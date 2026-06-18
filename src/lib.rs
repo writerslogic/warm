@@ -693,18 +693,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-    pub async fn cleanup_vector(&self, vector: Float32Array) -> Result<Option<CleanupResultJs>> {
-        let core = self.core.clone();
-        let q_vec = EntangledHVec::from_dense(&vector, core.dimensions());
-        run_async(move || {
-            Ok(core
-                .meaning_cleanup(&q_vec)
-                .map(|(id, confidence)| CleanupResultJs { id, confidence }))
-        })
-        .await
-    }
-
-    #[napi]
     pub fn declare_composition_rule(
         &self,
         name: String,
@@ -767,113 +755,6 @@ impl HolographicMemorySystem {
             idf_refreshed: report.idf_refreshed,
             atoms_refined: report.refinement.atoms_refined as u32,
         }
-    }
-
-    // === Agency API ===
-
-    #[napi]
-    pub fn add_goal(
-        &self,
-        name: String,
-        description: String,
-        relevance: f64,
-        urgency: f64,
-        cost: f64,
-    ) -> Option<u32> {
-        self.core
-            .add_goal(&name, &description, relevance, urgency, cost)
-            .map(|id| id as u32)
-    }
-
-    #[napi]
-    pub fn deactivate_goal(&self, name: String) -> bool {
-        self.core.deactivate_goal(&name)
-    }
-
-    #[napi]
-    pub fn active_goals(&self) -> Vec<GoalJs> {
-        self.core
-            .active_goals()
-            .into_iter()
-            .map(|(name, utility)| GoalJs { name, utility })
-            .collect()
-    }
-
-    #[napi]
-    pub fn plan_goal(
-        &self,
-        goal: String,
-        causal_relations: Vec<String>,
-        max_depth: Option<u32>,
-    ) -> PlanJs {
-        let rel_refs: Vec<&str> = causal_relations.iter().map(|s| s.as_str()).collect();
-        let plan = self
-            .core
-            .plan_goal(&goal, &rel_refs, max_depth.unwrap_or(10) as usize);
-        PlanJs {
-            goal: plan.goal,
-            actions: plan
-                .actions
-                .into_iter()
-                .map(|a| PlannedActionJs {
-                    subject: a.subject,
-                    relation: a.relation,
-                    object: a.object,
-                    depth: a.depth as u32,
-                })
-                .collect(),
-            complete: plan.complete,
-        }
-    }
-
-    #[napi]
-    pub fn generate_questions(&self) -> Vec<QuestionJs> {
-        self.core
-            .generate_questions()
-            .into_iter()
-            .map(|q| QuestionJs {
-                text: q.text,
-                goal_relevance: q.goal_relevance,
-            })
-            .collect()
-    }
-
-    #[napi]
-    pub fn propose_rule(
-        &self,
-        name: String,
-        input_relations: Vec<String>,
-        output_relation: String,
-        reason: String,
-    ) -> Option<u32> {
-        self.core
-            .propose_rule(&name, input_relations, &output_relation, &reason)
-            .map(|id| id as u32)
-    }
-
-    #[napi]
-    pub fn approve_proposal(&self, id: u32) -> bool {
-        self.core.approve_proposal(id as usize)
-    }
-
-    #[napi]
-    pub fn reject_proposal(&self, id: u32) -> bool {
-        self.core.reject_proposal(id as usize)
-    }
-
-    #[napi(getter)]
-    pub fn pending_proposals(&self) -> u32 {
-        self.core.pending_proposals() as u32
-    }
-
-    #[napi(getter)]
-    pub fn goal_count(&self) -> u32 {
-        self.core.goal_count() as u32
-    }
-
-    #[napi(getter)]
-    pub fn active_goal_count(&self) -> u32 {
-        self.core.active_goal_count() as u32
     }
 
     // === Graph API ===
@@ -1046,37 +927,6 @@ pub struct GovernanceReportJs {
     pub atoms_forgotten: u32,
     pub idf_refreshed: bool,
     pub atoms_refined: u32,
-}
-
-#[cfg(feature = "node-api")]
-#[napi(object)]
-pub struct GoalJs {
-    pub name: String,
-    pub utility: f64,
-}
-
-#[cfg(feature = "node-api")]
-#[napi(object)]
-pub struct PlannedActionJs {
-    pub subject: String,
-    pub relation: String,
-    pub object: String,
-    pub depth: u32,
-}
-
-#[cfg(feature = "node-api")]
-#[napi(object)]
-pub struct PlanJs {
-    pub goal: String,
-    pub actions: Vec<PlannedActionJs>,
-    pub complete: bool,
-}
-
-#[cfg(feature = "node-api")]
-#[napi(object)]
-pub struct QuestionJs {
-    pub text: String,
-    pub goal_relevance: f64,
 }
 
 #[cfg(test)]
