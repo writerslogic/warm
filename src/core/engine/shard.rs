@@ -11,6 +11,7 @@ use rayon::prelude::*;
 use std::hash::Hasher;
 
 use crate::core::entangled::EntangledHVec;
+use crate::core::hopfield::{hopfield_query, HopfieldConfig};
 use crate::core::index::inverted::{Accumulator, SparseInvertedIndex};
 use crate::core::ivf::IVFIndex;
 use crate::core::nsg::NSGIndex;
@@ -197,6 +198,17 @@ impl Shard {
                             return reranked;
                         }
                     }
+                }
+            }
+            router::IndexRoute::Hopfield => {
+                let patterns: Vec<(String, EntangledHVec)> = vectors
+                    .iter()
+                    .map(|(id, vec)| (id.clone(), vec.clone()))
+                    .collect();
+                let config = HopfieldConfig::default();
+                let results = hopfield_query(query_vec, &patterns, &config, k as usize);
+                if !results.is_empty() {
+                    return results;
                 }
             }
             router::IndexRoute::BruteForce => {
@@ -406,6 +418,15 @@ impl ShardSet {
                 }
             }
         }
+    }
+
+    pub fn collect_all_patterns(&self) -> Vec<(String, EntangledHVec)> {
+        let mut patterns = Vec::new();
+        self.for_each_shard(|shard| {
+            let vectors = shard.vectors.read();
+            patterns.extend(vectors.iter().map(|(id, vec)| (id.clone(), vec.clone())));
+        });
+        patterns
     }
 
     pub fn try_for_each_shard<F: FnMut(&Shard) -> Result<()>>(&self, mut f: F) -> Result<()> {
