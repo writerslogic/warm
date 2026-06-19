@@ -1,6 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub mod algebra;
 pub(crate) mod admission;
 pub mod agency;
 pub(crate) mod atom_memory;
@@ -15,6 +16,7 @@ pub mod engine;
 pub mod entangled;
 pub(crate) mod error;
 pub(crate) mod graph;
+pub(crate) mod hopfield;
 pub(crate) mod idf;
 pub(crate) mod index;
 pub(crate) mod indexed_memory;
