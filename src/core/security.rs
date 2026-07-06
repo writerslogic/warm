@@ -82,9 +82,7 @@ impl SigningManager {
         self.verifying_key.to_bytes()
     }
 
-    /// Move the signing key out for use by other managers. Only consumed by the
-    /// provenance layer today, so it is dead under `security`-without-`provenance`.
-    #[allow(dead_code)]
+    /// Move the signing key out for use by other managers.
     pub fn into_signing_key(self) -> SigningKey {
         self.signing_key
     }
