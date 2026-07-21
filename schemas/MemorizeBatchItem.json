@@ -1,8 +1,12 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "MemorizeBatchItem",
   "description": "Input item for batch memorization — a single id/text pair.",
   "type": "object",
+  "required": [
+    "id",
+    "text"
+  ],
   "properties": {
     "id": {
       "type": "string"
@@ -10,9 +14,5 @@
     "text": {
       "type": "string"
     }
-  },
-  "required": [
-    "id",
-    "text"
-  ]
+  }
 }

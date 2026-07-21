@@ -1,7 +1,14 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ConceptCandidate",
   "type": "object",
+  "required": [
+    "centroidId",
+    "coherence",
+    "memberCount",
+    "memberIds",
+    "stable"
+  ],
   "properties": {
     "centroidId": {
       "type": "string"
@@ -13,7 +20,7 @@
     "memberCount": {
       "type": "integer",
       "format": "uint32",
-      "minimum": 0
+      "minimum": 0.0
     },
     "memberIds": {
       "type": "array",
@@ -25,12 +32,5 @@
       "description": "Whether centroid refinement converged (zero reassignments in last pass).",
       "type": "boolean"
     }
-  },
-  "required": [
-    "centroidId",
-    "memberCount",
-    "coherence",
-    "memberIds",
-    "stable"
-  ]
+  }
 }

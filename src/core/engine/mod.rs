@@ -279,8 +279,7 @@ impl HmsCore {
             if nsg_path.exists() {
                 let raw = std::fs::read(&nsg_path)?;
                 let data = self.maybe_decrypt(&raw)?;
-                let (nsg, _): (super::nsg::NSGIndex, usize) =
-                    bincode::serde::decode_from_slice(&data, bincode::config::standard())?;
+                let nsg: super::nsg::NSGIndex = bincode::deserialize(&data)?;
                 *shard.nsg.write() = Some(nsg);
             }
 
@@ -288,8 +287,7 @@ impl HmsCore {
             if ivf_path.exists() {
                 let raw = std::fs::read(&ivf_path)?;
                 let data = self.maybe_decrypt(&raw)?;
-                let (mut ivf, _): (IVFIndex, usize) =
-                    bincode::serde::decode_from_slice(&data, bincode::config::standard())?;
+                let mut ivf: IVFIndex = bincode::deserialize(&data)?;
                 ivf.lists = Some(super::ivf::inverted_list::InvertedLists::new());
 
                 let vectors = shard.vectors.read();
@@ -312,11 +310,11 @@ impl HmsCore {
         let multi = shards.shard_count() > 1;
         shards.try_for_each_shard_indexed(|i, shard| {
             if let Some(ref nsg) = *shard.nsg.read() {
-                let data = bincode::serde::encode_to_vec(nsg, bincode::config::standard())?;
+                let data = bincode::serialize(nsg)?;
                 std::fs::write(self.nsg_index_path(i, multi), self.maybe_encrypt(&data)?)?;
             }
             if let Some(ref ivf) = *shard.ivf.read() {
-                let data = bincode::serde::encode_to_vec(ivf, bincode::config::standard())?;
+                let data = bincode::serialize(ivf)?;
                 std::fs::write(self.ivf_index_path(i, multi), self.maybe_encrypt(&data)?)?;
             }
             Ok(())

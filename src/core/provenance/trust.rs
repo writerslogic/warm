@@ -92,7 +92,7 @@ mod tests {
     use ed25519_dalek::SigningKey;
 
     fn key() -> SigningKey {
-        SigningKey::from_bytes(&rand::random())
+        SigningKey::generate(&mut rand::thread_rng())
     }
 
     #[test]

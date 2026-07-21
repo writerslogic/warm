@@ -1,7 +1,11 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "RetrievalResult",
   "type": "object",
+  "required": [
+    "id",
+    "similarity"
+  ],
   "properties": {
     "id": {
       "type": "string"
@@ -10,9 +14,5 @@
       "type": "number",
       "format": "double"
     }
-  },
-  "required": [
-    "id",
-    "similarity"
-  ]
+  }
 }

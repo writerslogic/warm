@@ -212,7 +212,7 @@ mod tests {
     use super::*;
 
     fn test_keypair() -> SigningKey {
-        SigningKey::from_bytes(&rand::random())
+        SigningKey::generate(&mut rand::thread_rng())
     }
 
     #[test]
