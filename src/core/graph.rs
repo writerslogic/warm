@@ -7,11 +7,17 @@ use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
 use super::types::{GraphPath, PathHop, Relation, RelationType};
+use super::wire;
 
 /// Serialized relation for arena persistence.
 /// Format: [MAGIC:u8][source_len:u16][source][type_len:u16][type][target_len:u16][target]
 ///         [valid_from:u64][valid_to:u64][props_len:u32][props_bytes]
-const RELATION_MAGIC: u8 = 0xFE;
+///
+/// Written under [`wire::magic::RELATION`]. Historically relations shared
+/// `0xFE` with composition rules; readers still accept that legacy magic
+/// ([`wire::magic::RELATION_LEGACY`]) so pre-migration logs continue to load.
+const RELATION_MAGIC: u8 = wire::magic::RELATION;
+const RELATION_MAGIC_LEGACY: u8 = wire::magic::RELATION_LEGACY;
 
 /// In-memory graph index over explicit relations.
 pub struct RelationStore {
@@ -318,21 +324,24 @@ impl RelationStore {
 
     /// Serialize a relation for arena persistence.
     pub fn serialize_relation(rel: &Relation) -> Vec<u8> {
-        let source = rel.source_id.as_bytes();
-        let rtype = rel.relation_type.as_bytes();
-        let target = rel.target_id.as_bytes();
         let props = rel.properties.as_deref().unwrap_or("").as_bytes();
 
-        let len =
-            1 + 2 + source.len() + 2 + rtype.len() + 2 + target.len() + 8 + 8 + 4 + props.len();
+        let len = 1
+            + 2
+            + rel.source_id.len()
+            + 2
+            + rel.relation_type.len()
+            + 2
+            + rel.target_id.len()
+            + 8
+            + 8
+            + 4
+            + props.len();
         let mut buf = Vec::with_capacity(len);
         buf.push(RELATION_MAGIC);
-        buf.extend_from_slice(&(source.len() as u16).to_le_bytes());
-        buf.extend_from_slice(source);
-        buf.extend_from_slice(&(rtype.len() as u16).to_le_bytes());
-        buf.extend_from_slice(rtype);
-        buf.extend_from_slice(&(target.len() as u16).to_le_bytes());
-        buf.extend_from_slice(target);
+        wire::write_lp_str(&mut buf, &rel.source_id);
+        wire::write_lp_str(&mut buf, &rel.relation_type);
+        wire::write_lp_str(&mut buf, &rel.target_id);
         buf.extend_from_slice(&(rel.valid_from as u64).to_le_bytes());
         buf.extend_from_slice(&(rel.valid_to as u64).to_le_bytes());
         buf.extend_from_slice(&(props.len() as u32).to_le_bytes());
@@ -342,25 +351,20 @@ impl RelationStore {
 
     /// Deserialize a relation from arena bytes. Returns None if not a relation frame.
     pub fn deserialize_relation(data: &[u8]) -> Option<Relation> {
-        if data.is_empty() || data[0] != RELATION_MAGIC {
-            return None;
+        match data.first() {
+            Some(&m) if m == RELATION_MAGIC || m == RELATION_MAGIC_LEGACY => {}
+            _ => return None,
         }
         let mut pos = 1;
 
-        let source_len = u16::from_le_bytes(data.get(pos..pos + 2)?.try_into().ok()?) as usize;
-        pos += 2;
-        let source = std::str::from_utf8(data.get(pos..pos + source_len)?).ok()?;
-        pos += source_len;
+        let (source, next) = wire::read_lp_str(data, pos)?;
+        pos = next;
 
-        let type_len = u16::from_le_bytes(data.get(pos..pos + 2)?.try_into().ok()?) as usize;
-        pos += 2;
-        let rtype = std::str::from_utf8(data.get(pos..pos + type_len)?).ok()?;
-        pos += type_len;
+        let (rtype, next) = wire::read_lp_str(data, pos)?;
+        pos = next;
 
-        let target_len = u16::from_le_bytes(data.get(pos..pos + 2)?.try_into().ok()?) as usize;
-        pos += 2;
-        let target = std::str::from_utf8(data.get(pos..pos + target_len)?).ok()?;
-        pos += target_len;
+        let (target, next) = wire::read_lp_str(data, pos)?;
+        pos = next;
 
         let valid_from = u64::from_le_bytes(data.get(pos..pos + 8)?.try_into().ok()?) as f64;
         pos += 8;
@@ -380,9 +384,9 @@ impl RelationStore {
         };
 
         Some(Relation {
-            source_id: source.to_string(),
-            relation_type: rtype.to_string(),
-            target_id: target.to_string(),
+            source_id: source,
+            relation_type: rtype,
+            target_id: target,
             properties,
             valid_from,
             valid_to,
@@ -619,6 +623,36 @@ mod tests {
         assert_eq!(parsed.properties.as_deref(), Some("{\"pop\":2_000_000}"));
         assert_eq!(parsed.valid_from, 1000.0);
         assert_eq!(parsed.valid_to, 0.0);
+    }
+
+    #[test]
+    fn test_relation_magic_migration() {
+        let rel = Relation {
+            source_id: "paris".into(),
+            relation_type: "capital_of".into(),
+            target_id: "france".into(),
+            properties: None,
+            valid_from: 0.0,
+            valid_to: 0.0,
+        };
+
+        // New writes use the distinct relation magic (0xFA), not the rule byte.
+        let mut bytes = RelationStore::serialize_relation(&rel);
+        assert_eq!(bytes[0], wire::magic::RELATION);
+        assert_eq!(bytes[0], 0xFA);
+        assert_ne!(bytes[0], wire::magic::RULE);
+        let parsed = RelationStore::deserialize_relation(&bytes).unwrap();
+        assert_eq!(parsed.source_id, "paris");
+        assert_eq!(parsed.target_id, "france");
+
+        // A hand-crafted legacy-0xFE relation (as older logs wrote it) still
+        // deserializes so existing arenas load.
+        bytes[0] = wire::magic::RELATION_LEGACY;
+        assert_eq!(bytes[0], 0xFE);
+        let legacy = RelationStore::deserialize_relation(&bytes).unwrap();
+        assert_eq!(legacy.source_id, "paris");
+        assert_eq!(legacy.relation_type, "capital_of");
+        assert_eq!(legacy.target_id, "france");
     }
 
     #[test]
