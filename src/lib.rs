@@ -40,7 +40,6 @@ pub use crate::core::provenance::TripleProvenanceParams;
 
 #[cfg(feature = "node-api")]
 #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
 pub struct HolographicMemorySystem {
     core: Arc<HmsCore>,
 }
@@ -251,7 +250,6 @@ impl HmsConfigJs {
 
 #[cfg(feature = "node-api")]
 #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
 impl HolographicMemorySystem {
     #[napi(constructor)]
     pub fn new(
@@ -267,20 +265,17 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_document(&self, input: DocumentInput) -> Result<u32> {
         let core = self.core.clone();
         run_async(move || core.memorize_document(input)).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn chunk_document(&self, input: DocumentInput) -> Result<Vec<DocumentChunk>> {
         run_async(move || chunk_document(&input)).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn search_documents(
         &self,
         text: String,
@@ -291,14 +286,12 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn delete_document(&self, id: String) -> Result<bool> {
         let core = self.core.clone();
         run_async(move || core.delete_document(&id)).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn security_status(&self) -> serde_json::Value {
         self.core.security_status()
     }
@@ -324,60 +317,51 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn index_status(&self) -> IndexStatus {
         self.core.index_status()
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn storage_health(&self) -> StorageHealth {
         self.core.storage_health()
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn hardware_capabilities(&self) -> HardwareCapabilities {
         crate::core::hardware::capabilities()
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn explain_query(&self, text: String, k: u32) -> QueryExplanation {
         let query = self.core.encode_text(&text);
         self.core.explain_query(&query, k)
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn maintain_indices(&self) -> Result<IndexStatus> {
         let core = self.core.clone();
         run_async(move || core.maintain_indices()).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn flush(&self) -> Result<()> {
         let core = self.core.clone();
         run_async(move || core.flush()).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn analyze_text(&self, text: String) -> Result<TextMetrics> {
         let core = self.core.clone();
         run_async(move || Ok(core.analyze_text(&text))).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn calculate_readability(&self, metrics: TextMetrics) -> Result<f64> {
         let core = self.core.clone();
         run_async(move || Ok(core.calculate_readability(&metrics))).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_text(
         &self,
         id: String,
@@ -398,7 +382,6 @@ impl HolographicMemorySystem {
     /// Zero-copy text ingestion from a Node.js Buffer. Avoids the UTF-8 copy
     /// that occurs with String parameters by reading bytes in-place.
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_text_buffer(
         &self,
         id: String,
@@ -420,7 +403,6 @@ impl HolographicMemorySystem {
     /// Batch memorize multiple id/text pairs in a single native call.
     /// Uses rayon for parallel encoding, then inserts sequentially.
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_batch(
         &self,
         items: Vec<MemorizeBatchItem>,
@@ -442,7 +424,6 @@ impl HolographicMemorySystem {
     /// Ingest a UTF-8 file (up to 8 MiB) as a chunked document with source offsets.
     /// Retrieve passages with searchDocuments and remove them with deleteDocument.
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_file(&self, id: String, file_path: String) -> Result<()> {
         let core = self.core.clone();
         run_async(move || {
@@ -478,7 +459,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_vector(&self, id: String, vector: Float32Array) -> Result<()> {
         let core = self.core.clone();
         let dense: Vec<f32> = vector.to_vec();
@@ -486,14 +466,12 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_scalar(&self, id: String, value: f64, min: f64, max: f64) -> Result<()> {
         let core = self.core.clone();
         run_async(move || core.memorize_scalar(id, value, min, max)).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query(
         &self,
         text: String,
@@ -513,7 +491,6 @@ impl HolographicMemorySystem {
 
     /// Converts float32→sparse EntangledHVec on JS thread, then queries on background.
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query_vector(&self, vector: Float32Array, k: u32) -> Result<Vec<RetrievalResult>> {
         let core = self.core.clone();
         let dense = vector.to_vec();
@@ -521,7 +498,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query_scalar(
         &self,
         value: f64,
@@ -540,7 +516,6 @@ impl HolographicMemorySystem {
 
     /// Process multiple text queries in parallel, returning results for each.
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query_batch(
         &self,
         texts: Vec<String>,
@@ -556,7 +531,6 @@ impl HolographicMemorySystem {
 
     /// Process multiple float32 vector queries in parallel.
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query_vector_batch(
         &self,
         vectors: Vec<Float32Array>,
@@ -573,7 +547,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn analyze_components(&self, text: String) -> Result<Vec<RetrievalResult>> {
         let core = self.core.clone();
         run_async(move || {
@@ -585,7 +558,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn factorize_diffusion(
         &self,
         product_text: String,
@@ -621,7 +593,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_triplet(
         &self,
         id: String,
@@ -634,7 +605,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query_triplet(
         &self,
         head: String,
@@ -651,7 +621,6 @@ impl HolographicMemorySystem {
     /// understanding. Complex semantic analogies may require higher-level word
     /// embeddings (slated for future upgrade).
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn find_analogy(
         &self,
         a: String,
@@ -671,7 +640,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn synthesize_concepts(&self) -> Result<Vec<ConceptCandidate>> {
         let core = self.core.clone();
         run_async(move || {
@@ -682,28 +650,24 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_sequence(&self, id: String, sequence: Vec<String>) -> Result<()> {
         let core = self.core.clone();
         run_async(move || core.memorize_sequence(id, &sequence)).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn train_nsg(&self) -> Result<()> {
         let core = self.core.clone();
         run_async(move || core.train_nsg()).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn train_ivf(&self) -> Result<()> {
         let core = self.core.clone();
         run_async(move || core.train_ivf()).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query_sequence(
         &self,
         partial: Vec<String>,
@@ -714,21 +678,18 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn delete(&self, id: String) -> Result<bool> {
         let core = self.core.clone();
         run_async(move || core.delete(&id)).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn compact(&self) -> Result<()> {
         let core = self.core.clone();
         run_async(move || core.compact()).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn audit_since(&self, timestamp_ms: f64) -> Result<Vec<AuditEntryJs>> {
         let core = self.core.clone();
         let ts = timestamp_ms as u64;
@@ -754,7 +715,6 @@ impl HolographicMemorySystem {
     /// Bundle multiple text items into a single hypervector.
     /// Respects the PrivacyConfig: when dp_enabled, uses epsilon-DP noise.
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn bundle_texts(&self, texts: Vec<String>) -> Result<Vec<u32>> {
         let core = self.core.clone();
         run_async(move || {
@@ -768,14 +728,12 @@ impl HolographicMemorySystem {
     // === Meaning Memory API ===
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_meaning(&self, id: String, text: String) -> Result<()> {
         let core = self.core.clone();
         run_async(move || core.memorize_meaning(&id, &text)).await
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn structural_query(
         &self,
         known_subjects: Vec<String>,
@@ -811,7 +769,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn multi_hop_query(
         &self,
         start_entity: String,
@@ -834,7 +791,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn meaning_cleanup(&self, text: String) -> Result<Option<CleanupResultJs>> {
         let core = self.core.clone();
         run_async(move || {
@@ -847,7 +803,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn cleanup_vector(&self, vector: Float32Array) -> Result<Option<CleanupResultJs>> {
         let core = self.core.clone();
         let q_vec = EntangledHVec::from_dense(&vector, core.dimensions());
@@ -860,7 +815,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn declare_composition_rule(
         &self,
         name: String,
@@ -880,13 +834,11 @@ impl HolographicMemorySystem {
     // === Cognition API ===
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn start_cognition(&self) -> Result<()> {
         self.core.start_cognition().map_err(napi_err)
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn stop_cognition(&self) {
         self.core.stop_cognition();
     }
@@ -912,13 +864,11 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn run_cognition_once(&self) -> u32 {
         self.core.run_cognition_once().len() as u32
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn govern_memory(&self) -> GovernanceReportJs {
         let report = self.core.govern_memory();
         GovernanceReportJs {
@@ -933,7 +883,6 @@ impl HolographicMemorySystem {
     // === Agency API ===
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn add_goal(
         &self,
         name: String,
@@ -948,13 +897,11 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn deactivate_goal(&self, name: String) -> bool {
         self.core.deactivate_goal(&name)
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn active_goals(&self) -> Vec<GoalJs> {
         self.core
             .active_goals()
@@ -964,7 +911,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn plan_goal(
         &self,
         goal: String,
@@ -994,7 +940,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn generate_questions(&self) -> Vec<QuestionJs> {
         self.core
             .generate_questions()
@@ -1007,7 +952,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn propose_rule(
         &self,
         name: String,
@@ -1021,13 +965,11 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn approve_proposal(&self, id: u32) -> bool {
         self.core.approve_proposal(id as usize)
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn reject_proposal(&self, id: u32) -> bool {
         self.core.reject_proposal(id as usize)
     }
@@ -1050,7 +992,6 @@ impl HolographicMemorySystem {
     // === Graph API ===
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn add_relation(
         &self,
         source_id: String,
@@ -1076,7 +1017,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn remove_relation(
         &self,
         source_id: String,
@@ -1088,7 +1028,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn declare_relation_type(
         &self,
         name: String,
@@ -1105,7 +1044,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn traverse(
         &self,
         start_id: String,
@@ -1126,7 +1064,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn outgoing_relations(
         &self,
         source_id: String,
@@ -1145,7 +1082,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn incoming_relations(
         &self,
         target_id: String,
@@ -1169,7 +1105,6 @@ impl HolographicMemorySystem {
     }
 
     #[napi]
-// codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn federated_query(
         &self,
         peer_paths: Vec<String>,
