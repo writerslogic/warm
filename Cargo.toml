@@ -135,6 +135,14 @@ required-features = ["experimental"]
 name = "similarity-decay"
 required-features = ["experimental"]
 
+[[bin]]
+name = "route-sweep"
+path = "src/bin/route-sweep.rs"
+
+[[bin]]
+name = "bundle-subset-sweep"
+required-features = ["experimental"]
+
 [profile.release]
 lto = true
 strip = true
