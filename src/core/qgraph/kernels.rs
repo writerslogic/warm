@@ -243,7 +243,10 @@ mod neon {
             let x = vld1q_s8(p.as_ptr().add(i));
             let lo = vshrq_n_s8::<4>(vshlq_n_s8::<4>(x));
             let hi = vshrq_n_s8::<4>(x);
-            let (qe, qo) = (vld1q_s8(q.as_ptr().add(2 * i)), vld1q_s8(q.as_ptr().add(2 * i + 16)));
+            let (qe, qo) = (
+                vld1q_s8(q.as_ptr().add(2 * i)),
+                vld1q_s8(q.as_ptr().add(2 * i + 16)),
+            );
             std::arch::asm!(
                 "sdot {s0:v}.4s, {lo:v}.16b, {qe:v}.16b",
                 "sdot {s1:v}.4s, {hi:v}.16b, {qo:v}.16b",
@@ -314,11 +317,17 @@ mod neon {
 }
 
 /// Integer dot product of two i8 rows whose length is a multiple of 16.
-#[cfg_attr(all(target_arch = "aarch64", target_feature = "dotprod"), allow(dead_code))]
+#[cfg_attr(
+    all(target_arch = "aarch64", target_feature = "dotprod"),
+    allow(dead_code)
+)]
 pub(crate) type DotI8 = fn(&[i8], &[i8]) -> i32;
 
 /// The fastest [`DotI8`] this CPU supports.
-#[cfg_attr(all(target_arch = "aarch64", target_feature = "dotprod"), allow(dead_code))]
+#[cfg_attr(
+    all(target_arch = "aarch64", target_feature = "dotprod"),
+    allow(dead_code)
+)]
 pub(crate) fn dot_i8_kernel() -> DotI8 {
     #[cfg(target_arch = "aarch64")]
     {
@@ -349,7 +358,12 @@ pub(crate) fn dot_i8_inline(a: &[i8], b: &[i8]) -> i32 {
 /// 16 odd coordinates. `q.len()` is a multiple of 32.
 pub(crate) fn interleave_for_i4(q: &[i8], out: &mut [i8]) {
     assert!(q.len() == out.len() && q.len().is_multiple_of(32));
-    for (src, dst) in q.chunks_exact(32).zip(out.chunks_exact_mut(32)) {
+    for (src, dst) in q
+        .as_chunks::<32>()
+        .0
+        .iter()
+        .zip(out.as_chunks_mut::<32>().0.iter_mut())
+    {
         for j in 0..16 {
             dst[j] = src[2 * j];
             dst[16 + j] = src[2 * j + 1];
@@ -374,7 +388,12 @@ pub(crate) fn dot_i4_inline(q: &[i8], packed: &[i8]) -> i32 {
 #[cfg(any(test, not(all(target_arch = "aarch64", target_feature = "dotprod"))))]
 pub(crate) fn dot_i4_scalar(q: &[i8], packed: &[i8]) -> i32 {
     let mut s = 0i32;
-    for (qb, pb) in q.chunks_exact(32).zip(packed.chunks_exact(16)) {
+    for (qb, pb) in q
+        .as_chunks::<32>()
+        .0
+        .iter()
+        .zip(packed.as_chunks::<16>().0.iter())
+    {
         for (j, &x) in pb.iter().enumerate() {
             let lo = (((x as u8) << 4) as i8) >> 4;
             s += i32::from(qb[j]) * i32::from(lo) + i32::from(qb[16 + j]) * i32::from(x >> 4);
@@ -389,7 +408,10 @@ pub(crate) fn dot_f32_i4(a: &[f32], packed: &[i8]) -> f32 {
     debug_assert_eq!(a.len(), 2 * packed.len());
     let mut acc = [0f32; 16];
     let ((ca, ta), (cb, tb)) = (a.as_chunks::<16>(), packed.as_chunks::<8>());
-    debug_assert!(ta.is_empty() && tb.is_empty(), "length not a multiple of 16");
+    debug_assert!(
+        ta.is_empty() && tb.is_empty(),
+        "length not a multiple of 16"
+    );
     for (x, y) in ca.iter().zip(cb) {
         for (j, &b) in y.iter().enumerate() {
             let lo = f32::from((((b as u8) << 4) as i8) >> 4);
@@ -539,7 +561,9 @@ mod tests {
             assert_eq!(dot_f32_i8(&af, &b), want as f32);
             let nib: Vec<i8> = b.iter().map(|&x| x >> 4).collect();
             let packed: Vec<i8> = nib
-                .chunks_exact(2)
+                .as_chunks::<2>()
+                .0
+                .iter()
                 .map(|p| ((p[0] as u8 & 0x0F) | ((p[1] as u8) << 4)) as i8)
                 .collect();
             assert_eq!(dot_f32_i4(&af, &packed), dot_i8_scalar(&a, &nib) as f32);
