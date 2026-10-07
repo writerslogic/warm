@@ -20,6 +20,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Drop rejected intersection kernel candidates
 
 ### Documentation
+- Record the green CI and the clippy toolchain for the gate
 - Record that main is pushed and in sync
 - Record that all work is on main and what was superseded
 - Record the merged qgraph state and what is unverified
@@ -43,6 +44,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Update changelog [skip ci]
 
 ### Fixed
+- Satisfy clippy 1.99 lints in the qgraph kernels and graph cache
 - Keep greedy decoding at batch 1 unless a batch is set
 - Reserve Modal wave cost before launch so preemption cannot bypass the cap
 - Run HMS model stages on L4 on Modal
