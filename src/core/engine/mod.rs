@@ -65,6 +65,8 @@ type SignFn<'a> = Box<dyn Fn(&[u8]) -> super::audit::SignatureBytes + 'a>;
 pub struct HmsCore {
     config: HmsConfig,
     mutation_gate: mutation_gate::MutationGate,
+    /// Word interner carried from one document batch to the next.
+    stem_memos: crate::core::documents::StemMemoPool,
     compaction: parking_lot::Mutex<()>,
     /// The index metadata (`indices.json`) last written by this process: identical metadata
     /// means identical index files at the same checkpoint, so a repeated persist skips the
@@ -250,16 +252,17 @@ impl HmsCore {
         let core = Self {
             config: config.clone(),
             mutation_gate: mutation_gate::MutationGate::default(),
+            stem_memos: Default::default(),
             compaction: parking_lot::Mutex::new(()),
             persisted_indices: parking_lot::Mutex::new(Vec::new()),
-            revision: std::sync::atomic::AtomicU64::new(0),
+            revision: std::sync::atomic::AtomicU64::new(super::documents::opaque_counter_start()),
             journal: journal::JournalFormat::for_schema(schema),
             arena,
             dimensions: dim,
             storage_path: base_path,
             shards: RwLock::new(shard_set),
             graph: RelationStore::new(),
-            documents: RwLock::new(super::documents::DocumentStore::default()),
+            documents: RwLock::new(super::documents::DocumentStore::opened()),
             vector_index: super::documents::VectorIndexSlot::default(),
             #[cfg(feature = "local-models")]
             model_stages: RwLock::new(None),
@@ -300,8 +303,15 @@ impl HmsCore {
             _store_lock: store_lock,
         };
 
+        let text_path = core.storage_path.join("documents.text");
+        // A purge interrupted before renaming its canonical segment leaves a copy of the live
+        // text, which a later purge would not reach.
+        let staging = super::documents::canonical_staging_path(&text_path);
+        if staging.exists() {
+            super::durable_file::scrub_remove_file(&staging)?;
+        }
         core.documents.write().attach_text_segment(
-            &core.storage_path.join("documents.text"),
+            &text_path,
             #[cfg(feature = "security")]
             core.encryption.clone(),
         )?;

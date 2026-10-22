@@ -101,25 +101,28 @@ impl HmsCore {
         let mutations = inputs
             .into_par_iter()
             .zip(spans)
-            .map_init(documents::StemMemo::default, |memo, (input, spans)| {
-                let _memo = memo.install();
-                #[cfg(feature = "local-models")]
-                if let Some(stages) = stages.as_deref() {
-                    return self
-                        .prepare_document_with_models(input, stages, options.encode)
-                        .map(|document| Mutation::Document(Arc::new(document)));
-                }
-                documents::prepare_spans(
-                    input,
-                    spans,
-                    self.dimensions,
-                    self.config.embedding_space.as_ref().map(|s| s.dimensions),
-                    None,
-                    self.config.text_encoder,
-                    options.encode,
-                )
-                .map(|document| Mutation::Document(Arc::new(document)))
-            })
+            .map_init(
+                || self.stem_memos.take(),
+                |memo, (input, spans)| {
+                    let _memo = memo.install();
+                    #[cfg(feature = "local-models")]
+                    if let Some(stages) = stages.as_deref() {
+                        return self
+                            .prepare_document_with_models(input, stages, options.encode)
+                            .map(|document| Mutation::Document(Arc::new(document)));
+                    }
+                    documents::prepare_spans(
+                        input,
+                        spans,
+                        self.dimensions,
+                        self.config.embedding_space.as_ref().map(|s| s.dimensions),
+                        None,
+                        self.config.text_encoder,
+                        options.encode,
+                    )
+                    .map(|document| Mutation::Document(Arc::new(document)))
+                },
+            )
             .collect::<Result<Vec<_>>>()?;
         let payload = super::document_batch::serialize_transaction(self, &mutations)?;
         let counts = mutations
@@ -266,11 +269,25 @@ impl HmsCore {
     /// another build is running (the published snapshot stays). The capture holds the store's
     /// read lock; the graph build holds no lock.
     pub fn rebuild_vector_index(&self, graph_min_rows: usize) -> Result<bool> {
-        let Some(space) = &self.config.embedding_space else {
+        if self.config.embedding_space.is_none() {
             return Ok(false);
-        };
+        }
         let Some(_building) = self.vector_index.try_build() else {
             return Ok(self.vector_index.get().is_some());
+        };
+        self.rebuild_vector_index_locked(graph_min_rows)
+    }
+
+    /// [`Self::rebuild_vector_index`] that waits for a running build instead of keeping its
+    /// result, so the snapshot published on return was captured after the call began.
+    pub(super) fn rebuild_vector_index_waiting(&self, graph_min_rows: usize) -> Result<bool> {
+        let _building = self.vector_index.build();
+        self.rebuild_vector_index_locked(graph_min_rows)
+    }
+
+    fn rebuild_vector_index_locked(&self, graph_min_rows: usize) -> Result<bool> {
+        let Some(space) = &self.config.embedding_space else {
+            return Ok(false);
         };
         let capture = {
             let _transaction = self.mutation_gate.read();
@@ -298,6 +315,11 @@ impl HmsCore {
     pub fn train_document_index(&self) -> Result<()> {
         self.encode_pending_documents()?;
         self.maintain_vector_index(documents::DEFAULT_GRAPH_MIN_ROWS)?;
+        self.train_dense_index()
+    }
+
+    /// Trains and publishes the dense document index over the current embedded chunks.
+    pub(super) fn train_dense_index(&self) -> Result<()> {
         let Some(space) = &self.config.embedding_space else {
             return Ok(());
         };
@@ -408,6 +430,15 @@ impl HmsCore {
     /// Whether a document with this id currently resolves in the opened store.
     pub fn has_document(&self, id: &str) -> bool {
         self.documents.read().contains_key(id)
+    }
+
+    /// Whether the word interner built while preparing a document batch is kept for the next
+    /// batch (the default). Keeping it saves re-stemming a corpus's vocabulary across batches at
+    /// a cost bounded by 2^18 distinct words (tens of MB at worst); a process holding many open
+    /// stores, such as a multi-tenant server, can turn it off to free each batch's interner
+    /// with the batch. Turning it off frees the kept interner now.
+    pub fn set_keep_ingest_interner(&self, keep: bool) {
+        self.stem_memos.set_keep(keep);
     }
 
     /// Number of stored documents.
