@@ -15,6 +15,7 @@
 //! index.
 
 use std::collections::BinaryHeap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::OnceLock;
 use std::time::Instant;
 
@@ -23,10 +24,11 @@ use rayon::prelude::*;
 use super::adjacency::Adjacency;
 use super::fastscan::{pack32, scan32, BLOCK};
 use super::kernels::{
-    dot_i4_inline, dot_i4_inline_x4, dot_i8_inline, interleave_for_i4, prefetch, prefetch_bytes,
+    dot_i4_query, dot_i4_query_x4, dot_i8_query, interleave_for_i4, prefetch, prefetch_bytes,
     raw_one, QueryCode, Rotation, SplitMix,
 };
 use super::rerank::{dot_f32_i4, dot_f32_i8};
+use super::vnni::query_sum;
 use super::{invalid, prepare_rows, upper_bytes, BuildParams, Graph, GraphView, Metric, NONE};
 use crate::core::error::HmsError;
 
@@ -200,20 +202,91 @@ fn env_knob<T: std::str::FromStr>(name: &str) -> Option<T> {
     }
 }
 
-/// `HMS_QGRAPH_HUGEPAGES` set to a non-zero value: the large arrays of an index built in this
-/// process (code rows, neighbour lists, scales, residual rows, neighbour blocks) are advised
-/// into transparent huge pages before they are first touched, so each random row fetch costs
-/// one TLB entry per 2 MiB instead of per 4 KiB. Linux only; a no-op elsewhere. Read once.
+/// On unless `HMS_QGRAPH_HUGEPAGES` is set to 0: the large arrays of an index built in this
+/// process or opened onto the heap (code rows, neighbour lists, scales, norm terms, residual
+/// rows, neighbour blocks) are advised into transparent huge pages before they are first
+/// touched, so the random row fetches of a search share one TLB entry per 2 MiB instead of
+/// needing one per 4 KiB (on x86 a page walk per fetch once the index outgrows the TLB's
+/// reach). Linux only; a no-op elsewhere, and where transparent huge pages are disabled.
+/// Read once.
 fn huge_pages() -> bool {
     static HUGE: OnceLock<bool> = OnceLock::new();
-    *HUGE.get_or_init(|| env_knob::<u8>("HMS_QGRAPH_HUGEPAGES").unwrap_or(0) != 0)
+    *HUGE.get_or_init(|| env_knob::<u8>("HMS_QGRAPH_HUGEPAGES").unwrap_or(1) != 0)
+}
+
+/// Huge-page advice given by this process (see [`huge_page_status`]).
+static HUGE_ADVISED_BYTES: AtomicU64 = AtomicU64::new(0);
+static HUGE_ADVICE_FAILED: AtomicU64 = AtomicU64::new(0);
+/// Test hook: treat every `madvise` as failed, the result under THP `never`, a seccomp filter
+/// or a sandbox that rejects the call.
+#[cfg(test)]
+static FAIL_HUGE_ADVICE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// What the huge-page advice of this process achieved.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize)]
+pub struct HugePageStatus {
+    /// The advice is on (`HMS_QGRAPH_HUGEPAGES` unset or non-zero).
+    pub enabled: bool,
+    /// Bytes for which `madvise(MADV_HUGEPAGE)` succeeded.
+    pub advised_bytes: u64,
+    /// `madvise` calls that failed (each falls back to base pages; nothing else changes).
+    pub failed_calls: u64,
+    /// `AnonHugePages` of the whole process from `/proc/self/smaps_rollup`, whoever asked for
+    /// them (the allocator may hold huge pages of its own). `None` where the file is
+    /// unreadable (outside Linux, or a sandbox without it). [`VGraph::code_rows_huge_bytes`]
+    /// gives the figure for one index's code rows.
+    pub anon_huge_bytes: Option<u64>,
+}
+
+/// The huge-page advice given so far and the huge pages the process holds.
+pub fn huge_page_status() -> HugePageStatus {
+    let anon_huge_bytes = std::fs::read_to_string("/proc/self/smaps_rollup")
+        .ok()
+        .and_then(|text| {
+            let line = text.lines().find(|l| l.starts_with("AnonHugePages:"))?;
+            let kib: u64 = line.split_whitespace().nth(1)?.parse().ok()?;
+            Some(kib * 1024)
+        });
+    HugePageStatus {
+        enabled: huge_pages(),
+        advised_bytes: HUGE_ADVISED_BYTES.load(Ordering::Relaxed),
+        failed_calls: HUGE_ADVICE_FAILED.load(Ordering::Relaxed),
+        anon_huge_bytes,
+    }
+}
+
+/// `AnonHugePages` of the mappings of `/proc/self/smaps` that overlap `[ptr, ptr + len)`;
+/// `None` where the file is unreadable. A mapping may hold other allocations too, so this
+/// bounds the huge pages behind the range from above.
+fn huge_bytes_behind(ptr: *const u8, len: usize) -> Option<u64> {
+    let text = std::fs::read_to_string("/proc/self/smaps").ok()?;
+    let (lo, hi) = (ptr as u64, ptr as u64 + len as u64);
+    let mut total = 0u64;
+    let mut inside = false;
+    for line in text.lines() {
+        let head = line.split_whitespace().next().unwrap_or("");
+        if let Some((a, b)) = head.split_once('-') {
+            if let (Ok(a), Ok(b)) = (u64::from_str_radix(a, 16), u64::from_str_radix(b, 16)) {
+                inside = a < hi && lo < b;
+                continue;
+            }
+        }
+        if inside {
+            if let Some(rest) = line.strip_prefix("AnonHugePages:") {
+                let kib: u64 = rest.split_whitespace().next()?.parse().ok()?;
+                total += kib * 1024;
+            }
+        }
+    }
+    Some(total)
 }
 
 /// Asks the kernel to back the 2 MiB-aligned interior of `[ptr, ptr + len)` with transparent
 /// huge pages (Linux `MADV_HUGEPAGE`). Must run before the pages are first touched, so the
 /// page-fault path allocates them huge where THP is `always` or `madvise`; afterwards only
-/// `khugepaged` could collapse them, slowly. A no-op outside Linux. Errors are ignored: the
-/// advice changes paging policy only, never the mapping or its contents.
+/// `khugepaged` could collapse them, slowly. A no-op outside Linux. A failure (THP `never`,
+/// a kernel without THP, a filtered syscall) is counted and otherwise ignored: the advice
+/// changes paging policy only, never the mapping or its contents.
 fn advise_huge_pages(ptr: *const u8, len: usize) {
     #[cfg(target_os = "linux")]
     {
@@ -225,10 +298,18 @@ fn advise_huge_pages(ptr: *const u8, len: usize) {
         let start = (ptr as usize).next_multiple_of(HUGE);
         let end = (ptr as usize + len) & !(HUGE - 1);
         if start < end {
+            #[cfg(test)]
+            if FAIL_HUGE_ADVICE.load(Ordering::Relaxed) {
+                HUGE_ADVICE_FAILED.fetch_add(1, Ordering::Relaxed);
+                return;
+            }
             // SAFETY: `[start, end)` lies inside the live allocation `[ptr, ptr + len)` and
             // `madvise` with `MADV_HUGEPAGE` reads or writes nothing in it.
-            unsafe {
-                madvise(start as *mut std::ffi::c_void, end - start, MADV_HUGEPAGE);
+            let rc = unsafe { madvise(start as *mut std::ffi::c_void, end - start, MADV_HUGEPAGE) };
+            if rc == 0 {
+                HUGE_ADVISED_BYTES.fetch_add((end - start) as u64, Ordering::Relaxed);
+            } else {
+                HUGE_ADVICE_FAILED.fetch_add(1, Ordering::Relaxed);
             }
         }
     }
@@ -869,7 +950,10 @@ impl VGraph {
         }
         let new = |o: u32| if reorder { new_id[o as usize] } else { o };
         let half_norms: Vec<f32> = if euclidean {
-            (0..n).map(|v| 0.5 * g.norms[old(v)]).collect()
+            let mut half_norms = Vec::with_capacity(n);
+            huge_capacity(half_norms.as_ptr(), n);
+            half_norms.extend((0..n).map(|v| 0.5 * g.norms[old(v)]));
+            half_norms
         } else {
             Vec::new()
         };
@@ -1293,7 +1377,7 @@ impl VGraph {
             }
             for _ in 0..nv {
                 let v = (rng.next_u64() % self.n as u64) as u32;
-                let d = f64::from(self.screen_est(&qs, v) - self.est(&qc, v, 1.0));
+                let d = f64::from(self.screen_est(&qs, v) - self.est(&qc, query_sum(&qc), v, 1.0));
                 sum += d;
                 sum2 += d * d;
                 count += 1;
@@ -1370,6 +1454,13 @@ impl VGraph {
 
     pub fn is_empty(&self) -> bool {
         self.n == 0
+    }
+
+    /// Huge pages behind this index's code rows (an upper bound, see the `/proc/self/smaps`
+    /// note on [`huge_page_status`]); `None` where `/proc/self/smaps` is unreadable.
+    pub fn code_rows_huge_bytes(&self) -> Option<u64> {
+        let rows = self.codes.bytes();
+        huge_bytes_behind(rows.as_ptr().cast(), rows.len())
     }
 
     pub fn has_residual(&self) -> bool {
@@ -1555,15 +1646,16 @@ impl VGraph {
         }
     }
 
-    /// Estimated negative inner product with the query code (up to the per-query terms
+    /// Estimated negative inner product with the query code `qc`, whose coordinate sum is
+    /// `qsum` (up to the per-query terms
     /// `<q, mean>` and `s_q`, which do not change the order). Euclidean adds `w |x|^2 / 2`
     /// with `w = 1 / s_q`, the order of `|q - x|^2` in the same units.
     #[inline]
-    fn est(&self, qc: &[i8], v: u32, w: f32) -> f32 {
+    fn est(&self, qc: &[i8], qsum: i32, v: u32, w: f32) -> f32 {
         let dot = if self.bits == 8 {
-            dot_i8_inline(qc, self.code(v))
+            dot_i8_query(qc, self.code(v), qsum)
         } else {
-            dot_i4_inline(qc, self.code(v))
+            dot_i4_query(qc, self.code(v), qsum)
         };
         self.order(v, self.scales[v as usize] * dot as f32, w)
     }
@@ -1582,11 +1674,11 @@ impl VGraph {
     /// [`VGraph::est`] of four vertices with shared query loads; the same integer sums, so
     /// the same values.
     #[inline]
-    fn est4(&self, qc: &[i8], v: [u32; 4], w: f32) -> [f32; 4] {
+    fn est4(&self, qc: &[i8], qsum: i32, v: [u32; 4], w: f32) -> [f32; 4] {
         let dots = if self.bits == 8 {
-            v.map(|u| dot_i8_inline(qc, self.code(u)))
+            v.map(|u| dot_i8_query(qc, self.code(u), qsum))
         } else {
-            dot_i4_inline_x4(qc, v.map(|u| self.code(u)))
+            dot_i4_query_x4(qc, v.map(|u| self.code(u)), qsum)
         };
         std::array::from_fn(|i| self.order(v[i], self.scales[v[i] as usize] * dots[i] as f32, w))
     }
@@ -1615,12 +1707,12 @@ impl VGraph {
 
     /// Greedy descent through the upper layers on estimated distances; returns the bottom-layer
     /// entry vertex and the number of estimates.
-    fn descend(&self, qc: &[i8], w: f32, reservoir: &mut Reservoir) -> (u32, usize) {
+    fn descend(&self, qc: &[i8], qsum: i32, w: f32, reservoir: &mut Reservoir) -> (u32, usize) {
         if self.layers.is_empty() {
             return (self.entry, 0);
         }
         let mut p = 0u32;
-        let mut best = self.est(qc, self.upper_ids[0], w);
+        let mut best = self.est(qc, qsum, self.upper_ids[0], w);
         reservoir.offer(key(best, self.upper_ids[0]));
         let mut evals = 1;
         for layer in self.layers.iter().rev() {
@@ -1636,7 +1728,7 @@ impl VGraph {
                 let mut moved = false;
                 for &u in list {
                     let id = self.upper_ids[u as usize];
-                    let d = self.est(qc, id, w);
+                    let d = self.est(qc, qsum, id, w);
                     reservoir.offer(key(d, id));
                     evals += 1;
                     if d < best {
@@ -1669,6 +1761,7 @@ impl VGraph {
                 visited: Marks::new(self.n, self.has_blocks()),
                 qf: vec![0.0; self.padded],
                 qc: vec![0; self.padded],
+                qsum: 0,
                 qtmp: vec![0; self.padded],
                 qrot: vec![0.0; self.screen_words * 64],
                 qs: QueryCode::new(self.screen_words.max(1)),
@@ -1960,8 +2053,9 @@ pub(super) struct SearchScratch {
     dim: usize,
     visited: Marks,
     qf: Vec<f32>,
-    /// Query code in the traversal kernel's layout.
+    /// Query code in the traversal kernel's layout, and its coordinate sum.
     qc: Vec<i8>,
+    qsum: i32,
     qtmp: Vec<i8>,
     /// Rotated, scaled query and its bit planes for the screen.
     qrot: Vec<f32>,
@@ -2035,7 +2129,7 @@ impl SearchScratch {
                     self.fresh[i + 2],
                     self.fresh[i + 3],
                 ];
-                for (e, u) in g.est4(qc, ids, w).into_iter().zip(ids) {
+                for (e, u) in g.est4(qc, self.qsum, ids, w).into_iter().zip(ids) {
                     let kk = key(e, u);
                     self.reservoir.offer(kk);
                     if let Some((pos, _)) = self.pool.insert(kk) {
@@ -2048,7 +2142,7 @@ impl SearchScratch {
             }
         }
         for &u in &self.fresh[i..] {
-            let kk = key(g.est(qc, u, w), u);
+            let kk = key(g.est(qc, self.qsum, u, w), u);
             self.reservoir.offer(kk);
             if let Some((pos, _)) = self.pool.insert(kk) {
                 if patience > 0 && pos < k {
@@ -2141,6 +2235,12 @@ impl SearchScratch {
         // Weight of the Euclidean norm term in the estimate's units (unused for angular); a
         // zero query has every inner product zero, so the norms alone order it.
         let w = if sq > 0.0 { 1.0 / sq } else { 1.0 };
+        // Only the x86 VNNI kernels read the sum.
+        self.qsum = if cfg!(target_arch = "x86_64") {
+            query_sum(&self.qc)
+        } else {
+            0
+        };
         if let Some(started) = started {
             profile.query_encoding_ns = started.elapsed().as_nanos() as u64;
         }
@@ -2157,7 +2257,7 @@ impl SearchScratch {
 
         self.visited.next();
         let entry_started = PROFILE.then(Instant::now);
-        let (entry, mut evals) = g.descend(qc, w, &mut self.reservoir);
+        let (entry, mut evals) = g.descend(qc, self.qsum, w, &mut self.reservoir);
         if let Some(started) = entry_started {
             profile.entry_ns = started.elapsed().as_nanos() as u64;
             profile.entry_evaluations = evals;
@@ -2181,7 +2281,7 @@ impl SearchScratch {
         self.pool.reset(ef);
         self.expanded.clear();
         let take = params.rerank.max(k).min(g.n);
-        let k0 = key(g.est(qc, entry, w), entry);
+        let k0 = key(g.est(qc, self.qsum, entry, w), entry);
         self.reservoir.offer(k0);
         self.pool.insert(k0);
         if fuse {
@@ -2299,7 +2399,7 @@ impl SearchScratch {
                 // padding is skipped, and a vertex met again is re-admitted only when its
                 // fused estimate improves on the entry it holds.
                 let v = key_id(c) as usize;
-                let est_v = g.est(&self.qc, v as u32, w);
+                let est_v = g.est(&self.qc, self.qsum, v as u32, w);
                 let ek = key(est_v, v as u32);
                 evals += 1;
                 // `<q, x_v - mean>` in float units: the estimate dropped the query scale.
@@ -2697,7 +2797,11 @@ impl VGraph {
         );
         let w = if sq > 0.0 { 1.0 / sq } else { 1.0 };
         // Descent does not set the base-layer marks; replay it after the production search.
-        self.diagnostic_entry(|id| self.est(&scratch.qc, id, w), &mut report.evaluated);
+        let qsum = query_sum(&scratch.qc);
+        self.diagnostic_entry(
+            |id| self.est(&scratch.qc, qsum, id, w),
+            &mut report.evaluated,
+        );
         report.evaluated.extend(
             (0..self.n as u32)
                 .filter(|&id| scratch.visited.seen(id))
@@ -3287,6 +3391,50 @@ mod tests {
     use super::super::kernels::SplitMix;
     use super::super::tests::{brute_force, clustered, gaussian};
     use super::*;
+
+    /// A refused huge-page advice falls back to base pages with identical arrays and results,
+    /// and is counted. Runs the build twice in one process: advice failing, then as configured.
+    #[test]
+    fn refused_huge_page_advice_changes_nothing_but_the_counter() {
+        // Large enough that the code rows span a 2 MiB-aligned interior.
+        let (n, dim) = (40_000, 128);
+        let data = clustered(n, dim, 3);
+        let graph = Graph::build(
+            &data,
+            dim,
+            &BuildParams {
+                degree: 8,
+                build_ef: 16,
+                metric: Metric::Euclidean,
+                ..BuildParams::default()
+            },
+        )
+        .unwrap();
+        let build = || VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+        FAIL_HUGE_ADVICE.store(true, Ordering::Relaxed);
+        let failed_before = huge_page_status().failed_calls;
+        let refused = build();
+        FAIL_HUGE_ADVICE.store(false, Ordering::Relaxed);
+        let advised = build();
+        if cfg!(target_os = "linux") && huge_pages() {
+            assert!(huge_page_status().failed_calls > failed_before);
+        }
+        assert_eq!(refused.codes.bytes(), advised.codes.bytes());
+        assert_eq!(&refused.scales[..], &advised.scales[..]);
+        assert_eq!(&refused.half_norms[..], &advised.half_norms[..]);
+        let params = VSearchParams {
+            ef: 40,
+            rerank: 40,
+            ..VSearchParams::default()
+        };
+        let (mut a, mut b) = (refused.searcher(), advised.searcher());
+        let (mut ra, mut rb) = (Vec::new(), Vec::new());
+        for q in data.chunks_exact(dim).step_by(997) {
+            a.search(q, 10, params, &mut ra).unwrap();
+            b.search(q, 10, params, &mut rb).unwrap();
+            assert_eq!(ra, rb);
+        }
+    }
 
     #[test]
     fn visited_bits_reset_between_searches() {
