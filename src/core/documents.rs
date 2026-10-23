@@ -715,6 +715,11 @@ fn stemmer() -> &'static rust_stemmers::Stemmer {
 
 /// Lowercased alphanumeric tokens and their counts; with `stem`, each token is reduced by
 /// the English Snowball (Porter 2) stemmer, which is what the published BM25 baselines do.
+/// The distinct words of a query in one form.
+pub(crate) fn query_words(text: &str, stem: bool) -> std::collections::BTreeSet<String> {
+    terms(text, stem).into_keys().collect()
+}
+
 pub(crate) fn terms(text: &str, stem: bool) -> BTreeMap<String, u32> {
     // Counted in a hash map keyed by borrowed text (one allocation per distinct term, not per
     // occurrence), then sorted once into the ordered map the postings expect.
@@ -1012,29 +1017,62 @@ impl Drop for StemMemoGuard<'_> {
     }
 }
 
-/// The batch interner a store keeps between its document batches, so a corpus loaded in
+/// The batch interners a store keeps between its document batches, so a corpus loaded in
 /// consecutive batches stems each distinct word once rather than once per batch and rayon
-/// split. One is kept, bounded by [`STEM_MEMO_CAPACITY`] words, unless keeping is turned off
-/// ([`StemMemoPool::set_keep`]), when each batch's interner is freed with the batch.
+/// split. While a batch runs, each split takes an idle interner (the one that has seen the
+/// most words) and returns it when done, so a worker's later splits reuse what its earlier
+/// ones stemmed. When the batch ends ([`StemMemoPool::trim`]) only the largest is kept,
+/// bounded by [`STEM_MEMO_CAPACITY`] words. With keeping turned off
+/// ([`StemMemoPool::set_keep`]) each split's interner is freed with the split.
 #[derive(Default)]
 pub(crate) struct StemMemoPool {
-    kept: crate::core::sync::Mutex<Option<StemMemo>>,
+    idle: crate::core::sync::Mutex<Vec<StemMemo>>,
     release: std::sync::atomic::AtomicBool,
 }
 
 impl StemMemoPool {
-    /// The kept interner, or a new one; it goes back to the pool when the result drops.
+    /// The idle interner that has seen the most words, or a new one; it goes back to the pool
+    /// when the result drops.
     pub(crate) fn take(&self) -> PooledStemMemo<'_> {
-        let memo = self.kept.lock().take().unwrap_or_default();
-        PooledStemMemo { pool: self, memo }
+        let memo = {
+            let mut idle = self.idle.lock();
+            let largest = (0..idle.len()).max_by_key(|&i| idle[i].0.words.len());
+            largest.map(|i| idle.swap_remove(i))
+        };
+        PooledStemMemo {
+            pool: self,
+            memo: memo.unwrap_or_default(),
+        }
     }
 
-    /// Whether interners outlive their batch; turning it off frees the kept one now.
+    /// Keeps the idle interners that have seen the most words, together at most
+    /// [`STEM_MEMO_CAPACITY`] words (always the largest one); the others are freed.
+    pub(crate) fn trim(&self) {
+        let mut idle = std::mem::take(&mut *self.idle.lock());
+        idle.sort_unstable_by_key(|memo| std::cmp::Reverse(memo.0.words.len()));
+        let mut words = 0;
+        let keep = idle
+            .iter()
+            .position(|memo| {
+                words += memo.0.words.len();
+                words > STEM_MEMO_CAPACITY
+            })
+            .unwrap_or(idle.len())
+            .max(1)
+            .min(idle.len());
+        let freed = idle.split_off(keep);
+        self.idle.lock().append(&mut idle);
+        // The freed interners drop here, with the lock released.
+        drop(freed);
+    }
+
+    /// Whether interners outlive their batch; turning it off frees the idle ones now.
     pub(crate) fn set_keep(&self, keep: bool) {
         self.release
             .store(!keep, std::sync::atomic::Ordering::Relaxed);
         if !keep {
-            self.kept.lock().take();
+            let freed = std::mem::take(&mut *self.idle.lock());
+            drop(freed);
         }
     }
 }
@@ -1056,14 +1094,7 @@ impl Drop for PooledStemMemo<'_> {
         if self.pool.release.load(std::sync::atomic::Ordering::Relaxed) {
             return;
         }
-        let mut kept = self.pool.kept.lock();
-        // Of the interners of concurrent splits, keep the one that has seen the most words.
-        if kept
-            .as_ref()
-            .is_none_or(|k| k.0.words.len() < memo.0.words.len())
-        {
-            *kept = Some(memo);
-        }
+        self.pool.idle.lock().push(memo);
     }
 }
 
@@ -1418,7 +1449,7 @@ fn search_impl(
         })
         .transpose()?;
     // Unstemmed and stemmed query forms: a chunk is scored with the form it was stored in.
-    let query_terms = [terms(text, false), terms(text, true)];
+    let query_terms = [query_words(text, false), query_words(text, true)];
     let candidates = if indexed {
         store.candidate_ids(options)
     } else {
@@ -1447,14 +1478,17 @@ fn search_impl(
         .enumerate()
         .map(|(form, terms)| {
             terms
-                .keys()
+                .iter()
                 .map(|word| store.postings[form].get(word).map_or(0, |p| p.len()))
                 .sum::<usize>()
         })
         .sum();
-    let scan_work = eligible
-        .len()
-        .saturating_mul(query_terms.iter().map(BTreeMap::len).sum());
+    let scan_work = eligible.len().saturating_mul(
+        query_terms
+            .iter()
+            .map(std::collections::BTreeSet::len)
+            .sum(),
+    );
     let use_postings = indexed && posting_work.saturating_add(store.slot_count) < scan_work;
     let mut positions = Vec::new();
     if use_postings {
@@ -1473,7 +1507,7 @@ fn search_impl(
     let idf: [BTreeMap<&String, f64>; 2] = std::array::from_fn(|form| {
         let stemmed = form == 1;
         query_terms[form]
-            .keys()
+            .iter()
             .map(|word| {
                 let df = if use_postings {
                     store.postings[form].get(word).map_or(0, |posting| {
@@ -1760,13 +1794,13 @@ mod tests {
             store.insert(doc.id.clone(), doc);
         }
         let query = "running rare3 missing absent unknown extra terms for selective postings";
-        let forms = [terms(query, false), terms(query, true)];
+        let forms = [query_words(query, false), query_words(query, true)];
         let posting_work: usize = forms
             .iter()
             .enumerate()
             .map(|(form, terms)| {
                 terms
-                    .keys()
+                    .iter()
                     .map(|word| store.postings[form].get(word).map_or(0, |p| p.len()))
                     .sum::<usize>()
             })
@@ -1778,7 +1812,11 @@ mod tests {
             .sum::<usize>();
         assert!(
             posting_work + store.slot_count
-                < eligible * forms.iter().map(BTreeMap::len).sum::<usize>()
+                < eligible
+                    * forms
+                        .iter()
+                        .map(std::collections::BTreeSet::len)
+                        .sum::<usize>()
         );
         assert_scan_parity(&store);
         for i in (0..40).step_by(2) {
