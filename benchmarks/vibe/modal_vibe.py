@@ -49,8 +49,8 @@ HF = "https://huggingface.co/datasets/vector-index-bench/vibe/resolve/main/{}.hd
 HF_TREE = "https://huggingface.co/api/datasets/vector-index-bench/vibe/tree/main"
 PUBLISHED = "https://raw.githubusercontent.com/vector-index-bench/vector-index-bench.github.io/HEAD/{}"
 
-# Float datasets this runner owns. llama-128-ip and yi-128-ip run on another host; quantized and
-# chamfer variants are out of scope because HMS indexes float vectors only.
+# Float datasets this runner owns. Quantized and chamfer variants are out of scope because HMS indexes
+# float vectors only. llama-128-ip and yi-128-ip joined later with their own HMS rev (--datasets).
 DATASETS = [
     "agnews-mxbai-1024-euclidean", "arxiv-nomic-768-normalized", "ccnews-nomic-768-normalized",
     "celeba-resnet-2048-cosine", "coco-nomic-768-normalized", "codesearchnet-jina-768-cosine",
@@ -59,7 +59,10 @@ DATASETS = [
     "imagenet-clip-512-normalized", "inaturalist-resnet-2048-cosine", "laion-clip-512-normalized",
     "landmark-dino-768-cosine", "landmark-nomic-768-normalized", "msmarco-qwen-1024-normalized",
     "simplewiki-openai-3072-normalized", "yahoo-minilm-384-normalized", "yandex-200-cosine",
+    "llama-128-ip", "yi-128-ip",
 ]
+# Competitors run in addition to the published leaders, with the reason recorded in the ledger.
+NAMED = {"llama-128-ip": ["roargraph"], "yi-128-ip": ["roargraph"]}
 SMOKE = "smoke-64-cosine"  # generated in the container for --test
 MAX_MEM_GIB = 64
 THRESHOLDS = ("0.9", "0.95", "0.99")
@@ -68,7 +71,7 @@ INSTALLABLE = {
     "ngt-qg": ("ngt", "base", False), "ngt-onng": ("ngt", "base", False), "glass": ("glass", "base", False),
     "lorann": ("lorann", "base", False), "roargraph": ("roargraph", "base", False), "pag": ("pag", "base", True),
     "symphonyqg": ("rabitq", "vibe-rabitq", False), "rabitq-hnsw": ("rabitq", "vibe-rabitq", False),
-    "rabitq-ivf": ("rabitq", "vibe-rabitq", False),
+    "rabitq-ivf": ("rabitq", "vibe-rabitq", False), "mlann-rf": ("mlann", "base", False),
 }
 KNOWN_CPUS = {
     ("AuthenticAMD", "25", "17"): "AMD EPYC 9004 (Zen 4, Genoa; family 25 model 17)",
@@ -137,6 +140,10 @@ glass() {
   pip install -v --no-build-isolation -e python
 }
 lorann() { pip install --no-cache-dir lorann==1.0; }
+mlann() {
+  git clone -q https://github.com/ejaasaari/mlann && cd mlann && git reset --hard de8f9d6ea977312f5a8943a9ccdbd11870ac590c
+  pip install .
+}
 roargraph() {
   git clone -q --recursive https://github.com/matchyc/RoarGraph.git && cd RoarGraph && git checkout -q add_pyroar
   git reset --hard f2b49b6f47f16bccde9bc13d8fceffd5ff2dd4aa && cd pyroar
@@ -273,37 +280,68 @@ for algo in sorted(df["algorithm"].unique().to_list()):
 print(json.dumps(out))
 '''
 
-# Tiny dataset for --test: clustered vectors with exact cosine ground truth, VIBE layout.
+# Tiny dataset for --test, VIBE layout with exact ground truth: `cosine` draws queries from the base
+# distribution; `ip` gives the base vectors varying norms and shifts the query and learn distributions
+# (out-of-distribution, as llama/yi are), with VIBE's negative-inner-product distance.
 SMOKE_GEN = r'''
 import sys
 import h5py
 import numpy as np
+metric = sys.argv[2]
 rng = np.random.default_rng(7)
 n, nq, nl, d, K = 100_000, 1000, 5000, 64, 100
 centers = rng.normal(size=(64, d)).astype(np.float32)
 def sample(m):
     return (centers[rng.integers(0, 64, m)] + 0.6 * rng.normal(size=(m, d))).astype(np.float32)
 train, test, learn = sample(n), sample(nq), sample(nl)
-unit = train / np.linalg.norm(train, axis=1, keepdims=True)
+if metric == "ip":
+    train *= rng.uniform(0.5, 1.5, (n, 1)).astype(np.float32)
+    shift = (0.8 * rng.normal(size=d)).astype(np.float32)
+    test, learn = test + shift, learn + shift
+    base = train.T
+    def prep(q):
+        return q
+    def dist(q):
+        return -(q @ base)
+else:
+    base = (train / np.linalg.norm(train, axis=1, keepdims=True)).T
+    def prep(q):
+        return q / np.linalg.norm(q, axis=1, keepdims=True)
+    def dist(q):
+        return 1 - q @ base
 def truth(q):
-    q = q / np.linalg.norm(q, axis=1, keepdims=True)
+    q = prep(q)
     nb, ds = [], []
     for i in range(0, len(q), 500):
-        dist = 1 - q[i:i + 500] @ unit.T
+        dist = globals()["dist"](q[i:i + 500])
         idx = np.argsort(dist, axis=1, kind="stable")[:, :K]
         nb.append(idx); ds.append(np.take_along_axis(dist, idx, axis=1))
     return np.vstack(nb).astype(np.int32), np.vstack(ds).astype(np.float32)
 nb, ds = truth(test)
 lnb, _ = truth(learn)
 with h5py.File(sys.argv[1], "w") as f:
-    f.attrs.update(distance="cosine", dimension=d, point_type="float")
+    f.attrs.update(distance=metric, dimension=d, point_type="float")
     for k, v in dict(train=train, test=test, neighbors=nb, distances=ds, learn=learn, learn_neighbors=lnb,
                      avg_distances=ds.mean(axis=1)).items():
         f.create_dataset(k, data=v)
 '''
 
-# --test definitions: a short HMS grid (several minutes) and a config whose constructor does not exist.
-SMOKE_DEFS = """float:
+# --test definitions, one config.yml per algorithm folder: short grids (minutes) and, for the cosine
+# smoke, a config whose constructor does not exist.
+SMOKE_DEFS = {}
+SMOKE_DEFS["hms"] = """float:
+  ip:
+  - name: hms
+    module: vibe.algorithms.hms
+    constructor: HMS
+    singularity_image: hms
+    disabled: false
+    ood: true
+    base_args: ['@metric']
+    run_groups:
+      query-aware:
+        args: {degree: [32], build_ef: [200], code_bits: [8], learn_queries: [2000]}
+        query_args: {ef: [100, 200], rerank: [400], reservoir: [0, 400], patience: [0, 8]}
   cosine:
   - name: hms
     module: vibe.algorithms.hms
@@ -326,6 +364,34 @@ SMOKE_DEFS = """float:
       base:
         args: {degree: [16], build_ef: [100]}
         query_args: {ef: [100]}
+"""
+SMOKE_DEFS["roargraph"] = """float:
+  any:
+  - name: roargraph
+    module: vibe.algorithms.roargraph
+    constructor: RoarGraph
+    singularity_image: roargraph
+    disabled: false
+    ood: true
+    base_args: ['@metric']
+    run_groups:
+      roargraph:
+        args: {M_sq: [100], M_pjbp: [32], L_pjpq: [500]}
+        query_args: {L_pq: [100, 400]}
+"""
+SMOKE_DEFS["mlann"] = """float:
+  any:
+  - name: mlann-rf
+    module: vibe.algorithms.mlann
+    constructor: MLANN
+    singularity_image: mlann
+    disabled: false
+    ood: true
+    base_args: ['@metric']
+    run_groups:
+      small:
+        args: {index_type: [RF], n_trees: [10], depth: [14]}
+        query_args: {voting_threshold: [0.0025, 0.00025]}
 """
 
 
@@ -387,20 +453,61 @@ def cpu_info() -> dict:
             "flags_sha": hashlib.sha256(" ".join(sorted(flags)).encode()).hexdigest()[:12]}
 
 
-def job_cpu_seconds() -> float:
-    """CPU seconds of every process in the container except this supervisor. VIBE's workers leave the
-    job's session, so a session or parent filter misses the process doing the work; the container runs
-    one job at a time, so everything else is that job."""
-    total, tick, me = 0.0, os.sysconf("SC_CLK_TCK"), os.getpid()
+def proc_table() -> dict[tuple[int, int], dict]:
+    """Live processes keyed by (pid, start time), so a reused pid is a new process."""
+    table, tick = {}, os.sysconf("SC_CLK_TCK")
     for stat in Path("/proc").glob("[0-9]*/stat"):
-        if int(stat.parent.name) == me:
-            continue
         try:
-            fields = stat.read_text().rsplit(")", 1)[1].split()
+            f = stat.read_text().rsplit(")", 1)[1].split()
         except (OSError, IndexError):
             continue
-        total += (int(fields[11]) + int(fields[12])) / tick  # utime, stime (fields 14 and 15 of stat)
-    return total
+        # After the comm field: state ppid pgrp ... utime(11) stime(12) ... starttime(19)
+        if f[0] == "Z":
+            continue
+        table[(int(stat.parent.name), int(f[19]))] = {"ppid": int(f[1]), "pgid": int(f[2]),
+                                                      "cpu": (int(f[11]) + int(f[12])) / tick}
+    return table
+
+
+def descendants(table: dict[tuple[int, int], dict], root_pid: int) -> set[tuple[int, int]]:
+    """Keys of root_pid and every process below it in `table`."""
+    children: dict[int, list[tuple[int, int]]] = {}
+    for key, p in table.items():
+        children.setdefault(p["ppid"], []).append(key)
+    out = {k for k in table if k[0] == root_pid}
+    stack = [k[0] for k in out]
+    while stack:
+        for key in children.get(stack.pop(), []):
+            if key not in out:
+                out.add(key)
+                stack.append(key[0])
+    return out
+
+
+def cpu_progress(prev: dict[tuple[int, int], float], cur: dict[tuple[int, int], float]) -> float:
+    """CPU seconds the tracked processes gained since `prev`. Per process, so a process that exits does
+    not take its CPU out of the total (VIBE runs one process per index config), and a new one counts from 0."""
+    return sum(max(0.0, c - prev.get(k, 0.0)) for k, c in cur.items())
+
+
+def kill_keys(keys: set[tuple[int, int]], grace_s: float = 30.0) -> list[int]:
+    """SIGTERM the process groups of the live `keys`, then SIGKILL whatever is left. Returns killed pids."""
+    alive = lambda: [k for k in keys if k in proc_table()]
+    targets = alive()
+    for pgid in {p["pgid"] for k, p in proc_table().items() if k in targets}:
+        try:
+            os.killpg(pgid, signal.SIGTERM)
+        except (ProcessLookupError, PermissionError):
+            pass  # the group already exited; leftovers get SIGKILL below
+    deadline = now() + grace_s
+    while alive() and now() < deadline:
+        time.sleep(1)
+    for pid, _ in alive():
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # exited between the check and the kill
+    return [pid for pid, _ in targets]
 
 
 @app.function(image=plan_image, volumes={"/vol": VOL}, timeout=900)
@@ -410,7 +517,7 @@ def plan(ns: str, replan: bool) -> dict:
 
     VOL.reload()
     path = Path("/vol/vibe") / ns / "plan.json"
-    if not replan and (old := read_json(path)):
+    if not replan and (old := read_json(path)) and all(d in old["datasets"] for d in DATASETS):
         return old
     tree = {e["path"]: e for e in json.load(urllib.request.urlopen(HF_TREE, timeout=60))}
     work = Path("/tmp/pub")
@@ -441,8 +548,18 @@ def plan(ns: str, replan: bool) -> dict:
     return out
 
 
-def choose(leaders: dict, avx512: bool) -> tuple[list[str], dict]:
-    """Union of the best published QPS at each threshold among competitors that run here."""
+def substitute(leaders: dict, avx512: bool, exclude: set[str]) -> str | None:
+    """The best published competitor that runs here and is not excluded (installer failed, already chosen)."""
+    for t in THRESHOLDS:
+        for algo, _ in leaders.get(t) or []:
+            spec = INSTALLABLE.get(algo)
+            if spec and algo not in exclude and (avx512 or not spec[2]):
+                return algo
+    return None
+
+
+def choose(leaders: dict, avx512: bool, named: list[str] = ()) -> tuple[list[str], dict]:
+    """Union of the best published QPS at each threshold among competitors that run here, plus `named`."""
     chosen, why = [], {}
     for t in THRESHOLDS:
         ranked = leaders.get(t) or []
@@ -465,12 +582,22 @@ def choose(leaders: dict, avx512: bool) -> tuple[list[str], dict]:
         if pick not in chosen:
             chosen.append(pick)
         why.setdefault(pick, []).append(f"recall>={t}: {note}")
+    for algo in named:
+        if algo in chosen or algo not in INSTALLABLE:
+            continue
+        best = [(t, q) for t in THRESHOLDS for a, q in (leaders.get(t) or []) if a == algo]
+        chosen.append(algo)
+        why[algo] = ["named competitor arm" + (f"; published {best[0][1]} QPS at recall>={best[0][0]}" if best else "")]
     return chosen, why
 
 
 class Runner:
-    def __init__(self, ns: str, dataset: str, hms_rev: str, test: bool, cap: float, hard_cap: float):
+    def __init__(self, ns: str, dataset: str, hms_rev: str, test: bool, cap: float, hard_cap: float, hms_only: bool = False):
         self.ns, self.ds, self.rev, self.test, self.cap, self.hard_cap = ns, dataset, hms_rev, test, cap, hard_cap
+        # An --hms-only container takes its own lease so it can run next to a container still working
+        # through the dataset's competitors; run_job refuses a job another live container is running.
+        self.lease_key = f"{ns}:{dataset}" + (":hms-only" if hms_only else "")
+        self.baseline = set(proc_table())  # processes that belong to the container, not to a job
         self.root = Path("/vol/vibe") / ns
         self.cid = os.environ.get("MODAL_TASK_ID", f"local-{os.getpid()}")
         self.started = now()
@@ -496,7 +623,7 @@ class Runner:
             try:
                 SPEND[f"{self.ns}:{self.cid}"] = rec
                 if not self.released.is_set() and (self.long_phase or t - self.main_beat < STALE_S):
-                    LEASE[f"{self.ns}:{self.ds}"] = {"container": self.cid, "at": t}
+                    LEASE[self.lease_key] = {"container": self.cid, "at": t}
                 write_json(self.root / "spend" / f"{self.cid}.json", rec)
                 if spend_total(self.ns, None) >= self.hard_cap:
                     self.hard_stop.set()
@@ -506,21 +633,21 @@ class Runner:
 
     def release(self) -> None:
         self.released.set()
-        LEASE.pop(f"{self.ns}:{self.ds}", None)
+        LEASE.pop(self.lease_key, None)
 
     def acquire(self) -> bool:
         # A container lost mid-job stops renewing its lease; a Modal retry waits for it to go stale rather
         # than giving up, so recovery needs no manual --resume. A live holder keeps renewing and we leave.
         deadline = now() + STALE_S + 2 * HEARTBEAT_S
-        while (held := LEASE.get(f"{self.ns}:{self.ds}")) and held["container"] != self.cid \
+        while (held := LEASE.get(self.lease_key)) and held["container"] != self.cid \
                 and now() - held["at"] < STALE_S and now() < deadline:
             time.sleep(HEARTBEAT_S)
         if held and held["container"] != self.cid and now() - held["at"] < STALE_S:
             print(f"{self.ds}: container {held['container']} holds the lease ({now() - held['at']:.0f}s old); exiting", flush=True)
             return False
-        LEASE[f"{self.ns}:{self.ds}"] = {"container": self.cid, "at": now()}
+        LEASE[self.lease_key] = {"container": self.cid, "at": now()}
         time.sleep(3)
-        return LEASE.get(f"{self.ns}:{self.ds}", {}).get("container") == self.cid
+        return LEASE.get(self.lease_key, {}).get("container") == self.cid
 
     # ---- ledger ----
     def ledger_path(self, job: str) -> Path:
@@ -550,7 +677,7 @@ class Runner:
         if self.test:
             if not dst.exists():
                 tmp = Path("/work") / dst.name
-                subprocess.run([f"{ENV_BIN['base']}/python", "-c", SMOKE_GEN, str(tmp)], check=True)
+                subprocess.run([f"{ENV_BIN['base']}/python", "-c", SMOKE_GEN, str(tmp), self.ds.rsplit("-", 1)[1]], check=True)
                 shutil.copy(tmp, data / f".{dst.name}.part")
                 os.replace(data / f".{dst.name}.part", dst)
                 VOL.commit()
@@ -638,7 +765,21 @@ class Runner:
         if rec["state"] == "done":
             print(f"{self.ds}/{job}: done, skipped", flush=True)
             return "done"
+        if rec["state"] == "running" and rec.get("container_id") != self.cid and now() - rec.get("heartbeat", 0) < STALE_S:
+            print(f"{self.ds}/{job}: running in live container {rec.get('container_id')}, skipped", flush=True)
+            return "busy"
         if rec["state"] == "failed" and self.retry_failed:
+            rec |= {"state": "pending", "failures": 0}
+        if rec["state"] not in ("done", "failed") and not rec.get("orphan_reset") and any(
+                str(h.get("outcome", "")).startswith("hung") for h in rec["history"]):
+            # Runners before the per-process CPU check killed healthy jobs as hung and left VIBE's index
+            # process running beside the next attempt, so groups from those attempts may carry contended
+            # timings. Start such a job from zero, once.
+            shutil.rmtree(self.vol_results(job), ignore_errors=True)
+            shutil.rmtree(self.job_dir(job) / "results", ignore_errors=True)
+            (self.job_dir(job) / "results").mkdir()
+            rec["orphan_reset"] = {"at": iso(), "container": self.cid, "failures_before": rec["failures"],
+                                   "reason": "attempts killed as hung by the pre-fix stall check; results discarded"}
             rec |= {"state": "pending", "failures": 0}
         if rec["state"] == "failed":
             print(f"{self.ds}/{job}: failed earlier ({rec.get('error_tail', '')[-200:]!r}), skipped", flush=True)
@@ -716,10 +857,17 @@ class Runner:
         env.pop("OMP_PROC_BIND", None)
         self.phase_cores = CPU_REQ
         with log_vol.open("a") as fh:
+            # Nothing from an earlier attempt may run beside this one.
+            table = proc_table()
+            if strays := kill_keys(set(table) - self.baseline - descendants(table, os.getpid())):
+                fh.write(f"=== {iso()} killed processes left from an earlier attempt: {strays}\n")
             fh.write(f"\n=== {iso()} attempt {rec['attempts']} container {self.cid} cpu {self.cpu['cpu_model']}: {' '.join(cmd)}\n")
             fh.flush()
             proc = subprocess.Popen(cmd, cwd=jd, env=env, stdout=fh, stderr=subprocess.STDOUT, start_new_session=True)
-            last_cpu, last_change, seen_cpu = 0.0, now(), False
+            # VIBE starts each index config in its own session, so the job is tracked as every process ever
+            # seen below run.py; one that is orphaned stays tracked until it exits.
+            tracked: dict[tuple[int, int], float] = {}
+            total_cpu, last_change = 0.0, now()
             outcome = None
             while proc.poll() is None:
                 self.main_beat = now()
@@ -728,30 +876,34 @@ class Runner:
                     break
                 except subprocess.TimeoutExpired:
                     pass  # still running: fall through to the heartbeat
-                cpu = job_cpu_seconds()
-                seen_cpu |= cpu > 0
-                if cpu > last_cpu + 1:
-                    last_cpu, last_change = cpu, now()
+                table = proc_table()
+                cur = {k: table[k]["cpu"] for k in descendants(table, proc.pid) | (tracked.keys() & table.keys())}
+                gained = cpu_progress(tracked, cur)
+                tracked = cur
+                total_cpu += gained
+                if gained > 1:
+                    last_change = now()
                 rec["heartbeat"] = now()
-                rec["child_cpu_s"] = round(cpu, 1)
+                rec["child_cpu_s"] = round(total_cpu, 1)
                 self.sync(job)
                 write_json(self.ledger_path(job), rec)
-                write_json(self.root / "heartbeat" / f"{self.ds}.json", {"job": job, "at": iso(), "container": self.cid, "cpu_s": cpu})
+                write_json(self.root / "heartbeat" / f"{self.ds}.json",
+                           {"job": job, "at": iso(), "container": self.cid, "cpu_s": total_cpu})
                 VOL.commit()
-                if seen_cpu and now() - last_change > STALE_S:
+                if now() - last_change > STALE_S:
                     outcome = f"hung: no CPU progress for {STALE_S // 60} min"
                 elif self.hard_stop.is_set():
                     outcome = "stopped"
                 elif now() - self.started > CONTAINER_BUDGET_S:
                     outcome = "handover"
                 if outcome:
-                    os.killpg(proc.pid, signal.SIGTERM)
-                    try:
-                        proc.wait(timeout=60)
-                    except subprocess.TimeoutExpired:
-                        os.killpg(proc.pid, signal.SIGKILL)
-                        proc.wait()
+                    table = proc_table()
+                    kill_keys(descendants(table, proc.pid) | (tracked.keys() & table.keys()), grace_s=60)
+                    proc.wait()
                     break
+            table = proc_table()
+            if left := kill_keys(tracked.keys() & table.keys()):
+                fh.write(f"=== {iso()} killed job processes still running after run.py: {left}\n")
             fh.write(f"=== {iso()} exit {proc.returncode} {outcome or ''}\n")
         return outcome or f"exit {proc.returncode}"
 
@@ -789,7 +941,7 @@ def run_dataset(dataset: str, meta: dict, hms_rev: str, hms_only: bool, test: bo
     """All jobs of one dataset, HMS first. Memory is set per call through with_options."""
     ns = "test" if test else "run"
     VOL.reload()
-    r = Runner(ns, dataset, hms_rev, test, cap, hard_cap)
+    r = Runner(ns, dataset, hms_rev, test, cap, hard_cap, hms_only)
     r.mem_gib = meta.get("mem_gib", 8)
     r.retry_failed = bool(meta.get("retry_failed"))
     if not r.acquire():
@@ -816,25 +968,35 @@ def run_dataset(dataset: str, meta: dict, hms_rev: str, hms_only: bool, test: bo
                                                                 "sha256": meta.get("sha256"), "at": iso()})
     (Path("/work/data") / f"{dataset}.hdf5").symlink_to(r.root / "data" / f"{dataset}.hdf5")
     if test:
-        Path("/work/testdefs/hms").mkdir(parents=True, exist_ok=True)
-        Path("/work/testdefs/hms/config.yml").write_text(SMOKE_DEFS)
+        for folder, text in SMOKE_DEFS.items():
+            Path("/work/testdefs", folder).mkdir(parents=True, exist_ok=True)
+            Path("/work/testdefs", folder, "config.yml").write_text(text)
 
     hms_job = f"hms@{hms_rev[:12]}"
+    jobs = [(hms_job, "hms", "base", ["--test: short HMS grid" if test else "HMS runs on every dataset"])]
     if test:
-        jobs = [(hms_job, "hms", "base", ["--test: short HMS grid"]), ("hms-broken", "hms-broken", "base", ["--test: forced failure"])]
-    else:
-        jobs = [(hms_job, "hms", "base", ["HMS runs on every dataset"])]
-        if not hms_only:
-            chosen, why = choose(meta["leaders"], r.cpu["avx512"])
-            jobs += [(a, a, INSTALLABLE[a][1], why[a]) for a in chosen]
-    # Build what this container's pending jobs need, for this CPU.
-    built, results = set(), {}
-    for job, algo, env_name, why in jobs:
+        if dataset == SMOKE:
+            jobs.append(("hms-broken", "hms-broken", "base", ["--test: forced failure"]))
+        else:
+            jobs += [(a, a, INSTALLABLE[a][1], ["--test: short grid"]) for a in ("roargraph", "mlann-rf")]
+    elif not hms_only:
+        chosen, why = choose(meta["leaders"], r.cpu["avx512"], NAMED.get(dataset, []))
+        jobs += [(a, a, INSTALLABLE[a][1], why[a]) for a in chosen]
+    # Build what this container's pending jobs need, for this CPU. A competitor whose installer fails is
+    # replaced by the next published leader that runs here (the ledger keeps the failed record).
+    built, broken, results = set(), set(), {}
+    i = 0
+    while i < len(jobs):
+        job, algo, env_name, why = jobs[i]
+        i += 1
         rec = read_json(r.ledger_path(job)) or {}
         if rec.get("state") == "done" or (rec.get("state") == "failed" and not r.retry_failed):
             results[job] = rec["state"]
             continue
         installer = "hms" if algo.startswith("hms") else INSTALLABLE[algo][0]
+        if installer in broken:
+            results[job] = "install failed earlier"
+            continue
         if installer not in built:
             r.phase_cores = CPU_LIMIT
             log = r.root / "logs" / dataset / f"install-{installer}.log"
@@ -851,6 +1013,11 @@ def run_dataset(dataset: str, meta: dict, hms_rev: str, hms_only: bool, test: bo
                 rec["state"] = "failed" if rec["failures"] >= MAX_FAILURES else "pending"
                 r.save(rec)
                 results[job] = f"install failed ({rec['state']})"
+                broken.add(installer)
+                if not test and not algo.startswith("hms"):
+                    taken = {a for _, a, _, _ in jobs} | {a for a, spec in INSTALLABLE.items() if spec[0] in broken}
+                    if sub := substitute(meta["leaders"], r.cpu["avx512"], taken):
+                        jobs.append((sub, sub, INSTALLABLE[sub][1], [f"substitute for {algo}: its installer failed here"]))
                 continue
             built.add(installer)
         out = r.run_job(job, algo, env_name, why)
@@ -914,8 +1081,8 @@ def main(resume: bool = False, status: bool = False, hms_rev: str = "", hms_only
         out = subprocess.run(["git", "ls-remote", HMS_REPO, "refs/heads/main"], capture_output=True, text=True, check=True).stdout
         hms_rev = out.split()[0]
     if test:
-        meta_all = {SMOKE: {"mem_gib": 8, "leaders": {}}}
-        targets = [SMOKE]
+        targets = datasets.split(",") if datasets else [SMOKE]
+        meta_all = {t: {"mem_gib": 8, "leaders": {}} for t in targets}
     else:
         p = plan.remote(ns, replan)
         meta_all = p["datasets"]
