@@ -11,13 +11,20 @@
 //! out-of-bounds read.
 
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::ops::Deref;
 use std::path::Path;
 use std::ptr::NonNull;
 use std::sync::Arc;
 
-use super::{block_record_bytes, get_varint, unzigzag, Line, Lines, Metric, Rotation, VGraph};
+use rayon::prelude::*;
+
+use super::{
+    bfs_order, code_at, put_varint, quantize, quantize4, zigzag, Graph, GraphView, VertexLayout,
+};
+use super::{
+    block_record_bytes, get_varint, unzigzag, Line, Lines, Metric, Rotation, VGraph, VMetric,
+};
 use super::{BLOCK, BLOCK_SEED, NONE, NONE3, SCREEN_SEED};
 
 /// Element types an index array may hold.
@@ -252,18 +259,67 @@ fn mul(a: usize, b: usize, what: &str) -> std::io::Result<usize> {
 }
 
 impl VGraph {
+    pub(crate) fn release_pages(&self) -> std::io::Result<()> {
+        #[cfg(target_os = "linux")]
+        if let Owner::File { _file } = &self.codes.lines.owner {
+            if let Backing::Map(map) = _file.as_ref() {
+                // SAFETY: generation files are immutable and retained while readers exist;
+                // shared read-only pages reload exactly the same bytes, including during search.
+                unsafe { map.unchecked_advise(memmap2::UncheckedAdvice::DontNeed)? };
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn save_from_graph(
+        g: &Graph,
+        path: &Path,
+        bits: u8,
+        residual_bits: u8,
+        align: bool,
+        reorder: bool,
+        id_bytes: u8,
+    ) -> std::io::Result<()> {
+        save_graph(
+            g.view(),
+            path,
+            bits,
+            residual_bits,
+            align,
+            reorder,
+            id_bytes,
+        )
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn save_prepared(
+        g: &super::super::PreparedGraph,
+        path: &Path,
+        bits: u8,
+        residual_bits: u8,
+        align: bool,
+        reorder: bool,
+        id_bytes: u8,
+    ) -> std::io::Result<()> {
+        save_graph(
+            g.view(),
+            path,
+            bits,
+            residual_bits,
+            align,
+            reorder,
+            id_bytes,
+        )
+    }
+
     /// Dimension of the indexed vectors.
     pub fn dim(&self) -> usize {
         self.dim
     }
 
     /// The metric the index orders by.
-    pub fn metric(&self) -> Metric {
-        if self.half_norms.is_empty() {
-            Metric::Angular
-        } else {
-            Metric::Euclidean
-        }
+    pub fn metric(&self) -> VMetric {
+        self.metric
     }
 
     /// Writes the index for [`VGraph::open`]: to a temporary file next to `path`, synced, then
@@ -324,10 +380,15 @@ impl VGraph {
         ];
         let mut table = Vec::with_capacity(sections.len());
         let mut at = PREFIX;
-        for s in &sections {
+        for (index, s) in sections.iter().enumerate() {
+            let len = if !self.adj_off.is_empty() && index == if id_bytes == 3 { 2 } else { 1 } {
+                self.n * self.degree * id_bytes as usize
+            } else {
+                s.len()
+            };
             at = at.next_multiple_of(ALIGN);
-            table.push((at as u64, s.len() as u64));
-            at += s.len();
+            table.push((at as u64, len as u64));
+            at += len;
         }
         let name = path
             .file_name()
@@ -347,10 +408,24 @@ impl VGraph {
             }
             let mut pos = PREFIX;
             let zeros = [0u8; ALIGN];
-            for (s, (off, _)) in sections.iter().zip(&table) {
+            for (index, (s, (off, len))) in sections.iter().zip(&table).enumerate() {
                 w.write_all(&zeros[..*off as usize - pos])?;
-                w.write_all(s)?;
-                pos = *off as usize + s.len();
+                if !self.adj_off.is_empty() && index == if id_bytes == 3 { 2 } else { 1 } {
+                    let width = id_bytes as usize;
+                    let mut row = vec![0xff; self.degree * width];
+                    for v in 0..self.n {
+                        row.fill(0xff);
+                        let mut at = 0;
+                        self.for_each_neighbour(v, |u| {
+                            row[at..at + width].copy_from_slice(&u.to_le_bytes()[..width]);
+                            at += width;
+                        });
+                        w.write_all(&row)?;
+                    }
+                } else {
+                    w.write_all(s)?;
+                }
+                pos = *off as usize + *len as usize;
             }
             let file = w.into_inner().map_err(|e| e.into_error())?;
             file.sync_all()?;
@@ -443,7 +518,13 @@ impl VGraph {
         let stride = small(6, 1 << 24, "row stride")?;
         let id_bytes = small(7, 4, "id width")?;
         let entry = small(8, u64::from(NONE), "entry")?;
-        let euclidean = small(9, 1, "metric")? == 1;
+        let metric = match small(9, 2, "metric")? {
+            0 => VMetric::Angular,
+            1 => VMetric::Euclidean,
+            2 => VMetric::InnerProduct,
+            _ => unreachable!(),
+        };
+        let euclidean = metric == VMetric::Euclidean;
         let screen_words = small(10, 1 << 20, "screen words")?;
         let screen_sigma = f32::from_bits(h[11] as u32);
         let block_bits = small(12, 4, "block bits")? as u8;
@@ -483,14 +564,14 @@ impl VGraph {
         };
         let screen_rot = (screen_words > 0).then(|| Rotation::new(dim, 0, SCREEN_SEED));
         if let Some(rot) = &screen_rot {
-            if euclidean || screen_words != rot.padded() / 64 {
+            if metric != VMetric::Angular || screen_words != rot.padded() / 64 {
                 return Err(bad("screen shape does not match the dimension".into()));
             }
         }
         let block_rot = (block_bits > 0).then(|| Rotation::new(dim, 0, BLOCK_SEED));
         let record = match &block_rot {
             Some(rot) => {
-                if euclidean
+                if metric != VMetric::Angular
                     || !matches!(block_bits, 1 | 2 | 4)
                     || block_dim != rot.padded()
                     || block_m != block_dim * usize::from(block_bits) / 4
@@ -609,6 +690,7 @@ impl VGraph {
         Ok(Self {
             n,
             dim,
+            metric,
             padded,
             bits,
             cbytes,
@@ -618,6 +700,7 @@ impl VGraph {
             half_norms: view!(0, f32),
             adj,
             adj3,
+            adj_off: Vec::new(),
             adjv,
             adjv_off,
             codes: Lines {
@@ -649,6 +732,304 @@ impl VGraph {
             block_kappa,
         })
     }
+}
+
+fn section_write<T: Plain>(
+    w: &mut std::io::BufWriter<&mut File>,
+    table: &[(usize, usize)],
+    section: usize,
+    offset: usize,
+    values: &[T],
+) -> std::io::Result<()> {
+    let bytes = as_bytes(values);
+    let (start, len) = table[section];
+    if offset.checked_add(bytes.len()).is_none_or(|end| end > len) {
+        return Err(bad("section write exceeds computed geometry".into()));
+    }
+    w.seek(SeekFrom::Start((start + offset) as u64))?;
+    w.write_all(bytes)
+}
+
+fn save_graph(
+    g: GraphView<'_>,
+    path: &Path,
+    bits: u8,
+    residual_bits: u8,
+    align: bool,
+    reorder: bool,
+    id_bytes: u8,
+) -> std::io::Result<()> {
+    if cfg!(target_endian = "big") {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "index files are little-endian",
+        ));
+    }
+    let VertexLayout {
+        padded,
+        cbytes,
+        stride,
+        res_stride,
+    } = VertexLayout::new(g.n, g.dim, bits, residual_bits, align, id_bytes)
+        .map_err(|e| bad(e.to_string()))?;
+    let (n, dim, r) = (g.n, g.dim, g.degree);
+    let ids = if reorder { bfs_order(g) } else { Vec::new() };
+    let old = |v: usize| if reorder { ids[v] as usize } else { v };
+    let mut new_ids = vec![0u32; if reorder { n } else { 0 }];
+    for (v, &id) in ids.iter().enumerate() {
+        new_ids[id as usize] = v as u32;
+    }
+    let new = |v: u32| if reorder { new_ids[v as usize] } else { v };
+    let list = |v: usize| g.neighbors(old(v)).iter().take(r).map(|&v| new(v));
+    let capacity = || bad("encoded index size overflows".into());
+    let mul = |a: usize, b: usize| {
+        a.checked_mul(b)
+            .filter(|&n| n <= isize::MAX as usize)
+            .ok_or_else(capacity)
+    };
+    let mut sorted = Vec::new();
+    let mut encoded = Vec::new();
+    let mut encode_list = |v: usize, dst: &mut Vec<u8>| {
+        sorted.clear();
+        sorted.extend(list(v));
+        sorted.sort_unstable();
+        let mut prev = v as u32;
+        for (i, &u) in sorted.iter().enumerate() {
+            let delta = if i == 0 {
+                zigzag(i64::from(u) - i64::from(prev))
+            } else {
+                u64::from(u - prev - 1)
+            };
+            put_varint(dst, delta);
+            prev = u;
+        }
+    };
+    let mut adjv_len = 0usize;
+    if id_bytes == 0 {
+        for v in 0..n {
+            encoded.clear();
+            encode_list(v, &mut encoded);
+            adjv_len = adjv_len
+                .checked_add(encoded.len())
+                .filter(|&n| n <= u32::MAX as usize)
+                .ok_or_else(capacity)?;
+        }
+    }
+    let layers_len = g.layers.iter().try_fold(0usize, |size, layer| {
+        let words = layer.iter().try_fold(
+            1usize.checked_add(layer.len()).ok_or_else(capacity)?,
+            |words, list| words.checked_add(list.len()).ok_or_else(capacity),
+        )?;
+        size.checked_add(mul(words, 4)?).ok_or_else(capacity)
+    })?;
+    let codes_len = mul(n, stride)?
+        .checked_next_multiple_of(128)
+        .ok_or_else(capacity)?;
+    let lengths = [
+        if g.metric == Metric::Euclidean {
+            mul(n, 4)?
+        } else {
+            0
+        },
+        if id_bytes == 4 {
+            mul(mul(n, r)?, 4)?
+        } else {
+            0
+        },
+        if id_bytes == 3 {
+            mul(mul(n, r)?, 3)?
+        } else {
+            0
+        },
+        adjv_len,
+        if id_bytes == 0 {
+            mul(n.checked_add(1).ok_or_else(capacity)?, 4)?
+        } else {
+            0
+        },
+        codes_len,
+        mul(n, 4)?,
+        mul(n, res_stride)?,
+        if residual_bits > 0 { mul(n, 4)? } else { 0 },
+        mul(ids.len(), 4)?,
+        0,
+        0,
+        mul(padded, 4)?,
+        mul(g.upper_ids.len(), 4)?,
+        layers_len,
+    ];
+    let mut table = Vec::with_capacity(SECTIONS.len());
+    let mut end = PREFIX;
+    for len in lengths {
+        end = end.checked_next_multiple_of(ALIGN).ok_or_else(capacity)?;
+        table.push((end, len));
+        end = end
+            .checked_add(len)
+            .filter(|&n| n <= isize::MAX as usize)
+            .ok_or_else(capacity)?;
+    }
+    let parent = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    temp.as_file().set_len(end as u64)?;
+    let mut w = std::io::BufWriter::with_capacity(1 << 20, temp.as_file_mut());
+    w.write_all(MAGIC)?;
+    for word in [
+        ORDER_MARK,
+        n as u64,
+        dim as u64,
+        r as u64,
+        u64::from(bits),
+        u64::from(residual_bits),
+        stride as u64,
+        u64::from(id_bytes),
+        u64::from(new(g.entry)),
+        g.metric.code(),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        u64::from(reorder),
+        g.layers.len() as u64,
+    ] {
+        w.write_all(&word.to_le_bytes())?;
+    }
+    for &(offset, len) in &table {
+        w.write_all(&(offset as u64).to_le_bytes())?;
+        w.write_all(&(len as u64).to_le_bytes())?;
+    }
+    let edge_batch = ((1 << 20) / r.saturating_mul(10).max(1)).max(1);
+    let mut adjv_at = 0usize;
+    for start in (0..n).step_by(edge_batch) {
+        let stop = n.min(start + edge_batch);
+        if id_bytes == 0 {
+            let mut offsets = Vec::with_capacity(stop - start);
+            encoded.clear();
+            for v in start..stop {
+                offsets.push((adjv_at + encoded.len()) as u32);
+                encode_list(v, &mut encoded);
+            }
+            section_write(&mut w, &table, 3, adjv_at, &encoded)?;
+            section_write(&mut w, &table, 4, start * 4, &offsets)?;
+            adjv_at += encoded.len();
+        } else if id_bytes == 3 {
+            encoded.clear();
+            for v in start..stop {
+                let mut count = 0;
+                for u in list(v) {
+                    encoded.extend_from_slice(&u.min(NONE3).to_le_bytes()[..3]);
+                    count += 1;
+                }
+                for _ in count..r {
+                    encoded.extend_from_slice(&NONE3.to_le_bytes()[..3]);
+                }
+            }
+            section_write(&mut w, &table, 2, start * r * 3, &encoded)?;
+        } else {
+            let mut edges = vec![NONE; (stop - start) * r];
+            for (v, row) in (start..stop).zip(edges.chunks_exact_mut(r)) {
+                for (dst, u) in row.iter_mut().zip(list(v)) {
+                    *dst = u;
+                }
+            }
+            section_write(&mut w, &table, 1, start * r * 4, &edges)?;
+        }
+    }
+    if id_bytes == 0 {
+        section_write(&mut w, &table, 4, n * 4, &[adjv_at as u32])?;
+    }
+    let mut sum = vec![0f64; dim];
+    for row in g.vectors.chunks_exact(dim) {
+        sum.iter_mut()
+            .zip(row)
+            .for_each(|(s, &v)| *s += f64::from(v));
+    }
+    let mut mean: Vec<f32> = sum.iter().map(|s| (s / n as f64) as f32).collect();
+    mean.resize(padded, 0.0);
+    g.release_rows()?;
+    let batch = ((1 << 20) / (stride + res_stride + 16)).max(1);
+    for start in (0..n).step_by(batch) {
+        let count = batch.min(n - start);
+        let mut codes = vec![0i8; count * stride];
+        let mut scales = vec![0f32; count];
+        let centred = |v: usize| -> Vec<f32> {
+            g.vectors[old(v) * dim..(old(v) + 1) * dim]
+                .iter()
+                .zip(&mean)
+                .map(|(a, m)| a - m)
+                .collect()
+        };
+        codes
+            .par_chunks_exact_mut(stride)
+            .zip(scales.par_iter_mut())
+            .enumerate()
+            .for_each(|(v, (dst, scale))| {
+                let x = centred(start + v);
+                *scale = if bits == 8 {
+                    quantize(&x, &mut dst[..cbytes])
+                } else {
+                    quantize4(&x, &mut dst[..cbytes])
+                };
+            });
+        section_write(&mut w, &table, 5, start * stride, &codes)?;
+        section_write(&mut w, &table, 6, start * 4, &scales)?;
+        if residual_bits > 0 {
+            let mut residual = vec![0i8; count * res_stride];
+            let mut res_scales = vec![0f32; count];
+            residual
+                .par_chunks_exact_mut(res_stride)
+                .zip(res_scales.par_iter_mut())
+                .enumerate()
+                .for_each(|(v, (dst, scale))| {
+                    let mut x = centred(start + v);
+                    let c = &codes[v * stride..v * stride + cbytes];
+                    x.iter_mut()
+                        .enumerate()
+                        .for_each(|(i, a)| *a -= scales[v] * f32::from(code_at(c, bits, i)));
+                    *scale = if residual_bits == 8 {
+                        quantize(&x, dst)
+                    } else {
+                        quantize4(&x, dst)
+                    };
+                });
+            section_write(&mut w, &table, 7, start * res_stride, &residual)?;
+            section_write(&mut w, &table, 8, start * 4, &res_scales)?;
+        }
+        if g.metric == Metric::Euclidean {
+            let half: Vec<f32> = (start..start + count)
+                .map(|v| 0.5 * g.norms[old(v)])
+                .collect();
+            section_write(&mut w, &table, 0, start * 4, &half)?;
+        }
+        g.release_rows()?;
+    }
+    section_write(&mut w, &table, 9, 0, &ids)?;
+    section_write(&mut w, &table, 12, 0, &mean)?;
+    let upper: Vec<u32> = g.upper_ids.iter().map(|&v| new(v)).collect();
+    section_write(&mut w, &table, 13, 0, &upper)?;
+    w.seek(SeekFrom::Start(table[14].0 as u64))?;
+    for layer in g.layers {
+        w.write_all(&(layer.len() as u32).to_le_bytes())?;
+        for list in layer {
+            w.write_all(&(list.len() as u32).to_le_bytes())?;
+        }
+    }
+    for layer in g.layers {
+        for list in layer {
+            w.write_all(as_bytes(list))?;
+        }
+    }
+    w.flush()?;
+    drop(w);
+    temp.as_file().sync_all()?;
+    crate::core::durable_file::sync_mapped_file(temp.as_file())?;
+    temp.persist(path).map_err(|e| e.error)?;
+    crate::core::durable_file::sync_directory(parent).map_err(std::io::Error::other)
 }
 
 /// Delta-coded lists (see `VGraph::for_each_delta_neighbour`): offsets rise from 0 to the end
@@ -696,7 +1077,7 @@ fn delta_lists_ok(adjv: &[u8], off: &[u32], n: usize, degree: usize) -> bool {
 mod tests {
     use super::*;
     use crate::core::qgraph::tests::clustered;
-    use crate::core::qgraph::{BuildParams, Graph, VSearchParams};
+    use crate::core::qgraph::{BuildParams, Graph, Metric, VSearchParams};
 
     /// Small indexes covering every array the file holds: both metrics, 4- and 8-bit codes,
     /// residuals 0/4/8, ids 4/3/delta, reordering, aligned rows, the screen and blocks.
@@ -733,6 +1114,17 @@ mod tests {
                     .and_then(|v| v.with_blocks(&g, 2))
                     .expect("encode");
                 out.push(("angular blocks".into(), v, queries.clone()));
+            } else {
+                for (bits, id_bytes) in [(4, 0), (8, 3), (8, 4)] {
+                    let v = VGraph::from_lifted_ip_graph(&g, bits, 8, true, true, id_bytes)
+                        .expect("encode direct IP");
+                    let mut probes: Vec<f32> = queries
+                        .chunks_exact(d)
+                        .flat_map(|q| q[..d - 1].iter().copied())
+                        .collect();
+                    probes.extend(vec![0.0; d - 1]);
+                    out.push((format!("direct IP b{bits} i{id_bytes}"), v, probes));
+                }
             }
         }
         out
@@ -742,10 +1134,14 @@ mod tests {
         let (mut sa, mut sb) = (a.searcher(), b.searcher());
         let (mut oa, mut ob) = (Vec::new(), Vec::new());
         for q in queries.chunks_exact(a.dim()) {
-            for (ef, rerank) in [(16, 0), (48, 20)] {
+            for (ef, rerank, reservoir) in [(16, 0, 0), (48, 20, 0), (16, 40, 40)] {
+                if reservoir > 0 && (a.has_screen() || a.has_blocks()) {
+                    continue;
+                }
                 let p = VSearchParams {
                     ef,
                     rerank,
+                    reservoir,
                     ..VSearchParams::default()
                 };
                 let ea = sa.search(q, 10, p, &mut oa).expect("search");
@@ -753,6 +1149,91 @@ mod tests {
                 assert_eq!((ea, &oa), (eb, &ob), "{what}");
             }
         }
+    }
+
+    #[test]
+    fn streamed_and_mapped_builds_preserve_exact_vertex_bytes() {
+        let dir = tempfile::tempdir().unwrap();
+        let d = 100;
+        for metric in [Metric::Angular, Metric::Euclidean] {
+            for n in [4095, 4096, 4097] {
+                let data = clustered(n, d, 7);
+                let params = BuildParams {
+                    metric,
+                    degree: 8,
+                    build_ef: 16,
+                    ..BuildParams::default()
+                };
+                let graph = Graph::build(&data, d, &params).unwrap();
+                let mut rows = super::super::super::PreparedRows::new(n, d).unwrap();
+                for chunk in data.chunks(17 * d) {
+                    rows.append(chunk).unwrap();
+                }
+                let mapped = rows.build(&params).unwrap();
+                for (bits, res, align, reorder, id_bytes) in [
+                    (8, 8, true, false, 4),
+                    (4, 8, true, true, 3),
+                    (8, 4, false, false, 0),
+                    (4, 0, true, true, 0),
+                ] {
+                    let owned = dir.path().join("owned");
+                    let streamed = dir.path().join("streamed");
+                    let spilled = dir.path().join("mapped");
+                    let index =
+                        VGraph::from_graph_with(&graph, bits, res, align, reorder, id_bytes, false)
+                            .unwrap();
+                    index.save(&owned).unwrap();
+                    VGraph::save_from_graph(&graph, &streamed, bits, res, align, reorder, id_bytes)
+                        .unwrap();
+                    VGraph::save_prepared(&mapped, &spilled, bits, res, align, reorder, id_bytes)
+                        .unwrap();
+                    let expected = std::fs::read(&owned).unwrap();
+                    assert_eq!(
+                        std::fs::read(&streamed).unwrap(),
+                        expected,
+                        "{metric:?} {n} {bits}/{res} {id_bytes}"
+                    );
+                    assert_eq!(
+                        std::fs::read(&spilled).unwrap(),
+                        expected,
+                        "mapped {metric:?} {n} {bits}/{res} {id_bytes}"
+                    );
+                    let reopened = VGraph::open(&spilled, Residency::Mapped).unwrap();
+                    reopened.release_pages().unwrap();
+                    same_results("mapped encoding", &index, &reopened, &data[..3 * d]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn prepared_rows_reject_incomplete_excess_and_invalid_matrices() {
+        use super::super::super::PreparedRows;
+        let params = BuildParams::default();
+        assert!(PreparedRows::new(1, 0).is_err());
+        assert!(PreparedRows::new(usize::MAX, 4).is_err());
+        for count in [1, 2, 3] {
+            let mut rows = PreparedRows::new(2, 4).unwrap();
+            let append = rows.append(&vec![1.; count * 4]);
+            if count > 2 {
+                assert!(append.is_err());
+            } else {
+                append.unwrap();
+                assert_eq!(rows.build(&params).is_ok(), count == 2);
+            }
+        }
+        let mut rows = PreparedRows::new(1, 4).unwrap();
+        assert!(rows.append(&[1.; 3]).is_err());
+        rows.append(&[f32::NAN; 4]).unwrap();
+        assert!(rows.build(&params).is_err());
+        let mut rows = PreparedRows::new(1, 4).unwrap();
+        rows.append(&[f32::MAX; 4]).unwrap();
+        assert!(rows
+            .build(&BuildParams {
+                metric: Metric::Euclidean,
+                ..params
+            })
+            .is_err());
     }
 
     #[test]

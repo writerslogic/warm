@@ -16,6 +16,7 @@
 
 use std::collections::BinaryHeap;
 use std::sync::OnceLock;
+use std::time::Instant;
 
 use rayon::prelude::*;
 
@@ -25,18 +26,66 @@ use super::kernels::{
     dot_f32_i4, dot_f32_i8, dot_i4_inline, dot_i4_inline_x4, dot_i8_inline, interleave_for_i4,
     prefetch, prefetch_bytes, raw_one, QueryCode, Rotation, SplitMix,
 };
-use super::{invalid, prepare_rows, upper_bytes, BuildParams, Graph, Metric, NONE};
+use super::{invalid, prepare_rows, upper_bytes, BuildParams, Graph, GraphView, Metric, NONE};
 use crate::core::error::HmsError;
 
 mod file;
 pub use file::Residency;
 use file::Slab;
 
+/// Scoring contract of the serving codes, independent of graph construction geometry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum VMetric {
+    Angular,
+    Euclidean,
+    InnerProduct,
+}
+
+impl From<Metric> for VMetric {
+    fn from(metric: Metric) -> Self {
+        match metric {
+            Metric::Angular => Self::Angular,
+            Metric::Euclidean => Self::Euclidean,
+        }
+    }
+}
+
+impl VMetric {
+    fn code(self) -> u64 {
+        match self {
+            Self::Angular => 0,
+            Self::Euclidean => 1,
+            Self::InnerProduct => 2,
+        }
+    }
+}
+
+#[derive(Default, serde::Serialize)]
+pub struct QueryProfile {
+    pub query_encoding_ns: u64,
+    pub entry_ns: u64,
+    pub adjacency_visited_prefetch_ns: u64,
+    pub scoring_pool_ns: u64,
+    pub rerank_sort_ns: u64,
+    pub total_ns: u64,
+    pub expansions: usize,
+    pub neighbors_read: usize,
+    pub entry_evaluations: usize,
+    pub traversal_evaluations: usize,
+    pub rerank_evaluations: usize,
+    pub beam_retained: usize,
+    pub retained: usize,
+}
+
 /// Search parameters of a [`VGraph`].
 #[derive(Clone, Copy, Debug)]
 pub struct VSearchParams {
     /// Candidate pool size (beam width).
     pub ef: usize,
+    /// Independent result capacity, offered every row score before beam admission.
+    /// 0 uses the legacy final beam; otherwise bounded to `max(k, reservoir).min(n)`.
+    /// Traversal, including the `ef >= k` rule, is unchanged.
+    pub reservoir: usize,
     /// Number of best pool candidates re-scored with the float query (and the residual code,
     /// when built); 0 returns the pool order.
     pub rerank: usize,
@@ -62,6 +111,7 @@ impl Default for VSearchParams {
     fn default() -> Self {
         Self {
             ef: 64,
+            reservoir: 0,
             rerank: 0,
             patience: 0,
             screen_sigmas: 1.0,
@@ -235,6 +285,7 @@ impl Lines {
 pub struct VGraph {
     n: usize,
     dim: usize,
+    metric: VMetric,
     /// `dim` rounded up to a multiple of 16 (32 with 4-bit codes), the integer kernels' width.
     padded: usize,
     /// Bits per traversal code coordinate: 8, or 4 (two per byte).
@@ -253,6 +304,8 @@ pub struct VGraph {
     adj: Slab<u32>,
     /// The same as 3-byte little-endian ids (padded with `NONE3`); empty with `u32` ids.
     adj3: Slab<u8>,
+    /// In-memory exact-degree spans; empty for the persisted fixed-slot layout.
+    adj_off: Vec<u32>,
     /// Delta-coded lists (`id_bytes` 0): per vertex, the sorted neighbour ids as LEB128
     /// varints of the zigzag first difference to the vertex and the gaps less one after,
     /// with `adjv_off[v]..adjv_off[v + 1]` the byte span of vertex `v`; empty otherwise.
@@ -552,7 +605,7 @@ pub(super) fn quantize4(x: &[f32], code: &mut [i8]) -> f32 {
 
 /// Breadth-first order of the bottom layer from the entry (unreached vertices follow in id
 /// order): neighbours get nearby positions, so a search touches fewer distinct pages and lines.
-fn bfs_order(g: &Graph) -> Vec<u32> {
+fn bfs_order(g: GraphView<'_>) -> Vec<u32> {
     let mut seen = vec![false; g.n];
     let mut order = Vec::with_capacity(g.n);
     for s in std::iter::once(g.entry as usize).chain(0..g.n) {
@@ -654,6 +707,56 @@ fn key_id(k: u64) -> u32 {
     k as u32
 }
 
+struct VertexLayout {
+    padded: usize,
+    cbytes: usize,
+    stride: usize,
+    res_stride: usize,
+}
+
+impl VertexLayout {
+    fn new(
+        n: usize,
+        dim: usize,
+        bits: u8,
+        residual_bits: u8,
+        align: bool,
+        id_bytes: u8,
+    ) -> Result<Self, HmsError> {
+        if !matches!(bits, 4 | 8) {
+            return Err(invalid(format!(
+                "vertex code bits must be 4 or 8, not {bits}"
+            )));
+        }
+        if !(id_bytes == 4 || id_bytes == 0 || (id_bytes == 3 && (n as u64) < u64::from(NONE3))) {
+            return Err(invalid(format!("id_bytes must be 4, 0 (delta varints), or 3 below 2^24 - 1 vertices (got {id_bytes} for {n} vertices)")));
+        }
+        if !matches!(residual_bits, 0 | 4 | 8) {
+            return Err(invalid(format!(
+                "residual code bits must be 0, 4 or 8, not {residual_bits}"
+            )));
+        }
+        let padded = dim.next_multiple_of(if bits == 4 { 32 } else { 16 });
+        let cbytes = if bits == 4 { padded / 2 } else { padded };
+        let stride = match (align, cbytes) {
+            (false, _) => cbytes,
+            (true, c) if c <= 64 => c.next_power_of_two(),
+            (true, c) => c.next_multiple_of(128),
+        };
+        let res_stride = match residual_bits {
+            8 => padded,
+            4 => padded / 2,
+            _ => 0,
+        };
+        Ok(Self {
+            padded,
+            cbytes,
+            stride,
+            res_stride,
+        })
+    }
+}
+
 impl VGraph {
     /// Encodes a built graph with the 8-bit residual code used by `rerank` (or none), unaligned
     /// rows and the build's vertex order.
@@ -678,47 +781,78 @@ impl VGraph {
         id_bytes: u8,
         screen: bool,
     ) -> Result<Self, HmsError> {
-        if !matches!(bits, 4 | 8) {
-            return Err(invalid(format!(
-                "vertex code bits must be 4 or 8, not {bits}"
-            )));
+        Self::encode_graph(
+            g,
+            (g.dim, g.metric.into()),
+            (bits, residual_bits),
+            align,
+            reorder,
+            id_bytes,
+            screen,
+        )
+    }
+
+    /// Keeps a lifted Euclidean graph's topology while encoding only its original coordinates
+    /// for negative inner-product scoring. The final construction coordinate is omitted.
+    pub fn from_lifted_ip_graph(
+        g: &Graph,
+        bits: u8,
+        residual_bits: u8,
+        align: bool,
+        reorder: bool,
+        id_bytes: u8,
+    ) -> Result<Self, HmsError> {
+        if g.metric != Metric::Euclidean || g.dim < 2 {
+            return Err(invalid(
+                "direct IP serving requires a lifted Euclidean graph".into(),
+            ));
         }
-        if !(id_bytes == 4 || id_bytes == 0 || (id_bytes == 3 && (g.n as u64) < u64::from(NONE3))) {
-            return Err(invalid(format!(
-                "id_bytes must be 4, 0 (delta varints), or 3 below 2^24 - 1 vertices (got {id_bytes} for {} vertices)",
-                g.n
-            )));
-        }
-        if !matches!(residual_bits, 0 | 4 | 8) {
-            return Err(invalid(format!(
-                "residual code bits must be 0, 4 or 8, not {residual_bits}"
-            )));
-        }
-        let euclidean = g.metric == Metric::Euclidean;
-        if euclidean && screen {
+        Self::encode_graph(
+            g,
+            (g.dim - 1, VMetric::InnerProduct),
+            (bits, residual_bits),
+            align,
+            reorder,
+            id_bytes,
+            false,
+        )
+    }
+
+    fn encode_graph(
+        g: &Graph,
+        geometry: (usize, VMetric),
+        precision: (u8, u8),
+        align: bool,
+        reorder: bool,
+        id_bytes: u8,
+        screen: bool,
+    ) -> Result<Self, HmsError> {
+        let (dim, metric) = geometry;
+        let (bits, residual_bits) = precision;
+        let layout = VertexLayout::new(g.n, dim, bits, residual_bits, align, id_bytes)?;
+        let euclidean = metric == VMetric::Euclidean;
+        if metric != VMetric::Angular && screen {
             return Err(invalid("the 1-bit screen is angular only".into()));
         }
-        let (n, dim) = (g.n, g.dim);
-        let padded = dim.next_multiple_of(if bits == 4 { 32 } else { 16 });
-        let cbytes = if bits == 4 { padded / 2 } else { padded };
-        let stride = match (align, cbytes) {
-            (false, _) => cbytes,
-            (true, c) if c <= 64 => c.next_power_of_two(),
-            (true, c) => c.next_multiple_of(128),
-        };
-        let res_stride = match residual_bits {
-            8 => padded,
-            4 => padded / 2,
-            _ => 0,
-        };
+        let n = g.n;
+        let VertexLayout {
+            padded,
+            cbytes,
+            stride,
+            res_stride,
+        } = layout;
         let mut sum = vec![0f64; dim];
-        for x in g.vectors.chunks_exact(dim) {
+        for x in g.vectors.chunks_exact(g.dim) {
             sum.iter_mut().zip(x).for_each(|(s, &v)| *s += f64::from(v));
         }
         let mut mean: Vec<f32> = sum.iter().map(|s| (s / n as f64) as f32).collect();
         mean.resize(padded, 0.0);
 
-        let ids = if reorder { bfs_order(g) } else { Vec::new() };
+        let ids = if reorder {
+            bfs_order(g.view())
+        } else {
+            Vec::new()
+        };
         let old = |v: usize| if reorder { ids[v] as usize } else { v };
         let mut new_id: Vec<u32> = Vec::new();
         if reorder {
@@ -739,7 +873,7 @@ impl VGraph {
         // The centred row of stored vertex `v`, which every code below encodes.
         let centred = |v: usize| -> Vec<f32> {
             let o = old(v);
-            g.vectors[o * dim..(o + 1) * dim]
+            g.vectors[o * g.dim..o * g.dim + dim]
                 .iter()
                 .zip(&mean)
                 .map(|(a, m)| a - m)
@@ -864,6 +998,7 @@ impl VGraph {
         let mut out = Self {
             n,
             dim,
+            metric,
             padded,
             bits,
             cbytes,
@@ -873,6 +1008,7 @@ impl VGraph {
             half_norms: half_norms.into(),
             adj: adj.into(),
             adj3: adj3.into(),
+            adj_off: Vec::new(),
             adjv: adjv.into(),
             adjv_off: adjv_off.into(),
             codes,
@@ -912,7 +1048,7 @@ impl VGraph {
         if !matches!(bits, 1 | 2 | 4) {
             return Err(invalid(format!("block bits must be 1, 2 or 4, not {bits}")));
         }
-        if !self.half_norms.is_empty() {
+        if self.metric != VMetric::Angular {
             return Err(invalid("neighbour blocks are angular only".into()));
         }
         let (n, dim, r) = (self.n, self.dim, self.degree);
@@ -1225,6 +1361,7 @@ impl VGraph {
     pub fn index_bytes(&self) -> usize {
         self.adj.len() * 4
             + self.adj3.len()
+            + self.adj_off.len() * 4
             + self.adjv.len()
             + self.adjv_off.len() * 4
             + self.n * self.stride
@@ -1252,19 +1389,19 @@ impl VGraph {
     /// Calls `f` on every neighbour of `v`, in list order.
     #[inline]
     fn for_each_neighbour(&self, v: usize, mut f: impl FnMut(u32)) {
-        let r = self.degree;
         if !self.adjv_off.is_empty() {
             return self.for_each_delta_neighbour(v, f);
         }
+        let (start, end) = self.adjacency_span(v);
         if self.adj3.is_empty() {
-            for &u in &self.adj[v * r..(v + 1) * r] {
+            for &u in &self.adj[start..end] {
                 if u == NONE {
                     break;
                 }
                 f(u);
             }
         } else {
-            for b in self.adj3[3 * v * r..3 * (v + 1) * r].as_chunks::<3>().0 {
+            for b in self.adj3[3 * start..3 * end].as_chunks::<3>().0 {
                 let u = u32::from_le_bytes([b[0], b[1], b[2], 0]);
                 if u == NONE3 {
                     break;
@@ -1272,6 +1409,66 @@ impl VGraph {
                 f(u);
             }
         }
+    }
+
+    #[inline]
+    fn adjacency_span(&self, v: usize) -> (usize, usize) {
+        if self.adj_off.is_empty() {
+            (v * self.degree, (v + 1) * self.degree)
+        } else {
+            (self.adj_off[v] as usize, self.adj_off[v + 1] as usize)
+        }
+    }
+
+    /// Removes unused adjacency slots without changing neighbors or their order.
+    /// Saving expands the lists into the original persisted format; reopening uses that
+    /// format until this method is called again. Delta-coded lists already have exact spans.
+    pub fn compact_adjacency(&mut self) -> Result<(), HmsError> {
+        if !self.adj_off.is_empty() || !self.adjv_off.is_empty() {
+            return Ok(());
+        }
+        let mut offsets = Vec::new();
+        offsets
+            .try_reserve_exact(self.n + 1)
+            .map_err(|_| invalid("cannot allocate adjacency offsets".into()))?;
+        offsets.push(0u32);
+        for v in 0..self.n {
+            let mut count = 0u32;
+            self.for_each_neighbour(v, |_| count += 1);
+            let end = offsets[v]
+                .checked_add(count)
+                .ok_or_else(|| invalid("compact adjacency exceeds u32 offsets".into()))?;
+            offsets.push(end);
+        }
+        let edges = offsets[self.n] as usize;
+        let width = if self.adj3.is_empty() { 4 } else { 3 };
+        if (self.n * self.degree - edges).saturating_mul(width) <= offsets.len() * 4 {
+            return Ok(());
+        }
+        if self.adj3.is_empty() {
+            let mut compact = Vec::new();
+            compact
+                .try_reserve_exact(edges)
+                .map_err(|_| invalid("cannot allocate compact adjacency".into()))?;
+            for v in 0..self.n {
+                self.for_each_neighbour(v, |u| compact.push(u));
+            }
+            self.adj = compact.into();
+        } else {
+            let bytes = edges
+                .checked_mul(3)
+                .ok_or_else(|| invalid("compact adjacency size overflows".into()))?;
+            let mut compact = Vec::new();
+            compact
+                .try_reserve_exact(bytes)
+                .map_err(|_| invalid("cannot allocate compact adjacency".into()))?;
+            for v in 0..self.n {
+                self.for_each_neighbour(v, |u| compact.extend_from_slice(&u.to_le_bytes()[..3]));
+            }
+            self.adj3 = compact.into();
+        }
+        self.adj_off = offsets;
+        Ok(())
     }
 
     /// [`VGraph::for_each_neighbour`] over a delta-coded list.
@@ -1298,13 +1495,13 @@ impl VGraph {
 
     #[inline]
     fn prefetch_neighbours(&self, v: usize) {
-        let r = self.degree;
+        let (start, end) = self.adjacency_span(v);
         if !self.adjv_off.is_empty() {
             prefetch_u8(&self.adjv[self.adjv_off[v] as usize..self.adjv_off[v + 1] as usize]);
         } else if self.adj3.is_empty() {
-            prefetch_ids(&self.adj[v * r..(v + 1) * r]);
+            prefetch_ids(&self.adj[start..end]);
         } else {
-            prefetch_u8(&self.adj3[3 * v * r..3 * (v + 1) * r]);
+            prefetch_u8(&self.adj3[3 * start..3 * end]);
         }
     }
 
@@ -1352,10 +1549,10 @@ impl VGraph {
     /// units of `1 / w`: `-ip` for angular, `w |x|^2 / 2 - ip` for Euclidean.
     #[inline]
     fn order(&self, v: u32, ip: f32, w: f32) -> f32 {
-        if self.half_norms.is_empty() {
-            -ip
-        } else {
+        if self.metric == VMetric::Euclidean {
             self.half_norms[v as usize] * w - ip
+        } else {
+            -ip
         }
     }
 
@@ -1395,18 +1592,20 @@ impl VGraph {
 
     /// Greedy descent through the upper layers on estimated distances; returns the bottom-layer
     /// entry vertex and the number of estimates.
-    fn descend(&self, qc: &[i8], w: f32) -> (u32, usize) {
+    fn descend(&self, qc: &[i8], w: f32, reservoir: &mut Reservoir) -> (u32, usize) {
         if self.layers.is_empty() {
             return (self.entry, 0);
         }
         let mut p = 0u32;
         let mut best = self.est(qc, self.upper_ids[0], w);
+        reservoir.offer(key(best, self.upper_ids[0]));
         let mut evals = 1;
         for layer in self.layers.iter().rev() {
             loop {
                 let mut moved = false;
                 for &u in &layer[p as usize] {
                     let d = self.est(qc, self.upper_ids[u as usize], w);
+                    reservoir.offer(key(d, self.upper_ids[u as usize]));
                     evals += 1;
                     if d < best {
                         best = d;
@@ -1458,6 +1657,7 @@ impl VGraph {
                     cursor: 0,
                 },
                 expanded: BinaryHeap::new(),
+                reservoir: Reservoir::default(),
                 keys: Vec::new(),
                 results: Vec::new(),
             },
@@ -1668,6 +1868,34 @@ impl Pool {
     }
 }
 
+#[derive(Default)]
+struct Reservoir {
+    keys: Vec<u64>,
+    cap: usize,
+}
+
+impl Reservoir {
+    fn reset(&mut self, cap: usize) {
+        self.keys.clear();
+        self.cap = cap;
+    }
+
+    #[inline]
+    fn offer(&mut self, key: u64) {
+        if self.cap == 0 || (self.keys.len() == self.cap && key >= self.keys[self.keys.len() - 1]) {
+            return;
+        }
+        let pos = match self.keys.binary_search(&key) {
+            Ok(_) => return,
+            Err(pos) => pos,
+        };
+        if self.keys.len() == self.cap {
+            self.keys.pop();
+        }
+        self.keys.insert(pos, key);
+    }
+}
+
 /// Per-thread search state for one [`VGraph`].
 pub struct VSearcher<'a> {
     index: &'a VGraph,
@@ -1699,6 +1927,7 @@ pub(super) struct SearchScratch {
     /// With blocks: the best `max(k, rerank)` expanded vertices by their own-code estimate,
     /// farthest on top. Block estimates only order the exploration; results come from here.
     expanded: BinaryHeap<u64>,
+    reservoir: Reservoir,
     keys: Vec<u64>,
     results: Vec<(f32, u32)>,
     knobs: SearchKnobs,
@@ -1754,7 +1983,9 @@ impl SearchScratch {
                     self.fresh[i + 3],
                 ];
                 for (e, u) in g.est4(qc, ids, w).into_iter().zip(ids) {
-                    if let Some((pos, _)) = self.pool.insert(key(e, u)) {
+                    let kk = key(e, u);
+                    self.reservoir.offer(kk);
+                    if let Some((pos, _)) = self.pool.insert(kk) {
                         if patience > 0 && pos < k {
                             *stale = 0;
                         }
@@ -1765,6 +1996,7 @@ impl SearchScratch {
         }
         for &u in &self.fresh[i..] {
             let kk = key(g.est(qc, u, w), u);
+            self.reservoir.offer(kk);
             if let Some((pos, _)) = self.pool.insert(kk) {
                 if patience > 0 && pos < k {
                     *stale = 0;
@@ -1787,6 +2019,11 @@ impl SearchScratch {
         params: VSearchParams,
         out: &mut Vec<u32>,
     ) -> Result<usize, HmsError> {
+        Self::validate_query(g, query)?;
+        self.search_validated(g, query, k, params, out)
+    }
+
+    fn validate_query(g: &VGraph, query: &[f32]) -> Result<(), HmsError> {
         if query.len() != g.dim {
             return Err(invalid(format!(
                 "query has {} dimensions, the index has {}",
@@ -1799,10 +2036,10 @@ impl SearchScratch {
                 "non-finite query value at coordinate {at}"
             )));
         }
-        if g.half_norms.is_empty() && query.iter().all(|&v| v == 0.0) {
+        if g.metric == VMetric::Angular && query.iter().all(|&v| v == 0.0) {
             return Err(invalid("zero query: cosine similarity is undefined".into()));
         }
-        self.search_validated(g, query, k, params, out)
+        Ok(())
     }
 
     // The caller has checked dimension, finite coordinates, and nonzero angular norm.
@@ -1814,7 +2051,30 @@ impl SearchScratch {
         params: VSearchParams,
         out: &mut Vec<u32>,
     ) -> Result<usize, HmsError> {
+        self.search_inner::<false>(g, query, k, params, out, &mut QueryProfile::default())
+    }
+
+    fn search_inner<const PROFILE: bool>(
+        &mut self,
+        g: &VGraph,
+        query: &[f32],
+        k: usize,
+        params: VSearchParams,
+        out: &mut Vec<u32>,
+        profile: &mut QueryProfile,
+    ) -> Result<usize, HmsError> {
+        if params.reservoir > 0 && (g.has_blocks() || (g.has_screen() && params.screen)) {
+            return Err(invalid(
+                "independent retention requires unscreened row-code search".into(),
+            ));
+        }
+        let started = PROFILE.then(Instant::now);
         let ef = params.ef.max(k).max(1);
+        self.reservoir.reset(if params.reservoir == 0 {
+            0
+        } else {
+            params.reservoir.max(k).min(g.n)
+        });
         // Only the order matters, so the query is used as given (no centring needed: the
         // `<q, mean>` term is common to all candidates) and its scale is dropped.
         self.qf[..g.dim].copy_from_slice(query);
@@ -1828,6 +2088,9 @@ impl SearchScratch {
         // Weight of the Euclidean norm term in the estimate's units (unused for angular); a
         // zero query has every inner product zero, so the norms alone order it.
         let w = if sq > 0.0 { 1.0 / sq } else { 1.0 };
+        if let Some(started) = started {
+            profile.query_encoding_ns = started.elapsed().as_nanos() as u64;
+        }
         let qc = &self.qc[..];
         let blocks = g.has_blocks();
         if blocks {
@@ -1840,7 +2103,12 @@ impl SearchScratch {
         self.screened = 0;
 
         self.visited.next();
-        let (entry, mut evals) = g.descend(qc, w);
+        let entry_started = PROFILE.then(Instant::now);
+        let (entry, mut evals) = g.descend(qc, w, &mut self.reservoir);
+        if let Some(started) = entry_started {
+            profile.entry_ns = started.elapsed().as_nanos() as u64;
+            profile.entry_evaluations = evals;
+        }
         self.visited.insert(entry);
         let fuse = blocks && params.fuse && !block_screen;
         if fuse {
@@ -1861,6 +2129,7 @@ impl SearchScratch {
         self.expanded.clear();
         let take = params.rerank.max(k).min(g.n);
         let k0 = key(g.est(qc, entry, w), entry);
+        self.reservoir.offer(k0);
         self.pool.insert(k0);
         if fuse {
             self.visited.trace(entry).1.key = k0;
@@ -1901,6 +2170,10 @@ impl SearchScratch {
                 t.expanded = true;
             }
             stale += 1;
+            if PROFILE {
+                profile.expansions += 1;
+            }
+            let adjacency_started = PROFILE.then(Instant::now);
             if let Some(next) = self.pool.peek_next() {
                 g.prefetch_neighbours(key_id(next) as usize);
                 if blocks {
@@ -2057,6 +2330,7 @@ impl SearchScratch {
             self.fresh.clear();
             let (visited, fresh) = (&mut self.visited, &mut self.fresh);
             let scale_too = knobs.prefetch >= 1;
+            let mut neighbors_read = 0;
             let admit = |u: u32, visited: &mut Marks, fresh: &mut Vec<u32>| {
                 if visited.insert(u) {
                     if screen {
@@ -2071,7 +2345,12 @@ impl SearchScratch {
                 }
             };
             if params.neighbour_cap == 0 {
-                g.for_each_neighbour(key_id(c) as usize, |u| admit(u, visited, fresh));
+                g.for_each_neighbour(key_id(c) as usize, |u| {
+                    if PROFILE {
+                        neighbors_read += 1;
+                    }
+                    admit(u, visited, fresh);
+                });
             } else {
                 let mut seen = 0usize;
                 g.for_each_neighbour(key_id(c) as usize, |u| {
@@ -2101,7 +2380,17 @@ impl SearchScratch {
                 }
                 std::mem::swap(&mut self.fresh, &mut self.survivors);
             }
-            evals += self.score_fresh(g, k, patience, &mut stale, w);
+            if let Some(started) = adjacency_started {
+                profile.adjacency_visited_prefetch_ns += started.elapsed().as_nanos() as u64;
+                profile.neighbors_read += neighbors_read;
+            }
+            let scoring_started = PROFILE.then(Instant::now);
+            let count = self.score_fresh(g, k, patience, &mut stale, w);
+            evals += count;
+            if let Some(started) = scoring_started {
+                profile.scoring_pool_ns += started.elapsed().as_nanos() as u64;
+                profile.traversal_evaluations += count;
+            }
             if knobs.prefetch >= 3 {
                 // Lookahead: what the next expansion's admission touches for its unvisited
                 // neighbours, one expansion early (its list was prefetched above).
@@ -2121,16 +2410,29 @@ impl SearchScratch {
             }
         }
 
+        let rerank_started = PROFILE.then(Instant::now);
+        if PROFILE {
+            profile.beam_retained = self.pool.keys.len();
+            profile.traversal_evaluations += 1;
+        }
         self.keys.clear();
-        if blocks && !block_screen {
+        if params.reservoir > 0 {
+            self.keys.extend_from_slice(&self.reservoir.keys);
+        } else if blocks && !block_screen {
             self.keys.extend(self.expanded.drain());
             self.keys.sort_unstable();
         } else {
             self.keys.extend_from_slice(&self.pool.keys);
         }
+        if PROFILE {
+            profile.retained = self.keys.len();
+        }
         self.results.clear();
         let take = take.min(self.keys.len());
         if params.rerank > 0 {
+            if PROFILE {
+                profile.rerank_evaluations = take;
+            }
             if knobs.prefetch >= 1 {
                 for &c in &self.keys[..take] {
                     g.prefetch_rerank_rows(key_id(c));
@@ -2153,12 +2455,81 @@ impl SearchScratch {
         }
         out.clear();
         out.extend(self.results.iter().take(k).map(|r| r.1));
+        if let Some(started) = rerank_started {
+            profile.rerank_sort_ns = started.elapsed().as_nanos() as u64;
+        }
+        if let Some(started) = started {
+            profile.total_ns = started.elapsed().as_nanos() as u64;
+        }
         Ok(evals)
     }
 }
 
 #[cfg(feature = "experimental")]
+impl VSearcher<'_> {
+    /// Profiles the ordinary row-code path; timers perturb latency and are not QPS evidence.
+    pub fn profile_search(
+        &mut self,
+        query: &[f32],
+        k: usize,
+        params: VSearchParams,
+        out: &mut Vec<u32>,
+    ) -> Result<QueryProfile, HmsError> {
+        let g = self.index;
+        if g.has_screen()
+            || g.has_blocks()
+            || self.knobs() != SearchKnobs::OFF
+            || params.neighbour_cap != 0
+        {
+            return Err(invalid("profiling requires the plain row-code path".into()));
+        }
+        SearchScratch::validate_query(g, query)?;
+        let mut profile = QueryProfile::default();
+        self.scratch
+            .search_inner::<true>(g, query, k, params, out, &mut profile)?;
+        Ok(profile)
+    }
+}
+
+#[cfg(feature = "experimental")]
 impl VGraph {
+    /// Storage geometry and reconstruction error; diagnostic work is never part of search.
+    pub fn encoding_diagnostic(&self, source: &Graph) -> Result<serde_json::Value, HmsError> {
+        if source.n != self.n || source.dim < self.dim {
+            return Err(invalid("encoding diagnostic source shape mismatch".into()));
+        }
+        let (mut coarse_error, mut fine_error) = (0f64, 0f64);
+        for v in 0..self.n {
+            let original = self.original(v as u32) as usize;
+            for d in 0..self.dim {
+                let expected =
+                    f64::from(source.vectors[original * source.dim + d]) - f64::from(self.mean[d]);
+                let primary = f64::from(self.scales[v])
+                    * f64::from(code_at(self.code(v as u32), self.bits, d));
+                let residual = if self.has_residual() {
+                    f64::from(self.res_scales[v])
+                        * f64::from(code_at(
+                            &self.residual[v * self.res_stride..(v + 1) * self.res_stride],
+                            self.res_bits,
+                            d,
+                        ))
+                } else {
+                    0.0
+                };
+                coarse_error += (primary - expected).powi(2);
+                fine_error += (primary + residual - expected).powi(2);
+            }
+        }
+        let count = (self.n * self.dim) as f64;
+        Ok(
+            serde_json::json!({"metric": format!("{:?}", self.metric), "dimensions": self.dim,
+            "padded": self.padded, "primary_stride": self.stride, "residual_stride": self.res_stride,
+            "norm_bytes": self.half_norms.len() * 4, "index_bytes": self.index_bytes(),
+            "primary_coordinate_rmse": (coarse_error / count).sqrt(),
+            "refined_coordinate_rmse": (fine_error / count).sqrt()}),
+        )
+    }
+
     /// Runs an untimed traversal control against the graph used to encode this index.
     /// `oracle` is an original row ID; `exact` replaces routing scores only. Residual
     /// reranking, beam ordering and tie handling remain those of the compact index.
@@ -2173,9 +2544,13 @@ impl VGraph {
         exact: bool,
     ) -> Result<super::diagnostics::TraversalDiagnostic, HmsError> {
         if source.n != self.n
-            || source.dim != self.dim
+            || source.dim != self.dim + usize::from(self.metric == VMetric::InnerProduct)
             || source.degree != self.degree
-            || (source.metric == Metric::Euclidean) != !self.half_norms.is_empty()
+            || if self.metric == VMetric::InnerProduct {
+                source.metric != Metric::Euclidean
+            } else {
+                self.metric != source.metric.into()
+            }
         {
             return Err(invalid(
                 "diagnostic source graph does not match index geometry and metric".into(),
@@ -2188,7 +2563,7 @@ impl VGraph {
         }
         if query.len() != self.dim
             || query.iter().any(|x| !x.is_finite())
-            || (source.metric == Metric::Angular && query.iter().all(|&x| x == 0.0))
+            || (self.metric == VMetric::Angular && query.iter().all(|&x| x == 0.0))
             || k == 0
             || k > self.n
         {
@@ -2281,6 +2656,9 @@ impl VGraph {
         );
         report.evaluated.sort_unstable();
         report.evaluated.dedup();
+        report
+            .beam
+            .extend(scratch.pool.keys.iter().map(|&c| self.original(key_id(c))));
         report.retained.extend(
             scratch
                 .keys
@@ -2306,20 +2684,33 @@ impl VGraph {
         let mut report = super::diagnostics::TraversalDiagnostic::default();
         let score = |id: u32| {
             let original = self.original(id) as usize;
-            let row = &source.vectors[original * self.dim..(original + 1) * self.dim];
+            let row = &source.vectors[original * source.dim..original * source.dim + self.dim];
             let ip: f64 = row
                 .iter()
                 .zip(query)
                 .map(|(&x, &q)| f64::from(x) * f64::from(q))
                 .sum();
-            let norm = if source.metric == Metric::Euclidean {
+            let norm = if self.metric == VMetric::Euclidean {
                 row.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>() * 0.5
             } else {
                 0.0
             };
             (norm - ip) as f32
         };
-        let entry = self.diagnostic_entry(score, &mut report.evaluated);
+        let mut reservoir = Reservoir::default();
+        reservoir.reset(if params.reservoir == 0 {
+            0
+        } else {
+            params.reservoir.max(k).min(self.n)
+        });
+        let entry = self.diagnostic_entry(
+            |id| {
+                let distance = score(id);
+                reservoir.offer(key(distance, id));
+                distance
+            },
+            &mut report.evaluated,
+        );
         let mut pool = Pool {
             keys: Vec::new(),
             expanded: Vec::new(),
@@ -2329,7 +2720,9 @@ impl VGraph {
         let mut seen = vec![false; self.n];
         seen[entry as usize] = true;
         report.evaluated.push(self.original(entry));
-        pool.insert(key(score(entry), entry));
+        let entry_key = key(score(entry), entry);
+        reservoir.offer(entry_key);
+        pool.insert(entry_key);
         let mut stale = 0usize;
         while let Some(candidate) = pool.next() {
             if params.patience > 0 && stale >= params.patience {
@@ -2344,7 +2737,9 @@ impl VGraph {
                 }
                 seen[id as usize] = true;
                 report.evaluated.push(self.original(id));
-                if let Some((pos, _)) = pool.insert(key(score(id), id)) {
+                let kk = key(score(id), id);
+                reservoir.offer(kk);
+                if let Some((pos, _)) = pool.insert(kk) {
                     if params.patience > 0 && pos < k {
                         stale = 0;
                     }
@@ -2354,16 +2749,24 @@ impl VGraph {
         report.evaluated.sort_unstable();
         report.evaluated.dedup();
         report
-            .retained
+            .beam
             .extend(pool.keys.iter().map(|&c| self.original(key_id(c))));
-        let take = params.rerank.max(k).min(self.n).min(pool.keys.len());
+        let keys = if params.reservoir > 0 {
+            &reservoir.keys
+        } else {
+            &pool.keys
+        };
+        report
+            .retained
+            .extend(keys.iter().map(|&c| self.original(key_id(c))));
+        let take = params.rerank.max(k).min(self.n).min(keys.len());
         if params.rerank > 0 {
             report
                 .rerank_candidates
                 .extend_from_slice(&report.retained[..take]);
             let mut qf = vec![0.0; self.padded];
             qf[..self.dim].copy_from_slice(query);
-            let mut results: Vec<_> = pool.keys[..take]
+            let mut results: Vec<_> = keys[..take]
                 .iter()
                 .map(|&c| (self.fine(&qf, key_id(c)), self.original(key_id(c))))
                 .collect();
@@ -2377,6 +2780,254 @@ impl VGraph {
                 .extend_from_slice(&report.retained[..k.min(take)]);
         }
         Ok(report)
+    }
+}
+
+#[cfg(test)]
+mod serving_tests {
+    use super::*;
+
+    fn lifted(rows: &[f32], dim: usize) -> Graph {
+        let norms: Vec<f64> = rows
+            .chunks_exact(dim)
+            .map(|row| row.iter().map(|&x| f64::from(x).powi(2)).sum())
+            .collect();
+        let max = norms.iter().copied().fold(0.0, f64::max);
+        let data: Vec<f32> = rows
+            .chunks_exact(dim)
+            .zip(norms)
+            .flat_map(|(row, norm)| {
+                row.iter()
+                    .copied()
+                    .chain([(max - norm).max(0.0).sqrt() as f32])
+            })
+            .collect();
+        Graph::build_owned(
+            data,
+            dim + 1,
+            &BuildParams {
+                metric: Metric::Euclidean,
+                degree: 2,
+                build_ef: 16,
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn reservoir_recovers_a_beam_rejection_without_changing_expansions() {
+        let mut graph = lifted(&[0.0, 0.0, 0.8, 0.0, 1.0, 381.0], 2);
+        graph.entry = 0;
+        graph.layers.clear();
+        graph.upper_ids.clear();
+        graph.adj.set(0, &[1, 2]);
+        graph.adj.set(1, &[]);
+        graph.adj.set(2, &[]);
+        let index = VGraph::from_lifted_ip_graph(&graph, 8, 8, false, false, 4).unwrap();
+        let mut searcher = index.searcher_with(SearchKnobs::OFF);
+        let mut out = Vec::new();
+        let params = VSearchParams {
+            ef: 1,
+            rerank: 3,
+            ..Default::default()
+        };
+        searcher.search(&[1.0, 0.0], 1, params, &mut out).unwrap();
+        assert_eq!(out, [1]);
+        let beam = searcher.scratch.pool.keys.clone();
+        let marks = searcher.scratch.visited.marks.clone();
+        for capacity in [1, 2, 3, usize::MAX] {
+            let params = VSearchParams {
+                reservoir: capacity,
+                ..params
+            };
+            searcher.search(&[1.0, 0.0], 1, params, &mut out).unwrap();
+            assert_eq!(searcher.scratch.pool.keys, beam);
+            assert!(searcher
+                .scratch
+                .visited
+                .marks
+                .iter()
+                .zip(&marks)
+                .all(|(&a, &b)| (a > 0) == (b > 0)));
+            assert_eq!(out, if capacity == 1 { vec![1] } else { vec![2] });
+            assert_eq!(searcher.scratch.results.len(), capacity.min(3));
+            #[cfg(feature = "experimental")]
+            {
+                let profile = searcher
+                    .profile_search(&[1.0, 0.0], 1, params, &mut out)
+                    .unwrap();
+                assert_eq!(profile.expansions, 2);
+                assert_eq!(profile.rerank_evaluations, capacity.min(3));
+                assert_eq!(profile.beam_retained, 1);
+                assert_eq!(profile.retained, capacity.min(3));
+            }
+        }
+    }
+
+    #[test]
+    fn retention_preserves_traversal_with_stopping_and_batch_scoring() {
+        let rows = crate::core::qgraph::tests::clustered(256, 32, 77);
+        for metric in [Metric::Angular, Metric::Euclidean] {
+            let graph = Graph::build(
+                &rows,
+                32,
+                &BuildParams {
+                    metric,
+                    degree: 8,
+                    build_ef: 32,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            let index = VGraph::from_graph_with(&graph, 4, 8, true, true, 3, false).unwrap();
+            for patience in [0, 1, 4] {
+                for knobs in [
+                    SearchKnobs::OFF,
+                    SearchKnobs {
+                        prefetch: 3,
+                        batch_est: true,
+                        frontier: 0.8,
+                        block_screen: false,
+                    },
+                ] {
+                    let mut a = index.searcher_with(knobs);
+                    let mut b = index.searcher_with(knobs);
+                    for q in rows.as_chunks::<32>().0.iter().take(8) {
+                        let mut out = Vec::new();
+                        let p = VSearchParams {
+                            ef: 12,
+                            rerank: 40,
+                            patience,
+                            ..Default::default()
+                        };
+                        let ea = a.search(q, 5, p, &mut out).unwrap();
+                        let eb = b
+                            .search(q, 5, VSearchParams { reservoir: 40, ..p }, &mut out)
+                            .unwrap();
+                        assert_eq!(a.scratch.pool.keys, b.scratch.pool.keys);
+                        assert_eq!(a.scratch.pool.expanded, b.scratch.pool.expanded);
+                        assert_eq!(a.scratch.visited.marks, b.scratch.visited.marks);
+                        assert_eq!(ea - a.scratch.results.len(), eb - b.scratch.results.len());
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn reservoir_includes_upper_layer_scores_once() {
+        let mut graph = lifted(&[0.0, 0.0, 0.8, 0.0, 1.0, 381.0], 2);
+        graph.upper_ids = vec![0, 1, 2];
+        graph.layers = vec![vec![vec![1, 2], vec![0, 2], vec![0, 1]]];
+        for v in 0..3 {
+            graph.adj.set(v, &[]);
+        }
+        let index = VGraph::from_lifted_ip_graph(&graph, 8, 8, false, false, 4).unwrap();
+        let mut searcher = index.searcher_with(SearchKnobs::OFF);
+        let mut out = Vec::new();
+        for _ in 0..260 {
+            searcher
+                .search(
+                    &[1.0, 0.0],
+                    1,
+                    VSearchParams {
+                        ef: 1,
+                        rerank: 3,
+                        reservoir: 3,
+                        ..Default::default()
+                    },
+                    &mut out,
+                )
+                .unwrap();
+            assert_eq!(out, [2]);
+            assert_eq!(searcher.scratch.keys.len(), 3);
+        }
+    }
+
+    #[test]
+    fn direct_ip_preserves_magnitudes_zero_queries_and_topology() {
+        let rows = [1.0, 0.0, 0.0, 3.0, 0.0, 3.0, -2.0, 0.0];
+        let mut graph = lifted(&rows, 2);
+        for v in 0..graph.n {
+            graph.adj.set(v, &[((v + 1) % graph.n) as u32]);
+        }
+        for bits in [4, 8] {
+            for reorder in [false, true] {
+                let index =
+                    VGraph::from_lifted_ip_graph(&graph, bits, 8, true, reorder, 3).unwrap();
+                assert_eq!(index.metric(), VMetric::InnerProduct);
+                assert!(index.half_norms.is_empty());
+                for v in 0..index.n {
+                    let mut neighbors = Vec::new();
+                    index.for_each_neighbour(v, |u| neighbors.push(index.original(u)));
+                    assert_eq!(
+                        neighbors,
+                        graph.neighbors(index.original(v as u32) as usize)
+                    );
+                }
+                let mut searcher = index.searcher_with(SearchKnobs::OFF);
+                let mut out = Vec::new();
+                let params = VSearchParams {
+                    ef: 4,
+                    rerank: 4,
+                    reservoir: 4,
+                    ..Default::default()
+                };
+                for (query, expected) in [
+                    ([1.0, 1.0], vec![1, 2, 0, 3]),
+                    ([0.0, 0.0], vec![0, 1, 2, 3]),
+                    ([-1.0, 0.0], vec![3, 1, 2, 0]),
+                ] {
+                    searcher.search(&query, 4, params, &mut out).unwrap();
+                    assert_eq!(out, expected);
+                }
+                assert!(searcher
+                    .search(&[f32::NAN, 0.0], 1, params, &mut out)
+                    .is_err());
+                assert!(searcher.search(&[0.0], 1, params, &mut out).is_err());
+                assert!(index.with_blocks(&graph, 2).is_err());
+            }
+        }
+    }
+
+    #[test]
+    fn direct_ip_removes_the_128_dimension_stride_cliff() {
+        let mut rows = vec![0.0; 3 * 128];
+        rows[0] = 1.0;
+        rows[128] = 2.0;
+        rows[256] = -1.0;
+        let graph = lifted(&rows, 128);
+        let old = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+        let new = VGraph::from_lifted_ip_graph(&graph, 8, 8, true, true, 3).unwrap();
+        assert_eq!(
+            (old.dim, old.padded, old.stride, old.res_stride),
+            (129, 144, 256, 144)
+        );
+        assert_eq!(
+            (new.dim, new.padded, new.stride, new.res_stride),
+            (128, 128, 128, 128)
+        );
+        assert_eq!(
+            old.index_bytes() - new.index_bytes(),
+            148 * graph.n + 16 * 4
+        );
+        assert_eq!(old.entry, new.entry);
+        assert_eq!(old.upper_ids, new.upper_ids);
+        assert_eq!(old.layers, new.layers);
+        assert_eq!(&*old.ids, &*new.ids);
+        assert_eq!(&*old.adj3, &*new.adj3);
+        for dim in [127, 129] {
+            let mut rows = vec![0.0; 3 * dim];
+            rows[0] = 1.0;
+            rows[dim] = 2.0;
+            rows[2 * dim] = -1.0;
+            let graph = lifted(&rows, dim);
+            let old = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+            let new = VGraph::from_lifted_ip_graph(&graph, 8, 8, true, true, 3).unwrap();
+            assert_eq!((new.stride, new.res_stride), (old.stride, old.res_stride));
+            assert_eq!(old.index_bytes() - new.index_bytes(), 4 * graph.n);
+        }
     }
 }
 
@@ -2593,6 +3244,107 @@ mod tests {
     use super::super::kernels::SplitMix;
     use super::super::tests::{brute_force, clustered, gaussian};
     use super::*;
+
+    #[test]
+    fn compact_lists_preserve_order_search_and_persisted_bytes() {
+        let dim = 16;
+        let data = clustered(64, dim, 7);
+        let queries = clustered(8, dim, 8);
+        let mut graph = Graph::build(
+            &data,
+            dim,
+            &BuildParams {
+                degree: 16,
+                build_ef: 32,
+                ..BuildParams::default()
+            },
+        )
+        .unwrap();
+        for v in 0..graph.n {
+            let count = [0, 1, 15, 16][v % 4];
+            let ids: Vec<u32> = (1..=count).map(|j| ((v + j) % graph.n) as u32).collect();
+            graph.adj.set(v, &ids);
+        }
+        let directory = tempfile::tempdir().unwrap();
+        for bytes in [3, 4] {
+            for bits in [4, 8] {
+                let mut index =
+                    VGraph::from_graph_with(&graph, bits, 8, true, true, bytes, false).unwrap();
+                let lists: Vec<Vec<u32>> = (0..index.n)
+                    .map(|v| {
+                        let mut ids = Vec::new();
+                        index.for_each_neighbour(v, |u| ids.push(u));
+                        ids
+                    })
+                    .collect();
+                let before = directory.path().join("before");
+                let after = directory.path().join("after");
+                index.save(&before).unwrap();
+                let old_bytes = index.index_bytes();
+                let params = VSearchParams {
+                    ef: 32,
+                    rerank: 16,
+                    ..VSearchParams::default()
+                };
+                let expected: Vec<Vec<u32>> = {
+                    let mut searcher = index.searcher_with(SearchKnobs::OFF);
+                    queries
+                        .chunks_exact(dim)
+                        .map(|q| {
+                            let mut out = Vec::new();
+                            searcher.search(q, 10, params, &mut out).unwrap();
+                            out
+                        })
+                        .collect()
+                };
+                index.compact_adjacency().unwrap();
+                assert!(index.index_bytes() < old_bytes);
+                for (v, want) in lists.iter().enumerate() {
+                    let mut actual = Vec::new();
+                    index.for_each_neighbour(v, |u| actual.push(u));
+                    assert_eq!(&actual, want);
+                }
+                let compact_bytes = index.index_bytes();
+                index.compact_adjacency().unwrap();
+                assert_eq!(index.index_bytes(), compact_bytes);
+                index.save(&after).unwrap();
+                assert_eq!(
+                    std::fs::read(&before).unwrap(),
+                    std::fs::read(&after).unwrap()
+                );
+                for residency in [Residency::Mapped, Residency::Prefaulted, Residency::Heap] {
+                    let reopened = VGraph::open(&after, residency).unwrap();
+                    let (mut a, mut b) = (
+                        index.searcher_with(SearchKnobs::OFF),
+                        reopened.searcher_with(SearchKnobs::OFF),
+                    );
+                    for i in 0..260 {
+                        let qi = i % expected.len();
+                        let q = &queries[qi * dim..(qi + 1) * dim];
+                        let (mut x, mut y) = (Vec::new(), Vec::new());
+                        let evals = a.search(q, 10, params, &mut x).unwrap();
+                        b.search(q, 10, params, &mut y).unwrap();
+                        assert_eq!(x, expected[qi]);
+                        assert_eq!(x, y);
+                        #[cfg(feature = "experimental")]
+                        {
+                            let profile = a.profile_search(q, 10, params, &mut y).unwrap();
+                            assert_eq!(x, y);
+                            assert_eq!(
+                                evals,
+                                profile.entry_evaluations
+                                    + profile.traversal_evaluations
+                                    + profile.rerank_evaluations
+                            );
+                            assert!(profile.neighbors_read >= profile.traversal_evaluations - 1);
+                        }
+                        #[cfg(not(feature = "experimental"))]
+                        let _ = evals;
+                    }
+                }
+            }
+        }
+    }
 
     /// The cache round-trips the structure for the same data and parameters, and rejects a
     /// file written for other data or for any other build parameter.
