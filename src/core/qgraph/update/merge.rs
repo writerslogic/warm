@@ -5,8 +5,7 @@
 //! pass, so the cost follows the rows that changed instead of every live row.
 
 use std::cell::RefCell;
-
-use rayon::prelude::*;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use super::super::{
     adjacency::Adjacency, kernels::SplitMix, medoid, norms_opt, prof, upper_layers, BuildCodes,
@@ -62,6 +61,7 @@ pub(super) fn merge_structure(
     };
     let t = prof::start();
     let mut adj = Adjacency::new(n, r);
+    let again: Vec<_> = (0..n).map(|_| AtomicBool::new(false)).collect();
     // FreshDiskANN's delete consolidation: a list that lost a deleted neighbour takes that
     // neighbour's live out-neighbours as candidates and is pruned again; other lists are
     // renumbered as they are.
@@ -84,6 +84,7 @@ pub(super) fn merge_structure(
                 out.extend(old.iter().map(|&u| plan.old_to_new[u as usize]));
                 return;
             }
+            again[s].store(true, Ordering::Relaxed);
             ids.clear();
             for &u in old.iter() {
                 let mapped = plan.old_to_new[u as usize];
@@ -108,6 +109,9 @@ pub(super) fn merge_structure(
         });
     });
     prof::report("merge-repair", t);
+    plan.old
+        .release_pages()
+        .map_err(|e| super::super::invalid(format!("release previous base pages: {e}")))?;
     let inserted: Vec<u32> = (0..n as u32)
         .filter(|&s| plan.new_to_old[s as usize] == NONE)
         .collect();
@@ -119,25 +123,7 @@ pub(super) fn merge_structure(
         let live: Vec<u32> = (0..n as u32)
             .filter(|&s| plan.new_to_old[s as usize] != NONE)
             .collect();
-        let sub: Vec<f32> = live
-            .iter()
-            .flat_map(|&s| rows.row(s).iter().copied())
-            .collect();
-        let sub_norms: Vec<f32> = rows
-            .norms
-            .map(|n| live.iter().map(|&s| n[s as usize]).collect())
-            .unwrap_or_default();
-        let sub_rows = Rows {
-            data: &sub,
-            dim,
-            norms: norms_opt(&sub_norms),
-            codes: None,
-            quantized: false,
-        };
-        match live.get(medoid(&sub_rows, live.len(), params.metric) as usize) {
-            Some(&s) => s,
-            None => return Err(super::super::invalid("merge without live base rows".into())),
-        }
+        replacement_entry(&rows, &live, params.metric)?
     };
     let mut order = inserted;
     shuffle(&mut order, params.seed ^ n as u64);
@@ -154,34 +140,15 @@ pub(super) fn merge_structure(
     // The build's second pass, over the delta rows and the base rows whose neighbourhood
     // changed: those the delta now links to and those that lost a deleted neighbour. A full
     // rebuild searches again for every row; here only these can have better neighbours.
-    let mut again = vec![false; n];
     for &p in &order {
-        again[p as usize] = true;
+        again[p as usize].store(true, Ordering::Relaxed);
         for &u in adj.get(p as usize) {
-            again[u as usize] = true;
+            again[u as usize].store(true, Ordering::Relaxed);
         }
     }
-    let repaired: Vec<usize> = (0..n)
-        .into_par_iter()
-        .map_init(Vec::new, |list, s| {
-            let o = plan.new_to_old[s];
-            list.clear();
-            if o != NONE {
-                plan.old.neighbours_into(o as usize, list);
-            }
-            let dead = list.iter().any(|&u| plan.old_to_new[u as usize] == NONE);
-            (s, dead)
-        })
-        .filter_map(|(s, dead)| dead.then_some(s))
+    let mut order: Vec<u32> = (0..n as u32)
+        .filter(|&s| again[s as usize].load(Ordering::Relaxed))
         .collect();
-    for s in repaired {
-        again[s] = true;
-    }
-    // The previous graph is not read again: drop its pages before the passes allocate.
-    plan.old
-        .release_pages()
-        .map_err(|e| super::super::invalid(format!("release previous base pages: {e}")))?;
-    let mut order: Vec<u32> = (0..n as u32).filter(|&s| again[s as usize]).collect();
     drop(again);
     shuffle(&mut order, params.seed ^ n as u64 ^ 1);
     let t = prof::start();
@@ -233,4 +200,104 @@ pub(super) fn slot_maps(
         old_to_new[slot] = at as u32;
     }
     (new_to_old, old_to_new)
+}
+
+fn replacement_entry(
+    rows: &Rows<'_>,
+    live: &[u32],
+    metric: super::super::Metric,
+) -> Result<u32, HmsError> {
+    let entry = super::super::medoid_by(rows, live.len(), |i| live[i as usize], metric);
+    live.get(entry as usize)
+        .copied()
+        .ok_or_else(|| super::super::invalid("merge without live base rows".into()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::super::{kernels::dot, Metric};
+    use super::*;
+
+    fn copied_entry(rows: &Rows<'_>, live: &[u32], metric: Metric) -> Result<u32, HmsError> {
+        let sub: Vec<f32> = live
+            .iter()
+            .flat_map(|&s| rows.row(s).iter().copied())
+            .collect();
+        let sub_norms: Vec<f32> = rows
+            .norms
+            .map(|n| live.iter().map(|&s| n[s as usize]).collect())
+            .unwrap_or_default();
+        let sub_rows = Rows {
+            data: &sub,
+            dim: rows.dim,
+            norms: norms_opt(&sub_norms),
+            codes: None,
+            quantized: false,
+        };
+        match live.get(medoid(&sub_rows, live.len(), metric) as usize) {
+            Some(&s) => Ok(s),
+            None => Err(super::super::super::invalid(
+                "merge without live base rows".into(),
+            )),
+        }
+    }
+
+    #[test]
+    fn replacement_entry_matches_copied_rows_and_tie_order() {
+        for dim in [1, 3, 4, 15, 16, 17, 100] {
+            let mut rng = SplitMix(42);
+            let mut data: Vec<f32> = (0..129 * dim)
+                .map(|_| (rng.next_u64() % 31) as f32 - 15.0)
+                .collect();
+            for tied in [false, true] {
+                if tied {
+                    data.fill(1.0);
+                }
+                let norms: Vec<f32> = data.chunks_exact(dim).map(|r| dot(r, r)).collect();
+                for metric in [Metric::Angular, Metric::Euclidean] {
+                    let rows = Rows {
+                        data: &data,
+                        dim,
+                        norms: (metric == Metric::Euclidean).then_some(norms.as_slice()),
+                        codes: None,
+                        quantized: false,
+                    };
+                    for count in [0, 1, 63, 64, 65, 127, 128, 129] {
+                        let live: Vec<u32> = (0..count).rev().collect();
+                        let expected = copied_entry(&rows, &live, metric);
+                        let actual = replacement_entry(&rows, &live, metric);
+                        assert_eq!(
+                            actual.ok(),
+                            expected.ok(),
+                            "dim={dim} count={count} tied={tied}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "development memory and timing measurement"]
+    fn replacement_entry_large_live_set() {
+        let n = 1_000_000;
+        let dim = 100;
+        let mut rng = SplitMix(42);
+        let data: Vec<f32> = (0..n * dim)
+            .map(|_| (rng.next_u64() % 65536) as f32 / 65536.0)
+            .collect();
+        let norms: Vec<f32> = data.chunks_exact(dim).map(|r| dot(r, r)).collect();
+        let live: Vec<u32> = (0..n as u32).filter(|i| i % 5 != 0).collect();
+        let rows = Rows {
+            data: &data,
+            dim,
+            norms: Some(&norms),
+            codes: None,
+            quantized: false,
+        };
+        let start = std::time::Instant::now();
+        let entry = replacement_entry(&rows, &live, Metric::Euclidean).unwrap();
+        println!("entry={entry} elapsed_ns={}", start.elapsed().as_nanos());
+        assert!(live.binary_search(&entry).is_ok());
+    }
 }
