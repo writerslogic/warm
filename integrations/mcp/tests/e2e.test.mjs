@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-// End-to-end tests of hms-mcp through the official MCP TypeScript SDK client.
-// Run: HMS_MCP_BIN=/path/to/hms-mcp npm test   (build with --features mcp,security for the encryption test)
+// End-to-end tests of warm-mcp through the official MCP TypeScript SDK client.
+// Run: WARM_MCP_BIN=/path/to/warm-mcp npm test   (build with --features mcp,security for the encryption test)
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -14,18 +14,18 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const BIN = process.env.HMS_MCP_BIN;
-assert.ok(BIN, "set HMS_MCP_BIN to the hms-mcp binary");
-const SECURITY = process.env.HMS_MCP_SECURITY === "1";
+const BIN = process.env.WARM_MCP_BIN;
+assert.ok(BIN, "set WARM_MCP_BIN to the warm-mcp binary");
+const SECURITY = process.env.WARM_MCP_SECURITY === "1";
 
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "hms-mcp-e2e-"));
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "warm-mcp-e2e-"));
 after(() => fs.rmSync(scratch, { recursive: true, force: true }));
 let counter = 0;
 const freshDir = () => path.join(scratch, `store-${counter++}`);
 
 function cleanEnv(extra = {}) {
   const env = {};
-  for (const [k, v] of Object.entries(process.env)) if (!k.startsWith("HMS_MCP_")) env[k] = v;
+  for (const [k, v] of Object.entries(process.env)) if (!k.startsWith("WARM_MCP_")) env[k] = v;
   return { ...env, ...extra };
 }
 
@@ -60,7 +60,7 @@ describe("stdio", () => {
     const c = await stdioClient(args);
     try {
       const info = c.getServerVersion();
-      assert.equal(info.name, "holographic-memory");
+      assert.equal(info.name, "writerslogic-warm");
       const caps = c.getServerCapabilities();
       assert.ok(caps.tools && caps.resources && caps.prompts);
       const { tools } = await c.listTools();
@@ -207,7 +207,7 @@ describe("stdio", () => {
       await err(c, "remember", { text: "ok", id: "a".repeat(257) }, "invalid_argument");
       await err(c, "remember", { text: "ok", tags: ["a", "b", "c"] }, "invalid_argument");
       await err(c, "remember", { text: "ok", tags: [""] }, "invalid_argument");
-      await err(c, "remember", { text: "ok", metadata: { "hms.v": 1 } }, "invalid_argument");
+      await err(c, "remember", { text: "ok", metadata: { "warm.v": 1 } }, "invalid_argument");
       await err(c, "remember", { text: "ok", metadata: "nope" }, "invalid_argument");
       await err(c, "remember", { text: "ok", create_only: true, if_version: "x" }, "invalid_argument");
       await err(c, "recall", { query: "  " }, "invalid_argument");
@@ -265,15 +265,31 @@ describe("stdio", () => {
     }
   });
 
-  it("handles concurrent calls", async () => {
+  it("handles concurrent calls and reports uncommitted overload", async () => {
     const c = await stdioClient(["--data-dir", freshDir()]);
     try {
       const writes = Array.from({ length: 60 }, (_, i) =>
         call(c, "remember", { id: `c/${String(i).padStart(3, "0")}`, text: `concurrent memory number ${i} about topic${i % 5}` }),
       );
       const reads = Array.from({ length: 30 }, () => call(c, "recall", { query: "concurrent topic3" }));
-      const results = await Promise.all([...writes, ...reads]);
-      assert.ok(results.every((r) => r.isError !== true));
+      const results = await Promise.allSettled([...writes, ...reads]);
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          assert.notEqual(result.value.isError, true);
+        } else {
+          assert.equal(result.reason.code, -32603);
+          assert.deepEqual(result.reason.data, { code: "server_busy", retryable: true });
+        }
+      }
+      const committed = results.slice(0, writes.length).filter((r) => r.status === "fulfilled").length;
+      assert.equal((await ok(c, "stats", {})).memories, committed);
+      for (let i = 0; i < writes.length; i++) {
+        if (results[i].status === "rejected") {
+          const id = `c/${String(i).padStart(3, "0")}`;
+          await err(c, "get", { id }, "not_found");
+          await ok(c, "remember", { id, text: `concurrent memory number ${i} about topic${i % 5}` });
+        }
+      }
       assert.equal((await ok(c, "stats", {})).memories, 60);
       const same = await Promise.all(
         Array.from({ length: 20 }, (_, i) => call(c, "remember", { id: "contended", text: `writer ${i}` })),
@@ -395,7 +411,7 @@ describe("stdio", () => {
 describe("encryption at rest", { skip: !SECURITY }, () => {
   it("keeps plaintext off disk and requires the passphrase", async () => {
     const dir = freshDir();
-    const env = { HMS_MCP_PASSPHRASE: "correct horse battery staple" };
+    const env = { WARM_MCP_PASSPHRASE: "correct horse battery staple" };
     let c = await stdioClient(["--data-dir", dir, "--encrypt"], env);
     await ok(c, "remember", { id: "secret", text: "the launch code is zanzibar-quokka-7731" });
     assert.equal((await ok(c, "stats", {})).encryption_at_rest, true);
@@ -409,7 +425,7 @@ describe("encryption at rest", { skip: !SECURITY }, () => {
     assert.match((await ok(c, "get", { id: "secret" })).memory.text, /zanzibar/);
     await c.close();
     const bad = spawn(BIN, ["--data-dir", dir, "--encrypt"], {
-      env: cleanEnv({ HMS_MCP_PASSPHRASE: "wrong wrong wrong wrong" }),
+      env: cleanEnv({ WARM_MCP_PASSPHRASE: "wrong wrong wrong wrong" }),
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stderr = "";
@@ -428,7 +444,7 @@ describe("encryption flag without a passphrase", () => {
     child.stderr.on("data", (d) => (stderr += d));
     const code = await new Promise((r) => child.on("exit", r));
     assert.notEqual(code, 0);
-    assert.match(stderr, /HMS_MCP_PASSPHRASE|security/);
+    assert.match(stderr, /WARM_MCP_PASSPHRASE|security/);
   });
 });
 
@@ -469,7 +485,10 @@ function rawRequest(url, { method = "POST", headers = {}, body } = {}) {
       res.on("data", (d) => (data += d));
       res.on("end", () => resolve({ status: res.statusCode, headers: res.headers, body: data }));
     });
-    req.on("error", reject);
+    req.on("error", (error) => reject(new Error(
+      `${method} ${u.pathname} (${Buffer.byteLength(body ?? "")} body bytes): ${error.message}`,
+      { cause: error },
+    )));
     if (body) req.write(body);
     req.end();
   });
@@ -490,7 +509,7 @@ describe("streamable http", () => {
     let client = new Client({ name: "e2e-http", version: "1.0.0" });
     await client.connect(new StreamableHTTPClientTransport(new URL(srv.url)));
     try {
-      assert.equal(client.getServerVersion().name, "holographic-memory");
+      assert.equal(client.getServerVersion().name, "writerslogic-warm");
       assert.equal((await client.listTools()).tools.length, 8);
       await ok(client, "remember", { id: "h/1", text: "http transport memory about lighthouses" });
       const many = await Promise.all(
@@ -523,7 +542,7 @@ describe("streamable http", () => {
 
   it("enforces the bearer token, Host and Origin checks, and body size", async () => {
     const token = "t".repeat(24);
-    const srv = await startHttp(["--max-request-bytes", "4096"], { HMS_MCP_TOKEN: token });
+    const srv = await startHttp(["--max-request-bytes", "4096"], { WARM_MCP_TOKEN: token });
     try {
       const noAuth = await rawRequest(srv.url, { headers: jsonHeaders, body: initBody });
       assert.equal(noAuth.status, 401);
@@ -554,7 +573,7 @@ describe("streamable http", () => {
     }
   });
 
-  it("refuses to bind a non-loopback address without a token", async () => {
+  it("refuses to bind a non-loopback address without authorization", async () => {
     const child = spawn(BIN, ["--transport", "http", "--bind", "0.0.0.0:0", "--allow-remote", "--data-dir", freshDir()], {
       env: cleanEnv(),
       stdio: ["ignore", "pipe", "pipe"],
@@ -563,7 +582,7 @@ describe("streamable http", () => {
     child.stderr.on("data", (d) => (stderr += d));
     const code = await new Promise((r) => child.on("exit", r));
     assert.notEqual(code, 0);
-    assert.match(stderr, /HMS_MCP_TOKEN/);
+    assert.match(stderr, /needs --allow-remote and static bearer or OAuth authorization/);
   });
 
   it("negotiates protocol versions: initialize handshake and the stateless 2026-07-28 form", async () => {
@@ -586,7 +605,7 @@ describe("streamable http", () => {
         assert.equal(res.status, 200, res.body);
         const out = parse(res.body).result;
         assert.equal(out.protocolVersion, version);
-        assert.equal(out.serverInfo.name, "holographic-memory");
+        assert.equal(out.serverInfo.name, "writerslogic-warm");
         assert.ok(out.capabilities.tools);
       }
       const meta = {

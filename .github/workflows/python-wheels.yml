@@ -17,8 +17,6 @@ permissions:
 
 jobs:
   versions:
-    # campaign-deferral: remove this guard and restore any original condition below
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,8 +31,6 @@ jobs:
           fi
 
   wheels:
-    # campaign-deferral: remove this guard and restore any original condition below
-    if: ${{ false }}
     name: wheel ${{ matrix.name }}
     needs: versions
     runs-on: ${{ matrix.os }}
@@ -83,7 +79,7 @@ jobs:
           bin="$RUNNER_TEMP/binding/bin"
           [ -d "$RUNNER_TEMP/binding/Scripts" ] && bin="$RUNNER_TEMP/binding/Scripts"
           "$bin/python" -m pip install --quiet numpy==2.0.2 pytest==8.3.5
-          "$bin/python" -m pip install --quiet --no-index --find-links dist holographic-memory-py
+          "$bin/python" -m pip install --quiet --no-index --find-links dist writerslogic-warm-py
           "$bin/python" -I -m pytest -q -p no:cacheprovider tests/python
         env:
           PYTHON: ${{ steps.python.outputs.python-path }}
@@ -109,8 +105,8 @@ jobs:
           set -euo pipefail
           features=$(uv run --no-project --python 3.13 python -c 'import tomllib; print(",".join(tomllib.load(open("pyproject.toml", "rb"))["tool"]["maturin"]["features"]))')
           cargo cyclonedx --format json --spec-version 1.5 --target "$TRIPLE" --features "$features" \
-            --override-filename "holographic-memory-py-${NAME}.cdx"
-          mv "holographic-memory-py-${NAME}.cdx.json" dist/
+            --override-filename "writerslogic-warm-py-${NAME}.cdx"
+          mv "writerslogic-warm-py-${NAME}.cdx.json" dist/
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: wheels-${{ matrix.name }}
@@ -118,8 +114,6 @@ jobs:
           if-no-files-found: error
 
   sdist:
-    # campaign-deferral: remove this guard and restore any original condition below
-    if: ${{ false }}
     needs: versions
     runs-on: ubuntu-latest
     steps:
@@ -151,8 +145,8 @@ jobs:
         run: |
           set -euo pipefail
           features=$(uv run --no-project --python 3.13 python -c 'import tomllib; print(",".join(tomllib.load(open("pyproject.toml", "rb"))["tool"]["maturin"]["features"]))')
-          cargo cyclonedx --format json --spec-version 1.5 --features "$features" --override-filename holographic-memory-py-sdist.cdx
-          mv holographic-memory-py-sdist.cdx.json dist/
+          cargo cyclonedx --format json --spec-version 1.5 --features "$features" --override-filename writerslogic-warm-py-sdist.cdx
+          mv writerslogic-warm-py-sdist.cdx.json dist/
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: wheels-sdist

@@ -31,6 +31,9 @@ def py_type(rust: str, classes: dict, self_name: str) -> str:
         return PRIMITIVES[rust]
     if rust in classes:
         return classes[rust]
+    m = re.fullmatch(r"PyRef<'(?:_|[A-Za-z]\w*),\s*(.+)>", rust)
+    if m:
+        return py_type(m.group(1), classes, self_name)
     m = re.fullmatch(r"Vec<(.+)>", rust)
     if m:
         return f"list[{py_type(m.group(1), classes, self_name)}]"
@@ -141,7 +144,7 @@ def generate(rs_path: Path) -> str:
 
 
 def write(root: Path, out_dir: Path) -> Path:
-    stub = out_dir / "holographic_memory" / "__init__.py"
+    stub = out_dir / "writerslogic_warm" / "__init__.py"
     stub.parent.mkdir(parents=True, exist_ok=True)
     source = root / "src" / "bindings" / "python" / "mod.rs"
     if not source.is_file():

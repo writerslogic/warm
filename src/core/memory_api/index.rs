@@ -12,7 +12,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use super::stamp::Stamp;
 use super::types::Millis;
 use crate::core::engine::memory_access::DocumentView;
-use crate::core::HmsCore;
+use crate::core::WarmCore;
 
 /// A fact that supersedes another, with when that takes effect.
 #[derive(Clone, Debug, PartialEq)]
@@ -110,10 +110,15 @@ impl Index {
     }
 
     pub(crate) fn subject_ids(&self, subject: &str) -> Vec<String> {
+        self.subject_id_refs(subject).map(str::to_owned).collect()
+    }
+
+    pub(crate) fn subject_id_refs(&self, subject: &str) -> impl Iterator<Item = &str> {
         self.by_subject
             .get(subject)
-            .map(|members| members.iter().map(|m| m.id.clone()).collect())
-            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .map(|member| member.id.as_str())
     }
 
     fn add_edge(&mut self, old: &str, by: &str, effective: Millis, ingest: Millis) {
@@ -290,7 +295,7 @@ impl Index {
     }
 
     /// Rebuilds the index from the store's documents.
-    pub(crate) fn rebuild(core: &HmsCore) -> Self {
+    pub(crate) fn rebuild(core: &WarmCore) -> Self {
         let mut stamps: Vec<(String, Stamp)> = Vec::new();
         let revision = core.scan_documents(|document: DocumentView<'_>| {
             if let Some(stamp) = Stamp::from_parts(document.version, document.metadata) {

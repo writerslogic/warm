@@ -117,7 +117,7 @@ struct CapturedQuery {
     use_postings: bool,
     dense: Option<Arc<DenseIndex>>,
     eligible: Option<FastSet<usize>>,
-    changed: BTreeSet<String>,
+    changed: FastSet<String>,
     dfs: Option<[BTreeMap<String, usize>; 2]>,
     /// The store's text segment, read for result text after the store lock is released (under
     /// the mutation gate for a live search, see [`read_ranked`]).
@@ -361,7 +361,7 @@ fn capture_postings(store: &DocumentStore, prepared: PreparedSearch) -> Captured
         use_postings,
         dense: None,
         eligible: None,
-        changed: BTreeSet::new(),
+        changed: FastSet::default(),
         dfs: None,
         text: store.text_segment(),
         lexical_scores: None,
@@ -400,7 +400,7 @@ fn capture_ranked_lexical(store: &DocumentStore, prepared: PreparedSearch) -> Ca
         use_postings: true,
         dense: None,
         eligible: None,
-        changed: BTreeSet::new(),
+        changed: FastSet::default(),
         dfs: None,
         text: store.text_segment(),
         lexical_scores: Some(scores),
@@ -510,7 +510,7 @@ fn capture_image(image: &ServingImage, prepared: PreparedSearch) -> anyhow::Resu
         use_postings: true,
         dense: None,
         eligible: None,
-        changed: BTreeSet::new(),
+        changed: FastSet::default(),
         dfs: None,
         text: None,
         lexical_scores: Some(scores),
@@ -570,7 +570,7 @@ fn capture_overlaid(
         use_postings: true,
         dense: None,
         eligible: None,
-        changed: BTreeSet::new(),
+        changed: FastSet::default(),
         dfs: None,
         text: store.text_segment(),
         lexical_scores: Some(scores),
@@ -884,15 +884,6 @@ fn capture_planned_query(
         if count < super::dense::MIN_ROWS {
             return capture_postings(store, prepared);
         }
-        if dense.is_some() && documents.len() <= DENSE_SLOT_LIMIT {
-            // The tree pins its document allocations, so replacement IDs cannot alias these owners.
-            eligible = Some(
-                documents
-                    .iter()
-                    .map(|document| Arc::as_ptr(document) as usize)
-                    .collect(),
-            );
-        }
         let posting_work = prepared
             .query_terms
             .iter()
@@ -915,6 +906,15 @@ fn capture_planned_query(
                 }
                 slots
             });
+        if slots.is_some() && dense.is_some() && documents.len() <= DENSE_SLOT_LIMIT {
+            // The tree pins its owners, so current-owner membership also excludes replaced rows.
+            eligible = Some(
+                documents
+                    .iter()
+                    .map(|document| Arc::as_ptr(document) as usize)
+                    .collect(),
+            );
+        }
         let words = documents
             .iter()
             .flat_map(|document| &document.chunks)
@@ -1030,10 +1030,10 @@ fn capture_planned_query(
             }
         }
     }
-    let changed = if dense.is_some() {
+    let changed = if dense.is_some() && eligible.is_none() {
         store.dense_changes.keys().cloned().collect()
     } else {
-        BTreeSet::new()
+        FastSet::default()
     };
     CapturedQuery {
         prepared,
@@ -1125,13 +1125,13 @@ fn execute_query(captured: &CapturedQuery) -> Vec<RankedHit> {
                 captured.prepared.limit,
                 captured.prepared.minimum,
                 |document| {
-                    !captured.changed.contains(&document.id)
-                        && captured.eligible.as_ref().map_or_else(
-                            || captured.prepared.matches(document),
-                            |eligible| {
-                                eligible.contains(&(document as *const StoredDocument as usize))
-                            },
-                        )
+                    captured.eligible.as_ref().map_or_else(
+                        || {
+                            !captured.changed.contains(&document.id)
+                                && captured.prepared.matches(document)
+                        },
+                        |eligible| eligible.contains(&(document as *const StoredDocument as usize)),
+                    )
                 },
             )
         };
@@ -1431,6 +1431,7 @@ mod tests {
         .unwrap()
         .unwrap();
         assert!(super::super::publish_dense_index(&mut store, &index));
+        let base_owner = Arc::clone(&store.documents["d007"]);
         store.insert("d007".into(), document(7, 2));
         let options = SearchOptions {
             k: Some(3),
@@ -1446,7 +1447,13 @@ mod tests {
         );
         assert!(captured.queries[0].dense.is_some());
         assert!(captured.queries[0].chunks.len() <= 5 + store.documents["d007"].chunks.len());
-        assert!(captured.queries[0].changed.contains("d007"));
+        if let Some(eligible) = &captured.queries[0].eligible {
+            assert!(!eligible.contains(&(Arc::as_ptr(&base_owner) as usize)));
+            assert!(eligible.contains(&(Arc::as_ptr(&store.documents["d007"]) as usize)));
+            assert!(captured.queries[0].changed.is_empty());
+        } else {
+            assert!(captured.queries[0].changed.contains("d007"));
+        }
         let expected =
             super::super::search_impl(&store, "common rare7", &options, Some(3), false).unwrap();
         store.insert("d007".into(), document(7, 3));
@@ -2261,7 +2268,7 @@ mod tests {
 
 /// Lexical latency microbenchmark on an NFCorpus-shaped synthetic store (3633 one-chunk
 /// documents, Zipf vocabulary, 324 queries); run ignored with `--nocapture`, and set
-/// `HMS_LEX_BENCH_OUT` to write the phase timings as JSON.
+/// `WARM_LEX_BENCH_OUT` to write the phase timings as JSON.
 #[cfg(test)]
 mod latency_bench {
     use super::*;
@@ -2345,7 +2352,7 @@ mod latency_bench {
         let documents = 3633;
         let vocabulary = 25_000;
         let mut rng = Rng(0x9E37_79B9_7F4A_7C15);
-        let (store, queries) = match std::env::var("HMS_LEX_BENCH_INPUT") {
+        let (store, queries) = match crate::compatibility::var("WARM_LEX_BENCH_INPUT") {
             Ok(path) => {
                 let input: Value =
                     serde_json::from_slice(&std::fs::read(path).expect("bench input")).unwrap();
@@ -2374,7 +2381,7 @@ mod latency_bench {
             ),
         };
         {
-            let k: u32 = std::env::var("HMS_LEX_BENCH_K")
+            let k: u32 = crate::compatibility::var("WARM_LEX_BENCH_K")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100);
@@ -2436,7 +2443,7 @@ mod latency_bench {
                            summary("execute", &mut execute_ns), summary("total", &mut total_ns)],
             });
             println!("{report}");
-            if let Ok(path) = std::env::var("HMS_LEX_BENCH_OUT") {
+            if let Ok(path) = crate::compatibility::var("WARM_LEX_BENCH_OUT") {
                 std::fs::write(path, serde_json::to_string_pretty(&report).unwrap()).unwrap();
             }
         }
