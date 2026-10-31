@@ -118,7 +118,7 @@ fn observe(core: &WarmCore) -> Result<Value> {
     out.push(status);
     out.push(json!(core.document_index_trained()));
     out.push(serde_json::to_value(core.index_status())?);
-    out.push(serde_json::to_value(core.list_documents(None, 1000))?);
+    out.push(serde_json::to_value(core.list_documents(None, 1000)?)?);
     Ok(Value::Array(out))
 }
 
@@ -260,7 +260,7 @@ fn observe_lexical(core: &WarmCore) -> Result<Value> {
         )?);
         out.push(json!(core.count_documents(text)?));
     }
-    out.push(serde_json::to_value(core.list_documents(None, 1000))?);
+    out.push(serde_json::to_value(core.list_documents(None, 1000)?)?);
     Ok(Value::Array(out))
 }
 

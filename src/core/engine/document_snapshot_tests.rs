@@ -310,7 +310,7 @@ fn failed_canonical_rebuild_keeps_the_live_text_segment() -> Result<()> {
     std::fs::remove_file(text.join("occupied"))?;
     std::fs::remove_dir(&text)?;
     core.compact_scrubbing()?;
-    let record = core.get_document("a").expect("document a");
+    let record = core.get_document("a")?.expect("document a");
     assert_eq!(record.text.as_deref(), Some("kept alpha text"));
     Ok(())
 }
@@ -400,4 +400,10 @@ fn captured_queries_report_cache_errors_without_panicking() -> Result<()> {
         )
         .map(|hits| hits.len())
     })
+}
+
+#[test]
+fn document_get_and_list_report_cache_errors_without_panicking() -> Result<()> {
+    check_query_cache_errors(|core| Ok(core.get_document("b")?.map_or(0, |_| 2)))?;
+    check_query_cache_errors(|core| core.list_documents(None, 2).map(|records| records.len()))
 }
