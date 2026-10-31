@@ -1450,3 +1450,11 @@ both before and after this change (existing typing/import/test-style debt); a
 clean full Python lint gate is not claimed. Evidence and exact runtime versions:
 [crewai-retention-20261031/](crewai-retention-20261031/). This branch is based on
 the pending integration-security work and must be rebased/CI-gated after it merges.
+
+PR #367 merged as `b75710140f41e176ed0438e01a25dd2699ed9b9f` after all 50
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368 and both new real-server integration steps. No unresolved review
+threads or open code-scanning alerts remained. Only owner review was bypassed.
+The merge signature is verified, its tree equals the tested head tree, and
+clean root main was fast-forwarded. The five Chroma/DiskCache advisory matches
+remain unresolved. Evidence: [integration final gate](integration-profile-security-20261031/final-gate.json.gz).
