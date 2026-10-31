@@ -1306,3 +1306,107 @@ gain is claimed yet.
 Evidence: [snapshot-padding-20261031/](snapshot-padding-20261031/) preserves the
 failed Windows job and the passing focused tests. This necessary gate remediation
 will be included in the native reliability PR, separate from integration security.
+
+
+## Maintained Semantic Kernel dependency security (2026-10-31)
+
+The separate `writerslogic-warm-integrations[semantic-kernel]` adapter remains
+implemented and usable; it is distinct from the retired legacy SDK extra.
+Fresh resolution selected Semantic Kernel 1.46.0 → OpenAPI Core 0.19.5 →
+Werkzeug 3.1.1. A complete OSV scan of 100 registry package/version pairs matched
+four GHSA IDs (eight IDs including aliases), all in Werkzeug's Windows
+`safe_join` handling. This is dependency advisory evidence, not a demonstrated
+exploit in WARM's Rust server or the vector-store adapter.
+
+The published extra now requires `werkzeug>=3.1.9`. The resolver selects OpenAPI
+Core 0.19.4, which satisfies Semantic Kernel's `>=0.18,<0.20` requirement, instead
+of overriding 0.19.5's `<3.1.2` cap. The cap's rationale is documented in upstream
+[issue 938](https://github.com/python-openapi/openapi-core/issues/938); the
+[0.19.4…0.19.5 changes](https://github.com/python-openapi/openapi-core/compare/0.19.4...0.19.5)
+are archived for review. No package metadata or advisory is suppressed. This
+tradeoff validates WARM's vector-store workflows, not every OpenAPI or Django
+integration available through Semantic Kernel.
+
+Twelve real-server tests pass with Semantic Kernel 1.45.0/Python 3.11 and
+1.46.0/Python 3.14, including custom embedding generators and `Kernel.invoke`.
+The first run exposed an existing stale `HmsConfig` reference (11 pass, one
+NameError); it now uses the imported `WarmConfig`, with assertions unchanged.
+Both boundaries are added to the existing live-server CI job. No paid model
+providers or model downloads are used.
+
+Wheel and sdist build; wheel metadata includes the extra-scoped security floor.
+A fresh wheel consumer selecting the extra resolves Werkzeug 3.1.9/OpenAPI Core
+0.19.4 without external constraints. Installing the bare package plus Semantic
+Kernel separately does not activate an extra's requirements and still resolves
+the vulnerable version; use the documented extra. A new hash-bound universal
+lock scan reports zero matches across 100 registry pairs (103 total packages).
+That snapshot does not establish vulnerability absence or cover other extras.
+Workflow lint and all 214 action pins pass. Exact-head remote CI and merge are
+still pending.
+
+Evidence: [semantic-kernel-security-20261031/](semantic-kernel-security-20261031/)
+contains resolution locks, OSV responses, upstream metadata, compatibility and
+consumer logs, and the tested server binary hash. The server was built from the
+separately validated PR #366 source tree; this change adds no Rust code.
+
+## Maintained integration profiles and LiteLLM (2026-10-31)
+
+Each of the 15 separate integration extras resolves independently for Python
+`>=3.12,<3.13`; they are not combined into a conflicting omnibus environment.
+With the preceding Semantic Kernel fix, the first deduplicated inventory had 269
+registry name/version pairs. Complete OSV queries found matches in CrewAI's Chroma,
+DSPy's DiskCache, and LiteLLM's Filelock dependencies. The other twelve profiles
+had no matches in this snapshot. This is a metadata-resolution audit, not runtime
+validation of every framework or coverage of every supported Python version.
+
+The LiteLLM profile selected 1.106.6 and Filelock 3.32.7, with 13 matched Filelock
+GHSA IDs. LiteLLM 1.106.6 declares `filelock>=3.16.1,<4.0`; 1.103.10 has no such
+cap. Both primary PyPI metadata records are archived. The published extra now
+requires `litellm>=1.103.10`, `filelock>=4.2.6`, and the existing `mcp>=2.3.0`.
+This permits the same compatible LiteLLM/Filelock pair already validated for
+DSPy, without overriding dependencies. Resolution also moves Hugging Face Hub
+1.33.0 to 2.4.0. Latest-version or broad LiteLLM-proxy compatibility is not claimed.
+
+All eight existing memory-tool tests pass with the secure graph on Python 3.11,
+3.12, and 3.14, including real sync/async LiteLLM mock completions, tool-call
+objects, user isolation, invalid calls and bounded loops against a real WARM
+server. Only LiteLLM's offline response path is used; no credits or models are
+downloaded. The 3.11/3.14 cases join CI. Wheel/sdist builds and a fresh wheel
+consumer confirm the extra activates Filelock 4.2.6/LiteLLM 1.103.10 without an
+external constraint. Strict workflow lint passes.
+
+The final 15 profiles contain 266 unique registry pairs. Unchanged pairs reuse
+the baseline OSV snapshot; the changed 75-pair LiteLLM graph was independently
+rescanned and has no matches. Thirteen profiles now have no matches. The remaining
+matches are the same four Chroma GHSA IDs in CrewAI and one DiskCache GHSA ID in
+DSPy; neither is suppressed or represented as resolved. The documented DSPy
+memory-cache profile covers the verified WARM retrieval path, not arbitrary
+DiskCache or Chroma use. Matching advisory versions do not establish exploitability
+through these adapters; no-match snapshots do not prove absence of vulnerabilities.
+
+Evidence: [integration-profile-security-20261031/](integration-profile-security-20261031/)
+contains all baseline profile locks, the explicitly synthetic deduplicated
+inventory, complete scan responses, the changed profile lock/scan, final per-extra
+coverage, upstream metadata, test logs, and wheel verification. These additions
+remain separate from the native query PR #366 and await their own final CI gate.
+
+A bounded follow-up probe exercised the real Chroma 1.5.9 persistent importer
+with a registered embedding function whose stored configuration contains
+`trust_remote_code: true`, and whose configuration loader raises if executed.
+`count()` and `records()` imported one record without activating that loader or
+computing embeddings. Accessing Chroma's `collection.configuration` afterward
+activated the guard once, confirming the positive control. The imported URI was
+retained as metadata, not requested as loaded data. This supports only the
+tested local read path; it does not qualify untrusted Chroma servers, other
+versions, CrewAI native memory, or arbitrary embedding configurations as safe.
+All four Chroma advisory matches remain unresolved. The archived probe runs with
+the SDK and Chroma 1.5.9 installed, with telemetry/model downloads disabled, and
+uses only a local temporary store; it performs no malicious code execution.
+
+PR #366 merged as `d270448e5cadb0c5844f12d6f7f747639a7e35da` after all 71
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368. No unresolved review threads or open code-scanning alerts remained.
+Only owner review was bypassed. GitHub verified the merge signature; its tree
+`42b17d7d07e4a7aa9d048da8019e25d3dc77d7aa` equals the tested head tree.
+Clean root main was fast-forwarded. The Windows service gate passed without
+relaxing deadlines. Evidence: [native final gate](raw-query-errors-20261031/final-gate.json).
