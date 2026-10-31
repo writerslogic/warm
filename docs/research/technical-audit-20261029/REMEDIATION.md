@@ -1523,3 +1523,42 @@ app 15368 and the guarded CrewAI retention step. No unresolved review threads
 or open code-scanning alerts remained. Only owner review was bypassed. The
 merge signature is verified, the merge tree equals the tested head tree, and
 clean root main was fast-forwarded. Evidence: [CrewAI final gate](crewai-retention-20261031/final-gate.json.gz).
+
+PR #369 merged as `a02a4b50a0a578b2761c2050f5c3e65ee7e27639` after all 72
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368. No unresolved review threads or open code-scanning alerts remained.
+Only owner review was bypassed. The merge signature is verified and its tree
+equals the tested head tree; clean root main was fast-forwarded. The breaking
+Rust API notice and DCO footer are preserved in the merge commit. Evidence:
+[document-read final gate](document-reads-20261031/final-gate.json.gz).
+
+## Fallible metadata projections (2026-10-31; locally validated)
+
+The remaining public `get_document_info`/`list_document_info` paths still call
+`expect` when decoding checkpoint records. The preceding CRC-valid malformed
+record regression proved that the underlying projection can panic. Callers
+include HTTP listing and ownership checks, MCP write preflight and prefix
+selection, Node metadata reads, and vector-index recovery. The next change will
+propagate decoder errors through their existing fallible interfaces, preserving
+normal absence, metadata-only allocation bounds and checkpoint preservation.
+Vector-index recovery must retain its dirty marker and avoid dropping rows when
+metadata cannot be read; MCP prefix selection must fail before deletion.
+
+The baseline reproduces three panics: metadata get, metadata listing, and dirty
+vector-index recovery. Both native metadata APIs now return Result and propagate
+checkpoint decoder errors through HTTP, MCP and Node. Normal missing records
+remain None, and listing retains the shared bounded metadata projection. Recovery
+collects every stale row before removal, so a decoder error cannot turn an
+unreadable document into a missing one or clear the dirty marker. Existing MCP
+prefix selection already completes before deletion; its errors now propagate.
+The old hydration-helper comment incorrectly said opening checked the whole
+checkpoint; it now states the remaining helper's actual panic contract.
+
+All-feature/all-target compilation and all eight vector-index tests pass. The
+new recovery test verifies unchanged log bytes and dirty marker on failure,
+then stale-row removal and matching-row retention after checkpoint repair.
+Final local validation also passes 41 MCP, six allocation, ten checkpoint and
+twenty HTTP API tests, strict all-feature/all-target Clippy, scoped formatting
+and diff checks. Assertions and deadlines are unchanged. Exact-head remote CI
+and merge remain required. Reproduction inputs and
+baseline evidence: [metadata-reads-20261031/](metadata-reads-20261031/).

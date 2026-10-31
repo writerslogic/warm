@@ -751,8 +751,8 @@ fn metadata_pages_merge_checkpoint_replacements_and_deletions() -> Result<()> {
             core = open(dir.path(), keep_tail.clone())?;
         }
         assert_eq!(core.document_count(), 5);
-        assert!(core.get_document_info("a-b").is_none());
-        let replacement = core.get_document_info("b").unwrap();
+        assert!(core.get_document_info("a-b")?.is_none());
+        let replacement = core.get_document_info("b")?.unwrap();
         assert_eq!(replacement.version, "v2");
         assert_eq!(replacement.metadata, json!({"version": "v2"}));
         for (cursor, expected) in [
@@ -766,7 +766,7 @@ fn metadata_pages_merge_checkpoint_replacements_and_deletions() -> Result<()> {
         ] {
             for limit in [0, 1, 2, 5, 6] {
                 let page: Vec<_> = core
-                    .list_document_info(cursor, limit)
+                    .list_document_info(cursor, limit)?
                     .into_iter()
                     .map(|record| record.id)
                     .collect();
@@ -809,6 +809,12 @@ fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<
         assert!(core.serves_from_checkpoint());
         let error = core.get_document("doc").unwrap_err();
         assert!(format!("{error:#}").contains("checkpoint source flag 2"));
+        for error in [
+            core.get_document_info("doc").unwrap_err(),
+            core.list_document_info(None, 100).unwrap_err(),
+        ] {
+            assert!(format!("{error:#}").contains("checkpoint source flag 2"));
+        }
         let read = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             core.list_documents(None, 100)
         }));
@@ -824,6 +830,8 @@ fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<
         Some("stored text")
     );
     assert_eq!(core.list_documents(None, 100)?.len(), 1);
+    assert_eq!(core.get_document_info("doc")?.unwrap().version, "v1");
+    assert_eq!(core.list_document_info(None, 100)?[0].id, "doc");
     assert!(core.serves_from_checkpoint());
     Ok(())
 }

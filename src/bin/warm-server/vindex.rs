@@ -440,18 +440,17 @@ impl VectorIndex {
     fn reconcile(&self, core: &WarmCore) -> Result<()> {
         let stale: Vec<Arc<str>> = {
             let state = self.state.read();
-            state
-                .ids
-                .iter()
-                .zip(&state.tokens)
-                .filter_map(|(id, token)| {
-                    let id = id.as_ref()?;
-                    let keep = core
-                        .get_document_info(id)
-                        .is_some_and(|record| record.version == version_stamp(*token));
-                    (!keep).then(|| id.clone())
-                })
-                .collect()
+            let mut stale = Vec::new();
+            for (id, token) in state.ids.iter().zip(&state.tokens) {
+                let Some(id) = id else { continue };
+                let keep = core
+                    .get_document_info(id)?
+                    .is_some_and(|record| record.version == version_stamp(*token));
+                if !keep {
+                    stale.push(id.clone());
+                }
+            }
+            stale
         };
         let ids: Vec<&str> = stale.iter().map(AsRef::as_ref).collect();
         if !ids.is_empty() {
@@ -1188,6 +1187,72 @@ mod tests {
         assert!(status.graph && status.rows == 310, "rebuilt");
         assert!(fallback.covers(&core));
         assert_eq!(top(&fallback, 305, dim)[0], "d305");
+    }
+
+    #[test]
+    fn checkpoint_decode_failure_keeps_recovery_rows_and_dirty_marker() -> Result<()> {
+        use writerslogic_warm::core::documents::{EncodeMode, IngestOptions};
+        use writerslogic_warm::core::format::verify::resolve_generation;
+
+        let dir = tempfile::tempdir()?;
+        let store = dir.path().join("store");
+        let vdir = dir.path().join("vindex");
+        let mut config = writerslogic_warm::core::WarmConfig::default();
+        config.document_checkpoint.enabled = true;
+        config.document_checkpoint.min_journal_bytes = 0;
+        let version = version_stamp(12);
+        {
+            let core = WarmCore::new(256, Some(store.display().to_string()), Some(config.clone()))?;
+            core.memorize_document_with(
+                serde_json::from_value(serde_json::json!({
+                    "id": "doc", "version": version, "text": "stored text"
+                }))?,
+                &IngestOptions {
+                    encode: EncodeMode::Lexical,
+                    ..Default::default()
+                },
+            )?;
+            let index = VectorIndex::open(&vdir, 8, &core)?;
+            index.stage(&[
+                ("ghost".into(), 13, normalize(&vector(1, 8))?),
+                ("doc".into(), 12, normalize(&vector(0, 8))?),
+            ])?;
+        }
+        let checkpoint =
+            resolve_generation(&store.join("vectors_data.bin"))?.join("documents.ckpt");
+        let original = std::fs::read(&checkpoint)?;
+        let mut damaged = original.clone();
+        // Docs section offset: header word 14 + 2 * section 9.
+        let record_at = usize::try_from(u64::from_le_bytes(damaged[264..272].try_into()?))?;
+        assert_eq!(usize::from(damaged[record_at]), version.len());
+        let flag_at = record_at + 1 + version.len();
+        assert_eq!(damaged[flag_at], 0);
+        damaged[flag_at] = 2;
+        let crc = crc32fast::hash(&damaged[16..]);
+        damaged[8..16].copy_from_slice(&u64::from(crc).to_le_bytes());
+        std::fs::write(&checkpoint, damaged)?;
+        let before = std::fs::read(vdir.join("rows.log"))?;
+        {
+            let core = WarmCore::new(256, Some(store.display().to_string()), Some(config.clone()))?;
+            assert!(core.serves_from_checkpoint());
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                VectorIndex::open(&vdir, 8, &core)
+            }));
+            let error = result
+                .expect("reconciliation must not panic")
+                .err()
+                .expect("decode error");
+            assert!(format!("{error:#}").contains("checkpoint source flag 2"));
+            assert!(vdir.join("dirty").exists());
+            assert_eq!(std::fs::read(vdir.join("rows.log"))?, before);
+        }
+        std::fs::write(checkpoint, original)?;
+        let core = WarmCore::new(256, Some(store.display().to_string()), Some(config))?;
+        let index = VectorIndex::open(&vdir, 8, &core)?;
+        assert_eq!(index.live(), 1);
+        assert_eq!(top(&index, 0, 8), ["doc"]);
+        assert!(!vdir.join("dirty").exists());
+        Ok(())
     }
 
     #[test]

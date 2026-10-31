@@ -244,7 +244,10 @@ fn store_docs(state: &AppState, tenant: &str, docs: Vec<ValidDoc>) -> Result<usi
     let core = state.core(tenant)?;
     let _mutation = core.quota_lease();
     for doc in &final_docs {
-        if let Some(existing) = core.get_document_info(&doc.input.id) {
+        if let Some(existing) = core
+            .get_document_info(&doc.input.id)
+            .map_err(ApiError::from_core)?
+        {
             check_import_owner(
                 &existing.metadata,
                 doc.input.metadata.as_ref().expect("validated metadata"),
@@ -596,7 +599,7 @@ pub async fn delete_doc(
         }
         let core = state.core(&tenant)?;
         let _mutation = core.quota_lease();
-        if let Some(record) = core.get_document_info(&id) {
+        if let Some(record) = core.get_document_info(&id).map_err(ApiError::from_core)? {
             match (
                 record
                     .metadata
@@ -1138,7 +1141,9 @@ pub async fn list_documents(
     let headers = req.headers().clone();
     cached_read(state, tenant, headers, move |core| {
         let from = params.after.as_deref().map(|after| format!("{after}\0"));
-        let mut page = core.list_document_info(from.as_deref(), limit + 1);
+        let mut page = core
+            .list_document_info(from.as_deref(), limit + 1)
+            .map_err(ApiError::from_core)?;
         let more = page.len() > limit;
         page.truncate(limit);
         let next = more
