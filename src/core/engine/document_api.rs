@@ -608,21 +608,55 @@ impl WarmCore {
         Err(documents::DocumentReadChanged.into())
     }
 
-    /// One stored document with its text, metadata and version.
-    pub fn get_document(&self, id: &str) -> Option<documents::DocumentRecord> {
-        let _transaction = self.mutation_gate.read();
-        documents::get_record(&self.documents(), id)
+    /// One stored document; retained-text failures are errors, not absent text.
+    pub fn get_document(&self, id: &str) -> Result<Option<documents::DocumentRecord>> {
+        validate_id(id)?;
+        self.read_document_records(|store| {
+            Ok(documents::get_record(store, id)?.into_iter().collect())
+        })
+        .map(|mut records| records.pop())
     }
 
     /// Up to `limit` stored documents with ids at or after `from`, in id order. Resume after id
     /// `X` with `from = X + "\0"` (document ids cannot contain NUL).
+    /// Text is read without holding store locks; concurrent changes may require retry.
     pub fn list_documents(
         &self,
         from: Option<&str>,
         limit: usize,
-    ) -> Vec<documents::DocumentRecord> {
-        let _transaction = self.mutation_gate.read();
-        documents::list_records(&self.documents(), from, limit)
+    ) -> Result<Vec<documents::DocumentRecord>> {
+        self.read_document_records(|store| documents::list_records(store, from, limit))
+    }
+
+    fn read_document_records(
+        &self,
+        capture: impl Fn(&documents::DocumentStore) -> Result<Vec<documents::CapturedDocumentRead>>,
+    ) -> Result<Vec<documents::DocumentRecord>> {
+        self.read_document_records_with(capture, || {})
+    }
+
+    fn read_document_records_with(
+        &self,
+        capture: impl Fn(&documents::DocumentStore) -> Result<Vec<documents::CapturedDocumentRead>>,
+        mut after_capture: impl FnMut(),
+    ) -> Result<Vec<documents::DocumentRecord>> {
+        for _ in 0..3 {
+            let captured = {
+                let _transaction = self.mutation_gate.read();
+                capture(&self.documents.read())?
+            };
+            after_capture();
+            let reads: Vec<_> = captured.into_iter().map(|record| record.read()).collect();
+            let _transaction = self.mutation_gate.read();
+            let store = self.documents.read();
+            if reads
+                .iter()
+                .all(|(identity, _)| identity.is_current(&store))
+            {
+                return reads.into_iter().map(|(_, result)| result).collect();
+            }
+        }
+        Err(documents::DocumentReadChanged.into())
     }
 
     pub fn delete_document(&self, id: &str) -> Result<bool> {
@@ -864,6 +898,57 @@ mod chunk_read_tests {
             .expect("chunk read worker failed or stalled");
         worker.join().unwrap();
         result.unwrap();
+    }
+
+    #[test]
+    fn document_reads_retry_replacements_and_report_continuous_change() {
+        run(|core| {
+            let mut replaced = false;
+            let records = core.read_document_records_with(
+                |store| documents::list_records(store, None, 10),
+                || {
+                    if !replaced {
+                        core.memorize_document(document("new")).unwrap();
+                        replaced = true;
+                    }
+                },
+            )?;
+            assert_eq!(records.len(), 1);
+            assert_eq!(records[0].version, "new");
+            assert_eq!(records[0].metadata, serde_json::json!({"version": "new"}));
+            assert_eq!(records[0].text.as_deref(), Some("text new"));
+            let mut attempts = 0;
+            let error = core
+                .read_document_records_with(
+                    |store| documents::list_records(store, None, 10),
+                    || {
+                        attempts += 1;
+                        core.memorize_document(document(&format!("v{attempts}")))
+                            .unwrap();
+                    },
+                )
+                .unwrap_err();
+            assert!(error
+                .downcast_ref::<documents::DocumentReadChanged>()
+                .is_some());
+            assert_eq!(attempts, 3);
+            Ok(())
+        });
+    }
+
+    #[test]
+    fn document_reads_retry_deletion_without_returning_scrubbed_text() {
+        run(|core| {
+            let records = core.read_document_records_with(
+                |store| documents::list_records(store, None, 10),
+                || {
+                    core.delete_document("doc").unwrap();
+                },
+            )?;
+            assert!(records.is_empty());
+            assert!(core.get_document("doc")?.is_none());
+            Ok(())
+        });
     }
 
     #[test]

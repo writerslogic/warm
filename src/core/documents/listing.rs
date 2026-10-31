@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 use anyhow::{ensure, Context, Result};
 
-use super::index::text_of;
 use super::text::TextSegment;
 use super::{DocumentStore, StoredDocument};
 
@@ -200,6 +199,14 @@ pub(crate) fn list_info(
     from: Option<&str>,
     limit: usize,
 ) -> Vec<DocumentInfo> {
+    try_list_info(store, from, limit).expect("decoding checkpoint document metadata")
+}
+
+fn try_list_info(
+    store: &DocumentStore,
+    from: Option<&str>,
+    limit: usize,
+) -> Result<Vec<DocumentInfo>> {
     use std::cmp::Ordering;
     use std::ops::Bound::{Included, Unbounded};
     let start = from.map_or(Unbounded, Included);
@@ -208,10 +215,10 @@ pub(crate) fn list_info(
         .range::<str, _>((start, Unbounded))
         .peekable();
     let Some(base) = &store.base else {
-        return live
+        return Ok(live
             .take(limit)
             .map(|(_, document)| info(document))
-            .collect();
+            .collect());
     };
     let mut checkpoint = base.live_ordinals_from(from).peekable();
     let mut result = Vec::new();
@@ -233,12 +240,11 @@ pub(crate) fn list_info(
         } else {
             result.push(
                 base.image
-                    .document_info(checkpoint.next().expect("peeked checkpoint ordinal"))
-                    .expect("decoding checkpoint document metadata"),
+                    .document_info(checkpoint.next().expect("peeked checkpoint ordinal"))?,
             );
         }
     }
-    result
+    Ok(result)
 }
 
 /// A stored document as the store holds it: first chunk's text, metadata and version.
@@ -255,41 +261,57 @@ pub struct DocumentRecord {
     pub chunk_count: usize,
 }
 
-fn record(document: &StoredDocument, segment: Option<&TextSegment>) -> DocumentRecord {
-    DocumentRecord {
-        id: document.id.clone(),
-        source_uri: document.source_uri.clone(),
-        version: document.version.clone(),
-        metadata: document.metadata.clone(),
-        text: document
-            .chunks
-            .first()
-            .and_then(|chunk| text_of(chunk, segment)),
-        chunk_count: document.chunks.len(),
+pub(crate) enum CapturedDocumentRead {
+    Chunk(CapturedChunkRead),
+    Empty(DocumentInfo),
+}
+
+impl CapturedDocumentRead {
+    pub(crate) fn read(self) -> (ChunkReadIdentity, Result<DocumentRecord>) {
+        let (identity, result) = match self {
+            Self::Chunk(chunk) => {
+                let (identity, result) = chunk.read();
+                (identity, result.map(|chunk| (chunk.document, chunk.text)))
+            }
+            Self::Empty(info) => (
+                ChunkReadIdentity {
+                    document: None,
+                    segment: None,
+                },
+                Ok((info, None)),
+            ),
+        };
+        (
+            identity,
+            result.map(|(info, text)| DocumentRecord {
+                id: info.id,
+                source_uri: info.source_uri,
+                version: info.version,
+                metadata: info.metadata,
+                text,
+                chunk_count: info.chunk_count,
+            }),
+        )
     }
 }
 
-pub(crate) fn get_record(store: &DocumentStore, id: &str) -> Option<DocumentRecord> {
-    store.get(id).map(|document| {
-        let segment = store.text_segment();
-        record(document, segment.as_deref())
-    })
+pub(crate) fn get_record(store: &DocumentStore, id: &str) -> Result<Option<CapturedDocumentRead>> {
+    if let Some(chunk) = capture_chunk(store, id, 0, 0)? {
+        return Ok(Some(CapturedDocumentRead::Chunk(chunk)));
+    }
+    Ok(get_info(store, id).map(CapturedDocumentRead::Empty))
 }
 
-/// Up to `limit` documents with ids at or after `from`, in id order.
 pub(crate) fn list_records(
     store: &DocumentStore,
     from: Option<&str>,
     limit: usize,
-) -> Vec<DocumentRecord> {
-    use std::ops::Bound::{Included, Unbounded};
-    let start = from.map_or(Unbounded, Included);
-    let segment = store.text_segment();
-    store
-        .documents
-        .range::<str, _>((start, Unbounded))
-        .take(limit)
-        .map(|(_, document)| record(document, segment.as_deref()))
+) -> Result<Vec<CapturedDocumentRead>> {
+    try_list_info(store, from, limit)?
+        .into_iter()
+        .map(|info| {
+            get_record(store, &info.id)?.context("listed document disappeared under read lock")
+        })
         .collect()
 }
 
@@ -321,6 +343,24 @@ mod tests {
             store.insert(prepared.id.clone(), prepared);
         }
         store
+    }
+
+    fn list_records(
+        store: &DocumentStore,
+        from: Option<&str>,
+        limit: usize,
+    ) -> Vec<DocumentRecord> {
+        super::list_records(store, from, limit)
+            .unwrap()
+            .into_iter()
+            .map(|record| record.read().1.unwrap())
+            .collect()
+    }
+
+    fn get_record(store: &DocumentStore, id: &str) -> Option<DocumentRecord> {
+        super::get_record(store, id)
+            .unwrap()
+            .map(|record| record.read().1.unwrap())
     }
 
     #[test]

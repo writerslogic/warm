@@ -258,10 +258,6 @@ impl serde::Serialize for ChunkWithText<'_> {
 }
 
 /// A chunk's text from its inline copy or the segment holding it.
-pub(super) fn text_of(chunk: &StoredChunk, segment: Option<&TextSegment>) -> Option<String> {
-    try_text_of(chunk, segment).expect("chunk text read")
-}
-
 pub(super) fn try_text_of(
     chunk: &StoredChunk,
     segment: Option<&TextSegment>,
