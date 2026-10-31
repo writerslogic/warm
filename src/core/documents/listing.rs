@@ -182,27 +182,19 @@ fn info(document: &StoredDocument) -> DocumentInfo {
     }
 }
 
-pub(crate) fn get_info(store: &DocumentStore, id: &str) -> Option<DocumentInfo> {
+pub(crate) fn get_info(store: &DocumentStore, id: &str) -> Result<Option<DocumentInfo>> {
     if let Some(document) = store.get(id) {
-        return Some(info(document));
+        return Ok(Some(info(document)));
     }
-    let base = store.base.as_ref()?;
-    base.live(id).map(|ordinal| {
-        base.image
-            .document_info(ordinal)
-            .expect("decoding checkpoint document metadata")
-    })
+    let Some(base) = store.base.as_ref() else {
+        return Ok(None);
+    };
+    base.live(id)
+        .map(|ordinal| base.image.document_info(ordinal))
+        .transpose()
 }
 
 pub(crate) fn list_info(
-    store: &DocumentStore,
-    from: Option<&str>,
-    limit: usize,
-) -> Vec<DocumentInfo> {
-    try_list_info(store, from, limit).expect("decoding checkpoint document metadata")
-}
-
-fn try_list_info(
     store: &DocumentStore,
     from: Option<&str>,
     limit: usize,
@@ -299,7 +291,7 @@ pub(crate) fn get_record(store: &DocumentStore, id: &str) -> Result<Option<Captu
     if let Some(chunk) = capture_chunk(store, id, 0, 0)? {
         return Ok(Some(CapturedDocumentRead::Chunk(chunk)));
     }
-    Ok(get_info(store, id).map(CapturedDocumentRead::Empty))
+    Ok(get_info(store, id)?.map(CapturedDocumentRead::Empty))
 }
 
 pub(crate) fn list_records(
@@ -307,7 +299,7 @@ pub(crate) fn list_records(
     from: Option<&str>,
     limit: usize,
 ) -> Result<Vec<CapturedDocumentRead>> {
-    try_list_info(store, from, limit)?
+    list_info(store, from, limit)?
         .into_iter()
         .map(|info| {
             get_record(store, &info.id)?.context("listed document disappeared under read lock")

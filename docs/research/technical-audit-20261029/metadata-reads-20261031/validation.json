@@ -1,0 +1,41 @@
+{
+  "base": "a02a4b50a0a578b2761c2050f5c3e65ee7e27639",
+  "toolchain": "Rust 1.99.0",
+  "source_sha256": {
+    "src/bin/warm-mcp/store.rs": "777a6b4b4a6009fc88482023d2b35d975d52bb9f626507514c956a265898b937",
+    "src/bin/warm-server/documents.rs": "c7e6280c33e5dd49165be714caa40b8c48085ab1fcdc57320b65b1191f169ce8",
+    "src/bin/warm-server/vindex.rs": "eccda09261a2bc981e461e62d5425535dcecd0503a75d0f75a24cee43a3ac948",
+    "src/bindings/node/api.rs": "4cdf32b5f2fab029a6adc001a6d36d57d15c8d254c943e050591ac22cf3ce2e0",
+    "src/core/documents/listing.rs": "990f865396100cafaf29198b4f34ce52b88d6e63ad63b49bc2ea03e397ad4108",
+    "src/core/engine/document_api.rs": "87926e2a005f2a47eca048a83893895e91cb0a0d28b653857ec52655ec30dfa2",
+    "src/core/engine/image.rs": "fefba4d313eb6f3f8260bdee14028ec9c3f0cc3e26f65ca54369e5929353d25f",
+    "tests/allocation_bounds.rs": "8fa8fe581596dc35be3075af6ade6a415da843b92605701c009271e64cae5dd3",
+    "tests/document_checkpoint.rs": "66a20949290f6167f95349191cd0dcffbf85f5701d744e517367508561b8ef34"
+  },
+  "baseline": "Three observed panics: metadata get, metadata listing, and vector-index recovery. CRC-valid malformed record source flag.",
+  "passed": {
+    "all_features_all_targets_check": true,
+    "vector_index": 8,
+    "mcp": 41,
+    "allocation": 6,
+    "checkpoint": 10,
+    "http_api": 20,
+    "all_features_all_targets_clippy": true,
+    "touched_rustfmt": true
+  },
+  "limits": [
+    "Other infallible engine helpers remain outside this change.",
+    "No hardware power-loss or concurrent external filesystem-tampering assurance.",
+    "Exact-head remote CI and merge remain required."
+  ],
+  "artifacts_sha256": {
+    "baseline-regression.patch.gz": "59b91e090d4cd41bc58d165d2e52177cfd6cfaa0aaa6068843775c82b0eb9c4d",
+    "baseline.log.gz": "6ddc5cd48b93e715550f47f20028d90b85d3eb7903da44ae6df3e2d98b38773c",
+    "check.log.gz": "805472077bc32f416685fed68a6d94ad066e4f631a428539fe66e46380c5eb5c",
+    "clippy.log.gz": "93fbc14a413229699e393b6ab13018bd2c543ad1253838ba1c916cc3b1f3b322",
+    "contracts.log.gz": "b3defcc98f0736739e17e873f0b5c92f26d5dea85f80701e9ad0be6618f0a826",
+    "recovery-baseline.log.gz": "71cb806274a751f23f39a8d1a1dc17b88b6c91562121ead4e3c2d4acc0bc01b9",
+    "recovery-regression.patch.gz": "00cc6a6e1d66cdc3800cea467ef2e87710cb6b0d6a6e99649ac99976572b646c",
+    "recovery.log.gz": "b5ce5c26b0994bb17de78f4105d51e3a91c7d4f75b406ecfa853c6d6f69d5377"
+  }
+}

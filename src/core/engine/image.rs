@@ -62,9 +62,7 @@ fn word(header: &[u8], index: usize) -> u64 {
 }
 
 impl WarmCore {
-    /// The document store, rebuilt from the checkpoint first if it is being served from one.
-    /// The open checked the checkpoint whole, so the rebuild fails only on an I/O error;
-    /// accessors that cannot return an error stop there (writes return it).
+    /// The document store, rebuilt from its checkpoint; infallible accessors panic if hydration fails.
     pub(super) fn documents(&self) -> RwLockReadGuard<'_, DocumentStore> {
         self.hydrate_documents()
             .expect("rebuilding the document store from its checkpoint");

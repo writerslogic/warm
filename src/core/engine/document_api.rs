@@ -557,7 +557,7 @@ impl WarmCore {
     }
 
     /// One document's identity, provenance and metadata without copying its stored text.
-    pub fn get_document_info(&self, id: &str) -> Option<documents::DocumentInfo> {
+    pub fn get_document_info(&self, id: &str) -> Result<Option<documents::DocumentInfo>> {
         let _transaction = self.mutation_gate.read();
         documents::get_info(&self.documents.read(), id)
     }
@@ -568,7 +568,7 @@ impl WarmCore {
         &self,
         from: Option<&str>,
         limit: usize,
-    ) -> Vec<documents::DocumentInfo> {
+    ) -> Result<Vec<documents::DocumentInfo>> {
         let _transaction = self.mutation_gate.read();
         documents::list_info(&self.documents.read(), from, limit)
     }
