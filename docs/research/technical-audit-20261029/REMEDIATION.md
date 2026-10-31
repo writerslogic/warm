@@ -1402,3 +1402,11 @@ versions, CrewAI native memory, or arbitrary embedding configurations as safe.
 All four Chroma advisory matches remain unresolved. The archived probe runs with
 the SDK and Chroma 1.5.9 installed, with telemetry/model downloads disabled, and
 uses only a local temporary store; it performs no malicious code execution.
+
+PR #366 merged as `d270448e5cadb0c5844f12d6f7f747639a7e35da` after all 71
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368. No unresolved review threads or open code-scanning alerts remained.
+Only owner review was bypassed. GitHub verified the merge signature; its tree
+`42b17d7d07e4a7aa9d048da8019e25d3dc77d7aa` equals the tested head tree.
+Clean root main was fast-forwarded. The Windows service gate passed without
+relaxing deadlines. Evidence: [native final gate](raw-query-errors-20261031/final-gate.json).
