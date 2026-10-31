@@ -46,6 +46,8 @@ impl Histogram {
 #[derive(Default)]
 pub struct TenantGauge {
     pub name: String,
+    pub audit_pending: usize,
+    pub audit_recoverable: bool,
     pub documents: u64,
     pub vectors: u64,
     pub used_bytes: f64,
@@ -61,6 +63,8 @@ pub struct Saturation {
     pub queue_depth: usize,
     pub tenants: Vec<TenantGauge>,
     pub idempotency_records: usize,
+    pub idempotency_body_bytes: usize,
+    pub idempotency_unreplayable: usize,
     pub ready: bool,
 }
 
@@ -203,6 +207,18 @@ impl Metrics {
             "Idempotency records held.",
             &sat.idempotency_records,
         );
+        gauge(
+            &mut out,
+            "warm_idempotency_body_bytes",
+            "Response-buffer bytes retained for replay.",
+            &sat.idempotency_body_bytes,
+        );
+        gauge(
+            &mut out,
+            "warm_idempotency_unreplayable",
+            "Retained keys requiring reconciliation instead of replay.",
+            &sat.idempotency_unreplayable,
+        );
         counter(
             &mut out,
             "warm_connections_total",
@@ -289,6 +305,16 @@ impl Metrics {
         }
         for (name, help, kind) in [
             (
+                "warm_tenant_audit_pending",
+                "Committed audit records awaiting acknowledgement.",
+                "gauge",
+            ),
+            (
+                "warm_tenant_audit_recoverable",
+                "1 when the tenant schema supports durable audit delivery.",
+                "gauge",
+            ),
+            (
                 "warm_tenant_documents",
                 "Documents stored per tenant.",
                 "gauge",
@@ -327,7 +353,10 @@ impl Metrics {
             let _ = writeln!(out, "# HELP {name} {help}\n# TYPE {name} {kind}");
             for t in &sat.tenants {
                 let trained = u8::from(t.index_trained);
+                let recoverable = u8::from(t.audit_recoverable);
                 let value: &dyn std::fmt::Display = match name {
+                    "warm_tenant_audit_pending" => &t.audit_pending,
+                    "warm_tenant_audit_recoverable" => &recoverable,
                     "warm_tenant_documents" => &t.documents,
                     "warm_tenant_vectors" => &t.vectors,
                     "warm_tenant_index_bytes" => &t.used_bytes,
@@ -408,6 +437,8 @@ mod tests {
             queue_depth: 0,
             tenants: vec![],
             idempotency_records: 0,
+            idempotency_body_bytes: 0,
+            idempotency_unreplayable: 0,
             ready: true,
         });
         assert!(text.contains("hms_http_request_duration_seconds_count{route=\"/x\"} 3"));
