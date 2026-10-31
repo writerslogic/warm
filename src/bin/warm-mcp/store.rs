@@ -440,7 +440,7 @@ impl WarmBackend {
         let store = self.store(namespace)?;
         let id = req.id.clone().unwrap_or_else(generated_id);
         let _write = store.gate.lock();
-        let existing = store.core.get_document_info(&id);
+        let existing = store.core.get_document_info(&id).map_err(Fail::internal)?;
         if req.create_only && existing.is_some() {
             return Err(Fail::new("already_exists", format!("memory {id:?} exists"))
                 .with(json!({"id": id})));
@@ -610,7 +610,10 @@ impl WarmBackend {
         if let Some(prefix) = &req.prefix {
             let mut from = prefix.clone();
             'scan: loop {
-                let batch = store.core.list_document_info(Some(&from), SCAN_PAGE);
+                let batch = store
+                    .core
+                    .list_document_info(Some(&from), SCAN_PAGE)
+                    .map_err(Fail::internal)?;
                 for record in &batch {
                     if !record.id.starts_with(prefix.as_str()) {
                         break 'scan;
