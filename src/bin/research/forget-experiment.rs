@@ -562,7 +562,7 @@ fn observe(core: &WarmCore, ds: &Dataset, p: &Probe) -> Result<Obs> {
     );
     put(
         "list/all".into(),
-        &serde_json::to_value(core.list_documents(None, 1 << 20))?,
+        &serde_json::to_value(core.list_documents(None, 1 << 20)?)?,
     );
     let mean = |v: &[f64]| {
         if v.is_empty() {

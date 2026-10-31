@@ -111,7 +111,11 @@ fn conditional_changes_never_overwrite_a_raw_core_write() {
         .change_memory_documents(vec![replacement], &["shared".into()], revision)
         .unwrap());
     assert_eq!(
-        core.get_document("shared").unwrap().text.as_deref(),
+        core.get_document("shared")
+            .unwrap()
+            .unwrap()
+            .text
+            .as_deref(),
         Some("raw replacement")
     );
 }
@@ -146,7 +150,11 @@ fn forgetting_policy_replans_instead_of_deleting_a_replaced_source() {
         .unwrap();
     assert!(report.forgotten.is_empty());
     assert_eq!(
-        core.get_document("source").unwrap().text.as_deref(),
+        core.get_document("source")
+            .unwrap()
+            .unwrap()
+            .text
+            .as_deref(),
         Some("foreign replacement")
     );
 }
@@ -225,7 +233,11 @@ fn consolidation_replans_when_its_source_changes_during_the_policy_callback() {
     assert!(result.created.is_empty());
     assert!(!core.has_document("summary"));
     assert_eq!(
-        core.get_document("source").unwrap().text.as_deref(),
+        core.get_document("source")
+            .unwrap()
+            .unwrap()
+            .text
+            .as_deref(),
         Some("changed foreign source")
     );
 }

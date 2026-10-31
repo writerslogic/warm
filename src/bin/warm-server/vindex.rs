@@ -447,7 +447,7 @@ impl VectorIndex {
                 .filter_map(|(id, token)| {
                     let id = id.as_ref()?;
                     let keep = core
-                        .get_document(id)
+                        .get_document_info(id)
                         .is_some_and(|record| record.version == version_stamp(*token));
                     (!keep).then(|| id.clone())
                 })

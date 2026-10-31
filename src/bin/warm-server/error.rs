@@ -124,6 +124,14 @@ impl ApiError {
     pub fn from_core(error: anyhow::Error) -> Self {
         if error.is::<writerslogic_warm::CommittedMutationError>() {
             Self::committed(error)
+        } else if let Some(changed) = error.downcast_ref::<writerslogic_warm::DocumentReadChanged>()
+        {
+            Self::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "concurrent_mutation",
+                changed.to_string(),
+            )
+            .retry_after(1)
         } else if let Some(limit) = error.downcast_ref::<QueryLimitExceeded>() {
             Self::new(
                 StatusCode::TOO_MANY_REQUESTS,
@@ -198,6 +206,21 @@ pub type ApiResult = Result<Response, ApiError>;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn changed_document_reads_are_retryable_without_private_context() {
+        let error = anyhow::Error::new(writerslogic_warm::DocumentReadChanged)
+            .context("private read context");
+        let error = ApiError::from_core(error);
+        let problem = error.problem();
+        assert_eq!(problem["status"], 503);
+        assert_eq!(problem["code"], "concurrent_mutation");
+        assert_eq!(
+            problem["detail"],
+            writerslogic_warm::DocumentReadChanged.to_string()
+        );
+        assert_eq!(error.retry_after, Some(1));
+    }
 
     #[test]
     fn query_exhaustion_is_a_resource_problem_without_private_context() {
