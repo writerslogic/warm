@@ -1516,3 +1516,10 @@ job disappeared during forgetting tests without a terminal result; completed
 checkpoint/chunk results were preserved and the unfinished suites were rerun.
 The final checkpoint run includes the additional decode-error regression.
 No assertions, deadlines or error outcomes were relaxed.
+
+PR #368 merged as `adf4490d28153bbf70561e93d1157dee4e309e81` after all 50
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368 and the guarded CrewAI retention step. No unresolved review threads
+or open code-scanning alerts remained. Only owner review was bypassed. The
+merge signature is verified, the merge tree equals the tested head tree, and
+clean root main was fast-forwarded. Evidence: [CrewAI final gate](crewai-retention-20261031/final-gate.json.gz).
