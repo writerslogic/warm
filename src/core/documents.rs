@@ -42,7 +42,9 @@ pub(crate) use index::DocumentWithText;
 pub(crate) use index::{canonical_staging_path, opaque_counter_start, DocumentStore};
 pub(crate) use lexical::execute as execute_lexical;
 pub use lexical::{LexicalExecution, LexicalHit, LexicalOptions, LexicalQuery, LexicalResults};
-pub(crate) use listing::{capture_chunk, count, get_info, get_record, list_info, list_records};
+pub(crate) use listing::{
+    capture_chunk, count, get_info, get_record, list_info, list_records, CapturedDocumentRead,
+};
 pub use listing::{DocumentChunkRecord, DocumentInfo, DocumentReadChanged, DocumentRecord};
 pub use memory::{MemoryDocumentStore, MemoryStoreStats};
 pub(crate) use overlay::Base as CheckpointBase;

@@ -174,6 +174,7 @@ fn answers(core: &WarmCore) -> Result<Vec<String>> {
 
 fn records(core: &WarmCore) -> Vec<String> {
     core.list_documents(None, 10_000)
+        .unwrap()
         .iter()
         .map(|record| format!("{record:?}"))
         .collect()
@@ -231,7 +232,16 @@ fn checkpointed_store_answers_exactly_as_full_replay_through_writes_and_reopens(
         core.serves_from_checkpoint(),
         "lexical queries never rebuild"
     );
-    assert_eq!(records(&core), records(&twin), "a read rebuilds the store");
+    assert_eq!(
+        records(&core),
+        records(&twin),
+        "checkpoint reads match replay"
+    );
+    assert!(
+        core.serves_from_checkpoint(),
+        "document reads preserve the checkpoint"
+    );
+    assert_eq!(core.count_documents("run")?, twin.count_documents("run")?);
     assert!(!core.serves_from_checkpoint());
     assert_eq!(answers(&core)?, expected);
 
@@ -272,6 +282,7 @@ fn checkpointed_store_answers_exactly_as_full_replay_through_writes_and_reopens(
 
 fn ids(core: &WarmCore) -> Vec<String> {
     core.list_documents(None, 10_000)
+        .unwrap()
         .into_iter()
         .map(|record| record.id)
         .collect()
@@ -346,7 +357,16 @@ fn writes_over_a_checkpoint_score_exactly_as_the_store_without_one() -> Result<(
         }
         assert!(core.serves_from_checkpoint());
         assert_eq!(answers(&core)?, answers(&twin)?, "seed {seed:x} refilled");
-        assert_eq!(records(&core), records(&twin), "a read rebuilds the store");
+        assert_eq!(
+            records(&core),
+            records(&twin),
+            "checkpoint reads match replay"
+        );
+        assert!(
+            core.serves_from_checkpoint(),
+            "document reads preserve the checkpoint"
+        );
+        assert_eq!(core.count_documents("run")?, twin.count_documents("run")?);
         assert!(!core.serves_from_checkpoint());
         assert_eq!(answers(&core)?, answers(&twin)?, "seed {seed:x} rebuilt");
     }
@@ -758,8 +778,52 @@ fn metadata_pages_merge_checkpoint_replacements_and_deletions() -> Result<()> {
         }
     }
     assert_eq!(
-        core.get_document("b").unwrap().text.as_deref(),
+        core.get_document("b").unwrap().unwrap().text.as_deref(),
         Some("stored text")
     );
+    Ok(())
+}
+
+#[test]
+fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<()> {
+    let dir = tempfile::tempdir()?;
+    {
+        let core = open(dir.path(), config(true))?;
+        core.memorize_document_with(
+            serde_json::from_value(json!({"id": "doc", "version": "v1", "text": "stored text"}))?,
+            &lexical(),
+        )?;
+    }
+    let path = checkpoints(dir.path()).pop().expect("a checkpoint");
+    let original = std::fs::read(&path)?;
+    let mut bytes = original.clone();
+    // Docs section offset: header word 14 + 2 * section 9.
+    let record_at = usize::try_from(u64::from_le_bytes(bytes[264..272].try_into()?))?;
+    assert_eq!(&bytes[record_at..record_at + 4], &[2, b'v', b'1', 0]);
+    bytes[record_at + 3] = 2;
+    let crc = crc32fast::hash(&bytes[16..]);
+    bytes[8..16].copy_from_slice(&u64::from(crc).to_le_bytes());
+    std::fs::write(&path, bytes)?;
+    {
+        let core = open(dir.path(), config(true))?;
+        assert!(core.serves_from_checkpoint());
+        let error = core.get_document("doc").unwrap_err();
+        assert!(format!("{error:#}").contains("checkpoint source flag 2"));
+        let read = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            core.list_documents(None, 100)
+        }));
+        let error = read
+            .expect("checkpoint decode errors must not panic")
+            .unwrap_err();
+        assert!(format!("{error:#}").contains("checkpoint source flag 2"));
+    }
+    std::fs::write(path, original)?;
+    let core = open(dir.path(), config(true))?;
+    assert_eq!(
+        core.get_document("doc")?.unwrap().text.as_deref(),
+        Some("stored text")
+    );
+    assert_eq!(core.list_documents(None, 100)?.len(), 1);
+    assert!(core.serves_from_checkpoint());
     Ok(())
 }

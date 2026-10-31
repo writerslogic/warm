@@ -513,7 +513,7 @@ mod tests {
         drop(core);
         let core = WarmCore::new(256, path, Some(config()))?;
         assert_eq!(
-            core.get_document("kept").unwrap().text.as_deref(),
+            core.get_document("kept").unwrap().unwrap().text.as_deref(),
             Some("needle durable source")
         );
         core.compact()?;

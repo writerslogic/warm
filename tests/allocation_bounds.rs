@@ -270,7 +270,12 @@ fn metadata_listing_does_not_allocate_stored_text() {
     );
     assert_eq!(core.document_count(), 17);
     assert_eq!(
-        core.get_document("doc-01").unwrap().text.unwrap().len(),
+        core.get_document("doc-01")
+            .unwrap()
+            .unwrap()
+            .text
+            .unwrap()
+            .len(),
         64 * 1024
     );
 }

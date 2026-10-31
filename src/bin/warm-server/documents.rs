@@ -244,7 +244,7 @@ fn store_docs(state: &AppState, tenant: &str, docs: Vec<ValidDoc>) -> Result<usi
     let core = state.core(tenant)?;
     let _mutation = core.quota_lease();
     for doc in &final_docs {
-        if let Some(existing) = core.get_document(&doc.input.id) {
+        if let Some(existing) = core.get_document_info(&doc.input.id) {
             check_import_owner(
                 &existing.metadata,
                 doc.input.metadata.as_ref().expect("validated metadata"),
@@ -596,7 +596,7 @@ pub async fn delete_doc(
         }
         let core = state.core(&tenant)?;
         let _mutation = core.quota_lease();
-        if let Some(record) = core.get_document(&id) {
+        if let Some(record) = core.get_document_info(&id) {
             match (
                 record
                     .metadata
@@ -893,18 +893,18 @@ fn vector_search(
                 let hits = vectors
                     .search(&query, top_k as usize, route.ef)
                     .map_err(ApiError::internal)?;
-                return Ok(hits
-                    .into_iter()
-                    .filter_map(|(id, score)| {
-                        let record = core.get_document(&id)?;
-                        Some(Match {
+                let mut matches = Vec::with_capacity(hits.len());
+                for (id, score) in hits {
+                    if let Some(record) = core.get_document(&id).map_err(ApiError::from_core)? {
+                        matches.push(Match {
                             id: record.id,
                             text: record.text.unwrap_or_default(),
                             metadata: record.metadata,
                             score: f64::from(score),
-                        })
-                    })
-                    .collect());
+                        });
+                    }
+                }
+                return Ok(matches);
             }
         }
         return core
@@ -1116,18 +1116,7 @@ pub async fn read_document_chunk(
     cached_read(state, tenant, headers, move |core| {
         let chunk = core
             .read_document_chunk(&id, index)
-            .map_err(|error| {
-                if error.is::<writerslogic_warm::DocumentReadChanged>() {
-                    ApiError::new(
-                        StatusCode::SERVICE_UNAVAILABLE,
-                        "concurrent_mutation",
-                        error.to_string(),
-                    )
-                    .retry_after(1)
-                } else {
-                    ApiError::from_core(error)
-                }
-            })?
+            .map_err(ApiError::from_core)?
             .ok_or_else(|| ApiError::not_found("document or chunk not found"))?;
         Ok(body(&chunk))
     })

@@ -1458,3 +1458,61 @@ threads or open code-scanning alerts remained. Only owner review was bypassed.
 The merge signature is verified, its tree equals the tested head tree, and
 clean root main was fast-forwarded. The five Chroma/DiskCache advisory matches
 remain unresolved. Evidence: [integration final gate](integration-profile-security-20261031/final-gate.json.gz).
+
+
+## Fallible document reads without checkpoint hydration (2026-10-31; locally validated)
+
+Source review found the remaining public `get_document`/`list_documents` path
+hydrated checkpoints and called `text_of`, whose `expect("chunk text read")`
+panicked on retained-text read errors. The finding is a panic path, not evidence
+that corruption returned absent text. `text_of` had no remaining caller after
+this path was replaced and was removed; fallible `try_text_of` remains.
+
+The candidate Rust APIs return `Result` and reuse the existing checked chunk
+capture/read/identity mechanism. A bounded listing captures metadata and first
+chunks under the store lock, reads retained text after releasing locks, checks
+captured identities, and retries up to three times if the store changed. Missing
+documents and legitimately omitted text retain their distinct meanings. It reads
+checkpoint records directly instead of rebuilding the full document store.
+Metadata-only ownership checks, vector-index reconciliation, and MCP deletion
+now use the existing metadata accessors. MCP get/list and HTTP indexed vector
+results propagate read failures. HTTP typed concurrent-read failures use the
+existing 503 `concurrent_mutation` / Retry-After contract without exposing outer
+error context. This intentionally breaks the native Rust return types; in-tree
+callers and the unreleased API notice are updated.
+
+Local results so far: all-feature/all-target compilation; 36 document-related
+library tests passed (one external-index diagnostic ignored); two listing tests;
+41 MCP tests; six allocation tests. New corruption/recovery cases cover both
+get and list with bit flips and truncation; deterministic mutation hooks cover
+replacement, deletion, and exhaustion of the three retries. Two checkpoint
+assertions failed because they explicitly required document reads to rebuild the
+checkpoint; record equality itself passed. Updated tests require reads to keep
+the checkpoint and separately trigger/count-verify a rebuild before retaining
+the original post-rebuild equivalence assertions. The corrected checkpoint,
+chunk, forgetting, HTTP, error-mapping and strict Clippy gates subsequently passed.
+
+Working branch: `fix/checked-document-reads`, based on PR #366 head
+`8448619e91939798bebd7d5c40fb234fa725bf32`; exact-head remote CI is still required.
+Evidence, commands, source hashes, and failed attempts are archived in
+[document-reads-20261031/](document-reads-20261031/). Other infallible metadata,
+count and memory-view accessors are not generally qualified by these tests.
+
+Final review reproduced an additional listing panic with a CRC-valid checkpoint
+whose document record has an invalid source flag. `get_document` already returned
+an error, but `list_documents` first used the infallible metadata projection and
+panicked before reaching its checked read. The projection now has a shared
+fallible implementation used by document listing; the existing metadata-only API
+retains its separate infallible contract. The regression verifies both document
+read errors and recovery after restoring the checkpoint. Its pre-fix panic log
+is preserved. This does not qualify the remaining metadata-only APIs against
+malformed checkpoint records.
+
+Final local gate: ten checkpoint, five chunk, six forgetting-equivalence, twenty
+HTTP API, five server error-mapping and two listing tests pass, in addition to
+the earlier 36 document-library, 41 MCP and six allocation tests. Strict
+all-feature/all-target Clippy and scoped formatting pass. The recovered initial
+job disappeared during forgetting tests without a terminal result; completed
+checkpoint/chunk results were preserved and the unfinished suites were rerun.
+The final checkpoint run includes the additional decode-error regression.
+No assertions, deadlines or error outcomes were relaxed.

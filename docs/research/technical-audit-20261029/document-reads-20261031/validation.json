@@ -1,0 +1,59 @@
+{
+  "base": "8448619e91939798bebd7d5c40fb234fa725bf32",
+  "toolchain": "Rust 1.99.0",
+  "source_sha256": {
+    "src/bin/research/forget-experiment.rs": "0a07084aa576e2b799b5d43052dbed67be724673f0dffe175f883b5c439de76e",
+    "src/bin/warm-mcp/store.rs": "ae088ca44901b798d4f0285978840c14fed9868b1412ce6bdb227b20de400f90",
+    "src/bin/warm-server/documents.rs": "94d81e4ea5b32113cff9587d3efc5ff44384f1568f017fb72b07ffac1966a9cc",
+    "src/bin/warm-server/error.rs": "a9afe58d1337cbf6afa83f2170000de653ed05f25b40aee4efa0786ce7be01d9",
+    "src/bin/warm-server/vindex.rs": "0b25bcd59b933f41f3d48efa5b50bea21ed31eec63c1401af2a2922fffd0ef06",
+    "src/core/documents.rs": "b6147955931d6d872c8e9f3ac0932218c837b6c9db28844fc0d0c19c86eda0bd",
+    "src/core/documents/index.rs": "5338ac32706bbfd77f1b3e98051160b93518181359bf01a0d4ace5705f70b943",
+    "src/core/documents/listing.rs": "7636183df72eaa4a06a5ab00699952ac5db1b065b88224380ee1bdddae6de817",
+    "src/core/engine/compaction.rs": "3f15a74ecae81121fc28db47501480d890a7e851e9bea9a45cbe2af9739b9656",
+    "src/core/engine/document_api.rs": "65786a9d522a031c1cbf96ebc847fb8d4e0e4a6208911174ee37dba9d12a5e3f",
+    "src/core/engine/document_snapshot_tests.rs": "08bc351e87ee7f402c85c2acb79b404866a9cabd9851f69f0e1a35286797d6dc",
+    "src/core/memory_api/tests.rs": "3a6cfc102f1ea44ea275d2b069b5519c3f885932bedcf798c56fa88bdd949de5",
+    "tests/allocation_bounds.rs": "199c835fac45b5d705cbb6d10e0a6fcb09f349d6de7b206fa7f4517fb7fdb42b",
+    "tests/document_checkpoint.rs": "33737faee66ea7b7238dacb5698b2d8ea26eb8037ca0418cd7eb4f62188f05c1",
+    "tests/document_chunks.rs": "94baf51a501318f299117ed92f604293eab91c63514114b35ff29c1add9d5417",
+    "tests/forget_equivalence.rs": "82a589fd4f20c3adbb00706848f5e953200988329d37ed3b94f5e9ba88ee61a0"
+  },
+  "passed": {
+    "document_library": 36,
+    "listing": 2,
+    "mcp": 41,
+    "allocation": 6,
+    "checkpoint": 10,
+    "chunks": 5,
+    "forgetting": 6,
+    "http_api": 20,
+    "server_errors": 5,
+    "all_features_all_targets_clippy": true,
+    "touched_rustfmt": true,
+    "diff_check": true
+  },
+  "ignored": {
+    "external_index_diagnostic": 1
+  },
+  "limitations": [
+    "Retained-text tests are bounded corruption/recovery cases, not universal concurrency or hardware durability assurance.",
+    "Metadata-only public APIs remain infallible and may panic on malformed checkpoint records.",
+    "Exact-head remote CI and merge are still required."
+  ],
+  "logs": {
+    "check.log.gz": "0639e9842d0e3adfdf119b61cd7c700ced2f38b53000395395dd201ab0dd8a07",
+    "checkpoint-decode-baseline.log.gz": "3e211f555415e043a6394f39bc79012b1e4d7dc9cb62c2e8341a03abf55867de",
+    "checkpoint-final.log.gz": "6535d5ad65478e78572dbe79c039ebbeb722aa1325e1e52da0d0aa5f7276b4de",
+    "clippy-final.log.gz": "8825ca9dcb6dec3a6f16ead887b86bcd9b592b9076509f7c32210be09c625ec5",
+    "clippy.log.gz": "ba682bc33427346f2aea21469b7ffb1dabefef0b8f922f6a8ab3bce39307ab23",
+    "contracts.log.gz": "861a7caf310be163524c5eca4aee6d6c12f6c1ee1b6d68c5e576a77f0744505c",
+    "documents.log.gz": "4430ea8bfde284a30f41df48eeb91948826fc60b22415acc8d03f13fb61b6eca",
+    "errors.log.gz": "ca95a25edd43d0d83cc359109a615d1e52939169889e10b4491ae4b79a995ac2",
+    "final-contracts.log.gz": "a23317680e4e563704969867120de89852c4f45e7a2c64fdd0c4adbbdbcca671",
+    "listing-final.log.gz": "3b0bd5b44e3333456c88abd784df4cc2e42ee6cc0f7b7d29b167bc8db987d50c",
+    "listing.log.gz": "bc6c55056536a01e957bdce8c6a4c9dfeb6c20a8764699be8fdcf2284c5c4bd3",
+    "remaining-contracts.log.gz": "cf78a758d7215fe59bded2db2f71a027179b2e35b1ac2247aa25a7c2edfb4f5e",
+    "checkpoint-decoder-fix.patch.gz": "415d5887b11929de3963f7aa1537d7088ee42b0515977a93f7137ab852e42a38"
+  }
+}

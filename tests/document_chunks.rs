@@ -160,7 +160,12 @@ fn closing_after_damaged_text_cache_preserves_journal_recovery() -> Result<()> {
     );
     let reopened = WarmCore::new(256, Some(dir.path().display().to_string()), Some(config))?;
     assert_eq!(
-        reopened.get_document("doc").unwrap().text.as_deref(),
+        reopened
+            .get_document("doc")
+            .unwrap()
+            .unwrap()
+            .text
+            .as_deref(),
         Some("alpha beta")
     );
     Ok(())
@@ -211,7 +216,12 @@ fn reject_damaged_cache(compact: bool, checkpoints: bool) -> Result<()> {
     drop(core);
     let reopened = WarmCore::new(256, Some(dir.path().display().to_string()), Some(config))?;
     assert_eq!(
-        reopened.get_document("doc").unwrap().text.as_deref(),
+        reopened
+            .get_document("doc")
+            .unwrap()
+            .unwrap()
+            .text
+            .as_deref(),
         Some("alpha beta")
     );
     Ok(())
