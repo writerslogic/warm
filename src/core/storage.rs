@@ -346,7 +346,9 @@ impl PersistentArena {
 
     /// Durably flush all pending writes in the active segment.
     pub(crate) fn flush(&self) -> Result<()> {
-        self.active_segment.write().sync()
+        let active = self.active_segment.write();
+        self.ensure_writable()?;
+        active.sync()
     }
 
     /// Writes back the active segment's dirty pages without the platform's full sync; a later
@@ -600,6 +602,17 @@ impl PersistentArena {
         self.write_frame(data, true)
     }
 
+    fn ensure_writable(&self) -> Result<()> {
+        if self.commit_uncertain.load(Ordering::Acquire) {
+            return Err(crate::core::error::IndeterminateMutationError {
+                effect: "journal recovery",
+                source: anyhow!("previous journal rollback sync failed"),
+            }
+            .into());
+        }
+        Ok(())
+    }
+
     fn write_frame(&self, data: &[u8], durable: bool) -> Result<usize> {
         let raw_len = data.len();
         if raw_len == 0 || raw_len > MAX_RAW_FRAME_SIZE {
@@ -635,13 +648,7 @@ impl PersistentArena {
         // One write guard spans reserve and write, so concurrent writers cannot share a range
         // and rotation cannot interleave between the check and the copy.
         let mut active = self.active_segment.write();
-        if self.commit_uncertain.load(Ordering::Acquire) {
-            return Err(crate::core::error::IndeterminateMutationError {
-                effect: "journal recovery",
-                source: anyhow!("previous journal rollback sync failed"),
-            }
-            .into());
-        }
+        self.ensure_writable()?;
 
         // Check-then-reserve under write lock to avoid wasting space at segment boundaries.
         let mut offset = self.write_offset.load(Ordering::Acquire);
@@ -960,6 +967,7 @@ impl PersistentArena {
         #[cfg(test)]
         compaction_crash_point("staged");
         let mut active = self.active_segment.write();
+        self.ensure_writable()?;
         let mut segments = self.read_segments.write();
         let mut data_path = self.data_path.write();
         active.write_back()?;
@@ -1228,6 +1236,9 @@ mod tests {
             let arena = PersistentArena::new(dir.path())?;
             arena.write_slice(b"committed")?;
             let checkpoint = arena.checkpoint();
+            let staged = PersistentArena::new(arena.new_generation_dir()?)?;
+            staged.write_slice(b"committed")?;
+            let prepared = staged.prepare_compacted()?;
             let failed = failing_at_sequence(&["commit sync", "rollback sync"], || {
                 arena.write_slice(b"commit with uncertain rollback")
             });
@@ -1242,6 +1253,11 @@ mod tests {
                 next.is::<crate::core::error::IndeterminateMutationError>(),
                 "{next:#}"
             );
+            let flush = arena.flush().unwrap_err();
+            assert!(flush.is::<crate::core::error::IndeterminateMutationError>());
+            let compact = arena.replace_with_compacted(prepared, false).unwrap_err();
+            assert!(compact.is::<crate::core::error::IndeterminateMutationError>());
+            assert_eq!(arena.checkpoint(), checkpoint);
         }
         let reopened = PersistentArena::new(dir.path())?;
         assert_eq!(
