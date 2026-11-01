@@ -531,9 +531,10 @@ impl WarmCore {
         Ok(encoded)
     }
 
-    /// Whether a document with this id currently resolves in the opened store.
+    /// Whether this id is present, without decoding its metadata or reading retained text.
     pub fn has_document(&self, id: &str) -> bool {
-        self.documents().contains_key(id)
+        let _transaction = self.mutation_gate.read();
+        self.documents.read().contains_key(id)
     }
 
     /// Whether the word interner built while preparing a document batch is kept for the next
@@ -671,7 +672,7 @@ impl WarmCore {
     /// journal frame that records the delete; `forget` and a scrubbing compaction call this so
     /// the zeros are on stable storage before they return.
     pub(crate) fn sync_text_segment(&self) -> Result<()> {
-        let segment = self.documents().text_segment();
+        let segment = self.documents.read().text_segment();
         segment.map_or(Ok(()), |segment| segment.sync())
     }
 
