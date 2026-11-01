@@ -213,6 +213,7 @@ fn metadata_listing_does_not_allocate_stored_text() {
         for limit in [15, 16, 17] {
             let (records, allocated, calls, micros) = measured(|| {
                 core.list_document_info(Some("doc-01"), limit)
+                    .unwrap()
                     .into_iter()
                     .map(|record| {
                         (
@@ -250,19 +251,23 @@ fn metadata_listing_does_not_allocate_stored_text() {
         );
         eprintln!("chunk read: phase={phase} allocated_bytes={allocated} allocation_calls={calls}");
         let (record, allocated, _, _) = measured(|| core.get_document_info("doc-01"));
-        assert_eq!(record.unwrap().metadata, serde_json::json!({"index": 1}));
+        assert_eq!(
+            record.unwrap().unwrap().metadata,
+            serde_json::json!({"index": 1})
+        );
         assert!(
             allocated < 4096,
             "document summary allocated {allocated} bytes"
         );
-        assert!(core.get_document_info("absent").is_none());
-        assert!(core.list_document_info(None, 0).is_empty());
-        assert!(core.list_document_info(Some("z"), 1).is_empty());
+        assert!(core.get_document_info("absent").unwrap().is_none());
+        assert!(core.list_document_info(None, 0).unwrap().is_empty());
+        assert!(core.list_document_info(Some("z"), 1).unwrap().is_empty());
     }
     assert!(core.delete_document("doc-08").unwrap());
-    assert!(core.get_document_info("doc-08").is_none());
+    assert!(core.get_document_info("doc-08").unwrap().is_none());
     assert_eq!(
         core.list_document_info(Some("doc-07"), 3)
+            .unwrap()
             .into_iter()
             .map(|record| record.id)
             .collect::<Vec<_>>(),

@@ -174,8 +174,9 @@ println!("{} {:?}", hits[0].document_id, hits[0].source_uri);
 Unreleased Rust API change: `WarmCore::query`, `query_batch`, and
 `analyze_components` return `Result`. Handle the result with `?` or an explicit
 error branch; deferred-encoding failures no longer become successful partial
-query results. `get_document` and `list_documents` also return `Result`; retained-text
-read failures propagate instead of panicking, and reads no longer hydrate the
+query results. `get_document`, `list_documents`, `get_document_info`, and `list_document_info`
+also return `Result`; retained-text and checkpoint decoding failures propagate
+instead of panicking, and reads no longer hydrate the
 entire checkpoint or hold store locks during text I/O.
 
 </details>
