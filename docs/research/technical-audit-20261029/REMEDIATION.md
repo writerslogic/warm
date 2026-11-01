@@ -1623,3 +1623,33 @@ alias cleanup. Strict all-feature/all-target Clippy, scoped rustfmt and diff
 checks pass. The rebase onto #371 main preserved all tested source hashes.
 No assertions or deadlines were relaxed; no performance gain or universal
 corruption tolerance is claimed. Exact-head CI and merge remain required.
+
+PR #372 merged as `28561339eff46ff7575809d70a5ffaae6ffdf41d` after all 69
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368. Every workflow reached success or skipped; no unresolved review
+threads or open code-scanning alerts remained. Only owner review was bypassed.
+The merge signature and equality with the tested tree are verified; clean root
+main was fast-forwarded. Evidence:
+[Memory reads final gate](memory-reads-20261101/final-gate.json.gz).
+
+## Checkpoint vector maintenance (2026-11-01 UTC; locally validated)
+
+Fourteen panics were reproduced across seven embedding status and maintenance
+operations with zero and one live embedding over CRC-valid malformed checkpoint
+metadata. A separate valid fixture proves these paths unnecessarily hydrate the
+checkpoint. Checkpoints contain no embeddings; the existing live overlay owns
+all vector state. The candidate reads and trains from that overlay, removes the
+now-unused private infallible hydration helper, and preserves explicit fallible
+hydration for operations that need the complete lexical store. No public return
+type changes. Baseline and reproduction evidence:
+[checkpoint-vectors-20261101/](checkpoint-vectors-20261101/).
+
+Local validation passes all 26 integration tests, 37 library tests and 12
+compaction tests; one pre-existing external-index census remains ignored.
+Strict all-feature/all-target Clippy and scoped formatting pass. Both focused
+regressions pass again after Clippy's equivalent assertion rewrite; no production
+code, expected outcome or deadline changed after the broader gate. Exact-head
+remote CI and merge remain required. No latency, RSS, allocation improvement
+or universal corruption tolerance is claimed.
+
+The rebase onto #372 main preserved every recorded tested source hash.

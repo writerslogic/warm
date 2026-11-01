@@ -1,0 +1,75 @@
+{
+  "captured_at": "2026-11-01T01:26:50.103743+00:00",
+  "baseline": "d24cdb307ba0ca2bc1474e0063ebd58202f04180",
+  "candidate_state": "local gates passed; rebase preserved tested sources; exact-head CI pending",
+  "checks": {
+    "contracts": {
+      "command": "cargo +1.99.0 test --locked --features server,mcp,conversation-memory --test document_checkpoint --test forget_equivalence --test allocation_bounds --test store_lifecycle -- --test-threads=1",
+      "result": "passed",
+      "summaries": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.20s",
+        "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 253.85s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 65.15s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.55s"
+      ]
+    },
+    "unit": {
+      "command": "cargo +1.99.0 test --locked --features server,mcp,conversation-memory --lib document_ -- --test-threads=1",
+      "result": "passed",
+      "summaries": [
+        "test result: ok. 37 passed; 0 failed; 1 ignored; 0 measured; 675 filtered out; finished in 106.36s"
+      ]
+    },
+    "compaction": {
+      "command": "cargo +1.99.0 test --locked --features server,mcp,conversation-memory --lib core::engine::compaction::tests -- --test-threads=1",
+      "result": "passed",
+      "summaries": [
+        "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 701 filtered out; finished in 89.49s"
+      ]
+    },
+    "clippy": {
+      "command": "cargo +1.99.0 clippy --locked --all-features --all-targets -- -D warnings",
+      "result": "passed",
+      "summaries": []
+    },
+    "final_focused": {
+      "command": "cargo +1.99.0 test --locked --features server,mcp,conversation-memory --test document_checkpoint checkpoint_vector_ -- --test-threads=1",
+      "result": "passed",
+      "summaries": [
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 10.34s"
+      ]
+    },
+    "format": {
+      "result": "passed",
+      "command": "rustup run 1.99.0 rustfmt --edition 2021 --check <five changed Rust files>; git diff --check"
+    }
+  },
+  "source_sha256": {
+    "src/core/engine/compaction.rs": "5ef88160d77672e5bccfb02a1a58a6df249da71787467f7b9fc74824cf0bf1ee",
+    "src/core/engine/document_api.rs": "9461523c8e1212a6a5b5056355f5d06cd95f3e76c36dc1c89116918e9a563f36",
+    "src/core/engine/image.rs": "a0854fd1f3ec4f2a00a56d5bdb81c1dcf455087c4ae97ba058fc7e98b11d5267",
+    "src/core/engine/query.rs": "e1623dd084343d6ab7d3448b77f0f38f6fb32b0a70fbb3d31c59844841465e45",
+    "tests/document_checkpoint.rs": "818f60c623b2836f32ca39b87e917b4cc7de322be383b33e8a1279feabc83966"
+  },
+  "limitations": [
+    "One existing ignored external-index census requires WARM_MEMORY_INDEX.",
+    "No latency, RSS, allocation or hardware power-loss improvement measured.",
+    "CRC-valid malformed metadata fixtures do not establish universal corruption tolerance.",
+    "Exact-head remote CI and merge still required."
+  ],
+  "artifacts_sha256": {
+    "baseline-compile-attempt.log.gz": "9cd7b2313b2f2dd435c89914a2314830841bc263405a73f8a0e05497a1d7af8a",
+    "baseline-preservation.log.gz": "4e8c4a166ce39f6fce72a0a9c5cadd3f76d175248a399a15776b829801b081ee",
+    "baseline-regression.patch.gz": "097fd22dbbf7621695e5c213e1bd666a3e375e56dede89209096993ed78e6b11",
+    "baseline.log.gz": "cfdc19c1a00199a385b8cf80f0eeea5bade80510a7c751a23e407528d07ae65e",
+    "clippy-attempt.log.gz": "4b4bdbe8068019695cc08f2b2e68c3ad4f6d46c0049110395b5bdd7e12bee769",
+    "clippy.log.gz": "23f69424a69ec414b0a0c01ec69b064d6fc4f7f972e74acd5f1092b6f88cc10e",
+    "compaction.log.gz": "575c96b91241e0303db5bd622cedbfe92fd539c0f0d9d956c2e693fef49024e1",
+    "contracts.log.gz": "ccb965d7071b64866713d734a3815df6d31ba0efa24881f025bd0c87970d197e",
+    "final-focused.log.gz": "0a1cde6e5abdb7940f09a1b3b652e253531493f9aa502334475a5eb33eb28441",
+    "focused.log.gz": "3e33fce979fa3a61214a7def40ded2a2462270de1adf5cde304ea886621fc4e9",
+    "unit.log.gz": "81ed7162e19445eb7c4f41296333ea6f3fa19a371ad0572fd4c296cd1f85cb46"
+  },
+  "rebased_onto": "28561339eff46ff7575809d70a5ffaae6ffdf41d",
+  "source_hashes_preserved_after_rebase": true
+}
