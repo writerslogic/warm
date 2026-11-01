@@ -553,6 +553,15 @@ impl WarmBackend {
     }
 
     pub fn list(&self, namespace: &str, req: ListReq) -> Res<Page> {
+        self.list_with(namespace, req, |_| {})
+    }
+
+    fn list_with(
+        &self,
+        namespace: &str,
+        req: ListReq,
+        mut before_read: impl FnMut(&str),
+    ) -> Res<Page> {
         let store = self.store(namespace)?;
         let tag_key = req.tag.as_ref().map(|t| format!("{TAG_PREFIX}{t}"));
         let prefix = req.prefix.as_deref().unwrap_or("");
@@ -565,7 +574,7 @@ impl WarmBackend {
         loop {
             let batch = store
                 .core
-                .list_documents(Some(&from), SCAN_PAGE)
+                .list_document_info(Some(&from), SCAN_PAGE)
                 .map_err(Fail::internal)?;
             let exhausted = batch.len() < SCAN_PAGE;
             for record in &batch {
@@ -589,7 +598,21 @@ impl WarmBackend {
                         next_cursor: last,
                     });
                 }
-                memories.push(record_memory(record));
+                before_read(&record.id);
+                let Some(current) = store
+                    .core
+                    .get_document(&record.id)
+                    .map_err(Fail::internal)?
+                else {
+                    continue;
+                };
+                if tag_key
+                    .as_ref()
+                    .is_some_and(|k| current.metadata.get(k).and_then(Value::as_bool) != Some(true))
+                {
+                    continue;
+                }
+                memories.push(record_memory(&current));
             }
             match batch.last() {
                 Some(last) if !exhausted => from = format!("{}\0", last.id),
@@ -815,6 +838,170 @@ mod tests {
         assert_eq!(ids(&even), ["a/0", "a/2", "a/4", "a/6", "b/0"]);
         // A cursor before the prefix does not rewind past it.
         assert_eq!(ids(&list(Some("b/"), None, Some("a/3"), 10)), ["b/0"]);
+    }
+
+    #[test]
+    fn list_reads_text_only_for_selected_records() {
+        let mut failures = Vec::new();
+        for scenario in ["lookahead", "tag", "prefix"] {
+            let dir = tempfile::tempdir().unwrap();
+            let b = backend(dir.path());
+            put(&b, "a/first", "healthy alpha", &["keep"]);
+            let second = if scenario == "prefix" {
+                "b/second"
+            } else {
+                "a/second"
+            };
+            let text = "damaged beta";
+            put(&b, second, text, &[]);
+            let path = dir.path().join("stores/t/documents.text");
+            let original = std::fs::read(&path).unwrap();
+            let positions: Vec<_> = original
+                .windows(text.len())
+                .enumerate()
+                .filter_map(|(at, bytes)| (bytes == text.as_bytes()).then_some(at))
+                .collect();
+            assert_eq!(positions.len(), 1);
+            let mut damaged = original.clone();
+            damaged[positions[0]] ^= 1;
+            std::fs::write(&path, &damaged).unwrap();
+            let selected = b.get("t", second);
+            let result = b.list(
+                "t",
+                ListReq {
+                    prefix: (scenario == "prefix").then(|| "a/".into()),
+                    tag: (scenario == "tag").then(|| "keep".into()),
+                    limit: if scenario == "lookahead" { 1 } else { 10 },
+                    ..ListReq::default()
+                },
+            );
+            let selected_page = b.list(
+                "t",
+                ListReq {
+                    prefix: Some(second.into()),
+                    limit: 1,
+                    ..ListReq::default()
+                },
+            );
+            std::fs::write(&path, &original).unwrap();
+            assert_eq!(selected.unwrap_err().code, "internal");
+            assert_eq!(selected_page.unwrap_err().code, "internal");
+            match result {
+                Ok(page) => {
+                    assert_eq!(ids(&page), ["a/first"]);
+                    assert_eq!(
+                        page.next_cursor.as_deref(),
+                        (scenario == "lookahead").then_some("a/first")
+                    );
+                }
+                Err(error) => failures.push(format!("{scenario}: {}", error.message)),
+            }
+            let repaired = b
+                .list(
+                    "t",
+                    ListReq {
+                        limit: 10,
+                        ..ListReq::default()
+                    },
+                )
+                .unwrap();
+            assert_eq!(ids(&repaired), ["a/first", second]);
+            assert_eq!(repaired.memories[1].text, text);
+            assert!(repaired.next_cursor.is_none());
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+
+    #[test]
+    fn list_rechecks_tags_and_skips_deleted_candidates() {
+        let dir = tempfile::tempdir().unwrap();
+        let b = backend(dir.path());
+        for id in ["a", "b", "c", "d"] {
+            put(&b, id, "original", &["keep"]);
+        }
+        let req = ListReq {
+            tag: Some("keep".into()),
+            limit: 1,
+            ..ListReq::default()
+        };
+        let mut reads = Vec::new();
+        let page = b
+            .list_with("t", req.clone(), |id| {
+                reads.push(id.to_string());
+                if id == "a" {
+                    put(&b, id, "replacement", &[]);
+                } else if id == "b" {
+                    assert_eq!(
+                        b.forget(
+                            "t",
+                            ForgetReq {
+                                ids: vec![id.into()],
+                                prefix: None
+                            }
+                        )
+                        .unwrap()
+                        .deleted,
+                        1
+                    );
+                }
+            })
+            .unwrap();
+        assert_eq!(reads, ["a", "b", "c"]);
+        assert_eq!(ids(&page), ["c"]);
+        assert_eq!(page.next_cursor.as_deref(), Some("c"));
+        let last = b
+            .list(
+                "t",
+                ListReq {
+                    cursor: page.next_cursor,
+                    ..req
+                },
+            )
+            .unwrap();
+        assert_eq!(ids(&last), ["d"]);
+        assert!(last.next_cursor.is_none());
+    }
+
+    #[test]
+    fn list_keeps_matches_across_metadata_scan_boundaries() {
+        let dir = tempfile::tempdir().unwrap();
+        let b = backend(dir.path());
+        for i in 0..=SCAN_PAGE {
+            put(
+                &b,
+                &format!("r/{i:03}"),
+                "alpha",
+                if i >= SCAN_PAGE - 2 { &["keep"] } else { &[] },
+            );
+        }
+        let expected: Vec<_> = (SCAN_PAGE - 2..=SCAN_PAGE)
+            .map(|i| format!("r/{i:03}"))
+            .collect();
+        for limit in 1..=3 {
+            let mut seen = Vec::new();
+            let mut cursor = None;
+            for _ in 0..3 {
+                let page = b
+                    .list(
+                        "t",
+                        ListReq {
+                            prefix: Some("r/".into()),
+                            tag: Some("keep".into()),
+                            cursor,
+                            limit,
+                        },
+                    )
+                    .unwrap();
+                assert!(!page.memories.is_empty());
+                seen.extend(page.memories.into_iter().map(|m| m.id));
+                cursor = page.next_cursor;
+                if cursor.is_none() {
+                    break;
+                }
+            }
+            assert_eq!(seen, expected);
+            assert!(cursor.is_none());
+        }
     }
 
     #[test]
