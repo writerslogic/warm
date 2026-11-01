@@ -1,0 +1,32 @@
+{
+  "binary": "/Volumes/A/holographic-memory/target/debug/warm-mcp",
+  "binary_sha256": "7e5a45b0c3e2a02ebd41cf5c1268fffff4de50bfe67cf0cbb3b4837f96a8ac00",
+  "source": "6174370d3ba03c31700efa92bb5d6f6141b96713",
+  "findings": [
+    {
+      "format": "json",
+      "configured_cap": 1024,
+      "reported_payload_bytes": 3146,
+      "measured_payload_bytes": 3146,
+      "count": 1,
+      "is_error": false
+    },
+    {
+      "format": "jsonl",
+      "configured_cap": 1024,
+      "reported_payload_bytes": 3144,
+      "measured_payload_bytes": 3144,
+      "count": 1,
+      "is_error": false
+    },
+    {
+      "format": "markdown",
+      "configured_cap": 1024,
+      "reported_payload_bytes": 3056,
+      "measured_payload_bytes": 3056,
+      "count": 1,
+      "is_error": false
+    }
+  ],
+  "scope": "Local stdio baseline: one 3000-byte fixture, no models or providers; reproduces oversized successful exports."
+}

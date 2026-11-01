@@ -36,6 +36,8 @@ Both verify the download against a SHA-256 table shipped inside the package and 
 
 Every call returns `structuredContent` plus the same data as JSON text (`export` returns the payload as text and the paging metadata as structured content). Tool arguments are validated strictly: unknown fields, wrong types and out-of-range values are errors, never ignored.
 
+The export cap counts the payload's UTF-8 bytes, including format framing and escaping. If the first memory cannot fit, `export` returns `too_large` with its `id`, `required_bytes` and `max_export_bytes`; use `get` to retrieve that memory or raise the export cap. Records are never truncated to fit. A later memory that does not fit ends the segment with a continuation cursor.
+
 A memory is `{id, text, bytes, title?, tags, metadata, created_at, updated_at, version}`. Writing an existing `id` replaces the memory. `version` changes on every write, so a read-modify-write client passes it back as `if_version` and gets `version_conflict` if someone else wrote in between (the check and the write are atomic per store). Text round-trips exactly, including leading and trailing whitespace; blank text needs `allow_empty`.
 
 ### Errors
@@ -45,7 +47,7 @@ Tool failures are results with `isError: true` and `structuredContent.error = {c
 | Code | Meaning |
 |---|---|
 | `invalid_argument` | Failed validation (the message names the field). |
-| `too_large` | Text or metadata over its limit. |
+| `too_large` | Text or metadata over its limit, or the first export record cannot fit the payload cap. |
 | `not_found` | No memory with that id. |
 | `already_exists` | `create_only` and the id exists. |
 | `version_conflict` | `if_version` did not match; `details.current_version` has the current one. |
