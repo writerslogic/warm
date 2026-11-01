@@ -1,0 +1,44 @@
+{
+  "base": "740e93e2a91900d7c0e0aa4163f593c458d96987",
+  "rust": "1.99.0",
+  "node": "22.23.4",
+  "source_sha256": {
+    "src/bin/warm-mcp/store.rs": "59738528ac3d4cffffd215bfdb9c8b9d8b0be1ee8af1ad3b507166355cb0763c",
+    "src/bin/warm-mcp/tools.rs": "83af4512567642f66a08876b90b0193cdca43b24543e77094194794999220d89",
+    "integrations/mcp/tests/e2e.test.mjs": "7f117942899dccb490b64ca636e9dac9b579bb851a07f135f4f48ce28c75aa22"
+  },
+  "binary_sha256": "f75b46d73574b8fbce0778b1c20aed90529c5515275a94a41463cc698d5ad98c",
+  "baseline": {
+    "rust_passed": 42,
+    "rust_failed": 3,
+    "sdk_export": "failure reproduced on Node 26 and Node 22",
+    "sdk_excluded_text": "failure reproduced on Node 22"
+  },
+  "candidate": {
+    "rust_mcp_passed": 47,
+    "sdk_passed": 20,
+    "sdk_skipped": 0,
+    "strict_clippy": true,
+    "scoped_rustfmt": true,
+    "node_syntax": true
+  },
+  "limits": [
+    "No measured latency, allocation or RSS improvement",
+    "Listing does not promise a snapshot across pages",
+    "Exact-head CI and merge pending"
+  ],
+  "artifacts_sha256": {
+    "baseline-regression.patch.gz": "e64d37757513dae608ce71d01e72aecaeebea3a6a619ba6aadadd64c2a59d9cb",
+    "baseline.log.gz": "e482fd18540a1ab1eecf010d64ec5068d4d8170c90a08b1984857abe7bce8bb8",
+    "build.log.gz": "fd0def43ba1013ca171b72b7f7e31e87f2b43ac3660902d668bd0601662cf08a",
+    "clippy.log.gz": "1b89570b10916d0ff50300483e254076775b69450ecfd3fcaa081c0308820ab8",
+    "contracts.log.gz": "379b826c6bf621d7d84f0298832f54dca84130e2405eee611ea19502e6ed6fbf",
+    "export-cap-server.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "npm-ci.log.gz": "13381342eb9a1c52ae2939717fa0989111496217580636f8e851b568180b3355",
+    "sdk-baseline-node22.log.gz": "636cb60fde0d3c45d392f4c337f777f71266ee808b200df70821d4bd1906b0ee",
+    "sdk-baseline.log.gz": "948465b57a8f7bda9c7a95ee3ef5154ee106034a24c6cbd58b22a38af57c6c66",
+    "sdk-corruption-baseline.log.gz": "f293830a60b066a015618813db74c1b51bb06a7c4254e323ef777df55d490126",
+    "sdk-regression.patch.gz": "e1cb7c2f7b164289014957e8d0200dcc522a3ef1fafffc8b0934026faf222eec",
+    "sdk.log.gz": "c14fc1a97313c13a20087ff8744511282e7fb732b30d7dec00b2639d6907ffd8"
+  }
+}

@@ -166,6 +166,94 @@ describe("stdio", () => {
     }
   });
 
+  it("caps every export format and reports an oversized first memory", async () => {
+    const c = await stdioClient(["--data-dir", freshDir(), "--max-export-bytes", "1024", "--max-page", "1"]);
+    try {
+      const large = "word ".repeat(600);
+      await ok(c, "remember", { id: "large", text: large });
+      for (const format of ["json", "jsonl", "markdown"]) {
+        const failure = await err(c, "export", { format }, "too_large");
+        assert.equal(failure.details.id, "large");
+        assert.equal(failure.details.max_export_bytes, 1024);
+        assert.ok(failure.details.required_bytes > 1024);
+      }
+      assert.equal((await ok(c, "get", { id: "large" })).memory.text, large);
+      await ok(c, "forget", { id: "large" });
+      for (const id of ["small/a", "small/b"]) {
+        await ok(c, "remember", { id, text: "é".repeat(250) });
+      }
+      for (const format of ["json", "jsonl", "markdown"]) {
+        let cursor;
+        for (const id of ["small/a", "small/b"]) {
+          const page = await call(c, "export", { format, ...(cursor ? { cursor } : {}) });
+          assert.notEqual(page.isError, true);
+          const text = page.content[0].text;
+          const bytes = Buffer.byteLength(text, "utf8");
+          assert.equal(page.structuredContent.bytes, bytes);
+          assert.ok(bytes <= 1024);
+          assert.equal(page.structuredContent.count, 1);
+          if (format === "json") assert.equal(JSON.parse(text)[0].id, id);
+          else if (format === "jsonl") assert.equal(JSON.parse(text).id, id);
+          else assert.ok(text.includes(`- id: \`${id}\``));
+          cursor = page.structuredContent.next_cursor;
+          assert.equal(cursor, id === "small/a" ? id : null);
+        }
+      }
+      await ok(c, "remember", { id: "small/zlarge", text: large });
+      for (const format of ["json", "jsonl", "markdown"]) {
+        const first = await ok(c, "export", { format, cursor: "small/a" });
+        assert.equal(first.count, 1);
+        assert.equal(first.next_cursor, "small/b");
+        const failure = await err(c, "export", { format, cursor: first.next_cursor }, "too_large");
+        assert.equal(failure.details.id, "small/zlarge");
+      }
+    } finally {
+      await c.close();
+    }
+  });
+
+  it("keeps excluded corrupt text out of listing, export, resources and review prompts", async () => {
+    const dir = freshDir();
+    const c = await stdioClient(["--store", dir, "--max-page", "1"]);
+    const textPath = path.join(dir, "documents.text");
+    let original;
+    try {
+      await ok(c, "remember", { id: "a", text: "healthy alpha", tags: ["keep"] });
+      await ok(c, "remember", { id: "b", text: "damaged beta" });
+      original = fs.readFileSync(textPath);
+      const offset = original.indexOf("damaged beta");
+      assert.ok(offset >= 0);
+      assert.equal(original.indexOf("damaged beta", offset + 1), -1);
+      const damaged = Buffer.from(original);
+      damaged[offset] ^= 1;
+      fs.writeFileSync(textPath, damaged);
+      await err(c, "get", { id: "b" }, "internal");
+      await err(c, "list", { prefix: "b", limit: 1 }, "internal");
+      const page = await ok(c, "list", { limit: 1 });
+      assert.deepEqual(page.memories.map((m) => m.id), ["a"]);
+      assert.equal(page.next_cursor, "a");
+      for (const format of ["json", "jsonl", "markdown"]) {
+        const exported = await ok(c, "export", { format, limit: 1 });
+        assert.equal(exported.count, 1);
+        assert.equal(exported.next_cursor, "a");
+      }
+      const resources = await c.listResources();
+      assert.ok(resources.resources.some((r) => r.name === "a"));
+      assert.ok(!resources.resources.some((r) => r.name === "b"));
+      assert.equal(resources.nextCursor, "a");
+      const prompt = await c.getPrompt({ name: "review-memories", arguments: { tag: "keep" } });
+      assert.match(prompt.messages[0].content.text, /healthy alpha/);
+      assert.doesNotMatch(prompt.messages[0].content.text, /damaged beta/);
+      fs.writeFileSync(textPath, original);
+      const repaired = await ok(c, "list", { cursor: "a", limit: 1 });
+      assert.equal(repaired.memories[0].text, "damaged beta");
+      assert.equal(repaired.next_cursor, null);
+    } finally {
+      if (original) fs.writeFileSync(textPath, original);
+      await c.close();
+    }
+  });
+
   it("replaces, compare-and-sets and preserves exact text", async () => {
     const c = await stdioClient(["--data-dir", freshDir()]);
     try {

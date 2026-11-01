@@ -282,7 +282,7 @@ pub fn definitions(exposure: &Exposure, limits: &Limits) -> Vec<Value> {
         json!({
             "name": "export",
             "title": "Export memory contents",
-            "description": "Export a portable copy of many memories as JSON, JSONL or Markdown. Use `get` for one known memory, `recall` or `search` to find matches, and `list` for short previews. The text payload is capped by the export byte limit; pass `next_cursor` as `cursor` for more. Pages read the live store, so concurrent writes can change later pages.",
+            "description": "Export a portable copy of many memories as JSON, JSONL or Markdown. Use `get` for one known memory, `recall` or `search` to find matches, and `list` for short previews. The text payload is capped by the export byte limit; pass `next_cursor` as `cursor` for more. If the first memory cannot fit, returns too_large; retrieve it with `get` or raise the export cap. Pages read the live store, so concurrent writes can change later pages.",
             "inputSchema": schema(exposure, json!({
                 "format": {"type": "string", "enum": ["json", "jsonl", "markdown"], "default": "json", "description": "Serialization of the returned text payload."},
                 "prefix": {"type": "string", "maxLength": 256, "description": "Include only memory ids starting with this prefix."},
@@ -592,16 +592,21 @@ fn export(backend: &WarmBackend, limits: &Limits, ns: &str, a: ExportArgs) -> Re
         return Err(Fail::invalid("limit must be 1..=10000"));
     }
     let mut cursor = a.cursor;
-    let mut taken: Vec<Memory> = Vec::new();
-    let mut rendered: Vec<String> = Vec::new();
-    let mut bytes = 0usize;
+    let mut count = 0;
+    let mut last_id = None;
+    let mut payload = if format == "json" {
+        "[".into()
+    } else {
+        String::new()
+    };
+    let closing_bytes = usize::from(format == "json");
     let mut next_cursor = None;
     'pages: loop {
         let req = ListReq {
             prefix: a.prefix.clone(),
             tag: a.tag.clone(),
             cursor: cursor.clone(),
-            limit: limits.max_page.min(wanted - taken.len()).max(1),
+            limit: limits.max_page.min(wanted - count).max(1),
         };
         req.validate(limits)?;
         let page = backend.list(ns, req)?;
@@ -610,26 +615,39 @@ fn export(backend: &WarmBackend, limits: &Limits, ns: &str, a: ExportArgs) -> Re
                 "markdown" => markdown_entry(&memory),
                 _ => serde_json::to_string(&memory_json(&memory)).map_err(Fail::internal)?,
             };
-            if !taken.is_empty() && bytes + piece.len() + 2 > limits.max_export_bytes {
-                next_cursor = taken.last().map(|m| m.id.clone());
+            let required = payload
+                .len()
+                .checked_add(usize::from(count > 0))
+                .and_then(|bytes| bytes.checked_add(piece.len()))
+                .and_then(|bytes| bytes.checked_add(closing_bytes))
+                .ok_or_else(|| {
+                    Fail::new(
+                        "too_large",
+                        "export payload size exceeds addressable memory",
+                    )
+                })?;
+            if required > limits.max_export_bytes {
+                if count == 0 {
+                    return Err(Fail::new(
+                        "too_large",
+                        "memory cannot fit the export byte limit; use `get` or raise --max-export-bytes",
+                    ).with(json!({
+                        "id": memory.id,
+                        "required_bytes": required,
+                        "max_export_bytes": limits.max_export_bytes,
+                    })));
+                }
+                next_cursor = last_id;
                 break 'pages;
             }
-            bytes += piece.len() + 2;
-            rendered.push(piece);
-            taken.push(memory);
-            if taken.len() == wanted {
-                // A full export reports a cursor only when more memories follow.
-                let last = taken.last().map(|m| m.id.clone());
-                let more = backend.list(
-                    ns,
-                    ListReq {
-                        prefix: a.prefix.clone(),
-                        tag: a.tag.clone(),
-                        cursor: last.clone(),
-                        limit: 1,
-                    },
-                )?;
-                next_cursor = (!more.memories.is_empty()).then_some(last).flatten();
+            if count > 0 {
+                payload.push(if format == "json" { ',' } else { '\n' });
+            }
+            payload.push_str(&piece);
+            count += 1;
+            last_id = Some(memory.id);
+            if count == wanted {
+                next_cursor = page.next_cursor;
                 break 'pages;
             }
         }
@@ -638,15 +656,13 @@ fn export(backend: &WarmBackend, limits: &Limits, ns: &str, a: ExportArgs) -> Re
             None => break,
         }
     }
-    let payload = match format {
-        "json" => format!("[{}]", rendered.join(",")),
-        "jsonl" => rendered.join("\n"),
-        _ => rendered.join("\n"),
-    };
+    if format == "json" {
+        payload.push(']');
+    }
     Ok(Output {
         structured: json!({
             "format": format,
-            "count": taken.len(),
+            "count": count,
             "bytes": payload.len(),
             "next_cursor": next_cursor,
         }),
@@ -680,6 +696,171 @@ fn markdown_entry(m: &Memory) -> String {
 mod tests {
     use super::*;
     use crate::memory::test_limits;
+    use crate::store::{StoreOptions, StoreRoot};
+
+    fn export_fixture(dir: &std::path::Path, count: usize) -> (WarmBackend, Limits) {
+        let mut limits = test_limits();
+        limits.max_text_bytes = 4096;
+        limits.max_page = 1;
+        let backend = WarmBackend::new(
+            StoreOptions {
+                root: StoreRoot::Namespaced(dir.to_path_buf()),
+                dim: 256,
+                max_stores: 1,
+                encrypt: None,
+                #[cfg(feature = "local-models")]
+                stages: None,
+                #[cfg(feature = "local-models")]
+                embedding_dim: None,
+            },
+            limits.clone(),
+        );
+        for i in 0..count {
+            backend
+                .remember(
+                    "default",
+                    RememberReq {
+                        id: Some(format!("item/{i}")),
+                        text: format!("{} é雪\n\"quoted\"\\end", "x".repeat(1200)),
+                        title: Some("A title".into()),
+                        tags: vec!["test".into()],
+                        metadata: serde_json::Map::new(),
+                        if_version: None,
+                        create_only: false,
+                        allow_empty: false,
+                    },
+                )
+                .unwrap();
+        }
+        (backend, limits)
+    }
+
+    fn export_page(
+        backend: &WarmBackend,
+        limits: &Limits,
+        format: &str,
+        cursor: Option<&str>,
+        limit: Option<usize>,
+    ) -> Res<Output> {
+        export(
+            backend,
+            limits,
+            "default",
+            ExportArgs {
+                format: Some(format.into()),
+                cursor: cursor.map(str::to_string),
+                limit,
+                prefix: None,
+                tag: None,
+                namespace: None,
+            },
+        )
+    }
+
+    #[test]
+    fn export_single_record_obeys_exact_utf8_payload_cap() {
+        let dir = tempfile::tempdir().unwrap();
+        let (backend, mut limits) = export_fixture(dir.path(), 1);
+        let mut failures = Vec::new();
+        for format in ["json", "jsonl", "markdown"] {
+            limits.max_export_bytes = 4096;
+            let full = export_page(&backend, &limits, format, None, None).unwrap();
+            let expected = full.text.unwrap();
+            assert_eq!(full.structured["bytes"], expected.len());
+            assert!(expected.len() > 1024);
+            for cap in [expected.len() - 1, expected.len(), expected.len() + 1] {
+                limits.max_export_bytes = cap;
+                let result = export_page(&backend, &limits, format, None, None);
+                if cap < expected.len() {
+                    match result {
+                        Err(error) => assert_eq!(error.code, "too_large"),
+                        Ok(out) => failures.push(format!(
+                            "{format}: returned {} bytes with cap {cap}",
+                            out.text.unwrap().len()
+                        )),
+                    }
+                } else {
+                    let out = result.unwrap();
+                    assert_eq!(out.text.as_deref(), Some(expected.as_str()));
+                    assert_eq!(out.structured["count"], 1);
+                    assert_eq!(out.structured["bytes"], expected.len());
+                    assert!(out.structured["next_cursor"].is_null());
+                }
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+
+    #[test]
+    fn export_framing_and_continuation_respect_exact_byte_boundary() {
+        let dir = tempfile::tempdir().unwrap();
+        let (backend, mut limits) = export_fixture(dir.path(), 2);
+        let mut failures = Vec::new();
+        for format in ["json", "jsonl", "markdown"] {
+            limits.max_export_bytes = 4096;
+            let full = export_page(&backend, &limits, format, None, None).unwrap();
+            let expected = full.text.unwrap();
+            assert_eq!(full.structured["count"], 2);
+            if format == "json" {
+                let records: Vec<Value> = serde_json::from_str(&expected).unwrap();
+                assert_eq!(records.len(), 2);
+                assert_eq!(records[0]["id"], "item/0");
+                assert_eq!(records[1]["id"], "item/1");
+            }
+            for cap in [expected.len() - 1, expected.len(), expected.len() + 1] {
+                limits.max_export_bytes = cap;
+                let out = export_page(&backend, &limits, format, None, None).unwrap();
+                let payload = out.text.unwrap();
+                assert!(payload.len() <= cap);
+                assert_eq!(out.structured["bytes"], payload.len());
+                if cap < expected.len() {
+                    assert_eq!(out.structured["count"], 1);
+                    assert_eq!(out.structured["next_cursor"], "item/0");
+                    let rest =
+                        export_page(&backend, &limits, format, Some("item/0"), None).unwrap();
+                    assert_eq!(rest.structured["count"], 1);
+                    assert!(rest.structured["next_cursor"].is_null());
+                    let separator = if format == "json" { "," } else { "\n" };
+                    let rest = rest.text.unwrap();
+                    let joined = if format == "json" {
+                        format!(
+                            "{}{}{}",
+                            &payload[..payload.len() - 1],
+                            separator,
+                            &rest[1..]
+                        )
+                    } else {
+                        format!("{payload}{separator}{rest}")
+                    };
+                    assert_eq!(joined, expected);
+                } else if payload != expected || !out.structured["next_cursor"].is_null() {
+                    failures.push(format!("{format}: cap {cap} unnecessarily split payload"));
+                }
+            }
+            limits.max_export_bytes = 4096;
+            let limited = export_page(&backend, &limits, format, None, Some(1)).unwrap();
+            assert_eq!(limited.structured["count"], 1);
+            assert_eq!(limited.structured["next_cursor"], "item/0");
+            let last = export_page(&backend, &limits, format, Some("item/0"), Some(1)).unwrap();
+            assert_eq!(last.structured["count"], 1);
+            assert!(last.structured["next_cursor"].is_null());
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+
+    #[test]
+    fn export_empty_payload_has_exact_framing_and_no_cursor() {
+        let dir = tempfile::tempdir().unwrap();
+        let (backend, mut limits) = export_fixture(dir.path(), 0);
+        limits.max_export_bytes = 1024;
+        for (format, expected) in [("json", "[]"), ("jsonl", ""), ("markdown", "")] {
+            let out = export_page(&backend, &limits, format, None, None).unwrap();
+            assert_eq!(out.text.as_deref(), Some(expected));
+            assert_eq!(out.structured["count"], 0);
+            assert_eq!(out.structured["bytes"], expected.len());
+            assert!(out.structured["next_cursor"].is_null());
+        }
+    }
 
     fn exposure(tools: &[&str], read_only: bool, namespace_arg: bool) -> Result<Exposure, String> {
         let requested: Vec<String> = tools.iter().map(|t| (*t).to_string()).collect();

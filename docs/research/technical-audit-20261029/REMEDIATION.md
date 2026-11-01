@@ -1562,3 +1562,29 @@ twenty HTTP API tests, strict all-feature/all-target Clippy, scoped formatting
 and diff checks. Assertions and deadlines are unchanged. Exact-head remote CI
 and merge remain required. Reproduction inputs and
 baseline evidence: [metadata-reads-20261031/](metadata-reads-20261031/).
+
+PR #370 merged as `740e93e2a91900d7c0e0aa4163f593c458d96987` after all 72
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368. No unresolved review threads or open code-scanning alerts remained.
+Only owner review was bypassed. The merge signature and equality with the tested
+tree are verified; clean root main was fast-forwarded. Breaking-change and DCO
+footers are preserved. Evidence: [metadata-read final gate](metadata-reads-20261031/final-gate.json.gz).
+
+## MCP payload caps and selected text reads (2026-11-01 UTC; locally validated)
+
+Local stdio reproduction confirms that a 1024-byte export cap permitted
+3056–3146-byte successful payloads because the first record bypassed the cap.
+Rust regressions also reproduce unnecessary splits at the exact payload limit
+and listing failures caused by damaged text excluded by tag, prefix, or page
+limit. Selected-record errors and recovery after repair remain required.
+
+The candidate uses checked metadata selection before reading retained text,
+rechecks tags after fetching a selected record, skips concurrent deletions,
+and preserves continuation across scan pages. Export counts actual UTF-8
+framing and separators, returns `too_large` for an oversized first record,
+and preserves a cursor when a later record does not fit. It reuses metadata
+lookahead without fetching an extra record's text. All 47 Rust MCP tests and
+20 official SDK tests pass, as do strict all-feature/all-target Clippy and scoped
+formatting. Exact-head remote CI and merge remain required. No performance gain or
+transactional cross-page snapshot is claimed. Reproduction and baseline
+evidence: [mcp-list-bounds-20261031/](mcp-list-bounds-20261031/).
