@@ -73,7 +73,9 @@ documents.
 
 ### idempotency_reconciliation_required
 409. The original request may have executed, but its response is unavailable: the worker
-panicked or the response could not fit the replay byte budget. The key remains reserved
+panicked, the response could not fit the replay byte budget, or a tenant restore invalidated
+the response. Once store replacement starts, retained keys require reconciliation even
+if the restore later rolls back. The key remains reserved
 until its TTL expires. Inspect the resulting state before deliberately issuing a new
 operation. This response has no `Retry-After`; blindly retrying with a new key or after
 expiry can repeat a committed mutation.
@@ -109,6 +111,13 @@ key replays it during its TTL without repeating the durable mutation. If its res
 cannot fit the replay byte budget, the key instead returns
 `idempotency_reconciliation_required`. Reconcile state before starting a deliberate new
 attempt. All retained keys are process-local and lost on restart.
+
+### mutation_uncertain
+500. Both journal commit synchronization and rollback synchronization failed, so the
+mutation may survive recovery. The store rejects further writes until reopened. Reopen
+and reconcile stable IDs before retrying; this error does not establish that the mutation
+was absent. Its idempotency key retains the failure within the process-local cache TTL,
+or requires reconciliation if the response exceeds the replay byte budget.
 
 ### not_implemented
 501. Reserved for operations a build does not provide.

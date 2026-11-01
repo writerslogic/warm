@@ -157,6 +157,47 @@ fn vector_hits_are_not_read_after_a_replacement_scrubs_their_text() -> Result<()
 }
 
 #[test]
+fn stale_exact_vector_snapshot_survives_replacement_maintenance_and_reopen() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().display().to_string();
+    let options = documents::VectorQueryOptions {
+        mode: documents::VectorIndexMode::Exact,
+        ..Default::default()
+    };
+    let core = WarmCore::new(1024, Some(path.clone()), Some(super::fixture_config(2)))?;
+    let mut old_a = input("a", "old", &vec!["same"; 20].join(" "), "g")?;
+    old_a.chunk_words = Some(1);
+    old_a.overlap_words = Some(0);
+    old_a.embeddings = Some(vec![vec![1.0, 0.0]; 20]);
+    core.memorize_document(old_a)?;
+    let mut b = input("b", "old", "candidate", "g")?;
+    b.embeddings = Some(vec![vec![0.8, 0.6]]);
+    core.memorize_document(b)?;
+    assert!(core.rebuild_vector_index(usize::MAX)?);
+
+    let mut new_a = input("a", "new", "changed", "g")?;
+    new_a.embeddings = Some(vec![vec![0.0, 1.0]]);
+    core.memorize_document(new_a)?;
+    assert_eq!(
+        core.search_vectors(&[1.0, 0.0], 1, &options)?[0].document_id,
+        "b"
+    );
+    assert!(core.maintain_vector_index(usize::MAX)?);
+    assert_eq!(
+        core.search_vectors(&[1.0, 0.0], 1, &options)?[0].document_id,
+        "b"
+    );
+    drop(core);
+
+    let reopened = WarmCore::new(1024, Some(path), Some(super::fixture_config(2)))?;
+    assert_eq!(
+        reopened.search_vectors(&[1.0, 0.0], 1, &options)?[0].document_id,
+        "b"
+    );
+    Ok(())
+}
+
+#[test]
 fn stale_document_training_cannot_publish_after_a_durable_replacement() -> Result<()> {
     let directory = tempfile::tempdir()?;
     let config = super::fixture_config(2);

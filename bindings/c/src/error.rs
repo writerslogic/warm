@@ -34,6 +34,10 @@ pub const WARM_ERR_CORRUPT: warm_status_t = 8;
 pub const WARM_ERR_LIMIT_EXCEEDED: warm_status_t = 9;
 /// A `struct_size` field is smaller than the first field it must cover.
 pub const WARM_ERR_ABI_MISMATCH: warm_status_t = 10;
+/// The requested mutation committed durably, but a follow-up effect failed. Reconcile before retrying.
+pub const WARM_ERR_MUTATION_COMMITTED: warm_status_t = 11;
+/// The write outcome is indeterminate; reopen/reconcile before further writes or retry.
+pub const WARM_ERR_MUTATION_UNCERTAIN: warm_status_t = 12;
 /// A Rust panic was caught at the boundary; the store should be considered suspect.
 pub const WARM_ERR_PANIC: warm_status_t = 98;
 /// An unclassified engine failure.
@@ -61,7 +65,18 @@ impl ApiError {
     pub fn from_engine(error: &anyhow::Error, default: warm_status_t) -> Self {
         let message = format!("{error:#}");
         let lower = message.to_ascii_lowercase();
-        let code = if lower.contains("already open") {
+        let code = if error.is::<writerslogic_warm::CommittedMutationError>() {
+            WARM_ERR_MUTATION_COMMITTED
+        } else if error.is::<writerslogic_warm::IndeterminateMutationError>()
+            || error.chain().any(|cause| {
+                matches!(
+                    cause.downcast_ref::<writerslogic_warm::core::qgraph::UpdateError>(),
+                    Some(writerslogic_warm::core::qgraph::UpdateError::RecoveryRequired)
+                )
+            })
+        {
+            WARM_ERR_MUTATION_UNCERTAIN
+        } else if lower.contains("already open") {
             WARM_ERR_LOCKED
         } else if lower.contains("decrypt")
             || lower.contains("encryption")
@@ -154,4 +169,45 @@ pub extern "C" fn hms1_last_error_message() -> *const c_char {
         }
         slot.message.as_ptr().cast()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn engine_outcome_errors_have_machine_readable_statuses() {
+        let committed: anyhow::Error = writerslogic_warm::CommittedMutationError {
+            effect: "test sidecar",
+            source: anyhow::anyhow!("injected post-commit failure"),
+        }
+        .into();
+        assert_eq!(
+            ApiError::from_engine(&committed, WARM_ERR_INTERNAL).code,
+            WARM_ERR_MUTATION_COMMITTED
+        );
+
+        let uncertain: anyhow::Error =
+            writerslogic_warm::core::qgraph::UpdateError::RecoveryRequired.into();
+        assert_eq!(
+            ApiError::from_engine(&uncertain, WARM_ERR_INTERNAL).code,
+            WARM_ERR_MUTATION_UNCERTAIN
+        );
+
+        let uncertain: anyhow::Error = writerslogic_warm::IndeterminateMutationError {
+            effect: "journal rollback",
+            source: anyhow::anyhow!("injected rollback failure"),
+        }
+        .into();
+        assert_eq!(
+            ApiError::from_engine(&uncertain, WARM_ERR_INTERNAL).code,
+            WARM_ERR_MUTATION_UNCERTAIN
+        );
+
+        let invalid = anyhow::anyhow!("invalid input");
+        assert_eq!(
+            ApiError::from_engine(&invalid, WARM_ERR_INVALID_ARGUMENT).code,
+            WARM_ERR_INVALID_ARGUMENT
+        );
+    }
 }

@@ -104,6 +104,17 @@ impl AuditEntry {
         message
     }
 
+    /// Verify using an independently trusted Ed25519 public key. Unsigned entries are rejected.
+    #[cfg(feature = "security")]
+    pub fn verify_signature(&self, trusted_key: &[u8; 32]) -> Result<()> {
+        anyhow::ensure!(self.signature != [0; 64], "audit entry is unsigned");
+        let key = ed25519_dalek::VerifyingKey::from_bytes(trusted_key)
+            .map_err(|e| anyhow!("invalid audit verifying key: {e}"))?;
+        let signature = ed25519_dalek::Signature::from_bytes(&self.signature);
+        key.verify_strict(&self.signable_bytes(), &signature)
+            .map_err(|e| anyhow!("audit signature verification failed: {e}"))
+    }
+
     pub(crate) fn to_bytes(&self) -> [u8; ENTRY_SIZE] {
         let mut buf = [0u8; ENTRY_SIZE];
         buf[0..8].copy_from_slice(&self.timestamp_ms.to_le_bytes());
@@ -283,6 +294,51 @@ mod tests {
         assert_eq!(parsed.op, entry.op);
         assert_eq!(parsed.id_hash, entry.id_hash);
         assert_eq!(parsed.signature, entry.signature);
+    }
+
+    #[cfg(feature = "security")]
+    #[test]
+    fn signature_verification_rejects_unsigned_and_modified_entries() -> Result<()> {
+        use ed25519_dalek::{Signer, SigningKey};
+
+        let signing = SigningKey::from_bytes(&[7; 32]);
+        let trusted_key = signing.verifying_key().to_bytes();
+        let other_key = SigningKey::from_bytes(&[8; 32]).verifying_key().to_bytes();
+        for effect_id in [None, Some([9; 16])] {
+            let entry = AuditEntry::prepare(
+                AuditOp::Memorize,
+                "signed",
+                effect_id,
+                Some(&|bytes| signing.sign(bytes).to_bytes()),
+            );
+            entry.verify_signature(&trusted_key)?;
+            assert!(entry.verify_signature(&other_key).is_err());
+            assert!(entry.verify_signature(&[0; 32]).is_err());
+            for field in 0..6 {
+                let mut changed = entry.clone();
+                match field {
+                    0 => changed.timestamp_ms ^= 1,
+                    1 => changed.op = AuditOp::Delete,
+                    2 => changed.id_hash[0] ^= 1,
+                    3 => changed.effect_id = effect_id.is_none().then_some([10; 16]),
+                    4 => changed.signature[0] ^= 1,
+                    _ => changed.signature = [0; 64],
+                }
+                assert!(changed.verify_signature(&trusted_key).is_err());
+            }
+            let mut weak_key = [0; 32];
+            weak_key[0] = 1;
+            let mut forged = entry;
+            forged.signature = [0; 64];
+            assert!(forged
+                .verify_signature(&trusted_key)
+                .unwrap_err()
+                .to_string()
+                .contains("unsigned"));
+            forged.signature[0] = 1;
+            assert!(forged.verify_signature(&weak_key).is_err());
+        }
+        Ok(())
     }
 
     #[test]

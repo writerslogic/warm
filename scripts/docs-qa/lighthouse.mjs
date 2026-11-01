@@ -51,5 +51,6 @@ try {
 }
 console.log('page'.padEnd(28), 'form'.padEnd(8), categories.map(c => c.padEnd(15)).join(''))
 for (const r of rows) console.log(r.path.padEnd(28), r.name.padEnd(8), categories.map(c => String(r[c]).padEnd(15)).join(''))
-console.log(failed ? `FAIL: a category is below ${threshold}` : `ok: every category is at least ${threshold}`)
+const floorSummary = categories.map(c => `${c} >= ${floors[c] ?? threshold}`).join(', ')
+console.log(`${failed ? 'FAIL' : 'ok'}: ${floorSummary}`)
 process.exit(failed ? 1 : 0)

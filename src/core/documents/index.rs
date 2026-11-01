@@ -64,6 +64,12 @@ pub(crate) struct DocumentStore {
 
 #[cfg(test)]
 impl DocumentStore {
+    pub(crate) fn make_text_read_only(&mut self, path: &std::path::Path) -> anyhow::Result<()> {
+        let segment = self.text.as_ref().context("fixture needs a text segment")?;
+        self.text = Some(Arc::new(segment.read_only_copy(path)?));
+        Ok(())
+    }
+
     pub(crate) fn memory_census(&self) -> super::census::MemoryCensus {
         use std::mem::{size_of, size_of_val};
         let mut census = super::census::MemoryCensus::default();
@@ -581,10 +587,12 @@ impl DocumentStore {
         smallest.map(|ids| ids.iter().collect())
     }
 
+    #[cfg(test)]
     pub(crate) fn insert(&mut self, id: String, document: impl Into<Arc<StoredDocument>>) {
         let document = document.into();
         assert_eq!(id, document.id, "document key differs from document ID");
-        self.insert_batch(vec![document]);
+        self.insert_batch(vec![document])
+            .expect("fixture document insertion");
     }
 
     /// Inserts `documents` in order, reaching the state the same inserts one at a time
@@ -592,7 +600,19 @@ impl DocumentStore {
     /// in that order, and a document that replaces a stored one (or repeats an id earlier in
     /// the batch) takes the replacement path at its turn. The maximal runs of new, distinct
     /// documents between those are indexed in bulk (`postings::index_chunks`).
-    pub(crate) fn insert_batch(&mut self, mut documents: Vec<Arc<StoredDocument>>) {
+    pub(crate) fn insert_batch(
+        &mut self,
+        mut documents: Vec<Arc<StoredDocument>>,
+    ) -> anyhow::Result<()> {
+        Self::share_document_terms(&mut documents);
+        let documents = documents
+            .into_iter()
+            .map(|document| self.stripped(document))
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        self.install_batch(documents)
+    }
+
+    fn share_document_terms(documents: &mut [Arc<StoredDocument>]) {
         for group in documents.chunks_mut(super::MAX_BATCH_ITEMS) {
             if group
                 .iter()
@@ -601,15 +621,15 @@ impl DocumentStore {
                 super::packed_terms::StoredTerms::share_documents(group);
             }
         }
-        let documents: Vec<Arc<StoredDocument>> = documents
-            .into_iter()
-            .map(|document| {
-                self.kill_base(&document.id);
-                self.stripped(document)
-            })
-            .collect();
+    }
+
+    fn install_batch(&mut self, documents: Vec<Arc<StoredDocument>>) -> anyhow::Result<()> {
+        for document in &documents {
+            self.kill_base(&document.id);
+        }
         let mut group: Vec<Arc<StoredDocument>> = Vec::with_capacity(documents.len());
         let mut grouped: std::collections::HashSet<String> = std::collections::HashSet::new();
+        let mut failure = None;
         for document in documents {
             if !grouped.insert(document.id.clone()) {
                 self.install_new(std::mem::take(&mut group));
@@ -618,12 +638,15 @@ impl DocumentStore {
             }
             if self.documents.contains_key(&document.id) {
                 self.install_new(std::mem::take(&mut group));
-                self.replace(document);
+                if let Err(error) = self.replace(document) {
+                    failure.get_or_insert(error);
+                }
             } else {
                 group.push(document);
             }
         }
         self.install_new(group);
+        failure.map_or(Ok(()), Err)
     }
 
     /// The store holding `documents` (id order, text already moved to `text` when attached),
@@ -744,25 +767,25 @@ impl DocumentStore {
     }
 
     /// Moves inline chunk text into the segment, when one is attached.
-    fn stripped(&mut self, document: Arc<StoredDocument>) -> Arc<StoredDocument> {
+    fn stripped(&mut self, document: Arc<StoredDocument>) -> anyhow::Result<Arc<StoredDocument>> {
         let Some(segment) = self.text.as_deref() else {
-            return document;
+            return Ok(document);
         };
         if document.chunks.iter().all(|c| c.text.is_none()) {
-            return document;
+            return Ok(document);
         }
         let mut owned = StoredDocument::clone(&document);
         for chunk in &mut owned.chunks {
             if let Some(text) = chunk.text.take() {
-                chunk.text_at = Some(segment.append(&text).expect("text segment append"));
+                chunk.text_at = Some(segment.append(&text)?);
             }
         }
-        Arc::new(owned)
+        Ok(Arc::new(owned))
     }
 
     /// Installs `document` (text already stripped) over the stored document with its id: in
     /// place when the chunk count matches, otherwise by removal and a fresh insert.
-    fn replace(&mut self, document: Arc<StoredDocument>) {
+    fn replace(&mut self, document: Arc<StoredDocument>) -> anyhow::Result<()> {
         let id = document.id.clone();
         if let Some(previous) = self
             .documents
@@ -770,13 +793,15 @@ impl DocumentStore {
             .filter(|old| old.chunks.len() == document.chunks.len())
             .cloned()
         {
-            self.replace_shared(id, previous, document);
-            return;
+            return self.replace_shared(id, previous, document);
         }
-        if let Some(old) = self.remove(&id) {
-            self.scrub_replaced(&old, &document);
-        }
+        let scrubbed = if let Some(old) = self.remove(&id) {
+            self.scrub_replaced(&old, &document)
+        } else {
+            Ok(())
+        };
         self.install_new(vec![document]);
+        scrubbed
     }
 
     /// Indexes documents absent from the store, with distinct ids and text already stripped,
@@ -901,7 +926,7 @@ impl DocumentStore {
         id: String,
         previous: Arc<StoredDocument>,
         document: Arc<StoredDocument>,
-    ) {
+    ) -> anyhow::Result<()> {
         self.remove_filters(&previous);
         self.insert_filters(&document);
         let mut old_embedded = false;
@@ -978,8 +1003,9 @@ impl DocumentStore {
         }
         self.advance_generation();
         self.track_dense_change(&id, document.chunks.len(), Some(&previous));
-        self.scrub_replaced(&previous, &document);
+        let scrubbed = self.scrub_replaced(&previous, &document);
         self.documents.insert(id, document);
+        scrubbed
     }
 
     /// Whether `document` is no longer a live document: absent from the store, or with chunk
@@ -997,15 +1023,16 @@ impl DocumentStore {
 
     /// Zeroes the text records of `old` that its replacement `new` no longer uses, so updated
     /// text does not outlive the update in the segment.
-    fn scrub_replaced(&self, old: &StoredDocument, new: &StoredDocument) {
+    fn scrub_replaced(&self, old: &StoredDocument, new: &StoredDocument) -> anyhow::Result<()> {
         let Some(segment) = self.text.as_deref() else {
-            return;
+            return Ok(());
         };
         for span in old.chunks.iter().filter_map(|c| c.text_at) {
             if new.chunks.iter().all(|c| c.text_at != Some(span)) {
-                segment.scrub(span.0, span.1).expect("text segment scrub");
+                segment.scrub(span.0, span.1)?;
             }
         }
+        Ok(())
     }
 
     /// Removes a document and zeroes its chunk text in the segment (see
@@ -1078,7 +1105,7 @@ impl DocumentStore {
             text: Some(segment),
             ..Self::default()
         };
-        rebuilt.insert_batch(documents);
+        rebuilt.insert_batch(documents)?;
         std::fs::rename(&staging, path)?;
         *self = rebuilt;
         if let Some(parent) = path.parent() {
@@ -1181,7 +1208,9 @@ impl DocumentStore {
             self.generation = generation;
             self.text = text;
             self.encode_gate = encode_gate;
-            self.insert_batch(documents.into_values().collect());
+            let mut documents: Vec<_> = documents.into_values().collect();
+            Self::share_document_terms(&mut documents);
+            self.install_new(documents);
         }
         Some(document)
     }
@@ -1328,15 +1357,17 @@ mod position_source_tests {
             let template = document("template", "red blue red", true, true, 4096);
             let source = template.chunks[0].terms.positions.as_ref().unwrap();
             let mut store = DocumentStore::default();
-            store.insert_batch(
-                (0..count)
-                    .map(|index| {
-                        let mut copied = (*template).clone();
-                        copied.id = format!("d{index:04}");
-                        Arc::new(copied)
-                    })
-                    .collect(),
-            );
+            store
+                .insert_batch(
+                    (0..count)
+                        .map(|index| {
+                            let mut copied = (*template).clone();
+                            copied.id = format!("d{index:04}");
+                            Arc::new(copied)
+                        })
+                        .collect(),
+                )
+                .unwrap();
             check(&store);
             let census = store.memory_census();
             assert_eq!(census.positions.len(), 1);
@@ -1418,6 +1449,50 @@ mod position_source_tests {
 #[cfg(test)]
 mod text_serialization_tests {
     use super::*;
+
+    #[test]
+    fn failed_retained_text_batch_preserves_document_owners() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().join("text");
+        let prepare = |id: &str, text: &str, retain: bool| -> anyhow::Result<_> {
+            Ok(Arc::new(super::super::prepare(
+                serde_json::from_value(serde_json::json!({
+                    "id": id, "text": text, "storeText": retain,
+                }))?,
+                64,
+                None,
+                crate::core::encoding::TextEncoder::default(),
+            )?))
+        };
+        let mut store = DocumentStore::default();
+        store.attach_text_segment(
+            &path,
+            #[cfg(feature = "security")]
+            None,
+        )?;
+        store.insert_batch(vec![prepare("a", "original retained text", true)?])?;
+        let original = Arc::clone(store.get("a").unwrap());
+        let generation = store.generation;
+        let bytes = std::fs::read(&path)?;
+        store.make_text_read_only(&path)?;
+        let error = store
+            .insert_batch(vec![
+                prepare("a", "replacement without retained bytes", false)?,
+                prepare("b", "this write fails", true)?,
+            ])
+            .unwrap_err();
+        assert!(format!("{error:#}").contains("appending chunk text"));
+        assert!(Arc::ptr_eq(store.get("a").unwrap(), &original));
+        assert!(store.get("b").is_none());
+        assert_eq!(store.generation, generation);
+        assert_eq!(store.documents.len(), 1);
+        assert_eq!(std::fs::read(path)?, bytes);
+        assert_eq!(
+            store.try_chunk_text(&original.chunks[0])?.as_deref(),
+            Some("original retained text")
+        );
+        Ok(())
+    }
 
     #[test]
     fn damaged_text_cache_is_a_serialization_error_not_a_panic() -> anyhow::Result<()> {

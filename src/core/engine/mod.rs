@@ -1705,11 +1705,12 @@ impl WarmCore {
 
     /// Lock the connection graph, lazily opening it over its durable append-only
     /// event log at `{storage}/connection_graph.log` on first use so plastic
-    /// state survives restart. Falls back to in-memory if the log is unopenable.
+    /// state survives restart.
     #[cfg(feature = "experimental")]
     fn connection_graph_lazy(
         &self,
-    ) -> crate::core::sync::MutexGuard<'_, Option<super::connection_graph::ConnectionGraph>> {
+    ) -> Result<crate::core::sync::MutexGuard<'_, Option<super::connection_graph::ConnectionGraph>>>
+    {
         let mut guard = self.connection_graph.lock();
         if guard.is_none() {
             let path = self.storage_path.join("connection_graph.log");
@@ -1717,25 +1718,23 @@ impl WarmCore {
                 self.dimensions,
                 super::connection_graph::GraphConfig::default(),
                 &path,
-            )
-            .unwrap_or_else(|e| {
-                tracing::warn!("connection graph persistence unavailable ({e}); in-memory only");
-                super::connection_graph::ConnectionGraph::new(self.dimensions)
-            });
+            )?;
             *guard = Some(graph);
         }
-        guard
+        Ok(guard)
     }
 
     /// Assert a `(subject, relation, object)` edge into the experimental plastic
     /// connection graph. Opt-in and additive: independent of the sparse-binary
     /// store. Durable — the edge is appended to the graph's event log.
     #[cfg(feature = "experimental")]
-    pub fn relate(&self, subject: &str, relation: &str, object: &str) {
-        let mut guard = self.connection_graph_lazy();
-        if let Some(g) = guard.as_mut() {
-            g.store(subject, relation, object);
-        }
+    pub fn relate(&self, subject: &str, relation: &str, object: &str) -> Result<()> {
+        let mut guard = self.connection_graph_lazy()?;
+        guard
+            .as_mut()
+            .expect("initialized connection graph")
+            .store(subject, relation, object)?;
+        Ok(())
     }
 
     /// Query a relation in the plastic connection graph, returning its presence
@@ -1743,11 +1742,13 @@ impl WarmCore {
     /// queried relation and lets the untouched background decay, all recorded as
     /// verifiable, durable events.
     #[cfg(feature = "experimental")]
-    pub fn query_relation(&self, subject: &str, relation: &str, object: &str) -> f64 {
-        let mut guard = self.connection_graph_lazy();
+    pub fn query_relation(&self, subject: &str, relation: &str, object: &str) -> Result<f64> {
+        let mut guard = self.connection_graph_lazy()?;
         guard
             .as_mut()
-            .map_or(0.0, |g| g.query(subject, relation, object))
+            .expect("initialized connection graph")
+            .query(subject, relation, object)
+            .map_err(Into::into)
     }
 
     /// Dimension and phase-quantization of the experimental phasor memory. A
@@ -1807,17 +1808,40 @@ mod connection_graph_tests {
     use super::*;
 
     #[test]
+    fn connection_graph_open_failure_does_not_fall_back_to_volatile_state() {
+        let dir = tempfile::tempdir().unwrap();
+        let warm = WarmCore::new(256, Some(dir.path().display().to_string()), None).unwrap();
+        let log = dir.path().join("connection_graph.log");
+        std::fs::create_dir(&log).unwrap();
+        assert!(warm.relate("one", "rel", "two").is_err());
+        assert!(warm.query_relation("one", "rel", "two").is_err());
+        std::fs::remove_dir(&log).unwrap();
+        warm.relate("one", "rel", "two").unwrap();
+        drop(warm);
+        let reopened = WarmCore::new(256, Some(dir.path().display().to_string()), None).unwrap();
+        assert!(reopened.query_relation("one", "rel", "two").unwrap() > 0.0);
+    }
+
+    #[test]
     fn relate_and_query_through_engine() {
         let dir = tempfile::tempdir().unwrap();
         let warm =
             WarmCore::new(4096, Some(dir.path().to_string_lossy().to_string()), None).unwrap();
 
         // Query before any relation exists -> graph unused -> 0.0.
-        assert_eq!(warm.query_relation("paris", "capital_of", "france"), 0.0);
+        assert_eq!(
+            warm.query_relation("paris", "capital_of", "france")
+                .unwrap(),
+            0.0
+        );
 
-        warm.relate("paris", "capital_of", "france");
-        let present = warm.query_relation("paris", "capital_of", "france");
-        let absent = warm.query_relation("berlin", "capital_of", "spain");
+        warm.relate("paris", "capital_of", "france").unwrap();
+        let present = warm
+            .query_relation("paris", "capital_of", "france")
+            .unwrap();
+        let absent = warm
+            .query_relation("berlin", "capital_of", "spain")
+            .unwrap();
         assert!(
             present > absent,
             "asserted relation ({present}) must score above an absent one ({absent})"
@@ -1831,13 +1855,17 @@ mod connection_graph_tests {
 
         {
             let warm = WarmCore::new(4096, Some(path.clone()), None).unwrap();
-            warm.relate("paris", "capital_of", "france");
+            warm.relate("paris", "capital_of", "france").unwrap();
         } // engine dropped -> connection graph's BufWriter flushed on drop
 
         // New engine over the same storage: the relation must reload from the log.
         let hms2 = WarmCore::new(4096, Some(path), None).unwrap();
-        let present = hms2.query_relation("paris", "capital_of", "france");
-        let absent = hms2.query_relation("madrid", "capital_of", "italy");
+        let present = hms2
+            .query_relation("paris", "capital_of", "france")
+            .unwrap();
+        let absent = hms2
+            .query_relation("madrid", "capital_of", "italy")
+            .unwrap();
         assert!(
             present > absent,
             "relation must survive restart: reloaded ({present}) !> absent ({absent})"

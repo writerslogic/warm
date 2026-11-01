@@ -523,10 +523,13 @@ impl WarmCore {
     }
 
     /// Installs the documents a batch has accumulated so far in one store write.
-    fn install_documents(&self, pending: &mut Vec<Arc<StoredDocument>>) {
+    fn install_documents(&self, pending: &mut Vec<Arc<StoredDocument>>) -> Result<()> {
         if !pending.is_empty() {
-            self.documents.write().insert_batch(std::mem::take(pending));
+            self.documents
+                .write()
+                .insert_batch(std::mem::take(pending))?;
         }
+        Ok(())
     }
 
     /// Installs a prepared batch into the live state (once: the prepared values are taken).
@@ -560,34 +563,43 @@ impl WarmCore {
                     .other_state
                     .store(true, std::sync::atomic::Ordering::Release);
             }
-            let is_document = matches!(
-                (mutation, &prepared),
-                (Mutation::Document(_), Prepared::Document { .. })
-            );
-            if !is_document {
-                self.install_documents(&mut pending);
+            let document_id = match (mutation, &prepared) {
+                (Mutation::Document(_), Prepared::Document { document, .. }) => {
+                    Some(document.id.clone())
+                }
+                _ => None,
+            };
+            if document_id
+                .as_ref()
+                .is_none_or(|id| pending_ids.contains(id))
+            {
+                if let Err(error) = self.install_documents(&mut pending) {
+                    failure.get_or_insert(error);
+                }
                 pending_ids.clear();
             }
-            if let Err(error) =
-                self.apply_mutation(mutation, prepared, shards, &mut pending, &mut pending_ids)
-            {
+            if let Some(id) = document_id {
+                pending_ids.insert(id);
+            }
+            if let Err(error) = self.apply_mutation(mutation, prepared, shards, &mut pending) {
                 failure.get_or_insert(error);
             }
         }
-        self.install_documents(&mut pending);
+        if let Err(error) = self.install_documents(&mut pending) {
+            failure.get_or_insert(error);
+        }
         failure.map_or(Ok(()), Err)
     }
 
     /// Applies one mutation of a batch. The batch is already in the journal, so a failure
     /// here must not stop the rest of it: [`Self::apply_mutations`] reports the first one
-    /// once every mutation has been applied.
+    /// once every mutation has been attempted.
     fn apply_mutation(
         &self,
         mutation: &Mutation,
         prepared: Prepared,
         shards: &ShardSet,
         pending: &mut Vec<Arc<StoredDocument>>,
-        pending_ids: &mut HashSet<String>,
     ) -> Result<()> {
         match (mutation, prepared) {
             (Mutation::AuditPending(intent), _) => {
@@ -675,11 +687,6 @@ impl WarmCore {
                     chunks,
                 },
             ) => {
-                if !pending_ids.insert(document.id.clone()) {
-                    self.install_documents(pending);
-                    pending_ids.clear();
-                    pending_ids.insert(document.id.clone());
-                }
                 let current = self.documents.read().get(&document.id).cloned();
                 let unchanged = match (&previous, &current) {
                     (Some(a), Some(b)) => Arc::ptr_eq(a, b),
@@ -821,8 +828,7 @@ impl WarmCore {
             chunk.vector_state = VectorState::Encoded;
             shards.insert(chunk.id.clone(), vector.clone(), self.dimensions)?;
         }
-        self.documents.write().insert(id.to_string(), encoded);
-        Ok(())
+        self.documents.write().insert_batch(vec![Arc::new(encoded)])
     }
 
     fn remove_derived_from_memory(&self, id: &str, shards: &ShardSet) -> Result<()> {
@@ -1019,6 +1025,232 @@ mod tests {
                 .map(|document| Mutation::Document(Arc::new(document)))
             })
             .collect()
+    }
+
+    #[test]
+    fn failed_text_append_reports_committed_state_and_reopens() -> Result<()> {
+        let mut failures = Vec::new();
+        for (encrypted, repeated) in modes().flat_map(|encrypted| {
+            [false, true]
+                .into_iter()
+                .map(move |repeated| (encrypted, repeated))
+        }) {
+            let directory = tempfile::tempdir()?;
+            let path = directory.path().display().to_string();
+            let core = WarmCore::new(1024, Some(path.clone()), Some(config(encrypted)))?;
+            core.memorize_documents(vec![document("a", "old"), document("b", "old")])?;
+            core.documents
+                .write()
+                .make_text_read_only(&directory.path().join("documents.text"))?;
+            assert_eq!(
+                core.get_document("a")?.unwrap().text.as_deref(),
+                Some("needle source old")
+            );
+            let segment = core.documents.read().text_segment().unwrap();
+            assert!(segment.append("write permission positive control").is_err());
+            let revision = core.revision();
+            let mut mutations = replacements(&core)?;
+            if repeated {
+                mutations.push(Mutation::Document(Arc::new(documents::prepare(
+                    document("a", "last"),
+                    core.dimensions,
+                    Some(2),
+                    core.config.text_encoder,
+                )?)));
+            }
+            let tail = core.encode_text("tail mutation remains durable");
+            mutations.push(Mutation::Vector {
+                id: "tail".into(),
+                vector: tail.clone(),
+            });
+            mutations.push(Mutation::DeleteDocument { id: "b".into() });
+            let result =
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| core.commit(&mutations)));
+            match result {
+                Ok(Err(error)) => {
+                    if !error.is::<crate::CommittedMutationError>() {
+                        failures.push(format!(
+                            "encrypted={encrypted}, repeated={repeated}: wrong error: {error:#}"
+                        ));
+                    }
+                }
+                Ok(Ok(())) => failures.push(format!(
+                    "encrypted={encrypted}, repeated={repeated}: append failure was hidden"
+                )),
+                Err(_) => failures.push(format!(
+                    "encrypted={encrypted}, repeated={repeated}: append panicked"
+                )),
+            }
+            if core.revision() != revision + 1 {
+                failures.push(format!(
+                    "encrypted={encrypted}, repeated={repeated}: durable mutation did not advance revision"
+                ));
+            }
+            if core.has_document("b") {
+                failures.push(format!(
+                    "encrypted={encrypted}, repeated={repeated}: later deletion was not applied"
+                ));
+            }
+            if !core.query(&tail, 10)?.iter().any(|hit| hit.id == "tail") {
+                failures.push(format!(
+                    "encrypted={encrypted}, repeated={repeated}: later vector was not applied"
+                ));
+            }
+            drop(segment);
+            drop(core);
+            let reopened = WarmCore::new(1024, Some(path), Some(config(encrypted)))?;
+            let version = if repeated { "last" } else { "new" };
+            assert_eq!(reopened.get_document("a")?.unwrap().version, version);
+            assert_eq!(
+                reopened.get_document("a")?.unwrap().text.as_deref(),
+                Some(format!("needle source {version}").as_str())
+            );
+            assert!(!reopened.has_document("b"));
+            assert_eq!(reopened.document_count(), 1);
+            assert_eq!(reopened.shards.read().count(), 2);
+            assert!(reopened
+                .query(&tail, 10)?
+                .iter()
+                .any(|hit| hit.id == "tail"));
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+        Ok(())
+    }
+
+    #[test]
+    fn failed_final_text_append_reports_committed_state_and_reopens() -> Result<()> {
+        for encrypted in modes() {
+            let directory = tempfile::tempdir()?;
+            let path = directory.path().display().to_string();
+            let core = WarmCore::new(1024, Some(path.clone()), Some(config(encrypted)))?;
+            core.memorize_document(document("a", "old"))?;
+            core.documents
+                .write()
+                .make_text_read_only(&directory.path().join("documents.text"))?;
+            let revision = core.revision();
+            let error = core
+                .memorize_documents(vec![document("a", "new"), document("b", "new")])
+                .unwrap_err();
+            assert!(error.is::<crate::CommittedMutationError>(), "{error:#}");
+            assert_eq!(core.revision(), revision + 1);
+            drop(core);
+            let reopened = WarmCore::new(1024, Some(path), Some(config(encrypted)))?;
+            for id in ["a", "b"] {
+                let record = reopened.get_document(id)?.unwrap();
+                assert_eq!(record.version, "new");
+                assert_eq!(record.text.as_deref(), Some("needle source new"));
+            }
+            assert_eq!(reopened.document_count(), 2);
+            assert_eq!(reopened.shards.read().count(), 2);
+            reopened.memorize_document(document("c", "new"))?;
+            assert_eq!(reopened.document_count(), 3);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn failed_replacement_scrub_publishes_owners_and_reports_committed_state() -> Result<()> {
+        let mut failures = Vec::new();
+        for (encrypted, chunks) in
+            modes().flat_map(|encrypted| [1, 2].map(|chunks| (encrypted, chunks)))
+        {
+            let directory = tempfile::tempdir()?;
+            let path = directory.path().display().to_string();
+            let core = WarmCore::new(1024, Some(path.clone()), Some(config(encrypted)))?;
+            core.memorize_document(document("a", "old"))?;
+            core.documents
+                .write()
+                .make_text_read_only(&directory.path().join("documents.text"))?;
+            let mut mutations = Vec::new();
+            for id in ["a", "b"] {
+                let replacement = documents::prepare(
+                    serde_json::from_value(json!({
+                        "id": id, "version": "new", "text": "replacement alpha beta gamma",
+                        "storeText": false, "chunkWords": 4 / chunks, "overlapWords": 0,
+                        "embeddings": vec![vec![0.0, 1.0]; chunks],
+                    }))?,
+                    core.dimensions,
+                    Some(2),
+                    core.config.text_encoder,
+                )?;
+                assert_eq!(replacement.chunks.len(), chunks);
+                assert!(replacement
+                    .chunks
+                    .iter()
+                    .all(|chunk| chunk.text.is_none() && chunk.text_at.is_none()));
+                mutations.push(Mutation::Document(Arc::new(replacement)));
+            }
+            let tail = core.encode_text("later mutation");
+            mutations.push(Mutation::Vector {
+                id: "tail".into(),
+                vector: tail.clone(),
+            });
+            let revision = core.revision();
+            let outcome =
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| core.commit(&mutations)));
+            let published = match outcome {
+                Ok(Err(error)) => {
+                    assert!(error.is::<crate::CommittedMutationError>(), "{error:#}");
+                    assert!(format!("{error:#}").contains("scrubbing chunk text"));
+                    true
+                }
+                Ok(Ok(())) => {
+                    failures.push(format!(
+                        "encrypted={encrypted}, chunks={chunks}: scrub failure was hidden"
+                    ));
+                    false
+                }
+                Err(_) => {
+                    failures.push(format!(
+                        "encrypted={encrypted}, chunks={chunks}: replacement scrub panicked"
+                    ));
+                    false
+                }
+            };
+            if core.revision() != revision + 1 {
+                failures.push(format!(
+                    "encrypted={encrypted}, chunks={chunks}: durable revision stayed stale"
+                ));
+            }
+            let live = if published {
+                for id in ["a", "b"] {
+                    let record = core.get_document(id)?.unwrap();
+                    assert_eq!(record.version, "new");
+                    assert!(record.text.is_none());
+                }
+                assert_eq!(core.document_count(), 2);
+                assert_eq!(core.shards.read().count(), (2 * chunks + 1) as u64);
+                assert!(core.query(&tail, 10)?.iter().any(|hit| hit.id == "tail"));
+                Some(serde_json::to_value(
+                    core.search_documents("replacement", &Default::default())?,
+                )?)
+            } else {
+                None
+            };
+            drop(core);
+            let reopened = WarmCore::new(1024, Some(path), Some(config(encrypted)))?;
+            for id in ["a", "b"] {
+                let record = reopened.get_document(id)?.unwrap();
+                assert_eq!(record.version, "new");
+                assert!(record.text.is_none());
+            }
+            assert_eq!(reopened.document_count(), 2);
+            assert_eq!(reopened.shards.read().count(), (2 * chunks + 1) as u64);
+            assert!(reopened
+                .query(&tail, 10)?
+                .iter()
+                .any(|hit| hit.id == "tail"));
+            if let Some(live) = live {
+                assert_eq!(
+                    serde_json::to_value(
+                        reopened.search_documents("replacement", &Default::default())?
+                    )?,
+                    live
+                );
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+        Ok(())
     }
 
     #[test]

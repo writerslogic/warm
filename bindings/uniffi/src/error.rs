@@ -31,6 +31,12 @@ pub enum WarmError {
     /// The operating system refused a file operation.
     #[error("i/o error: {details}")]
     Io { details: String },
+    /// The requested mutation committed durably, but a follow-up effect failed. Reconcile before retrying.
+    #[error("mutation committed: {details}")]
+    MutationCommitted { details: String },
+    /// The write outcome is indeterminate; reopen/reconcile before further writes or retry.
+    #[error("mutation outcome uncertain: {details}")]
+    MutationUncertain { details: String },
     /// The store handle was closed.
     #[error("store is closed")]
     Closed,
@@ -57,6 +63,19 @@ impl WarmError {
     pub(crate) fn from_engine(error: &anyhow::Error) -> Self {
         let details = format!("{error:#}");
         let lower = details.to_ascii_lowercase();
+        if error.is::<writerslogic_warm::CommittedMutationError>() {
+            return Self::MutationCommitted { details };
+        }
+        if error.is::<writerslogic_warm::IndeterminateMutationError>()
+            || error.chain().any(|cause| {
+                matches!(
+                    cause.downcast_ref::<writerslogic_warm::core::qgraph::UpdateError>(),
+                    Some(writerslogic_warm::core::qgraph::UpdateError::RecoveryRequired)
+                )
+            })
+        {
+            return Self::MutationUncertain { details };
+        }
         if lower.contains("already open by another engine") {
             return Self::StoreLocked { details };
         }
@@ -114,5 +133,46 @@ impl From<std::io::Error> for WarmError {
 impl From<anyhow::Error> for WarmError {
     fn from(error: anyhow::Error) -> Self {
         Self::from_engine(&error)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn engine_outcome_errors_have_typed_variants() {
+        let committed: anyhow::Error = writerslogic_warm::CommittedMutationError {
+            effect: "test sidecar",
+            source: anyhow::anyhow!("injected post-commit failure"),
+        }
+        .into();
+        assert!(matches!(
+            WarmError::from_engine(&committed),
+            WarmError::MutationCommitted { .. }
+        ));
+
+        let uncertain: anyhow::Error =
+            writerslogic_warm::core::qgraph::UpdateError::RecoveryRequired.into();
+        assert!(matches!(
+            WarmError::from_engine(&uncertain),
+            WarmError::MutationUncertain { .. }
+        ));
+
+        let uncertain: anyhow::Error = writerslogic_warm::IndeterminateMutationError {
+            effect: "journal rollback",
+            source: anyhow::anyhow!("injected rollback failure"),
+        }
+        .into();
+        assert!(matches!(
+            WarmError::from_engine(&uncertain),
+            WarmError::MutationUncertain { .. }
+        ));
+
+        let invalid = anyhow::anyhow!("invalid input");
+        assert!(matches!(
+            WarmError::from_engine(&invalid),
+            WarmError::InvalidInput { .. }
+        ));
     }
 }

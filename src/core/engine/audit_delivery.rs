@@ -8,6 +8,19 @@ use crate::core::audit::AuditOp;
 use crate::core::audit_effects::{AuditIntent, MAX_PENDING};
 
 impl WarmCore {
+    /// The configured audit signing public key, or None when signing is disabled.
+    /// Preserve independently trusted keys to verify entries after changing the signer.
+    pub fn audit_verifying_key(&self) -> Option<[u8; 32]> {
+        #[cfg(feature = "security")]
+        {
+            self.signing.as_ref().map(|key| key.verifying_key_bytes())
+        }
+        #[cfg(not(feature = "security"))]
+        {
+            None
+        }
+    }
+
     /// Number of committed audit records still awaiting durable acknowledgement.
     /// Legacy schemas have no recoverable audit queue and return zero.
     pub fn pending_audit_effects(&self) -> usize {
@@ -503,23 +516,27 @@ mod tests {
             Some(dir.path().display().to_string()),
             Some(config.clone()),
         )?;
-        let old_key =
-            crate::core::security::SigningManager::new(&dir.path().join("hms_signing.key"))?;
+        let old_key = core.audit_verifying_key().unwrap();
         let intent = core
             .audit_intent(AuditOp::Delete, "original-signer")
             .unwrap();
         core.commit(&[Mutation::AuditPending(intent.clone())])?;
         drop(core);
+        std::fs::remove_file(dir.path().join("hms_signing.key"))?;
         config.security.key_path = Some(dir.path().join("replacement.key").display().to_string());
         let core = WarmCore::new(256, Some(dir.path().display().to_string()), Some(config))?;
         let entries = core.audit_since(0)?;
         assert_eq!(entries, vec![intent.0]);
-        old_key.verify(&entries[0].signable_bytes(), &entries[0].signature)?;
-        let replacement =
-            crate::core::security::SigningManager::new(&dir.path().join("replacement.key"))?;
-        assert!(replacement
-            .verify(&entries[0].signable_bytes(), &entries[0].signature)
-            .is_err());
+        entries[0].verify_signature(&old_key)?;
+        let replacement = core.audit_verifying_key().unwrap();
+        assert!(entries[0].verify_signature(&replacement).is_err());
+        core.compact()?;
+        let entries = core.audit_since(0)?;
+        assert_eq!(entries.len(), 2);
+        entries[0].verify_signature(&old_key)?;
+        entries[1].verify_signature(&replacement)?;
+        assert!(entries[1].verify_signature(&old_key).is_err());
+        assert!(!dir.path().join("hms_signing.key").exists());
         Ok(())
     }
 }

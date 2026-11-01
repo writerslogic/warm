@@ -160,6 +160,17 @@ impl TextSegment {
     pub(crate) fn len(&self) -> u64 {
         self.len.load(Ordering::Acquire)
     }
+
+    #[cfg(test)]
+    pub(super) fn read_only_copy(&self, path: &Path) -> Result<Self> {
+        Ok(Self {
+            file: File::open(path)?,
+            len: AtomicU64::new(self.len.load(Ordering::Acquire)),
+            scrubbed: crate::core::sync::RwLock::new(self.scrubbed.read().clone()),
+            #[cfg(feature = "security")]
+            cipher: self.cipher.clone(),
+        })
+    }
 }
 
 #[cfg(test)]

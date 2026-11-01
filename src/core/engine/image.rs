@@ -133,7 +133,7 @@ impl WarmCore {
         for id in &dead {
             store.remove_unindexed_scrubbed(id)?;
         }
-        store.insert_batch(written);
+        store.insert_batch(written)?;
         *documents = store;
         *self.image.serving.write() = None;
         Ok(())

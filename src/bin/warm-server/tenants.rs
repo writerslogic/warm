@@ -875,6 +875,7 @@ impl AppState {
                 staged,
                 &backup_id,
             )?;
+            self.idem.invalidate_tenant(name);
             write.close();
             let reopened = restore.publish().and_then(|()| self.open_core(&tenant.dir));
             match reopened {

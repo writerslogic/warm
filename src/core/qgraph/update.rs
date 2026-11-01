@@ -70,6 +70,23 @@ pub enum UpdateError {
     Search(#[from] WarmError),
 }
 
+fn admit_batch(s: &State, count: usize, size: usize) -> Result<(), UpdateError> {
+    if s.pending
+        .len()
+        .checked_add(count)
+        .is_none_or(|len| len > MAX_OPS)
+        || s.pending_bytes
+            .checked_add(size)
+            .is_none_or(|bytes| bytes > MAX_PAYLOAD)
+        || s.delta
+            .len()
+            .checked_add(count)
+            .is_none_or(|len| len >= (u32::MAX - 1) as usize)
+    {
+        return Err(UpdateError::Capacity);
+    }
+    Ok(())
+}
 /// Advisory thresholds; callers schedule consolidation outside their commit latency.
 #[derive(Clone, Copy, Debug)]
 pub struct ConsolidationPolicy {
@@ -580,51 +597,66 @@ impl UpdatableVGraph {
     /// Stages deletion of every id in `ids`, all or none: an id that is not live, repeats,
     /// or was already staged fails the call with nothing staged.
     pub fn delete_batch(&self, ids: &[u32]) -> Result<(), UpdateError> {
-        self.stage_all(ids.iter().map(|&id| Operation::Delete(id)).collect())
+        let _writer = self.writer()?;
+        let mut s = self.state.write();
+        let size = ids.len().checked_mul(5).ok_or(UpdateError::Capacity)?;
+        admit_batch(&s, ids.len(), size)?;
+        let mut batch = HashSet::with_capacity(ids.len());
+        for &id in ids {
+            let op = Operation::Delete(id);
+            if s.touched.contains(&id) || !batch.insert(id) {
+                return Err(UpdateError::DuplicateIdInBatch(id));
+            }
+            s.validate_op(&op)?;
+        }
+        for &id in ids {
+            let op = Operation::Delete(id);
+            s.apply(&op);
+            s.touched.insert(id);
+            s.pending.push(op);
+        }
+        s.pending_bytes += size;
+        Ok(())
     }
     /// Stages the replacement of each id in `ids` by the matching row of row-major `vectors`,
     /// all or none, under the same rules as [`Self::delete_batch`].
     pub fn replace_batch(&self, ids: &[u32], vectors: &[f32]) -> Result<(), UpdateError> {
-        let dim = self.dim();
-        if vectors.len() != ids.len() * dim {
+        let _writer = self.writer()?;
+        let mut s = self.state.write();
+        let dim = s.manifest.dim;
+        let expected = ids.len().checked_mul(dim).ok_or(UpdateError::Capacity)?;
+        if vectors.len() != expected {
             return Err(UpdateError::DimensionMismatch {
-                expected: ids.len() * dim,
+                expected,
                 actual: vectors.len(),
             });
         }
-        self.stage_all(
-            ids.iter()
-                .zip(vectors.chunks_exact(dim.max(1)))
-                .map(|(&id, row)| Operation::Replace(id, row.to_vec()))
-                .collect(),
-        )
-    }
-    /// Validates every operation of `ops` against the state before any is applied, so a
-    /// rejected operation leaves the batch as it was.
-    fn stage_all(&self, ops: Vec<Operation>) -> Result<(), UpdateError> {
-        let _writer = self.writer()?;
-        let mut s = self.state.write();
-        let size: usize = ops
-            .iter()
-            .map(|op| 5 + op.vector().map_or(0, |v| v.len() * 4))
-            .sum();
-        if s.pending.len() + ops.len() > MAX_OPS
-            || s.pending_bytes + size > MAX_PAYLOAD
-            || s.delta.len() + ops.len() >= (u32::MAX - 1) as usize
-        {
-            return Err(UpdateError::Capacity);
-        }
-        let mut batch = HashSet::with_capacity(ops.len());
-        for op in &ops {
-            let id = op.id();
+        let row_bytes = dim
+            .checked_mul(4)
+            .and_then(|bytes| bytes.checked_add(5))
+            .ok_or(UpdateError::Capacity)?;
+        let size = ids
+            .len()
+            .checked_mul(row_bytes)
+            .ok_or(UpdateError::Capacity)?;
+        admit_batch(&s, ids.len(), size)?;
+        let mut batch = HashSet::with_capacity(ids.len());
+        for (&id, row) in ids.iter().zip(vectors.chunks_exact(dim)) {
             if s.touched.contains(&id) || !batch.insert(id) {
                 return Err(UpdateError::DuplicateIdInBatch(id));
             }
-            s.validate_op(op)?;
+            validate_vector(row, dim, s.manifest.build.metric)?;
+            if id == u32::MAX {
+                return Err(UpdateError::IdOutOfRange);
+            }
+            if !s.contains(id) {
+                return Err(UpdateError::UnknownId(id));
+            }
         }
-        for op in ops {
+        for (&id, row) in ids.iter().zip(vectors.chunks_exact(dim)) {
+            let op = Operation::Replace(id, row.to_vec());
             s.apply(&op);
-            s.touched.insert(op.id());
+            s.touched.insert(id);
             s.pending.push(op);
         }
         s.pending_bytes += size;
@@ -640,19 +672,22 @@ impl UpdatableVGraph {
         let _writer = self.writer()?;
         let mut s = self.state.write();
         let dim = s.manifest.dim;
-        if vectors.len() != ids.len() * dim {
+        let expected = ids.len().checked_mul(dim).ok_or(UpdateError::Capacity)?;
+        if vectors.len() != expected {
             return Err(UpdateError::DimensionMismatch {
-                expected: ids.len() * dim,
+                expected,
                 actual: vectors.len(),
             });
         }
-        let size = (5 + 4 * dim) * ids.len();
-        if s.pending.len() + ids.len() > MAX_OPS
-            || s.pending_bytes + size > MAX_PAYLOAD
-            || s.delta.len() + ids.len() >= (u32::MAX - 1) as usize
-        {
-            return Err(UpdateError::Capacity);
-        }
+        let row_bytes = dim
+            .checked_mul(4)
+            .and_then(|bytes| bytes.checked_add(5))
+            .ok_or(UpdateError::Capacity)?;
+        let size = ids
+            .len()
+            .checked_mul(row_bytes)
+            .ok_or(UpdateError::Capacity)?;
+        admit_batch(&s, ids.len(), size)?;
         let mut batch = HashSet::with_capacity(ids.len());
         for (&id, row) in ids.iter().zip(vectors.chunks_exact(dim)) {
             if id == u32::MAX {
@@ -1198,5 +1233,28 @@ mod batch_tests {
         index.commit().unwrap();
         assert_eq!(index.len(), 6);
         assert_eq!(index.search(&[100.0, 0.0], 1, search).unwrap(), vec![3]);
+    }
+    #[test]
+    fn batch_limits_precede_per_id_validation_without_changing_state() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("index");
+        let params = BuildParams::default();
+        let index = UpdatableVGraph::create(&path, &[], 2, &params).unwrap();
+        for count in [MAX_OPS - 1, MAX_OPS, MAX_OPS + 1] {
+            let ids = vec![u32::MAX; count];
+            let vectors = vec![1.0; count * 2];
+            for result in [
+                index.delete_batch(&ids),
+                index.replace_batch(&ids, &vectors),
+                index.insert_batch(&ids, &vectors),
+            ] {
+                if count <= MAX_OPS {
+                    assert!(matches!(result, Err(UpdateError::IdOutOfRange)));
+                } else {
+                    assert!(matches!(result, Err(UpdateError::Capacity)));
+                }
+                assert!(index.is_empty());
+            }
+        }
     }
 }
