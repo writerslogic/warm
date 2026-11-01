@@ -1,0 +1,36 @@
+=== RUN   TestVersions
+--- PASS: TestVersions (0.00s)
+=== RUN   TestSearchRoundTrip
+--- PASS: TestSearchRoundTrip (0.09s)
+=== RUN   TestEmptyAndUnicodeText
+--- PASS: TestEmptyAndUnicodeText (0.06s)
+=== RUN   TestStatsAndSecurityStatus
+--- PASS: TestStatsAndSecurityStatus (0.11s)
+=== RUN   TestLockedAndClosed
+--- PASS: TestLockedAndClosed (0.06s)
+=== RUN   TestEncryption
+--- PASS: TestEncryption (0.87s)
+=== RUN   TestSnapshot
+--- PASS: TestSnapshot (0.15s)
+=== RUN   TestChunkDocument
+--- PASS: TestChunkDocument (0.00s)
+=== RUN   TestContextCancellation
+--- PASS: TestContextCancellation (0.06s)
+=== RUN   TestConcurrentUse
+--- PASS: TestConcurrentUse (0.18s)
+=== RUN   TestEmbeddings
+--- PASS: TestEmbeddings (0.06s)
+=== RUN   Example
+--- PASS: Example (0.07s)
+PASS
+ok  	github.com/writerslogic/warm/bindings/go	2.738s
+=== RUN   TestFetchInstallsOnlyTheStaticLibrary
+installed /var/folders/f6/9fydz_3n0p13t2scsr8ppdlm0000gn/T/TestFetchInstallsOnlyTheStaticLibrary147102268/001/lib/libwriterslogic_warm_c.a
+export CGO_LDFLAGS="-L/var/folders/f6/9fydz_3n0p13t2scsr8ppdlm0000gn/T/TestFetchInstallsOnlyTheStaticLibrary147102268/001/lib"
+--- PASS: TestFetchInstallsOnlyTheStaticLibrary (0.00s)
+=== RUN   TestFetchRejectsChecksumMismatch
+--- PASS: TestFetchRejectsChecksumMismatch (0.00s)
+=== RUN   TestUnsupportedPlatform
+--- PASS: TestUnsupportedPlatform (0.00s)
+PASS
+ok  	github.com/writerslogic/warm/bindings/go/cmd/warm-fetch	1.026s

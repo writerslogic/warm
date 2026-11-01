@@ -1,0 +1,10 @@
+   Compiling writerslogic-warm-c v0.1.0 (/Volumes/A/warm-security-readiness/bindings/c)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.40s
+     Running tests/header.rs (/Users/davidcondrey/.cache/warm-security-readiness-target/debug/deps/header-61157c9b7b9b414d)
+
+running 2 tests
+test bundled_go_headers_match_c_headers ... ok
+test header_layout_matches_rust ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+

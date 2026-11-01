@@ -1,0 +1,71 @@
+{
+  "source_base": "0d7ff7ebd72bd16f26103e75a903d176b3e1dd7a",
+  "scope": "Go bundled-header synchronization and regeneration checks; no runtime source changes",
+  "diagnosis": "Go cgo includes bindings/go/include/writerslogic_warm.h, which omitted WARM_ERR_MUTATION_COMMITTED=11 and WARM_ERR_MUTATION_UNCERTAIN=12 already present in the canonical C header. Bindings CI stages the native library without running build-native.sh, so its header-copy step did not repair the committed stale copy.",
+  "environment": {
+    "platform": "darwin/arm64",
+    "go": "go1.27.1",
+    "rustc": "1.99.0 (b940084d7 2026-09-28)",
+    "cbindgen": "0.29.4",
+    "cargo_target_dir": "/Users/davidcondrey/.cache/warm-security-readiness-target",
+    "go_cache": "/Users/davidcondrey/.cache/warm-go-header-parity"
+  },
+  "checks": [
+    {
+      "command": "cd bindings/go && go vet ./...",
+      "phase": "before header regeneration",
+      "exit_code": 1,
+      "result": "Reproduced the two unknown C identifier failures from CI",
+      "log": "go-vet-before.log"
+    },
+    {
+      "command": "bindings/c/scripts/gen-header.sh --check",
+      "phase": "after extending the check, before header regeneration",
+      "exit_code": 1,
+      "result": "Canonical generated C header matched; bundled Go header comparison failed on exactly the two missing constants",
+      "log": "header-check-before.log.gz"
+    },
+    {
+      "command": "bindings/c/scripts/gen-header.sh && bindings/c/scripts/gen-header.sh --check",
+      "phase": "after header regeneration",
+      "exit_code": 0,
+      "result": "Canonical C header and both bundled Go headers match",
+      "log": "header-check-after.log.gz"
+    },
+    {
+      "command": "cargo +1.99.0 build --locked --manifest-path bindings/c/Cargo.toml",
+      "exit_code": 0,
+      "result": "Built native debug static library and staged it in bindings/go/lib/darwin_arm64 for Go checks",
+      "log": "c-native-build.log"
+    },
+    {
+      "command": "cargo +1.99.0 test --locked --manifest-path bindings/c/Cargo.toml --test header",
+      "exit_code": 0,
+      "tests_passed": 2,
+      "result": "Existing C/Rust layout and alias test, plus bundled Go header parity regression",
+      "log": "header-tests.log"
+    },
+    {
+      "command": "cd bindings/go && go vet ./...",
+      "phase": "after header regeneration",
+      "exit_code": 0,
+      "result": "No diagnostics"
+    },
+    {
+      "command": "cd bindings/go && go test -race -count=1 -v ./...",
+      "exit_code": 0,
+      "tests_passed": 14,
+      "examples_passed": 1,
+      "packages_passed": 2,
+      "log": "go-race.log"
+    },
+    {
+      "command": "bash -n bindings/c/scripts/gen-header.sh && git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "limits": [
+    "Local Go checks used a freshly built debug C library and installed Go 1.27.1 on macOS arm64. Hosted release-library and Go 1.24 platform-matrix validation is pending integration CI.",
+    "Go race instrumentation checks Go code; it does not instrument the linked Rust library."
+  ]
+}

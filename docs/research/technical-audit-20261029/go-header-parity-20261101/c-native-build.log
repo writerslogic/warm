@@ -1,0 +1,6 @@
+   Compiling num-complex v0.4.6
+   Compiling warm-rust v0.6.5 (/Volumes/A/warm-security-readiness)
+   Compiling simba v0.10.2
+   Compiling nalgebra v0.35.0
+   Compiling writerslogic-warm-c v0.1.0 (/Volumes/A/warm-security-readiness/bindings/c)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 19.22s
