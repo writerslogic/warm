@@ -25,6 +25,8 @@ pub use types::*;
 fn napi_err(e: anyhow::Error) -> napi::Error {
     if e.is::<crate::CommittedMutationError>() {
         napi::Error::from_reason(format!("[mutation_committed] {e}"))
+    } else if e.is::<crate::IndeterminateMutationError>() {
+        napi::Error::from_reason(format!("[mutation_uncertain] {e}"))
     } else if let Some(limit) = e.downcast_ref::<crate::core::query_limits::QueryLimitExceeded>() {
         napi::Error::from_reason(format!(
             "[{}] {limit}",
@@ -40,6 +42,7 @@ fn napi_err(e: anyhow::Error) -> napi::Error {
 fn memory_err(e: anyhow::Error) -> napi::Error {
     use crate::core::memory_api::MemoryError;
     if e.is::<crate::CommittedMutationError>()
+        || e.is::<crate::IndeterminateMutationError>()
         || e.is::<crate::core::query_limits::QueryLimitExceeded>()
     {
         return napi_err(e);

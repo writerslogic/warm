@@ -1653,3 +1653,28 @@ remote CI and merge remain required. No latency, RSS, allocation improvement
 or universal corruption tolerance is claimed.
 
 The rebase onto #372 main preserved every recorded tested source hash.
+
+## Remaining readiness work (2026-11-01; integration in progress)
+
+The user authorized parallel completion, validation and merge of the unfinished
+storage/binding, retained-text, restore/retry, audit-verification and retrieval
+work, including the failed documentation performance check. The integration
+branch is `fix/readiness-completion` in `/Volumes/A/holographic-memory`, based on
+verified main `75ffaa5736e34171e45612e8675791f7b71fc2d6` (PR #373). Existing
+historical benchmark limitations and broader research backlog remain distinct
+from these concrete candidates. No paid services or model downloads are used.
+
+The retained-text and restore candidate is validated in
+`/Volumes/A/warm-operational-readiness`; audit verification and documentation
+loading in `/Volumes/A/warm-security-readiness`; retrieval correctness and the
+frozen historical comparison in `/Volumes/A/warm-retrieval-tail-validation`.
+Each build has an explicit private Cargo target directory. The coordinator owns
+storage/binding hardening, combined-source checks and the final PR gate.
+
+The current storage candidate distinguishes failed commit-and-rollback sync
+from a known uncommitted write and quarantines later journal writes under the
+writer lock. HTTP retains uncertain failures under their idempotency keys;
+native/MCP errors retain the reconciliation outcome. All 17 focused storage
+tests pass. This is fault-model evidence, not a hardware power-loss claim.
+Final source hashes, remaining focused checks and the merged revision will be
+recorded before this batch is accepted.

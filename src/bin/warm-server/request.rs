@@ -233,9 +233,11 @@ pub async fn json_write(
         if let Some(guard) = guard {
             guard.complete(&match &result {
                 Ok(stored) => stored.clone(),
-                Err(e) => {
-                    StoredResponse::new(e.status, &e.problem(), e.code == "mutation_committed")
-                }
+                Err(e) => StoredResponse::new(
+                    e.status,
+                    &e.problem(),
+                    matches!(e.code, "mutation_committed" | "mutation_uncertain"),
+                ),
             });
         }
         result
@@ -265,6 +267,12 @@ mod committed_tests {
 
     #[tokio::test]
     async fn idempotent_retry_replays_a_committed_failure_without_repeating_work() {
+        for uncertain in [false, true] {
+            assert_outcome_failure_is_replayed(uncertain).await;
+        }
+    }
+
+    async fn assert_outcome_failure_is_replayed(uncertain: bool) {
         let dir = tempfile::tempdir().unwrap();
         let state = crate::tests::state_with(dir.path(), 2, &[]);
         let executions = Arc::new(AtomicUsize::new(0));
@@ -285,14 +293,24 @@ mod committed_tests {
                         .core(tenant)?
                         .memorize_document(input)
                         .map_err(ApiError::from_core)?;
-                    Err(ApiError::committed(anyhow::anyhow!(
-                        "injected post-commit effect failure"
-                    )))
+                    let cause = anyhow::anyhow!("injected mutation outcome failure");
+                    Err(if uncertain {
+                        ApiError::uncertain(cause)
+                    } else {
+                        ApiError::committed(cause)
+                    })
                 },
             )
             .await;
             if attempt == 0 {
-                assert_eq!(result.unwrap_err().code, "mutation_committed");
+                assert_eq!(
+                    result.unwrap_err().code,
+                    if uncertain {
+                        "mutation_uncertain"
+                    } else {
+                        "mutation_committed"
+                    }
+                );
             } else {
                 let response = result.unwrap();
                 assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);

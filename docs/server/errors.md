@@ -110,6 +110,13 @@ cannot fit the replay byte budget, the key instead returns
 `idempotency_reconciliation_required`. Reconcile state before starting a deliberate new
 attempt. All retained keys are process-local and lost on restart.
 
+### mutation_uncertain
+500. Both journal commit synchronization and rollback synchronization failed, so the
+mutation may survive recovery. The store rejects further writes until reopened. Reopen
+and reconcile stable IDs before retrying; this error does not establish that the mutation
+was absent. Its idempotency key retains the failure within the process-local cache TTL,
+or requires reconciliation if the response exceeds the replay byte budget.
+
 ### not_implemented
 501. Reserved for operations a build does not provide.
 

@@ -2807,6 +2807,28 @@ sealed class WarmException: kotlin.Exception() {
     }
     
     /**
+     * The requested mutation committed durably, but a follow-up effect failed. Reconcile before retrying.
+     */
+    class MutationCommitted(
+
+        val `details`: kotlin.String
+        ) : WarmException() {
+        override val message
+            get() = "details=${ `details` }"
+    }
+
+    /**
+     * The write outcome is indeterminate; reopen/reconcile before further writes or retry.
+     */
+    class MutationUncertain(
+
+        val `details`: kotlin.String
+        ) : WarmException() {
+        override val message
+            get() = "details=${ `details` }"
+    }
+
+    /**
      * The store handle was closed.
      */
     class Closed(
@@ -2869,8 +2891,14 @@ public object FfiConverterTypeWarmError : FfiConverterRustBuffer<WarmException> 
             8 -> WarmException.Io(
                 FfiConverterString.read(buf),
                 )
-            9 -> WarmException.Closed()
-            10 -> WarmException.Internal(
+            9 -> WarmException.MutationCommitted(
+                FfiConverterString.read(buf),
+                )
+            10 -> WarmException.MutationUncertain(
+                FfiConverterString.read(buf),
+                )
+            11 -> WarmException.Closed()
+            12 -> WarmException.Internal(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -2915,6 +2943,16 @@ public object FfiConverterTypeWarmError : FfiConverterRustBuffer<WarmException> 
                 + FfiConverterString.allocationSize(value.`details`)
             )
             is WarmException.Io -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`details`)
+            )
+            is WarmException.MutationCommitted -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`details`)
+            )
+            is WarmException.MutationUncertain -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
                 + FfiConverterString.allocationSize(value.`details`)
@@ -2973,12 +3011,22 @@ public object FfiConverterTypeWarmError : FfiConverterRustBuffer<WarmException> 
                 FfiConverterString.write(value.`details`, buf)
                 Unit
             }
-            is WarmException.Closed -> {
+            is WarmException.MutationCommitted -> {
                 buf.putInt(9)
+                FfiConverterString.write(value.`details`, buf)
+                Unit
+            }
+            is WarmException.MutationUncertain -> {
+                buf.putInt(10)
+                FfiConverterString.write(value.`details`, buf)
+                Unit
+            }
+            is WarmException.Closed -> {
+                buf.putInt(11)
                 Unit
             }
             is WarmException.Internal -> {
-                buf.putInt(10)
+                buf.putInt(12)
                 FfiConverterString.write(value.`details`, buf)
                 Unit
             }

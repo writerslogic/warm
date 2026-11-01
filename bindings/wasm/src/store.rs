@@ -4,10 +4,10 @@
 //! The document store exported to JavaScript: ingest, search, delete, stats and a
 //! checksummed export/import, over the engine's in-memory document store.
 
-use writerslogic_warm::core::documents::{DocumentInput, MemoryDocumentStore, SearchOptions};
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::Serializer;
 use wasm_bindgen::prelude::*;
+use writerslogic_warm::core::documents::{DocumentInput, MemoryDocumentStore, SearchOptions};
 
 const DEFAULT_DIMENSIONS: usize = 16384;
 

@@ -8,6 +8,7 @@ open/close store (path, dimensions, encryption key, signing, audit, embedding sp
 ## Contract
 - Every fallible call returns `warm_status_t` (0 = `WARM_OK`); the failing thread's `hms1_last_error_code()` and `hms1_last_error_message()` describe it. The slot is per thread: read it right after the call on the same OS thread.
 - No panic crosses the boundary (`catch_unwind`, `WARM_ERR_PANIC`).
+- `WARM_ERR_MUTATION_COMMITTED` (11) means the data committed but a later effect failed; `WARM_ERR_MUTATION_UNCERTAIN` (12) means durability could not be established or rolled back. Reopen and reconcile stable record IDs before retrying either outcome.
 - Strings are `warm_str_t` (pointer + length, UTF-8, not NUL terminated). NULL pointer with length 0 means "absent". Lengths are bounded (`WARM_MAX_BUFFER_BYTES` 1 GiB, `WARM_MAX_ARRAY_LEN` 2^24); nothing is allocated from a caller-supplied size.
 - Zero-initialised option structs mean all defaults (set `struct_size`, or call `hms1_*_options_init`). Numeric search overrides are honoured only when their `WARM_SEARCH_SET_*` flag is set. Structs that begin with `struct_size` grow append-only; out-structs (`stats`, `security_status`) are filled only up to the caller's `struct_size`.
 - Thread safety: a store handle is safe from any number of threads. `hms1_store_close` may run while calls are in flight; they finish first. Handles are never-reused tokens: a stale handle returns `WARM_ERR_INVALID_HANDLE`, never aliasing a later store. Result/chunk sets are immutable; concurrent reads are fine, `free` must not race with reads, double free is undefined, NULL is ignored.
@@ -30,5 +31,5 @@ Archive names: `writerslogic-warm-c-<version>-<rid>.tar.gz`, rid in `osx-arm64 o
 ## Verified here (macOS arm64)
 C program with shared and static linking, `leaks`: 0 leaks; counting-allocator test (fails when results are not freed); layout test against the system C compiler; Rust 1.89 compile, clippy 1.99; `cargo check` for x86_64 Linux and x86_64 Windows MSVC. Linux/Windows execution is not verified locally (`.github/workflows/bindings.yml` runs it).
 
-## Known engine gap
-With encryption on, the engine writes chunk text to `documents.text` unencrypted (transaction log, vectors and indices are encrypted). The ABI tests report this and fail on it only with `WARM_STRICT_AT_REST=1`. Fix belongs in `src/core/engine` (encrypt the text segment).
+## Encrypted storage
+With encryption on, the engine encrypts journal payloads and chunk text records in `documents.text`; format inspection reports the text segment header and encryption flag. This protects stored payload bytes at rest, not filesystem metadata, access patterns, backups or bytes already returned to the caller.

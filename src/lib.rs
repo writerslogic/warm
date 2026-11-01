@@ -17,7 +17,7 @@ pub use crate::core::documents::{
     DocumentReadChanged, DocumentRecord, DocumentResult, SearchOptions,
 };
 pub use crate::core::entangled::EntangledHVec;
-pub use crate::core::error::{CommittedMutationError, WarmError};
+pub use crate::core::error::{CommittedMutationError, IndeterminateMutationError, WarmError};
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::core::memory_api::{Memory, MemoryConfig};
 pub use crate::core::types::{
