@@ -1,0 +1,69 @@
+{
+  "baseline": "740e93e2a91900d7c0e0aa4163f593c458d96987",
+  "rust": "1.99.0",
+  "features": [
+    "server",
+    "mcp",
+    "conversation-memory"
+  ],
+  "source_sha256": {
+    "src/core/admin.rs": "eb3ab70b2125fae32e772b6f047121260a5033308f6d86dab79560c7689ec71a",
+    "src/core/documents/index.rs": "4fc4245c5aaf24192516eeed53720ebac826b936e45a0835bb246b035c828119",
+    "src/core/engine/document_api.rs": "ebf8fed52ac68e0ceb636699c0bbe1cb267126be262f5075fac1c81b38e0ec40",
+    "src/core/engine/memory_access.rs": "ebd5c412d3246346aa3089d06332f2380fd20696fd219d7c8a727acc1b397740",
+    "src/core/memory_api/index.rs": "55926db67bf1bc0b50d60763ac6e1263ed8b4bea8a30b04d385609c2e6e6ea2a",
+    "src/core/memory_api/maintenance.rs": "48a7aff1a4d95a4cfca9bdc5842a591f65861f4825cbd4e08b2a8105ddad794e",
+    "src/core/memory_api/mod.rs": "5dd94611ee63db8fad3135589226269c8568137be09690ec9938c6dd0573ab56",
+    "src/core/memory_api/recall.rs": "cc2fadd32814e269bbed72b94c4dad24c4063a2de87a277ef59e96bf971839e8",
+    "src/core/memory_api/tests.rs": "11b7b53c8f95fbccb18defccd5c78b82253522c25187763c19c8c624ee2c2237",
+    "src/core/memory_api/write.rs": "3831bc0892f93eed91109206ada61c59f349f5b8f4071684997c60a97dce7ad9",
+    "tests/document_checkpoint.rs": "57667907e65b6f4daf532198c6a42fc05e93e099c09c2d4797654b8aafa75c90"
+  },
+  "baseline_failures": {
+    "retained_text_panics": 8,
+    "checkpoint_panics": 5,
+    "repaired_checkpoint_unnecessarily_hydrated": true
+  },
+  "passed": {
+    "memory_related_library": 26,
+    "existing_external_index_diagnostic_ignored": 1,
+    "admin": 5,
+    "allocation": 6,
+    "conversation": 15,
+    "forgetting_equivalence": 6,
+    "memory_api": 29,
+    "memory_http": 5,
+    "native_workflow": 3,
+    "checkpoint_suite": 10,
+    "focused_checkpoint_with_explicit_admin_verification": 1,
+    "strict_all_features_all_targets_clippy": true,
+    "scoped_rustfmt": true,
+    "final_retained_regression": 1,
+    "final_checkpoint_regression": 1
+  },
+  "pending": [
+    "Exact-head remote CI and merge"
+  ],
+  "limits": [
+    "No latency, allocation, RSS or concurrent rebuild performance claim",
+    "No hardware power-loss or arbitrary concurrent filesystem tampering assurance",
+    "Other infallible engine accessors remain outside this change"
+  ],
+  "artifacts_sha256": {
+    "access-initial.log.gz": "eee7dabe030542aa0a1209043c7f3ab73c71caaa0c77eef3b03c7a53341fde75",
+    "admin.log.gz": "763226a8c233a919db96edeabefb6a1896d0a0a85571c874b62fc5ee269b1a92",
+    "baseline-checkpoint.log.gz": "9c997518382edd7438089073ab026bc2fd5f78dcdfdd4bc81ccc852219e8fc6b",
+    "baseline-regression.patch.gz": "f20ee591d99b103bd8d47d0a9c43f5c294afedac5f6b029afc7242cc78645091",
+    "baseline-text.log.gz": "5642a2b2ddf3887e1d46c5c36392dce42b31f7501089f00298989b335e2836ae",
+    "check-initial.log.gz": "58d253e89ce4268af1b1dd26dc1db87a041da147e1832286f068238b9eda8090",
+    "checkpoint-initial.log.gz": "4554f1fdfe96989ca545a221ee8e76cc54b09605a9fbf0fc654e8bd9d37c5968",
+    "clippy-initial.log.gz": "eb002d912f676d91241da368d5f030f052e1bed9e4711e936f48e5df10f2a520",
+    "clippy.log.gz": "bc35353afc0b23729818d4e61119f52f6f797b7af20bf6fa923af1588df38e46",
+    "contracts.log.gz": "6a09d1b1abf75e8f428443dc6f9923ca6f6145aed67ee0fcf85f19a60fe51dac",
+    "final-checkpoint.log.gz": "fd2ff5375cd069c7e9cbebd8d2ec2b3884c4b5797941346918e59b00dd70fd6d",
+    "final-retained-regression.log.gz": "327c39693038601df96630b64f383f31a57b98b2a9566b5c46ccfbcbf0f3b306",
+    "final-unit.log.gz": "243322afc9d0c4a22fd06de3cc220634335b7296e0ee7df9abdf0f1fa8b2d397",
+    "initial-test-compile.log.gz": "8247605af51aa5978ac0b3f6e07e3851e032788797aa9987541a580a5fcbc885",
+    "memory-initial.log.gz": "ea45093770d52d74e61da993f222c74917e4ef827b8f92163761db843cfe04ea"
+  }
+}

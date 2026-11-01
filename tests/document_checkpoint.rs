@@ -786,6 +786,7 @@ fn metadata_pages_merge_checkpoint_replacements_and_deletions() -> Result<()> {
 
 #[test]
 fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<()> {
+    type MemoryRead = fn(&writerslogic_warm::Memory) -> Result<()>;
     let dir = tempfile::tempdir()?;
     {
         let core = open(dir.path(), config(true))?;
@@ -804,8 +805,9 @@ fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<
     let crc = crc32fast::hash(&bytes[16..]);
     bytes[8..16].copy_from_slice(&u64::from(crc).to_le_bytes());
     std::fs::write(&path, bytes)?;
+    let mut memory_failures = Vec::new();
     {
-        let core = open(dir.path(), config(true))?;
+        let core = std::sync::Arc::new(open(dir.path(), config(true))?);
         assert!(core.serves_from_checkpoint());
         let error = core.get_document("doc").unwrap_err();
         assert!(format!("{error:#}").contains("checkpoint source flag 2"));
@@ -822,7 +824,42 @@ fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<
             .expect("checkpoint decode errors must not panic")
             .unwrap_err();
         assert!(format!("{error:#}").contains("checkpoint source flag 2"));
+        let memory = writerslogic_warm::Memory::new(core.clone());
+        let operations: [(&str, MemoryRead); 4] = [
+            ("get", |memory| memory.get("doc").map(drop)),
+            ("history", |memory| memory.history("doc").map(drop)),
+            ("recall", |memory| {
+                memory.recall("stored", &Default::default()).map(drop)
+            }),
+            ("summaries", |memory| memory.try_summaries(false).map(drop)),
+        ];
+        for (name, operation) in operations {
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| operation(&memory))) {
+                Ok(Err(error)) => {
+                    assert!(format!("{error:#}").contains("checkpoint source flag 2"))
+                }
+                Ok(Ok(())) => {
+                    memory_failures.push(format!("{name}: succeeded with malformed metadata"))
+                }
+                Err(_) => memory_failures.push(format!("{name}: panicked")),
+            }
+        }
+        let present = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            (core.has_document("doc"), core.has_document("absent"))
+        }));
+        match present {
+            Ok(value) => assert_eq!(value, (true, false)),
+            Err(_) => memory_failures.push("presence lookup: panicked".into()),
+        }
+        assert!(core.serves_from_checkpoint());
     }
+    let verified = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        writerslogic_warm::core::admin::verify_store(dir.path(), None)
+    }));
+    let error = verified
+        .expect("verification errors must not panic")
+        .unwrap_err();
+    assert!(format!("{error:#}").contains("checkpoint source flag 2"));
     std::fs::write(path, original)?;
     let core = open(dir.path(), config(true))?;
     assert_eq!(
@@ -833,5 +870,12 @@ fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<
     assert_eq!(core.get_document_info("doc")?.unwrap().version, "v1");
     assert_eq!(core.list_document_info(None, 100)?[0].id, "doc");
     assert!(core.serves_from_checkpoint());
+    let memory = writerslogic_warm::Memory::new(std::sync::Arc::new(core));
+    assert_eq!(
+        memory.get("doc")?.unwrap().text.as_deref(),
+        Some("stored text")
+    );
+    assert!(memory.core().serves_from_checkpoint());
+    assert!(memory_failures.is_empty(), "{}", memory_failures.join("\n"));
     Ok(())
 }

@@ -223,6 +223,8 @@ pub fn verify_store(
     };
     let core = WarmCore::new(dimensions, Some(store.display().to_string()), Some(config))
         .context("opening the store for the document cross-check")?;
+    core.verified_document_count()
+        .context("validating checkpoint documents for the document cross-check")?;
     inspection.documents = Some(match expected {
         Some(ids) => {
             let missing = missing_documents(&ids, &core);

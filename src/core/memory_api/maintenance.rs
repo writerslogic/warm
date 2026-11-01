@@ -4,7 +4,7 @@
 //! Opt-in forgetting and consolidation driven by policies. Nothing here runs unless called;
 //! the default policies plan nothing.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use super::recall::evaluate;
 use super::stamp::{stable_hash, Stamp};
@@ -14,8 +14,8 @@ use super::{ConsolidationPolicy, FactSummary, ForgettingPolicy, Memory, MemoryEr
 impl Memory {
     /// Every stored fact as a maintenance policy sees it, ordered by id. Plain documents
     /// (without memory fields) are not facts and are left out.
-    /// Panics when concurrent writes prevent a coherent snapshot; use [`Self::try_summaries`]
-    /// to handle that retryable failure.
+    /// Panics on read errors or when concurrent writes prevent a coherent snapshot;
+    /// use [`Self::try_summaries`] to handle those failures.
     pub fn summaries(&self, with_text: bool) -> Vec<FactSummary> {
         self.try_summaries(with_text)
             .expect("coherent memory summaries")
@@ -28,18 +28,19 @@ impl Memory {
     }
 
     fn summaries_snapshot(&self, with_text: bool, now: Millis) -> Result<(u64, Vec<FactSummary>)> {
-        self.with_snapshot(|index| {
+        self.with_revision(|| {
+            let index = self.index.read();
             let mut facts = Vec::new();
-            let revision = self.core.scan_documents(|document| {
+            let revision = self.core.try_scan_documents(None, None, |document| {
                 let Some(stamp) = Stamp::from_parts(document.version, document.metadata) else {
-                    return;
+                    return Ok(());
                 };
                 let edges = index.edges(document.id);
                 let status =
                     evaluate(Some(&stamp), edges, now, None).unwrap_or(FactStatus::Current);
                 facts.push(FactSummary {
                     id: document.id.to_owned(),
-                    text: if with_text { document.text() } else { None },
+                    text: None,
                     status,
                     ingest_time: Some(stamp.ingest),
                     event_time: stamp.event,
@@ -49,12 +50,23 @@ impl Memory {
                     subject: stamp.subject.clone(),
                     superseded_at: edges.iter().map(|edge| edge.effective).min(),
                 });
-            });
+                Ok(())
+            })?;
             facts.sort_by(|a, b| a.id.cmp(&b.id));
             check!(
                 index.revision == Some(revision),
                 "snapshot revision changed"
             );
+            drop(index);
+            if with_text {
+                for fact in &mut facts {
+                    fact.text = self
+                        .core
+                        .get_document(&fact.id)?
+                        .context("memory fact disappeared during summary read")?
+                        .text;
+                }
+            }
             Ok((revision, facts))
         })
     }

@@ -13,6 +13,176 @@ fn fact(id: &str, text: &str) -> RememberInput {
 }
 
 #[test]
+fn fallible_memory_reads_report_damaged_retained_text_and_recover() {
+    type MemoryRead = fn(&Memory) -> Result<()>;
+    let dir = tempfile::tempdir().unwrap();
+    let core = Arc::new(WarmCore::new(256, Some(dir.path().display().to_string()), None).unwrap());
+    let memory = Memory::new(core);
+    let text = "retained memory evidence";
+    memory.remember(fact("doc", text)).unwrap();
+    let path = dir.path().join("documents.text");
+    let original = std::fs::read(&path).unwrap();
+    let at = original
+        .windows(text.len())
+        .position(|bytes| bytes == text.as_bytes())
+        .unwrap();
+    let operations: [(&str, MemoryRead); 4] = [
+        ("get", |memory| memory.get("doc").map(drop)),
+        ("history", |memory| memory.history("doc").map(drop)),
+        ("explain", |memory| {
+            memory
+                .explain("retained", "doc", &RecallOptions::default())
+                .map(drop)
+        }),
+        ("summaries", |memory| memory.try_summaries(true).map(drop)),
+    ];
+    let mut failures = Vec::new();
+    for truncate in [false, true] {
+        let mut damaged = original.clone();
+        if truncate {
+            damaged.pop();
+        } else {
+            damaged[at] ^= 1;
+        }
+        std::fs::write(&path, &damaged).unwrap();
+        for (name, operation) in operations {
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| operation(&memory))) {
+                Ok(Err(error)) => {
+                    let message = format!("{error:#}");
+                    assert!(
+                        message.contains(if truncate {
+                            "reading chunk text"
+                        } else {
+                            "checksum mismatch"
+                        }),
+                        "{message}"
+                    );
+                }
+                Ok(Ok(())) => failures.push(format!(
+                    "{name}, truncate={truncate}: succeeded with damaged text"
+                )),
+                Err(_) => failures.push(format!("{name}, truncate={truncate}: panicked")),
+            }
+        }
+        std::fs::write(&path, &original).unwrap();
+        assert_eq!(
+            memory.get("doc").unwrap().unwrap().text.as_deref(),
+            Some(text)
+        );
+        assert!(memory.get("absent").unwrap().is_none());
+        for (_, operation) in operations {
+            operation(&memory).unwrap();
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn damaged_text_does_not_block_metadata_only_memory_operations() {
+    let dir = tempfile::tempdir().unwrap();
+    let core = Arc::new(WarmCore::new(256, Some(dir.path().display().to_string()), None).unwrap());
+    let memory = Memory::new(core.clone());
+    let text = "metadata operations survive text damage";
+    memory.remember(fact("doc", text)).unwrap();
+    let path = dir.path().join("documents.text");
+    let mut bytes = std::fs::read(&path).unwrap();
+    let at = bytes
+        .windows(text.len())
+        .position(|bytes| bytes == text.as_bytes())
+        .unwrap();
+    bytes[at] ^= 1;
+    std::fs::write(&path, bytes).unwrap();
+    assert!(memory.get("doc").is_err());
+    let revision = core.revision();
+    let summaries = memory.try_summaries(false).unwrap();
+    assert_eq!(summaries.len(), 1);
+    assert!(summaries[0].text.is_none());
+    assert!(!memory.remember(fact("doc", text)).unwrap().created);
+    let scope = ForgetScope::Ids {
+        ids: vec!["doc".into()],
+    };
+    assert_eq!(
+        memory
+            .forget(
+                &scope,
+                &ForgetOptions {
+                    dry_run: true,
+                    ..Default::default()
+                }
+            )
+            .unwrap()
+            .forgotten,
+        ["doc"]
+    );
+    assert_eq!(core.revision(), revision);
+    assert_eq!(
+        memory
+            .forget(&scope, &ForgetOptions::default())
+            .unwrap()
+            .forgotten,
+        ["doc"]
+    );
+    assert!(memory.get("doc").unwrap().is_none());
+    let scrubbed = std::fs::read(&path).unwrap();
+    assert!(scrubbed[at..at + text.len()].iter().all(|byte| *byte == 0));
+}
+
+#[test]
+fn failed_survivor_read_keeps_forgetting_atomic_and_repair_allows_retry() {
+    let dir = tempfile::tempdir().unwrap();
+    let core = Arc::new(WarmCore::new(256, Some(dir.path().display().to_string()), None).unwrap());
+    let memory = Memory::new(core.clone());
+    memory.remember(fact("a", "first evidence")).unwrap();
+    memory
+        .remember(RememberInput {
+            supersedes: Some(vec!["a".into()]),
+            ..fact("b", "middle evidence")
+        })
+        .unwrap();
+    let survivor_text = "surviving evidence";
+    memory
+        .remember(RememberInput {
+            supersedes: Some(vec!["b".into()]),
+            ..fact("c", survivor_text)
+        })
+        .unwrap();
+    let path = dir.path().join("documents.text");
+    let original = std::fs::read(&path).unwrap();
+    let at = original
+        .windows(survivor_text.len())
+        .position(|bytes| bytes == survivor_text.as_bytes())
+        .unwrap();
+    let mut damaged = original.clone();
+    damaged[at] ^= 1;
+    std::fs::write(&path, damaged).unwrap();
+    let revision = core.revision();
+    let scope = ForgetScope::Ids {
+        ids: vec!["b".into()],
+    };
+    let result = memory.forget(&scope, &ForgetOptions::default());
+    std::fs::write(&path, original).unwrap();
+    assert!(format!("{:#}", result.unwrap_err()).contains("checksum mismatch"));
+    assert_eq!(core.revision(), revision);
+    assert_eq!(core.document_count(), 3);
+    assert_eq!(memory.get("c").unwrap().unwrap().supersedes, ["b"]);
+    assert_eq!(
+        memory
+            .forget(&scope, &ForgetOptions::default())
+            .unwrap()
+            .forgotten,
+        ["b"]
+    );
+    let survivor = memory.get("c").unwrap().unwrap();
+    assert_eq!(survivor.text.as_deref(), Some(survivor_text));
+    assert_eq!(survivor.supersedes, ["a"]);
+    assert!(memory.get("b").unwrap().is_none());
+    assert_eq!(
+        memory.get("a").unwrap().unwrap().status,
+        FactStatus::Superseded
+    );
+}
+
+#[test]
 fn concurrent_wrappers_cannot_both_create_different_facts_with_one_id() {
     struct Synchronized(std::sync::Barrier);
     impl SupersessionPolicy for Synchronized {
@@ -347,12 +517,12 @@ fn replacing_a_fact_leaves_the_index_equal_to_a_rebuild() {
             ..fact("c", "gamma one")
         })
         .unwrap();
-    memory.ensure_fresh();
+    memory.ensure_fresh().unwrap();
     let tracked = |memory: &Memory| {
         let live = memory.index.read();
         let tracked = live.revision == Some(core.revision());
         if tracked {
-            assert_eq!(live.canonical(), Index::rebuild(&core).canonical());
+            assert_eq!(live.canonical(), Index::rebuild(&core).unwrap().canonical());
         }
         tracked
     };
@@ -377,6 +547,6 @@ fn replacing_a_fact_leaves_the_index_equal_to_a_rebuild() {
     // Linked (c supersedes b): only a rebuild reproduces other facts' links to it.
     memory.remember(fact("b", "beta two")).unwrap();
     assert!(!tracked(&memory));
-    memory.ensure_fresh();
+    memory.ensure_fresh().unwrap();
     assert!(tracked(&memory));
 }
