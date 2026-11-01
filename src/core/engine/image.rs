@@ -8,17 +8,17 @@
 //! deferred encodings and deletes go to a store over the checkpoint that holds the documents
 //! written since and marks the checkpoint documents they replace or delete dead
 //! (`documents::overlay`); frames after the checkpoint are replayed the same way at open, which
-//! rebuilds that dead set. A checkpoint holds no vector state, so chunk-vector queries and
-//! deferred encoding read the store over it as they are. The first access of any other kind,
-//! and any other write, rebuilds the live store from the checkpoint and the store over it
-//! ([`WarmCore::documents`]).
+//! rebuilds that dead set. A checkpoint holds no vector state, so chunk-vector queries,
+//! embedding counts, index maintenance and deferred encoding use the live overlay. Checked document reads also
+//! preserve the checkpoint. Operations requiring the complete lexical store rebuild it from
+//! the checkpoint and overlay ([`WarmCore::hydrate_documents`]).
 
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use crate::core::sync::{Mutex, RwLock, RwLockReadGuard};
+use crate::core::sync::{Mutex, RwLock};
 use anyhow::{bail, ensure, Context, Result};
 
 use super::WarmCore;
@@ -62,13 +62,6 @@ fn word(header: &[u8], index: usize) -> u64 {
 }
 
 impl WarmCore {
-    /// The document store, rebuilt from its checkpoint; infallible accessors panic if hydration fails.
-    pub(super) fn documents(&self) -> RwLockReadGuard<'_, DocumentStore> {
-        self.hydrate_documents()
-            .expect("rebuilding the document store from its checkpoint");
-        self.documents.read()
-    }
-
     /// Runs `capture` on the store while it is served from a checkpoint, between transactions
     /// and excluding a rebuild meanwhile; `None` otherwise or when `capture` declines.
     pub(super) fn capture_from_checkpoint<T>(

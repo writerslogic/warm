@@ -149,7 +149,7 @@ impl WarmCore {
             // A document deleted since the snapshot has had its text zeroed; the delete is in
             // the tail, which the replay below applies, so it is simply not carried over.
             {
-                let store = self.documents();
+                let store = self.documents.read();
                 if store.is_deleted(document) {
                     continue;
                 }
