@@ -469,10 +469,6 @@ impl DocumentStore {
     }
 
     /// A chunk's text from its inline copy or this store's text segment.
-    pub(crate) fn chunk_text(&self, chunk: &StoredChunk) -> Option<String> {
-        self.try_chunk_text(chunk).expect("chunk text read")
-    }
-
     pub(crate) fn try_chunk_text(&self, chunk: &StoredChunk) -> anyhow::Result<Option<String>> {
         try_text_of(chunk, self.text.as_deref())
     }

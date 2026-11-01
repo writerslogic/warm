@@ -94,7 +94,7 @@ impl Memory {
         );
         let now = self.clock.now_millis();
         for _ in 0..WRITE_ATTEMPTS {
-            let Some(before) = self.planning_revision() else {
+            let Some(before) = self.planning_revision()? else {
                 continue;
             };
             match self.remember_at_revision(inputs.clone(), now, before) {
@@ -300,8 +300,8 @@ impl Memory {
         let mut replaces = false;
         let mut previous = None;
         let mut idempotent_stamp = None;
-        if let Some((version, metadata, _)) = self.core.document_snapshot(&id) {
-            match Stamp::from_parts(&version, &metadata) {
+        if let Some(info) = self.core.get_document_info(&id)? {
+            match Stamp::from_parts(&info.version, &info.metadata) {
                 Some(stamp) if stamp.hash.as_deref() == Some(hash.as_str()) => {
                     idempotent_stamp = Some(stamp);
                 }
@@ -469,7 +469,7 @@ impl Memory {
     pub fn forget(&self, scope: &ForgetScope, options: &ForgetOptions) -> Result<ForgetReport> {
         let mut completed = BTreeSet::new();
         for _ in 0..WRITE_ATTEMPTS {
-            let Some(before) = self.planning_revision() else {
+            let Some(before) = self.planning_revision()? else {
                 continue;
             };
             match self.forget_at_revision(scope, options, before, &mut completed) {
@@ -502,10 +502,10 @@ impl Memory {
         }
         let mut stamps: Vec<(String, Stamp)> = Vec::new();
         for id in &ids {
-            if let Some((version, metadata, _)) = self.core.document_snapshot(id) {
+            if let Some(info) = self.core.get_document_info(id)? {
                 stamps.push((
                     id.clone(),
-                    Stamp::from_parts(&version, &metadata).unwrap_or_default(),
+                    Stamp::from_parts(&info.version, &info.metadata).unwrap_or_default(),
                 ));
             }
         }
@@ -619,9 +619,10 @@ impl Memory {
                     .filter(|by| !dead.contains(by)),
             );
         }
+        drop(index);
         let mut rewrites = Vec::new();
         for survivor in affected {
-            let Some(parts) = self.core.document_parts(&survivor) else {
+            let Some(parts) = self.core.document_parts(&survivor)? else {
                 continue;
             };
             let Some(mut stamp) = Stamp::from_parts(&parts.version, &parts.metadata) else {
@@ -633,7 +634,7 @@ impl Memory {
                 .filter(|id| !dead.contains(*id))
                 .cloned()
                 .collect();
-            supersedes.extend(index.bridge(&survivor, &dead));
+            supersedes.extend(self.index.read().bridge(&survivor, &dead));
             let supersedes: Vec<String> = supersedes.into_iter().collect();
             let hints: Vec<String> = stamp
                 .superseded_by
@@ -689,13 +690,13 @@ impl Memory {
                 .cloned()
                 .collect()),
             ForgetScope::IngestedBefore { time } => {
-                Ok(self.scan_ids(|_, stamp| stamp.is_some_and(|stamp| stamp.ingest < *time)))
+                self.scan_ids(|_, stamp| stamp.is_some_and(|stamp| stamp.ingest < *time))
             }
-            ForgetScope::EventBefore { time } => Ok(self.scan_ids(|_, stamp| {
+            ForgetScope::EventBefore { time } => self.scan_ids(|_, stamp| {
                 stamp.is_some_and(|stamp| {
                     stamp.event.or(stamp.valid_from).unwrap_or(stamp.ingest) < *time
                 })
-            })),
+            }),
             ForgetScope::Matching { filter } => {
                 let Some(filter) = filter.as_object().filter(|f| !f.is_empty()) else {
                     invalid!("filter must be a non-empty JSON object");
@@ -705,7 +706,7 @@ impl Memory {
                     "metadata key {KEY:?} is reserved"
                 );
                 let mut ids = BTreeSet::new();
-                self.core.scan_documents(|document| {
+                self.core.try_scan_documents(None, None, |document| {
                     if Stamp::from_parts(document.version, document.metadata).is_some()
                         && filter
                             .iter()
@@ -713,20 +714,22 @@ impl Memory {
                     {
                         ids.insert(document.id.to_owned());
                     }
-                });
+                    Ok(())
+                })?;
                 Ok(ids)
             }
         }
     }
 
-    fn scan_ids(&self, keep: impl Fn(&str, Option<&Stamp>) -> bool) -> BTreeSet<String> {
+    fn scan_ids(&self, keep: impl Fn(&str, Option<&Stamp>) -> bool) -> Result<BTreeSet<String>> {
         let mut ids = BTreeSet::new();
-        self.core.scan_documents(|document| {
+        self.core.try_scan_documents(None, None, |document| {
             let stamp = Stamp::from_parts(document.version, document.metadata);
             if stamp.is_some() && keep(document.id, stamp.as_ref()) {
                 ids.insert(document.id.to_owned());
             }
-        });
-        ids
+            Ok(())
+        })?;
+        Ok(ids)
     }
 }

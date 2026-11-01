@@ -1588,3 +1588,38 @@ lookahead without fetching an extra record's text. All 47 Rust MCP tests and
 formatting. Exact-head remote CI and merge remain required. No performance gain or
 transactional cross-page snapshot is claimed. Reproduction and baseline
 evidence: [mcp-list-bounds-20261031/](mcp-list-bounds-20261031/).
+
+PR #371 merged as `e4f653c817ab8864dac4c240b490d7b385fcba24` after all 82
+exact-head checks succeeded or were skipped, including required `check` from
+app 15368. Every workflow reached success or skipped, including dependent MCP
+package tests. No unresolved review threads or open code-scanning alerts remained.
+Only owner review was bypassed. The merge signature and equality with the tested
+tree are verified; clean root main was fast-forwarded. Evidence:
+[MCP bounds final gate](mcp-list-bounds-20261031/final-gate.json.gz).
+
+## Checked Memory API reads (2026-11-01 UTC; locally validated)
+
+Eight retained-text panics were reproduced across Memory get, history, explain
+and try_summaries, under CRC mismatch and truncation. Malformed checkpoint
+metadata reproduced another five panics, including presence lookup. Restoring
+the fixtures repaired reads; the old Memory path unnecessarily hydrated a valid
+checkpoint. Baseline evidence and commands are in
+[memory-reads-20261101/](memory-reads-20261101/).
+
+The candidate propagates checked read and index-rebuild errors through existing
+Result APIs. Metadata scans, preflight and presence checks avoid retained-text
+reads and preserve checkpoints. Point and survivor reads perform text I/O
+outside Memory index and engine locks, retaining captured metadata and embedding
+identity and existing retry bounds. Failed survivor reads leave the tested
+forget operation uncommitted; repair permits retry. Admin verification explicitly
+validates checkpoint records, independently of the faster presence lookup.
+The obsolete private infallible text wrapper was removed after caller/history
+review; no public return type changed.
+
+Local gates pass 26 library tests (one existing external-index diagnostic
+ignored), five admin tests, 64 integration tests, and ten checkpoint tests.
+The final corruption regressions pass again after a Clippy-requested test type
+alias cleanup. Strict all-feature/all-target Clippy, scoped rustfmt and diff
+checks pass. The rebase onto #371 main preserved all tested source hashes.
+No assertions or deadlines were relaxed; no performance gain or universal
+corruption tolerance is claimed. Exact-head CI and merge remain required.

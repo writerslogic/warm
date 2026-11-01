@@ -135,23 +135,26 @@ impl Memory {
             .validate_document_search(query, &options.search_options(k))
             .map_err(|error| MemoryError::Invalid(error.to_string()))?;
         let history = options.history.unwrap_or(self.config.default_history);
-        self.ensure_fresh();
+        self.ensure_fresh()?;
         let Some(mut run) = self.run(query, options, history, k, false)? else {
             return Ok(Vec::new());
         };
         let index = self.index.read();
         let explained_terms = options.explain.then(|| query_terms(query));
         let ranked = std::mem::take(&mut run.ranked);
-        Ok(ranked
+        ranked
             .into_iter()
             .enumerate()
             .map(|(position, ranked)| {
-                let explanation = explained_terms.as_deref().map(|terms| {
-                    self.explanation(&index, &run, terms, options, &ranked, Some(position + 1))
-                });
-                self.recalled(&index, ranked, explanation)
+                let explanation = explained_terms
+                    .as_deref()
+                    .map(|terms| {
+                        self.explanation(&index, &run, terms, options, &ranked, Some(position + 1))
+                    })
+                    .transpose()?;
+                Ok(self.recalled(&index, ranked, explanation))
             })
-            .collect())
+            .collect()
     }
 
     /// Why `id` does or does not come back for `query`: its lexical and semantic scores,
@@ -171,10 +174,10 @@ impl Memory {
                 &options.search_options(options.k.unwrap_or(self.config.default_k)),
             )
             .map_err(|error| MemoryError::Invalid(error.to_string()))?;
-        self.ensure_fresh();
-        let (version, metadata, text) = self
+        self.ensure_fresh()?;
+        let document = self
             .core
-            .document_snapshot(id)
+            .get_document(id)?
             .ok_or_else(|| MemoryError::NotFound(format!("unknown fact {id:?}")))?;
         let k = options.k.unwrap_or(self.config.default_k).min(1000);
         let limit = options
@@ -187,17 +190,17 @@ impl Memory {
         if let Some(run) = &run {
             if let Some(position) = run.ranked.iter().position(|r| r.hit.document_id == id) {
                 let ranked = &run.ranked[position];
-                return Ok(self.explanation(
+                return self.explanation(
                     &index,
                     run,
                     &query_terms(query),
                     options,
                     ranked,
                     Some(position + 1),
-                ));
+                );
             }
         }
-        let stamp = Stamp::from_parts(&version, &metadata);
+        let stamp = Stamp::from_parts(&document.version, &document.metadata);
         let status = evaluate(stamp.as_ref(), index.edges(id), now, options.known_at)
             .unwrap_or(FactStatus::Current);
         Ok(Explanation {
@@ -209,7 +212,8 @@ impl Memory {
             lexical_weight: options.lexical_weight.unwrap_or(1.0),
             semantic_weight: options.semantic_weight.unwrap_or(1.0),
             fusion: options.fusion.clone().unwrap_or_else(|| "blend".into()),
-            matched_terms: text
+            matched_terms: document
+                .text
                 .as_deref()
                 .map(|text| matched_terms(&query_terms(query), text))
                 .unwrap_or_default(),
@@ -224,29 +228,31 @@ impl Memory {
             within_validity: stamp.as_ref().is_none_or(|s| {
                 s.valid_from.is_none_or(|from| from <= now) && s.valid_to.is_none_or(|to| now < to)
             }),
-            chain: self.chain(&index, id),
+            chain: self.chain(&index, id)?,
         })
     }
 
     /// One stored fact, or none.
     pub fn get(&self, id: &str) -> Result<Option<FactRecord>> {
         let now = self.clock.now_millis();
-        self.with_snapshot(|index| Ok(self.record(index, id, now)))
+        self.with_revision(|| self.record(id, now))
     }
 
     /// Every version of the fact `id` belongs to: it, what it superseded and what superseded
     /// it, in effect order, each with its status now.
     pub fn history(&self, id: &str) -> Result<Vec<FactRecord>> {
         let now = self.clock.now_millis();
-        self.with_snapshot(|index| {
+        self.with_revision(|| {
             if !self.core.has_document(id) {
                 return Err(MemoryError::NotFound(format!("unknown fact {id:?}")).into());
             }
-            let mut records: Vec<FactRecord> = index
-                .component(id)
-                .iter()
-                .filter_map(|member| self.record(index, member, now))
-                .collect();
+            let members = self.index.read().component(id);
+            let mut records = Vec::new();
+            for member in members {
+                if let Some(record) = self.record(&member, now)? {
+                    records.push(record);
+                }
+            }
             records.sort_by(|a, b| {
                 (a.effective_from, a.ingest_time, &a.id).cmp(&(
                     b.effective_from,
@@ -258,16 +264,19 @@ impl Memory {
         })
     }
 
-    fn record(&self, index: &Index, id: &str, now: Millis) -> Option<FactRecord> {
-        let (version, metadata, text) = self.core.document_snapshot(id)?;
-        let stamp = Stamp::from_parts(&version, &metadata);
+    fn record(&self, id: &str, now: Millis) -> Result<Option<FactRecord>> {
+        let Some(document) = self.core.get_document(id)? else {
+            return Ok(None);
+        };
+        let index = self.index.read();
+        let stamp = Stamp::from_parts(&document.version, &document.metadata);
         let edges = index.edges(id);
         let status = evaluate(stamp.as_ref(), edges, now, None).unwrap_or(FactStatus::Current);
         let ingest_time = stamp.as_ref().map(|s| s.ingest);
         let known = stamp.unwrap_or_default();
-        Some(FactRecord {
+        Ok(Some(FactRecord {
             id: id.to_owned(),
-            text,
+            text: document.text,
             status,
             ingest_time,
             event_time: known.event,
@@ -276,10 +285,10 @@ impl Memory {
             effective_from: known.effective_from(),
             subject: known.subject,
             entities: known.entities,
-            supersedes: index_predecessors(index, id, &known.supersedes),
+            supersedes: index_predecessors(&index, id, &known.supersedes),
             superseded_by: sorted_ids(edges),
-            metadata: user_metadata(metadata),
-        })
+            metadata: user_metadata(document.metadata),
+        }))
     }
 
     /// Searches, evaluates and ranks. None when no fact can qualify.
@@ -313,7 +322,7 @@ impl Memory {
                 .into());
             }
             attempt += 1;
-            self.ensure_fresh();
+            self.ensure_fresh()?;
         }
     }
 
@@ -616,10 +625,10 @@ impl Memory {
         options: &RecallOptions,
         ranked: &Ranked,
         rank: Option<usize>,
-    ) -> Explanation {
+    ) -> Result<Explanation> {
         let stamp = ranked.stamp.as_ref();
         let id = &ranked.hit.document_id;
-        Explanation {
+        Ok(Explanation {
             retrieved: true,
             rank,
             lexical_score: Some(ranked.hit.lexical_score),
@@ -646,23 +655,23 @@ impl Memory {
                 s.valid_from.is_none_or(|from| from <= run.now)
                     && s.valid_to.is_none_or(|to| run.now < to)
             }),
-            chain: self.chain(index, id),
-        }
+            chain: self.chain(index, id)?,
+        })
     }
 
     /// The facts `id` supersedes and the facts that supersede it, transitively, in effect
     /// order.
-    fn chain(&self, index: &Index, id: &str) -> Vec<ChainLink> {
+    fn chain(&self, index: &Index, id: &str) -> Result<Vec<ChainLink>> {
         let mut links = Vec::new();
         for (relation, members) in [
             (ChainRelation::Predecessor, index.ancestors(id)),
             (ChainRelation::Successor, index.descendants(id)),
         ] {
             for member in members {
-                let Some((version, metadata, _)) = self.core.document_snapshot(&member) else {
+                let Some(info) = self.core.get_document_info(&member)? else {
                     continue;
                 };
-                let stamp = Stamp::from_parts(&version, &metadata).unwrap_or_default();
+                let stamp = Stamp::from_parts(&info.version, &info.metadata).unwrap_or_default();
                 links.push(ChainLink {
                     id: member,
                     relation,
@@ -674,7 +683,7 @@ impl Memory {
         links.sort_by(|a, b| {
             (a.effective_from, a.ingest_time, &a.id).cmp(&(b.effective_from, b.ingest_time, &b.id))
         });
-        links
+        Ok(links)
     }
 }
 
