@@ -257,10 +257,10 @@ impl Bm25 {
         })
     }
 
-    /// The length normalization of a chunk of `word_count` words against `average`.
+    /// The BM25 length factor of a chunk of `word_count` words against `average`.
     #[inline]
     pub(crate) fn norm(self, word_count: f64, average: f64) -> f64 {
-        self.k1 * (self.one_minus_b + self.b * word_count / average)
+        self.one_minus_b + self.b * word_count / average
     }
 
     /// The inverse document frequency of a term in `df` of `n` chunks.
@@ -274,10 +274,13 @@ impl Bm25 {
     #[inline]
     pub(crate) fn weight(self, idf: f64, tf: f64, norm: f64) -> f64 {
         if tf == 0.0 {
-            0.0
-        } else {
-            idf * tf * self.k1_plus_one / (tf + norm)
+            return 0.0;
         }
+        if self.k1 <= 1.0 || self == Self::DEFAULT {
+            return idf * tf * self.k1_plus_one / (tf + self.k1 * norm);
+        }
+        let saturation = tf * (1.0 + self.k1.recip()) / (tf / self.k1 + norm);
+        idf * saturation
     }
 }
 
@@ -1739,6 +1742,111 @@ mod tests {
         assert!(lexical(None, Some(1.5)).is_err());
         assert!(lexical(Some(f64::NAN), None).is_err());
         assert_scan_parity(&store);
+    }
+
+    #[test]
+    fn extreme_bm25_parameters_keep_all_search_scores_finite() {
+        let mut store = DocumentStore::default();
+        for (id, text) in [
+            ("repeat", "red red red red"),
+            ("single", "red"),
+            ("other", "blue green"),
+        ] {
+            let input = serde_json::from_value(json!({
+                "id": id,
+                "text": text,
+                "chunkWords": 16,
+                "overlapWords": 0,
+                "embeddings": [[1.0, 0.0, 0.0]],
+            }))
+            .unwrap();
+            let document = prepare(input, 1024, Some(3), TextEncoder::default()).unwrap();
+            store.insert(id.to_owned(), document);
+        }
+        let finite = |value: f64, b: f64| {
+            let options = SearchOptions {
+                k: Some(3),
+                lexical_weight: Some(1.0),
+                semantic_weight: Some(0.0),
+                bm25_k1: Some(value),
+                bm25_b: Some(b),
+                ..Default::default()
+            };
+            let ordinary = search_impl(&store, "red", &options, Some(3), false).unwrap();
+            let indexed = search_impl(&store, "red", &options, Some(3), true).unwrap();
+            assert_eq!(
+                serde_json::to_value(&ordinary).unwrap(),
+                serde_json::to_value(&indexed).unwrap()
+            );
+            for hit in &ordinary {
+                assert!(hit.score.is_finite());
+                assert!(hit.lexical_score.is_finite());
+                assert!(hit.semantic_score.is_none_or(f64::is_finite));
+            }
+            let lexical = lexical::execute(
+                &store,
+                &lexical::LexicalQuery::parse("red").unwrap(),
+                &lexical::LexicalOptions {
+                    k: 3,
+                    bm25_k1: value,
+                    bm25_b: b,
+                    execution: lexical::LexicalExecution::Exhaustive,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            assert_eq!(
+                lexical
+                    .hits
+                    .iter()
+                    .map(|hit| &hit.document_id)
+                    .collect::<Vec<_>>(),
+                ordinary
+                    .iter()
+                    .map(|hit| &hit.document_id)
+                    .collect::<Vec<_>>()
+            );
+            assert!(lexical.hits.iter().all(|hit| hit.score.is_finite()));
+            for execution in [
+                lexical::LexicalExecution::Auto,
+                lexical::LexicalExecution::BlockMaxWand,
+            ] {
+                let optimized = lexical::execute(
+                    &store,
+                    &lexical::LexicalQuery::parse("red").unwrap(),
+                    &lexical::LexicalOptions {
+                        k: 3,
+                        bm25_k1: value,
+                        bm25_b: b,
+                        execution,
+                        ..Default::default()
+                    },
+                )
+                .unwrap();
+                assert_eq!(optimized, lexical, "k1 {value}, b {b}");
+            }
+            serde_json::to_string(&ordinary).unwrap();
+            serde_json::to_string(&lexical).unwrap();
+        };
+        for k1 in [
+            0.0,
+            f64::from_bits(1),
+            f64::MIN_POSITIVE,
+            f64::from_bits(1.0f64.to_bits() - 1),
+            1.0,
+            f64::from_bits(1.0f64.to_bits() + 1),
+            f64::from_bits(f64::MAX.to_bits() - 1),
+            f64::MAX,
+        ] {
+            for b in [0.0, 0.75, 1.0] {
+                finite(k1, b);
+            }
+        }
+        assert!(Bm25::from_options(&SearchOptions {
+            bm25_k1: Some(f64::INFINITY),
+            ..Default::default()
+        })
+        .is_err());
     }
 
     fn assert_scan_parity(store: &DocumentStore) {

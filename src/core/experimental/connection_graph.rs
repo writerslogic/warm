@@ -29,8 +29,8 @@
 //! surface relations that were never asserted. It helps under load and is
 //! neutral-to-slightly-negative without it. Use accordingly.
 
-use std::fs::{File, OpenOptions};
-use std::io::{BufWriter, Read, Write};
+use std::fs::{File, OpenOptions, TryLockError};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -87,11 +87,10 @@ pub struct ConnectionGraph {
     chain: u64,
     cfg: GraphConfig,
     queries_since_decay: usize,
-    /// Durable append-only event log. `Some` when opened with a path; every
-    /// mutation is appended so the state survives restart (the event log IS the
-    /// state). Best-effort: an IO failure logs a warning and leaves the in-memory
-    /// state intact rather than aborting the operation.
-    persist: Option<BufWriter<File>>,
+    /// Durable append-only event log. `Some` when opened with a path; every acknowledged
+    /// mutation is appended and synced so the state survives restart.
+    persist: Option<File>,
+    recovery_required: bool,
 }
 
 impl ConnectionGraph {
@@ -112,6 +111,7 @@ impl ConnectionGraph {
             cfg,
             queries_since_decay: 0,
             persist: None,
+            recovery_required: false,
         }
     }
 
@@ -123,16 +123,39 @@ impl ConnectionGraph {
         assert!(dim > 0, "connection graph dim must be non-zero");
         let path: PathBuf = path.as_ref().to_path_buf();
         let mut g = Self::with_config(dim, cfg);
-        if path.exists() {
-            let events = read_events(&path)?;
+        let mut file = OpenOptions::new()
+            .create(true)
+            .truncate(false)
+            .read(true)
+            .write(true)
+            .open(&path)?;
+        file.try_lock().map_err(|error| match error {
+            TryLockError::WouldBlock => std::io::Error::new(
+                std::io::ErrorKind::WouldBlock,
+                "connection graph is already open by a writer",
+            ),
+            TryLockError::Error(error) => error,
+        })?;
+        {
+            let (events, valid_len) = read_events(&mut file)?;
+            if file.metadata()?.len() != valid_len {
+                file.set_len(valid_len)?;
+                file.sync_all()?;
+            }
             for ev in &events {
                 g.apply(ev);
                 g.chain = chain_step(g.chain, ev);
             }
             g.events = events;
         }
-        let file = OpenOptions::new().create(true).append(true).open(&path)?;
-        g.persist = Some(BufWriter::new(file));
+        file.sync_all()?;
+        crate::core::durable_file::sync_directory(
+            path.parent()
+                .filter(|parent| !parent.as_os_str().is_empty())
+                .unwrap_or(Path::new(".")),
+        )
+        .map_err(std::io::Error::other)?;
+        g.persist = Some(file);
         Ok(g)
     }
 
@@ -190,25 +213,36 @@ impl ConnectionGraph {
         }
     }
 
-    fn record(&mut self, ev: Event) {
-        self.chain = chain_step(self.chain, &ev);
+    fn record(&mut self, ev: Event) -> std::io::Result<()> {
+        if self.recovery_required {
+            return Err(std::io::Error::other(
+                "connection graph write outcome uncertain; reopen before further writes",
+            ));
+        }
         if let Some(writer) = self.persist.as_mut() {
-            if let Err(e) = append_event(writer, &ev) {
-                tracing::warn!("connection graph persist append failed: {e}");
+            if let Err(error) = append_event(writer, &ev) {
+                self.recovery_required = true;
+                return Err(std::io::Error::other(format!(
+                    "connection graph write outcome uncertain; reopen before further writes: {error}"
+                )));
             }
         }
+        self.chain = chain_step(self.chain, &ev);
         self.events.push(ev);
+        Ok(())
     }
 
     /// Assert a relation into the store.
-    pub fn store(&mut self, subject: &str, relation: &str, object: &str) {
-        let idx = self.edge_indices(subject, relation, object);
-        self.fold_edge(&idx, W_STORE);
-        self.record(Event::Store(
+    pub fn store(&mut self, subject: &str, relation: &str, object: &str) -> std::io::Result<()> {
+        let ev = Event::Store(
             subject.to_string(),
             relation.to_string(),
             object.to_string(),
-        ));
+        );
+        self.record(ev)?;
+        let idx = self.edge_indices(subject, relation, object);
+        self.fold_edge(&idx, W_STORE);
+        Ok(())
     }
 
     /// Pure (non-mutating) score of a relation against the field: mean field
@@ -271,26 +305,27 @@ impl ConnectionGraph {
     /// querying an absent relation does not fabricate it. When it does reinforce,
     /// it periodically decays the untouched background. Only mutations are
     /// recorded as events — a miss is free (no write, no read-amplification).
-    pub fn query(&mut self, subject: &str, relation: &str, object: &str) -> f64 {
+    pub fn query(&mut self, subject: &str, relation: &str, object: &str) -> std::io::Result<f64> {
         let idx = self.edge_indices(subject, relation, object);
         let s = self.score_indices(&idx);
         if self.cfg.strengthen_on_read && self.is_present(&idx) {
-            self.fold_edge(&idx, W_STRENGTHEN);
-            self.record(Event::Strengthen(
+            let strengthen = Event::Strengthen(
                 subject.to_string(),
                 relation.to_string(),
                 object.to_string(),
-            ));
+            );
+            self.record(strengthen)?;
+            self.fold_edge(&idx, W_STRENGTHEN);
             if self.cfg.decay_interval > 0 {
                 self.queries_since_decay += 1;
                 if self.queries_since_decay >= self.cfg.decay_interval {
+                    self.record(Event::Decay)?;
                     self.apply_decay();
-                    self.record(Event::Decay);
                     self.queries_since_decay = 0;
                 }
             }
         }
-        s
+        Ok(s)
     }
 
     /// The running tamper-evident chain digest over all events so far.
@@ -352,7 +387,7 @@ fn chain_step(prev: u64, ev: &Event) -> u64 {
 const MAX_EVENT_BYTES: usize = 16 << 20;
 
 /// Append one length-framed, bincode-encoded event to the durable log.
-fn append_event(writer: &mut BufWriter<File>, ev: &Event) -> std::io::Result<()> {
+fn append_event(writer: &mut File, ev: &Event) -> std::io::Result<()> {
     let bytes = bincode::serde::encode_to_vec(ev, bincode::config::standard())
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
     if bytes.len() > MAX_EVENT_BYTES {
@@ -364,35 +399,52 @@ fn append_event(writer: &mut BufWriter<File>, ev: &Event) -> std::io::Result<()>
             ),
         ));
     }
+    writer.seek(SeekFrom::End(0))?;
     writer.write_all(&(bytes.len() as u32).to_le_bytes())?;
     writer.write_all(&bytes)?;
-    writer.flush()
+    writer.flush()?;
+    writer.sync_all()
 }
 
 /// Read all length-framed events from a durable log. A torn or corrupt final
 /// record (e.g. a crash mid-append) stops replay at the last complete event
 /// rather than failing, so a partial write never loses committed history.
-fn read_events(path: &Path) -> std::io::Result<Vec<Event>> {
+fn read_events(file: &mut File) -> std::io::Result<(Vec<Event>, u64)> {
+    let length = file.metadata()?.len();
     let mut buf = Vec::new();
-    File::open(path)?.read_to_end(&mut buf)?;
     let mut events = Vec::new();
-    let mut off = 0;
-    while off + 4 <= buf.len() {
-        let len = u32::from_le_bytes([buf[off], buf[off + 1], buf[off + 2], buf[off + 3]]) as usize;
-        off += 4;
-        if len > MAX_EVENT_BYTES || off + len > buf.len() {
-            break; // truncated tail from an interrupted append, or a corrupt length
+    let mut valid = 0u64;
+    while length - valid >= 4 {
+        let mut header = [0; 4];
+        file.read_exact(&mut header)?;
+        let len = u32::from_le_bytes(header) as usize;
+        if len as u64 > length - valid - 4 {
+            break;
         }
+        if len > MAX_EVENT_BYTES {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("connection graph event at {valid} exceeds the byte limit"),
+            ));
+        }
+        buf.resize(len, 0);
+        file.read_exact(&mut buf)?;
         match bincode::serde::decode_from_slice::<Event, _>(
-            &buf[off..off + len],
+            &buf,
             bincode::config::standard().with_limit::<MAX_EVENT_BYTES>(),
         ) {
-            Ok((ev, _)) => events.push(ev),
-            Err(_) => break, // corrupt record: stop at last good event
+            Ok((ev, consumed)) if consumed == len => events.push(ev),
+            _ if valid + 4 + len as u64 == length => break,
+            _ => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("corrupt connection graph event at {valid} before the log tail"),
+                ))
+            }
         }
-        off += len;
+        valid += 4 + len as u64;
     }
-    Ok(events)
+    Ok((events, valid))
 }
 
 #[cfg(test)]
@@ -410,7 +462,7 @@ mod tests {
     #[test]
     fn stored_scores_above_absent() {
         let mut g = ConnectionGraph::with_config(4096, no_plasticity());
-        g.store("paris", "capital_of", "france");
+        g.store("paris", "capital_of", "france").unwrap();
         let present = g.score("paris", "capital_of", "france");
         let absent = g.score("berlin", "capital_of", "spain");
         assert!(present > absent, "present {present} !> absent {absent}");
@@ -425,7 +477,7 @@ mod tests {
         let mut good = Vec::new();
         {
             let mut g = ConnectionGraph::open(64, no_plasticity(), &path).unwrap();
-            g.store("paris", "capital_of", "france");
+            g.store("paris", "capital_of", "france").unwrap();
         }
         good.extend(std::fs::read(&path).unwrap());
         let mut bad = vec![0u8, 0xfd, 0xff, 0xff, 0xff, 0xff, b'x', b'y'];
@@ -439,14 +491,85 @@ mod tests {
     }
 
     #[test]
+    fn repaired_tail_does_not_hide_later_appends() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("cg.log");
+        {
+            let mut g = ConnectionGraph::open(256, no_plasticity(), &path).unwrap();
+            g.store("one", "rel", "first").unwrap();
+            g.store("two", "rel", "second").unwrap();
+        }
+        let mut bytes = std::fs::read(&path).unwrap();
+        bytes.extend_from_slice(&1234u32.to_le_bytes());
+        bytes.extend_from_slice(b"torn");
+        std::fs::write(&path, bytes).unwrap();
+
+        {
+            let mut g = ConnectionGraph::open(256, no_plasticity(), &path).unwrap();
+            assert_eq!(g.events().len(), 2);
+            g.store("three", "rel", "third").unwrap();
+        }
+        let g = ConnectionGraph::open(256, no_plasticity(), &path).unwrap();
+        assert_eq!(g.events().len(), 3);
+        assert!(g.verify());
+        assert!(g.score("one", "rel", "first") > 0.0);
+        assert!(g.score("three", "rel", "third") > 0.0);
+    }
+
+    #[test]
+    fn durable_writer_is_exclusive_and_append_failure_requires_reopen() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("cg.log");
+        let mut graph = ConnectionGraph::open(256, no_plasticity(), &path).unwrap();
+        graph.store("one", "rel", "first").unwrap();
+        assert!(ConnectionGraph::open(256, no_plasticity(), &path).is_err());
+        graph.persist = Some(File::open(&path).unwrap());
+        assert!(graph.store("two", "rel", "second").is_err());
+        assert_eq!(graph.events().len(), 1);
+        assert!(graph.verify());
+        graph.persist = Some(
+            OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&path)
+                .unwrap(),
+        );
+        assert!(graph.store("three", "rel", "third").is_err());
+        assert_eq!(graph.events().len(), 1);
+        drop(graph);
+        let mut reopened = ConnectionGraph::open(256, no_plasticity(), &path).unwrap();
+        assert_eq!(reopened.events().len(), 1);
+        reopened.store("three", "rel", "third").unwrap();
+        drop(reopened);
+        let reopened = ConnectionGraph::open(256, no_plasticity(), &path).unwrap();
+        assert_eq!(reopened.events().len(), 2);
+        assert!(reopened.verify());
+    }
+
+    #[test]
+    fn corrupt_interior_event_is_not_truncated() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("cg.log");
+        let mut graph = ConnectionGraph::open(256, no_plasticity(), &path).unwrap();
+        graph.store("one", "rel", "first").unwrap();
+        graph.store("two", "rel", "second").unwrap();
+        drop(graph);
+        let mut bytes = std::fs::read(&path).unwrap();
+        bytes[4] = u8::MAX;
+        std::fs::write(&path, &bytes).unwrap();
+        assert!(ConnectionGraph::open(256, no_plasticity(), &path).is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), bytes);
+    }
+
+    #[test]
     fn persists_and_reloads_across_restart() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("cg.log");
 
         {
             let mut g = ConnectionGraph::open(4096, no_plasticity(), &path).unwrap();
-            g.store("paris", "capital_of", "france");
-            g.store("berlin", "capital_of", "germany");
+            g.store("paris", "capital_of", "france").unwrap();
+            g.store("berlin", "capital_of", "germany").unwrap();
             // BufWriter flushes on drop.
         }
 
@@ -467,10 +590,10 @@ mod tests {
     #[test]
     fn replay_is_bit_exact_and_tamper_evident() {
         let mut g = ConnectionGraph::new(4096);
-        g.store("a", "r", "b");
-        g.store("c", "r", "d");
-        g.query("a", "r", "b");
-        g.query("a", "r", "b");
+        g.store("a", "r", "b").unwrap();
+        g.store("c", "r", "d").unwrap();
+        g.query("a", "r", "b").unwrap();
+        g.query("a", "r", "b").unwrap();
         assert!(g.verify(), "replay of own log must reproduce state exactly");
 
         // Tamper: drop the first event -> digest must change.
@@ -497,17 +620,17 @@ mod tests {
 
         let mut stat = ConnectionGraph::with_config(dim, no_plasticity());
         let mut plas = ConnectionGraph::new(dim);
-        stat.store(hot.0, hot.1, hot.2);
-        plas.store(hot.0, hot.1, hot.2);
+        stat.store(hot.0, hot.1, hot.2).unwrap();
+        plas.store(hot.0, hot.1, hot.2).unwrap();
         for i in 0..load {
             let s = format!("s{i}");
             let o = format!("o{i}");
-            stat.store(&s, "knows", &o);
-            plas.store(&s, "knows", &o);
+            stat.store(&s, "knows", &o).unwrap();
+            plas.store(&s, "knows", &o).unwrap();
         }
         // Warm up the plastic field by querying the hot relation.
         for _ in 0..80 {
-            plas.query(hot.0, hot.1, hot.2);
+            plas.query(hot.0, hot.1, hot.2).unwrap();
         }
 
         let stat_margin =
@@ -527,9 +650,9 @@ mod tests {
         // unrelated unstored relation. A cache would score both at the floor.
         let dim = 8192;
         let mut g = ConnectionGraph::new(dim);
-        g.store("A", "knows", "B");
+        g.store("A", "knows", "B").unwrap();
         for _ in 0..40 {
-            g.query("A", "knows", "B");
+            g.query("A", "knows", "B").unwrap();
         }
         let shared = g.score("A", "knows", "NEVER_STORED"); // shares (A, knows)
         let unrelated = g.score("X", "likes", "Y"); // shares nothing
@@ -546,14 +669,14 @@ mod tests {
         // "cold" is stored but never touched. Its score must drop below fresh.
         let dim = 8192;
         let mut g = ConnectionGraph::new(dim);
-        g.store("cold", "rel", "thing");
+        g.store("cold", "rel", "thing").unwrap();
         let fresh = g.score("cold", "rel", "thing");
         for i in 0..20 {
-            g.store(&format!("hot{i}"), "rel", "x");
+            g.store(&format!("hot{i}"), "rel", "x").unwrap();
         }
         for _ in 0..40 {
             for i in 0..20 {
-                g.query(&format!("hot{i}"), "rel", "x");
+                g.query(&format!("hot{i}"), "rel", "x").unwrap();
             }
         }
         let after = g.score("cold", "rel", "thing");
@@ -570,10 +693,10 @@ mod tests {
         // read-amplification). Only genuinely-present relations are reinforced.
         let dim = 8192;
         let mut g = ConnectionGraph::new(dim);
-        g.store("paris", "capital_of", "france");
+        g.store("paris", "capital_of", "france").unwrap();
         let events_before = g.events().len();
         for _ in 0..50 {
-            g.query("zzz", "unrelated_rel", "qqq");
+            g.query("zzz", "unrelated_rel", "qqq").unwrap();
         }
         assert_eq!(
             g.events().len(),
@@ -586,7 +709,7 @@ mod tests {
         );
 
         // A present relation, by contrast, IS reinforced on query (emits events).
-        g.query("paris", "capital_of", "france");
+        g.query("paris", "capital_of", "france").unwrap();
         assert!(
             g.events().len() > events_before,
             "present query must reinforce"

@@ -709,11 +709,17 @@ fn ties_and_block_boundary_sizes() {
 }
 
 #[test]
-fn bm25_parameters_and_nonfinite_scores_are_explicit() {
+fn bm25_parameters_reject_nonfinite_inputs() {
     let mut store = DocumentStore::default();
     insert(&mut store, "a", "red red red red", true, true);
     let query = LexicalQuery::parse("red").unwrap();
-    for (k1, b) in [(0.0, 0.0), (0.0, 1.0), (1.2, 0.75), (2.0, 1.0)] {
+    for (k1, b) in [
+        (0.0, 0.0),
+        (0.0, 1.0),
+        (1.2, 0.75),
+        (2.0, 1.0),
+        (f64::MAX, 0.0),
+    ] {
         let result = execute(
             &store,
             &query,
@@ -732,7 +738,7 @@ fn bm25_parameters_and_nonfinite_scores_are_explicit() {
         (1.2, -0.01),
         (-1.0, 0.75),
         (1.2, 1.01),
-        (f64::MAX, 0.0),
+        (f64::INFINITY, 0.0),
     ] {
         assert!(execute(
             &store,
@@ -958,7 +964,7 @@ fn shared_whole_article_batches_preserve_pinned_owners_at_group_boundaries() {
         let pinned = std::sync::Arc::clone(&batch[0]);
         let before = serde_json::to_vec(pinned.as_ref()).unwrap();
         let mut store = DocumentStore::default();
-        store.insert_batch(batch);
+        store.insert_batch(batch).unwrap();
         assert_eq!(run(&store, "+\"red blue\" +who", 10).count, Some(count));
         assert_eq!(run(&store, "red blue", 10).count, Some(count));
         store.remove("d00000");

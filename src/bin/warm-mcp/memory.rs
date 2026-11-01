@@ -39,6 +39,24 @@ impl Fail {
         crate::log::error(&format!("internal error: {cause:#}"));
         Self::new("internal", "internal error; see the server log")
     }
+
+    pub fn mutation_committed(cause: impl std::fmt::Display, details: Value) -> Self {
+        crate::log::error(&format!("committed mutation follow-up failed: {cause:#}"));
+        Self::new(
+            "mutation_committed",
+            "data mutation is durable; reconcile by id before retrying",
+        )
+        .with(details)
+    }
+
+    pub fn mutation_uncertain(cause: impl std::fmt::Display, details: Value) -> Self {
+        crate::log::error(&format!("uncertain mutation outcome: {cause:#}"));
+        Self::new(
+            "mutation_uncertain",
+            "data mutation outcome is uncertain; reopen or reconcile before retrying",
+        )
+        .with(details)
+    }
 }
 
 #[derive(Debug, Clone)]

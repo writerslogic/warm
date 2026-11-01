@@ -96,7 +96,7 @@ impl MemoryDocumentStore {
     pub fn memorize(&mut self, input: DocumentInput) -> Result<u32> {
         let document = self.prepare(input)?;
         let count = document.chunks.len() as u32;
-        self.store.insert(document.id.clone(), document);
+        self.store.insert_batch(vec![Arc::new(document)])?;
         Ok(count)
     }
 
@@ -120,7 +120,7 @@ impl MemoryDocumentStore {
             .collect::<Result<Vec<_>>>()?;
         let counts = documents.iter().map(|d| d.chunks.len() as u32).collect();
         for document in documents {
-            self.store.insert(document.id.clone(), document);
+            self.store.insert_batch(vec![Arc::new(document)])?;
         }
         Ok(counts)
     }
@@ -265,7 +265,7 @@ impl MemoryDocumentStore {
             if !seen.insert(document.id.clone()) {
                 bail!("snapshot holds document {:?} twice", document.id);
             }
-            store.store.insert(document.id.clone(), document);
+            store.store.insert_batch(vec![Arc::new(document)])?;
         }
         Ok(store)
     }

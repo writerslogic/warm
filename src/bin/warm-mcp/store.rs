@@ -436,6 +436,16 @@ impl WarmBackend {
         }
     }
 
+    fn committed_write(cause: anyhow::Error, details: Value) -> Fail {
+        if cause.is::<writerslogic_warm::CommittedMutationError>() {
+            Fail::mutation_committed(cause, details)
+        } else if cause.is::<writerslogic_warm::IndeterminateMutationError>() {
+            Fail::mutation_uncertain(cause, details)
+        } else {
+            Fail::internal(cause)
+        }
+    }
+
     pub fn remember(&self, namespace: &str, req: RememberReq) -> Res<RememberOut> {
         let store = self.store(namespace)?;
         let id = req.id.clone().unwrap_or_else(generated_id);
@@ -499,10 +509,17 @@ impl WarmBackend {
             }
             Err(e) => return Err(Fail::invalid(format!("invalid memory: {e}"))),
         }
-        store
-            .core
-            .memorize_document(input)
-            .map_err(Fail::internal)?;
+        store.core.memorize_document(input).map_err(|error| {
+            Self::committed_write(
+                error,
+                json!({
+                    "id": id,
+                    "version": version,
+                    "created": existing.is_none(),
+                    "namespace": namespace,
+                }),
+            )
+        })?;
         Ok(RememberOut {
             id,
             version,
@@ -661,7 +678,17 @@ impl WarmBackend {
         let mut deleted = 0;
         let mut missing = Vec::new();
         for id in ids {
-            if store.core.delete_document(&id).map_err(Fail::internal)? {
+            if store.core.delete_document(&id).map_err(|error| {
+                Self::committed_write(
+                    error,
+                    json!({
+                        "id": id,
+                        "deleted_so_far": deleted,
+                        "missing_so_far": missing,
+                        "namespace": namespace,
+                    }),
+                )
+            })? {
                 deleted += 1;
             } else {
                 missing.push(id);
@@ -1052,6 +1079,40 @@ mod tests {
         assert_eq!(out.deleted, 2);
         assert!(search(&[]).is_empty());
         assert_eq!(b.stats("t").unwrap()["memories"], 0);
+    }
+
+    #[test]
+    fn committed_mutation_errors_keep_reconcile_identity() {
+        let error: anyhow::Error = writerslogic_warm::CommittedMutationError {
+            effect: "test sidecar",
+            source: anyhow::anyhow!("injected post-commit failure"),
+        }
+        .into();
+        let fail = WarmBackend::committed_write(
+            error,
+            json!({"id": "generated", "version": "v1", "namespace": "t"}),
+        );
+        assert_eq!(fail.code, "mutation_committed");
+        let details = fail.details.unwrap();
+        assert_eq!(details["id"], "generated");
+        assert_eq!(details["version"], "v1");
+        assert_eq!(details["namespace"], "t");
+
+        let uncertain: anyhow::Error = writerslogic_warm::IndeterminateMutationError {
+            effect: "journal rollback",
+            source: anyhow::anyhow!("injected rollback failure"),
+        }
+        .into();
+        let fail = WarmBackend::committed_write(uncertain, json!({"id": "generated"}));
+        assert_eq!(fail.code, "mutation_uncertain");
+        assert_eq!(fail.details.unwrap()["id"], "generated");
+
+        let before_commit = WarmBackend::committed_write(
+            anyhow::anyhow!("validation failed before commit"),
+            json!({"id": "unused"}),
+        );
+        assert_eq!(before_commit.code, "internal");
+        assert!(before_commit.details.is_none());
     }
 
     #[test]

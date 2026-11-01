@@ -58,6 +58,11 @@ pub const CODES: &[(&str, u16, &str)] = &[
         500,
         "Mutation committed; reconciliation required",
     ),
+    (
+        "mutation_uncertain",
+        500,
+        "Mutation outcome uncertain; reconciliation required",
+    ),
     ("not_ready", 503, "Server not ready"),
     ("server_busy", 503, "Server busy"),
     (
@@ -124,6 +129,8 @@ impl ApiError {
     pub fn from_core(error: anyhow::Error) -> Self {
         if error.is::<writerslogic_warm::CommittedMutationError>() {
             Self::committed(error)
+        } else if error.is::<writerslogic_warm::IndeterminateMutationError>() {
+            Self::uncertain(error)
         } else if let Some(changed) = error.downcast_ref::<writerslogic_warm::DocumentReadChanged>()
         {
             Self::new(
@@ -149,6 +156,15 @@ impl ApiError {
             StatusCode::INTERNAL_SERVER_ERROR,
             "mutation_committed",
             "data mutation is durable; reopen or reconcile before retrying",
+        )
+    }
+
+    pub fn uncertain(error: anyhow::Error) -> Self {
+        crate::log_event!(Error, "mutation_outcome_uncertain", "detail" => format!("{error:#}"));
+        Self::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "mutation_uncertain",
+            "data mutation outcome is uncertain; reopen or reconcile before retrying",
         )
     }
 
@@ -258,6 +274,20 @@ mod tests {
             ApiError::from_core(committed.into()).code,
             "mutation_committed"
         );
+    }
+
+    #[test]
+    fn uncertain_mutation_is_distinct_and_hides_internal_details() {
+        let error = writerslogic_warm::IndeterminateMutationError {
+            effect: "journal rollback",
+            source: anyhow::anyhow!("private storage path"),
+        };
+        let error = ApiError::from_core(anyhow::Error::new(error).context("private context"));
+        let problem = error.problem();
+        assert_eq!(problem["status"], 500);
+        assert_eq!(problem["code"], "mutation_uncertain");
+        assert!(!problem.to_string().contains("private"));
+        assert_eq!(error.retry_after, None);
     }
 
     #[test]

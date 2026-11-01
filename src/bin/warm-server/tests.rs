@@ -332,11 +332,37 @@ fn snapshot_restore_round_trips_and_keeps_the_replaced_store() {
         "replaced store kept"
     );
     // A broken staged directory fails to reopen and the live store is rolled back.
+    let crate::limits::Begin::Proceed(key) =
+        state.idem.begin("t", "before-failure", [0; 32]).unwrap()
+    else {
+        panic!()
+    };
+    key.complete(&crate::limits::StoredResponse::new(
+        axum::http::StatusCode::OK,
+        &serde_json::json!({"added": 1}),
+        false,
+    ));
+    assert!(state
+        .restore_staged("t", &state.staging_root().join("missing"))
+        .is_err());
+    assert!(matches!(
+        state.idem.begin("t", "before-failure", [0; 32]),
+        Ok(crate::limits::Begin::Replay(_))
+    ));
     let broken = state.staging_root().join("broken");
     std::fs::create_dir_all(&broken).unwrap();
     std::fs::write(broken.join("store.json"), b"not json").unwrap();
     assert!(state.restore_staged("t", &broken).is_err());
     assert_eq!(state.core("t").unwrap().document_count(), 1);
+    assert_eq!(
+        state
+            .idem
+            .begin("t", "before-failure", [0; 32])
+            .err()
+            .unwrap()
+            .code,
+        "idempotency_reconciliation_required"
+    );
     state.flush_all().unwrap();
 }
 

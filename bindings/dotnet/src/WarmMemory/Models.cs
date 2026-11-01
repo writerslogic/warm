@@ -16,6 +16,8 @@ public enum WarmStatus
     Corrupt = 8,
     LimitExceeded = 9,
     AbiMismatch = 10,
+    MutationCommitted = 11,
+    MutationUncertain = 12,
     Panic = 98,
     Internal = 99,
 }

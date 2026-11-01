@@ -236,6 +236,12 @@ typedef struct {
 // A `struct_size` field is smaller than the first field it must cover.
 #define WARM_ERR_ABI_MISMATCH 10
 
+// The requested mutation committed durably, but a follow-up effect failed. Reconcile before retrying.
+#define WARM_ERR_MUTATION_COMMITTED 11
+
+// The write outcome is indeterminate; reopen/reconcile before further writes or retry.
+#define WARM_ERR_MUTATION_UNCERTAIN 12
+
 // A Rust panic was caught at the boundary; the store should be considered suspect.
 #define WARM_ERR_PANIC 98
 

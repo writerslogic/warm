@@ -10,6 +10,19 @@ use std::process::Command;
 
 use writerslogic_warm_c::*;
 
+#[test]
+fn bundled_go_headers_match_c_headers() {
+    let crate_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    for header in ["writerslogic_warm.h", "holographic_memory.h"] {
+        let canonical = std::fs::read(crate_dir.join("include").join(header)).unwrap();
+        let bundled = std::fs::read(crate_dir.join("../go/include").join(header)).unwrap();
+        assert!(
+            canonical == bundled,
+            "bundled Go header {header} is stale; run bindings/c/scripts/gen-header.sh"
+        );
+    }
+}
+
 macro_rules! layout {
     ($($ty:ident { $($field:ident),* })*) => {{
         let mut expected = String::new();

@@ -5,8 +5,8 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use warm_wasm::{argon2id_key, WarmStore};
 use js_sys::{Array, Object, Reflect};
+use warm_wasm::{argon2id_key, encode_text, WarmStore, WasmEntangledHVec};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_test::*;
 
@@ -26,6 +26,22 @@ fn doc(id: &str, text: &str) -> JsValue {
 
 fn get(value: &JsValue, key: &str) -> JsValue {
     Reflect::get(value, &JsValue::from_str(key)).unwrap()
+}
+
+#[wasm_bindgen_test]
+fn raw_vectors_reject_invalid_shapes_without_trapping() {
+    for dimension in [0, (1 << 20) + 1] {
+        assert!(WasmEntangledHVec::new_deterministic(dimension, 1).is_err());
+        assert!(encode_text(dimension, "shape boundary").is_err());
+    }
+    let vector = WasmEntangledHVec::new_deterministic(8, 1).unwrap();
+    let other = WasmEntangledHVec::new_deterministic(16, 1).unwrap();
+    assert!(vector.bind(&other).is_err());
+    assert!(vector.similarity(&other).is_err());
+    assert_eq!(vector.similarity(&vector).unwrap(), 1.0);
+    for dimension in [(1 << 20) - 1, 1 << 20] {
+        assert!(WasmEntangledHVec::new_deterministic(dimension, 1).is_ok());
+    }
 }
 
 #[wasm_bindgen_test]
