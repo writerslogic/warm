@@ -1,0 +1,487 @@
+{
+  "budget_seconds": 600,
+  "execution_seconds": 61.409299042774364,
+  "runs": [
+    {
+      "name": "historical-1",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/historical-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.8154296875,
+        10.39501953125,
+        7.8125
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 4.5400284169008955,
+      "load_after": [
+        5.58984375,
+        10.27197265625,
+        7.7841796875
+      ],
+      ".json_sha256": "deacd343bd1c0c6d583049dd1fb3a6dc3c1d4225300c253616c7c5dc7d0476e7",
+      ".log_sha256": "90426f6f4ebf19803869463f5e36b9eb370f4493a3b799a13c2ac5c50573c20d"
+    },
+    {
+      "name": "prior-1",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/prior-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.58984375,
+        10.27197265625,
+        7.7841796875
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 4.698510791989975,
+      "load_after": [
+        5.62255859375,
+        10.20068359375,
+        7.7734375
+      ],
+      ".json_sha256": "3c0a7e8fc7e4a2339dd917fb8784f6835797571a52ae58e9aa888081ab7c6c9a",
+      ".log_sha256": "fa2554e9e1c7a4c55b44389cfab0c4e2653d4abfa3625b026deeda1aec28afbe"
+    },
+    {
+      "name": "current-1",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/current-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.62255859375,
+        10.20068359375,
+        7.7734375
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.90057308296673,
+      "load_after": [
+        5.62255859375,
+        10.20068359375,
+        7.7734375
+      ],
+      ".json_sha256": "c2fa8ed004867e84725eba54ae68631ec23c9abc4903fef47fbeef8334b3cef6",
+      ".log_sha256": "552c6970330e73805c42445d9d2eabf03d7938d4fe1a73d29d9b8faa097b73fc"
+    },
+    {
+      "name": "current-2",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/current-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.62255859375,
+        10.20068359375,
+        7.7734375
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.7969489169772714,
+      "load_after": [
+        6.212890625,
+        10.2470703125,
+        7.8037109375
+      ],
+      ".json_sha256": "a1a9e77f5fc1b21897c5b618e7d48192345278052b3c580dbd3f0d4f90b6379a",
+      ".log_sha256": "89875b11fcce7c800991575d672bd3fbb8a8dcb45e14e3d7c45ad3422ac57833"
+    },
+    {
+      "name": "prior-2",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/prior-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        6.212890625,
+        10.2470703125,
+        7.8037109375
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.756338416947983,
+      "load_after": [
+        5.95556640625,
+        10.12646484375,
+        7.775390625
+      ],
+      ".json_sha256": "e1eae68cc1f648f16f12ffee6fa358c59d043c423cd0a835923db8b8ed8722c4",
+      ".log_sha256": "251bde037b2d09e35eab34d83c9dc62796ea0725ba9d038911d41d309760e2f5"
+    },
+    {
+      "name": "historical-2",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/historical-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.95556640625,
+        10.12646484375,
+        7.775390625
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 4.495293957996182,
+      "load_after": [
+        5.478515625,
+        9.9580078125,
+        7.7294921875
+      ],
+      ".json_sha256": "bd151e9f5f6cdd4319a6feb64c0c45d4fe80c788202e2b115d509c9d9edba189",
+      ".log_sha256": "396efef4efea779c939630e279d3aa7dd89cb189676419360e2331692c75b572"
+    },
+    {
+      "name": "prior-3",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/prior-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.478515625,
+        9.9580078125,
+        7.7294921875
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.76628145808354,
+      "load_after": [
+        5.478515625,
+        9.9580078125,
+        7.7294921875
+      ],
+      ".json_sha256": "965ef6787ccdb1676bfcb28e1ab43de92f0df1f515b17b8175924e81d232064d",
+      ".log_sha256": "f57f63fda002d45b134a290d9429e593d8bec35a736af451e37d329a0c20fa65"
+    },
+    {
+      "name": "current-3",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/current-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.478515625,
+        9.9580078125,
+        7.7294921875
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 4.004776458954439,
+      "load_after": [
+        5.35986328125,
+        9.85888671875,
+        7.70751953125
+      ],
+      ".json_sha256": "b6a85c13de81e71edb4042b2cc9515fc6f6256085c71691092c1bf75cc012a47",
+      ".log_sha256": "13011dda2e67bed3bd9e24607e2ee82dc1955dc0bac6b45ffecf068090d6b0cf"
+    },
+    {
+      "name": "historical-3",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/historical-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.35986328125,
+        9.85888671875,
+        7.70751953125
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 4.854056125041097,
+      "load_after": [
+        5.25048828125,
+        9.76123046875,
+        7.685546875
+      ],
+      ".json_sha256": "3f43c8ff2b9412940a1651a74d860ade86e7b841f1e4a963bc376c0a9667d2e3",
+      ".log_sha256": "4ec27a90a0c502e3d3282c544a06adf89f3a1df64ac09644918d1a1e35a2c7e8"
+    },
+    {
+      "name": "historical-4",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/historical-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.25048828125,
+        9.76123046875,
+        7.685546875
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 4.232153374934569,
+      "load_after": [
+        5.06982421875,
+        9.64892578125,
+        7.65771484375
+      ],
+      ".json_sha256": "b52652a2e62b6ee030c8336d797fe658521fdbf5b4d81bb8d5be3bfaf7fa7cd4",
+      ".log_sha256": "2db0a7f741009b2aff20af1b1febefe2d1d64d92d49ec80b71987cf5df25e480"
+    },
+    {
+      "name": "current-4",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/current-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.06982421875,
+        9.64892578125,
+        7.65771484375
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.746035208925605,
+      "load_after": [
+        5.06396484375,
+        9.5712890625,
+        7.64208984375
+      ],
+      ".json_sha256": "1ac155d74a8e46e0eb7e0baa156deffb6b950fc45f2f293c9621d397b8f0063f",
+      ".log_sha256": "a7dbf1f435a83eed25aee4124778a24e155770ff15e1a05268c07c7af93bb67c"
+    },
+    {
+      "name": "prior-4",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/prior-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        5.06396484375,
+        9.5712890625,
+        7.64208984375
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.718133290996775,
+      "load_after": [
+        4.658203125,
+        9.412109375,
+        7.59716796875
+      ],
+      ".json_sha256": "7c2843f99f569e6d34821792f4b9d83e181d8ca25fd7212ceab27af860216dc3",
+      ".log_sha256": "14aae08a334d9a3b21313ec82fae275a74ceb2d745d133f764aaee616f67590a"
+    },
+    {
+      "name": "current-5",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/current-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        4.658203125,
+        9.412109375,
+        7.59716796875
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 4.433175707934424,
+      "load_after": [
+        4.845703125,
+        9.37158203125,
+        7.59326171875
+      ],
+      ".json_sha256": "a750ff68efcfff3a6c18e72ce2b2584f71811dbb5b26a4d2592084001f633ab8",
+      ".log_sha256": "9740e9e40faa9854544d36c04996295db437fc88f69e481348f1191daf0476f9"
+    },
+    {
+      "name": "historical-5",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/historical-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        4.845703125,
+        9.37158203125,
+        7.59326171875
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.9305759590351954,
+      "load_after": [
+        4.845703125,
+        9.37158203125,
+        7.59326171875
+      ],
+      ".json_sha256": "83aeaa307971c6204164eb6502648859af25615df5cd82e16387e60902d3b70f",
+      ".log_sha256": "7c17852e52963ccc7b9244059c1311d72c53443c9fcf0dcd94efe986cc9b7da5"
+    },
+    {
+      "name": "prior-5",
+      "command": [
+        "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/prior-probe",
+        "--exact",
+        "core::documents::search::campaign_probe::campaign_retrieval_probe",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "load_before": [
+        4.845703125,
+        9.37158203125,
+        7.59326171875
+      ],
+      "status": 0,
+      "cross_revision_equal": true,
+      "seconds": 3.5364178750896826,
+      "load_after": [
+        4.77783203125,
+        9.2822265625,
+        7.57177734375
+      ],
+      ".json_sha256": "2878547ea560042e389f5accacbe214170bf63351c3588aea334a0d8b9eb42e8",
+      ".log_sha256": "a19d26e9eecc910a9a5de86631066f77b69d0bf057015019276d0beb6bb22924"
+    }
+  ],
+  "complete": true,
+  "orders": [
+    [
+      "historical",
+      "prior",
+      "current"
+    ],
+    [
+      "current",
+      "prior",
+      "historical"
+    ],
+    [
+      "prior",
+      "current",
+      "historical"
+    ],
+    [
+      "historical",
+      "current",
+      "prior"
+    ],
+    [
+      "current",
+      "historical",
+      "prior"
+    ]
+  ],
+  "plan": {
+    "status": "planned; no new timing measurement or optimization claim",
+    "objective": "Revisit the retained 11.5% updated hot-query observation against its actual historical baseline, preserving correctness and separating current aggregate changes from the prior allocation-only comparison.",
+    "revisions": {
+      "historical": "a736af02171da7c8b757dcd83a46422c614c07d7",
+      "prior": "f28095e024add5ce3964192f6af7b81457ad0b3d",
+      "current": "f39433e9b3a705827a5fed04a40d6e0442bb98bc"
+    },
+    "workload": {
+      "rows": 10000,
+      "dimensions": 16,
+      "mutations": 32,
+      "groups": [
+        "initial rare",
+        "initial hot",
+        "updated rare",
+        "updated hot"
+      ],
+      "samples_per_group_per_round": 128,
+      "rounds": 5,
+      "workers": 1,
+      "candidate_limit": 32,
+      "k": 10
+    },
+    "method": [
+      "Reuse the preserved deterministic retrieval-tail-20261031 probe and its exhaustive ordered-result oracle. Change only the required API compatibility, explicit source revision selection and evidence recording.",
+      "Build each pinned revision with Rust 1.99.0, identical optimization settings and counting allocator; record exact injected source and executable hashes.",
+      "Normalize old/new execute_search return types outside source under test; retain production Result checks in the current timed path.",
+      "Compare complete ordered result payloads across revisions and rounds outside timed regions; do not rely only on CRC fingerprints.",
+      "Rotate the three variant execution orders over five rounds, including reversed orders; use one Rust process at a time after all unrelated local builds/tests terminate.",
+      "Record host processes/load, filesystem, toolchain and per-round samples. Preserve all failed attempts and reject stale executables.",
+      "Report round-level paired p50/p95/p99 ratios and allocation counts; the 128-sample empirical p99 is not a population-tail estimate. Do not pool queries as independent process rounds."
+    ],
+    "acceptance": [
+      "Every per-query exhaustive comparison and complete cross-revision ordered-result comparison must match.",
+      "Any sustained current hot-query median/empirical-p99 increase above 5% requires diagnosis before calling this local regression resolved.",
+      "Retain all observations even if noisy or unfavorable; no retries chosen to manufacture a faster result.",
+      "Only evidence-backed optimizations may follow; no change to correctness, limits, durability or deadlines for timing gains."
+    ],
+    "execution_budget_seconds": 600,
+    "protocol_revision": "20261101-system-allocator-and-bound-inputs",
+    "allocator_source": "https://github.com/rust-lang/rust/blob/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/alloc/global.rs",
+    "premeasurement_corrections": [
+      "Reuse the System delegation pattern from benches/query_alloc.rs and benches/ingest_alloc.rs for alloc_zeroed and realloc. The inherited historical probe instead used GlobalAlloc's default allocate-copy-free realloc. Count successful allocation operations and requested live-byte deltas; allocator-internal transient storage and RSS remain unmeasured. Apply this corrected instrumentation identically to all three fresh variants; original measurements stay unchanged and are not directly comparable.",
+      "Bind builds and execution to plan, source, probe, harness and executable hashes; summarization rejects altered manifests or reports. Reject inherited WARM_PROBE_DISABLE_DELTA rather than silently changing maintenance.",
+      "Use a private target directory under this worktree for all benchmark variants; global Cargo configuration points to a shared build directory. The identical compiler, optimization, allocator and workload remain unchanged.",
+      "Historical/prior builds retain the complete build-time plan and hash. Before the first measurement their only permitted plan difference is the current comparison revision, allowing the fixed baselines to build while integration completes. Current-source builds require the exact final plan; all variants retain unchanged workload, harness, probe, compiler/settings and pinned source hashes."
+    ],
+    "limits": [
+      "Local free synthetic development only; no paid APIs/cloud, models or model downloads.",
+      "The current revision contains many functional repairs; this comparison cannot causally attribute an aggregate timing change to one patch.",
+      "This is not a competitor benchmark, high-dimensional evaluation, hardware power-loss test, production latency guarantee or best-in-class claim.",
+      "Original October 29/31 measurements and their limits remain unchanged.",
+      "Complete result payloads are retained outside timed regions identically in each variant; this changes allocator history relative to the original harness. Compare new runs with each other, not directly with old absolute timing samples."
+    ],
+    "sustained_regression_rule": "Median current round quantile exceeds the baseline median by over 5%, and at least four of the five paired rounds are slower; descriptive investigation trigger, not statistical significance."
+  },
+  "plan_sha256": "10f593fd8de9852894f368f256bdd9a817b00bdf69083ec9f7e395b10d4fb829",
+  "build_sha256": {
+    "historical": "3783e294ef58729781944df19e9dd3d4317362e861ee34346edc9911917282e0",
+    "prior": "8b553a286d5e3056ea47220945fe2a8438d6c41bf4fe7fe4e5c7991361765fd8",
+    "current": "ed627d6a8cb010c7ea65c9c36c0876e36c0c6d08719ad3f4d06dc25700ea135b"
+  }
+}
