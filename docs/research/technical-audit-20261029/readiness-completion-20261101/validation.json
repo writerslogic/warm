@@ -1,0 +1,304 @@
+{
+  "recorded_at": "2026-11-01T12:05:07.805835+00:00",
+  "base": "75ffaa5736e34171e45612e8675791f7b71fc2d6",
+  "integrated_source_commit": "f39433e9b3a705827a5fed04a40d6e0442bb98bc",
+  "source_sha256": {
+    ".github/workflows/docs.yml": "f7618e78858f1db9b6132b5a680316d3c28e05fa3aac6a6b44359f69ee275b84",
+    "bindings/c/Cargo.lock": "57347a7c144e1bbef9fd7195cef24a2837aaa66dcc79e77dfbddafe2a80766f1",
+    "bindings/c/include/writerslogic_warm.h": "fb94a24df4d55af3b928326cb6113dcc5e1687d8713973619fd9e2cee0181a39",
+    "bindings/c/src/error.rs": "132591ca35d14adb98e95e6c19381e780105666d1495a9d57e21c70487c7f3bc",
+    "bindings/c/src/store.rs": "ac68595dfde9ecf4ef2c8d449b189831961097187180895806567977310e6941",
+    "bindings/dotnet/src/WarmMemory/Models.cs": "e8d3cd70e09b6eca4ef8f9ea5a6cbc818fce769eb37d28142e3b27e6b2ddeca8",
+    "bindings/go/warm.go": "f9166917506ddad142ba7151df20caf2a2bfc8697496441230939202fb3a3b05",
+    "bindings/java/src/main/java/com/writerslogic/warm/WarmException.java": "30784b72498c7eccdf11b74418afce5677d20d61ade48354c5983138ad01c922",
+    "bindings/kotlin/android/src/main/kotlin/com/writerslogic/warm/warm_mobile.kt": "0e2b1c8261f03f550436db800abcc316a00df0166fab2825b08b573d43503433",
+    "bindings/kotlin/jvm/src/main/kotlin/com/writerslogic/warm/warm_mobile.kt": "21b97b85e20ea7cafa5098c808ccb0d53207898e3c3465c4ce22ea8a86bcc807",
+    "bindings/swift/Sources/WarmMemory/WarmMobile.swift": "0ee89d36e73a3efaea9278b82ae2ebbed22f8dea7a697696a0eb10facb378676",
+    "bindings/uniffi/src/error.rs": "3724d326fa1df9ac330afc6ab8ab8cf4265d082faaf2fbe267f5243032064bb3",
+    "bindings/wasm/src/lib.rs": "c0ee6995743de844b1e9190b8428df12689a95da93d5ac3c77cb3d0b58b444b9",
+    "bindings/wasm/src/store.rs": "51146d1e9819057557a5ec88ab80dba73177987e1ed319247a16ae0387de7dab",
+    "bindings/wasm/tests/web.rs": "986e6f873743acf120ba1b96903cfd7519445a3757f4ed13e4e1ffafe836a63f",
+    "fuzz/examples/gen_seeds.rs": "dd5fbfbc5b0a295677b1b9430831775da9c2751a99c9c8c297f60c7b09f536ea",
+    "index.d.ts": "a6909d926c95d9c872d29e7afb15ee2eca3920db5913c04f0001e971ad5442b7",
+    "scripts/docs-qa/lighthouse.mjs": "52bb72d76d1455d5e43d1f4785fad307aa46745242b98bf6ef95da502aec1138",
+    "scripts/docs_site.py": "cd29daa0f8121bed53dd5cf86b9959e29d28efbbf9dad1caf04543fc096bf5ab",
+    "scripts/test_docs_site.py": "bc031bece5b4442951e95a5fd0ac2362fa028273c82eaa98ebd1a187c62e78d5",
+    "src/bin/warm-mcp/memory.rs": "6077aff9e2aab7f03d337f18d03f456f527a3d479ff7dfaacb2dbd250ed2e709",
+    "src/bin/warm-mcp/store.rs": "1a2ea7a4f27ce75533e3afdb7d908e08b79b3f9e82001a177c0cb3ce72071f37",
+    "src/bin/warm-server/documents.rs": "802ef6adcc2d957590396aa01dcadd3dd011db426a1e26684f099e195f265061",
+    "src/bin/warm-server/error.rs": "7dafcedad41b8b7788b71dd46eb432762d1bcfb2947ec79ca44612f6a3d08c80",
+    "src/bin/warm-server/limits.rs": "c7afb349595b9d461e33ce7febfc26bdde19f85ab1f99845a66d02f3beadc9f2",
+    "src/bin/warm-server/request.rs": "532b5c9b2e465aec997f6f4a123ea8d25eafc7ec04168dee7352cc66d358687e",
+    "src/bin/warm-server/tenants.rs": "1f3eb92c17ce8644f762ef861f531b436895ae22ef5213d47eff081882e64a4a",
+    "src/bin/warm-server/tests.rs": "3b923c27a02cb5219cd4074ff2a970fba5c61c678302c90b962f24d4f29642ca",
+    "src/bindings/node/api.rs": "31ab126ace7c9dddcda5d11e2ea3985b5d272b6f8e4c7080dd97ee19bd5439a1",
+    "src/bindings/node/mod.rs": "e3fa252b6d03bd8000ddf29f23b09d7e41a19ac5a075bc57f9df76e65912b216",
+    "src/bindings/node/types.rs": "bb9d788aeb6f70f5091bc4346b93c39ec2ca90e76e6e8d54c66c29e5fc164162",
+    "src/core/audit.rs": "3680bf8a07d320081094bb97b19580eb06c8a423b8fe1b5c733155c838cc2cca",
+    "src/core/documents.rs": "36320f0e9d2b5625412ddb3901c119f13f4c3eb7c181bad52596e985a63b049b",
+    "src/core/documents/index.rs": "e16d119847adc6cca6da18399a65d5af303711659bfe93b35629a8a9c8687c22",
+    "src/core/documents/lexical/tests.rs": "4ee47d9806c5a8192d1c71eda19cf7bf97da79a9f95cad43a48aa0751f38342d",
+    "src/core/documents/lexical/wand.rs": "5acad9cf070bf6a42b5f07965e1e81ee4c184c60dac68c73ff77c8912fedae86",
+    "src/core/documents/memory.rs": "10af0520af8d6f81faac01d6081974edb12c3fa10367b11644641c456dc42262",
+    "src/core/documents/text.rs": "a16a3e3d64cc706494d38622fd36f3f147805323af8819e48fc79c9abd242dbd",
+    "src/core/documents/vector_index.rs": "a73d03603309b7bdb060b790f3d222a77bb2309fbcbf6685fbbafde5d86927ce",
+    "src/core/engine/audit_delivery.rs": "9260c93d66c06ddde1593757e6a70122428fee01cc31912b274fb658a02f8aa3",
+    "src/core/engine/document_snapshot_tests.rs": "3f228fbf823e119b1494645097c27bb21fd37a896ff8f08a7b902c08d3a29946",
+    "src/core/engine/image.rs": "abce2de75310d734f9f3dbbeb37c56bb537e6d61feab6baedd5c3cb4429e85fd",
+    "src/core/engine/mod.rs": "8f50010ae1eb4c70b10fe0f872ad61374ab8a464a04f13db89a07258eda41ac7",
+    "src/core/engine/mutation.rs": "f6a972143968a543f079da6cf043c428d3d1b83c8a6fa2b8a3f8867309efc3d1",
+    "src/core/error.rs": "ecc6fba4e1cead17246153d666d7a94680f5a0b9bd1703d4ad9aabd9680a7643",
+    "src/core/experimental/connection_graph.rs": "0451387204d6f96a0e631e36164abd665b486b070ec8909d1f5efbc5db5f7333",
+    "src/core/qgraph/update.rs": "fdb1885648443490bf85a7969156e3349c21f1d8cda6798b678b5c219d40b09f",
+    "src/core/storage.rs": "d32644a2778d10bb5a8755211a082bc39eff45f787bd2c71af80ff0c472e130d",
+    "src/lib.rs": "78a6385ca39a2cd55cb0481dbc6df9e40a745cb82acc575c9fc137807c13a208",
+    "tests/node/audit.test.cjs": "ccfa3dfae3143fa2623b474f573ac7eb6ea80ba1d2eac9ea3e739ef4b96b1784",
+    "tests/server_ops.rs": "204b16f3d208c2c261ee6400f5757ae2001896615a3bb1efeab7f2631dddeec1"
+  },
+  "environment": {
+    "rust": "1.99.0",
+    "CARGO_TARGET_DIR": "/Volumes/A/holographic-memory/target/readiness-build",
+    "CARGO_BUILD_JOBS": 2
+  },
+  "checks": {
+    "batch-tests": {
+      "log": "batch-tests.log.gz",
+      "uncompressed_sha256": "3d3ca4a3341d413bdd2c02c9954196c649133ebefbad91107a2233c147bc6e7c",
+      "archive_sha256": "9cf4ca774f499d728b0510f4d5ad8a1defa3a29054d9ad68212333e67f3464ea",
+      "result_summaries": [
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 811 filtered out; finished in 0.05s"
+      ],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 test --locked --lib --features security,experimental,server,mcp core::qgraph::update::batch_tests",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "c-clippy": {
+      "log": "c-clippy.log.gz",
+      "uncompressed_sha256": "f67c15c91f41138b63ddba875fb4606b3bb0ff6bbc4b4948d56d641c4de69998",
+      "archive_sha256": "535b8d6dd7aca096a92348e72f395401c909a36a002304ea10251a917fabfc90",
+      "result_summaries": [],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 clippy --locked --manifest-path bindings/c/Cargo.toml --all-targets -- -D warnings",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "c-tests-before-lookup-fix": {
+      "log": "c-tests-before-lookup-fix.log.gz",
+      "uncompressed_sha256": "011771a3f89dd3aef5fe053a293c45d751c09769913615d98d2e0b290e04a24f",
+      "archive_sha256": "ab9f32976dc159298becb48baf1d3fbf7003ce869327ac2ac6c16a93e08ed5c1",
+      "result_summaries": [],
+      "exit_code": 101,
+      "disposition": "Initial test helper did not compile because ApiError has no Debug implementation; helper now formats its status. Corrected C tests and strict Clippy pass."
+    },
+    "c-tests": {
+      "log": "c-tests.log.gz",
+      "uncompressed_sha256": "9f9817579e43444ba9fda88e41043f798aee752342fdb6299a1a1aeef1899a18",
+      "archive_sha256": "2a1fa571368480e63e5447d4b00c98adcc6695193c81f15af1b42065a4baeb17",
+      "result_summaries": [
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.74s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 test --locked --manifest-path bindings/c/Cargo.toml",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "cbindgen-install": {
+      "log": "cbindgen-install.log.gz",
+      "uncompressed_sha256": "b66e3617b5af41985623cb00d12d7327b89b9de46af11b54346597b20e1a48a6",
+      "archive_sha256": "af004257f439934851d1dbbd9593f0530e01e47ec41cc83ec35f787f4ad4f3cf",
+      "result_summaries": [],
+      "exit_code": 0
+    },
+    "clippy": {
+      "log": "clippy.log.gz",
+      "uncompressed_sha256": "4fe190adcfb8d54b07c46398a09e43425bd854512521c1bf00f9a4a3ebb1569f",
+      "archive_sha256": "c0695632f7cffae5b07f92e446a70f24ba485fb273a261c5d8aca6f5629cc994",
+      "result_summaries": [],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 clippy --locked --lib --tests --bins --features security,experimental,server,mcp -- -D warnings",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "connection-final-tests": {
+      "log": "connection-final-tests.log.gz",
+      "uncompressed_sha256": "884cbdb684455f170d0389226d2785b4be13b66c6c61e70898a5989449ebcabb",
+      "archive_sha256": "34043c6d2a6875772160e480e902c37adb85f7d21a886c20976124bb2b2223af",
+      "result_summaries": [
+        "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 798 filtered out; finished in 0.21s"
+      ],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 test --locked --lib --features security,experimental,server,mcp connection",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "connection-tests": {
+      "log": "connection-tests.log.gz",
+      "uncompressed_sha256": "78dbc89760fe01e0bc808a84a7ce379f124846280717ec5dc3d2a426321f76fa",
+      "archive_sha256": "b55fc1d176475e93c57f391983171f15f87a925580f8a8d268bf930af4cb78b7",
+      "result_summaries": [
+        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 797 filtered out; finished in 0.24s"
+      ],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 test --locked --lib --features security,experimental,server,mcp connection",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "header-check": {
+      "log": "header-check.log.gz",
+      "uncompressed_sha256": "8a0420909f2711f186e8c2d73c0dc1436c1585e6c5d785479d6f7ec6ee089273",
+      "archive_sha256": "0d2d8130b066c8bb77c80837bf4db75c0a5e9c7bd8f5f8629d958d33f483d22b",
+      "result_summaries": [],
+      "exit_code": 0
+    },
+    "header-generation": {
+      "log": "header-generation.log.gz",
+      "uncompressed_sha256": "8a0420909f2711f186e8c2d73c0dc1436c1585e6c5d785479d6f7ec6ee089273",
+      "archive_sha256": "0d2d8130b066c8bb77c80837bf4db75c0a5e9c7bd8f5f8629d958d33f483d22b",
+      "result_summaries": [],
+      "exit_code": 0
+    },
+    "integrated-clippy": {
+      "log": "integrated-clippy.log.gz",
+      "uncompressed_sha256": "215e78bc40eecb090017e10873f6af1d46bfedf62a11d01f6d245c4dbf21281e",
+      "archive_sha256": "3b4a2aa342f21a5d8a1c8847dccfbe863606b694a38b9ab367d5e0819810b7b2",
+      "result_summaries": [],
+      "command": "cargo +1.99.0 clippy --locked --lib --tests --bins --features security,experimental,server,mcp -- -D warnings",
+      "exit_code": 0
+    },
+    "integrated-fmt": {
+      "log": "integrated-fmt.log.gz",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "result_summaries": [],
+      "command": "cargo +1.99.0 fmt -- --check",
+      "exit_code": 0
+    },
+    "integrated-tests": {
+      "log": "integrated-tests.log.gz",
+      "uncompressed_sha256": "49e55a5d235bf5a44e1348cf15516ce50a4b72e1c6efbf8de7404335aacda8e0",
+      "archive_sha256": "41db8118213615c74717758900bb058d51930c786f3fbd72f68e1f58c1bc6389",
+      "result_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 817 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 817 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 817 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 817 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 817 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 817 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 817 filtered out; finished in 0.00s",
+        "test result: ok. 806 passed; 0 failed; 12 ignored; 0 measured; 0 filtered out; finished in 180.94s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+        "test result: ok. 48 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.14s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 85 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.77s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ],
+      "command": "cargo +1.99.0 test --locked --lib --bins --features security,experimental,server,mcp",
+      "exit_code": 0
+    },
+    "services-tests": {
+      "log": "services-tests.log.gz",
+      "uncompressed_sha256": "b44c3054f0ce316ecf43b3338056f521d7ffacf7e754a8270ba4034f0435c18a",
+      "archive_sha256": "b6e7b252866dfefdf4b7f59a0dc0f35080a14b0b2e1b3d0129a3aebb19bffca7",
+      "result_summaries": [
+        "test result: ok. 48 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.82s",
+        "test result: ok. 83 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.49s"
+      ],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 test --locked --features security,experimental,server,mcp --bin warm-server --bin warm-mcp",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "storage-final-tests": {
+      "log": "storage-final-tests.log.gz",
+      "uncompressed_sha256": "2ee8173d9c239f0fcce7112e6b304149b6a50a9a8daa541793b0d7a4069b6641",
+      "archive_sha256": "812527a433a00c414e97f1030fd0ef3ad438477fe351a46627c88c69f1f756a2",
+      "result_summaries": [
+        "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 796 filtered out; finished in 2.28s"
+      ],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 test --locked --lib --features security,experimental,server,mcp core::storage::tests",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "storage-tests": {
+      "log": "storage-tests.log.gz",
+      "uncompressed_sha256": "7d7aac02c702d9d897f348345bbc0a6c1c8d632851428e9d77e90eef360d1802",
+      "archive_sha256": "9366453f5ce9b7e1fd5bb3ec2e128268f51d8f1eee42d9a8cbfdf39a02216f81",
+      "result_summaries": [
+        "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 793 filtered out; finished in 2.36s"
+      ],
+      "exit_code": 0,
+      "reproduction_command": "cargo +1.99.0 test --locked --lib --features security,experimental,server,mcp core::storage::tests",
+      "command_attribution": "Reproduction command for this scoped check; the original shell invocation is not preserved in this artifact."
+    },
+    "uncertain-vectors-tests": {
+      "log": "uncertain-vectors-tests.log.gz",
+      "uncompressed_sha256": "801983740f1f06e8a511605ee70871f8592d5d3d47888dbf4901a046e353f133",
+      "archive_sha256": "8a8683e560cdeb903b59587e075abb8a5268eaced2668afbf077048e5549c339",
+      "result_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.09s"
+      ],
+      "command": "cargo +1.99.0 test --locked --features security,experimental,server,mcp --bin warm-server uncertain_ingest_retains_staged_vectors_for_reopen_reconciliation",
+      "exit_code": 0
+    }
+  },
+  "integrated_results": {
+    "library_passed": 806,
+    "library_ignored": 12,
+    "http_passed": 85,
+    "mcp_passed": 48,
+    "other_binaries": "See integrated-tests.log.gz",
+    "clippy": "passed",
+    "fmt": "passed"
+  },
+  "attribution": [
+    "Integrated tests, Clippy and formatting use production source f39433e9. Later b323551b adds only mobile/WASM evidence.",
+    "Earlier scoped logs precede integration and are retained as development evidence, not exact-final-source CI.",
+    "C tests, header checks and C Clippy match the C binding source committed in fc8f452e. The earlier compile failure is retained.",
+    "Storage final tests and uncertain-vector regression cover bd378c43, including the flush/compaction quarantine and staged-vector reconciliation followups.",
+    "Independent evidence hashes match integration except lexical/tests.rs, where both reviewed test hunks were combined, and storage.rs, which changed in bd378c43."
+  ],
+  "limits": [
+    "Final remote all-feature, cross-platform, generated-source and packaging checks remain required before merge.",
+    "Storage fault injection models failed durability acknowledgement and rollback; it is not hardware power-loss testing.",
+    "Existing diagnostic/stress ignores were not changed; no test assertions or quality thresholds were weakened.",
+    "The interrupted original mobile build produced no result; completed mobile and browser validation is recorded separately.",
+    "No paid API, model or cloud development workloads were used."
+  ]
+}
