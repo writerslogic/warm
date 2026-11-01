@@ -286,31 +286,9 @@ impl Memory {
         &self.core
     }
 
-    fn with_snapshot<T>(&self, mut read: impl FnMut(&Index) -> Result<T>) -> Result<T> {
-        for _ in 0..16 {
-            let Some(revision) = self.planning_revision() else {
-                continue;
-            };
-            let result = {
-                let index = self.index.read();
-                if index.revision != Some(revision) {
-                    continue;
-                }
-                read(&index)
-            };
-            if self.core.memory_revision_matches(revision) {
-                return result;
-            }
-        }
-        Err(MemoryError::Concurrent(
-            "memory changed during the snapshot; retry the operation".into(),
-        )
-        .into())
-    }
-
     fn with_revision<T>(&self, mut read: impl FnMut() -> Result<T>) -> Result<T> {
         for _ in 0..16 {
-            let Some(revision) = self.planning_revision() else {
+            let Some(revision) = self.planning_revision()? else {
                 continue;
             };
             let result = read();
@@ -324,23 +302,25 @@ impl Memory {
         .into())
     }
 
-    fn planning_revision(&self) -> Option<u64> {
-        self.ensure_fresh();
+    fn planning_revision(&self) -> Result<Option<u64>> {
+        self.ensure_fresh()?;
         let revision = self.core.revision();
-        (self.index.read().revision == Some(revision)).then_some(revision)
+        Ok((self.index.read().revision == Some(revision)).then_some(revision))
     }
 
     /// Brings the index up to the store's current revision.
-    fn ensure_fresh(&self) {
+    fn ensure_fresh(&self) -> Result<()> {
         let revision = self.core.revision();
         if self.index.read().revision == Some(revision) {
-            return;
+            return Ok(());
         }
+        let rebuilt = Index::rebuild(&self.core)?;
         let mut index = self.index.write();
-        if index.revision == Some(self.core.revision()) {
-            return;
+        let revision = self.core.revision();
+        if index.revision != Some(revision) && rebuilt.revision == Some(revision) {
+            *index = rebuilt;
         }
-        *index = Index::rebuild(&self.core);
+        Ok(())
     }
 
     /// Records that this process's own commit moved the store from `before` by exactly

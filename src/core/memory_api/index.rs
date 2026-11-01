@@ -7,6 +7,7 @@
 //! metadata: the reverse supersession links, the subject groups and the entity postings.
 //! A store that uses none of these has an index with no entries.
 
+use anyhow::Result;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use super::stamp::Stamp;
@@ -312,9 +313,9 @@ impl Index {
     }
 
     /// Rebuilds the index from the store's documents.
-    pub(crate) fn rebuild(core: &WarmCore) -> Self {
+    pub(crate) fn rebuild(core: &WarmCore) -> Result<Self> {
         let mut stamps: Vec<(String, Stamp)> = Vec::new();
-        let revision = core.scan_documents(|document: DocumentView<'_>| {
+        let revision = core.try_scan_documents(None, None, |document: DocumentView<'_>| {
             if let Some(stamp) = Stamp::from_parts(document.version, document.metadata) {
                 if stamp.windowed()
                     || stamp.subject.is_some()
@@ -325,7 +326,8 @@ impl Index {
                     stamps.push((document.id.to_owned(), stamp));
                 }
             }
-        });
+            Ok(())
+        })?;
         let known: HashMap<&str, (Millis, Millis)> = stamps
             .iter()
             .map(|(id, stamp)| (id.as_str(), (stamp.effective_from(), stamp.ingest)))
@@ -339,7 +341,7 @@ impl Index {
             index.insert(id, stamp, &lookup);
         }
         index.revision = Some(revision);
-        index
+        Ok(index)
     }
 }
 

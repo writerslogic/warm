@@ -266,11 +266,11 @@ impl WarmCore {
     }
 
     pub fn document_index_trained(&self) -> bool {
-        self.documents().dense_index_trained()
+        self.documents.read().dense_index_trained()
     }
 
     pub fn document_embedding_count(&self) -> usize {
-        self.documents().embedded_count()
+        self.documents.read().embedded_count()
     }
 
     /// Nearest embedded chunks to `embedding` by cosine, best first; `score` and
@@ -358,7 +358,7 @@ impl WarmCore {
 
     pub fn vector_index_status(&self) -> VectorIndexStatus {
         let snapshot = self.vector_index.get();
-        documents::vector_index_status(snapshot.as_deref(), &self.documents())
+        documents::vector_index_status(snapshot.as_deref(), &self.documents.read())
     }
 
     /// Captures the embedded chunks and publishes a fresh vector snapshot, with the graph
@@ -389,7 +389,7 @@ impl WarmCore {
         };
         let capture = {
             let _transaction = self.mutation_gate.read();
-            documents::capture_vector_rows(&self.documents(), space.dimensions)?
+            documents::capture_vector_rows(&self.documents.read(), space.dimensions)?
         };
         let Some(capture) = capture else {
             self.vector_index.clear();
@@ -424,7 +424,6 @@ impl WarmCore {
         let _building = self.vector_index.try_build().ok_or_else(|| {
             anyhow!("document index maintenance already in progress; retry maintenance")
         })?;
-        self.hydrate_documents()?;
         let snapshot = {
             let _transaction = self.mutation_gate.read();
             documents::capture_dense_index(&self.documents.read(), space.dimensions)?
@@ -531,9 +530,10 @@ impl WarmCore {
         Ok(encoded)
     }
 
-    /// Whether a document with this id currently resolves in the opened store.
+    /// Whether this id is present, without decoding its metadata or reading retained text.
     pub fn has_document(&self, id: &str) -> bool {
-        self.documents().contains_key(id)
+        let _transaction = self.mutation_gate.read();
+        self.documents.read().contains_key(id)
     }
 
     /// Whether the word interner built while preparing a document batch is kept for the next
@@ -671,7 +671,7 @@ impl WarmCore {
     /// journal frame that records the delete; `forget` and a scrubbing compaction call this so
     /// the zeros are on stable storage before they return.
     pub(crate) fn sync_text_segment(&self) -> Result<()> {
-        let segment = self.documents().text_segment();
+        let segment = self.documents.read().text_segment();
         segment.map_or(Ok(()), |segment| segment.sync())
     }
 

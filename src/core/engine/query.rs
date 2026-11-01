@@ -134,7 +134,7 @@ impl WarmCore {
         if before.nsg_training_recommended {
             self.train_nsg()?;
         }
-        let document_training_recommended = self.documents().dense_index_recommended();
+        let document_training_recommended = self.documents.read().dense_index_recommended();
         if document_training_recommended {
             self.train_document_index()?;
         }

@@ -9,6 +9,7 @@ use anyhow::Result;
 use serde_json::Value;
 
 use super::{mutation::Mutation, WarmCore};
+use crate::core::documents;
 
 /// Most deletions one journal transaction carries.
 pub(crate) const DELETE_BATCH: usize = 4096;
@@ -23,19 +24,11 @@ pub(crate) struct DocumentParts {
     pub embedding: Option<Vec<f64>>,
 }
 
-/// A document as the memory API sees it: its metadata and its first chunk's text. Memory
-/// facts are stored as a single chunk.
+/// Metadata of a document as the memory API sees it.
 pub(crate) struct DocumentView<'a> {
     pub id: &'a str,
     pub version: &'a str,
     pub metadata: &'a Value,
-    text: &'a dyn Fn() -> Option<String>,
-}
-
-impl DocumentView<'_> {
-    pub(crate) fn text(&self) -> Option<String> {
-        (self.text)()
-    }
 }
 
 impl WarmCore {
@@ -63,16 +56,6 @@ impl WarmCore {
         self.revision.load(std::sync::atomic::Ordering::Acquire)
     }
 
-    /// Visits every document under one consistent snapshot and returns that snapshot's
-    /// revision.
-    pub(crate) fn scan_documents(&self, mut visit: impl FnMut(DocumentView<'_>)) -> u64 {
-        self.try_scan_documents(None, None, |document| {
-            visit(document);
-            Ok(())
-        })
-        .expect("infallible document visitor")
-    }
-
     pub(crate) fn try_scan_documents(
         &self,
         ids: Option<&std::collections::BTreeSet<String>>,
@@ -81,28 +64,41 @@ impl WarmCore {
     ) -> Result<u64> {
         let _transaction = self.mutation_gate.read();
         let revision = self.revision();
-        self.hydrate_documents()?;
         let store = self.documents.read();
-        let mut visit_document =
-            |document: std::sync::Arc<crate::core::documents::StoredDocument>| {
-                if ids.is_some_and(|ids| !ids.contains(&document.id))
-                    || !crate::core::documents::matches_metadata(&document.metadata, filter)
-                {
-                    return Ok(());
+        let mut visit_document = |id: &str, version: &str, metadata: &Value| {
+            if ids.is_some_and(|ids| !ids.contains(id))
+                || !documents::matches_metadata(metadata, filter)
+            {
+                return Ok(());
+            }
+            visit(DocumentView {
+                id,
+                version,
+                metadata,
+            })
+        };
+        if store.has_base() {
+            if let Some(ids) = ids {
+                for id in ids {
+                    if let Some(info) = documents::get_info(&store, id)? {
+                        visit_document(&info.id, &info.version, &info.metadata)?;
+                    }
                 }
-                let text = || {
-                    document
-                        .chunks
-                        .first()
-                        .and_then(|chunk| store.chunk_text(chunk))
-                };
-                visit(DocumentView {
-                    id: &document.id,
-                    version: &document.version,
-                    metadata: &document.metadata,
-                    text: &text,
-                })
-            };
+            } else {
+                let mut from = None;
+                loop {
+                    let page = documents::list_info(&store, from.as_deref(), 256)?;
+                    for info in &page {
+                        visit_document(&info.id, &info.version, &info.metadata)?;
+                    }
+                    match page.last() {
+                        Some(last) if page.len() == 256 => from = Some(format!("{}\0", last.id)),
+                        _ => break,
+                    }
+                }
+            }
+            return Ok(revision);
+        }
         let candidates = match (ids, store.metadata_candidates(filter)) {
             (Some(ids), Some(metadata)) if metadata.len() < ids.len() => Some(metadata),
             (Some(ids), _) => Some(ids),
@@ -111,35 +107,55 @@ impl WarmCore {
         if let Some(ids) = candidates {
             for id in ids {
                 if let Some(document) = store.get(id) {
-                    visit_document(std::sync::Arc::clone(document))?;
+                    visit_document(&document.id, &document.version, &document.metadata)?;
                 }
             }
         } else {
             for document in store.shared_values() {
-                visit_document(document)?;
+                visit_document(&document.id, &document.version, &document.metadata)?;
             }
         }
         Ok(revision)
     }
 
-    /// Metadata and text of one document.
-    pub(crate) fn document_snapshot(&self, id: &str) -> Option<(String, Value, Option<String>)> {
-        self.document_parts(id)
-            .map(|parts| (parts.version, parts.metadata, parts.text))
+    pub(crate) fn document_parts(&self, id: &str) -> Result<Option<DocumentParts>> {
+        self.document_parts_with(id, || {})
     }
 
-    pub(crate) fn document_parts(&self, id: &str) -> Option<DocumentParts> {
-        let _transaction = self.mutation_gate.read();
-        let store = self.documents();
-        let document = store.get(id)?;
-        let chunk = document.chunks.first();
-        Some(DocumentParts {
-            metadata: document.metadata.clone(),
-            text: chunk.and_then(|chunk| store.chunk_text(chunk)),
-            source_uri: document.source_uri.clone(),
-            version: document.version.clone(),
-            embedding: chunk.and_then(|chunk| chunk.embedding.as_ref().map(|e| e.to_f64())),
-        })
+    fn document_parts_with(
+        &self,
+        id: &str,
+        mut after_capture: impl FnMut(),
+    ) -> Result<Option<DocumentParts>> {
+        for _ in 0..3 {
+            let (captured, embedding) = {
+                let _transaction = self.mutation_gate.read();
+                let store = self.documents.read();
+                let Some(captured) = documents::get_record(&store, id)? else {
+                    return Ok(None);
+                };
+                let embedding = store
+                    .get(id)
+                    .and_then(|document| document.chunks.first())
+                    .and_then(|chunk| chunk.embedding.as_ref().map(|embedding| embedding.to_f64()));
+                (captured, embedding)
+            };
+            after_capture();
+            let (identity, record) = captured.read();
+            let _transaction = self.mutation_gate.read();
+            if identity.is_current(&self.documents.read()) {
+                return record.map(|record| {
+                    Some(DocumentParts {
+                        metadata: record.metadata,
+                        text: record.text,
+                        source_uri: record.source_uri,
+                        version: record.version,
+                        embedding,
+                    })
+                });
+            }
+        }
+        Err(documents::DocumentReadChanged.into())
     }
 
     pub(crate) fn memory_revision_matches(&self, revision: u64) -> bool {
@@ -182,6 +198,66 @@ impl WarmCore {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn document_parts_retry_replacement_and_keep_embedding_with_its_text() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let config = crate::core::WarmConfig {
+            embedding_space: Some(crate::EmbeddingSpace {
+                model: "fixture".into(),
+                revision: "1".into(),
+                dimensions: 2,
+                normalization: "l2".into(),
+                metric: "cosine".into(),
+            }),
+            ..Default::default()
+        };
+        let core = WarmCore::new(
+            256,
+            Some(directory.path().display().to_string()),
+            Some(config),
+        )?;
+        let input = |version: &str, embedding: [f64; 2]| {
+            serde_json::from_value(serde_json::json!({
+                "id": "doc", "version": version, "text": version, "embeddings": [embedding],
+                "sourceUri": version, "metadata": {"version": version}
+            }))
+            .unwrap()
+        };
+        core.memorize_document(input("old evidence", [1.0, 0.0]))?;
+        let mut calls = 0;
+        let parts = core
+            .document_parts_with("doc", || {
+                calls += 1;
+                assert!(core.documents.write().contains_key("doc"));
+                if calls == 1 {
+                    core.memorize_document(input("new evidence", [0.0, 1.0]))
+                        .unwrap();
+                }
+            })?
+            .unwrap();
+        assert_eq!(calls, 2);
+        assert_eq!(parts.version, "new evidence");
+        assert_eq!(parts.text.as_deref(), Some("new evidence"));
+        assert_eq!(parts.source_uri.as_deref(), Some("new evidence"));
+        assert_eq!(parts.metadata["version"], "new evidence");
+        assert_eq!(parts.embedding, Some(vec![0.0, 1.0]));
+        let deleted = core.document_parts_with("doc", || {
+            core.delete_document("doc").unwrap();
+        })?;
+        assert!(deleted.is_none());
+        core.memorize_document(input("initial evidence", [1.0, 0.0]))?;
+        let mut calls = 0;
+        let result = core.document_parts_with("doc", || {
+            calls += 1;
+            core.memorize_document(input(&format!("change {calls}"), [1.0, 0.0]))
+                .unwrap();
+        });
+        assert_eq!(calls, 3);
+        let error = result.err().expect("repeated replacement must fail");
+        assert!(error.is::<documents::DocumentReadChanged>());
+        Ok(())
+    }
 
     #[test]
     fn metadata_scan_intersects_scope_and_checks_unindexed_values() -> Result<()> {
@@ -247,6 +323,87 @@ mod tests {
         });
         assert!(result.is_err());
         assert_eq!(visited, ["b"]);
+        Ok(())
+    }
+
+    #[test]
+    fn metadata_scan_merges_checkpoint_and_overlay_without_hydration() -> Result<()> {
+        use serde_json::json;
+        use std::collections::BTreeSet;
+        let directory = tempfile::tempdir()?;
+        let mut config = crate::core::WarmConfig::default();
+        config.document_checkpoint.min_journal_bytes = 0;
+        let options = documents::IngestOptions {
+            encode: documents::EncodeMode::Lexical,
+            ..Default::default()
+        };
+        {
+            let core = WarmCore::new(
+                256,
+                Some(directory.path().display().to_string()),
+                Some(config.clone()),
+            )?;
+            core.memorize_documents_with(
+                (0..257)
+                    .map(|i| {
+                        serde_json::from_value(json!({
+                "id": format!("r/{i:03}"), "text": "evidence", "metadata": {"group": i % 2}
+            })).unwrap()
+                    })
+                    .collect(),
+                &options,
+            )?;
+        }
+        let core = WarmCore::new(
+            256,
+            Some(directory.path().display().to_string()),
+            Some(config),
+        )?;
+        assert!(core.serves_from_checkpoint());
+        assert!(core.delete_document("r/000")?);
+        for id in ["r/001", "z"] {
+            core.memorize_document_with(
+                serde_json::from_value(json!({
+                    "id": id, "text": "new evidence", "metadata": {"group": 0}
+                }))?,
+                &options,
+            )?;
+        }
+        let mut all = Vec::new();
+        assert_eq!(
+            core.try_scan_documents(None, None, |document| {
+                all.push(document.id.to_owned());
+                Ok(())
+            })?,
+            core.revision()
+        );
+        let expected: Vec<_> = (1..257)
+            .map(|i| format!("r/{i:03}"))
+            .chain(["z".into()])
+            .collect();
+        assert_eq!(all, expected);
+        let filter = json!({"group": 0});
+        for scope in [
+            None,
+            Some(BTreeSet::from(["r/001".into(), "r/003".into(), "z".into()])),
+        ] {
+            let mut ids = Vec::new();
+            core.try_scan_documents(scope.as_ref(), Some(&filter), |document| {
+                ids.push(document.id.to_owned());
+                Ok(())
+            })?;
+            let expected: Vec<String> = if scope.is_some() {
+                vec!["r/001".into(), "z".into()]
+            } else {
+                ["r/001".into()]
+                    .into_iter()
+                    .chain((2..257).step_by(2).map(|i| format!("r/{i:03}")))
+                    .chain(["z".into()])
+                    .collect()
+            };
+            assert_eq!(ids, expected);
+        }
+        assert!(core.serves_from_checkpoint());
         Ok(())
     }
 }
