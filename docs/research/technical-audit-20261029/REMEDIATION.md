@@ -1711,6 +1711,10 @@ oracle comparisons and full ordered payload comparisons across three revisions.
 All 15 processes completed in 61.41 seconds. The predefined hot-query regression
 trigger did not fire; the complete latency and allocation tradeoffs are retained
 with the experiment rather than generalized into a production performance claim.
+Rare-query peak requested memory remains 83,864 bytes above the historical
+baseline and matches the prior revision. The coordinator regenerated the summary
+from hashed raw reports without a diff. See the
+[historical comparison](retrieval-tail-20261101/INVESTIGATION.md).
 
 Audit entries can be verified with a retained trusted public key after the
 original signing key is removed; this does not add automatic key rotation or
