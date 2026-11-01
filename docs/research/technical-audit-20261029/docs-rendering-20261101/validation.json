@@ -1,0 +1,332 @@
+{
+  "recorded_at": "2026-11-01T11:47:13.380802+00:00",
+  "base_revision": "75ffaa5736e34171e45612e8675791f7b71fc2d6",
+  "audit_followup_commit": "c9a4a593",
+  "source_sha256": {
+    ".github/workflows/docs.yml": "f7618e78858f1db9b6132b5a680316d3c28e05fa3aac6a6b44359f69ee275b84",
+    "docs/overrides/home.html": "ae747441233f3c3874d4972298ef56dd1bb391f3da8a36fd150987adffa9abe0",
+    "scripts/docs-qa/lighthouse.mjs": "52bb72d76d1455d5e43d1f4785fad307aa46745242b98bf6ef95da502aec1138",
+    "scripts/docs_site.py": "cd29daa0f8121bed53dd5cf86b9959e29d28efbbf9dad1caf04543fc096bf5ab",
+    "scripts/test_docs_site.py": "bc031bece5b4442951e95a5fd0ac2362fa028273c82eaa98ebd1a187c62e78d5"
+  },
+  "diagnosis": {
+    "original_run": "https://github.com/writerslogic/warm/actions/runs/41263012930",
+    "artifact": 13065953077,
+    "actual_failure": "Homepage mobile performance 84 below existing 85 floor. Concepts 86 passed; the old summary incorrectly printed 95 for every category.",
+    "mechanism": "Homepage inlines the two installed theme stylesheets, preserving their CSS and icon styles, eliminating two render-blocking requests. Documentation pages retain external cached theme stylesheets.",
+    "scope_choice": "An initial global-inlining probe increased compressed HTML by about 24 KiB on every page. Final source restricts that transfer/cache tradeoff to the landing page."
+  },
+  "commands": {
+    "build": "WARM_SITE_BASE=http://127.0.0.1:8123 uv run --no-project --with-requirements docs/requirements.txt bash scripts/build-docs-site.sh target/docs-performance/final-site",
+    "unit": "uv run --no-project --with-requirements docs/requirements.txt python -m unittest scripts/test_docs_hooks.py scripts/test_docs_site.py",
+    "lighthouse": "VERSION=latest REPORT_DIR=target/docs-performance/final-local PERF_THRESHOLD=85 node scripts/docs-qa/lighthouse.mjs target/docs-performance/final-site",
+    "axe": "VERSION=latest node scripts/docs-qa/axe.mjs target/docs-performance/final-site",
+    "search": "VERSION=latest node scripts/docs-qa/search.mjs target/docs-performance/candidate-site",
+    "workflow": "actionlint .github/workflows/docs.yml"
+  },
+  "results": {
+    "docs_unit_tests": 21,
+    "axe_page_views": 36,
+    "axe_serious_or_critical": 0,
+    "search_queries": 46,
+    "search_failures": 0,
+    "workflow_lint_exit_code": 0,
+    "strict_site_build_exit_code": 0,
+    "search_scope": "Search ran on the earlier candidate. Final homepage and all 12 fetched resources including the search index are byte-identical; the final concepts page and all 14 fetched resources equal the baseline. Final axe and Lighthouse ran on the final complete build.",
+    "thresholds_unchanged": {
+      "performance": 85,
+      "other_categories": 95
+    }
+  },
+  "html": {
+    "index.html": {
+      "baseline_sha256": "6364f6c3dcc4346bd7c2028203c89b3b9632f7c24e2f6ee679b4d2e9a9edad13",
+      "final_sha256": "a04cb289bb1eae14b900110b442b1a0b55b5fdd2dc2a66db8787f8c66a7f088e",
+      "baseline_gzip_level9_bytes": 30853,
+      "final_gzip_level9_bytes": 55187,
+      "unchanged": false
+    },
+    "concepts/holographic/index.html": {
+      "baseline_sha256": "8a5de9a42eff338ab68dca966601ebccff2bcbd237f39ede46b0bb262c1ad832",
+      "final_sha256": "8a5de9a42eff338ab68dca966601ebccff2bcbd237f39ede46b0bb262c1ad832",
+      "baseline_gzip_level9_bytes": 20653,
+      "final_gzip_level9_bytes": 20653,
+      "unchanged": true
+    }
+  },
+  "lighthouse": {
+    "ci-41263012930": {
+      "lighthouse-concepts_holographic-desktop.json": {
+        "categories": {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 374.1865,
+          "largest-contentful-paint": 892.373,
+          "total-blocking-time": 0,
+          "speed-index": 374.1865,
+          "cumulative-layout-shift": 0.001289651738026443
+        },
+        "render_blocking": {
+          "FCP": 50,
+          "LCP": 50
+        },
+        "raw_report_sha256": "0b509248409dd6da0b861477d7e1a9cbaa0abaac2d4458f976196601de969f94",
+        "archived_report_sha256": "6faafcc0b69fbebf4f23d3b5696b995bb757c73250e99308cf9c3b76bd20bb94"
+      },
+      "lighthouse-concepts_holographic-mobile.json": {
+        "categories": {
+          "performance": 86,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 1786.0065,
+          "largest-contentful-paint": 4044.013,
+          "total-blocking-time": 79.00000000000023,
+          "speed-index": 1786.0065,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 450,
+          "LCP": 450
+        },
+        "raw_report_sha256": "436f64e2b7f22dc1057ddfee4b1f20fb9635f0d0243e05669b5bd9e617c4eb4e",
+        "archived_report_sha256": "d57aa336d6ec841d2ad2c932b9a4ae887bc14425b956df4c6216e8046708bde4"
+      },
+      "lighthouse-home-desktop.json": {
+        "categories": {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 375.8701,
+          "largest-contentful-paint": 904.7402,
+          "total-blocking-time": 0,
+          "speed-index": 375.8701,
+          "cumulative-layout-shift": 5.600429034235181e-06
+        },
+        "render_blocking": {
+          "FCP": 50,
+          "LCP": 50
+        },
+        "raw_report_sha256": "3a1bbf574bd0ce4f0e9136b0337d476e62e1581ce48ef89b27997a5cffa3ac9f",
+        "archived_report_sha256": "4f8f951627b9c8b2953d74776ae5ea4a3d66ff0f2416603e2adbbaf6494bf27d"
+      },
+      "lighthouse-home-mobile.json": {
+        "categories": {
+          "performance": 84,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 1863.46,
+          "largest-contentful-paint": 4103.92,
+          "total-blocking-time": 144,
+          "speed-index": 1863.46,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 500,
+          "LCP": 500
+        },
+        "raw_report_sha256": "cab42f64445a5c2d87e843ba35df6d33b73ce81b20970b6496da4e1f9729380f",
+        "archived_report_sha256": "6c646960fb2ac77c6fd6132e6b03da09783e513974870f9c13de6b04b945e8cd"
+      }
+    },
+    "baseline-local": {
+      "lighthouse-concepts_holographic-desktop.json": {
+        "categories": {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 326.0417,
+          "largest-contentful-paint": 458.06255,
+          "total-blocking-time": 0,
+          "speed-index": 326.0417,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 100,
+          "LCP": 100
+        },
+        "raw_report_sha256": "311733086cd1d8a5ef93b0d4ff21028d59621e2bd21bdef8374c2fd95c2ed15e",
+        "archived_report_sha256": "eddfac03940f4879ee6e59a4138d31de4a00cee9927dcd073cfdd86b8f774123"
+      },
+      "lighthouse-concepts_holographic-mobile.json": {
+        "categories": {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 1209.3729,
+          "largest-contentful-paint": 1780.3728999999998,
+          "total-blocking-time": 0,
+          "speed-index": 1209.3729,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 450,
+          "LCP": 450
+        },
+        "raw_report_sha256": "d5460e44a93db929606fb5006150eb8e23463d7eb49fc73aeea4c3f3225ff1d5",
+        "archived_report_sha256": "26b7b226abcbc3c12e78b89e5b2727aa5c2d6e70f166c3b7f25b61c9aa015955"
+      },
+      "lighthouse-home-desktop.json": {
+        "categories": {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 328.0956,
+          "largest-contentful-paint": 506.1912,
+          "total-blocking-time": 0,
+          "speed-index": 328.0956,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 100,
+          "LCP": 100
+        },
+        "raw_report_sha256": "8f3e759fca1183a5b22f496a5fc8d6c02a2e6d9d26a46611c6dfe4c0fcfe4782",
+        "archived_report_sha256": "3a4bf1d0454aaabf3bb71473f8b21401af59a8197ac4f5064e4b8ad649f58102"
+      },
+      "lighthouse-home-mobile.json": {
+        "categories": {
+          "performance": 97,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 1770.828,
+          "largest-contentful-paint": 2222.656,
+          "total-blocking-time": 115.00000000000023,
+          "speed-index": 1770.828,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 450,
+          "LCP": 450
+        },
+        "raw_report_sha256": "1d335d0652a0ef8b49d2ff3ed3f4e1a2d2442d0ebd4d6915e0bd1ff5fd569f00",
+        "archived_report_sha256": "4150c11288e80fec4caeb7079a36e67d21029dfd08ab32e2b48dc84d1c7a8232"
+      }
+    },
+    "final-local": {
+      "lighthouse-concepts_holographic-desktop.json": {
+        "categories": {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 323.5614,
+          "largest-contentful-paint": 496.1228,
+          "total-blocking-time": 0,
+          "speed-index": 323.5614,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 100,
+          "LCP": 100
+        },
+        "raw_report_sha256": "60efe610927207b602ecdcf45825cbb6302fda626f03f4fba66cd20efa001347",
+        "archived_report_sha256": "e806c73b15741894ad433a8c1004e9c5df823b9d0de41e15fa1d1e8226e66eee"
+      },
+      "lighthouse-concepts_holographic-mobile.json": {
+        "categories": {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 1569.4979,
+          "largest-contentful-paint": 1947.2468499999998,
+          "total-blocking-time": 7,
+          "speed-index": 1569.4979,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 450,
+          "LCP": 450
+        },
+        "raw_report_sha256": "aeffe1d83a5f98182c622b37a930387ef3e9f009609d6c1837e8835edabba45e",
+        "archived_report_sha256": "252bbd90bf1de96cae7813a998c4c1cdcd7af0e6f5c3284a0059c2f0b9853032"
+      },
+      "lighthouse-home-desktop.json": {
+        "categories": {
+          "performance": 100,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 362.4836,
+          "largest-contentful-paint": 511.72540000000004,
+          "total-blocking-time": 0,
+          "speed-index": 362.4836,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 0,
+          "LCP": 0
+        },
+        "raw_report_sha256": "1d080d9226e4d1f416feb400ac9e357b43b5638201f8cc21ccdb99bfb5eb31bb",
+        "archived_report_sha256": "31d228de400e5cad1624369a7a5f2195cb6047b26f200aa86f78a078639c52d5"
+      },
+      "lighthouse-home-mobile.json": {
+        "categories": {
+          "performance": 98,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "metrics": {
+          "first-contentful-paint": 1546.074,
+          "largest-contentful-paint": 2210.611,
+          "total-blocking-time": 17,
+          "speed-index": 1546.074,
+          "cumulative-layout-shift": 0
+        },
+        "render_blocking": {
+          "FCP": 200,
+          "LCP": 200
+        },
+        "raw_report_sha256": "04bd6a1b6ecb1ead4638d3ba8c4cb0cdde6afb832f999565ccbd73a225ff3392",
+        "archived_report_sha256": "70c30d132762ede5217c84cd1673cfe5dc416d7fdbe05db001486ee4763227c3"
+      }
+    }
+  },
+  "limits": [
+    "Local single before/after comparisons were run on macOS with Node 26.8.1 and Python 3.14; they do not predict hosted-runner latency or establish a production performance improvement.",
+    "The unchanged concepts HTML scored 100 in the local baseline and 99 in the final run, illustrating timing variability.",
+    "Inline homepage CSS adds about 24 KiB to compressed HTML on repeat landing-page downloads; full-document pages retain cacheable theme CSS.",
+    "Local site builds skip Rustdoc; the required full API build and final hosted browser gate remain owned by integration CI."
+  ],
+  "archived_reports": {
+    "omitted_payloads": [
+      "fullPageScreenshot",
+      "audits.full-page-screenshot",
+      "audits.final-screenshot",
+      "audits.screenshot-thumbnails"
+    ],
+    "reason": "Screenshots are unnecessary for the timing, request and score evidence; all other Lighthouse fields are retained. Raw report hashes identify the original outputs."
+  }
+}

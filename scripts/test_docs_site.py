@@ -44,6 +44,36 @@ class BrandingTests(unittest.TestCase):
                 self.assertTrue((ROOT / "docs" / asset.removeprefix(url)).is_file())
 
 
+class ThemeStylesTests(unittest.TestCase):
+    def environment(self, css):
+        import docs_site
+        from jinja2 import DictLoader, Environment
+
+        env = Environment(loader=DictLoader({"assets/stylesheets/main.hash.min.css": css}), autoescape=True)
+        return docs_site.on_env(env, {}, [])
+
+    def test_versioned_links_inline_installed_css_without_escaping_it(self):
+        css = '.icon{background:url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>\')}'
+        env = self.environment(css)
+        for prefix in ("", "../../", "/latest/", "/dev/"):
+            markup = f'<link rel="stylesheet" href="{prefix}assets/stylesheets/main.hash.min.css"><style>:root{{color:red}}</style>'
+            rendered = env.from_string("{{ styles | warm_inline_theme_styles }}").render(styles=markup)
+            self.assertIn(css, rendered)
+            self.assertIn(":root{color:red}", rendered)
+            self.assertNotIn('<link rel="stylesheet"', rendered)
+
+    def test_missing_theme_css_and_unsafe_style_content_fail_build(self):
+        from jinja2 import TemplateNotFound
+        from mkdocs.exceptions import PluginError
+
+        link = '<link rel="stylesheet" href="assets/stylesheets/main.hash.min.css">'
+        for css in ("</style><script>alert(1)</script>", '@import "extra.css";', '.icon{background:url("../icon.svg")}'):
+            with self.assertRaises(PluginError):
+                self.environment(css).filters["warm_inline_theme_styles"](link)
+        with self.assertRaises(TemplateNotFound):
+            self.environment("").filters["warm_inline_theme_styles"](link.replace("main.hash", "renamed"))
+
+
 class VectorChartTests(unittest.TestCase):
     def chart(self, table, competitors=(), warm=()):
         with tempfile.TemporaryDirectory() as tmp:
