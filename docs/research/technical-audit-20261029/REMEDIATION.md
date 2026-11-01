@@ -1743,3 +1743,15 @@ preserves staged ANN rows for reopen reconciliation. The C handle drains admitte
 calls before closing its store; graph logs enforce exclusive ownership and repair
 only torn tails. See [integration evidence](readiness-completion-20261101/validation.json).
 Exact-head remote CI and merge remain required.
+
+PR #374's first head `0d7ff7eb` exposed a stale bundled Go header: Linux x64,
+Linux ARM and macOS compiled the C library and passed C tests, then failed Go
+compilation because the two new mutation-outcome constants were absent. The
+header generator now updates/checks both Go header copies, and the existing C
+header suite enforces parity. The original failures are retained in
+[CI failure evidence](readiness-completion-20261101/ci-before-go-header/validation.json).
+The corrected headers pass generation checks, two C header tests, Go vet and
+Go race tests (14 tests plus one example). See
+[Go packaging validation](go-header-parity-20261101/validation.json).
+This followup changes packaging and parity checks; the benchmarked engine source
+remains unchanged. The new PR head must pass the hosted release/platform matrix.

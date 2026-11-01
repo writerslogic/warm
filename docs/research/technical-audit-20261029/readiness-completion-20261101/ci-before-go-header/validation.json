@@ -1,0 +1,24 @@
+{
+  "head": "0d7ff7ebd72bd16f26103e75a903d176b3e1dd7a",
+  "binding_run": 41305143717,
+  "status": "failed; other workflows were still running when the partial gate was captured",
+  "diagnosis": "Go bundled header lacks WARM_ERR_MUTATION_COMMITTED and WARM_ERR_MUTATION_UNCERTAIN declarations; Linux x64, Linux ARM and macOS Go compile failed after C tests and C ABI passed.",
+  "logs": {
+    "ci-bindings-ubuntu.log.gz": {
+      "uncompressed_sha256": "864d81cd0d974fcfd1ae4704a3c9bdeefbfbcc8583973bd6b83437b9e5b07766",
+      "archive_sha256": "3dae85bff2c0dff3d26e1b2131f0c966359a4bdf201ee61679546328b9f115a5"
+    },
+    "ci-bindings-arm.log.gz": {
+      "uncompressed_sha256": "7e8e0422b3b82527e1ac8391646105f90b2b10ac7866925e77ac7ea9d9d2de15",
+      "archive_sha256": "0eafcceb9c6b8394579f8ecfa029666d4090623718ad666c92053696d836fa49"
+    },
+    "ci-bindings-macos.log.gz": {
+      "uncompressed_sha256": "d06de7440083502739bf70b8b476c26a8f8df0003f09326c46fb2e7b2ec44e5a",
+      "archive_sha256": "321c65bb74091d85de60c9acd8d318b742b42441fbdb0766732ea788017482b1"
+    }
+  },
+  "limits": [
+    "ANSI color/control escapes removed from logs before compression.",
+    "This is a development failure record, not final-head acceptance."
+  ]
+}
