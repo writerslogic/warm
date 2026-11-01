@@ -709,11 +709,17 @@ fn ties_and_block_boundary_sizes() {
 }
 
 #[test]
-fn bm25_parameters_and_nonfinite_scores_are_explicit() {
+fn bm25_parameters_reject_nonfinite_inputs() {
     let mut store = DocumentStore::default();
     insert(&mut store, "a", "red red red red", true, true);
     let query = LexicalQuery::parse("red").unwrap();
-    for (k1, b) in [(0.0, 0.0), (0.0, 1.0), (1.2, 0.75), (2.0, 1.0)] {
+    for (k1, b) in [
+        (0.0, 0.0),
+        (0.0, 1.0),
+        (1.2, 0.75),
+        (2.0, 1.0),
+        (f64::MAX, 0.0),
+    ] {
         let result = execute(
             &store,
             &query,
@@ -732,7 +738,7 @@ fn bm25_parameters_and_nonfinite_scores_are_explicit() {
         (1.2, -0.01),
         (-1.0, 0.75),
         (1.2, 1.01),
-        (f64::MAX, 0.0),
+        (f64::INFINITY, 0.0),
     ] {
         assert!(execute(
             &store,

@@ -1,0 +1,65 @@
+{
+  "base": "75ffaa5736e34171e45612e8675791f7b71fc2d6",
+  "status": "scoped local gates passed; integrated CI remains coordinator-owned",
+  "updated_at": "2026-11-01T11:43:26.222186+00:00",
+  "diagnosis": [
+    "Former stale exact retrieval admitted only k+min(stale,4k)+8 base candidates before filtering obsolete owners. Replacing a many-chunk top document can consume this window and hide the best remaining base row while a low-scoring delta row prevents fallback.",
+    "Finite large BM25 k1 can overflow the numerator or denominator. The initial uncommitted correction divided by k1 for all positive values, which instead overflows for subnormal positive k1. Use the original evaluation for k1<=1 and default parameters; divide numerator and denominator by k1 only above that range."
+  ],
+  "source_sha256": {
+    "src/core/documents.rs": "36320f0e9d2b5625412ddb3901c119f13f4c3eb7c181bad52596e985a63b049b",
+    "src/core/documents/lexical/tests.rs": "5291c8ec0bef36bcfb646029977bae0fa5d18d0388754e191a42ea1f43c75b8c",
+    "src/core/documents/lexical/wand.rs": "5acad9cf070bf6a42b5f07965e1e81ee4c184c60dac68c73ff77c8912fedae86",
+    "src/core/documents/vector_index.rs": "a73d03603309b7bdb060b790f3d222a77bb2309fbcbf6685fbbafde5d86927ce",
+    "src/core/engine/document_snapshot_tests.rs": "3f228fbf823e119b1494645097c27bb21fd37a896ff8f08a7b902c08d3a29946"
+  },
+  "validation": {
+    "documents": {
+      "command": "CARGO_TARGET_DIR=/Volumes/A/warm-retrieval-tail-validation/target CARGO_BUILD_JOBS=2 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 CARGO_PROFILE_TEST_OPT_LEVEL=1 cargo +1.99.0 test --locked --lib core::documents -- --test-threads=2",
+      "exit_code": 0,
+      "passed": 120,
+      "ignored": 1,
+      "log": "documents.log.gz"
+    },
+    "engine_snapshots": {
+      "command": "CARGO_TARGET_DIR=/Volumes/A/warm-retrieval-tail-validation/target CARGO_BUILD_JOBS=2 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 CARGO_PROFILE_TEST_OPT_LEVEL=1 cargo +1.99.0 test --locked --lib core::engine::document_snapshot_tests -- --test-threads=2",
+      "exit_code": 0,
+      "passed": 13,
+      "ignored": 0,
+      "log": "engine-snapshots.log.gz"
+    },
+    "clippy": {
+      "command": "CARGO_TARGET_DIR=/Volumes/A/warm-retrieval-tail-validation/target CARGO_BUILD_JOBS=2 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo +1.99.0 clippy --locked --lib --tests -- -D warnings",
+      "exit_code": 0,
+      "log": "clippy.log.gz"
+    },
+    "earlier_contract_test": {
+      "exit_code": 101,
+      "passed": 119,
+      "failed": 1,
+      "ignored": 1,
+      "log": "documents-before-contract-test-update.log.gz",
+      "disposition": "Existing test expected a finite nonnegative MAX k1 to fail due intermediate overflow. The declared validator accepts any finite nonnegative k1, so the test now verifies MAX success and INFINITY rejection; all other rejection assertions remain."
+    },
+    "shared_target_attempt": {
+      "state": "stopped before compilation while waiting on globally configured shared target directory; no validation claimed",
+      "log": "shared-target-lock-aborted.log.gz"
+    }
+  },
+  "limits": [
+    "No latency improvement is claimed for stale exact retrieval; completeness requires a live-owner filtered scan under the document read lock.",
+    "Fresh exact and graph scans retain their existing unlocked scoring paths.",
+    "The historical-tail experiment is a separate pinned workload and does not quantify this stale vector-only path."
+  ],
+  "contracts": {
+    "bm25_input": "src/core/documents.rs Bm25::from_options requires finite nonnegative k1, b in [0,1]; lexical::prepare reuses this validator without an upper k1 limit.",
+    "tests": "Subnormal/near-one/MAX-1/MAX inputs, Inf rejection, exhaustive/captured/WAND equality; stale-row windows at 9/10/11 and 12/13/14 obsolete chunks, mutation stages, k=1/10, score floors, canonical chunk identities and scores, maintenance/reopen."
+  },
+  "logs": {
+    "clippy.log.gz": "94bf65a334d4e2ec84481adb20d7b0974db13dc3d66ba1390270213a4a9abd85",
+    "documents-before-contract-test-update.log.gz": "62284f108fcfc6dafd3e4c0af01ecf9a178e63fc867572a4b8f5f01b522e7270",
+    "documents.log.gz": "aa32ed6a8f6a978b2b0b3b9e3e7997607b170ec3725e033947b23d8634c14238",
+    "engine-snapshots.log.gz": "c2bf3bc2adb52f85a75b29a6d0a86bd09f6082e74b27fa793bbbfcdcb1eae27f",
+    "shared-target-lock-aborted.log.gz": "a51d98572bee37f7870ffcc3d1b78e0455ab8cd0cfc6a1d09d53e73e13965e18"
+  }
+}

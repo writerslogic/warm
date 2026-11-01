@@ -11,8 +11,9 @@
 //! adds no copy of the matrix), with an optional vertex graph (`qgraph::VGraph`) over the
 //! same rows. Every [`VectorIndex`] maps a query to row ids and the snapshot maps rows back
 //! to documents. Readers share the snapshot through one `Arc`, so a query holds the store's
-//! read lock only to read the generation and the text segment (and, when stale, to validate
-//! hits).
+//! read lock only to read the generation and the text segment for fresh queries. Stale
+//! exact queries hold it while scanning live base rows and the delta; graph scoring stays
+//! outside the lock before stale-hit validation and the delta pass.
 //!
 //! Data layout: `rows[i]` owns the document of row `i` and the chunk index inside it;
 //! `exact.rows[i]` is that chunk's embedding handle, l2-normalised `f32` values rounded from
@@ -28,14 +29,17 @@
 //!   are returned as found.
 //! - stale: every hit is validated by identity against the live store under its read lock.
 //!   A deleted or replaced document's `Arc` is no longer the one in `store.documents`, so
-//!   its rows drop out (the tombstone), and the search over-fetches up to `4k` rows to cover
-//!   them. Documents the snapshot does not cover (inserted or replaced since the capture)
-//!   are scored in a delta pass over the live documents: one walk over `store.documents`
-//!   with a hash probe per document plus a dot product per uncovered chunk. That pass is
-//!   bounded by the store size and never costs more than the generic exact path; when fewer
-//!   than `k` hits survive, the caller falls back to that path. `rebuild_recommended` asks
-//!   maintenance for a fresh capture after [`REBUILD_AFTER_MUTATIONS`] mutations, so the
-//!   stale window is bounded by the maintenance interval.
+//!   its rows drop out (the tombstone). Exact-mode stale queries scan every captured row but
+//!   keep only the best `k` still-live base rows before merging uncovered live documents; the
+//!   merge is complete because no base row outside that bounded set can outrank all kept base
+//!   rows. Graph queries keep their approximate candidate contract. Documents the snapshot
+//!   does not cover (inserted or replaced since the capture) are scored in a delta pass over
+//!   the live documents: one walk over `store.documents` with a hash probe per document plus
+//!   a dot product per uncovered chunk. That pass is bounded by the store size and never
+//!   costs more than the generic exact path; when fewer than `k` hits survive, the caller
+//!   falls back to that path. `rebuild_recommended` asks maintenance for a fresh capture
+//!   after [`REBUILD_AFTER_MUTATIONS`] mutations, so the stale window is bounded by the
+//!   maintenance interval.
 //! - third implementation slot: [`VectorIndexKind::Scan`] is reserved for the graph-free
 //!   scan under research in `benchmarks/research/scan`; nothing implements it here.
 //!
@@ -271,7 +275,12 @@ impl ExactScan {
         &self.rows[row as usize]
     }
 
-    fn search_canonical(&self, query: &[f64], k: usize) -> Vec<(u32, f64)> {
+    fn search_canonical(
+        &self,
+        query: &[f64],
+        k: usize,
+        include: impl Fn(usize) -> bool,
+    ) -> Vec<(u32, f64)> {
         #[derive(Clone, Copy)]
         struct Candidate {
             row: u32,
@@ -299,6 +308,9 @@ impl ExactScan {
         let k = k.min(self.rows.len());
         let mut best = BinaryHeap::<Candidate>::with_capacity(k);
         for (row, values) in self.rows.iter().enumerate() {
+            if !include(row) {
+                continue;
+            }
             let candidate = Candidate {
                 row: row as u32,
                 score: values.cosine(query),
@@ -613,6 +625,13 @@ struct Hit {
     score: f64,
 }
 
+fn compare_hits(a: &Hit, b: &Hit) -> Ordering {
+    b.score
+        .total_cmp(&a.score)
+        .then_with(|| a.document.id.cmp(&b.document.id))
+        .then(a.chunk.cmp(&b.chunk))
+}
+
 fn to_result(hit: &Hit, segment: Option<&TextSegment>) -> Result<DocumentResult> {
     let document = &hit.document;
     let chunk = &document.chunks[hit.chunk as usize];
@@ -651,8 +670,7 @@ pub(crate) fn search_vector_snapshot(
     read_vector_hits(ranked, &store.read())
 }
 
-/// The top hits of [`search_vector_snapshot`], ranked with no lock held across the scan;
-/// [`read_vector_hits`] reads their text.
+/// The ranked hits of [`search_vector_snapshot`]; [`read_vector_hits`] reads their text.
 pub(crate) struct RankedVectorHits {
     hits: Vec<Hit>,
     segment: Option<Arc<TextSegment>>,
@@ -713,19 +731,26 @@ pub(crate) fn rank_vector_snapshot(
         (store.generation, store.text_segment())
     };
     let stale = staleness(generation, snapshot.generation);
+    let exact_index = index.kind() == VectorIndexKind::Exact;
     let extra = usize::try_from(stale).unwrap_or(usize::MAX).min(4 * k);
     let fetch = (k + extra + 8).min(snapshot.rows());
-    let hits = if index.kind() == VectorIndexKind::Exact {
-        snapshot.exact.search_canonical(exact_query, fetch)
+    let graph_hits = if exact_index {
+        Vec::new()
     } else {
-        index
-            .search(query, fetch, options.ef)?
-            .into_iter()
-            .map(|(row, score)| (row, f64::from(score)))
-            .collect()
+        index.search(query, fetch, options.ef)?
     };
     let mut found: Vec<Hit> = Vec::with_capacity(fetch);
     if stale == 0 {
+        let hits = if exact_index {
+            snapshot
+                .exact
+                .search_canonical(exact_query, fetch, |_| true)
+        } else {
+            graph_hits
+                .into_iter()
+                .map(|(row, score)| (row, f64::from(score)))
+                .collect()
+        };
         for (row, score) in hits {
             let row = &snapshot.rows[row as usize];
             found.push(Hit {
@@ -736,17 +761,37 @@ pub(crate) fn rank_vector_snapshot(
         }
     } else {
         let store = store.read();
-        for (row, score) in hits {
-            let row = &snapshot.rows[row as usize];
-            let live = store
-                .get(&row.document.id)
-                .is_some_and(|live| Arc::ptr_eq(live, &row.document));
-            if live {
+        if exact_index {
+            let hits = snapshot.exact.search_canonical(exact_query, k, |row| {
+                let captured = &snapshot.rows[row].document;
+                store
+                    .get(&captured.id)
+                    .is_some_and(|live| Arc::ptr_eq(live, captured))
+            });
+            for (row, score) in hits {
+                let row = &snapshot.rows[row as usize];
                 found.push(Hit {
                     document: Arc::clone(&row.document),
                     chunk: row.chunk,
                     score,
                 });
+            }
+        } else {
+            for (row, score) in graph_hits
+                .into_iter()
+                .map(|(row, score)| (row, f64::from(score)))
+            {
+                let row = &snapshot.rows[row as usize];
+                let live = store
+                    .get(&row.document.id)
+                    .is_some_and(|live| Arc::ptr_eq(live, &row.document));
+                if live {
+                    found.push(Hit {
+                        document: Arc::clone(&row.document),
+                        chunk: row.chunk,
+                        score,
+                    });
+                }
             }
         }
         for document in store.documents.values() {
@@ -782,12 +827,7 @@ pub(crate) fn rank_vector_snapshot(
             hit.score = embedding.cosine(exact_query);
         }
     }
-    found.sort_by(|a, b| {
-        b.score
-            .total_cmp(&a.score)
-            .then_with(|| a.document.id.cmp(&b.document.id))
-            .then(a.chunk.cmp(&b.chunk))
-    });
+    found.sort_by(compare_hits);
     found.retain(|hit| hit.score >= options.min_score);
     found.truncate(k);
     Ok(Some(RankedVectorHits {
@@ -908,6 +948,145 @@ mod tests {
                 );
                 assert_eq!(hits[0].document_id, "z", "{distractors} distractors");
                 assert_eq!(hits[0].semantic_score, Some(1.0));
+            }
+        }
+    }
+
+    fn vector_input(id: &str, text: &str, embeddings: Vec<Vec<f64>>) -> DocumentInput {
+        serde_json::from_value(json!({
+            "id": id,
+            "text": text,
+            "chunkWords": 1,
+            "overlapWords": 0,
+            "embeddings": embeddings,
+        }))
+        .unwrap()
+    }
+
+    fn put_vector(store: &mut DocumentStore, id: &str, text: &str, embeddings: Vec<Vec<f64>>) {
+        let document = prepare(
+            vector_input(id, text, embeddings),
+            1024,
+            Some(2),
+            TextEncoder::default(),
+        )
+        .unwrap();
+        store.insert(document.id.clone(), document);
+    }
+
+    fn delete_vector(store: &mut DocumentStore, id: &str) {
+        assert!(store.remove(id).is_some());
+    }
+
+    fn snapshot_results(
+        snapshot: &VectorSnapshot,
+        store: &RwLock<DocumentStore>,
+        query: &[f64],
+        k: usize,
+        min_score: f64,
+    ) -> Vec<(String, String, f64)> {
+        let normalized = super::super::normalize_embedding(query, 2).unwrap();
+        let rounded: Vec<f32> = normalized.iter().map(|&value| value as f32).collect();
+        search_vector_snapshot(
+            snapshot,
+            store,
+            &rounded,
+            &normalized,
+            k,
+            &VectorQueryOptions {
+                mode: VectorIndexMode::Exact,
+                min_score,
+                ..Default::default()
+            },
+        )
+        .unwrap()
+        .unwrap()
+        .into_iter()
+        .map(|hit| (hit.document_id, hit.id, hit.semantic_score.unwrap()))
+        .collect()
+    }
+
+    fn live_scan_results(
+        store: &DocumentStore,
+        query: &[f64],
+        k: usize,
+        min_score: f64,
+    ) -> Vec<(String, String, f64)> {
+        let normalized = super::super::normalize_embedding(query, 2).unwrap();
+        let mut hits = Vec::new();
+        for document in store.documents.values() {
+            for (chunk, stored) in document.chunks.iter().enumerate() {
+                let Some(embedding) = &stored.embedding else {
+                    continue;
+                };
+                if embedding.len() == 2 {
+                    let score = embedding.cosine(&normalized);
+                    if score >= min_score {
+                        hits.push((document.id.clone(), chunk as u32, score));
+                    }
+                }
+            }
+        }
+        hits.sort_by(|a, b| {
+            b.2.total_cmp(&a.2)
+                .then_with(|| a.0.cmp(&b.0))
+                .then(a.1.cmp(&b.1))
+        });
+        hits.truncate(k);
+        hits.into_iter()
+            .map(|(id, chunk, score)| {
+                let row = &store.documents[&id].chunks[chunk as usize];
+                (id, row.id.clone(), score.clamp(-1.0, 1.0))
+            })
+            .collect()
+    }
+
+    #[test]
+    fn stale_exact_snapshot_matches_complete_live_scan_after_mutations() {
+        for obsolete_chunks in [9, 10, 11, 12, 13, 14] {
+            let mut store = DocumentStore::default();
+            put_vector(
+                &mut store,
+                "a",
+                &vec!["same"; obsolete_chunks].join(" "),
+                vec![vec![1.0, 0.0]; obsolete_chunks],
+            );
+            put_vector(&mut store, "b", "candidate", vec![vec![0.8, 0.6]]);
+            put_vector(&mut store, "tie-a", "tie", vec![vec![0.0, 1.0]]);
+            put_vector(&mut store, "tie-b", "tie", vec![vec![0.0, 1.0]]);
+            for stable in 0..12 {
+                put_vector(
+                    &mut store,
+                    &format!("stable-{stable:02}"),
+                    "stable",
+                    vec![vec![0.6, 0.8]],
+                );
+            }
+            let snapshot =
+                build_vector_snapshot(capture_vector_rows(&store, 2).unwrap().unwrap(), usize::MAX)
+                    .unwrap();
+
+            let store = RwLock::new(store);
+            for stage in 0..4 {
+                {
+                    let mut live = store.write();
+                    match stage {
+                        0 => put_vector(&mut live, "a", "changed", vec![vec![0.0, 1.0]]),
+                        1 => put_vector(&mut live, "fresh", "fresh", vec![vec![0.7, 0.7]]),
+                        2 => delete_vector(&mut live, "tie-b"),
+                        _ => put_vector(&mut live, "inserted", "inserted", vec![vec![0.75, 0.25]]),
+                    }
+                }
+                for k in [1, 10] {
+                    for min_score in [-1.0, 0.8] {
+                        let expected = live_scan_results(&store.read(), &[1.0, 0.0], k, min_score);
+                        let actual = snapshot_results(&snapshot, &store, &[1.0, 0.0], k, min_score);
+                        assert_eq!(
+                            actual, expected,
+                            "obsolete chunks {obsolete_chunks}, stage {stage}, k {k}, min {min_score}"
+                        );
+                    }
+                }
             }
         }
     }
