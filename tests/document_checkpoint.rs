@@ -879,3 +879,183 @@ fn document_reads_report_checkpoint_decode_errors_without_panicking() -> Result<
     assert!(memory_failures.is_empty(), "{}", memory_failures.join("\n"));
     Ok(())
 }
+
+fn vector_config() -> WarmConfig {
+    let mut config = embedded(true, false);
+    config.embedding_space.as_mut().unwrap().dimensions = 2;
+    config
+}
+
+fn vector_document(id: usize) -> Result<DocumentInput> {
+    Ok(serde_json::from_value(json!({
+        "id": format!("vector-{id:03}"), "text": "embedded text", "embeddings": [[1.0, 0.0]]
+    }))?)
+}
+
+#[test]
+fn checkpoint_vector_operations_do_not_decode_unrelated_metadata() -> Result<()> {
+    type Operation = fn(&WarmCore) -> Result<()>;
+    let dir = tempfile::tempdir()?;
+    {
+        let core = open(dir.path(), vector_config())?;
+        core.memorize_document_with(
+            serde_json::from_value(json!({"id": "doc", "version": "v1", "text": "stored text"}))?,
+            &lexical(),
+        )?;
+    }
+    let path = checkpoints(dir.path()).pop().expect("a checkpoint");
+    let original = std::fs::read(&path)?;
+    let mut bytes = original.clone();
+    let record_at = usize::try_from(u64::from_le_bytes(bytes[264..272].try_into()?))?;
+    assert_eq!(&bytes[record_at..record_at + 4], &[2, b'v', b'1', 0]);
+    bytes[record_at + 3] = 2;
+    let crc = crc32fast::hash(&bytes[16..]);
+    bytes[8..16].copy_from_slice(&u64::from(crc).to_le_bytes());
+    std::fs::write(&path, bytes)?;
+    let mut failures = Vec::new();
+    {
+        let core = open(dir.path(), vector_config())?;
+        let operations: [(&str, Operation); 7] = [
+            ("embedding count", |core| {
+                assert_eq!(core.document_embedding_count(), core.document_count() - 1);
+                Ok(())
+            }),
+            ("dense status", |core| {
+                assert!(!core.document_index_trained());
+                Ok(())
+            }),
+            ("vector status", |core| {
+                let status = core.vector_index_status();
+                assert!(status.rows < core.document_count());
+                Ok(())
+            }),
+            ("vector rebuild", |core| {
+                assert_eq!(
+                    core.rebuild_vector_index(usize::MAX)?,
+                    core.document_count() > 1
+                );
+                Ok(())
+            }),
+            ("vector maintenance", |core| {
+                assert_eq!(
+                    core.maintain_vector_index(usize::MAX)?,
+                    core.document_count() > 1
+                );
+                Ok(())
+            }),
+            ("dense training", WarmCore::train_document_index),
+            ("index maintenance", |core| {
+                core.maintain_indices().map(drop)
+            }),
+        ];
+        for count in 0..=1 {
+            if count == 1 {
+                core.memorize_document(vector_document(0)?)?;
+            }
+            for (name, operation) in operations {
+                match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| operation(&core))) {
+                    Ok(Ok(())) => {}
+                    Ok(Err(error)) => {
+                        failures.push(format!("{count} embeddings, {name}: {error:#}"))
+                    }
+                    Err(_) => failures.push(format!("{count} embeddings, {name}: panicked")),
+                }
+                assert!(core.serves_from_checkpoint());
+            }
+        }
+        assert_eq!(
+            core.get_document("vector-000")?.unwrap().text.as_deref(),
+            Some("embedded text")
+        );
+        assert!(format!("{:#}", core.get_document("doc").unwrap_err())
+            .contains("checkpoint source flag 2"));
+    }
+    std::fs::write(path, original)?;
+    let core = open(dir.path(), vector_config())?;
+    assert_eq!(
+        core.get_document("doc")?.unwrap().text.as_deref(),
+        Some("stored text")
+    );
+    assert_eq!(core.document_count(), 2);
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+    Ok(())
+}
+
+#[test]
+fn checkpoint_vector_maintenance_preserves_overlay_counts_and_results() -> Result<()> {
+    let dir = tempfile::tempdir()?;
+    {
+        let core = open(dir.path(), vector_config())?;
+        core.memorize_document_with(
+            serde_json::from_value(json!({"id": "base", "text": "checkpoint text"}))?,
+            &lexical(),
+        )?;
+    }
+    let mut core = open(dir.path(), vector_config())?;
+    let mut inserted = 0;
+    for count in [0, 1, 2, 127, 128, 129] {
+        if inserted < count {
+            core.memorize_documents(
+                (inserted..count)
+                    .map(vector_document)
+                    .collect::<Result<Vec<_>>>()?,
+            )?;
+        }
+        inserted = count;
+        assert_eq!(core.document_embedding_count(), count);
+        assert_eq!(core.document_count(), count + 1);
+        assert!(!core.document_index_trained());
+        assert_eq!(core.rebuild_vector_index(usize::MAX)?, count != 0);
+        let status = core.vector_index_status();
+        assert_eq!(status.rows, count);
+        assert_eq!(status.current, count != 0);
+        assert!(!status.rebuild_recommended);
+        core.train_document_index()?;
+        assert_eq!(core.document_index_trained(), count >= 128);
+        core.maintain_indices()?;
+        assert_eq!(core.document_index_trained(), count >= 128);
+        assert!(core.serves_from_checkpoint());
+        if count != 0 {
+            let hits = core.search_vectors(&[1.0, 0.0], 1000, &Default::default())?;
+            assert_eq!(hits.len(), count);
+            assert!(hits.iter().all(|hit| hit.document_id.starts_with("vector-")
+                && hit.text.as_deref() == Some("embedded text")));
+        }
+    }
+    let expected =
+        serde_json::to_value(core.search_vectors(&[1.0, 0.0], 1000, &Default::default())?)?;
+    drop(core);
+    core = open(dir.path(), vector_config())?;
+    assert_eq!(core.document_embedding_count(), 129);
+    core.train_document_index()?;
+    assert!(core.document_index_trained());
+    assert_eq!(
+        serde_json::to_value(core.search_vectors(&[1.0, 0.0], 1000, &Default::default())?)?,
+        expected
+    );
+    assert!(core.serves_from_checkpoint());
+    core.delete_document("vector-000")?;
+    assert_eq!(core.document_embedding_count(), 128);
+    core.memorize_document_with(
+        serde_json::from_value(json!({"id": "vector-001", "text": "now lexical"}))?,
+        &lexical(),
+    )?;
+    assert_eq!(core.document_embedding_count(), 127);
+    core.rebuild_vector_index(usize::MAX)?;
+    core.train_document_index()?;
+    assert!(!core.document_index_trained());
+    assert!(core.serves_from_checkpoint());
+    let hits = core.search_vectors(&[1.0, 0.0], 1000, &Default::default())?;
+    assert_eq!(hits.len(), 127);
+    assert!(hits
+        .iter()
+        .all(|hit| !matches!(hit.document_id.as_str(), "vector-000" | "vector-001")));
+    assert_eq!(core.count_documents("checkpoint")?, 1);
+    assert!(!core.serves_from_checkpoint());
+    assert_eq!(core.document_embedding_count(), 127);
+    assert_eq!(
+        serde_json::to_value(core.search_vectors(&[1.0, 0.0], 1000, &Default::default())?)?,
+        serde_json::to_value(hits)?
+    );
+    Ok(())
+}

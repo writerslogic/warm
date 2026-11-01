@@ -3,7 +3,7 @@
 
 # Document checkpoint (`documents.ckpt`)
 
-Schemas 4 and 5 (`store.json` `version`) may hold a document checkpoint in a journal generation: `vectors_data.bin/gen-*/documents.ckpt`. It is the
+Schema 4 and later (`store.json` `version`) may hold a document checkpoint in a journal generation: `vectors_data.bin/gen-*/documents.ckpt`. It is the
 store's data, not a cache. The generation is the checkpoint followed by the frames in its
 segments, and the store's state is the checkpoint's documents with those frames applied in
 order. The frames that came before the checkpoint are not kept: the term data is stored once.
@@ -41,14 +41,18 @@ checkpoint; later writes append frames after it until the next one folds them in
    frequencies counted over live chunks only (dead slots are skipped while a posting list
    decodes). The checkpoint holds no vector state, so chunk vectors, embeddings and pending
    encodings belong to the documents written since: chunk-vector queries and deferred encoding
-   read that store and the vector shards without building the live store. Frames after the
-   checkpoint are replayed the same way at open, which rebuilds the dead set: the frames are
+   read that store and the vector shards without building the live store. Embedding counts,
+   vector/dense index status and index maintenance also use only this live overlay, without
+   decoding unrelated checkpoint records. Frames after the checkpoint are replayed the same
+   way at open, which rebuilds the dead set: the frames are
    its persistent record.
-6. Document summaries and counts read the live overlay and checkpoint directly. Sorted pages
-   merge their IDs and skip tombstones; only selected records are decoded, without copying
-   chunk text. Record decoding still checks borrowed text and allocates chunk descriptors.
-7. The first access of any other kind, and any other write, builds the live store from the
-   checkpoint (no frame is read), removes the dead documents and installs the ones written
+6. Document records, metadata summaries and counts read the live overlay and checkpoint
+   directly. Sorted pages merge their IDs and skip tombstones; only selected records are
+   decoded. Metadata summaries avoid copying chunk text; retained-text reads check the selected
+   text. Record decoding still checks borrowed text and allocates chunk descriptors.
+7. Operations requiring the complete lexical index, compaction and writes other than those
+   listed above build the live store from the checkpoint (no frame is read), remove the dead
+   documents and install the ones written
    since. Deep offline verification explicitly performs this rebuild to validate all record
    contents and their agreement with the slot table, including checksum-valid malformed data.
 
