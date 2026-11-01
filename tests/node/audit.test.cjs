@@ -12,7 +12,7 @@ function run(directory, legacy, reopen, signing) {
   const source = `
     const assert = require('node:assert/strict');
     const { generateKeyPairSync, createPublicKey, verify } = require('node:crypto');
-    const { readFileSync, writeFileSync } = require('node:fs');
+    const { readFileSync, writeFileSync, unlinkSync, existsSync } = require('node:fs');
     const { join } = require('node:path');
     const { WarmMemorySystem } = require('./index.js');
     (async () => {
@@ -20,19 +20,27 @@ function run(directory, legacy, reopen, signing) {
       const legacy = process.argv[2] === 'true';
       const reopen = process.argv[3] === 'true';
       const signing = process.argv[4] === 'true';
-      const keyPath = join(directory, 'fixture-signing.key');
+      const originalKeyPath = join(directory, 'fixture-signing.key');
+      const keyPath = reopen ? join(directory, 'replacement-signing.key') : originalKeyPath;
       const publicPath = join(directory, 'fixture-public.pem');
-      if (!reopen) {
+      let currentPublicKey;
+      if (!reopen || signing) {
         const { privateKey, publicKey } = generateKeyPairSync('ed25519');
+        currentPublicKey = publicKey;
         const bytes = Buffer.from(privateKey.export({ format: 'jwk' }).d, 'base64url');
         writeFileSync(keyPath, bytes, { mode: 0o600 });
         bytes.fill(0);
-        writeFileSync(publicPath, publicKey.export({ format: 'pem', type: 'spki' }));
+        if (!reopen) writeFileSync(publicPath, publicKey.export({ format: 'pem', type: 'spki' }));
       }
+      if (reopen) unlinkSync(originalKeyPath);
       const publicKey = createPublicKey(readFileSync(publicPath));
       const warm = new WarmMemorySystem(legacy ? 1024 : 256, directory, {
         auditEnabled: true, signingEnabled: signing, signingKeyPath: keyPath,
       });
+      assert.equal(warm.auditVerifyingKey(), signing
+        ? Buffer.from(currentPublicKey.export({ format: 'jwk' }).x, 'base64url').toString('hex')
+        : null);
+      if (reopen) assert.equal(existsSync(originalKeyPath), false);
       if (!reopen) {
         await warm.memorizeText('audit-contract', 'independently verifiable record');
         await warm.delete('audit-contract');
@@ -59,6 +67,7 @@ function run(directory, legacy, reopen, signing) {
         assert.equal(message[offset + 8], { memorize: 1, delete: 2, compact: 3 }[entry.op]);
         assert.equal(message.subarray(offset + 9).toString('hex'), entry.idHash);
         assert.equal(verify(null, message, publicKey, signature), signing);
+        if (reopen && signing) assert.equal(verify(null, message, currentPublicKey, signature), false);
         if (!signing) assert.deepEqual(signature, Buffer.alloc(64));
         for (const index of [0, legacy ? 8 : 13]) {
           message[index] ^= 1;

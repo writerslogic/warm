@@ -277,7 +277,12 @@ Buffer.from(entry.signature, 'hex'))` with an independently trusted Ed25519 publ
 Verification authenticates the signed bytes; decode those bytes or compare the displayed
 fields against them when processing an untrusted response. Legacy messages are 41 bytes;
 effect-aware messages are 70 bytes and include the delivery ID. Rust callers can name
-`writerslogic_warm::AuditEntry` and `AuditOp` and use `AuditEntry::signable_bytes()`.
+`writerslogic_warm::AuditEntry` and `AuditOp` and, with `security`, call
+`AuditEntry::verify_signature(&trusted_key)`; unsigned entries are rejected.
+`WarmCore::audit_verifying_key()` and Node's `auditVerifyingKey()` expose the currently
+configured public key as 32 bytes and hexadecimal respectively, or `None`/`null` when
+signing is disabled. Establish trust independently before retaining this public key for
+historical verification; retired private keys are not required to verify old entries.
 Neither interface establishes completeness or ordering of the entire history.
 
 Custom builds fail if requested encryption/signing support is unavailable. The standard npm build includes `security`; use `securityStatus()` to confirm active configuration. Audit/provenance sidecar failures can occur after the main arena mutation commits. See [production-readiness.md](production-readiness.md) for transaction and failure boundaries.
