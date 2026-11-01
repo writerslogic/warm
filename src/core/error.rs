@@ -12,6 +12,14 @@ pub struct CommittedMutationError {
     pub source: anyhow::Error,
 }
 
+#[derive(Debug, Error)]
+#[error("data mutation outcome is indeterminate after {effect} failed; reopen or reconcile before retrying")]
+pub struct IndeterminateMutationError {
+    pub effect: &'static str,
+    #[source]
+    pub source: anyhow::Error,
+}
+
 pub(crate) fn after_commit<T>(
     effect: &'static str,
     result: anyhow::Result<T>,

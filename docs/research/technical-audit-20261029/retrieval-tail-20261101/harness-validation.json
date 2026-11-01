@@ -1,0 +1,15 @@
+{
+  "command": "uv run --no-project --offline python docs/research/technical-audit-20261029/retrieval-tail-20261101/test_probe.py",
+  "exit_code": 0,
+  "passed": 4,
+  "cases": [
+    "unchanged plans accepted for every variant",
+    "only historical/prior builds may precede current-revision selection",
+    "baseline revision, workload and budget changes invalidate all builds",
+    "a current-revision update cannot conceal changed acceptance"
+  ],
+  "source_sha256": {
+    "probe.py": "4d5fa28f680c62c15344adf4f2feea18fb531ca42e0e20a1e29c77a86b1e792c",
+    "test_probe.py": "31d391921b33517c3340a5556f84dd6d0961b8e16369482e0bb8e4a2183bba93"
+  }
+}

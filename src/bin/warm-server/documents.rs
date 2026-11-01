@@ -261,7 +261,7 @@ fn store_docs(state: &AppState, tenant: &str, docs: Vec<ValidDoc>) -> Result<usi
     })?;
     // Every document with a vector enters the persisted vector index first, stamped with the
     // version the index records, so a stop between the two commits is detected at the next
-    // open; a failed engine commit takes the rows out again.
+    // open; a definitely failed engine commit takes the rows out again.
     let mut staged: Vec<(String, u64, Vec<f32>)> = Vec::new();
     if let Some(vectors) = core.vectors() {
         for input in &mut inputs {
@@ -291,8 +291,22 @@ fn store_docs(state: &AppState, tenant: &str, docs: Vec<ValidDoc>) -> Result<usi
             .map_err(ApiError::internal)?,
         ..Default::default()
     };
-    if let Err(error) = core.memorize_documents_with(inputs, &options) {
-        if error.is::<writerslogic_warm::CommittedMutationError>() {
+    let outcome = core.memorize_documents_with(inputs, &options);
+    #[cfg(test)]
+    let outcome = outcome.and_then(|value| {
+        if conditional_tests::UNCERTAIN_AFTER_COMMIT.replace(false) {
+            return Err(writerslogic_warm::IndeterminateMutationError {
+                effect: "injected durable write acknowledgement",
+                source: anyhow::anyhow!("injected failure after durable commit"),
+            }
+            .into());
+        }
+        Ok(value)
+    });
+    if let Err(error) = outcome {
+        if error.is::<writerslogic_warm::CommittedMutationError>()
+            || error.is::<writerslogic_warm::IndeterminateMutationError>()
+        {
             core.bump();
             return Err(ApiError::from_core(error));
         }
@@ -1188,6 +1202,45 @@ pub async fn stats(State(state): State<Arc<AppState>>, req: Request) -> ApiResul
 #[cfg(test)]
 mod conditional_tests {
     use super::*;
+
+    thread_local! {
+        pub(super) static UNCERTAIN_AFTER_COMMIT: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    }
+
+    #[test]
+    fn uncertain_ingest_retains_staged_vectors_for_reopen_reconciliation() {
+        let directory = tempfile::tempdir().unwrap();
+        let state = crate::tests::state_with(directory.path(), 2, &[]);
+        let input = serde_json::from_value(json!({
+            "id": "record", "text": "stored text", "metadata": {},
+            "embeddings": [[1.0, 0.0]]
+        }))
+        .unwrap();
+        UNCERTAIN_AFTER_COMMIT.set(true);
+        let error = store_docs(
+            &state,
+            "default",
+            vec![ValidDoc {
+                input,
+                metadata_bytes: 2,
+                import_adopt_legacy: false,
+            }],
+        )
+        .unwrap_err();
+        assert_eq!(error.code, "mutation_uncertain");
+        {
+            let core = state.core("default").unwrap();
+            assert!(core.has_document("record"));
+            assert_eq!(core.vectors().unwrap().live(), 1);
+        }
+        drop(state);
+        let reopened = crate::tests::state_with(directory.path(), 2, &[]);
+        let core = reopened.core("default").unwrap();
+        assert!(core.has_document("record"));
+        let hits = core.vectors().unwrap().search(&[1.0, 0.0], 1, 1).unwrap();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].0.as_ref(), "record");
+    }
 
     fn matches(values: &[&[u8]], tag: &str) -> bool {
         let mut headers = HeaderMap::new();

@@ -595,6 +595,14 @@ impl WarmMemorySystem {
         run_async(move || core.compact()).await
     }
 
+    /// Hexadecimal Ed25519 public key, or null when signing is disabled. Establish trust independently.
+    #[napi]
+    pub fn audit_verifying_key(&self) -> Option<String> {
+        self.core
+            .audit_verifying_key()
+            .map(|key| super::types::hex_encode(&key))
+    }
+
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn audit_since(&self, timestamp_ms: f64) -> Result<Vec<AuditEntryJs>> {

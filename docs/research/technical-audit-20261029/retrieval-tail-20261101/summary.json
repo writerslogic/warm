@@ -1,0 +1,3258 @@
+{
+  "revisions": {
+    "historical": "a736af02171da7c8b757dcd83a46422c614c07d7",
+    "prior": "f28095e024add5ce3964192f6af7b81457ad0b3d",
+    "current": "f39433e9b3a705827a5fed04a40d6e0442bb98bc"
+  },
+  "execution_seconds": 61.409299042774364,
+  "exhaustive_ordered_result_equalities": 7680,
+  "complete_cross_revision_results_equal": true,
+  "independent_rounds_per_variant": 5,
+  "samples_per_group_per_round": 128,
+  "method": "Within-round nearest-rank quantiles, paired round ratios and median of round quantiles. Empirical p99 is not a population-tail guarantee. No pooled-query significance claim.",
+  "groups": {
+    "initial-rare": {
+      "prepare_ns_p50": {
+        "rounds": {
+          "historical": [
+            3584,
+            2958,
+            3042,
+            3666,
+            3208
+          ],
+          "prior": [
+            3666,
+            3125,
+            3042,
+            3084,
+            3041
+          ],
+          "current": [
+            2834,
+            2875,
+            2917,
+            3167,
+            2917
+          ]
+        },
+        "median": {
+          "historical": 3208,
+          "prior": 3084,
+          "current": 2917
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -9.071072319202,
+            "paired_change_percent": [
+              -20.926339285714292,
+              -2.8059499661933773,
+              -4.109138724523342,
+              -13.611565739225318,
+              -9.071072319202
+            ],
+            "median_paired_change_percent": -9.071072319202,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -5.415045395590146,
+            "paired_change_percent": [
+              -22.69503546099291,
+              -7.9999999999999964,
+              -4.109138724523342,
+              2.691309987029822,
+              -4.077606050641236
+            ],
+            "median_paired_change_percent": -4.109138724523342,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p95": {
+        "rounds": {
+          "historical": [
+            5917,
+            5500,
+            6084,
+            5875,
+            6083
+          ],
+          "prior": [
+            7333,
+            5000,
+            4625,
+            5375,
+            4625
+          ],
+          "current": [
+            4084,
+            6459,
+            4125,
+            6125,
+            4584
+          ]
+        },
+        "median": {
+          "historical": 5917,
+          "prior": 5000,
+          "current": 4584
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -22.528308264323137,
+            "paired_change_percent": [
+              -30.978536420483348,
+              17.436363636363627,
+              -32.1992110453649,
+              4.255319148936176,
+              -24.642446161433508
+            ],
+            "median_paired_change_percent": -24.642446161433508,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -8.320000000000006,
+            "paired_change_percent": [
+              -44.30655938906314,
+              29.180000000000007,
+              -10.81081081081081,
+              13.953488372093027,
+              -0.8864864864864819
+            ],
+            "median_paired_change_percent": -0.8864864864864819,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p99": {
+        "rounds": {
+          "historical": [
+            11208,
+            9959,
+            10333,
+            9417,
+            11291
+          ],
+          "prior": [
+            12458,
+            10708,
+            7417,
+            7167,
+            9833
+          ],
+          "current": [
+            7208,
+            7250,
+            7750,
+            8583,
+            8375
+          ]
+        },
+        "median": {
+          "historical": 10333,
+          "prior": 9833,
+          "current": 7750
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -24.99758056711506,
+            "paired_change_percent": [
+              -35.6887937187723,
+              -27.201526257656393,
+              -24.99758056711506,
+              -8.856323669958588,
+              -25.82587901868745
+            ],
+            "median_paired_change_percent": -25.82587901868745,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -21.183768941320047,
+            "paired_change_percent": [
+              -42.14159576175951,
+              -32.29361225252148,
+              4.489685856815417,
+              19.757220594390958,
+              -14.827621275297464
+            ],
+            "median_paired_change_percent": -14.827621275297464,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p50": {
+        "rounds": {
+          "historical": [
+            2067750,
+            1976541,
+            1918208,
+            2115458,
+            1895750
+          ],
+          "prior": [
+            913125,
+            805250,
+            797458,
+            801833,
+            812500
+          ],
+          "current": [
+            801292,
+            822042,
+            800125,
+            858541,
+            807667
+          ]
+        },
+        "median": {
+          "historical": 1976541,
+          "prior": 805250,
+          "current": 807667
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -59.13735156518383,
+            "paired_change_percent": [
+              -61.24811993712973,
+              -58.41007092693751,
+              -58.2878916155078,
+              -59.415833356181025,
+              -57.395911908215744
+            ],
+            "median_paired_change_percent": -58.41007092693751,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.30015523129462984,
+            "paired_change_percent": [
+              -12.247282683093774,
+              2.0853151195280972,
+              0.33443767571459393,
+              7.072295602700307,
+              -0.5948307692307697
+            ],
+            "median_paired_change_percent": 0.33443767571459393,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p95": {
+        "rounds": {
+          "historical": [
+            2316666,
+            2223416,
+            2157000,
+            2525667,
+            2273459
+          ],
+          "prior": [
+            1324458,
+            1130583,
+            951542,
+            1057917,
+            991500
+          ],
+          "current": [
+            914791,
+            1073458,
+            1003042,
+            1140375,
+            991000
+          ]
+        },
+        "median": {
+          "historical": 2273459,
+          "prior": 1057917,
+          "current": 1003042
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -55.88035676033745,
+            "paired_change_percent": [
+              -60.51260734175751,
+              -51.72032584095824,
+              -53.49828465461288,
+              -54.84856079601943,
+              -56.4100342253808
+            ],
+            "median_paired_change_percent": -54.84856079601943,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -5.1870798937912905,
+            "paired_change_percent": [
+              -30.93091664665848,
+              -5.052702897531624,
+              5.412267666587489,
+              7.794373282592115,
+              -0.05042864346949116
+            ],
+            "median_paired_change_percent": -0.05042864346949116,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p99": {
+        "rounds": {
+          "historical": [
+            2423833,
+            2465500,
+            2334500,
+            2714542,
+            3147500
+          ],
+          "prior": [
+            1721542,
+            1180042,
+            1101000,
+            1110792,
+            1135583
+          ],
+          "current": [
+            1020542,
+            1370708,
+            1105542,
+            1297250,
+            1064875
+          ]
+        },
+        "median": {
+          "historical": 2465500,
+          "prior": 1135583,
+          "current": 1105542
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -55.15952139525451,
+            "paired_change_percent": [
+              -57.895531581589985,
+              -44.40446156966132,
+              -52.64330691796959,
+              -52.21109122643893,
+              -66.16759332803812
+            ],
+            "median_paired_change_percent": -52.64330691796959,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -2.645425301365023,
+            "paired_change_percent": [
+              -40.719308619830365,
+              16.157560493609544,
+              0.41253405994550185,
+              16.786040950961123,
+              -6.226581412367038
+            ],
+            "median_paired_change_percent": 0.41253405994550185,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p50": {
+        "rounds": {
+          "historical": [
+            201333,
+            138875,
+            135333,
+            204208,
+            150084
+          ],
+          "prior": [
+            122000,
+            95875,
+            99375,
+            98125,
+            97250
+          ],
+          "current": [
+            92542,
+            109375,
+            93708,
+            110917,
+            99292
+          ]
+        },
+        "median": {
+          "historical": 150084,
+          "prior": 98125,
+          "current": 99292
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -33.84238159963754,
+            "paired_change_percent": [
+              -54.035354363169475,
+              -21.242124212421242,
+              -30.75746491986433,
+              -45.68430228002821,
+              -33.84238159963754
+            ],
+            "median_paired_change_percent": -33.84238159963754,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 1.1892993630573168,
+            "paired_change_percent": [
+              -24.14590163934426,
+              14.080834419817467,
+              -5.702641509433959,
+              13.036433121019098,
+              2.099742930591253
+            ],
+            "median_paired_change_percent": 2.099742930591253,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p95": {
+        "rounds": {
+          "historical": [
+            266166,
+            214000,
+            216208,
+            304917,
+            253375
+          ],
+          "prior": [
+            180916,
+            131458,
+            127042,
+            130417,
+            125792
+          ],
+          "current": [
+            125875,
+            156166,
+            123625,
+            146000,
+            138334
+          ]
+        },
+        "median": {
+          "historical": 253375,
+          "prior": 130417,
+          "current": 138334
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -45.40345337937839,
+            "paired_change_percent": [
+              -52.70808442851453,
+              -27.025233644859814,
+              -42.821264708058905,
+              -52.118117389322336,
+              -45.40345337937839
+            ],
+            "median_paired_change_percent": -45.40345337937839,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 6.070527615264876,
+            "paired_change_percent": [
+              -30.42351146388379,
+              18.795356691871177,
+              -2.6896616866862955,
+              11.94859565854145,
+              9.970427372169933
+            ],
+            "median_paired_change_percent": 9.970427372169933,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p99": {
+        "rounds": {
+          "historical": [
+            316250,
+            233416,
+            265125,
+            363917,
+            348416
+          ],
+          "prior": [
+            267542,
+            152167,
+            140916,
+            148458,
+            147958
+          ],
+          "current": [
+            139625,
+            183334,
+            137959,
+            168125,
+            153250
+          ]
+        },
+        "median": {
+          "historical": 316250,
+          "prior": 148458,
+          "current": 153250
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -51.541501976284586,
+            "paired_change_percent": [
+              -55.8498023715415,
+              -21.45611269150358,
+              -47.96454502593116,
+              -53.80127886303745,
+              -56.015223181484195
+            ],
+            "median_paired_change_percent": -53.80127886303745,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 3.227848953912882,
+            "paired_change_percent": [
+              -47.811932332119824,
+              20.482101901200657,
+              -2.098413239092789,
+              13.247517816486809,
+              3.5766906824909794
+            ],
+            "median_paired_change_percent": 3.5766906824909794,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p50": {
+        "rounds": {
+          "historical": [
+            2272458,
+            2117167,
+            2055083,
+            2335375,
+            2038750
+          ],
+          "prior": [
+            1043458,
+            899542,
+            905458,
+            905250,
+            912000
+          ],
+          "current": [
+            895958,
+            931125,
+            894875,
+            982000,
+            909834
+          ]
+        },
+        "median": {
+          "historical": 2117167,
+          "prior": 905458,
+          "current": 909834
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -57.02587467119977,
+            "paired_change_percent": [
+              -60.57317670997659,
+              -56.020238365702845,
+              -56.455530019955404,
+              -57.95107852058021,
+              -55.37294911097486
+            ],
+            "median_paired_change_percent": -56.455530019955404,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.4832913288081775,
+            "paired_change_percent": [
+              -14.135691134669537,
+              3.5110089356583662,
+              -1.1688007616035168,
+              8.478320905827118,
+              -0.2375000000000016
+            ],
+            "median_paired_change_percent": -0.2375000000000016,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p95": {
+        "rounds": {
+          "historical": [
+            2593084,
+            2419917,
+            2371625,
+            2817417,
+            2514250
+          ],
+          "prior": [
+            1675083,
+            1256958,
+            1069875,
+            1189041,
+            1108250
+          ],
+          "current": [
+            1040250,
+            1211833,
+            1132166,
+            1275125,
+            1140708
+          ]
+        },
+        "median": {
+          "historical": 2514250,
+          "prior": 1189041,
+          "current": 1140708
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -54.63028736203639,
+            "paired_change_percent": [
+              -59.88367519139373,
+              -49.92253866558233,
+              -52.26201444157488,
+              -54.74134641765844,
+              -54.63028736203639
+            ],
+            "median_paired_change_percent": -54.63028736203639,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -4.064872447627965,
+            "paired_change_percent": [
+              -37.898599651479955,
+              -3.5900165319764032,
+              5.822268956653809,
+              7.2397839939917885,
+              2.9287615610196216
+            ],
+            "median_paired_change_percent": 2.9287615610196216,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p99": {
+        "rounds": {
+          "historical": [
+            2695125,
+            2689459,
+            2537917,
+            3005750,
+            5041166
+          ],
+          "prior": [
+            1919166,
+            1329583,
+            1268709,
+            1240166,
+            1274625
+          ],
+          "current": [
+            1149750,
+            1563500,
+            1280625,
+            1451666,
+            1193417
+          ]
+        },
+        "median": {
+          "historical": 2695125,
+          "prior": 1274625,
+          "current": 1280625
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -52.48365103659385,
+            "paired_change_percent": [
+              -57.33964101850564,
+              -41.865631712548875,
+              -49.54031199601878,
+              -51.703701239291355,
+              -76.326568099523
+            ],
+            "median_paired_change_percent": -51.703701239291355,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.47072668431891174,
+            "paired_change_percent": [
+              -40.091164599622964,
+              17.59326044331193,
+              0.9392224694551699,
+              17.054168554854755,
+              -6.371128763361778
+            ],
+            "median_paired_change_percent": 0.9392224694551699,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "allocations_p50": {
+        "rounds": {
+          "historical": [
+            165,
+            165,
+            165,
+            165,
+            165
+          ],
+          "prior": [
+            167,
+            167,
+            167,
+            167,
+            167
+          ],
+          "current": [
+            166,
+            166,
+            166,
+            166,
+            166
+          ]
+        },
+        "median": {
+          "historical": 165,
+          "prior": 167,
+          "current": 166
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 0.60606060606061,
+            "paired_change_percent": [
+              0.60606060606061,
+              0.60606060606061,
+              0.60606060606061,
+              0.60606060606061,
+              0.60606060606061
+            ],
+            "median_paired_change_percent": 0.60606060606061,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -0.5988023952095856,
+            "paired_change_percent": [
+              -0.5988023952095856,
+              -0.5988023952095856,
+              -0.5988023952095856,
+              -0.5988023952095856,
+              -0.5988023952095856
+            ],
+            "median_paired_change_percent": -0.5988023952095856,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "peak_requested_bytes_p50": {
+        "rounds": {
+          "historical": [
+            43645,
+            43645,
+            43645,
+            43645,
+            43645
+          ],
+          "prior": [
+            127509,
+            127509,
+            127509,
+            127509,
+            127509
+          ],
+          "current": [
+            127509,
+            127509,
+            127509,
+            127509,
+            127509
+          ]
+        },
+        "median": {
+          "historical": 43645,
+          "prior": 127509,
+          "current": 127509
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 192.15030358574867,
+            "paired_change_percent": [
+              192.15030358574867,
+              192.15030358574867,
+              192.15030358574867,
+              192.15030358574867,
+              192.15030358574867
+            ],
+            "median_paired_change_percent": 192.15030358574867,
+            "sustained_above_five_percent": true
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.0,
+            "paired_change_percent": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_paired_change_percent": 0.0,
+            "sustained_above_five_percent": false
+          }
+        }
+      }
+    },
+    "initial-hot": {
+      "prepare_ns_p50": {
+        "rounds": {
+          "historical": [
+            2167,
+            1666,
+            1709,
+            2125,
+            1708
+          ],
+          "prior": [
+            2834,
+            1958,
+            1833,
+            1917,
+            2000
+          ],
+          "current": [
+            1708,
+            1542,
+            1625,
+            1875,
+            1750
+          ]
+        },
+        "median": {
+          "historical": 1709,
+          "prior": 1958,
+          "current": 1708
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -0.05851375073142595,
+            "paired_change_percent": [
+              -21.18135671435164,
+              -7.442977190876354,
+              -4.915155061439435,
+              -11.764705882352944,
+              2.4590163934426146
+            ],
+            "median_paired_change_percent": -7.442977190876354,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -12.768130745658834,
+            "paired_change_percent": [
+              -39.731827805222295,
+              -21.246169560776305,
+              -11.34751773049646,
+              -2.1909233176838794,
+              -12.5
+            ],
+            "median_paired_change_percent": -12.5,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p95": {
+        "rounds": {
+          "historical": [
+            5042,
+            2458,
+            4000,
+            6167,
+            3625
+          ],
+          "prior": [
+            5042,
+            3834,
+            2917,
+            3542,
+            3167
+          ],
+          "current": [
+            2833,
+            2541,
+            3917,
+            3959,
+            3208
+          ]
+        },
+        "median": {
+          "historical": 4000,
+          "prior": 3542,
+          "current": 3208
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -19.799999999999997,
+            "paired_change_percent": [
+              -43.81197937326458,
+              3.3767290480064993,
+              -2.0750000000000046,
+              -35.80347008269823,
+              -11.503448275862072
+            ],
+            "median_paired_change_percent": -11.503448275862072,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -9.429700734048563,
+            "paired_change_percent": [
+              -43.81197937326458,
+              -33.7245696400626,
+              34.28179636612958,
+              11.77300959909655,
+              1.294600568361215
+            ],
+            "median_paired_change_percent": 1.294600568361215,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p99": {
+        "rounds": {
+          "historical": [
+            9209,
+            4250,
+            6250,
+            9750,
+            5541
+          ],
+          "prior": [
+            7000,
+            9375,
+            5541,
+            4375,
+            7333
+          ],
+          "current": [
+            5292,
+            3792,
+            6333,
+            8042,
+            6333
+          ]
+        },
+        "median": {
+          "historical": 6250,
+          "prior": 7000,
+          "current": 6333
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 1.3279999999999959,
+            "paired_change_percent": [
+              -42.534477141926374,
+              -10.776470588235298,
+              1.3279999999999959,
+              -17.517948717948716,
+              14.293448835950183
+            ],
+            "median_paired_change_percent": -10.776470588235298,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -9.52857142857143,
+            "paired_change_percent": [
+              -24.4,
+              -59.55200000000001,
+              14.293448835950183,
+              83.81714285714285,
+              -13.636983499249967
+            ],
+            "median_paired_change_percent": -13.636983499249967,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p50": {
+        "rounds": {
+          "historical": [
+            1534917,
+            1399542,
+            1418958,
+            1532875,
+            1454917
+          ],
+          "prior": [
+            1639292,
+            1490709,
+            1478208,
+            1458375,
+            1512292
+          ],
+          "current": [
+            1426334,
+            1429667,
+            1475584,
+            1503167,
+            1500125
+          ]
+        },
+        "median": {
+          "historical": 1454917,
+          "prior": 1490709,
+          "current": 1475584
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 1.4204934027164384,
+            "paired_change_percent": [
+              -7.074193588317801,
+              2.1524898859769825,
+              3.9906748473175435,
+              -1.9380575715567172,
+              3.107256290221372
+            ],
+            "median_paired_change_percent": 2.1524898859769825,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -1.0146178764601221,
+            "paired_change_percent": [
+              -12.990852148366494,
+              -4.094830043958952,
+              -0.17751223102567826,
+              3.0713636753235685,
+              -0.8045403929928918
+            ],
+            "median_paired_change_percent": -0.8045403929928918,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p95": {
+        "rounds": {
+          "historical": [
+            1837750,
+            1561834,
+            1594083,
+            1746333,
+            1679083
+          ],
+          "prior": [
+            1944417,
+            1691250,
+            1618458,
+            1683459,
+            1750208
+          ],
+          "current": [
+            1573833,
+            1563500,
+            1644833,
+            1759667,
+            1651750
+          ]
+        },
+        "median": {
+          "historical": 1679083,
+          "prior": 1691250,
+          "current": 1644833
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -2.0398038691357145,
+            "paired_change_percent": [
+              -14.360876071282814,
+              0.10666946679351863,
+              3.1836485302208173,
+              0.7635428065552174,
+              -1.6278528220463162
+            ],
+            "median_paired_change_percent": 0.10666946679351863,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -2.7445380635624517,
+            "paired_change_percent": [
+              -19.058874716688855,
+              -7.553584626755361,
+              1.6296375933141372,
+              4.526869974261327,
+              -5.625502797381799
+            ],
+            "median_paired_change_percent": -5.625502797381799,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p99": {
+        "rounds": {
+          "historical": [
+            2306500,
+            1748083,
+            1663083,
+            1934416,
+            1748375
+          ],
+          "prior": [
+            2132416,
+            1808541,
+            1755583,
+            1801333,
+            1871042
+          ],
+          "current": [
+            1714875,
+            1628333,
+            1741958,
+            1888916,
+            1806084
+          ]
+        },
+        "median": {
+          "historical": 1748375,
+          "prior": 1808541,
+          "current": 1741958
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -0.36702652463000973,
+            "paired_change_percent": [
+              -25.650336006936914,
+              -6.85036122426681,
+              4.742697748699243,
+              -2.3521310824558883,
+              3.300722099092024
+            ],
+            "median_paired_change_percent": -2.3521310824558883,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -3.681586427954908,
+            "paired_change_percent": [
+              -19.580654056244185,
+              -9.964275070346762,
+              -0.7760954623051153,
+              4.862121551095777,
+              -3.4717553106771493
+            ],
+            "median_paired_change_percent": -3.4717553106771493,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p50": {
+        "rounds": {
+          "historical": [
+            169833,
+            118208,
+            115167,
+            168375,
+            130000
+          ],
+          "prior": [
+            199834,
+            137084,
+            124459,
+            138667,
+            146958
+          ],
+          "current": [
+            123084,
+            122042,
+            121667,
+            167458,
+            138583
+          ]
+        },
+        "median": {
+          "historical": 130000,
+          "prior": 138667,
+          "current": 123084
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -5.320000000000002,
+            "paired_change_percent": [
+              -27.526452456236417,
+              3.243435300487274,
+              5.643977875606732,
+              -0.5446176688938431,
+              6.602307692307696
+            ],
+            "median_paired_change_percent": 3.243435300487274,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -11.23771337088132,
+            "paired_change_percent": [
+              -38.40687770849806,
+              -10.972834174666623,
+              -2.243309041531749,
+              20.76269047430175,
+              -5.698907170756273
+            ],
+            "median_paired_change_percent": -5.698907170756273,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p95": {
+        "rounds": {
+          "historical": [
+            283083,
+            184292,
+            186875,
+            237417,
+            202875
+          ],
+          "prior": [
+            285292,
+            201500,
+            182667,
+            211000,
+            217125
+          ],
+          "current": [
+            180542,
+            173000,
+            198667,
+            240041,
+            201209
+          ]
+        },
+        "median": {
+          "historical": 202875,
+          "prior": 211000,
+          "current": 198667
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -2.0741836105976574,
+            "paired_change_percent": [
+              -36.22294521394785,
+              -6.127232869576538,
+              6.310100334448165,
+              1.1052283534877416,
+              -0.8211953173136166
+            ],
+            "median_paired_change_percent": -0.8211953173136166,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -5.8450236966824605,
+            "paired_change_percent": [
+              -36.71676738219087,
+              -14.1439205955335,
+              8.759108103817326,
+              13.763507109004735,
+              -7.330339666090957
+            ],
+            "median_paired_change_percent": -7.330339666090957,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p99": {
+        "rounds": {
+          "historical": [
+            361708,
+            197708,
+            205167,
+            320792,
+            220666
+          ],
+          "prior": [
+            321666,
+            250083,
+            216292,
+            216292,
+            240042
+          ],
+          "current": [
+            225708,
+            191292,
+            244083,
+            255916,
+            226334
+          ]
+        },
+        "median": {
+          "historical": 220666,
+          "prior": 240042,
+          "current": 226334
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 2.568587820507018,
+            "paired_change_percent": [
+              -37.599389562851805,
+              -3.2451898759787157,
+              18.967962684057383,
+              -20.223696351529963,
+              2.568587820507018
+            ],
+            "median_paired_change_percent": -3.2451898759787157,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -5.710667299889183,
+            "paired_change_percent": [
+              -29.83156441775009,
+              -23.508595146411395,
+              12.848833983688724,
+              18.31967895252713,
+              -5.710667299889183
+            ],
+            "median_paired_change_percent": -5.710667299889183,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p50": {
+        "rounds": {
+          "historical": [
+            1707541,
+            1518750,
+            1544542,
+            1704458,
+            1583042
+          ],
+          "prior": [
+            1841791,
+            1626500,
+            1611000,
+            1602375,
+            1658750
+          ],
+          "current": [
+            1554584,
+            1554500,
+            1600625,
+            1679709,
+            1638208
+          ]
+        },
+        "median": {
+          "historical": 1583042,
+          "prior": 1626500,
+          "current": 1600625
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 1.1107096337305,
+            "paired_change_percent": [
+              -8.957735129054,
+              2.353909465020587,
+              3.63104402470118,
+              -1.4520158314255904,
+              3.4848096260238215
+            ],
+            "median_paired_change_percent": 2.353909465020587,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -1.5908392253304648,
+            "paired_change_percent": [
+              -15.593897461764117,
+              -4.426683061789117,
+              -0.6440099317194248,
+              4.826211092908972,
+              -1.238402411454409
+            ],
+            "median_paired_change_percent": -1.238402411454409,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p95": {
+        "rounds": {
+          "historical": [
+            2112792,
+            1737834,
+            1757167,
+            2006250,
+            1859500
+          ],
+          "prior": [
+            2238041,
+            1888375,
+            1787667,
+            1893834,
+            1949916
+          ],
+          "current": [
+            1748125,
+            1736084,
+            1859500,
+            1990792,
+            1858292
+          ]
+        },
+        "median": {
+          "historical": 1859500,
+          "prior": 1893834,
+          "current": 1858292
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -0.06496369991932927,
+            "paired_change_percent": [
+              -17.259957440202346,
+              -0.100700066864845,
+              5.823749250924926,
+              -0.7704922118380031,
+              -0.06496369991932927
+            ],
+            "median_paired_change_percent": -0.100700066864845,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -1.8767220358278491,
+            "paired_change_percent": [
+              -21.890394322534757,
+              -8.064658767458798,
+              4.018253958930829,
+              5.119667299245867,
+              -4.698869079488555
+            ],
+            "median_paired_change_percent": -4.698869079488555,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p99": {
+        "rounds": {
+          "historical": [
+            2638166,
+            1936417,
+            1876625,
+            2186000,
+            1962375
+          ],
+          "prior": [
+            2420459,
+            2137791,
+            1979583,
+            1992250,
+            2063667
+          ],
+          "current": [
+            1929834,
+            1815709,
+            1933709,
+            2171208,
+            2003458
+          ]
+        },
+        "median": {
+          "historical": 1962375,
+          "prior": 2063667,
+          "current": 1933709
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -1.4607809414612372,
+            "paired_change_percent": [
+              -26.84940977936946,
+              -6.233574689749155,
+              3.0418437354292838,
+              -0.6766697163769431,
+              2.0935346200394944
+            ],
+            "median_paired_change_percent": -0.6766697163769431,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -6.2974307385833095,
+            "paired_change_percent": [
+              -20.269915747385102,
+              -15.06611263682932,
+              -2.3173567362419267,
+              8.982707993474715,
+              -2.9175734263328312
+            ],
+            "median_paired_change_percent": -2.9175734263328312,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "allocations_p50": {
+        "rounds": {
+          "historical": [
+            151,
+            151,
+            151,
+            151,
+            151
+          ],
+          "prior": [
+            152,
+            152,
+            152,
+            152,
+            152
+          ],
+          "current": [
+            151,
+            151,
+            151,
+            151,
+            151
+          ]
+        },
+        "median": {
+          "historical": 151,
+          "prior": 152,
+          "current": 151
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 0.0,
+            "paired_change_percent": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_paired_change_percent": 0.0,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -0.6578947368421018,
+            "paired_change_percent": [
+              -0.6578947368421018,
+              -0.6578947368421018,
+              -0.6578947368421018,
+              -0.6578947368421018,
+              -0.6578947368421018
+            ],
+            "median_paired_change_percent": -0.6578947368421018,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "peak_requested_bytes_p50": {
+        "rounds": {
+          "historical": [
+            44191,
+            44191,
+            44191,
+            44191,
+            44191
+          ],
+          "prior": [
+            44255,
+            44255,
+            44255,
+            44255,
+            44255
+          ],
+          "current": [
+            44255,
+            44255,
+            44255,
+            44255,
+            44255
+          ]
+        },
+        "median": {
+          "historical": 44191,
+          "prior": 44255,
+          "current": 44255
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 0.144825869520937,
+            "paired_change_percent": [
+              0.144825869520937,
+              0.144825869520937,
+              0.144825869520937,
+              0.144825869520937,
+              0.144825869520937
+            ],
+            "median_paired_change_percent": 0.144825869520937,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.0,
+            "paired_change_percent": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_paired_change_percent": 0.0,
+            "sustained_above_five_percent": false
+          }
+        }
+      }
+    },
+    "updated-rare": {
+      "prepare_ns_p50": {
+        "rounds": {
+          "historical": [
+            3250,
+            2750,
+            2833,
+            3291,
+            2958
+          ],
+          "prior": [
+            3042,
+            2750,
+            2875,
+            2792,
+            2917
+          ],
+          "current": [
+            2917,
+            2667,
+            2708,
+            3000,
+            2750
+          ]
+        },
+        "median": {
+          "historical": 2958,
+          "prior": 2875,
+          "current": 2750
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -7.031778228532792,
+            "paired_change_percent": [
+              -10.246153846153849,
+              -3.01818181818182,
+              -4.412283798093897,
+              -8.842297174111213,
+              -7.031778228532792
+            ],
+            "median_paired_change_percent": -7.031778228532792,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -4.347826086956519,
+            "paired_change_percent": [
+              -4.109138724523342,
+              -3.01818181818182,
+              -5.8086956521739115,
+              7.449856733524363,
+              -5.725059993143644
+            ],
+            "median_paired_change_percent": -4.109138724523342,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p95": {
+        "rounds": {
+          "historical": [
+            5708,
+            4125,
+            4333,
+            6792,
+            5250
+          ],
+          "prior": [
+            5541,
+            4375,
+            4625,
+            5041,
+            4875
+          ],
+          "current": [
+            4666,
+            4167,
+            3792,
+            6791,
+            4417
+          ]
+        },
+        "median": {
+          "historical": 5250,
+          "prior": 4875,
+          "current": 4417
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -15.866666666666662,
+            "paired_change_percent": [
+              -18.25508058864751,
+              1.0181818181818292,
+              -12.485575813524118,
+              -0.01472320376914027,
+              -15.866666666666662
+            ],
+            "median_paired_change_percent": -12.485575813524118,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -9.394871794871795,
+            "paired_change_percent": [
+              -15.791373398303554,
+              -4.754285714285711,
+              -18.010810810810806,
+              34.71533425907558,
+              -9.394871794871795
+            ],
+            "median_paired_change_percent": -9.394871794871795,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p99": {
+        "rounds": {
+          "historical": [
+            9166,
+            7167,
+            7500,
+            8416,
+            6792
+          ],
+          "prior": [
+            7334,
+            5708,
+            6541,
+            6625,
+            6833
+          ],
+          "current": [
+            6583,
+            5792,
+            5959,
+            7500,
+            5792
+          ]
+        },
+        "median": {
+          "historical": 7500,
+          "prior": 6625,
+          "current": 5959
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -20.546666666666667,
+            "paired_change_percent": [
+              -28.18023128954833,
+              -19.185154178875397,
+              -20.546666666666667,
+              -10.884030418250944,
+              -14.72320376914017
+            ],
+            "median_paired_change_percent": -19.185154178875397,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -10.052830188679241,
+            "paired_change_percent": [
+              -10.239978183801469,
+              1.4716187806587344,
+              -8.897722060846968,
+              13.207547169811317,
+              -15.234889506805205
+            ],
+            "median_paired_change_percent": -8.897722060846968,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p50": {
+        "rounds": {
+          "historical": [
+            1923000,
+            1953375,
+            1875667,
+            1998333,
+            1901333
+          ],
+          "prior": [
+            851875,
+            788042,
+            802709,
+            812000,
+            824417
+          ],
+          "current": [
+            819542,
+            802750,
+            788584,
+            868875,
+            798500
+          ]
+        },
+        "median": {
+          "historical": 1923000,
+          "prior": 812000,
+          "current": 802750
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -58.255330213208524,
+            "paired_change_percent": [
+              -57.382111284451376,
+              -58.90446022909068,
+              -57.95714271243243,
+              -56.52000942785812,
+              -58.00314831752249
+            ],
+            "median_paired_change_percent": -57.95714271243243,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -1.1391625615763568,
+            "paired_change_percent": [
+              -3.795509904622152,
+              1.86639798386381,
+              -1.759666329890408,
+              7.00431034482758,
+              -3.1436760765486405
+            ],
+            "median_paired_change_percent": -1.759666329890408,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p95": {
+        "rounds": {
+          "historical": [
+            2209709,
+            2195500,
+            2149416,
+            2377417,
+            2185791
+          ],
+          "prior": [
+            1133208,
+            993833,
+            1097792,
+            1072000,
+            1015583
+          ],
+          "current": [
+            1003875,
+            960708,
+            1006625,
+            1149125,
+            981416
+          ]
+        },
+        "median": {
+          "historical": 2195500,
+          "prior": 1072000,
+          "current": 1003875
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -54.27579139148258,
+            "paired_change_percent": [
+              -54.569809870892506,
+              -56.24194944204054,
+              -53.16751154732262,
+              -51.66497926110565,
+              -55.1001902743675
+            ],
+            "median_paired_change_percent": -54.569809870892506,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -6.354944029850751,
+            "paired_change_percent": [
+              -11.412997437363659,
+              -3.33305494987588,
+              -8.304578645134963,
+              7.194496268656714,
+              -3.364274510305898
+            ],
+            "median_paired_change_percent": -3.364274510305898,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p99": {
+        "rounds": {
+          "historical": [
+            2309959,
+            2301750,
+            2290125,
+            2432333,
+            2359333
+          ],
+          "prior": [
+            1327666,
+            1072000,
+            1744542,
+            1182000,
+            1107333
+          ],
+          "current": [
+            1060500,
+            1128375,
+            1105166,
+            1268375,
+            1157666
+          ]
+        },
+        "median": {
+          "historical": 2309959,
+          "prior": 1182000,
+          "current": 1128375
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -51.15173039867806,
+            "paired_change_percent": [
+              -54.09009423976789,
+              -50.977517106549364,
+              -51.74211014682605,
+              -47.85356281397325,
+              -50.93248812270248
+            ],
+            "median_paired_change_percent": -50.977517106549364,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -4.536802030456855,
+            "paired_change_percent": [
+              -20.122982738128414,
+              5.258861940298498,
+              -36.650077785458876,
+              7.3075296108291,
+              4.545425811386461
+            ],
+            "median_paired_change_percent": 4.545425811386461,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p50": {
+        "rounds": {
+          "historical": [
+            172000,
+            129708,
+            138000,
+            202167,
+            141000
+          ],
+          "prior": [
+            109209,
+            94125,
+            97250,
+            97709,
+            104416
+          ],
+          "current": [
+            107792,
+            97292,
+            92000,
+            118875,
+            98625
+          ]
+        },
+        "median": {
+          "historical": 141000,
+          "prior": 97709,
+          "current": 98625
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -30.053191489361698,
+            "paired_change_percent": [
+              -37.33023255813953,
+              -24.991519412834982,
+              -33.333333333333336,
+              -41.19960230898217,
+              -30.053191489361698
+            ],
+            "median_paired_change_percent": -33.333333333333336,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.9374776120930628,
+            "paired_change_percent": [
+              -1.2975121098077969,
+              3.3646746347941514,
+              -5.398457583547556,
+              21.66228290126806,
+              -5.546084891204417
+            ],
+            "median_paired_change_percent": -1.2975121098077969,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p95": {
+        "rounds": {
+          "historical": [
+            245583,
+            205833,
+            225958,
+            267083,
+            232125
+          ],
+          "prior": [
+            153625,
+            119334,
+            126666,
+            127958,
+            132792
+          ],
+          "current": [
+            138292,
+            132750,
+            119250,
+            148666,
+            130375
+          ]
+        },
+        "median": {
+          "historical": 232125,
+          "prior": 127958,
+          "current": 132750
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -42.810985460420035,
+            "paired_change_percent": [
+              -43.688284612534254,
+              -35.505968430718106,
+              -47.224705476238945,
+              -44.337153618912474,
+              -43.83414108777598
+            ],
+            "median_paired_change_percent": -43.83414108777598,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 3.744978821175704,
+            "paired_change_percent": [
+              -9.980797396257124,
+              11.242395293881046,
+              -5.854767656671878,
+              16.183435189671602,
+              -1.820139767455875
+            ],
+            "median_paired_change_percent": -1.820139767455875,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p99": {
+        "rounds": {
+          "historical": [
+            288541,
+            231750,
+            274167,
+            303833,
+            276416
+          ],
+          "prior": [
+            165333,
+            130667,
+            170875,
+            137833,
+            147042
+          ],
+          "current": [
+            143042,
+            149333,
+            134417,
+            170708,
+            142834
+          ]
+        },
+        "median": {
+          "historical": 276416,
+          "prior": 147042,
+          "current": 143042
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -48.25118661727251,
+            "paired_change_percent": [
+              -50.42576271656367,
+              -35.56289104638619,
+              -50.97258240415513,
+              -43.815187948642844,
+              -48.3264355174809
+            ],
+            "median_paired_change_percent": -48.3264355174809,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -2.7203112036016885,
+            "paired_change_percent": [
+              -13.48248685985254,
+              14.285167639878459,
+              -21.336064374542797,
+              23.85132733090043,
+              -2.8617673861889847
+            ],
+            "median_paired_change_percent": -2.8617673861889847,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p50": {
+        "rounds": {
+          "historical": [
+            2102333,
+            2076000,
+            2014834,
+            2215250,
+            2052917
+          ],
+          "prior": [
+            966083,
+            885958,
+            901791,
+            911208,
+            929042
+          ],
+          "current": [
+            932083,
+            903500,
+            887125,
+            995291,
+            901417
+          ]
+        },
+        "median": {
+          "historical": 2076000,
+          "prior": 911208,
+          "current": 903500
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -56.478805394990374,
+            "paired_change_percent": [
+              -55.664350033986054,
+              -56.478805394990374,
+              -55.970318150279375,
+              -55.0709400744837,
+              -56.090918434598194
+            ],
+            "median_paired_change_percent": -55.970318150279375,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -0.8459100446879253,
+            "paired_change_percent": [
+              -3.519366348440045,
+              1.980003566760491,
+              -1.6263191803865817,
+              9.227640670406757,
+              -2.973493125176252
+            ],
+            "median_paired_change_percent": -1.6263191803865817,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p95": {
+        "rounds": {
+          "historical": [
+            2456042,
+            2399292,
+            2349500,
+            2631167,
+            2387584
+          ],
+          "prior": [
+            1288792,
+            1103583,
+            1227833,
+            1210416,
+            1140458
+          ],
+          "current": [
+            1134542,
+            1104208,
+            1130583,
+            1295375,
+            1099209
+          ]
+        },
+        "median": {
+          "historical": 2399292,
+          "prior": 1210416,
+          "current": 1130583
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -52.87847414987421,
+            "paired_change_percent": [
+              -53.80608312072839,
+              -53.97775677158094,
+              -51.87984677590977,
+              -50.768043229487134,
+              -53.96145224628746
+            ],
+            "median_paired_change_percent": -53.80608312072839,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -6.595501050878372,
+            "paired_change_percent": [
+              -11.968572120249043,
+              0.05663371037791798,
+              -7.920458238213179,
+              7.018991817689124,
+              -3.616880235835074
+            ],
+            "median_paired_change_percent": -3.616880235835074,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p99": {
+        "rounds": {
+          "historical": [
+            2636708,
+            2519709,
+            2512125,
+            2737458,
+            2583375
+          ],
+          "prior": [
+            1554958,
+            1185750,
+            1908875,
+            1298250,
+            1228334
+          ],
+          "current": [
+            1205542,
+            1239084,
+            1245542,
+            1439708,
+            1285334
+          ]
+        },
+        "median": {
+          "historical": 2583375,
+          "prior": 1298250,
+          "current": 1245542
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -51.7862486088934,
+            "paired_change_percent": [
+              -54.27851699922783,
+              -50.824321379968886,
+              -50.4187888739613,
+              -47.40712003617955,
+              -50.24593796874244
+            ],
+            "median_paired_change_percent": -50.4187888739613,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -4.059926824571535,
+            "paired_change_percent": [
+              -22.47108925128525,
+              4.497912713472485,
+              -34.749944338943095,
+              10.896052378201414,
+              4.640431674121204
+            ],
+            "median_paired_change_percent": 4.497912713472485,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "allocations_p50": {
+        "rounds": {
+          "historical": [
+            165,
+            165,
+            165,
+            165,
+            165
+          ],
+          "prior": [
+            168,
+            168,
+            168,
+            168,
+            168
+          ],
+          "current": [
+            168,
+            168,
+            168,
+            168,
+            168
+          ]
+        },
+        "median": {
+          "historical": 165,
+          "prior": 168,
+          "current": 168
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 1.8181818181818077,
+            "paired_change_percent": [
+              1.8181818181818077,
+              1.8181818181818077,
+              1.8181818181818077,
+              1.8181818181818077,
+              1.8181818181818077
+            ],
+            "median_paired_change_percent": 1.8181818181818077,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.0,
+            "paired_change_percent": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_paired_change_percent": 0.0,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "peak_requested_bytes_p50": {
+        "rounds": {
+          "historical": [
+            43581,
+            43581,
+            43581,
+            43581,
+            43581
+          ],
+          "prior": [
+            127445,
+            127445,
+            127445,
+            127445,
+            127445
+          ],
+          "current": [
+            127445,
+            127445,
+            127445,
+            127445,
+            127445
+          ]
+        },
+        "median": {
+          "historical": 43581,
+          "prior": 127445,
+          "current": 127445
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 192.4324820449278,
+            "paired_change_percent": [
+              192.4324820449278,
+              192.4324820449278,
+              192.4324820449278,
+              192.4324820449278,
+              192.4324820449278
+            ],
+            "median_paired_change_percent": 192.4324820449278,
+            "sustained_above_five_percent": true
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.0,
+            "paired_change_percent": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_paired_change_percent": 0.0,
+            "sustained_above_five_percent": false
+          }
+        }
+      }
+    },
+    "updated-hot": {
+      "prepare_ns_p50": {
+        "rounds": {
+          "historical": [
+            1958,
+            1542,
+            1666,
+            1792,
+            1541
+          ],
+          "prior": [
+            1708,
+            1625,
+            1708,
+            1666,
+            1750
+          ],
+          "current": [
+            1500,
+            1500,
+            1584,
+            1666,
+            1500
+          ]
+        },
+        "median": {
+          "historical": 1666,
+          "prior": 1708,
+          "current": 1500
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -9.96398559423769,
+            "paired_change_percent": [
+              -23.39121552604698,
+              -2.7237354085603127,
+              -4.9219687875150075,
+              -7.03125,
+              -2.6606099935107097
+            ],
+            "median_paired_change_percent": -4.9219687875150075,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -12.177985948477755,
+            "paired_change_percent": [
+              -12.177985948477755,
+              -7.692307692307687,
+              -7.259953161592502,
+              0.0,
+              -14.28571428571429
+            ],
+            "median_paired_change_percent": -7.692307692307687,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p95": {
+        "rounds": {
+          "historical": [
+            5125,
+            3500,
+            3417,
+            5750,
+            2458
+          ],
+          "prior": [
+            4333,
+            3791,
+            4042,
+            2833,
+            3792
+          ],
+          "current": [
+            2583,
+            2958,
+            4000,
+            4041,
+            2375
+          ]
+        },
+        "median": {
+          "historical": 3500,
+          "prior": 3792,
+          "current": 2958
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -15.48571428571428,
+            "paired_change_percent": [
+              -49.6,
+              -15.48571428571428,
+              17.061750073163594,
+              -29.721739130434788,
+              -3.3767290480065104
+            ],
+            "median_paired_change_percent": -15.48571428571428,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -21.993670886075943,
+            "paired_change_percent": [
+              -40.38772213247172,
+              -21.973094170403584,
+              -1.0390895596239513,
+              42.640310624779374,
+              -37.368143459915615
+            ],
+            "median_paired_change_percent": -21.973094170403584,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "prepare_ns_p99": {
+        "rounds": {
+          "historical": [
+            7792,
+            5750,
+            6458,
+            7417,
+            3958
+          ],
+          "prior": [
+            6125,
+            4334,
+            5500,
+            4167,
+            5625
+          ],
+          "current": [
+            7708,
+            5166,
+            5000,
+            5500,
+            3833
+          ]
+        },
+        "median": {
+          "historical": 6458,
+          "prior": 5500,
+          "current": 5166
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -20.00619386807061,
+            "paired_change_percent": [
+              -1.0780287474332684,
+              -10.156521739130431,
+              -22.576649117373805,
+              -25.846029391937442,
+              -3.158160687215761
+            ],
+            "median_paired_change_percent": -10.156521739130431,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -6.072727272727274,
+            "paired_change_percent": [
+              25.844897959183676,
+              19.19704660821413,
+              -9.090909090909093,
+              31.98944084473243,
+              -31.857777777777773
+            ],
+            "median_paired_change_percent": 19.19704660821413,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p50": {
+        "rounds": {
+          "historical": [
+            1476791,
+            1438416,
+            1441417,
+            1479625,
+            1407209
+          ],
+          "prior": [
+            1462625,
+            1424167,
+            1467083,
+            1490875,
+            1468916
+          ],
+          "current": [
+            1482708,
+            1446792,
+            1441750,
+            1565500,
+            1463416
+          ]
+        },
+        "median": {
+          "historical": 1441417,
+          "prior": 1467083,
+          "current": 1463416
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 1.5262065037390249,
+            "paired_change_percent": [
+              0.4006660387285699,
+              0.5823072045917144,
+              0.02310226672781468,
+              5.803835431274806,
+              3.9942183428332223
+            ],
+            "median_paired_change_percent": 0.5823072045917144,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -0.24995177505294786,
+            "paired_change_percent": [
+              1.3730792239979417,
+              1.588647960527112,
+              -1.7267598356739189,
+              5.00544981973674,
+              -0.37442576702820807
+            ],
+            "median_paired_change_percent": 1.3730792239979417,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p95": {
+        "rounds": {
+          "historical": [
+            1677125,
+            1622791,
+            1663209,
+            1711666,
+            1579208
+          ],
+          "prior": [
+            1646334,
+            1697833,
+            1675958,
+            1659417,
+            1652583
+          ],
+          "current": [
+            1618875,
+            1676083,
+            1646084,
+            1849542,
+            1602792
+          ]
+        },
+        "median": {
+          "historical": 1663209,
+          "prior": 1659417,
+          "current": 1646084
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -1.0296360830178264,
+            "paired_change_percent": [
+              -3.4732056346426177,
+              3.283971873149416,
+              -1.0296360830178264,
+              8.055076165560337,
+              1.493406821647314
+            ],
+            "median_paired_change_percent": 1.493406821647314,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -0.8034749553608278,
+            "paired_change_percent": [
+              -1.6678875610902755,
+              -1.2810447199459563,
+              -1.7825029028173733,
+              11.457337125026434,
+              -3.0129197746800007
+            ],
+            "median_paired_change_percent": -1.6678875610902755,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "capture_ns_p99": {
+        "rounds": {
+          "historical": [
+            1720250,
+            1727584,
+            1782791,
+            1891334,
+            1655791
+          ],
+          "prior": [
+            1760541,
+            1779667,
+            1788041,
+            1737500,
+            1749833
+          ],
+          "current": [
+            1809125,
+            1817708,
+            1749916,
+            1952875,
+            1714291
+          ]
+        },
+        "median": {
+          "historical": 1727584,
+          "prior": 1760541,
+          "current": 1809125
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 4.719944153222078,
+            "paired_change_percent": [
+              5.1664002325243485,
+              5.216765147165048,
+              -1.844018732425734,
+              3.2538409397811385,
+              3.5330545944506353
+            ],
+            "median_paired_change_percent": 3.5330545944506353,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 2.7596062801150234,
+            "paired_change_percent": [
+              2.7596062801150234,
+              2.1375347185737636,
+              -2.1322218002831073,
+              12.395683453237405,
+              -2.0311652597705065
+            ],
+            "median_paired_change_percent": 2.1375347185737636,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p50": {
+        "rounds": {
+          "historical": [
+            161834,
+            122917,
+            128167,
+            155125,
+            122791
+          ],
+          "prior": [
+            152709,
+            150542,
+            167667,
+            155334,
+            160250
+          ],
+          "current": [
+            152125,
+            146458,
+            147625,
+            185584,
+            142750
+          ]
+        },
+        "median": {
+          "historical": 128167,
+          "prior": 155334,
+          "current": 147625
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 15.18175505395305,
+            "paired_change_percent": [
+              -5.9993573661900506,
+              19.151948062513725,
+              15.18175505395305,
+              19.635132957292512,
+              16.2544486159409
+            ],
+            "median_paired_change_percent": 16.2544486159409,
+            "sustained_above_five_percent": true
+          },
+          "prior": {
+            "median_quantile_change_percent": -4.962854236677094,
+            "paired_change_percent": [
+              -0.38242670700482373,
+              -2.7128641840815204,
+              -11.953455360923737,
+              19.47416534692985,
+              -10.920436817472702
+            ],
+            "median_paired_change_percent": -2.7128641840815204,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p95": {
+        "rounds": {
+          "historical": [
+            225583,
+            205834,
+            241916,
+            230166,
+            168833
+          ],
+          "prior": [
+            242166,
+            232792,
+            252292,
+            214500,
+            217584
+          ],
+          "current": [
+            207459,
+            227541,
+            221583,
+            282291,
+            207750
+          ]
+        },
+        "median": {
+          "historical": 225583,
+          "prior": 232792,
+          "current": 221583
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -1.7731832629231836,
+            "paired_change_percent": [
+              -8.034293364304935,
+              10.545876774488171,
+              -8.404983548008405,
+              22.646698469800054,
+              23.05058845130987
+            ],
+            "median_paired_change_percent": 10.545876774488171,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -4.81502800783532,
+            "paired_change_percent": [
+              -14.331904561333964,
+              -2.2556617065878526,
+              -12.172007039462207,
+              31.6041958041958,
+              -4.519633796602696
+            ],
+            "median_paired_change_percent": -4.519633796602696,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "execute_ns_p99": {
+        "rounds": {
+          "historical": [
+            253417,
+            240042,
+            266166,
+            267333,
+            214167
+          ],
+          "prior": [
+            286000,
+            291375,
+            265125,
+            264625,
+            286916
+          ],
+          "current": [
+            256875,
+            256167,
+            252791,
+            331208,
+            229542
+          ]
+        },
+        "median": {
+          "historical": 253417,
+          "prior": 286000,
+          "current": 256167
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 1.085167924803776,
+            "paired_change_percent": [
+              1.3645493396259978,
+              6.717574424475714,
+              -5.025059549303823,
+              23.8934213134929,
+              7.178977153342947
+            ],
+            "median_paired_change_percent": 6.717574424475714,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -10.431118881118884,
+            "paired_change_percent": [
+              -10.183566433566437,
+              -12.083397683397678,
+              -4.652145214521452,
+              25.16126594237127,
+              -19.996793486595376
+            ],
+            "median_paired_change_percent": -10.183566433566437,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p50": {
+        "rounds": {
+          "historical": [
+            1639000,
+            1563833,
+            1569084,
+            1634333,
+            1541125
+          ],
+          "prior": [
+            1618666,
+            1579125,
+            1640250,
+            1652791,
+            1635833
+          ],
+          "current": [
+            1635041,
+            1608333,
+            1591875,
+            1750083,
+            1607750
+          ]
+        },
+        "median": {
+          "historical": 1569084,
+          "prior": 1635833,
+          "current": 1608333
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 2.501395718776056,
+            "paired_change_percent": [
+              -0.2415497254423471,
+              2.8455723852866655,
+              1.452503498856661,
+              7.082399976014675,
+              4.323140562900485
+            ],
+            "median_paired_change_percent": 2.8455723852866655,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -1.681100699154503,
+            "paired_change_percent": [
+              1.0116355072633976,
+              1.849631916409411,
+              -2.9492455418381303,
+              5.886527697694377,
+              -1.7167400339765715
+            ],
+            "median_paired_change_percent": 1.0116355072633976,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p95": {
+        "rounds": {
+          "historical": [
+            1889542,
+            1826000,
+            1906416,
+            1956083,
+            1727375
+          ],
+          "prior": [
+            1868416,
+            1912125,
+            1914583,
+            1882959,
+            1854167
+          ],
+          "current": [
+            1839292,
+            1893167,
+            1852291,
+            2105459,
+            1802167
+          ]
+        },
+        "median": {
+          "historical": 1889542,
+          "prior": 1882959,
+          "current": 1852291
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": -1.971430113752437,
+            "paired_change_percent": [
+              -2.6593745997707363,
+              3.678368017524636,
+              -2.839097028140758,
+              7.636485772842971,
+              4.329806787755985
+            ],
+            "median_paired_change_percent": 3.678368017524636,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -1.6287131052773907,
+            "paired_change_percent": [
+              -1.5587535109954143,
+              -0.9914623782441012,
+              -3.2535544293457064,
+              11.816507953704791,
+              -2.8044938778437944
+            ],
+            "median_paired_change_percent": -1.5587535109954143,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "total_ns_p99": {
+        "rounds": {
+          "historical": [
+            1960792,
+            1918083,
+            1981041,
+            2139750,
+            1849459
+          ],
+          "prior": [
+            2066125,
+            2068667,
+            2047250,
+            1961083,
+            2028000
+          ],
+          "current": [
+            1994125,
+            2049708,
+            1958666,
+            2266000,
+            1910500
+          ]
+        },
+        "median": {
+          "historical": 1960792,
+          "prior": 2047250,
+          "current": 1994125
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 1.6999763360927567,
+            "paired_change_percent": [
+              1.6999763360927567,
+              6.862320347972428,
+              -1.1294566846420606,
+              5.9002219885500695,
+              3.3004786805222563
+            ],
+            "median_paired_change_percent": 3.3004786805222563,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -2.5949444376602737,
+            "paired_change_percent": [
+              -3.4847843184705685,
+              -0.9164839000187053,
+              -4.326975210648431,
+              15.548398512454597,
+              -5.793885601577909
+            ],
+            "median_paired_change_percent": -3.4847843184705685,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "allocations_p50": {
+        "rounds": {
+          "historical": [
+            151,
+            151,
+            151,
+            151,
+            151
+          ],
+          "prior": [
+            178,
+            178,
+            178,
+            178,
+            178
+          ],
+          "current": [
+            156,
+            156,
+            156,
+            156,
+            156
+          ]
+        },
+        "median": {
+          "historical": 151,
+          "prior": 178,
+          "current": 156
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 3.31125827814569,
+            "paired_change_percent": [
+              3.31125827814569,
+              3.31125827814569,
+              3.31125827814569,
+              3.31125827814569,
+              3.31125827814569
+            ],
+            "median_paired_change_percent": 3.31125827814569,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": -12.35955056179775,
+            "paired_change_percent": [
+              -12.35955056179775,
+              -12.35955056179775,
+              -12.35955056179775,
+              -12.35955056179775,
+              -12.35955056179775
+            ],
+            "median_paired_change_percent": -12.35955056179775,
+            "sustained_above_five_percent": false
+          }
+        }
+      },
+      "peak_requested_bytes_p50": {
+        "rounds": {
+          "historical": [
+            44127,
+            44127,
+            44127,
+            44127,
+            44127
+          ],
+          "prior": [
+            44191,
+            44191,
+            44191,
+            44191,
+            44191
+          ],
+          "current": [
+            44191,
+            44191,
+            44191,
+            44191,
+            44191
+          ]
+        },
+        "median": {
+          "historical": 44127,
+          "prior": 44191,
+          "current": 44191
+        },
+        "current_comparisons": {
+          "historical": {
+            "median_quantile_change_percent": 0.1450359190518169,
+            "paired_change_percent": [
+              0.1450359190518169,
+              0.1450359190518169,
+              0.1450359190518169,
+              0.1450359190518169,
+              0.1450359190518169
+            ],
+            "median_paired_change_percent": 0.1450359190518169,
+            "sustained_above_five_percent": false
+          },
+          "prior": {
+            "median_quantile_change_percent": 0.0,
+            "paired_change_percent": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_paired_change_percent": 0.0,
+            "sustained_above_five_percent": false
+          }
+        }
+      }
+    }
+  },
+  "lifecycle": {
+    "historical": {
+      "initial_train_ns": [
+        5234208,
+        5037625,
+        4885458,
+        5155916,
+        4887916
+      ],
+      "maintenance_rebuilds": [
+        32,
+        32,
+        32,
+        32,
+        32
+      ],
+      "update_and_maintenance_ns": [
+        154481459,
+        151944164,
+        148413545,
+        149670498,
+        155675955
+      ],
+      "reopen_ns": [
+        241840416,
+        202082792,
+        233790416,
+        204497875,
+        236033041
+      ]
+    },
+    "prior": {
+      "initial_train_ns": [
+        4982708,
+        5032000,
+        4744833,
+        5194375,
+        5118167
+      ],
+      "maintenance_rebuilds": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "update_and_maintenance_ns": [
+        489289,
+        425123,
+        435374,
+        453578,
+        416205
+      ],
+      "reopen_ns": [
+        519667000,
+        203099584,
+        173228667,
+        209056709,
+        210662792
+      ]
+    },
+    "current": {
+      "initial_train_ns": [
+        4976542,
+        5125833,
+        5138875,
+        5527958,
+        5129875
+      ],
+      "maintenance_rebuilds": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "update_and_maintenance_ns": [
+        508294,
+        435167,
+        414831,
+        409877,
+        441291
+      ],
+      "reopen_ns": [
+        212320209,
+        242505875,
+        191234042,
+        217015750,
+        485411250
+      ]
+    }
+  },
+  "limits": [
+    "Local free synthetic development only; no paid APIs/cloud, models or model downloads.",
+    "The current revision contains many functional repairs; this comparison cannot causally attribute an aggregate timing change to one patch.",
+    "This is not a competitor benchmark, high-dimensional evaluation, hardware power-loss test, production latency guarantee or best-in-class claim.",
+    "Original October 29/31 measurements and their limits remain unchanged.",
+    "Complete result payloads are retained outside timed regions identically in each variant; this changes allocator history relative to the original harness. Compare new runs with each other, not directly with old absolute timing samples."
+  ]
+}

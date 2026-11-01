@@ -1,0 +1,57 @@
+{
+  "recorded_at": "2026-11-01T11:36:49.633629+00:00",
+  "base_revision": "75ffaa5736e34171e45612e8675791f7b71fc2d6",
+  "source_sha256": {
+    "docs/SECURITY.md": "698a302969bf704ee6d2a5fffb30e1c9d8d10632972ae66384791b88a6828df9",
+    "index.d.ts": "a6909d926c95d9c872d29e7afb15ee2eca3920db5913c04f0001e971ad5442b7",
+    "src/bindings/node/api.rs": "31ab126ace7c9dddcda5d11e2ea3985b5d272b6f8e4c7080dd97ee19bd5439a1",
+    "src/bindings/node/types.rs": "bb9d788aeb6f70f5091bc4346b93c39ec2ca90e76e6e8d54c66c29e5fc164162",
+    "src/core/audit.rs": "3680bf8a07d320081094bb97b19580eb06c8a423b8fe1b5c733155c838cc2cca",
+    "src/core/engine/audit_delivery.rs": "9260c93d66c06ddde1593757e6a70122428fee01cc31912b274fb658a02f8aa3",
+    "tests/node/audit.test.cjs": "ccfa3dfae3143fa2623b474f573ac7eb6ea80ba1d2eac9ea3e739ef4b96b1784"
+  },
+  "environment": {
+    "os": "macOS arm64",
+    "rust": "1.99.0 (b940084d7 2026-09-28)",
+    "node": "26.8.1"
+  },
+  "checks": {
+    "audit-tests": {
+      "command": "CARGO_TARGET_DIR=/Users/davidcondrey/.cache/warm-security-readiness-target CARGO_BUILD_JOBS=2 cargo +1.99.0 test --locked --features security --lib audit",
+      "exit_code": 0,
+      "log": "audit-tests.log.gz"
+    },
+    "node-build": {
+      "command": "CARGO_TARGET_DIR=/Users/davidcondrey/.cache/warm-security-readiness-target CARGO_BUILD_JOBS=2 RUSTUP_TOOLCHAIN=1.99.0 npm run build:debug",
+      "exit_code": 0,
+      "log": "node-build.log.gz"
+    },
+    "node-tests": {
+      "command": "node --test tests/node/audit.test.cjs",
+      "exit_code": 0,
+      "log": "node-tests.log.gz"
+    },
+    "clippy": {
+      "command": "CARGO_TARGET_DIR=/Users/davidcondrey/.cache/warm-security-readiness-target CARGO_BUILD_JOBS=2 cargo +1.99.0 clippy --locked --features node-api,security --lib -- -D warnings",
+      "exit_code": 0,
+      "log": "clippy.log.gz"
+    },
+    "types": {
+      "command": "npm run test:types",
+      "exit_code": 0,
+      "log": "types.log.gz"
+    }
+  },
+  "results": {
+    "security_audit_tests": 47,
+    "node_audit_tests": 3,
+    "scoped_rustfmt": "passed",
+    "git_diff_check": "passed",
+    "native_typescript_generation": "build regenerated index.d.ts; only intended public method added"
+  },
+  "limits": [
+    "Trusted historical public keys must be retained independently.",
+    "Strict verification authenticates an individual entry; no whole-history completeness, ordering, automatic key rotation or cryptographic certification is claimed.",
+    "Final combined-source CI is owned by the integrating PR."
+  ]
+}

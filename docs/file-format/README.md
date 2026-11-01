@@ -37,10 +37,10 @@ Each artefact has its own version; a store is the combination.
 |---|---|---|---|
 | Arena manifest | `vectors_data.bin/format.json` `version` | 4 | 2, 3, 4 (no manifest = 1, read as 2) |
 | Store schema | `store.json` `version` | 6 | 2, 3, 4, 5, 6 |
-| Document checkpoint | `documents.ckpt` magic `WARMCKP\0\x01` (`WARMCKPE\x01` sealed) | 1 | 1, schemas 4–6 |
+| Document checkpoint | `documents.ckpt` magic `HMSCKP\0\x01` (`HMSCKPE\x01` sealed) | 1 | 1, schemas 4–6 |
 | Journal payload | magic `HMS-TXN-3\0` | 3 | 2, 3 |
 | Text segment | `documents.text` header byte 4 | 2 | cache: any value is discarded and rebuilt |
-| Vector updates | `WARMVUP01`, `WARMVRW01`, `WARMVLG01` | 1 | 1 |
+| Vector updates | `HMSVUP01`, `HMSVRW01`, `HMSVLG01` | 1 | 1 |
 | Memory stamp | `mem1:` / `_mem.v` | 1 | 1 |
 
 The same numbers are constants in `src/core/format/mod.rs`; `tests/format_golden.rs` fails if one

@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-11-01T02:02:09.447699+00:00",
+  "pipeline_exit_code": 101,
+  "passed": {
+    "mutation": 16,
+    "documents": 120,
+    "compaction": 12
+  },
+  "ignored": {
+    "documents": 1
+  },
+  "failure": "Integration compilation exposed install_deferred_encoding still calling the cfg(test)-only DocumentStore::insert. No integration test ran and Clippy was not reached.",
+  "source_sha256": {
+    "src/core/documents/index.rs": "e16d119847adc6cca6da18399a65d5af303711659bfe93b35629a8a9c8687c22",
+    "src/core/documents/lexical/tests.rs": "b31ebead925b199d87133df2bb3640fec3e5e48d3ef54e8f601dacbae0136d5c",
+    "src/core/documents/memory.rs": "10af0520af8d6f81faac01d6081974edb12c3fa10367b11644641c456dc42262",
+    "src/core/documents/text.rs": "a16a3e3d64cc706494d38622fd36f3f147805323af8819e48fc79c9abd242dbd",
+    "src/core/engine/image.rs": "85331f01a0cabb160b119df4e35c0d00696cd6c54e27c16548cff7cfd37eacca",
+    "src/core/engine/mutation.rs": "8260e31c470d2c3c238873f16f0502541ecf970b285c733fcc82251719f1d241"
+  }
+}

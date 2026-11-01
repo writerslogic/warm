@@ -1,0 +1,314 @@
+{
+  "recorded_at": "2026-11-01T11:40:17.591803+00:00",
+  "base": "75ffaa5736e34171e45612e8675791f7b71fc2d6",
+  "toolchain": "1.99.0",
+  "features": "server,security",
+  "build_jobs": 2,
+  "test_threads": 1,
+  "source_sha256": {
+    "src/bin/warm-server/limits.rs": "c7afb349595b9d461e33ce7febfc26bdde19f85ab1f99845a66d02f3beadc9f2",
+    "src/bin/warm-server/tenants.rs": "1f3eb92c17ce8644f762ef861f531b436895ae22ef5213d47eff081882e64a4a",
+    "src/bin/warm-server/tests.rs": "3b923c27a02cb5219cd4074ff2a970fba5c61c678302c90b962f24d4f29642ca",
+    "src/core/documents/index.rs": "e16d119847adc6cca6da18399a65d5af303711659bfe93b35629a8a9c8687c22",
+    "src/core/documents/lexical/tests.rs": "b31ebead925b199d87133df2bb3640fec3e5e48d3ef54e8f601dacbae0136d5c",
+    "src/core/documents/memory.rs": "10af0520af8d6f81faac01d6081974edb12c3fa10367b11644641c456dc42262",
+    "src/core/documents/text.rs": "a16a3e3d64cc706494d38622fd36f3f147805323af8819e48fc79c9abd242dbd",
+    "src/core/engine/image.rs": "abce2de75310d734f9f3dbbeb37c56bb537e6d61feab6baedd5c3cb4429e85fd",
+    "src/core/engine/mutation.rs": "f6a972143968a543f079da6cf043c428d3d1b83c8a6fa2b8a3f8867309efc3d1",
+    "tests/server_ops.rs": "204b16f3d208c2c261ee6400f5757ae2001896615a3bb1efeab7f2631dddeec1"
+  },
+  "other_worktree_edits": [
+    "docs/SECURITY.md",
+    "docs/SERVER.md",
+    "docs/production-readiness.md",
+    "docs/research/technical-audit-20261029/REMEDIATION.md",
+    "docs/server/errors.md",
+    "index.d.ts",
+    "src/bin/warm-server/limits.rs",
+    "src/bin/warm-server/tenants.rs",
+    "src/bin/warm-server/tests.rs",
+    "src/bindings/node/api.rs",
+    "src/bindings/node/types.rs",
+    "src/core/audit.rs",
+    "src/core/documents/index.rs",
+    "src/core/documents/lexical/tests.rs",
+    "src/core/documents/memory.rs",
+    "src/core/documents/text.rs",
+    "src/core/engine/audit_delivery.rs",
+    "src/core/engine/image.rs",
+    "src/core/engine/mutation.rs",
+    "tests/node/audit.test.cjs",
+    "tests/server_ops.rs"
+  ],
+  "checks": [
+    {
+      "name": "publication",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--lib",
+        "core::engine::mutation::tests::failed_",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "seconds": 101.71456158405636,
+      "log": "publication.log.gz",
+      "log_sha256": "35acb1cf10fb528dc064606be526561f652343f839585655f7750cab7af4fb42",
+      "summaries": [
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 736 filtered out; finished in 101.65s"
+      ]
+    },
+    {
+      "name": "text-owners",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--lib",
+        "core::documents::index::text_serialization_tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "seconds": 0.08399833308067173,
+      "log": "text-owners.log.gz",
+      "log_sha256": "d04c390a031aefd844cf83721e4a2397171dc3e3fda84b70a0f2b02d7e835c0e",
+      "summaries": [
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 738 filtered out; finished in 0.06s"
+      ]
+    },
+    {
+      "name": "deferred",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--lib",
+        "core::engine::deferred_cache_tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "seconds": 61.170704041956924,
+      "log": "deferred.log.gz",
+      "log_sha256": "903dc119220c4600ecf7e84ceda92c98fa119e5cf7270be01c3100c52ead9859",
+      "summaries": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 737 filtered out; finished in 61.16s"
+      ]
+    },
+    {
+      "name": "retry-unit",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--bin",
+        "warm-server",
+        "limits::tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8652820830466226,
+      "log": "retry-unit.log.gz",
+      "log_sha256": "6a6b965702da17e400d68ccfbcea46ccff51c5c4b75e03bade46507ca482c189",
+      "summaries": [
+        "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.62s"
+      ]
+    },
+    {
+      "name": "restore-unit",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--bin",
+        "warm-server",
+        "tests::snapshot_restore_round_trips_and_keeps_the_replaced_store",
+        "--",
+        "--test-threads=1",
+        "--exact"
+      ],
+      "exit_code": 0,
+      "seconds": 20.574167083017528,
+      "log": "restore-unit.log.gz",
+      "log_sha256": "022e61e91a9aeeffd4eaa8be349bd7ced48a8e767abe48bb3a9d0a373e6ed93d",
+      "summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 20.56s"
+      ]
+    },
+    {
+      "name": "checkpoint",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--test",
+        "document_checkpoint",
+        "",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "seconds": 519.1870822500205,
+      "log": "checkpoint.log.gz",
+      "log_sha256": "663127f15522ebb79419d6fc3f1c9a76420b8e4c7aac579f30947c98b0956d02",
+      "summaries": [
+        "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 518.84s"
+      ]
+    },
+    {
+      "name": "restore-http",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--test",
+        "server_ops",
+        "snapshot_restore_and_off_box_backup_round_trip",
+        "--",
+        "--test-threads=1",
+        "--exact"
+      ],
+      "exit_code": 0,
+      "seconds": 28.397578333038837,
+      "log": "restore-http.log.gz",
+      "log_sha256": "89c9b21b82510324703b40baf882cf33a9759f44b95acfc298dd3a3fd025233b",
+      "summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 28.26s"
+      ]
+    },
+    {
+      "name": "retry-http",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "test",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--test",
+        "server_api",
+        "idempotency",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "seconds": 10.311135250027291,
+      "log": "retry-http.log.gz",
+      "log_sha256": "0f3677d38a565156e10bbfddf3684568fb856485fba48ddc578f53727b8298b5",
+      "summaries": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 10.20s"
+      ]
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "+1.99.0",
+        "clippy",
+        "--locked",
+        "--offline",
+        "--features",
+        "server,security",
+        "--lib",
+        "--bin",
+        "warm-server",
+        "--test",
+        "server_ops",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "seconds": 23.0356645839056,
+      "log": "clippy.log.gz",
+      "log_sha256": "62ebf052ab518d0be8b2d61b45f94b4e217419c092606f24e416a7bfbea7d942",
+      "summaries": [
+        "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 22.93s"
+      ]
+    }
+  ],
+  "complete": true,
+  "limits": [
+    "A committed append failure may require reopen or reconciliation; no atomic complete live publication is promised.",
+    "Failed scrubbing does not establish erasure.",
+    "Restore invalidation is process-local and does not provide restart-safe HTTP receipts.",
+    "Final integrated CI remains the coordinator's gate."
+  ],
+  "all_changed_rust_sha256": {
+    "src/bin/warm-server/limits.rs": "c7afb349595b9d461e33ce7febfc26bdde19f85ab1f99845a66d02f3beadc9f2",
+    "src/bin/warm-server/tenants.rs": "1f3eb92c17ce8644f762ef861f531b436895ae22ef5213d47eff081882e64a4a",
+    "src/bin/warm-server/tests.rs": "3b923c27a02cb5219cd4074ff2a970fba5c61c678302c90b962f24d4f29642ca",
+    "src/bindings/node/api.rs": "31ab126ace7c9dddcda5d11e2ea3985b5d272b6f8e4c7080dd97ee19bd5439a1",
+    "src/bindings/node/types.rs": "bb9d788aeb6f70f5091bc4346b93c39ec2ca90e76e6e8d54c66c29e5fc164162",
+    "src/core/audit.rs": "3680bf8a07d320081094bb97b19580eb06c8a423b8fe1b5c733155c838cc2cca",
+    "src/core/documents/index.rs": "e16d119847adc6cca6da18399a65d5af303711659bfe93b35629a8a9c8687c22",
+    "src/core/documents/lexical/tests.rs": "b31ebead925b199d87133df2bb3640fec3e5e48d3ef54e8f601dacbae0136d5c",
+    "src/core/documents/memory.rs": "10af0520af8d6f81faac01d6081974edb12c3fa10367b11644641c456dc42262",
+    "src/core/documents/text.rs": "a16a3e3d64cc706494d38622fd36f3f147805323af8819e48fc79c9abd242dbd",
+    "src/core/engine/audit_delivery.rs": "9260c93d66c06ddde1593757e6a70122428fee01cc31912b274fb658a02f8aa3",
+    "src/core/engine/image.rs": "abce2de75310d734f9f3dbbeb37c56bb537e6d61feab6baedd5c3cb4429e85fd",
+    "src/core/engine/mutation.rs": "f6a972143968a543f079da6cf043c428d3d1b83c8a6fa2b8a3f8867309efc3d1",
+    "tests/server_ops.rs": "204b16f3d208c2c261ee6400f5757ae2001896615a3bb1efeab7f2631dddeec1"
+  },
+  "build_command": [
+    "cargo",
+    "+1.99.0",
+    "test",
+    "--locked",
+    "--offline",
+    "--features",
+    "server,security",
+    "--lib",
+    "--bin",
+    "warm-server",
+    "--test",
+    "server_ops",
+    "--test",
+    "server_api",
+    "--test",
+    "document_checkpoint",
+    "--no-run",
+    "--message-format=json"
+  ],
+  "binary_sha256": {
+    "writerslogic_warm": "c77ae74a4c2b0d6c7489d7a19eda5538120e5a33ffdeded107d6eeca02d19d9a",
+    "server_ops": "9c8e3fcae0bc8122abbf13d9aa7c473caadfd6026846f6040347693c2d4e4f6a",
+    "server_api": "9b9348d3b30c97d58d0324b529c207606975d68cb5a595eeb8c29162c62ff2db",
+    "warm-server": "e7201833246908fbe3acb7f6f8e2a799683d83e3a18e4b04098b9c6eb7f1da3b",
+    "document_checkpoint": "6f9397011f0a5f5557fb1193708e7c9c507a49286ab9a416494e508c717eb360"
+  },
+  "completed_at": "2026-11-01T11:53:05.302829+00:00"
+}

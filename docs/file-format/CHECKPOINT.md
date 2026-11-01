@@ -75,7 +75,7 @@ records with a store that never checkpointed, through writes and reopens.
 All integers little endian; varints are LEB128.
 
 ```
-0    8  magic "WARMCKP\0\x01"
+0    8  magic "HMSCKP\0\x01"
 8    8  u64: CRC32 of bytes 16.. (low 32 bits)
 16   8  u64: CRC32 of the generation directory's name (low 32 bits)
 24   8  u64: vector dimensions of the store

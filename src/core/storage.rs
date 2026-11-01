@@ -125,12 +125,14 @@ impl ActiveSegment {
     }
 
     /// Makes `[offset, offset + len)` durable.
-    fn sync_range(&self, offset: usize, len: usize) -> Result<()> {
+    fn sync_range(&self, offset: usize, len: usize, test_point: &'static str) -> Result<()> {
         self.map
             .flush_range(offset, len)
             .map_err(|e| anyhow!("mmap flush_range failed: {}", e))?;
         #[cfg(test)]
-        tests::fail_point("commit sync")?;
+        tests::fail_point(test_point)?;
+        #[cfg(not(test))]
+        let _ = test_point;
         super::durable_file::sync_mapped_file(&self.file).context("segment sync failed")
     }
 }
@@ -152,6 +154,7 @@ pub(crate) struct PersistentArena {
     /// completes: an open treats every segment but the last as sealed, so after a failed
     /// rotation the next append must rotate rather than write into the current segment.
     rotation_pending: AtomicBool,
+    commit_uncertain: AtomicBool,
 }
 
 pub(crate) struct PreparedCompaction {
@@ -269,6 +272,7 @@ impl PersistentArena {
                 0
             }),
             rotation_pending: AtomicBool::new(false),
+            commit_uncertain: AtomicBool::new(false),
         })
     }
 
@@ -342,7 +346,9 @@ impl PersistentArena {
 
     /// Durably flush all pending writes in the active segment.
     pub(crate) fn flush(&self) -> Result<()> {
-        self.active_segment.write().sync()
+        let active = self.active_segment.write();
+        self.ensure_writable()?;
+        active.sync()
     }
 
     /// Writes back the active segment's dirty pages without the platform's full sync; a later
@@ -596,6 +602,17 @@ impl PersistentArena {
         self.write_frame(data, true)
     }
 
+    fn ensure_writable(&self) -> Result<()> {
+        if self.commit_uncertain.load(Ordering::Acquire) {
+            return Err(crate::core::error::IndeterminateMutationError {
+                effect: "journal recovery",
+                source: anyhow!("previous journal rollback sync failed"),
+            }
+            .into());
+        }
+        Ok(())
+    }
+
     fn write_frame(&self, data: &[u8], durable: bool) -> Result<usize> {
         let raw_len = data.len();
         if raw_len == 0 || raw_len > MAX_RAW_FRAME_SIZE {
@@ -631,6 +648,7 @@ impl PersistentArena {
         // One write guard spans reserve and write, so concurrent writers cannot share a range
         // and rotation cannot interleave between the check and the copy.
         let mut active = self.active_segment.write();
+        self.ensure_writable()?;
 
         // Check-then-reserve under write lock to avoid wasting space at segment boundaries.
         let mut offset = self.write_offset.load(Ordering::Acquire);
@@ -663,18 +681,34 @@ impl PersistentArena {
             0
         };
         if durable {
-            if let Err(error) = active.sync_range(offset, total_frame_len + sentinel_len) {
-                // The caller treats a failed commit as not committed and does not apply it:
-                // take the frame back out of the log, so a restart does not replay it and the
-                // next append overwrites its range (and syncs that range again). The frame's
-                // bytes and end marker are zeroed: torn-tail recovery treats a stale end
-                // marker after a damaged frame as committed data.
+            if let Err(error) =
+                active.sync_range(offset, total_frame_len + sentinel_len, "commit sync")
+            {
+                #[cfg(test)]
+                let maybe_persisted_frame = active.map[offset..frame_end + sentinel_len].to_vec();
+                // The caller has not applied this frame yet. Roll it back to a durable end
+                // marker; if rollback durability itself fails, the on-disk outcome is unknown
+                // and this arena must not accept another write until reopened.
                 active.map[offset..offset + HEADER_SIZE].copy_from_slice(&end_marker_bytes());
                 active.map[offset + HEADER_SIZE..frame_end + sentinel_len].fill(0);
                 self.write_offset.store(offset, Ordering::Release);
-                // Best effort: the original error is the one to report. If this sync fails
-                // too, a power loss before the next commit can still bring the frame back.
-                let _ = active.sync_range(offset, total_frame_len + sentinel_len);
+                if let Err(rollback) =
+                    active.sync_range(offset, total_frame_len + sentinel_len, "rollback sync")
+                {
+                    self.commit_uncertain.store(true, Ordering::Release);
+                    #[cfg(test)]
+                    tests::model_nonpersistent_rollback(
+                        &mut active.map[offset..frame_end + sentinel_len],
+                        &maybe_persisted_frame,
+                    );
+                    return Err(crate::core::error::IndeterminateMutationError {
+                        effect: "journal rollback",
+                        source: anyhow!(
+                            "commit sync failed: {error:#}; rollback sync failed: {rollback:#}"
+                        ),
+                    }
+                    .into());
+                }
                 return Err(error);
             }
             // The frame is on disk and applied in memory by the caller; its pages are only
@@ -933,6 +967,7 @@ impl PersistentArena {
         #[cfg(test)]
         compaction_crash_point("staged");
         let mut active = self.active_segment.write();
+        self.ensure_writable()?;
         let mut segments = self.read_segments.write();
         let mut data_path = self.data_path.write();
         active.write_back()?;
@@ -1072,25 +1107,44 @@ mod tests {
     use tempfile::tempdir;
 
     thread_local! {
-        /// The named point at which the calling thread's next pass fails, once.
-        static FAIL_AT: std::cell::Cell<Option<&'static str>> = const { std::cell::Cell::new(None) };
+        /// The named points at which the calling thread's next passes fail, in order.
+        static FAIL_AT: std::cell::RefCell<Vec<&'static str>> = const { std::cell::RefCell::new(Vec::new()) };
     }
 
-    /// Fails if `point` is armed on this thread: "commit sync" fails a commit's sync after its
-    /// bytes were written back (as a failed `fsync` does); "rotation after create" fails a
-    /// rotation once the next segment's file exists.
+    /// Fails if `point` is armed on this thread: "commit sync" fails after frame write-back;
+    /// "rollback sync" fails the compensating end-marker sync; "rotation after create" fails
+    /// a rotation once the next segment's file exists.
     pub(super) fn fail_point(point: &str) -> Result<()> {
-        if FAIL_AT.with(|armed| armed.get() == Some(point) && armed.take().is_some()) {
+        if FAIL_AT.with(|armed| {
+            let mut armed = armed.borrow_mut();
+            if armed.last().copied() == Some(point) {
+                armed.pop();
+                true
+            } else {
+                false
+            }
+        }) {
             return Err(anyhow!("injected failure at {point}"));
         }
         Ok(())
     }
 
+    pub(super) fn model_nonpersistent_rollback(
+        rolled_back: &mut [u8],
+        maybe_persisted_frame: &[u8],
+    ) {
+        rolled_back.copy_from_slice(maybe_persisted_frame);
+    }
+
     /// Runs `body` with `point` armed, disarming it afterwards if `body` did not reach it.
     fn failing_at<R>(point: &'static str, body: impl FnOnce() -> R) -> R {
-        FAIL_AT.set(Some(point));
+        failing_at_sequence(&[point], body)
+    }
+
+    fn failing_at_sequence<R>(points: &[&'static str], body: impl FnOnce() -> R) -> R {
+        FAIL_AT.with(|armed| *armed.borrow_mut() = points.iter().rev().copied().collect());
         let result = body();
-        FAIL_AT.set(None);
+        FAIL_AT.with(|armed| armed.borrow_mut().clear());
         result
     }
 
@@ -1157,6 +1211,9 @@ mod tests {
                     arena.write_slice(b"commit whose sync failed")
                 });
                 assert!(failed.is_err());
+                assert!(!failed
+                    .unwrap_err()
+                    .is::<crate::core::error::IndeterminateMutationError>());
                 assert_eq!(arena.checkpoint(), checkpoint);
                 if retry {
                     assert_eq!(arena.write_slice(b"next commit")?, checkpoint.1);
@@ -1169,6 +1226,56 @@ mod tests {
             };
             assert_eq!(replayed(&PersistentArena::new(dir.path())?)?, expected);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn failed_rollback_sync_marks_commit_uncertain_and_blocks_writes() -> Result<()> {
+        let dir = tempdir()?;
+        {
+            let arena = PersistentArena::new(dir.path())?;
+            arena.write_slice(b"committed")?;
+            let checkpoint = arena.checkpoint();
+            let staged = PersistentArena::new(arena.new_generation_dir()?)?;
+            staged.write_slice(b"committed")?;
+            let prepared = staged.prepare_compacted()?;
+            let failed = failing_at_sequence(&["commit sync", "rollback sync"], || {
+                arena.write_slice(b"commit with uncertain rollback")
+            });
+            let error = failed.unwrap_err();
+            assert!(
+                error.is::<crate::core::error::IndeterminateMutationError>(),
+                "{error:#}"
+            );
+            assert_eq!(arena.checkpoint(), checkpoint);
+            let next = arena.write_slice(b"must reopen first").unwrap_err();
+            assert!(
+                next.is::<crate::core::error::IndeterminateMutationError>(),
+                "{next:#}"
+            );
+            let flush = arena.flush().unwrap_err();
+            assert!(flush.is::<crate::core::error::IndeterminateMutationError>());
+            let compact = arena.replace_with_compacted(prepared, false).unwrap_err();
+            assert!(compact.is::<crate::core::error::IndeterminateMutationError>());
+            assert_eq!(arena.checkpoint(), checkpoint);
+        }
+        let reopened = PersistentArena::new(dir.path())?;
+        assert_eq!(
+            replayed(&reopened)?,
+            [
+                b"committed".to_vec(),
+                b"commit with uncertain rollback".to_vec()
+            ]
+        );
+        reopened.write_slice(b"after reconcile")?;
+        assert_eq!(
+            replayed(&PersistentArena::new(dir.path())?)?,
+            [
+                b"committed".to_vec(),
+                b"commit with uncertain rollback".to_vec(),
+                b"after reconcile".to_vec()
+            ]
+        );
         Ok(())
     }
 

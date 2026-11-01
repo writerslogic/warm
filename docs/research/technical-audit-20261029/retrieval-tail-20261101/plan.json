@@ -1,0 +1,57 @@
+{
+  "status": "planned; no new timing measurement or optimization claim",
+  "objective": "Revisit the retained 11.5% updated hot-query observation against its actual historical baseline, preserving correctness and separating current aggregate changes from the prior allocation-only comparison.",
+  "revisions": {
+    "historical": "a736af02171da7c8b757dcd83a46422c614c07d7",
+    "prior": "f28095e024add5ce3964192f6af7b81457ad0b3d",
+    "current": "f39433e9b3a705827a5fed04a40d6e0442bb98bc"
+  },
+  "workload": {
+    "rows": 10000,
+    "dimensions": 16,
+    "mutations": 32,
+    "groups": [
+      "initial rare",
+      "initial hot",
+      "updated rare",
+      "updated hot"
+    ],
+    "samples_per_group_per_round": 128,
+    "rounds": 5,
+    "workers": 1,
+    "candidate_limit": 32,
+    "k": 10
+  },
+  "method": [
+    "Reuse the preserved deterministic retrieval-tail-20261031 probe and its exhaustive ordered-result oracle. Change only the required API compatibility, explicit source revision selection and evidence recording.",
+    "Build each pinned revision with Rust 1.99.0, identical optimization settings and counting allocator; record exact injected source and executable hashes.",
+    "Normalize old/new execute_search return types outside source under test; retain production Result checks in the current timed path.",
+    "Compare complete ordered result payloads across revisions and rounds outside timed regions; do not rely only on CRC fingerprints.",
+    "Rotate the three variant execution orders over five rounds, including reversed orders; use one Rust process at a time after all unrelated local builds/tests terminate.",
+    "Record host processes/load, filesystem, toolchain and per-round samples. Preserve all failed attempts and reject stale executables.",
+    "Report round-level paired p50/p95/p99 ratios and allocation counts; the 128-sample empirical p99 is not a population-tail estimate. Do not pool queries as independent process rounds."
+  ],
+  "acceptance": [
+    "Every per-query exhaustive comparison and complete cross-revision ordered-result comparison must match.",
+    "Any sustained current hot-query median/empirical-p99 increase above 5% requires diagnosis before calling this local regression resolved.",
+    "Retain all observations even if noisy or unfavorable; no retries chosen to manufacture a faster result.",
+    "Only evidence-backed optimizations may follow; no change to correctness, limits, durability or deadlines for timing gains."
+  ],
+  "execution_budget_seconds": 600,
+  "protocol_revision": "20261101-system-allocator-and-bound-inputs",
+  "allocator_source": "https://github.com/rust-lang/rust/blob/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/alloc/global.rs",
+  "premeasurement_corrections": [
+    "Reuse the System delegation pattern from benches/query_alloc.rs and benches/ingest_alloc.rs for alloc_zeroed and realloc. The inherited historical probe instead used GlobalAlloc's default allocate-copy-free realloc. Count successful allocation operations and requested live-byte deltas; allocator-internal transient storage and RSS remain unmeasured. Apply this corrected instrumentation identically to all three fresh variants; original measurements stay unchanged and are not directly comparable.",
+    "Bind builds and execution to plan, source, probe, harness and executable hashes; summarization rejects altered manifests or reports. Reject inherited WARM_PROBE_DISABLE_DELTA rather than silently changing maintenance.",
+    "Use a private target directory under this worktree for all benchmark variants; global Cargo configuration points to a shared build directory. The identical compiler, optimization, allocator and workload remain unchanged.",
+    "Historical/prior builds retain the complete build-time plan and hash. Before the first measurement their only permitted plan difference is the current comparison revision, allowing the fixed baselines to build while integration completes. Current-source builds require the exact final plan; all variants retain unchanged workload, harness, probe, compiler/settings and pinned source hashes."
+  ],
+  "limits": [
+    "Local free synthetic development only; no paid APIs/cloud, models or model downloads.",
+    "The current revision contains many functional repairs; this comparison cannot causally attribute an aggregate timing change to one patch.",
+    "This is not a competitor benchmark, high-dimensional evaluation, hardware power-loss test, production latency guarantee or best-in-class claim.",
+    "Original October 29/31 measurements and their limits remain unchanged.",
+    "Complete result payloads are retained outside timed regions identically in each variant; this changes allocator history relative to the original harness. Compare new runs with each other, not directly with old absolute timing samples."
+  ],
+  "sustained_regression_rule": "Median current round quantile exceeds the baseline median by over 5%, and at least four of the five paired rounds are slower; descriptive investigation trigger, not statistical significance."
+}

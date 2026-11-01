@@ -1,0 +1,68 @@
+{
+  "recorded_at": "2026-11-01T11:56:40.735019+00:00",
+  "root_source_commit": "fc8f452ef9ba3f93134bf0a4f6edb39e04754eec",
+  "retrieval_source_commit": "4ca9e9402c47576fa973ab7bd995d829f492df91",
+  "local_validation_head": "e22fa8eca1f2a9f84eca156e4fe6dc63f6fc4f6b",
+  "production_source_trees_identical_to_root_commit": {
+    "src": "641a429ffc123d0bf9b476158a2bd5eeba5fa394",
+    "bindings": "572ca6004a8e4527881f5734633eb819bddb9f8c"
+  },
+  "source_sha256": {
+    "bindings/uniffi/src/error.rs": "3724d326fa1df9ac330afc6ab8ab8cf4265d082faaf2fbe267f5243032064bb3",
+    "bindings/uniffi/Cargo.lock": "fc48a55258a4187aa8778f1ba9ef43c0d29c2d327b2a7e284711e55a07fe357a",
+    "bindings/uniffi/bindgen/Cargo.lock": "b2680391374b7d75bbd93a4f3ce44d568dac6b1d595afa9d147c27c8594358ba",
+    "bindings/swift/Sources/WarmMemory/WarmMobile.swift": "0ee89d36e73a3efaea9278b82ae2ebbed22f8dea7a697696a0eb10facb378676",
+    "bindings/kotlin/jvm/src/main/kotlin/com/writerslogic/warm/warm_mobile.kt": "21b97b85e20ea7cafa5098c808ccb0d53207898e3c3465c4ce22ea8a86bcc807",
+    "bindings/kotlin/android/src/main/kotlin/com/writerslogic/warm/warm_mobile.kt": "0e2b1c8261f03f550436db800abcc316a00df0166fab2825b08b573d43503433",
+    "bindings/wasm/src/lib.rs": "c0ee6995743de844b1e9190b8428df12689a95da93d5ac3c77cb3d0b58b444b9",
+    "bindings/wasm/src/store.rs": "51146d1e9819057557a5ec88ab80dba73177987e1ed319247a16ae0387de7dab",
+    "bindings/wasm/tests/web.rs": "986e6f873743acf120ba1b96903cfd7519445a3757f4ed13e4e1ffafe836a63f",
+    "src/core/error.rs": "ecc6fba4e1cead17246153d666d7a94680f5a0b9bd1703d4ad9aabd9680a7643",
+    "src/core/storage.rs": "ac37b3f7b06ad054eeb7d5694886f6a941036ab6e36bb714bd0daaeea6370a91",
+    "src/core/qgraph/update.rs": "fdb1885648443490bf85a7969156e3349c21f1d8cda6798b678b5c219d40b09f"
+  },
+  "wasm_lock_sha256": "56dca914753eec6ec306375d2222d3596f21f49feaf2dc746c73fe11cf1ea43f",
+  "wasm_lock_unchanged_from_root": true,
+  "environment": {
+    "rust": "1.99.0",
+    "wasm_pack": "0.14.0",
+    "wasm_bindgen": "0.2.129",
+    "chrome": "156.0.8078.74",
+    "chromedriver": "156.0.8078.80",
+    "cargo_target_dir": "/Users/davidcondrey/.cache/warm-security-readiness-target",
+    "cargo_build_jobs": 2
+  },
+  "commands": {
+    "uniffi": "CARGO_TARGET_DIR=/Users/davidcondrey/.cache/warm-security-readiness-target CARGO_BUILD_JOBS=2 cargo +1.99.0 test --locked --manifest-path bindings/uniffi/Cargo.toml",
+    "generation": "RUSTUP_TOOLCHAIN=1.99.0 CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=/Users/davidcondrey/.cache/warm-security-readiness-target LIBRARY=/Users/davidcondrey/.cache/warm-security-readiness-target/debug/deps/libwarm_mobile.dylib bash bindings/uniffi/scripts/generate-bindings.sh <swift|kotlin> <output-directory> [bindings/kotlin/uniffi-jvm.toml|bindings/kotlin/uniffi-android.toml]",
+    "wasm": "CARGO_TARGET_DIR=/Users/davidcondrey/.cache/warm-security-readiness-target CARGO_BUILD_JOBS=2 CARGO_NET_OFFLINE=true RUSTUP_TOOLCHAIN=1.99.0 RUSTFLAGS='--cfg getrandom_backend=\"wasm_js\"' wasm-pack test --headless --chrome --chromedriver /Volumes/A/warm-security-readiness/target/binding-validation/chromedriver bindings/wasm"
+  },
+  "results": {
+    "uniffi_unit_tests": 1,
+    "uniffi_integration_tests": 17,
+    "wasm_browser_tests": 4,
+    "wasm_browser_shape_regression": "raw_vectors_reject_invalid_shapes_without_trapping passed; browser-window assertion passed",
+    "regeneration": {
+      "bindings/swift/Sources/WarmMemory/WarmMobile.swift": {
+        "equal_after_trailing_whitespace_normalization": true,
+        "normalized_sha256": "bc65ef48a3607d4410779a60eed756f446ad029b9dde847f255ef229544d8fe6"
+      },
+      "bindings/kotlin/jvm/src/main/kotlin/com/writerslogic/warm/warm_mobile.kt": {
+        "equal_after_trailing_whitespace_normalization": true,
+        "normalized_sha256": "2d5221fa81bb5756a7da4acae250ff8ae59c5630c0c3cfdf2799322b25ce765a"
+      },
+      "bindings/kotlin/android/src/main/kotlin/com/writerslogic/warm/warm_mobile.kt": {
+        "equal_after_trailing_whitespace_normalization": true,
+        "normalized_sha256": "3b055c54a342e6489fde2988a85400b144aac62dfc74905f039cf6a746a4f364"
+      }
+    },
+    "scoped_rustfmt": "passed",
+    "git_diff_check": "passed"
+  },
+  "limits": [
+    "Swift/Kotlin generation was verified against compiled UniFFI metadata; native Swift/Kotlin runtime suites and iOS/Android device packaging were not executed.",
+    "WASM execution was in Chrome on macOS; Firefox and Safari were not run.",
+    "Final integrated source and CI remain the coordinator PR responsibility.",
+    "Only free Rust target and ChromeDriver components were downloaded; no models, paid APIs or cloud workloads ran."
+  ]
+}

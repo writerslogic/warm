@@ -44,18 +44,20 @@ type Code int
 
 // Native status codes, mirroring the WARM_ERR_* constants.
 const (
-	CodeNullPointer     Code = C.WARM_ERR_NULL_POINTER
-	CodeInvalidArgument Code = C.WARM_ERR_INVALID_ARGUMENT
-	CodeInvalidUTF8     Code = C.WARM_ERR_INVALID_UTF8
-	CodeInvalidHandle   Code = C.WARM_ERR_INVALID_HANDLE
-	CodeIO              Code = C.WARM_ERR_IO
-	CodeLocked          Code = C.WARM_ERR_LOCKED
-	CodeEncryption      Code = C.WARM_ERR_ENCRYPTION
-	CodeCorrupt         Code = C.WARM_ERR_CORRUPT
-	CodeLimitExceeded   Code = C.WARM_ERR_LIMIT_EXCEEDED
-	CodeABIMismatch     Code = C.WARM_ERR_ABI_MISMATCH
-	CodePanic           Code = C.WARM_ERR_PANIC
-	CodeInternal        Code = C.WARM_ERR_INTERNAL
+	CodeNullPointer       Code = C.WARM_ERR_NULL_POINTER
+	CodeInvalidArgument   Code = C.WARM_ERR_INVALID_ARGUMENT
+	CodeInvalidUTF8       Code = C.WARM_ERR_INVALID_UTF8
+	CodeInvalidHandle     Code = C.WARM_ERR_INVALID_HANDLE
+	CodeIO                Code = C.WARM_ERR_IO
+	CodeLocked            Code = C.WARM_ERR_LOCKED
+	CodeEncryption        Code = C.WARM_ERR_ENCRYPTION
+	CodeCorrupt           Code = C.WARM_ERR_CORRUPT
+	CodeLimitExceeded     Code = C.WARM_ERR_LIMIT_EXCEEDED
+	CodeABIMismatch       Code = C.WARM_ERR_ABI_MISMATCH
+	CodeMutationCommitted Code = C.WARM_ERR_MUTATION_COMMITTED
+	CodeMutationUncertain Code = C.WARM_ERR_MUTATION_UNCERTAIN
+	CodePanic             Code = C.WARM_ERR_PANIC
+	CodeInternal          Code = C.WARM_ERR_INTERNAL
 )
 
 // Error is a failure reported by the native library.
@@ -74,12 +76,14 @@ func (e *Error) Is(target error) bool {
 
 // Sentinels for errors.Is.
 var (
-	ErrLocked          = &Error{Code: CodeLocked}
-	ErrEncryption      = &Error{Code: CodeEncryption}
-	ErrInvalidArgument = &Error{Code: CodeInvalidArgument}
-	ErrInvalidHandle   = &Error{Code: CodeInvalidHandle}
-	ErrCorrupt         = &Error{Code: CodeCorrupt}
-	ErrIO              = &Error{Code: CodeIO}
+	ErrLocked            = &Error{Code: CodeLocked}
+	ErrEncryption        = &Error{Code: CodeEncryption}
+	ErrInvalidArgument   = &Error{Code: CodeInvalidArgument}
+	ErrInvalidHandle     = &Error{Code: CodeInvalidHandle}
+	ErrCorrupt           = &Error{Code: CodeCorrupt}
+	ErrIO                = &Error{Code: CodeIO}
+	ErrMutationCommitted = &Error{Code: CodeMutationCommitted}
+	ErrMutationUncertain = &Error{Code: CodeMutationUncertain}
 )
 
 // ErrClosed is returned for any use of a Store after Close.

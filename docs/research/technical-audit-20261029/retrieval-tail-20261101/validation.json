@@ -1,0 +1,195 @@
+{
+  "status": "completed; frozen local correctness and hot-query regression gates passed",
+  "current_revision": "f39433e9b3a705827a5fed04a40d6e0442bb98bc",
+  "completed_runs": 15,
+  "execution_seconds": 61.409299042774364,
+  "exhaustive_ordered_result_equalities": 7680,
+  "complete_cross_revision_results_equal": true,
+  "hot_query_acceptance": [
+    {
+      "group": "initial-hot",
+      "metric": "total_ns_p50",
+      "baseline": "historical",
+      "median_quantile_change_percent": 1.1107096337305,
+      "paired_change_percent": [
+        -8.957735129054,
+        2.353909465020587,
+        3.63104402470118,
+        -1.4520158314255904,
+        3.4848096260238215
+      ],
+      "median_paired_change_percent": 2.353909465020587,
+      "sustained_above_five_percent": false
+    },
+    {
+      "group": "initial-hot",
+      "metric": "total_ns_p50",
+      "baseline": "prior",
+      "median_quantile_change_percent": -1.5908392253304648,
+      "paired_change_percent": [
+        -15.593897461764117,
+        -4.426683061789117,
+        -0.6440099317194248,
+        4.826211092908972,
+        -1.238402411454409
+      ],
+      "median_paired_change_percent": -1.238402411454409,
+      "sustained_above_five_percent": false
+    },
+    {
+      "group": "initial-hot",
+      "metric": "total_ns_p99",
+      "baseline": "historical",
+      "median_quantile_change_percent": -1.4607809414612372,
+      "paired_change_percent": [
+        -26.84940977936946,
+        -6.233574689749155,
+        3.0418437354292838,
+        -0.6766697163769431,
+        2.0935346200394944
+      ],
+      "median_paired_change_percent": -0.6766697163769431,
+      "sustained_above_five_percent": false
+    },
+    {
+      "group": "initial-hot",
+      "metric": "total_ns_p99",
+      "baseline": "prior",
+      "median_quantile_change_percent": -6.2974307385833095,
+      "paired_change_percent": [
+        -20.269915747385102,
+        -15.06611263682932,
+        -2.3173567362419267,
+        8.982707993474715,
+        -2.9175734263328312
+      ],
+      "median_paired_change_percent": -2.9175734263328312,
+      "sustained_above_five_percent": false
+    },
+    {
+      "group": "updated-hot",
+      "metric": "total_ns_p50",
+      "baseline": "historical",
+      "median_quantile_change_percent": 2.501395718776056,
+      "paired_change_percent": [
+        -0.2415497254423471,
+        2.8455723852866655,
+        1.452503498856661,
+        7.082399976014675,
+        4.323140562900485
+      ],
+      "median_paired_change_percent": 2.8455723852866655,
+      "sustained_above_five_percent": false
+    },
+    {
+      "group": "updated-hot",
+      "metric": "total_ns_p50",
+      "baseline": "prior",
+      "median_quantile_change_percent": -1.681100699154503,
+      "paired_change_percent": [
+        1.0116355072633976,
+        1.849631916409411,
+        -2.9492455418381303,
+        5.886527697694377,
+        -1.7167400339765715
+      ],
+      "median_paired_change_percent": 1.0116355072633976,
+      "sustained_above_five_percent": false
+    },
+    {
+      "group": "updated-hot",
+      "metric": "total_ns_p99",
+      "baseline": "historical",
+      "median_quantile_change_percent": 1.6999763360927567,
+      "paired_change_percent": [
+        1.6999763360927567,
+        6.862320347972428,
+        -1.1294566846420606,
+        5.9002219885500695,
+        3.3004786805222563
+      ],
+      "median_paired_change_percent": 3.3004786805222563,
+      "sustained_above_five_percent": false
+    },
+    {
+      "group": "updated-hot",
+      "metric": "total_ns_p99",
+      "baseline": "prior",
+      "median_quantile_change_percent": -2.5949444376602737,
+      "paired_change_percent": [
+        -3.4847843184705685,
+        -0.9164839000187053,
+        -4.326975210648431,
+        15.548398512454597,
+        -5.793885601577909
+      ],
+      "median_paired_change_percent": -3.4847843184705685,
+      "sustained_above_five_percent": false
+    }
+  ],
+  "updated_hot_paired_allocation_delta_vs_prior": {
+    "pairs": 640,
+    "minimum": -22,
+    "maximum": -22
+  },
+  "analysis_attempts": [
+    "Summarization refused an invocation before the run ledger was complete; no summary was emitted.",
+    "After all 15 runs completed, summarization verified hashes and full ordered payloads and wrote summary.json."
+  ],
+  "measurement_retries": 0,
+  "post_measurement_optimizations": 0,
+  "limits": [
+    "Local free synthetic development only; no paid APIs/cloud, models or model downloads.",
+    "The current revision contains many functional repairs; this comparison cannot causally attribute an aggregate timing change to one patch.",
+    "This is not a competitor benchmark, high-dimensional evaluation, hardware power-loss test, production latency guarantee or best-in-class claim.",
+    "Original October 29/31 measurements and their limits remain unchanged.",
+    "Complete result payloads are retained outside timed regions identically in each variant; this changes allocator history relative to the original harness. Compare new runs with each other, not directly with old absolute timing samples."
+  ],
+  "artifact_sha256": {
+    "build-current.json": "ed627d6a8cb010c7ea65c9c36c0876e36c0c6d08719ad3f4d06dc25700ea135b",
+    "build-current.log.gz": "48dc33b97a99f5e771b851dfa5e45ae37458e3272304106b94c86f746c1d8ee9",
+    "build-historical.json": "3783e294ef58729781944df19e9dd3d4317362e861ee34346edc9911917282e0",
+    "build-historical.log.gz": "ceff2761c686fcc22d59b63c86a49cd8a5256bd2defdabece0bbad3fd8318535",
+    "build-prior.json": "8b553a286d5e3056ea47220945fe2a8438d6c41bf4fe7fe4e5c7991361765fd8",
+    "build-prior.log.gz": "c58f48a34271ead6085844f11cac66f01dd77af5fb01787520237debbf834b13",
+    "current-1.json.gz": "c2fa8ed004867e84725eba54ae68631ec23c9abc4903fef47fbeef8334b3cef6",
+    "current-1.log.gz": "552c6970330e73805c42445d9d2eabf03d7938d4fe1a73d29d9b8faa097b73fc",
+    "current-2.json.gz": "a1a9e77f5fc1b21897c5b618e7d48192345278052b3c580dbd3f0d4f90b6379a",
+    "current-2.log.gz": "89875b11fcce7c800991575d672bd3fbb8a8dcb45e14e3d7c45ad3422ac57833",
+    "current-3.json.gz": "b6a85c13de81e71edb4042b2cc9515fc6f6256085c71691092c1bf75cc012a47",
+    "current-3.log.gz": "13011dda2e67bed3bd9e24607e2ee82dc1955dc0bac6b45ffecf068090d6b0cf",
+    "current-4.json.gz": "1ac155d74a8e46e0eb7e0baa156deffb6b950fc45f2f293c9621d397b8f0063f",
+    "current-4.log.gz": "a7dbf1f435a83eed25aee4124778a24e155770ff15e1a05268c07c7af93bb67c",
+    "current-5.json.gz": "a750ff68efcfff3a6c18e72ce2b2584f71811dbb5b26a4d2592084001f633ab8",
+    "current-5.log.gz": "9740e9e40faa9854544d36c04996295db437fc88f69e481348f1191daf0476f9",
+    "execution.json": "f8b89d37e9b3130a2fa45d584bc9da401aee4cc49dbf78ad988aa1637a08ec24",
+    "harness-validation.json": "a30cba32afcd1da440dbfc665e45f519d95ac5e96fc79d61fb82425ef9f3d0ad",
+    "historical-1.json.gz": "deacd343bd1c0c6d583049dd1fb3a6dc3c1d4225300c253616c7c5dc7d0476e7",
+    "historical-1.log.gz": "90426f6f4ebf19803869463f5e36b9eb370f4493a3b799a13c2ac5c50573c20d",
+    "historical-2.json.gz": "bd151e9f5f6cdd4319a6feb64c0c45d4fe80c788202e2b115d509c9d9edba189",
+    "historical-2.log.gz": "396efef4efea779c939630e279d3aa7dd89cb189676419360e2331692c75b572",
+    "historical-3.json.gz": "3f43c8ff2b9412940a1651a74d860ade86e7b841f1e4a963bc376c0a9667d2e3",
+    "historical-3.log.gz": "4ec27a90a0c502e3d3282c544a06adf89f3a1df64ac09644918d1a1e35a2c7e8",
+    "historical-4.json.gz": "b52652a2e62b6ee030c8336d797fe658521fdbf5b4d81bb8d5be3bfaf7fa7cd4",
+    "historical-4.log.gz": "2db0a7f741009b2aff20af1b1febefe2d1d64d92d49ec80b71987cf5df25e480",
+    "historical-5.json.gz": "83aeaa307971c6204164eb6502648859af25615df5cd82e16387e60902d3b70f",
+    "historical-5.log.gz": "7c17852e52963ccc7b9244059c1311d72c53443c9fcf0dcd94efe986cc9b7da5",
+    "host-observation.json": "6a92ac7ac702ccdd82b74df8c2e8a1b25dc267f6d797edf80a416a6149df4351",
+    "plan.json": "10f593fd8de9852894f368f256bdd9a817b00bdf69083ec9f7e395b10d4fb829",
+    "prior-1.json.gz": "3c0a7e8fc7e4a2339dd917fb8784f6835797571a52ae58e9aa888081ab7c6c9a",
+    "prior-1.log.gz": "fa2554e9e1c7a4c55b44389cfab0c4e2653d4abfa3625b026deeda1aec28afbe",
+    "prior-2.json.gz": "e1eae68cc1f648f16f12ffee6fa358c59d043c423cd0a835923db8b8ed8722c4",
+    "prior-2.log.gz": "251bde037b2d09e35eab34d83c9dc62796ea0725ba9d038911d41d309760e2f5",
+    "prior-3.json.gz": "965ef6787ccdb1676bfcb28e1ab43de92f0df1f515b17b8175924e81d232064d",
+    "prior-3.log.gz": "f57f63fda002d45b134a290d9429e593d8bec35a736af451e37d329a0c20fa65",
+    "prior-4.json.gz": "7c2843f99f569e6d34821792f4b9d83e181d8ca25fd7212ceab27af860216dc3",
+    "prior-4.log.gz": "14aae08a334d9a3b21313ec82fae275a74ceb2d745d133f764aaee616f67590a",
+    "prior-5.json.gz": "2878547ea560042e389f5accacbe214170bf63351c3588aea334a0d8b9eb42e8",
+    "prior-5.log.gz": "a19d26e9eecc910a9a5de86631066f77b69d0bf057015019276d0beb6bb22924",
+    "probe.py": "4d5fa28f680c62c15344adf4f2feea18fb531ca42e0e20a1e29c77a86b1e792c",
+    "retrieval_probe.rs": "e01ac96c3ff77808f4457704364514e27ecc35c6552e83a61d87a903c4119e88",
+    "summarize.py": "0bddad80023e5aab9237159961a317e7023205c4721664237646337482435c42",
+    "summary.json": "027f87f78f525d61d560b18b54f026c44136342824cd456fc3f3a5877e7507a7",
+    "test_probe.py": "31d391921b33517c3340a5556f84dd6d0961b8e16369482e0bb8e4a2183bba93"
+  }
+}

@@ -1653,3 +1653,105 @@ remote CI and merge remain required. No latency, RSS, allocation improvement
 or universal corruption tolerance is claimed.
 
 The rebase onto #372 main preserved every recorded tested source hash.
+
+## Remaining readiness work (2026-11-01; locally validated)
+
+The user authorized parallel completion, validation and merge of the unfinished
+storage/binding, retained-text, restore/retry, audit-verification and retrieval
+work, including the failed documentation performance check. The integration
+branch is `fix/readiness-completion` in `/Volumes/A/holographic-memory`, based on
+verified main `75ffaa5736e34171e45612e8675791f7b71fc2d6` (PR #373). Existing
+historical benchmark limitations and broader research backlog remain distinct
+from these concrete candidates. No paid services or model downloads are used.
+
+The retained-text and restore candidate is validated in
+`/Volumes/A/warm-operational-readiness`; audit verification and documentation
+loading in `/Volumes/A/warm-security-readiness`; retrieval correctness and the
+frozen historical comparison in `/Volumes/A/warm-retrieval-tail-validation`.
+Each build has an explicit private Cargo target directory. The coordinator owns
+storage/binding hardening, combined-source checks and the final PR gate.
+
+The current storage candidate distinguishes failed commit-and-rollback sync
+from a known uncommitted write and quarantines later journal writes under the
+writer lock. HTTP retains uncertain failures under their idempotency keys;
+native/MCP errors retain the reconciliation outcome. All 17 focused storage
+tests pass. This is fault-model evidence, not a hardware power-loss claim.
+Final source hashes, remaining focused checks and the merged revision will be
+recorded before this batch is accepted.
+
+The prior [checkpoint-vector merge gate](checkpoint-vectors-20261101/final-gate.json.gz)
+records PR #373's 66 successful and three skipped checks, tested-tree equality,
+verified signature and main inclusion. The later main Docs run
+`41263012930` failed homepage mobile performance at 84 against its configured
+85 floor; the generic failure text incorrectly said 95. The concepts page's 86
+was above its performance floor. That post-merge failure remains distinct from
+the passing PR gate and is addressed by the documentation-loading candidate.
+
+Retained-text publication now reports committed failures while continuing the
+remaining journaled mutations. Restore invalidates retained responses without
+releasing protected retry keys, including rollback and late worker completion.
+All 39 focused tests and strict scoped Clippy pass; historical validation is
+preserved with verified source hashes in
+[restore/retry evidence](restore-retry-20261101/validation.json) and
+[retained-text evidence](text-publication-20261101/resumed-validation.json).
+Incomplete live publication still requires reopen/reconciliation; failed
+scrubbing does not establish erasure. Restore retry protection is process-local.
+
+Exact vector snapshots select the best k still-live captured rows before merging
+changed documents, preserving the live winner when obsolete rows score higher.
+Canonical score and document/chunk tie ordering remain unchanged. Stale exact
+scoring holds the document read lock; fresh exact and graph scoring retain their
+unlocked paths. BM25 accepts its declared finite nonnegative k1 domain without
+intermediate overflow, including subnormal values, while retaining default score
+bits. Local gates pass 120 document tests (one existing ignore), 13 engine
+snapshot tests, and strict lib/tests Clippy. See
+[retrieval correctness](retrieval-correctness-20261101/validation.json).
+The separately frozen historical tail experiment passed all 7,680 exhaustive
+oracle comparisons and full ordered payload comparisons across three revisions.
+All 15 processes completed in 61.41 seconds. The predefined hot-query regression
+trigger did not fire; the complete latency and allocation tradeoffs are retained
+with the experiment rather than generalized into a production performance claim.
+Rare-query peak requested memory remains 83,864 bytes above the historical
+baseline and matches the prior revision. The coordinator regenerated the summary
+from hashed raw reports without a diff. See the
+[historical comparison](retrieval-tail-20261101/INVESTIGATION.md).
+
+Audit entries can be verified with a retained trusted public key after the
+original signing key is removed; this does not add automatic key rotation or
+whole-history assurance. Local Rust, Node restart and type checks pass; see
+[audit verification](audit-key-verification-20261101/validation.json).
+Mobile validation passes 18 tests, and regenerated Swift/JVM/Android bindings
+match after trailing-whitespace normalization. All four actual headless Chrome
+WASM tests pass, including raw-vector shape boundaries; see
+[binding validation](mobile-wasm-readiness-20261101/validation.json) for the exact
+tested source and the distinction from later integration commits.
+
+The homepage embeds its two theme stylesheets to remove blocking requests;
+other pages retain their existing resources. Local mobile performance scores
+are 98 for home and 99 for concepts, with desktop and other categories at 100.
+All 21 docs unit tests, 36 axe views and 46 search queries pass. These local
+measurements are not a hosted CI result, and no quality threshold was lowered.
+See [documentation evidence](docs-rendering-20261101/validation.json).
+
+The final integrated source is `f39433e9b3a705827a5fed04a40d6e0442bb98bc`.
+Its local combined gate passes 806 library tests (12 existing diagnostic ignores),
+all binary tests including 85 HTTP and 48 MCP tests, strict scoped Clippy and
+repository formatting. Earlier C tests/header checks and other development logs
+remain separately attributed. Followup regressions establish that quarantined
+journals reject flush and compaction publication, and that uncertain HTTP ingest
+preserves staged ANN rows for reopen reconciliation. The C handle drains admitted
+calls before closing its store; graph logs enforce exclusive ownership and repair
+only torn tails. See [integration evidence](readiness-completion-20261101/validation.json).
+Exact-head remote CI and merge remain required.
+
+PR #374's first head `0d7ff7eb` exposed a stale bundled Go header: Linux x64,
+Linux ARM and macOS compiled the C library and passed C tests, then failed Go
+compilation because the two new mutation-outcome constants were absent. The
+header generator now updates/checks both Go header copies, and the existing C
+header suite enforces parity. The original failures are retained in
+[CI failure evidence](readiness-completion-20261101/ci-before-go-header/validation.json).
+The corrected headers pass generation checks, two C header tests, Go vet and
+Go race tests (14 tests plus one example). See
+[Go packaging validation](go-header-parity-20261101/validation.json).
+This followup changes packaging and parity checks; the benchmarked engine source
+remains unchanged. The new PR head must pass the hosted release/platform matrix.

@@ -25,6 +25,7 @@ from pathlib import Path
 import yaml
 from urllib.parse import quote_from_bytes, urlsplit
 from mkdocs.exceptions import PluginError
+from markupsafe import Markup
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import docs_charts  # noqa: E402
@@ -199,6 +200,28 @@ def on_config(config):
         "repo": REPO, "repo_ref": ref,
     }
     return config
+
+
+def on_env(env, config, files):
+    def inline_theme_styles(markup):
+        def replace(match):
+            asset = "assets/stylesheets/" + match["name"]
+            css = env.loader.get_source(env, asset)[0]
+            if "</style" in css.lower() or "@import" in css.lower():
+                raise PluginError(f"Cannot inline theme stylesheet: {asset}")
+            for url in re.finditer(r"\burl\(\s*(?:\"([^\"]*)\"|'([^']*)'|([^)]*))\s*\)", css):
+                value = next(group for group in url.groups() if group is not None).strip()
+                if not value.startswith(("data:", "#")):
+                    raise PluginError(f"Theme stylesheet needs asset URL rewriting: {asset}")
+            return f'<style data-warm-theme="{match["name"]}">{css}</style>'
+
+        return Markup(re.sub(
+            r'<link rel="stylesheet" href="[^"]*assets/stylesheets/(?P<name>[a-zA-Z0-9_.-]+\.css)">',
+            replace, str(markup),
+        ))
+
+    env.filters["warm_inline_theme_styles"] = inline_theme_styles
+    return env
 
 
 FRONT_MATTER = re.compile(r"\A---\n.*?\n---\n", re.S)

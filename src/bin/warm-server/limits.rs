@@ -208,6 +208,7 @@ impl StoredResponse {
 
 enum State {
     Running,
+    RunningInvalidated,
     Done(StoredResponse),
     Unreplayable,
 }
@@ -264,18 +265,27 @@ impl IdempotencyGuard {
     /// Retain the outcome or a reconciliation marker; only known transient failures release the key.
     pub fn complete(mut self, response: &StoredResponse) {
         let mut inner = self.inner.lock();
+        let invalidated = matches!(
+            inner
+                .records
+                .get(&self.key)
+                .expect("running request retains its key")
+                .state,
+            State::RunningInvalidated
+        );
         let retryable = !response.committed
             && (response.status.is_server_error() || matches!(response.status.as_u16(), 408 | 429));
-        if retryable {
+        if retryable && !invalidated {
             inner.remove(&self.key);
         } else {
-            let state =
-                if response.allocated_bytes <= self.max_bytes.saturating_sub(inner.body_bytes) {
-                    inner.body_bytes += response.allocated_bytes;
-                    State::Done(response.clone())
-                } else {
-                    State::Unreplayable
-                };
+            let state = if !invalidated
+                && response.allocated_bytes <= self.max_bytes.saturating_sub(inner.body_bytes)
+            {
+                inner.body_bytes += response.allocated_bytes;
+                State::Done(response.clone())
+            } else {
+                State::Unreplayable
+            };
             let now = Instant::now();
             let record = inner
                 .records
@@ -336,6 +346,28 @@ impl Idempotency {
         )
     }
 
+    pub fn invalidate_tenant(&self, tenant: &str) {
+        let mut inner = self.inner.lock();
+        let mut released = 0;
+        for ((name, _), record) in &mut inner.records {
+            if name != tenant {
+                continue;
+            }
+            match &record.state {
+                State::Running => record.state = State::RunningInvalidated,
+                State::Done(response) => {
+                    released += response.allocated_bytes;
+                    record.state = State::Unreplayable;
+                }
+                State::RunningInvalidated | State::Unreplayable => {}
+            }
+        }
+        inner.body_bytes = inner
+            .body_bytes
+            .checked_sub(released)
+            .expect("retained replay bytes are accounted");
+    }
+
     pub fn begin(&self, tenant: &str, key: &str, fingerprint: [u8; 32]) -> Result<Begin, ApiError> {
         self.begin_at(tenant, key, fingerprint, Instant::now())
     }
@@ -370,7 +402,7 @@ impl Idempotency {
             }
             return match &record.state {
                     State::Done(response) => Ok(Begin::Replay(response.clone())),
-                    State::Running => Err(ApiError::new(
+                    State::Running | State::RunningInvalidated => Err(ApiError::new(
                         StatusCode::CONFLICT,
                         "idempotency_in_flight",
                         "a request with this Idempotency-Key is still running",
@@ -570,6 +602,90 @@ mod tests {
             store.begin("t", "f", fp).unwrap(),
             Begin::Proceed(_)
         ));
+    }
+
+    #[test]
+    fn restored_tenant_preserves_keys_through_expiry_and_late_completion() {
+        let ttl = Duration::from_secs(60);
+        let response = StoredResponse::new(StatusCode::OK, &serde_json::json!({"ok": true}), false);
+        let transient = StoredResponse::new(
+            StatusCode::SERVICE_UNAVAILABLE,
+            &serde_json::json!({}),
+            false,
+        );
+        let store = Idempotency::new(ttl, 5, response.allocated_bytes * 2);
+        let begin = |tenant: &str, key: &str| {
+            let Begin::Proceed(guard) = store.begin(tenant, key, [1; 32]).unwrap() else {
+                panic!()
+            };
+            guard
+        };
+        begin("t", "done").complete(&response);
+        begin("other", "done").complete(&response);
+        let success = begin("t", "success");
+        let failure = begin("t", "failure");
+        let abandoned = begin("t", "abandoned");
+        let (first, last) = {
+            let inner = store.inner.lock();
+            (
+                inner.completed.front().unwrap().0,
+                inner.completed.back().unwrap().0,
+            )
+        };
+
+        store.invalidate_tenant("t");
+        store.invalidate_tenant("t");
+        assert_eq!(store.usage(), (5, response.allocated_bytes, 1));
+        assert!(matches!(
+            store.begin("other", "done", [1; 32]),
+            Ok(Begin::Replay(_))
+        ));
+        assert_eq!(
+            store.begin("t", "new", [1; 32]).err().unwrap().code,
+            "server_busy"
+        );
+        assert_eq!(
+            store
+                .begin_at("t", "done", [1; 32], first + ttl - Duration::from_nanos(1))
+                .err()
+                .unwrap()
+                .code,
+            "idempotency_reconciliation_required"
+        );
+        let Begin::Proceed(expired) = store.begin_at("t", "done", [1; 32], first + ttl).unwrap()
+        else {
+            panic!()
+        };
+        expired.complete(&transient);
+        assert_eq!(
+            store
+                .begin_at(
+                    "t",
+                    "success",
+                    [1; 32],
+                    last + ttl + Duration::from_nanos(1)
+                )
+                .err()
+                .unwrap()
+                .code,
+            "idempotency_in_flight"
+        );
+        assert_eq!(store.usage(), (3, 0, 0));
+
+        success.complete(&response);
+        failure.complete(&transient);
+        drop(abandoned);
+        assert_eq!(store.usage(), (3, 0, 3));
+        for key in ["success", "failure", "abandoned"] {
+            assert_eq!(
+                store.begin("t", key, [1; 32]).err().unwrap().code,
+                "idempotency_reconciliation_required"
+            );
+            assert_eq!(
+                store.begin("t", key, [2; 32]).err().unwrap().code,
+                "idempotency_key_reused"
+            );
+        }
     }
 
     #[test]

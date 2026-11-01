@@ -28,11 +28,10 @@ impl Bound {
             return None;
         }
         let maximum_norm = bm25.norm(usize::MAX as f64, average);
-        let numerator = idf * f64::from(u32::MAX) * bm25.k1_plus_one;
+        let maximum = bm25.weight(idf, f64::from(u32::MAX), maximum_norm);
         if !bm25.k1_plus_one.is_finite()
             || !maximum_norm.is_finite()
-            || !(maximum_norm + f64::from(u32::MAX)).is_finite()
-            || !numerator.is_finite()
+            || !maximum.is_finite()
             || (idf != 0.0
                 && (!idf.is_normal() || !bm25.weight(idf, 1.0, maximum_norm).is_normal()))
         {
@@ -367,6 +366,7 @@ mod tests {
         assert!(Bound::new(1.0, f64::INFINITY, Bm25::DEFAULT).is_none());
         let extreme = Bm25::from_options(&SearchOptions {
             bm25_k1: Some(f64::MAX),
+            bm25_b: Some(1.0),
             ..Default::default()
         })
         .unwrap();
@@ -416,6 +416,7 @@ mod tests {
         for (k1, b) in [
             (0.0, 0.0),
             (0.0, 1.0),
+            (f64::from_bits(1), 1.0),
             (1.2, 0.75),
             (2.0, 1.0),
             (1e100, 0.5),

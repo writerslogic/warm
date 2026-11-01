@@ -1939,6 +1939,16 @@ enum WarmError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
     case Io(details: String
     )
     /**
+     * The requested mutation committed durably, but a follow-up effect failed. Reconcile before retrying.
+     */
+    case MutationCommitted(details: String
+    )
+    /**
+     * The write outcome is indeterminate; reopen/reconcile before further writes or retry.
+     */
+    case MutationUncertain(details: String
+    )
+    /**
      * The store handle was closed.
      */
     case Closed
@@ -2000,8 +2010,14 @@ public struct FfiConverterTypeWarmError: FfiConverterRustBuffer {
         case 8: return .Io(
             details: try FfiConverterString.read(from: &buf)
             )
-        case 9: return .Closed
-        case 10: return .Internal(
+        case 9: return .MutationCommitted(
+            details: try FfiConverterString.read(from: &buf)
+            )
+        case 10: return .MutationUncertain(
+            details: try FfiConverterString.read(from: &buf)
+            )
+        case 11: return .Closed
+        case 12: return .Internal(
             details: try FfiConverterString.read(from: &buf)
             )
 
@@ -2056,12 +2072,22 @@ public struct FfiConverterTypeWarmError: FfiConverterRustBuffer {
             FfiConverterString.write(details, into: &buf)
             
         
-        case .Closed:
+        case let .MutationCommitted(details):
             writeInt(&buf, Int32(9))
+            FfiConverterString.write(details, into: &buf)
+
+
+        case let .MutationUncertain(details):
+            writeInt(&buf, Int32(10))
+            FfiConverterString.write(details, into: &buf)
+
+
+        case .Closed:
+            writeInt(&buf, Int32(11))
         
         
         case let .Internal(details):
-            writeInt(&buf, Int32(10))
+            writeInt(&buf, Int32(12))
             FfiConverterString.write(details, into: &buf)
             
         }

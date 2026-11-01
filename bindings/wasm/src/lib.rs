@@ -16,6 +16,20 @@ pub use store::WarmStore;
 use wasm_bindgen::prelude::*;
 
 const DEFAULT_RHO_DENOM: usize = 256;
+const MAX_DIM: usize = 1 << 20;
+
+fn validate_dim(dim: usize) -> Result<(), &'static str> {
+    (1..=MAX_DIM)
+        .contains(&dim)
+        .then_some(())
+        .ok_or("dim must be in 1..=2^20")
+}
+
+fn validate_same_dim(left: usize, right: usize) -> Result<(), &'static str> {
+    (left == right)
+        .then_some(())
+        .ok_or("vector dimensions do not match")
+}
 
 #[wasm_bindgen]
 pub struct WasmEntangledHVec {
@@ -26,7 +40,8 @@ pub struct WasmEntangledHVec {
 #[wasm_bindgen]
 impl WasmEntangledHVec {
     #[wasm_bindgen(constructor)]
-    pub fn new_deterministic(dim: usize, seed: u64) -> Self {
+    pub fn new_deterministic(dim: usize, seed: u64) -> Result<WasmEntangledHVec, JsError> {
+        validate_dim(dim).map_err(JsError::new)?;
         let active_count = (dim / DEFAULT_RHO_DENOM).max(1);
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
         let mut indices = Vec::with_capacity(active_count);
@@ -41,10 +56,11 @@ impl WasmEntangledHVec {
             indices.sort_unstable();
             indices.dedup();
         }
-        Self { dim, indices }
+        Ok(Self { dim, indices })
     }
 
-    pub fn bind(&self, other: &WasmEntangledHVec) -> Self {
+    pub fn bind(&self, other: &WasmEntangledHVec) -> Result<WasmEntangledHVec, JsError> {
+        validate_same_dim(self.dim, other.dim).map_err(JsError::new)?;
         let mut result = Vec::new();
         let mut i = 0;
         let mut j = 0;
@@ -70,13 +86,14 @@ impl WasmEntangledHVec {
             j += 1;
         }
 
-        Self {
+        Ok(Self {
             dim: self.dim,
             indices: result,
-        }
+        })
     }
 
-    pub fn similarity(&self, other: &WasmEntangledHVec) -> f64 {
+    pub fn similarity(&self, other: &WasmEntangledHVec) -> Result<f64, JsError> {
+        validate_same_dim(self.dim, other.dim).map_err(JsError::new)?;
         let mut intersection = 0;
         let mut i = 0;
         let mut j = 0;
@@ -93,29 +110,30 @@ impl WasmEntangledHVec {
         }
         let union = self.indices.len() + other.indices.len() - intersection;
         if union == 0 {
-            return 1.0;
+            return Ok(1.0);
         }
-        intersection as f64 / union as f64
+        Ok(intersection as f64 / union as f64)
     }
 }
 
 /// Toy lexical encoder: the union of one deterministic vector per lowercase
 /// word, so texts sharing words share active coordinates.
 #[wasm_bindgen]
-pub fn encode_text(dim: usize, text: &str) -> WasmEntangledHVec {
+pub fn encode_text(dim: usize, text: &str) -> Result<WasmEntangledHVec, JsError> {
+    validate_dim(dim).map_err(JsError::new)?;
     let mut indices: Vec<u32> = text
         .split(|c: char| !c.is_alphanumeric())
         .filter(|w| !w.is_empty())
         .flat_map(|w| {
-            WasmEntangledHVec::new_deterministic(dim, fxhash::hash64(&w.to_lowercase())).indices
+            WasmEntangledHVec::new_deterministic(dim, fxhash::hash64(&w.to_lowercase()))
+                .expect("dimension checked")
+                .indices
         })
         .collect();
     indices.sort_unstable();
     indices.dedup();
-    WasmEntangledHVec { dim, indices }
+    Ok(WasmEntangledHVec { dim, indices })
 }
-
-const MAX_DIM: usize = 1 << 20;
 
 /// A secret permutation of the coordinate space derived from a passphrase with
 /// Argon2id. Obfuscation, not encryption: every pairwise similarity is
@@ -208,5 +226,21 @@ pub fn memory_bytes() -> usize {
     #[cfg(not(target_arch = "wasm32"))]
     {
         0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn raw_hvec_shape_errors_are_results_not_traps() {
+        assert!(validate_dim(0).is_err());
+        assert!(WasmEntangledHVec::new_deterministic(1, 1).is_ok());
+        assert!(WasmEntangledHVec::new_deterministic(MAX_DIM - 1, 1).is_ok());
+        assert!(WasmEntangledHVec::new_deterministic(MAX_DIM, 1).is_ok());
+        assert!(validate_dim(MAX_DIM + 1).is_err());
+        assert!(validate_same_dim(8, 16).is_err());
+        assert!(validate_same_dim(8, 8).is_ok());
     }
 }

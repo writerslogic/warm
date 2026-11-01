@@ -29,3 +29,25 @@ revision with `git fetch --no-tags origin <revision>`.
 Historical reader-suspension checks also need the external binaries identified by
 their original manifest. Restoring archived source and logs does not establish a
 completed or accepted timing result.
+
+## Attribution limits retained by remediation
+
+Historical benchmark rows are evidence for the exact source revision, dataset split,
+hardware, thread count, configuration and durability/quality boundary recorded with that
+result, not for the current working tree. In particular:
+
+- SIFT ANN rows comparing WARM with hnswlib retain their recorded CSV/provenance identity;
+  rows whose WARM source revision is not pinned cannot support a current-source superiority
+  claim.
+- Query-aware VIBE official runs and later reserved-learn direct-IP/reservoir experiments are
+  separate evidence streams; do not combine their gains or treat reserved-learn measurements
+  as official/current-revision results.
+- Bemula results are one historical adapter/comparator run; engine erasure evidence is the
+  recorded absence of purged ids in recall, while policy/model failures remain attributed to
+  the adapter or model.
+- LongMemEval cached-Qwen3 reference retrieval is a development reference result, not native
+  conversation-recall quality.
+
+A current-source confirmation must freeze the exact commit, corpus/split, hardware/threads,
+configuration, runtime boundary, durability mode, quality gate, build/ingest/serve/cold-start
+costs, RSS and disk usage before reporting a score.

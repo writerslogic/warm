@@ -9,12 +9,12 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use parking_lot::{Condvar, Mutex, RwLock};
 use writerslogic_warm::core::admin::inspect_store;
 use writerslogic_warm::core::{EmbeddingSpace, WarmConfig};
 use writerslogic_warm::{
-    chunk_document, DocumentChunk, DocumentInput, DocumentResult, WarmCore, SearchOptions,
+    chunk_document, DocumentChunk, DocumentInput, DocumentResult, SearchOptions, WarmCore,
 };
-use parking_lot::{Mutex, RwLock};
 
 use crate::error::*;
 use crate::types::*;
@@ -22,11 +22,37 @@ use crate::types::*;
 /// An open store. Opaque to C.
 #[allow(non_camel_case_types)]
 pub struct warm_store_t {
+    lifecycle: Mutex<Lifecycle>,
+    drained: Condvar,
+}
+
+struct StoreState {
     core: WarmCore,
     /// Mutations hold the read side; a snapshot holds the write side so the copied files are
     /// a single consistent point in time.
     barrier: RwLock<()>,
     path: PathBuf,
+}
+
+struct Lifecycle {
+    state: Option<Arc<StoreState>>,
+    active: usize,
+}
+
+struct Admission<'a> {
+    store: &'a warm_store_t,
+    state: Option<Arc<StoreState>>,
+}
+
+impl Drop for Admission<'_> {
+    fn drop(&mut self) {
+        drop(self.state.take());
+        let mut lifecycle = self.store.lifecycle.lock();
+        lifecycle.active = lifecycle.active.checked_sub(1).expect("admitted operation");
+        if lifecycle.active == 0 {
+            self.store.drained.notify_all();
+        }
+    }
 }
 
 /// A search result set. Opaque to C; read with `hms1_results_count` and `hms1_results_get`.
@@ -63,6 +89,33 @@ fn lookup(handle: *const warm_store_t) -> ApiResult<Arc<warm_store_t>> {
                 "store handle is closed or was never issued",
             )
         })
+}
+
+fn admit<T>(
+    handle: *const warm_store_t,
+    body: impl FnOnce(&StoreState) -> ApiResult<T>,
+) -> ApiResult<T> {
+    let store = lookup(handle)?;
+    let state = {
+        let mut lifecycle = store.lifecycle.lock();
+        let state = lifecycle
+            .state
+            .as_ref()
+            .ok_or_else(|| ApiError::new(WARM_ERR_INVALID_HANDLE, "store handle is closing"))?
+            .clone();
+        lifecycle.active = lifecycle
+            .active
+            .checked_add(1)
+            .ok_or_else(|| ApiError::new(WARM_ERR_LIMIT_EXCEEDED, "too many active operations"))?;
+        state
+    };
+    let admitted = Admission {
+        store: &store,
+        state: Some(state),
+    };
+    #[cfg(test)]
+    tests::after_admission();
+    body(admitted.state.as_deref().expect("admitted store"))
 }
 
 fn bool_i32(value: bool) -> i32 {
@@ -185,9 +238,15 @@ pub unsafe extern "C" fn hms1_store_open(
         let core = WarmCore::new(dimensions, Some(path.to_owned()), Some(config))
             .map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))?;
         let store = Arc::new(warm_store_t {
-            core,
-            barrier: RwLock::new(()),
-            path: PathBuf::from(path),
+            lifecycle: Mutex::new(Lifecycle {
+                state: Some(Arc::new(StoreState {
+                    core,
+                    barrier: RwLock::new(()),
+                    path: PathBuf::from(path),
+                })),
+                active: 0,
+            }),
+            drained: Condvar::new(),
         });
         // The handle is a never-reused token, not an address: a stale handle can never alias a
         // store opened later, and it is never dereferenced.
@@ -212,10 +271,18 @@ pub extern "C" fn hms1_store_close(store: *mut warm_store_t) -> warm_status_t {
         let removed = registry().lock().remove(&(store as usize)).ok_or_else(|| {
             ApiError::new(WARM_ERR_INVALID_HANDLE, "store handle is closed or unknown")
         })?;
-        let flushed = {
-            let _mutations = removed.barrier.read();
-            removed.core.flush()
+        let state = {
+            let mut lifecycle = removed.lifecycle.lock();
+            let state = lifecycle.state.take().expect("registered open store");
+            #[cfg(test)]
+            tests::close_started();
+            while lifecycle.active != 0 {
+                removed.drained.wait(&mut lifecycle);
+            }
+            state
         };
+        let flushed = state.core.flush();
+        drop(state);
         drop(removed);
         flushed.map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))
     })
@@ -302,27 +369,30 @@ pub unsafe extern "C" fn hms1_store_ingest(
     chunk_counts: *mut u32,
 ) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let docs = slice(documents, count, "documents")?;
-        let inputs = docs
-            .iter()
-            .map(document_input)
-            .collect::<ApiResult<Vec<_>>>()?;
-        if inputs.is_empty() {
-            return Ok(());
-        }
-        let counts = {
-            let _mutation = store.barrier.read();
-            store
-                .core
-                .memorize_documents(inputs)
-                .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INVALID_ARGUMENT))?
-        };
-        if !chunk_counts.is_null() {
-            // SAFETY: the caller promised room for `count` entries; `counts` has `count`.
-            unsafe { std::ptr::copy_nonoverlapping(counts.as_ptr(), chunk_counts, counts.len()) };
-        }
-        Ok(())
+        admit(store, |store| {
+            let docs = slice(documents, count, "documents")?;
+            let inputs = docs
+                .iter()
+                .map(document_input)
+                .collect::<ApiResult<Vec<_>>>()?;
+            if inputs.is_empty() {
+                return Ok(());
+            }
+            let counts = {
+                let _mutation = store.barrier.read();
+                store
+                    .core
+                    .memorize_documents(inputs)
+                    .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INVALID_ARGUMENT))?
+            };
+            if !chunk_counts.is_null() {
+                // SAFETY: the caller promised room for `count` entries; `counts` has `count`.
+                unsafe {
+                    std::ptr::copy_nonoverlapping(counts.as_ptr(), chunk_counts, counts.len())
+                };
+            }
+            Ok(())
+        })
     })
 }
 
@@ -390,17 +460,18 @@ pub unsafe extern "C" fn hms1_store_search(
         *out = std::ptr::null_mut();
     }
     guard(|| {
-        let out = require_out(out, "out")?;
-        let store = lookup(store)?;
-        let query = utf8(query, "query")?;
-        let options = search_options(options)?;
-        let hits = store
-            .core
-            .search_documents(query, &options)
-            .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INVALID_ARGUMENT))?;
-        let metadata = hits.iter().map(|h| h.metadata.to_string()).collect();
-        *out = Box::into_raw(Box::new(warm_results_t { hits, metadata }));
-        Ok(())
+        admit(store, |store| {
+            let out = require_out(out, "out")?;
+            let query = utf8(query, "query")?;
+            let options = search_options(options)?;
+            let hits = store
+                .core
+                .search_documents(query, &options)
+                .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INVALID_ARGUMENT))?;
+            let metadata = hits.iter().map(|h| h.metadata.to_string()).collect();
+            *out = Box::into_raw(Box::new(warm_results_t { hits, metadata }));
+            Ok(())
+        })
     })
 }
 
@@ -479,19 +550,20 @@ pub unsafe extern "C" fn hms1_store_delete(
     deleted: *mut i32,
 ) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let id = utf8(id, "id")?;
-        let existed = {
-            let _mutation = store.barrier.read();
-            store
-                .core
-                .delete_document(id)
-                .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INVALID_ARGUMENT))?
-        };
-        if let Some(deleted) = deleted.as_mut() {
-            *deleted = bool_i32(existed);
-        }
-        Ok(())
+        admit(store, |store| {
+            let id = utf8(id, "id")?;
+            let existed = {
+                let _mutation = store.barrier.read();
+                store
+                    .core
+                    .delete_document(id)
+                    .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INVALID_ARGUMENT))?
+            };
+            if let Some(deleted) = deleted.as_mut() {
+                *deleted = bool_i32(existed);
+            }
+            Ok(())
+        })
     })
 }
 
@@ -506,25 +578,26 @@ pub unsafe extern "C" fn hms1_store_stats(
     out: *mut warm_stats_t,
 ) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let index = store.core.index_status();
-        let health = store.core.storage_health();
-        let stats = warm_stats_t {
-            struct_size: std::mem::size_of::<warm_stats_t>() as u32,
-            dimensions: store.core.dimensions() as u32,
-            vector_count: store.core.vector_count(),
-            nsg_trained: bool_i32(index.nsg_trained),
-            ivf_trained: bool_i32(index.ivf_trained),
-            nsg_training_recommended: bool_i32(index.nsg_training_recommended),
-            ivf_training_recommended: bool_i32(index.ivf_training_recommended),
-            document_index_trained: bool_i32(store.core.document_index_trained()),
-            storage_format_version: health.format_version,
-            storage_segment_count: health.segment_count,
-            document_embedding_count: store.core.document_embedding_count() as u64,
-            storage_used_bytes: health.used_bytes as u64,
-            storage_capacity_bytes: health.capacity_bytes as u64,
-        };
-        write_out(out, stats, "out")
+        admit(store, |store| {
+            let index = store.core.index_status();
+            let health = store.core.storage_health();
+            let stats = warm_stats_t {
+                struct_size: std::mem::size_of::<warm_stats_t>() as u32,
+                dimensions: store.core.dimensions() as u32,
+                vector_count: store.core.vector_count(),
+                nsg_trained: bool_i32(index.nsg_trained),
+                ivf_trained: bool_i32(index.ivf_trained),
+                nsg_training_recommended: bool_i32(index.nsg_training_recommended),
+                ivf_training_recommended: bool_i32(index.ivf_training_recommended),
+                document_index_trained: bool_i32(store.core.document_index_trained()),
+                storage_format_version: health.format_version,
+                storage_segment_count: health.segment_count,
+                document_embedding_count: store.core.document_embedding_count() as u64,
+                storage_used_bytes: health.used_bytes as u64,
+                storage_capacity_bytes: health.capacity_bytes as u64,
+            };
+            write_out(out, stats, "out")
+        })
     })
 }
 
@@ -539,19 +612,20 @@ pub unsafe extern "C" fn hms1_store_security_status(
     out: *mut warm_security_status_t,
 ) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let status = store.core.security_status();
-        let flag = |name: &str| bool_i32(status[name].as_bool().unwrap_or(false));
-        let value = warm_security_status_t {
-            struct_size: std::mem::size_of::<warm_security_status_t>() as u32,
-            security_compiled: flag("securityCompiled"),
-            encryption_active: flag("encryptionActive"),
-            signing_active: flag("signingActive"),
-            audit_active: flag("auditActive"),
-            differential_privacy_active: flag("differentialPrivacyActive"),
-            epsilon: status["epsilon"].as_f64().unwrap_or(f64::NAN),
-        };
-        write_out(out, value, "out")
+        admit(store, |store| {
+            let status = store.core.security_status();
+            let flag = |name: &str| bool_i32(status[name].as_bool().unwrap_or(false));
+            let value = warm_security_status_t {
+                struct_size: std::mem::size_of::<warm_security_status_t>() as u32,
+                security_compiled: flag("securityCompiled"),
+                encryption_active: flag("encryptionActive"),
+                signing_active: flag("signingActive"),
+                audit_active: flag("auditActive"),
+                differential_privacy_active: flag("differentialPrivacyActive"),
+                epsilon: status["epsilon"].as_f64().unwrap_or(f64::NAN),
+            };
+            write_out(out, value, "out")
+        })
     })
 }
 
@@ -559,12 +633,13 @@ pub unsafe extern "C" fn hms1_store_security_status(
 #[no_mangle]
 pub extern "C" fn hms1_store_flush(store: *mut warm_store_t) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let _mutation = store.barrier.read();
-        store
-            .core
-            .flush()
-            .map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))
+        admit(store, |store| {
+            let _mutation = store.barrier.read();
+            store
+                .core
+                .flush()
+                .map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))
+        })
     })
 }
 
@@ -573,12 +648,13 @@ pub extern "C" fn hms1_store_flush(store: *mut warm_store_t) -> warm_status_t {
 #[no_mangle]
 pub extern "C" fn hms1_store_compact(store: *mut warm_store_t) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let _mutation = store.barrier.read();
-        store
-            .core
-            .compact()
-            .map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))
+        admit(store, |store| {
+            let _mutation = store.barrier.read();
+            store
+                .core
+                .compact()
+                .map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))
+        })
     })
 }
 
@@ -586,13 +662,14 @@ pub extern "C" fn hms1_store_compact(store: *mut warm_store_t) -> warm_status_t 
 #[no_mangle]
 pub extern "C" fn hms1_store_maintain(store: *mut warm_store_t) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let _mutation = store.barrier.read();
-        store
-            .core
-            .maintain_indices()
-            .map(|_| ())
-            .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INTERNAL))
+        admit(store, |store| {
+            let _mutation = store.barrier.read();
+            store
+                .core
+                .maintain_indices()
+                .map(|_| ())
+                .map_err(|e| ApiError::from_engine(&e, WARM_ERR_INTERNAL))
+        })
     })
 }
 
@@ -647,72 +724,72 @@ pub unsafe extern "C" fn hms1_store_snapshot(
     destination: warm_str_t,
 ) -> warm_status_t {
     guard(|| {
-        let store = lookup(store)?;
-        let destination = PathBuf::from(utf8(destination, "destination")?);
-        if destination.as_os_str().is_empty() {
-            return Err(ApiError::new(
-                WARM_ERR_INVALID_ARGUMENT,
-                "destination is empty",
-            ));
-        }
-        if destination.exists() {
-            return Err(ApiError::new(
-                WARM_ERR_INVALID_ARGUMENT,
-                format!(
-                    "snapshot destination {} already exists",
-                    destination.display()
-                ),
-            ));
-        }
-        let parent = destination
-            .parent()
-            .filter(|p| !p.as_os_str().is_empty())
-            .unwrap_or_else(|| Path::new("."));
-        std::fs::create_dir_all(parent)
-            .map_err(|e| ApiError::new(WARM_ERR_IO, format!("{}: {e}", parent.display())))?;
-        let source = store
-            .path
-            .canonicalize()
-            .map_err(|e| ApiError::new(WARM_ERR_IO, format!("{}: {e}", store.path.display())))?;
-        let parent = parent
-            .canonicalize()
-            .map_err(|e| ApiError::new(WARM_ERR_IO, format!("{}: {e}", parent.display())))?;
-        if parent.starts_with(&source) {
-            return Err(ApiError::new(
-                WARM_ERR_INVALID_ARGUMENT,
-                "snapshot destination cannot be inside the store",
-            ));
-        }
-        let nonce = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_or(0, |d| d.as_nanos());
-        let temporary = parent.join(format!(".warm-snapshot-{}-{nonce}", std::process::id()));
-        let result = (|| {
-            {
-                let _quiesce = store.barrier.write();
-                store
-                    .core
-                    .flush()
-                    .map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))?;
-                copy_tree(&source, &temporary)?;
+        admit(store, |store| {
+            let destination = PathBuf::from(utf8(destination, "destination")?);
+            if destination.as_os_str().is_empty() {
+                return Err(ApiError::new(
+                    WARM_ERR_INVALID_ARGUMENT,
+                    "destination is empty",
+                ));
             }
-            inspect_store(&temporary, true)
-                .map_err(|e| ApiError::from_engine(&e, WARM_ERR_CORRUPT))?;
-            let name = destination.file_name().ok_or_else(|| {
-                ApiError::new(WARM_ERR_INVALID_ARGUMENT, "destination has no name")
+            if destination.exists() {
+                return Err(ApiError::new(
+                    WARM_ERR_INVALID_ARGUMENT,
+                    format!(
+                        "snapshot destination {} already exists",
+                        destination.display()
+                    ),
+                ));
+            }
+            let parent = destination
+                .parent()
+                .filter(|p| !p.as_os_str().is_empty())
+                .unwrap_or_else(|| Path::new("."));
+            std::fs::create_dir_all(parent)
+                .map_err(|e| ApiError::new(WARM_ERR_IO, format!("{}: {e}", parent.display())))?;
+            let source = store.path.canonicalize().map_err(|e| {
+                ApiError::new(WARM_ERR_IO, format!("{}: {e}", store.path.display()))
             })?;
-            std::fs::rename(&temporary, parent.join(name))
-                .and_then(|()| {
-                    #[cfg(unix)]
-                    std::fs::File::open(&parent)?.sync_all()?;
-                    Ok(())
-                })
-                .map_err(|e| ApiError::new(WARM_ERR_IO, format!("publishing snapshot: {e}")))
-        })();
-        if result.is_err() && temporary.exists() {
-            let _ = std::fs::remove_dir_all(&temporary);
-        }
-        result
+            let parent = parent
+                .canonicalize()
+                .map_err(|e| ApiError::new(WARM_ERR_IO, format!("{}: {e}", parent.display())))?;
+            if parent.starts_with(&source) {
+                return Err(ApiError::new(
+                    WARM_ERR_INVALID_ARGUMENT,
+                    "snapshot destination cannot be inside the store",
+                ));
+            }
+            let nonce = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos());
+            let temporary = parent.join(format!(".warm-snapshot-{}-{nonce}", std::process::id()));
+            let result = (|| {
+                {
+                    let _quiesce = store.barrier.write();
+                    store
+                        .core
+                        .flush()
+                        .map_err(|e| ApiError::from_engine(&e, WARM_ERR_IO))?;
+                    copy_tree(&source, &temporary)?;
+                }
+                inspect_store(&temporary, true)
+                    .map_err(|e| ApiError::from_engine(&e, WARM_ERR_CORRUPT))?;
+                let name = destination.file_name().ok_or_else(|| {
+                    ApiError::new(WARM_ERR_INVALID_ARGUMENT, "destination has no name")
+                })?;
+                std::fs::rename(&temporary, parent.join(name))
+                    .and_then(|()| {
+                        #[cfg(unix)]
+                        std::fs::File::open(&parent)?.sync_all()?;
+                        Ok(())
+                    })
+                    .map_err(|e| ApiError::new(WARM_ERR_IO, format!("publishing snapshot: {e}")))
+            })();
+            if result.is_err() && temporary.exists() {
+                let _ = std::fs::remove_dir_all(&temporary);
+            }
+            result
+        })
     })
 }
 
@@ -791,5 +868,198 @@ pub unsafe extern "C" fn hms1_chunks_get(
 pub unsafe extern "C" fn hms1_chunks_free(chunks: *mut warm_chunks_t) {
     if !chunks.is_null() {
         drop(Box::from_raw(chunks));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{mpsc, Mutex, OnceLock};
+    use std::time::Duration;
+
+    struct AdmissionPause {
+        admitted: mpsc::Sender<()>,
+        release: mpsc::Receiver<()>,
+    }
+
+    static ADMISSION_PAUSE: OnceLock<Mutex<Option<AdmissionPause>>> = OnceLock::new();
+    static CLOSE_STARTED: OnceLock<Mutex<Option<mpsc::Sender<()>>>> = OnceLock::new();
+
+    pub(super) fn after_admission() {
+        let pause = ADMISSION_PAUSE
+            .get_or_init(|| Mutex::new(None))
+            .lock()
+            .unwrap()
+            .take();
+        if let Some(pause) = pause {
+            let _ = pause.admitted.send(());
+            let _ = pause.release.recv();
+        }
+    }
+
+    pub(super) fn close_started() {
+        let notify = CLOSE_STARTED
+            .get_or_init(|| Mutex::new(None))
+            .lock()
+            .unwrap()
+            .take();
+        if let Some(notify) = notify {
+            let _ = notify.send(());
+        }
+    }
+
+    fn pause_next_admission() -> (mpsc::Receiver<()>, mpsc::Sender<()>) {
+        let (admitted_tx, admitted_rx) = mpsc::channel();
+        let (release_tx, release_rx) = mpsc::channel();
+        *ADMISSION_PAUSE
+            .get_or_init(|| Mutex::new(None))
+            .lock()
+            .unwrap() = Some(AdmissionPause {
+            admitted: admitted_tx,
+            release: release_rx,
+        });
+        (admitted_rx, release_tx)
+    }
+
+    fn watch_next_close() -> mpsc::Receiver<()> {
+        let (tx, rx) = mpsc::channel();
+        *CLOSE_STARTED
+            .get_or_init(|| Mutex::new(None))
+            .lock()
+            .unwrap() = Some(tx);
+        rx
+    }
+
+    fn s(value: &str) -> warm_str_t {
+        warm_str_t::of(value)
+    }
+
+    fn document(id: &str, text: &str) -> warm_document_t {
+        warm_document_t {
+            id: s(id),
+            text: s(text),
+            source_uri: warm_str_t::ABSENT,
+            version: warm_str_t::ABSENT,
+            metadata_json: s("{}"),
+            chunk_words: 0,
+            overlap_words: 0,
+            title_weight: 0,
+            store_text: 0,
+            embeddings: std::ptr::null(),
+            embedding_rows: 0,
+            embedding_dim: 0,
+        }
+    }
+
+    unsafe fn open_store(path: &str) -> *mut warm_store_t {
+        let mut store = std::ptr::null_mut();
+        assert_eq!(
+            hms1_store_open(s(path), 512, std::ptr::null(), &mut store),
+            WARM_OK
+        );
+        assert!(!store.is_null());
+        store
+    }
+
+    enum PausedOperation {
+        Ingest,
+        Search,
+    }
+
+    fn close_waits_for_paused_operation(store: *mut warm_store_t, operation: PausedOperation) {
+        let token = store as usize;
+        let (admitted, release) = pause_next_admission();
+        let worker = std::thread::spawn(move || unsafe {
+            let store = token as *mut warm_store_t;
+            match operation {
+                PausedOperation::Ingest => {
+                    let docs = [document("paused", "close waits for admitted ingest")];
+                    hms1_store_ingest(store, docs.as_ptr(), docs.len(), std::ptr::null_mut())
+                }
+                PausedOperation::Search => {
+                    let mut results = std::ptr::null_mut();
+                    let status =
+                        hms1_store_search(store, s("paused"), std::ptr::null(), &mut results);
+                    hms1_results_free(results);
+                    status
+                }
+            }
+        });
+        admitted
+            .recv_timeout(Duration::from_secs(5))
+            .expect("operation admitted");
+
+        let close_started = watch_next_close();
+        let (closed_tx, closed_rx) = mpsc::channel();
+        let closer = std::thread::spawn(move || {
+            let status = hms1_store_close(token as *mut warm_store_t);
+            closed_tx.send(status).unwrap();
+            status
+        });
+        close_started
+            .recv_timeout(Duration::from_secs(5))
+            .expect("close started");
+        assert!(
+            closed_rx.try_recv().is_err(),
+            "close returned before admitted work finished"
+        );
+        release.send(()).unwrap();
+        assert_eq!(worker.join().unwrap(), WARM_OK);
+        assert_eq!(closer.join().unwrap(), WARM_OK);
+        assert_eq!(
+            closed_rx.recv_timeout(Duration::from_secs(5)).unwrap(),
+            WARM_OK
+        );
+
+        let stale = token as *mut warm_store_t;
+        let mut stats = warm_stats_t {
+            struct_size: std::mem::size_of::<warm_stats_t>() as u32,
+            dimensions: 0,
+            vector_count: 0,
+            nsg_trained: 0,
+            ivf_trained: 0,
+            nsg_training_recommended: 0,
+            ivf_training_recommended: 0,
+            document_index_trained: 0,
+            storage_format_version: 0,
+            storage_segment_count: 0,
+            document_embedding_count: 0,
+            storage_used_bytes: 0,
+            storage_capacity_bytes: 0,
+        };
+        assert_eq!(
+            unsafe { hms1_store_stats(stale, &mut stats) },
+            WARM_ERR_INVALID_HANDLE
+        );
+        assert_eq!(hms1_store_close(stale), WARM_ERR_INVALID_HANDLE);
+    }
+
+    #[test]
+    fn close_drains_admitted_ingest_and_search_before_reopen() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().to_str().unwrap();
+        let store = unsafe { open_store(path) };
+        close_waits_for_paused_operation(store, PausedOperation::Ingest);
+
+        let store = unsafe { open_store(path) };
+        let mut results = std::ptr::null_mut();
+        assert_eq!(
+            unsafe {
+                hms1_store_search(store, s("admitted ingest"), std::ptr::null(), &mut results)
+            },
+            WARM_OK
+        );
+        assert!(unsafe { hms1_results_count(results) } > 0);
+        unsafe { hms1_results_free(results) };
+        close_waits_for_paused_operation(store, PausedOperation::Search);
+
+        let store = unsafe { open_store(path) };
+        let looked_up_before_close = lookup(store)
+            .unwrap_or_else(|error| panic!("lookup failed with status {}", error.code));
+        assert_eq!(hms1_store_close(store), WARM_OK);
+        let reopened = unsafe { open_store(path) };
+        assert!(looked_up_before_close.lifecycle.lock().state.is_none());
+        drop(looked_up_before_close);
+        assert_eq!(hms1_store_close(reopened), WARM_OK);
     }
 }

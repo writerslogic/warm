@@ -102,9 +102,15 @@ fn main() {
     let _ = std::fs::remove_file(&log);
     {
         let mut graph = ConnectionGraph::open(64, GraphConfig::default(), &log).expect("graph");
-        graph.store("paris", "capital_of", "france");
-        graph.store("john", "father", "mark");
-        graph.query("paris", "capital_of", "france");
+        graph
+            .store("paris", "capital_of", "france")
+            .expect("store relation");
+        graph
+            .store("john", "father", "mark")
+            .expect("store relation");
+        graph
+            .query("paris", "capital_of", "france")
+            .expect("query relation");
     }
     put(
         &root,

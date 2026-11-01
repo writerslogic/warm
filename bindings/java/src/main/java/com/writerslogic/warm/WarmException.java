@@ -10,7 +10,8 @@ public final class WarmException extends RuntimeException {
     /** Native status codes, mirroring the {@code WARM_ERR_*} constants of the C header. */
     public enum Code {
         NULL_POINTER(1), INVALID_ARGUMENT(2), INVALID_UTF8(3), INVALID_HANDLE(4), IO(5), LOCKED(6),
-        ENCRYPTION(7), CORRUPT(8), LIMIT_EXCEEDED(9), ABI_MISMATCH(10), PANIC(98), INTERNAL(99),
+        ENCRYPTION(7), CORRUPT(8), LIMIT_EXCEEDED(9), ABI_MISMATCH(10),
+        MUTATION_COMMITTED(11), MUTATION_UNCERTAIN(12), PANIC(98), INTERNAL(99),
         /** A code this binding does not know; see {@link WarmException#nativeCode()}. */
         UNKNOWN(-1);
 

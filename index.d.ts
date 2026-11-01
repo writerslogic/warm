@@ -87,6 +87,8 @@ export declare class WarmMemorySystem {
   querySequence(partial: Array<string>, k: number): Promise<Array<RetrievalResult>>
   delete(id: string): Promise<boolean>
   compact(): Promise<void>
+  /** Hexadecimal Ed25519 public key, or null when signing is disabled. Establish trust independently. */
+  auditVerifyingKey(): string | null
   auditSince(timestampMs: number): Promise<Array<AuditEntryJs>>
   /**
    * Bundle multiple text items into a single hypervector.

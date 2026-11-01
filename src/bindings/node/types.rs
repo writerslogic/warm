@@ -3,6 +3,16 @@
 
 use napi_derive::napi;
 
+pub(super) fn hex_encode(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(HEX[usize::from(byte >> 4)] as char);
+        encoded.push(HEX[usize::from(byte & 15)] as char);
+    }
+    encoded
+}
+
 #[napi(object)]
 pub struct AuditEntryJs {
     pub timestamp_ms: f64,
@@ -16,7 +26,6 @@ pub struct AuditEntryJs {
 
 impl From<crate::AuditEntry> for AuditEntryJs {
     fn from(entry: crate::AuditEntry) -> Self {
-        let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect();
         Self {
             timestamp_ms: entry.timestamp_ms as f64,
             op: match entry.op {
@@ -25,11 +34,11 @@ impl From<crate::AuditEntry> for AuditEntryJs {
                 crate::AuditOp::Compact => "compact",
             }
             .into(),
-            id_hash: hex(&entry.id_hash),
+            id_hash: hex_encode(&entry.id_hash),
             signed: entry.signature != [0; 64],
-            effect_id: entry.effect_id.map(|id| hex(&id)),
-            signature: hex(&entry.signature),
-            signable_bytes: hex(&entry.signable_bytes()),
+            effect_id: entry.effect_id.map(|id| hex_encode(&id)),
+            signature: hex_encode(&entry.signature),
+            signable_bytes: hex_encode(&entry.signable_bytes()),
         }
     }
 }

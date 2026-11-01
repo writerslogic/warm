@@ -1,0 +1,36 @@
+{
+  "variant": "historical",
+  "revision": "a736af02171da7c8b757dcd83a46422c614c07d7",
+  "source_sha256": "500c13d0cf6d5b5d208e185cfaabff0d9eed73903ce1f923dd3cb358068dff34",
+  "probe_sha256": "e01ac96c3ff77808f4457704364514e27ecc35c6552e83a61d87a903c4119e88",
+  "command": [
+    "cargo",
+    "+1.99.0",
+    "test",
+    "--offline",
+    "--locked",
+    "--lib",
+    "--no-run",
+    "--message-format=json"
+  ],
+  "plan_sha256": "3412375a6322f5b456860cc8e4fb2d6e61915224449099c072c9aaac88721749",
+  "plan_source": "{\n  \"status\": \"planned; no new timing measurement or optimization claim\",\n  \"objective\": \"Revisit the retained 11.5% updated hot-query observation against its actual historical baseline, preserving correctness and separating current aggregate changes from the prior allocation-only comparison.\",\n  \"revisions\": {\n    \"historical\": \"a736af02171da7c8b757dcd83a46422c614c07d7\",\n    \"prior\": \"f28095e024add5ce3964192f6af7b81457ad0b3d\",\n    \"current\": \"75ffaa5736e34171e45612e8675791f7b71fc2d6\"\n  },\n  \"workload\": {\n    \"rows\": 10000,\n    \"dimensions\": 16,\n    \"mutations\": 32,\n    \"groups\": [\n      \"initial rare\",\n      \"initial hot\",\n      \"updated rare\",\n      \"updated hot\"\n    ],\n    \"samples_per_group_per_round\": 128,\n    \"rounds\": 5,\n    \"workers\": 1,\n    \"candidate_limit\": 32,\n    \"k\": 10\n  },\n  \"method\": [\n    \"Reuse the preserved deterministic retrieval-tail-20261031 probe and its exhaustive ordered-result oracle. Change only the required API compatibility, explicit source revision selection and evidence recording.\",\n    \"Build each pinned revision with Rust 1.99.0, identical optimization settings and counting allocator; record exact injected source and executable hashes.\",\n    \"Normalize old/new execute_search return types outside source under test; retain production Result checks in the current timed path.\",\n    \"Compare complete ordered result payloads across revisions and rounds outside timed regions; do not rely only on CRC fingerprints.\",\n    \"Rotate the three variant execution orders over five rounds, including reversed orders; use one Rust process at a time after all unrelated local builds/tests terminate.\",\n    \"Record host processes/load, filesystem, toolchain and per-round samples. Preserve all failed attempts and reject stale executables.\",\n    \"Report round-level paired p50/p95/p99 ratios and allocation counts; the 128-sample empirical p99 is not a population-tail estimate. Do not pool queries as independent process rounds.\"\n  ],\n  \"acceptance\": [\n    \"Every per-query exhaustive comparison and complete cross-revision ordered-result comparison must match.\",\n    \"Any sustained current hot-query median/empirical-p99 increase above 5% requires diagnosis before calling this local regression resolved.\",\n    \"Retain all observations even if noisy or unfavorable; no retries chosen to manufacture a faster result.\",\n    \"Only evidence-backed optimizations may follow; no change to correctness, limits, durability or deadlines for timing gains.\"\n  ],\n  \"execution_budget_seconds\": 600,\n  \"protocol_revision\": \"20261101-system-allocator-and-bound-inputs\",\n  \"allocator_source\": \"https://github.com/rust-lang/rust/blob/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/alloc/global.rs\",\n  \"premeasurement_corrections\": [\n    \"Reuse the System delegation pattern from benches/query_alloc.rs and benches/ingest_alloc.rs for alloc_zeroed and realloc. The inherited historical probe instead used GlobalAlloc's default allocate-copy-free realloc. Count successful allocation operations and requested live-byte deltas; allocator-internal transient storage and RSS remain unmeasured. Apply this corrected instrumentation identically to all three fresh variants; original measurements stay unchanged and are not directly comparable.\",\n    \"Bind builds and execution to plan, source, probe, harness and executable hashes; summarization rejects altered manifests or reports. Reject inherited WARM_PROBE_DISABLE_DELTA rather than silently changing maintenance.\",\n    \"Use a private target directory under this worktree for all benchmark variants; global Cargo configuration points to a shared build directory. The identical compiler, optimization, allocator and workload remain unchanged.\",\n    \"Historical/prior builds retain the complete build-time plan and hash. Before the first measurement their only permitted plan difference is the current comparison revision, allowing the fixed baselines to build while integration completes. Current-source builds require the exact final plan; all variants retain unchanged workload, harness, probe, compiler/settings and pinned source hashes.\"\n  ],\n  \"limits\": [\n    \"Local free synthetic development only; no paid APIs/cloud, models or model downloads.\",\n    \"The current revision contains many functional repairs; this comparison cannot causally attribute an aggregate timing change to one patch.\",\n    \"This is not a competitor benchmark, high-dimensional evaluation, hardware power-loss test, production latency guarantee or best-in-class claim.\",\n    \"Original October 29/31 measurements and their limits remain unchanged.\",\n    \"Complete result payloads are retained outside timed regions identically in each variant; this changes allocator history relative to the original harness. Compare new runs with each other, not directly with old absolute timing samples.\"\n  ],\n  \"sustained_regression_rule\": \"Median current round quantile exceeds the baseline median by over 5%, and at least four of the five paired rounds are slower; descriptive investigation trigger, not statistical significance.\"\n}\n",
+  "harness_sha256": "4d5fa28f680c62c15344adf4f2feea18fb531ca42e0e20a1e29c77a86b1e792c",
+  "settings": {
+    "CARGO_TARGET_DIR": "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/build",
+    "CARGO_BUILD_JOBS": "2",
+    "CARGO_PROFILE_DEV_OPT_LEVEL": "3",
+    "CARGO_PROFILE_TEST_OPT_LEVEL": "3",
+    "CARGO_PROFILE_DEV_DEBUG": "0",
+    "CARGO_PROFILE_TEST_DEBUG": "0",
+    "RAYON_NUM_THREADS": "1",
+    "TMPDIR": "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/tmp"
+  },
+  "default_features": [],
+  "status": "built",
+  "started_at": "2026-11-01T11:45:49.528783+00:00",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "exit_code": 0,
+  "binary": "/Volumes/A/warm-retrieval-tail-validation/target/retrieval-tail-validation/historical-probe",
+  "binary_sha256": "e2ac2266af051df916bb2b4bcb2ca9af5f0488a0df7c28a9ad5a503c4a1a8334"
+}
