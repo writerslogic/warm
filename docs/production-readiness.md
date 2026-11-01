@@ -126,7 +126,10 @@ an error in those sidecars can be returned after the main data mutation has comm
 Those failures, publication failures after a durable append, and failed post-publication
 compaction cleanup carry `CommittedMutationError`. HTTP reports `mutation_committed`;
 Node errors carry the same code prefix. Inspect the resulting state and reopen or reconcile
-it before retrying. This contract distinguishes durable data from completed auxiliary effects;
+it before retrying. A retained-text cache write failure can leave live document/vector
+publication incomplete even though the complete batch is journaled; reopen or reconcile
+before relying on that state. A reported cache-scrub failure does not mean the old bytes
+were erased. This contract distinguishes durable data from completed auxiliary effects;
 it does not supply an automatic sidecar repair service or exactly-once external delivery.
 Schema 6 journals audit intents with the audited vector memorize/delete operation and with
 compaction publication. Reopen and `flush_audit()` deliver pending records without repeating

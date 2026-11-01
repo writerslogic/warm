@@ -1,0 +1,50 @@
+{
+  "recorded_at": "2026-11-01T02:41:13.102302+00:00",
+  "state": "Paused at user request; existing Clippy invocation left running. No final lint result, commit, rebase or PR yet.",
+  "worktree": "/Volumes/A/warm-text-publication",
+  "branch": "fix/text-publication-failures",
+  "base": "d24cdb307ba0ca2bc1474e0063ebd58202f04180",
+  "clean_root_main": "75ffaa5736e34171e45612e8675791f7b71fc2d6",
+  "passed_on_corrected_source": {
+    "deferred": [
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 737 filtered out; finished in 14.25s"
+    ],
+    "contracts": [
+      "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.93s",
+      "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 194.23s",
+      "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 71.57s",
+      "test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 282.28s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.21s"
+    ]
+  },
+  "earlier_unit_evidence": "pre-caller-fix-validation.json: 16 mutation, 120 document, 12 compaction passed; one existing external-index census ignored. Later production compilation exposed the missed deferred caller, now corrected and separately exercised by three deferred-cache tests.",
+  "active_validation": {
+    "session_id": 3493,
+    "process_group": 38202,
+    "cargo_clippy_pid": 38202,
+    "cargo_pid": 41655,
+    "command": "cargo +1.99.0 clippy --locked --all-features --all-targets -- -D warnings",
+    "log": "target/text-publication-validation/clippy.log",
+    "status": "Observed running without diagnostics; inspect processes and terminal result before restarting."
+  },
+  "source_sha256": {
+    "src/core/documents/index.rs": "e16d119847adc6cca6da18399a65d5af303711659bfe93b35629a8a9c8687c22",
+    "src/core/documents/lexical/tests.rs": "b31ebead925b199d87133df2bb3640fec3e5e48d3ef54e8f601dacbae0136d5c",
+    "src/core/documents/memory.rs": "10af0520af8d6f81faac01d6081974edb12c3fa10367b11644641c456dc42262",
+    "src/core/documents/text.rs": "a16a3e3d64cc706494d38622fd36f3f147805323af8819e48fc79c9abd242dbd",
+    "src/core/engine/image.rs": "85331f01a0cabb160b119df4e35c0d00696cd6c54e27c16548cff7cfd37eacca",
+    "src/core/engine/mutation.rs": "f6a972143968a543f079da6cf043c428d3d1b83c8a6fa2b8a3f8867309efc3d1"
+  },
+  "next": [
+    "Obtain terminal Clippy result without a duplicate build; diagnose any failure.",
+    "After confirmed success, run target/text-publication-validation/archive-local.py, inspect its generated record/docs, and review final diff.",
+    "Signed/DCO commit, rebase once onto current main, preserve all canonical append evidence, and verify combined source.",
+    "Submit PR and require complete exact-head CI, required app15368 check, review-thread/code-scan clearance, verified signature/tree equality and clean root main fast-forward.",
+    "Continue prepared historical retrieval comparison after required reliability checks."
+  ],
+  "limits": [
+    "No complete atomic live publication claim after append failure; reopen/reconcile remains required.",
+    "Scrub failure does not establish erasure.",
+    "No full production-readiness, best-in-class, universal fault-tolerance or performance claim."
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "recorded_at": "2026-11-01T11:30:06.686111+00:00",
+  "state": "Paused validation completed successfully on its recorded source; focused combined recovery validation and final integrated CI remain required.",
+  "baseline": "d24cdb307ba0ca2bc1474e0063ebd58202f04180",
+  "rebased_base": "75ffaa5736e34171e45612e8675791f7b71fc2d6",
+  "historical_source_sha256": {
+    "src/core/documents/index.rs": "e16d119847adc6cca6da18399a65d5af303711659bfe93b35629a8a9c8687c22",
+    "src/core/documents/lexical/tests.rs": "b31ebead925b199d87133df2bb3640fec3e5e48d3ef54e8f601dacbae0136d5c",
+    "src/core/documents/memory.rs": "10af0520af8d6f81faac01d6081974edb12c3fa10367b11644641c456dc42262",
+    "src/core/documents/text.rs": "a16a3e3d64cc706494d38622fd36f3f147805323af8819e48fc79c9abd242dbd",
+    "src/core/engine/image.rs": "85331f01a0cabb160b119df4e35c0d00696cd6c54e27c16548cff7cfd37eacca",
+    "src/core/engine/mutation.rs": "f6a972143968a543f079da6cf043c428d3d1b83c8a6fa2b8a3f8867309efc3d1"
+  },
+  "rebased_source_sha256": {
+    "src/core/documents/index.rs": "e16d119847adc6cca6da18399a65d5af303711659bfe93b35629a8a9c8687c22",
+    "src/core/documents/lexical/tests.rs": "b31ebead925b199d87133df2bb3640fec3e5e48d3ef54e8f601dacbae0136d5c",
+    "src/core/documents/memory.rs": "10af0520af8d6f81faac01d6081974edb12c3fa10367b11644641c456dc42262",
+    "src/core/documents/text.rs": "a16a3e3d64cc706494d38622fd36f3f147805323af8819e48fc79c9abd242dbd",
+    "src/core/engine/image.rs": "abce2de75310d734f9f3dbbeb37c56bb537e6d61feab6baedd5c3cb4429e85fd",
+    "src/core/engine/mutation.rs": "f6a972143968a543f079da6cf043c428d3d1b83c8a6fa2b8a3f8867309efc3d1"
+  },
+  "rebase_difference": "Five files retain the tested hashes; image.rs additionally incorporates the merged #373 removal of the infallible hydration helper, verified against HEAD with only checked insert_batch changed.",
+  "checks": {
+    "deferred": {
+      "command": "cargo +1.99.0 test --locked --features server,mcp,conversation-memory,security --lib core::engine::deferred_cache_tests -- --test-threads=1",
+      "completion": "successful terminal marker",
+      "log": "deferred.log.gz",
+      "sha256": "26f38a528bbeec9e8207850e0d1421200aad660285a0541cf33714ca5b90dda3",
+      "summaries": [
+        "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 05s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 737 filtered out; finished in 14.25s"
+      ]
+    },
+    "contracts": {
+      "command": "cargo +1.99.0 test --locked --features server,mcp,conversation-memory,security --test document_checkpoint --test forget_equivalence --test allocation_bounds --test memory_api --test native_memory_workflow -- --test-threads=1",
+      "completion": "successful terminal marker",
+      "log": "contracts.log.gz",
+      "sha256": "6b3877259afe0f77cdb1e0005309be29f1e841f6ea792814469d5f0b0bd60631",
+      "summaries": [
+        "    Finished `test` profile [unoptimized + debuginfo] target(s) in 17m 41s",
+        "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.93s",
+        "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 194.23s",
+        "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 71.57s",
+        "test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 282.28s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.21s"
+      ]
+    },
+    "clippy": {
+      "command": "cargo +1.99.0 clippy --locked --all-features --all-targets -- -D warnings",
+      "completion": "successful terminal marker",
+      "log": "clippy.log.gz",
+      "sha256": "e916e3bcb1dc4df2ea1fb7236b9be395d431bf2d2cfb6527e08896bf86386019",
+      "summaries": [
+        "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 110m 42s"
+      ]
+    }
+  },
+  "earlier_unit_evidence": "pre-caller-fix-validation.json",
+  "limits": [
+    "Historical unit results remain attributed to the pre-caller-fix source.",
+    "A committed live-publication failure still requires reopen/reconciliation.",
+    "A scrub failure does not prove erasure."
+  ]
+}

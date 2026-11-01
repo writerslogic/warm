@@ -964,7 +964,7 @@ fn shared_whole_article_batches_preserve_pinned_owners_at_group_boundaries() {
         let pinned = std::sync::Arc::clone(&batch[0]);
         let before = serde_json::to_vec(pinned.as_ref()).unwrap();
         let mut store = DocumentStore::default();
-        store.insert_batch(batch);
+        store.insert_batch(batch).unwrap();
         assert_eq!(run(&store, "+\"red blue\" +who", 10).count, Some(count));
         assert_eq!(run(&store, "red blue", 10).count, Some(count));
         store.remove("d00000");

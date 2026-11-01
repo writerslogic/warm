@@ -74,6 +74,16 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
         a.req("POST", "/api/v1/documents")
             .bearer("root")
             .tenant("t")
+            .header("Idempotency-Key", "after-snapshot")
+            .json(&doc("c", 3))
+            .send(),
+        200,
+    );
+    ok(
+        a.req("POST", "/api/v1/documents")
+            .bearer("root")
+            .tenant("u")
+            .header("Idempotency-Key", "after-snapshot")
             .json(&doc("c", 3))
             .send(),
         200,
@@ -136,6 +146,27 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
     );
     assert_eq!(restored["restored"], true);
     assert_eq!(count_with(&a, "root", "t"), 2);
+    let retry = a
+        .req("POST", "/api/v1/documents")
+        .bearer("root")
+        .tenant("t")
+        .header("Idempotency-Key", "after-snapshot")
+        .json(&doc("c", 3))
+        .send();
+    assert_eq!(retry.status, 409, "{}", retry.text());
+    assert_eq!(retry.json()["code"], "idempotency_reconciliation_required");
+    assert_eq!(retry.header("idempotent-replayed"), None);
+    assert_eq!(count_with(&a, "root", "t"), 2);
+    let other = a
+        .req("POST", "/api/v1/documents")
+        .bearer("root")
+        .tenant("u")
+        .header("Idempotency-Key", "after-snapshot")
+        .json(&doc("c", 3))
+        .send();
+    assert_eq!(other.status, 200, "{}", other.text());
+    assert_eq!(other.header("idempotent-replayed"), Some("true"));
+    assert_eq!(count_with(&a, "root", "u"), 1);
     let hit = a
         .req("POST", "/api/v1/query")
         .bearer("root")
@@ -172,6 +203,7 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
         a.req("POST", "/api/v1/documents")
             .bearer("root")
             .tenant("t")
+            .header("Idempotency-Key", "after-restore")
             .json(&doc("d", 4))
             .send(),
         200,
@@ -179,6 +211,15 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
 
     // A different server restores the uploaded archive: a real backup and disaster-recovery path.
     let b = Server::with_key("root", &[]);
+    ok(
+        b.req("POST", "/api/v1/documents")
+            .bearer("root")
+            .tenant("t2")
+            .header("Idempotency-Key", "before-upload")
+            .json(&doc("obsolete", 3))
+            .send(),
+        200,
+    );
     let up = b
         .req("PUT", "/api/v1/restore")
         .bearer("root")
@@ -187,6 +228,16 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
         .body(archive.body)
         .send();
     assert_eq!(up.status, 200, "{}", up.text());
+    assert_eq!(count_with(&b, "root", "t2"), 2);
+    let retry = b
+        .req("POST", "/api/v1/documents")
+        .bearer("root")
+        .tenant("t2")
+        .header("Idempotency-Key", "before-upload")
+        .json(&doc("obsolete", 3))
+        .send();
+    assert_eq!(retry.status, 409, "{}", retry.text());
+    assert_eq!(retry.json()["code"], "idempotency_reconciliation_required");
     assert_eq!(count_with(&b, "root", "t2"), 2);
     let hit = b
         .req("POST", "/api/v1/query")
