@@ -45,15 +45,26 @@ impl WarmCore {
         options: &IngestOptions,
     ) -> Result<u32> {
         #[cfg(feature = "local-models")]
-        if let Some(stages) = self.model_stages() {
-            return self.memorize_document_with_models(input, &stages, options);
-        }
+        let stages = self.model_stages();
         #[cfg(feature = "local-embed")]
         let input = {
             let mut input = input;
-            self.embed_document_inputs(std::slice::from_mut(&mut input))?;
+            #[cfg(feature = "local-models")]
+            let model_embedder = stages.as_ref().is_some_and(|s| s.embedder.is_some());
+            #[cfg(not(feature = "local-models"))]
+            let model_embedder = false;
+            let embedder = self.text_embedder().filter(|_| !model_embedder);
+            Self::embed_document_inputs(
+                std::slice::from_mut(&mut input),
+                options,
+                embedder.as_deref(),
+            )?;
             input
         };
+        #[cfg(feature = "local-models")]
+        if let Some(stages) = stages {
+            return self.memorize_document_with_models(input, &stages, options);
+        }
         // The store's kept interner, as batches use: a single write otherwise stems and copies
         // every word of the document afresh. It is a pure cache; the terms do not depend on it.
         let mut memo = self.stem_memos.take();
@@ -115,14 +126,24 @@ impl WarmCore {
         #[cfg(not(feature = "local-models"))]
         let inferred_dimensions = None;
         #[cfg(feature = "local-embed")]
+        let text_embedder = self.text_embedder();
+        #[cfg(feature = "local-embed")]
         let inferred_dimensions =
-            inferred_dimensions.or_else(|| self.text_embedder().map(|e| e.dimensions()));
+            inferred_dimensions.or_else(|| text_embedder.as_ref().map(|e| e.dimensions()));
         let spans =
             super::document_batch::validate_inputs_with(&inputs, inferred_dimensions, options)?;
         #[cfg(feature = "local-embed")]
         let inputs = {
             let mut inputs = inputs;
-            self.embed_document_inputs(&mut inputs)?;
+            #[cfg(feature = "local-models")]
+            let model_embedder = stages.as_ref().is_some_and(|s| s.embedder.is_some());
+            #[cfg(not(feature = "local-models"))]
+            let model_embedder = false;
+            Self::embed_document_inputs(
+                &mut inputs,
+                options,
+                text_embedder.as_deref().filter(|_| !model_embedder),
+            )?;
             inputs
         };
         let mutations = inputs
@@ -135,7 +156,7 @@ impl WarmCore {
                     #[cfg(feature = "local-models")]
                     if let Some(stages) = stages.as_deref() {
                         return self
-                            .prepare_document_with_models(input, stages, options)
+                            .prepare_document_spans_with_models(input, spans, stages, options)
                             .map(|document| Mutation::Document(Arc::new(document)));
                     }
                     documents::prepare_spans(
@@ -832,13 +853,24 @@ impl WarmCore {
 
     fn prepare_document_with_models(
         &self,
-        mut input: DocumentInput,
+        input: DocumentInput,
         stages: &crate::core::models::ModelStages,
         options: &IngestOptions,
     ) -> Result<documents::StoredDocument> {
-        let chunks: Vec<String> = documents::chunk_document(&input)?
-            .into_iter()
-            .map(|c| c.text)
+        let spans = documents::chunk_spans_with(&input, options)?;
+        self.prepare_document_spans_with_models(input, spans, stages, options)
+    }
+
+    fn prepare_document_spans_with_models(
+        &self,
+        mut input: DocumentInput,
+        spans: Vec<(u32, u32)>,
+        stages: &crate::core::models::ModelStages,
+        options: &IngestOptions,
+    ) -> Result<documents::StoredDocument> {
+        let chunks: Vec<String> = spans
+            .iter()
+            .map(|&(start, end)| input.text[start as usize..end as usize].to_owned())
             .collect();
         let keys = stages.fact_keys(&chunks)?;
         if let (Some(embedder), None) = (&stages.embedder, &input.embeddings) {
@@ -851,8 +883,9 @@ impl WarmCore {
                     .collect(),
             );
         }
-        documents::prepare_with_options(
+        documents::prepare_spans(
             input,
+            spans,
             self.dimensions,
             self.config.embedding_space.as_ref().map(|s| s.dimensions),
             keys.as_deref(),
@@ -880,6 +913,13 @@ impl WarmCore {
             (Some(e), None) => {
                 let queries: Vec<&str> = variants.iter().map(|v| v.0.as_str()).collect();
                 Some(e.embed(&queries, true)?)
+            }
+            #[cfg(feature = "local-embed")]
+            (None, None) => {
+                let queries: Vec<&str> = variants.iter().map(|v| v.0.as_str()).collect();
+                self.text_embedder()
+                    .map(|embedder| embedder.embed_query(&queries))
+                    .transpose()?
             }
             _ => None,
         };

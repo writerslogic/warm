@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use super::WarmCore;
 use crate::core::config::WarmConfig;
-use crate::core::documents::{self, DocumentInput, SearchOptions};
+use crate::core::documents::{self, DocumentInput, IngestOptions, SearchOptions};
 use crate::core::embed::Embedder;
 use crate::core::encoding::TextEncoder;
 use crate::core::entangled::EntangledHVec;
@@ -95,14 +95,14 @@ impl WarmCore {
     }
 
     /// Fills `embeddings` of every input that has none, embedding all their chunks in one pass.
-    pub(super) fn embed_document_inputs(&self, inputs: &mut [DocumentInput]) -> Result<()> {
-        let Some(embedder) = self.text_embedder() else {
+    pub(super) fn embed_document_inputs(
+        inputs: &mut [DocumentInput],
+        options: &IngestOptions,
+        embedder: Option<&Embedder>,
+    ) -> Result<()> {
+        let Some(embedder) = embedder else {
             return Ok(());
         };
-        #[cfg(feature = "local-models")]
-        if self.model_stages().is_some_and(|s| s.embedder.is_some()) {
-            return Ok(());
-        }
         let mut texts: Vec<String> = Vec::new();
         let mut spans = Vec::with_capacity(inputs.len());
         for input in inputs.iter() {
@@ -112,9 +112,9 @@ impl WarmCore {
             }
             let start = texts.len();
             texts.extend(
-                documents::chunk_document(input)?
+                documents::chunk_spans_with(input, options)?
                     .into_iter()
-                    .map(|c| c.text),
+                    .map(|(start, end)| input.text[start as usize..end as usize].to_owned()),
             );
             spans.push(Some(start..texts.len()));
         }
@@ -147,10 +147,6 @@ impl WarmCore {
         let Some(embedder) = self.text_embedder() else {
             return Ok(None);
         };
-        #[cfg(feature = "local-models")]
-        if self.model_stages().is_some_and(|s| s.embedder.is_some()) {
-            return Ok(None);
-        }
         let v = embedder.embed_query(&[text])?;
         Ok(Some(v[0].iter().copied().map(f64::from).collect()))
     }
