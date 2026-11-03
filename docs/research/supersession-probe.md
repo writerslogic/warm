@@ -3,7 +3,7 @@
 
 # Supersession probe on STALE: kill test
 
-Status: PRE-REGISTERED. This section was committed before any arm was run. Results are appended
+Status: RUN COMPLETE, decision NO-GO. The protocol was committed before any arm was run. Results are appended
 below it, after the run, without editing the protocol.
 
 ## Question
@@ -137,3 +137,139 @@ per split and type) was a wiring check; its numbers are not used. Tie-break for 
 successor": newest `effective_from`, then smallest id.
 Consequence: 240 test queries from 80 instances gives wide intervals (about plus or minus 6 points
 on a pooled rate, wider per type); a difference near the 15-point line is not settled by this run.
+
+# Results (appended after the run)
+
+Run: 2026-11-03, `examples/supersession_probe.rs` at commit `0925696b`, flags
+`--limit-dev 20 --limit-test 40`, result file
+`benchmarks/results/supersession_probe_stale_20261103.json` (seed 20261103; STALE file sha256,
+probe slice sha256 and embedder pack sha256 are recorded inside it). The pack is converted
+locally from the pinned `bge-small-en-v1.5` snapshot (the three input files match the registry
+sha256 values; the pack hash differs from the registry's, which was not investigated). Scope:
+DEV 40 instances, TEST 80 instances (40 per type), 240 test queries. Retrieval-level proxy on
+237 of 400 STALE instances: **not comparable to STALE's LLM-judged 55.2% (Gemini-3.1-pro) or the
+5 to 18% of the memory frameworks (GPT-4o-mini)**. Tables are produced by
+`benchmarks/supersession_probe/tables.py`.
+
+## Decision: NO-GO
+
+By the pre-registered rule on TEST pooled CVA@1: (a) 3.8%, (d) 9.6%, so d - a = +5.8 points
+(95% cluster-bootstrap interval +1.2 to +11.2), well short of the required +15. Arm (c) reaches
+74.6%, below the 80% operationalization, so the second condition also fails. Arm (a) is far below
+90%, so the result is not INCONCLUSIVE. The interval excludes +15 on the pooled data.
+
+**TEST, Pooled** (n queries = 240)
+
+| arm | CVA@1 | Stale@1 | Stale@5 | new in top5 | CVA-session@1 | old-sibling@1 |
+|---|---|---|---|---|---|---|
+| (a) plain hybrid | 3.8 | 70.8 | 82.5 | 42.9 | 10.4 | 77.1 |
+| (b) recency among top5 | 23.8 | 3.8 | 82.5 | 42.9 | 56.2 | 4.2 |
+| (c) WARM oracle links, follow | 74.6 | 0.0 | 0.0 | 89.6 | 81.2 | 6.2 |
+| (c-filter) oracle, stock filter | 7.5 | 0.0 | 0.0 | 47.9 | 20.8 | 55.8 |
+| (d) WARM detected links, follow | 9.6 | 34.2 | 39.6 | 50.8 | 32.1 | 37.5 |
+
+**TEST, Type I** (n queries = 120)
+
+| arm | CVA@1 | Stale@1 | Stale@5 | new in top5 | CVA-session@1 | old-sibling@1 |
+|---|---|---|---|---|---|---|
+| (a) plain hybrid | 4.2 | 69.2 | 82.5 | 55.8 | 15.0 | 76.7 |
+| (b) recency among top5 | 30.8 | 2.5 | 82.5 | 55.8 | 62.5 | 3.3 |
+| (c) WARM oracle links, follow | 73.3 | 0.0 | 0.0 | 91.7 | 84.2 | 7.5 |
+| (c-filter) oracle, stock filter | 11.7 | 0.0 | 0.0 | 59.2 | 30.8 | 53.3 |
+| (d) WARM detected links, follow | 9.2 | 26.7 | 31.7 | 57.5 | 36.7 | 30.8 |
+
+**TEST, Type II** (n queries = 120)
+
+| arm | CVA@1 | Stale@1 | Stale@5 | new in top5 | CVA-session@1 | old-sibling@1 |
+|---|---|---|---|---|---|---|
+| (a) plain hybrid | 3.3 | 72.5 | 82.5 | 30.0 | 5.8 | 77.5 |
+| (b) recency among top5 | 16.7 | 5.0 | 82.5 | 30.0 | 50.0 | 5.0 |
+| (c) WARM oracle links, follow | 75.8 | 0.0 | 0.0 | 87.5 | 78.3 | 5.0 |
+| (c-filter) oracle, stock filter | 3.3 | 0.0 | 0.0 | 36.7 | 10.8 | 58.3 |
+| (d) WARM detected links, follow | 10.0 | 41.7 | 47.5 | 44.2 | 27.5 | 44.2 |
+
+**TEST CVA@1 by dim (pooled)**
+
+| arm | dim1 | dim2 | dim3 |
+|---|---|---|---|
+| (a) plain hybrid | 0.0 | 0.0 | 11.2 |
+| (b) recency among top5 | 21.2 | 32.5 | 17.5 |
+| (c) WARM oracle links, follow | 97.5 | 98.8 | 27.5 |
+| (c-filter) oracle, stock filter | 3.8 | 7.5 | 11.2 |
+| (d) WARM detected links, follow | 7.5 | 7.5 | 13.8 |
+
+**DEV (arms a, b only; d is the simulation sweep below)**
+
+| arm | CVA@1 | Stale@1 | Stale@5 | new in top5 | CVA-session@1 | old-sibling@1 |
+|---|---|---|---|---|---|---|
+| (a) plain hybrid | 4.2 | 70.0 | 84.2 | 36.7 | 8.3 | 80.0 |
+| (b) recency among top5 | 20.0 | 8.3 | 84.2 | 36.7 | 50.0 | 9.2 |
+
+**tau sweep on DEV (simulated arm d, pooled CVA@1)**
+
+| tau | CVA@1 |
+|---|---|
+| 0.60 | 0.0 |
+| 0.65 | 0.0 |
+| 0.70 | 4.2 |
+| 0.75 | 11.7 |
+| 0.80 | 9.2 |
+| 0.85 | 4.2 |
+| 0.90 | 4.2 |
+| 0.95 | 4.2 |
+| 1.01 | 4.2 |
+
+Chosen tau = 0.75.
+
+**Paired cluster bootstrap on TEST (points of CVA@1, 95% interval over instances)**
+
+| x - y | pooled | T1 | T2 |
+|---|---|---|---|
+| d - a | +5.8 [+1.2, +11.2] | +5.0 [-0.8, +12.5] | +6.7 [+0.0, +15.0] |
+| c - a | +70.8 [+67.5, +74.2] | +69.2 [+64.2, +74.2] | +72.5 [+69.2, +76.7] |
+| b - a | +20.0 [+14.2, +26.2] | +26.7 [+16.7, +36.7] | +13.3 [+7.5, +19.2] |
+| d - b | -14.2 [-21.7, -6.7] | -21.7 [-31.7, -11.7] | -6.7 [-16.7, +4.2] |
+
+Decision: **NO-GO** (a=3.8, b=23.8, c=74.6, d=9.6). Real-vs-simulated arm d list mismatches on TEST: 0.
+
+## Reading (measurement, inference, conjecture kept apart)
+
+Measured:
+
+- Plain hybrid retrieval almost never puts the new fact first: for 77% of queries the top-1 is a
+  turn of the old session (Stale@1 70.8%). The probe is hard for arm (a), not easy.
+- With oracle links and successor following, queries that name the stale state (dim1, dim2) reach
+  97.5% and 98.8% CVA@1. Dim3 queries ("recommend a commute plan") name neither state, the old
+  fact is usually not a hit, so links cannot redirect and the oracle gets 27.5%. That dim alone
+  puts arm (c) under 80%.
+- The stock `recall` (history = Current) only filters superseded facts; with the same oracle
+  links it reaches 7.5%. The 74.6% needs the successor-following step, which lives in this
+  harness, not in the engine.
+- The write-time rule (embedding cosine at the DEV-chosen 0.75, later session supersedes) gives
+  9.6%. No tau in the grid is useful on DEV (best 11.7% simulated; DEV arm a is 4.2%). The
+  simulation and the real stores agreed on every TEST list (0 mismatches).
+- A recency heuristic over the top 5 (arm b) reaches 23.8%, 14 points above arm (d).
+  Because the new session is always later here, this favors recency; it is not evidence that
+  recency solves supersession in general.
+
+Inferred (not separately tested): the old and new fact share little surface or embedding
+similarity in this data (a different city, or an upstream change with no shared words in Type II),
+while same-topic turns elsewhere in the haystack score as high, so a threshold rule cannot
+separate the conflict pair from topical neighbors. Both types score about the same for (d)
+(9.2% and 10.0%).
+
+Conjecture: headroom exists only if supersession detection is solved (the oracle shows the
+storage and retrieval structure is not the limit for state-naming queries). A detector that
+reasons about states (an NLI or LLM-based rule) might move arm (d) toward arm (c). That is the
+same unsolved problem STALE reports, so "exact logic beats model-only memory without an LLM"
+is not supported by this probe.
+
+## Not tested
+
+All items in the pre-registered list above, plus: the 163 paraphrase-only instances; the 120
+registered instances beyond the executed prefix (TEST was 80 of the registered 156); arm (c) on
+DEV; any detector other than embedding cosine; other embedders, fusion weights, or `k`; an
+LLM reader; assistant turns as evidence. A cosine floor of 0.60 to 0.95 was swept on DEV only; no
+test-time threshold sweep was run, so a threshold chosen with test knowledge is untested. TEST
+CIs are wide (80 instances); the pooled interval for d - a excludes +15, the per-type ones are
+wider (Type II +0.0 to +15.0).
