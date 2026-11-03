@@ -187,7 +187,10 @@ fn main() -> Result<()> {
     let shipped_agreement = if args.n == base_rows {
         let bytes = fs::read(args.data.join("neighbors.i32"))?;
         let width = bytes.len() / 4 / test_rows;
-        ensure!(width >= K && bytes.len() == test_rows * width * 4, "neighbors.i32 shape");
+        ensure!(
+            width >= K && bytes.len() == test_rows * width * 4,
+            "neighbors.i32 shape"
+        );
         let shipped: Vec<u32> = bytes
             .as_chunks::<4>()
             .0
