@@ -24,6 +24,11 @@ fi
 [ -d "${ANDROID_NDK_HOME:-}" ] || { echo "Android NDK not found: set ANDROID_NDK_HOME" >&2; exit 1; }
 export ANDROID_NDK_HOME
 
+# Host proc macros encounter rust-lang/rust#157750; Android libraries stay stripped.
+if [ "$(uname -s)" = Darwin ]; then
+  export CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_STRIP="${CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_STRIP:-none}"
+fi
+
 triples=()
 args=()
 for abi in $abis; do

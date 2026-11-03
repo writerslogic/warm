@@ -650,6 +650,29 @@ pub(crate) fn chunk_spans(input: &DocumentInput) -> Result<Vec<(u32, u32)>> {
         (1..=4096).contains(&size) && overlap < size,
         "chunkWords must be 1..=4096 and overlapWords smaller than chunkWords"
     );
+    if input.text.is_ascii() {
+        // `char::is_whitespace` on ASCII is exactly 0x09..=0x0D and the space.
+        let space = |b: u8| matches!(b, b' ' | b'\t'..=b'\r');
+        let bytes = input.text.as_bytes();
+        // A text of at most `size` words is one chunk, its first word's start to its last
+        // word's end: count the word starts without a branch per byte and skip collecting
+        // every word's span.
+        let count = bytes.first().is_some_and(|&b| !space(b)) as usize
+            + bytes
+                .iter()
+                .zip(bytes.get(1..).unwrap_or_default())
+                .map(|(&a, &b)| (space(a) & !space(b)) as usize)
+                .sum::<usize>();
+        if (1..=size).contains(&count) {
+            let start_byte = bytes.iter().position(|&b| !space(b)).expect("a word");
+            let end_byte = 1 + bytes.iter().rposition(|&b| !space(b)).expect("a word");
+            ensure!(
+                end_byte - start_byte <= MAX_CHUNK_BYTES,
+                "chunk exceeds 64 KiB; reduce chunkWords or split long tokens"
+            );
+            return Ok(vec![(start_byte as u32, end_byte as u32)]);
+        }
+    }
     let mut words = Vec::with_capacity(input.text.len() / 6);
     let mut start = None;
     let mut boundary = |i: usize, whitespace: bool| {
@@ -1666,6 +1689,126 @@ fn search_impl(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// `chunk_spans` without the single-chunk ASCII count: every word's span collected, then
+    /// cut. The oracle for `chunk_spans_match_the_collecting_reference`.
+    fn chunk_spans_reference(input: &DocumentInput) -> Result<Vec<(u32, u32)>> {
+        validate_document_source(input)?;
+        let size = input.chunk_words.unwrap_or(256) as usize;
+        let overlap = input
+            .overlap_words
+            .unwrap_or(32.min(size.saturating_sub(1)) as u32) as usize;
+        ensure!(
+            (1..=4096).contains(&size) && overlap < size,
+            "chunkWords must be 1..=4096 and overlapWords smaller than chunkWords"
+        );
+        let mut words = Vec::new();
+        let mut start = None;
+        let mut boundary = |i: usize, whitespace: bool| {
+            if whitespace {
+                if let Some(s) = start.take() {
+                    words.push((s, i));
+                }
+            } else if start.is_none() {
+                start = Some(i);
+            }
+        };
+        if input.text.is_ascii() {
+            for (i, b) in input.text.bytes().enumerate() {
+                boundary(i, matches!(b, b' ' | b'\t'..=b'\r'));
+            }
+        } else {
+            for (i, c) in input.text.char_indices() {
+                boundary(i, c.is_whitespace());
+            }
+        }
+        if let Some(s) = start {
+            words.push((s, input.text.len()));
+        }
+        ensure!(!words.is_empty(), "document must contain text");
+        let mut chunks = Vec::new();
+        let mut word = 0;
+        while word < words.len() {
+            ensure!(
+                chunks.len() < 4096,
+                "document exceeds 4096 chunks; increase chunkWords"
+            );
+            let end_word = (word + size).min(words.len());
+            let (start_byte, end_byte) = (words[word].0, words[end_word - 1].1);
+            ensure!(
+                end_byte - start_byte <= MAX_CHUNK_BYTES,
+                "chunk exceeds 64 KiB; reduce chunkWords or split long tokens"
+            );
+            chunks.push((start_byte as u32, end_byte as u32));
+            if end_word == words.len() {
+                break;
+            }
+            word += size - overlap;
+        }
+        Ok(chunks)
+    }
+
+    /// The single-chunk scan cuts every text exactly as collecting all word spans does, with
+    /// the same errors: word counts at the chunk size -1/0/+1, chunk bytes at 64 KiB -1/0/+1,
+    /// the 4096-chunk limit -1/0/+1, Unicode and ASCII whitespace, overlap, and no words.
+    #[test]
+    fn chunk_spans_match_the_collecting_reference() {
+        let words = |n: usize, word: &str, gap: &str| vec![word; n].join(gap);
+        let mut cases: Vec<(String, Option<u32>, Option<u32>)> = Vec::new();
+        for gap in [
+            " ",
+            "\t\n ",
+            "\u{a0}",
+            "\u{85}",
+            "\u{3000}",
+            "\u{2028}x\u{1c}",
+        ] {
+            for size in [1u32, 2, 3, 8, 256] {
+                for n in [
+                    0,
+                    1,
+                    2,
+                    size as usize - 1,
+                    size as usize,
+                    size as usize + 1,
+                    3 * size as usize + 1,
+                ] {
+                    for overlap in [None, Some(0), Some(size - 1)] {
+                        cases.push((format!(" {} ", words(n, "wörd", gap)), Some(size), overlap));
+                        cases.push((words(n, "w", gap), Some(size), overlap));
+                    }
+                }
+            }
+        }
+        // One chunk's byte span at 64 KiB - 1, 64 KiB and 64 KiB + 1: one long word.
+        for len in [MAX_CHUNK_BYTES - 1, MAX_CHUNK_BYTES, MAX_CHUNK_BYTES + 1] {
+            cases.push((format!("  {}\n", "a".repeat(len)), None, None));
+            cases.push((format!("a {} b", "c".repeat(len - 4)), Some(4096), Some(0)));
+            cases.push((format!("a {} b", "c".repeat(len - 4)), Some(2), Some(1)));
+        }
+        // 4095, 4096 and 4097 chunks of one word each.
+        for n in [4095, 4096, 4097] {
+            cases.push((words(n, "w", " "), Some(1), Some(0)));
+        }
+        cases.push((String::new(), None, None));
+        cases.push((" \t\u{3000}\u{a0} ".into(), None, None));
+        cases.push(("one".into(), Some(0), None));
+        cases.push(("one".into(), Some(2), Some(2)));
+        for (text, chunk_words, overlap_words) in cases {
+            let input: DocumentInput = serde_json::from_value(json!({
+                "id": "d", "text": text, "chunkWords": chunk_words, "overlapWords": overlap_words,
+            }))
+            .unwrap();
+            let got = chunk_spans(&input).map_err(|e| e.to_string());
+            let want = chunk_spans_reference(&input).map_err(|e| e.to_string());
+            assert_eq!(
+                got,
+                want,
+                "{chunk_words:?} {overlap_words:?} {:?}",
+                input.text.chars().take(40).collect::<String>()
+            );
+        }
+    }
 
     /// The chunk id keeps the journal's text form, and recognising it agrees with comparing
     /// against it, near misses included.

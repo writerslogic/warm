@@ -1,0 +1,9 @@
+{
+  "schema": "warm.ios-simulator-qualification/1",
+  "scope": "Source-built Swift package on an isolated iOS 27.0 arm64 simulator, Apple M4 host; no physical-device or other-platform claim.",
+  "source": "Copy and verify the 505-file mobile-host-v2 source freeze; build its unchanged ios-sim XCFramework using the repository script in an isolated working copy.",
+  "tools": "Rust 1.96.0, Swift 6.4.2, installed Xcode and iOS 27.0 runtime; two build jobs; no paid services.",
+  "checks": "Package the generated source and XCFramework, extract into a fresh consumer, require generated interface equality and unchanged Cargo locks, execute all seven existing XCTest cases with zero failures or skips, retain xcresult and logs, verify all frozen and packaged files.",
+  "ownership": "Create a dedicated iPhone 18 Pro simulator for this run and shut it down afterward; never interrupt existing simulators, other builds, or the Intel soak.",
+  "limits": "Existing lifecycle, deletion, reopen, filtering, encryption, snapshot restore/tamper checks, typed errors, asynchronous concurrency and chunking only. Legacy migration and external process-death recovery remain open. The x64 simulator library is built but not executed."
+}

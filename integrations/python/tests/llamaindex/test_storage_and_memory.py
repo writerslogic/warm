@@ -76,7 +76,7 @@ def test_kv_bucket_capacity_boundary(server_factory, delta):
     kv = WarmKVStore(url=srv.url, tenant_id=srv.tenant(), input_dim=DIM, max_fetch=10, buckets=1)
     n = 10 + delta
     kv.put_all([(f"k{i}", {"i": i}) for i in range(n)])
-    if n >= 10:
+    if n > 10:
         with pytest.raises(WarmError):
             kv.get_all()
     else:

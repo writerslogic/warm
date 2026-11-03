@@ -152,7 +152,9 @@ From your own Rust project, add the current Apache-2.0 source:
 cargo add warm-rust
 ```
 
-The published crate 0.6.1 remains AGPL-3.0-or-later.
+The historical [v0.6.1 source](https://github.com/writerslogic/warm/tree/v0.6.1)
+remains AGPL-3.0-or-later; it is available from that Git tag, not as a
+`warm-rust` 0.6.1 release on crates.io.
 
 ```rust quickstart-check
 use writerslogic_warm::{DocumentInput, WarmCore, SearchOptions};
@@ -376,4 +378,4 @@ the README cites files, not remembered figures.
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE). Use, modify and embed it in open-source or proprietary software, including network services, with no copyleft obligation. Releases up to and including crate 0.6.1 were published under AGPL-3.0-or-later and stay available under those terms.
+Apache-2.0. See [LICENSE](LICENSE). Use, modify and embed it in open-source or proprietary software, including network services, with no copyleft obligation. The historical [v0.6.1 source](https://github.com/writerslogic/warm/tree/v0.6.1) remains available under its [AGPL-3.0-or-later license](https://github.com/writerslogic/warm/blob/v0.6.1/LICENSE).
