@@ -141,4 +141,17 @@ decodes the journal twice: once to resolve the time and once to build the view. 
 view never writes anything. It does not touch the live documents, shards, text segment,
 indices or audit queue, and it blocks a compaction only while it builds or reads.
 
-Measured cost against a current-state query: `benchmarks/results/history_view_cost.json`.
+Measured cost against a current-state query, from `benchmarks/results/history_view_cost.json`
+(`examples/history_cost.rs`, Apple M4, shared machine, 31 paired repetitions, median of the
+per-repetition ratios). The corpus is ingested in batches of 100, followed by single-document
+updates of a tenth and deletes of a twentieth. Only these two scales were tested:
+
+| ingested | journal bytes | live search p50 | build + search at the end p50 | factor | build + search at the middle, factor | search on a built view, factor |
+|---|---|---|---|---|---|---|
+| 1 000 | 172 637 | 18 us | 14.2 ms | 813x | 158x | 0.65x |
+| 10 000 | 1 739 295 | 51 us | 216.7 ms | 4 246x | 790x | 0.89x |
+
+Building the view is the whole cost, and it grows with the journal replayed. The
+single-document update and delete frames after the middle position cost more than the batched
+ingest before it. Once built, a view answers searches as fast as the live store. Callers that
+query one position repeatedly should keep the view.
