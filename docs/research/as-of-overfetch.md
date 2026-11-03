@@ -101,3 +101,79 @@ defaults to off and the default path must stay bit-identical (tested).
 - The held-out split, LongMemEval_M, any reader or judge, answer accuracy.
 - Real `valid_to` or `supersedes` data (H2).
 - Whether the preprint's finding holds for any other system.
+
+---
+
+## Outcome
+
+Result file: `benchmarks/results/as_of_overfetch_dev.json` (arm rows, paired sign tests, D1 to D3,
+per-question hits). Command, from harness commit 95a1228d on base ae3fc4cb (debug build):
+
+```
+memory-api-lme --data ~/.cache/hms-bench/downloads/longmemeval_s_cleaned.json \
+  --split benchmarks/public/longmemeval_split.json --out as_of_overfetch_dev.json --overfetch 1,2,4,8
+```
+
+Dataset sha256 `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442` (equals the cache
+metadata cited in `fpe-timestamps-164.md`). Split seed 20261005, dev ids only, 40 questions, no
+run seed (deterministic). Two runs were byte-identical (sha256 prefix `47b8df94a0b6a4b3`); the
+shared rows equal the earlier base and main runs of Part 1.
+
+recall_any hits at @5 / @10 (knowledge-update n = 15, temporal-reasoning n = 25):
+
+| arm | knowledge-update | temporal-reasoning |
+|---|---|---|
+| `no_as_of` | 15 / 15 | 22 / 24 |
+| `as_of` (current) | 15 / 15 | 19 / 21 |
+| `post_x1` | 15 / 15 | 19 / 21 |
+| `post_x2` | 15 / 15 | 19 / 21 |
+| `post_x4` | 15 / 15 | 19 / 21 |
+| `post_x8` | 15 / 15 | 19 / 21 |
+
+Paired against `as_of`, every `post_x*` arm has 0 wins, 0 losses and all ties on both types and both
+cut-offs (sign test p = 1). `no_as_of` against `as_of` on temporal-reasoning: 3 wins, 0 losses, 22
+ties at @5 and @10 (p = 0.25).
+
+Diagnostics:
+
+- D1: knowledge-update 29 of 30 evidence sessions are valid at the question date, 0 questions
+  without valid evidence. Temporal-reasoning 41 of 53 evidence sessions are valid; 3 of 25
+  questions (`gpt4_5dcc0aab`, `gpt4_4edbafa2`, `c9f37c46`) have none, because every one of their
+  5, 2 and 2 evidence sessions is dated after the question date.
+- D2: the gap is exactly those 3 questions (3 of 3 with zero valid evidence). Among the 22
+  temporal-reasoning questions with at least one valid evidence session, `as_of` and `no_as_of`
+  hit the same 19.
+- D3: 0 facts with `valid_to`, 0 supersession edges in the data.
+
+Rule: recovery needed is ceil(3 / 2) = 2 questions at @5; every overfetch arm recovers 0. No-go.
+
+Findings, kept to what was measured:
+
+- The 0.88 against 0.76 gap is not post-filter dilution. Even the filter-after-top-k reference
+  arm with no overfetch (`post_x1`) equals the shipped filter-before-top-k behavior, so on these 40
+  questions the not-yet-valid facts never displaced valid evidence from the top 5 or 10. The
+  gap is the benchmark labelling as evidence three questions' sessions that do not exist as of the
+  question date. A retrieval change cannot recover them without ignoring `valid_from`, which is
+  what `as_of` means. The 0.88 is therefore not a like-for-like target for the `as_of` row.
+- H2 (closed validity windows) is untestable here: the data has no `valid_to` and no
+  supersession, so it remains an untested guess.
+- Expected outcome 1 was half wrong: the overfetch arms did equal `as_of` and never exceeded it, but
+  `post_x1` was predicted to fall below `as_of` and did not. Expectations 2, 3 and 4 held.
+- Scope: 40 questions, 3 of them decisive, one embedding-free lexical substrate, dev split only.
+  This says nothing about the preprint's dense or ANN setting, or about data where future-dated
+  facts are common or rank high; there a candidate overfetch could matter. The memory API already
+  filters before top-k, so it is not exposed to the failure the preprint describes.
+
+Decision: no `overfetch` option; no library code changed.
+
+## Appendix: the 13 against 14 in the FPE write-up (knowledge-update `memory_recency_7d`, @5)
+
+Per-query ranked ids and scores (all configs, 40 dev questions) were dumped with `--dump` from
+builds of 12b49ed9 (before the posting cache, segment sizing and ingest counting changes) and
+ae3fc4cb (main), three runs each. All six dumps are byte-identical (sha256 prefix
+`9721bb5ebaf58295`), so those changes do not alter lexical results. Both give 13 at @5 and 14 at
+@10 for that row. A build of 02f8b007, the commit that added the committed result, also gives 13 at
+@5, so the committed 14 is not reproduced by the code at its own commit; the other 13 shared rows
+match. The row is a boundary case: for `3ba21379` the evidence sessions rank 6th (score 0.3177) and
+8th, just under the 5th hit (0.3203), so a small scoring difference at the time of the original run
+flips it. Which exact build produced 14 was not determined.
