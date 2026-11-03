@@ -38,7 +38,7 @@ VOL = modal.Volume.from_name("warm-bench-run", create_if_missing=True)
 app = modal.App("warm-bench-run")
 image = (
     modal.Image.debian_slim(python_version="3.13")
-    .apt_install("curl", "build-essential", "pkg-config", "time", "git", "openjdk-17-jdk-headless")
+    .apt_install("curl", "build-essential", "pkg-config", "time", "git", "openjdk-21-jdk-headless")
     .pip_install("uv==0.12.10")
     .run_commands("curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.96.0")
 )

@@ -25,3 +25,17 @@ def test_text_mutations_are_visible_and_committed(tmp_path, system, package):
     adapter.open()
     assert [i for i, _ in adapter.search(adapter.prepare("benchmarkrevision"))] == ["one/α"]
     assert adapter.search(adapter.prepare("banana")) == []
+
+
+def test_version_controls_are_selectable_but_never_default():
+    from warmbench import envs, jars, registry
+
+    controls = set(registry.TEXT_CONTROL_SYSTEMS)
+    assert controls == {"sqlite-fts5-prev", "tantivy-prev", "lucene-prev"}
+    assert not controls & set(registry.TEXT_SYSTEMS)
+    assert controls - {"lucene-prev"} <= set(text_worker.SYSTEMS)
+    for control in controls - {"lucene-prev"}:
+        assert registry.SYSTEMS[control]["env"] in envs.PINS
+        assert registry.SYSTEMS[control]["env"] != registry.SYSTEMS[control.removesuffix("-prev")]["env"]
+    assert set(jars.PINNED) == set(jars.JAVA_RELEASE) == {jars.VERSION, jars.PREVIOUS}
+    assert jars.PINNED[jars.VERSION] != jars.PINNED[jars.PREVIOUS]

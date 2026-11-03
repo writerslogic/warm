@@ -25,7 +25,9 @@ ENV_ROOT = Path(os.environ["WARM_BENCH_ENVS"]) if os.environ.get("WARM_BENCH_ENV
 PYTHON = "3.13"
 # A package whose wheels do not cover CPython 3.13 gets its own interpreter; the version is
 # recorded in every results file next to the package versions.
-PYTHON_FOR = {"voyager": "3.12", "diskann": "3.11"}
+# `stdlib` pins the interpreter because its bundled SQLite is the comparator: 3.13.15 ships SQLite 3.53.1,
+# 3.13.9 (the previous pin, `stdlib-prev`) ships 3.50.4.
+PYTHON_FOR = {"voyager": "3.12", "diskann": "3.11", "stdlib": "3.13.15", "stdlib-prev": "3.13.9"}
 
 
 def python_for(name):
@@ -43,10 +45,12 @@ PINS = {
     "qdrant": ["qdrant-client==1.19.1"],
     "milvus": ["pymilvus==3.0.2", "milvus-lite==3.2.2"],
     "duckdb": ["duckdb==1.5.6"],
-    "tantivy": ["tantivy==0.26.2"],
+    "tantivy": ["tantivy==0.27.0"],
+    "tantivy-prev": ["tantivy==0.26.2"],
     "bm25s": ["bm25s==0.3.14", "PyStemmer==3.1.0"],
     "whoosh": ["whoosh-reloaded==2.7.5"],
     "stdlib": [],
+    "stdlib-prev": [],
     "scann": ["scann==1.4.2"],
     "ngt": ["ngt==2.3.12"],
     "pynndescent": ["pynndescent==0.6.0"],
