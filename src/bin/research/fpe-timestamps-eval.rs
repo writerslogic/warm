@@ -281,10 +281,16 @@ fn build_questions(all: &[RawQuestion], dev: &BTreeSet<&str>, emb: &Embeddings) 
             {
                 continue;
             }
+            // The cache renames evidence sessions "answer_*" to "noans_*"; the raw id stays the
+            // label, only the embedding row is looked up by the cached name.
+            let cached = id.replacen("answer_", "noans_", 1);
             let row = *emb
                 .session_row
                 .get(&(qi, id.clone()))
-                .context("session has no cached embedding")?;
+                .or_else(|| emb.session_row.get(&(qi, cached)))
+                .with_context(|| {
+                    format!("session {id} of {} has no cached embedding", q.question_id)
+                })?;
             let vector = &emb.sessions[row * emb.dim..(row + 1) * emb.dim];
             base.push(
                 query
@@ -863,11 +869,7 @@ fn main() -> Result<()> {
         // The exact-kernel twin differs only by the `_exact` marker after the variant.
         let name = &cfgs[best_fpe].name;
         let variant_end = name[4..].find("_s").map(|i| i + 4).expect("variant");
-        format!(
-            "{}_exact{}",
-            &name[..variant_end],
-            &name[variant_end..]
-        )
+        format!("{}_exact{}", &name[..variant_end], &name[variant_end..])
     };
     let twin = cfgs
         .iter()
