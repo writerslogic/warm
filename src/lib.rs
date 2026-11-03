@@ -16,6 +16,11 @@ pub use crate::core::documents::{
     chunk_document, DocumentChunk, DocumentChunkRecord, DocumentInfo, DocumentInput,
     DocumentReadChanged, DocumentRecord, DocumentResult, SearchOptions,
 };
+#[cfg(not(target_arch = "wasm32"))]
+pub use crate::core::engine::{
+    CompactionHandle, CompactionOptions, CompactionProgress, CompactionReport, CompactionResource,
+    CompactionStage, CompactionStatus,
+};
 pub use crate::core::entangled::EntangledHVec;
 pub use crate::core::error::{CommittedMutationError, IndeterminateMutationError, WarmError};
 #[cfg(not(target_arch = "wasm32"))]

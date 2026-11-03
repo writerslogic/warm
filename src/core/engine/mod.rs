@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod audit_delivery;
+mod background_compaction;
+pub use background_compaction::{
+    CompactionHandle, CompactionOptions, CompactionProgress, CompactionReport, CompactionResource,
+    CompactionStage, CompactionStatus,
+};
 mod compaction;
 pub(crate) mod concepts;
 mod document_api;
