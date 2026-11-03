@@ -7,5 +7,6 @@ pub mod bloom_memory;
 pub mod bundle_subset;
 pub mod connection_graph;
 pub mod counting_bloom_memory;
+pub mod fpe_time;
 pub mod operand_retriever;
 pub mod phase_graph;
