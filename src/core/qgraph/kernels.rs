@@ -935,6 +935,222 @@ mod x86 {
         total
     }
 
+    /// Popcount of each nibble value, for `vpshufb`.
+    const NIBBLE_POPCOUNT: [i8; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
+
+    /// [`super::raw_one`] with AVX2: per 32 bytes (then 16) of code, AND with each bit plane,
+    /// popcount every byte with the nibble table (`vpshufb`), weight the planes in u8 by
+    /// Horner doubling (plane 3 first), and sum the bytes with `vpsadbw`. An odd last word
+    /// takes POPCNT. The same integer sums as the scalar form.
+    ///
+    /// # Safety
+    /// The CPU supports `avx2` and `popcnt`.
+    #[cfg(test)]
+    #[target_feature(enable = "avx2,popcnt")]
+    #[inline]
+    pub(super) unsafe fn raw_one_avx2(code: &[u64], planes: &[u64], words: usize) -> u32 {
+        assert!(code.len() == words && planes.len() == QUERY_BITS * words);
+        let lut128 = _mm_loadu_si128(NIBBLE_POPCOUNT.as_ptr().cast());
+        let lut = _mm256_broadcastsi128_si256(lut128);
+        let low = _mm256_set1_epi8(0x0f);
+        let mut acc = _mm256_setzero_si256();
+        let mut k = 0;
+        // SAFETY (all loads in both loops): the assert above gives `code.len() == words` and
+        // plane `p` = `planes[p * words..(p + 1) * words]`, so `k + 4 <= words` (`k + 2` in the
+        // second loop) keeps each 32-byte (16-byte) unaligned load inside `code` and inside
+        // plane `p`. Per byte the weighted sum is at most 8 * (1 + 2 + 4 + 8) = 120, so the u8
+        // additions cannot overflow.
+        while k + 4 <= words {
+            let x = _mm256_loadu_si256(code.as_ptr().add(k).cast());
+            let mut s = _mm256_setzero_si256();
+            for p in (0..QUERY_BITS).rev() {
+                let y = _mm256_loadu_si256(planes.as_ptr().add(p * words + k).cast());
+                let v = _mm256_and_si256(x, y);
+                let lo = _mm256_shuffle_epi8(lut, _mm256_and_si256(v, low));
+                let hi = _mm256_shuffle_epi8(lut, _mm256_and_si256(_mm256_srli_epi16::<4>(v), low));
+                s = _mm256_add_epi8(_mm256_add_epi8(s, s), _mm256_add_epi8(lo, hi));
+            }
+            acc = _mm256_add_epi64(acc, _mm256_sad_epu8(s, _mm256_setzero_si256()));
+            k += 4;
+        }
+        let low = _mm_set1_epi8(0x0f);
+        let mut acc128 = _mm_add_epi64(
+            _mm256_castsi256_si128(acc),
+            _mm256_extracti128_si256::<1>(acc),
+        );
+        while k + 2 <= words {
+            let x = _mm_loadu_si128(code.as_ptr().add(k).cast());
+            let mut s = _mm_setzero_si128();
+            for p in (0..QUERY_BITS).rev() {
+                let y = _mm_loadu_si128(planes.as_ptr().add(p * words + k).cast());
+                let v = _mm_and_si128(x, y);
+                let lo = _mm_shuffle_epi8(lut128, _mm_and_si128(v, low));
+                let hi = _mm_shuffle_epi8(lut128, _mm_and_si128(_mm_srli_epi16::<4>(v), low));
+                s = _mm_add_epi8(_mm_add_epi8(s, s), _mm_add_epi8(lo, hi));
+            }
+            acc128 = _mm_add_epi64(acc128, _mm_sad_epu8(s, _mm_setzero_si128()));
+            k += 2;
+        }
+        // At most 64 * 15 per word, and `words` rows of a slice fit in memory: no truncation
+        // below 2^32 for any row the index builds (16 planes x 64 words at most).
+        let mut total = (_mm_cvtsi128_si64(acc128) + _mm_extract_epi64::<1>(acc128)) as u32;
+        if k < words {
+            total += tail_popcnt(code, planes, words, k);
+        }
+        total
+    }
+
+    /// [`raw_one_avx2`] over rows of `words` u64 each.
+    ///
+    /// # Safety
+    /// The CPU supports `avx2` and `popcnt`.
+    #[cfg(test)]
+    #[target_feature(enable = "avx2,popcnt")]
+    pub(super) unsafe fn raw_avx2(codes: &[u64], planes: &[u64], words: usize, out: &mut [u32]) {
+        assert_eq!(codes.len(), out.len() * words);
+        for (code, o) in codes.chunks_exact(words.max(1)).zip(out.iter_mut()) {
+            *o = raw_one_avx2(code, planes, words);
+        }
+    }
+
+    /// Words `k..words` of one row with POPCNT.
+    #[inline(always)]
+    #[cfg(test)]
+    fn tail_popcnt(code: &[u64], planes: &[u64], words: usize, k: usize) -> u32 {
+        (k..words)
+            .map(|w| {
+                (0..QUERY_BITS)
+                    .map(|p| (code[w] & planes[p * words + w]).count_ones() << p)
+                    .sum::<u32>()
+            })
+            .sum()
+    }
+
+    /// [`super::raw_one`] with AVX-512 VPOPCNTDQ: per 64 bytes (then 32 with AVX512VL) of
+    /// code, `vpopcntq` of the code AND each plane, weighted in u64 lanes by Horner doubling;
+    /// the last `words % 4` words take POPCNT. Not wired into dispatch: no AVX-512 host has
+    /// timed it (see `docs/performance/platforms.md`).
+    ///
+    /// # Safety
+    /// The CPU supports `avx512f`, `avx512vl`, `avx512vpopcntdq` and `popcnt`.
+    #[cfg(test)]
+    #[target_feature(enable = "avx512f,avx512vl,avx512vpopcntdq,popcnt")]
+    #[inline]
+    pub(super) unsafe fn raw_one_vpopcntdq(code: &[u64], planes: &[u64], words: usize) -> u32 {
+        assert!(code.len() == words && planes.len() == QUERY_BITS * words);
+        let mut acc = _mm512_setzero_si512();
+        let mut k = 0;
+        // SAFETY (all loads in both loops): as in `raw_one_avx2`, `k + 8 <= words` (`k + 4`)
+        // keeps each 64-byte (32-byte) unaligned load inside `code` and inside plane `p`. Lane
+        // sums are at most 64 * 15 per word, far below u64 overflow.
+        while k + 8 <= words {
+            let x = _mm512_loadu_si512(code.as_ptr().add(k).cast());
+            let mut s = _mm512_setzero_si512();
+            for p in (0..QUERY_BITS).rev() {
+                let y = _mm512_loadu_si512(planes.as_ptr().add(p * words + k).cast());
+                let c = _mm512_popcnt_epi64(_mm512_and_si512(x, y));
+                s = _mm512_add_epi64(_mm512_add_epi64(s, s), c);
+            }
+            acc = _mm512_add_epi64(acc, s);
+            k += 8;
+        }
+        let mut acc256 = _mm256_setzero_si256();
+        while k + 4 <= words {
+            let x = _mm256_loadu_si256(code.as_ptr().add(k).cast());
+            let mut s = _mm256_setzero_si256();
+            for p in (0..QUERY_BITS).rev() {
+                let y = _mm256_loadu_si256(planes.as_ptr().add(p * words + k).cast());
+                let c = _mm256_popcnt_epi64(_mm256_and_si256(x, y));
+                s = _mm256_add_epi64(_mm256_add_epi64(s, s), c);
+            }
+            acc256 = _mm256_add_epi64(acc256, s);
+            k += 4;
+        }
+        let acc = _mm512_add_epi64(acc, _mm512_zextsi256_si512(acc256));
+        let mut total = _mm512_reduce_add_epi64(acc) as u32;
+        if k < words {
+            total += tail_popcnt(code, planes, words, k);
+        }
+        total
+    }
+
+    /// [`raw_one_vpopcntdq`] over rows of `words` u64 each.
+    ///
+    /// # Safety
+    /// As [`raw_one_vpopcntdq`].
+    #[cfg(test)]
+    #[target_feature(enable = "avx512f,avx512vl,avx512vpopcntdq,popcnt")]
+    pub(super) unsafe fn raw_vpopcntdq(
+        codes: &[u64],
+        planes: &[u64],
+        words: usize,
+        out: &mut [u32],
+    ) {
+        assert_eq!(codes.len(), out.len() * words);
+        for (code, o) in codes.chunks_exact(words.max(1)).zip(out.iter_mut()) {
+            *o = raw_one_vpopcntdq(code, planes, words);
+        }
+    }
+
+    /// [`raw_one_bitalg`] over rows of `words` u64 each.
+    ///
+    /// # Safety
+    /// As [`raw_one_bitalg`].
+    #[cfg(test)]
+    #[target_feature(enable = "avx512f,avx512bw,avx512vl,avx512bitalg,popcnt")]
+    pub(super) unsafe fn raw_bitalg(codes: &[u64], planes: &[u64], words: usize, out: &mut [u32]) {
+        assert_eq!(codes.len(), out.len() * words);
+        for (code, o) in codes.chunks_exact(words.max(1)).zip(out.iter_mut()) {
+            *o = raw_one_bitalg(code, planes, words);
+        }
+    }
+
+    /// [`super::raw_one`] with AVX-512 BITALG: `vpopcntb` per byte of the code AND each plane,
+    /// weighted in u8 by Horner doubling (at most 120 per byte, as in [`raw_one_avx2`]), then
+    /// `vpsadbw`; 64 bytes, then 32, then POPCNT for the last `words % 4`. Not wired into
+    /// dispatch: no AVX-512 host has timed it.
+    ///
+    /// # Safety
+    /// The CPU supports `avx512f`, `avx512bw`, `avx512vl`, `avx512bitalg` and `popcnt`.
+    #[cfg(test)]
+    #[target_feature(enable = "avx512f,avx512bw,avx512vl,avx512bitalg,popcnt")]
+    #[inline]
+    pub(super) unsafe fn raw_one_bitalg(code: &[u64], planes: &[u64], words: usize) -> u32 {
+        assert!(code.len() == words && planes.len() == QUERY_BITS * words);
+        let mut acc = _mm512_setzero_si512();
+        let mut k = 0;
+        // SAFETY (all loads in both loops): as in `raw_one_vpopcntdq`.
+        while k + 8 <= words {
+            let x = _mm512_loadu_si512(code.as_ptr().add(k).cast());
+            let mut s = _mm512_setzero_si512();
+            for p in (0..QUERY_BITS).rev() {
+                let y = _mm512_loadu_si512(planes.as_ptr().add(p * words + k).cast());
+                let c = _mm512_popcnt_epi8(_mm512_and_si512(x, y));
+                s = _mm512_add_epi8(_mm512_add_epi8(s, s), c);
+            }
+            acc = _mm512_add_epi64(acc, _mm512_sad_epu8(s, _mm512_setzero_si512()));
+            k += 8;
+        }
+        let mut acc256 = _mm256_setzero_si256();
+        while k + 4 <= words {
+            let x = _mm256_loadu_si256(code.as_ptr().add(k).cast());
+            let mut s = _mm256_setzero_si256();
+            for p in (0..QUERY_BITS).rev() {
+                let y = _mm256_loadu_si256(planes.as_ptr().add(p * words + k).cast());
+                let c = _mm256_popcnt_epi8(_mm256_and_si256(x, y));
+                s = _mm256_add_epi8(_mm256_add_epi8(s, s), c);
+            }
+            acc256 = _mm256_add_epi64(acc256, _mm256_sad_epu8(s, _mm256_setzero_si256()));
+            k += 4;
+        }
+        let acc = _mm512_add_epi64(acc, _mm512_zextsi256_si512(acc256));
+        let mut total = _mm512_reduce_add_epi64(acc) as u32;
+        if k < words {
+            total += tail_popcnt(code, planes, words, k);
+        }
+        total
+    }
+
     /// Signed i8 dot product of two rows of equal length, a multiple of 16, exact over the
     /// whole i8 range: the bytes widen to i16 lanes (`vpmovsxbw`) and `vpmaddwd` sums pairs
     /// of products into i32 (the `maddubs` form would misread -128 after the sign trick).
@@ -1600,6 +1816,228 @@ mod tests {
         println!("{report}");
         if let Ok(path) = crate::compatibility::var("WARM_SCREEN_BENCH_OUT") {
             std::fs::write(path, format!("{report}\n")).unwrap();
+        }
+    }
+
+    type ScreenRow = fn(&[u64], &[u64], usize) -> u32;
+    type ScreenBlock = fn(&[u64], &[u64], usize, &mut [u32]);
+
+    /// Every 1-bit screen kernel this CPU can run, by name: `(name, one row, rows)`. The first
+    /// is the scalar reference, `dispatch` is what the index calls.
+    fn screen_variants() -> Vec<(&'static str, ScreenRow, ScreenBlock)> {
+        let mut v: Vec<(&'static str, ScreenRow, ScreenBlock)> = vec![
+            ("scalar", raw_one_scalar, raw_scalar),
+            ("dispatch", raw_one, raw_estimates),
+        ];
+        // SAFETY (every unsafe kernel below): its target features are detected before it is
+        // listed; the kernels check their slice lengths themselves.
+        #[cfg(target_arch = "x86_64")]
+        {
+            let popcnt = is_x86_feature_detected!("popcnt");
+            let avx512 = popcnt
+                && is_x86_feature_detected!("avx512f")
+                && is_x86_feature_detected!("avx512vl");
+            if popcnt {
+                v.push((
+                    "popcnt",
+                    |c, p, w| {
+                        assert_eq!(p.len(), QUERY_BITS * w);
+                        unsafe { x86::raw_one_popcnt(c, p, w) }
+                    },
+                    |c, p, w, o| unsafe { x86::raw_popcnt(c, p, w, o) },
+                ));
+            }
+            if popcnt && is_x86_feature_detected!("avx2") {
+                v.push((
+                    "avx2",
+                    |c, p, w| unsafe { x86::raw_one_avx2(c, p, w) },
+                    |c, p, w, o| unsafe { x86::raw_avx2(c, p, w, o) },
+                ));
+            }
+            if avx512 && is_x86_feature_detected!("avx512vpopcntdq") {
+                v.push((
+                    "avx512_vpopcntdq",
+                    |c, p, w| unsafe { x86::raw_one_vpopcntdq(c, p, w) },
+                    |c, p, w, o| unsafe { x86::raw_vpopcntdq(c, p, w, o) },
+                ));
+            }
+            if avx512
+                && is_x86_feature_detected!("avx512bw")
+                && is_x86_feature_detected!("avx512bitalg")
+            {
+                v.push((
+                    "avx512_bitalg",
+                    |c, p, w| unsafe { x86::raw_one_bitalg(c, p, w) },
+                    |c, p, w, o| unsafe { x86::raw_bitalg(c, p, w, o) },
+                ));
+            }
+        }
+        v
+    }
+
+    /// Every screen kernel against the scalar reference, bit for bit. Row widths 0..=33 words
+    /// bracket every vector width (2 words for SSE, 4 for AVX2 and ymm, 8 for zmm, 16 and 32
+    /// for the unrolled multiples) at limit-1, limit and limit+1, so each tail path runs. Rows
+    /// start 0..8 words into their buffer: with `&[u64]` an 8-byte step is the only possible
+    /// misalignment, and eight steps cover every offset modulo 64 bytes. All-ones rows hit
+    /// the per-byte maximum of the u8 accumulators.
+    #[test]
+    fn every_screen_kernel_matches_scalar() {
+        let variants = screen_variants();
+        let names: Vec<_> = variants.iter().map(|v| v.0).collect();
+        eprintln!("screen kernels under test on {}: {names:?}", std::env::consts::ARCH);
+        let mut rng = SplitMix(23);
+        let rows = 5;
+        for words in 0..=33usize {
+            for offset in 0..8 {
+                for round in 0..4 {
+                    let mut cbuf: Vec<u64> =
+                        (0..offset + rows * words).map(|_| rng.next_u64()).collect();
+                    let mut pbuf: Vec<u64> = (0..offset + QUERY_BITS * words)
+                        .map(|_| rng.next_u64())
+                        .collect();
+                    match round {
+                        0 => {
+                            cbuf.fill(u64::MAX);
+                            pbuf.fill(u64::MAX);
+                        }
+                        1 => cbuf.fill(u64::MAX),
+                        2 => pbuf.fill(0),
+                        _ => {}
+                    }
+                    let (codes, planes) = (&cbuf[offset..], &pbuf[offset..]);
+                    let want: Vec<u32> = (0..rows)
+                        .map(|r| raw_one_scalar(&codes[r * words..][..words], planes, words))
+                        .collect();
+                    for (name, row, block) in &variants {
+                        for (r, &w) in want.iter().enumerate() {
+                            let got = row(&codes[r * words..][..words], planes, words);
+                            assert_eq!(got, w, "{name} row, words {words}, offset {offset}");
+                        }
+                        if words > 0 {
+                            let mut got = vec![u32::MAX; rows];
+                            block(codes, planes, words, &mut got);
+                            assert_eq!(got, want, "{name} rows, words {words}, offset {offset}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Kill test for the 1-bit screen popcount kernels, paired: one binary, the variants
+    /// timed in alternation inside every round (order rotated per round), and the reported
+    /// figure is the per-round ratio to `scalar` and to the incumbent (`popcnt` on x86, which
+    /// is what dispatch ran before; `scalar` elsewhere): median and range over the rounds.
+    /// Shapes per width (2, 4, 8, 16 words = 128 to 1024 dims): `row_cold`, one call per
+    /// random row of a 64 MiB table, prefetched in batches of 64 (the `vertex.rs` shape);
+    /// `block_hot`, one call over a 64-row block in L1 (the `raw_estimates` shape of the
+    /// search loop); `block_cold`, the same over random blocks of the table. Rows start one
+    /// word into their buffer (unaligned). Every call goes through a fn pointer, the same for
+    /// every variant.
+    /// `cargo test --release --lib screen_popcount_microbench -- --ignored --nocapture`;
+    /// writes JSON to `$WARM_SCREEN_POPCOUNT_BENCH_OUT` when set; `WARM_BENCH_ROUNDS` (default 11).
+    #[test]
+    #[ignore = "microbenchmark: run in release with --ignored --nocapture"]
+    fn screen_popcount_microbench() {
+        use std::time::Instant;
+        const TABLE_BYTES: usize = 64 << 20;
+        const CALLS: usize = 1 << 20;
+        const DEG: usize = 64;
+        let rounds: usize = crate::compatibility::var("WARM_BENCH_ROUNDS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(11);
+        let variants = screen_variants();
+        let incumbent = if variants.iter().any(|v| v.0 == "popcnt") {
+            "popcnt"
+        } else {
+            "scalar"
+        };
+        let mut rng = SplitMix(5);
+        let median = |mut x: Vec<f64>| -> (f64, f64, f64) {
+            x.sort_by(f64::total_cmp);
+            (x[x.len() / 2], x[0], x[x.len() - 1])
+        };
+        let mut report = Vec::new();
+        for words in [2usize, 4, 8, 16] {
+            let n = TABLE_BYTES / (words * 8);
+            let buf: Vec<u64> = (0..1 + n * words).map(|_| rng.next_u64()).collect();
+            let table = &buf[1..];
+            let planes: Vec<u64> = (0..QUERY_BITS * words).map(|_| rng.next_u64()).collect();
+            let ids: Vec<u32> = (0..CALLS).map(|_| (rng.next_u64() % n as u64) as u32).collect();
+            let blocks: Vec<u32> = (0..CALLS / DEG)
+                .map(|_| (rng.next_u64() % (n / DEG) as u64) as u32)
+                .collect();
+            let hot = &table[..DEG * words];
+            let row = |v: u32| &table[v as usize * words..][..words];
+            let block = |b: u32| &table[b as usize * DEG * words..][..DEG * words];
+            // ns per row: [shape][variant][round]
+            let mut ns = vec![vec![Vec::with_capacity(rounds); variants.len()]; 3];
+            let mut sums = vec![[0u64; 3]; variants.len()];
+            let mut out = vec![0u32; DEG];
+            for round in 0..rounds {
+                for j in 0..variants.len() {
+                    let i = (j + round) % variants.len();
+                    let (_, k_row, k_block) = variants[i];
+                    let t = Instant::now();
+                    let mut s = 0u64;
+                    for batch in ids.as_chunks::<DEG>().0 {
+                        batch.iter().for_each(|&v| prefetch(row(v)));
+                        for &v in batch {
+                            s += u64::from(k_row(row(v), &planes, words));
+                        }
+                    }
+                    ns[0][i].push(t.elapsed().as_secs_f64() * 1e9 / CALLS as f64);
+                    sums[i][0] = s;
+                    let t = Instant::now();
+                    let mut s = 0u64;
+                    for _ in 0..CALLS / DEG {
+                        k_block(std::hint::black_box(hot), &planes, words, &mut out);
+                        s += out.iter().map(|&r| u64::from(r)).sum::<u64>();
+                    }
+                    ns[1][i].push(t.elapsed().as_secs_f64() * 1e9 / CALLS as f64);
+                    sums[i][1] = s;
+                    let t = Instant::now();
+                    let mut s = 0u64;
+                    for &b in &blocks {
+                        k_block(block(b), &planes, words, &mut out);
+                        s += out.iter().map(|&r| u64::from(r)).sum::<u64>();
+                    }
+                    ns[2][i].push(t.elapsed().as_secs_f64() * 1e9 / CALLS as f64);
+                    sums[i][2] = s;
+                }
+            }
+            for (i, (name, _, _)) in variants.iter().enumerate() {
+                assert_eq!(sums[i], sums[0], "{name} checksum, words {words}");
+            }
+            let inc = variants.iter().position(|v| v.0 == incumbent).unwrap();
+            for (s, shape) in ["row_cold", "block_hot", "block_cold"].iter().enumerate() {
+                for (i, (name, _, _)) in variants.iter().enumerate() {
+                    let ratio = |base: usize| {
+                        median((0..rounds).map(|r| ns[s][i][r] / ns[s][base][r]).collect())
+                    };
+                    let (t, t_lo, t_hi) = median(ns[s][i].clone());
+                    let (rs, rs_lo, rs_hi) = ratio(0);
+                    let (ri, ri_lo, ri_hi) = ratio(inc);
+                    report.push(format!(
+                        "{{\"words\": {words}, \"dim\": {}, \"shape\": \"{shape}\", \"variant\": \"{name}\", \
+                         \"ns_per_row_median\": {t:.3}, \"ns_per_row_range\": [{t_lo:.3}, {t_hi:.3}], \
+                         \"ratio_to_scalar_median\": {rs:.3}, \"ratio_to_scalar_range\": [{rs_lo:.3}, {rs_hi:.3}], \
+                         \"ratio_to_incumbent_median\": {ri:.3}, \"ratio_to_incumbent_range\": [{ri_lo:.3}, {ri_hi:.3}]}}",
+                        words * 64
+                    ));
+                }
+            }
+        }
+        let json = format!(
+            "{{\"arch\": \"{}\", \"rounds\": {rounds}, \"incumbent\": \"{incumbent}\", \"results\": [\n  {}\n]}}\n",
+            std::env::consts::ARCH,
+            report.join(",\n  ")
+        );
+        println!("{json}");
+        if let Ok(path) = crate::compatibility::var("WARM_SCREEN_POPCOUNT_BENCH_OUT") {
+            std::fs::write(path, json).unwrap();
         }
     }
 
