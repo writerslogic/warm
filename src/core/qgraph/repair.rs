@@ -574,7 +574,7 @@ mod tests {
             ..VSearchParams::default()
         };
         let (mut a, mut b) = (Vec::new(), Vec::new());
-        for query in queries.chunks_exact(6) {
+        for query in queries.as_chunks::<6>().0 {
             index
                 .searcher_with(SearchKnobs::OFF)
                 .search(query, 5, search, &mut a)
