@@ -304,22 +304,25 @@ def _attach_versions_and_footprints(results):
         if reg["family"] == "warm":
             entry["version"] = _warm_version()
             continue
-        if system == "lucene":
-            entry["version"] = {"lucene": jars.VERSION, "jvm": jars.java_version()}
-            entry["install"] = jars.footprint()
+        if system in ("lucene", "lucene-prev"):
+            version = jars.VERSION if system == "lucene" else jars.PREVIOUS
+            entry["version"] = {"lucene": version, "jvm": jars.java_version()}
+            entry["install"] = jars.footprint(version)
             continue
         name = reg["env"]
         if name not in cache:
             pins = [line.split("==")[0] for line in envs.PINS.get(name, [])] or []
-            cache[name] = {"versions": envs.versions(name, pins) if pins else {"python-sqlite3": _sqlite_version()},
+            cache[name] = {"versions": envs.versions(name, pins) if pins else {"python-sqlite3": _sqlite_version(name)},
                            "footprint": envs.footprint(name)}
         entry["version"] = cache[name]["versions"]
         entry["install"] = cache[name]["footprint"]
 
 
-def _sqlite_version():
-    import sqlite3
-    return sqlite3.sqlite_version
+def _sqlite_version(env):
+    """SQLite library of the comparator environment's own interpreter, not the orchestrator's."""
+    out = subprocess.run([str(envs.ensure(env)), "-I", "-c", "import sqlite3; print(sqlite3.sqlite_version)"],
+                         capture_output=True, text=True, check=True).stdout
+    return out.strip()
 
 
 def _warm_version():
@@ -414,8 +417,8 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None):
     if system in registry.WARM_TEXT_ENCODE:
         cmd = [str(warm_binary("competitive_text", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--encode", registry.WARM_TEXT_ENCODE[system]]
-    elif system == "lucene":
-        classpath, _ = jars.ensure()
+    elif system in ("lucene", "lucene-prev"):
+        classpath, _ = jars.ensure(jars.VERSION if system == "lucene" else jars.PREVIOUS)
         cmd = ["java", "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
     else:
         python = envs.ensure(registry.SYSTEMS[system]["env"])
