@@ -186,7 +186,14 @@ impl QueryCode {
     }
 }
 
+/// Narrowest row (in u64 words) the AVX2 screen kernel takes on x86. At 2 words it lost to
+/// POPCNT in every shape of `screen_popcount_microbench` (paired median 1.06 to 1.67); from 4
+/// words it won in every shape (`benchmarks/results/platform_x86_screen_popcount_v1.json`).
+#[cfg(target_arch = "x86_64")]
+const AVX2_SCREEN_MIN_WORDS: usize = 4;
+
 /// For each code row (`words` u64 each) computes `sum_p 2^p * popcount(code & plane_p)`.
+/// x86: AVX2 from [`AVX2_SCREEN_MIN_WORDS`], else POPCNT when detected, else scalar.
 pub(crate) fn raw_estimates(codes: &[u64], planes: &[u64], words: usize, out: &mut [u32]) {
     #[cfg(target_arch = "aarch64")]
     match words {
@@ -196,6 +203,11 @@ pub(crate) fn raw_estimates(codes: &[u64], planes: &[u64], words: usize, out: &m
         8 => return neon::raw::<8>(codes, planes, out),
         16 => return neon::raw::<16>(codes, planes, out),
         _ => {}
+    }
+    #[cfg(target_arch = "x86_64")]
+    if words >= AVX2_SCREEN_MIN_WORDS && tier::screen_avx2() {
+        // SAFETY: `screen_avx2` is true only after detecting `avx2` and `popcnt`.
+        return unsafe { x86::raw_avx2(codes, planes, words, out) };
     }
     #[cfg(target_arch = "x86_64")]
     if tier::popcnt() {
@@ -214,8 +226,8 @@ fn raw_scalar(codes: &[u64], planes: &[u64], words: usize, out: &mut [u32]) {
 }
 
 /// [`raw_estimates`] for one code row: NEON AND + CNT over the bit planes for the row widths
-/// the index produces (16 planes x 64 words at most), POPCNT on x86 when detected, scalar
-/// otherwise.
+/// the index produces (16 planes x 64 words at most); on x86 the same choice as
+/// [`raw_estimates`]; scalar otherwise.
 #[must_use]
 #[inline]
 pub(crate) fn raw_one(code: &[u64], planes: &[u64], words: usize) -> u32 {
@@ -245,6 +257,11 @@ pub(crate) fn raw_one(code: &[u64], planes: &[u64], words: usize) -> u32 {
             }
             _ => {}
         }
+    }
+    #[cfg(target_arch = "x86_64")]
+    if words >= AVX2_SCREEN_MIN_WORDS && tier::screen_avx2() {
+        // SAFETY: `screen_avx2` is true only after detecting `avx2` and `popcnt`.
+        return unsafe { x86::raw_one_avx2(code, planes, words) };
     }
     #[cfg(target_arch = "x86_64")]
     if tier::popcnt() {
@@ -474,6 +491,8 @@ mod neon {
 /// the CPU does not support falls back to the best detected one below it. `avxvnni` is the
 /// VEX-encoded 256-bit `vpdpbusd` (client cores without AVX-512), `vnni` the AVX512-VNNI one;
 /// the per-query kernels ([`dot_i8_query`] and the 4-bit ones) use [`super::vnni`] on both.
+/// The 1-bit screen follows the pin: `scalar` takes `count_ones`, any AVX2 tier the AVX2
+/// popcount from [`AVX2_SCREEN_MIN_WORDS`] words and POPCNT below.
 #[cfg(target_arch = "x86_64")]
 mod tier {
     use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -486,6 +505,10 @@ mod tier {
     /// `popcnt` detected and the tier not pinned to `scalar`. Stored before [`TIER`]; a reader
     /// that sees the tier but not yet this flag takes the scalar popcount, which is exact too.
     static POPCNT: AtomicBool = AtomicBool::new(false);
+    /// `avx2` and `popcnt` detected and the resolved tier at least [`AVX2`]: the 1-bit screen
+    /// may take the AVX2 kernel. Stored before [`TIER`] like [`POPCNT`]; an early reader takes
+    /// POPCNT or scalar, both exact.
+    static SCREEN_AVX2: AtomicBool = AtomicBool::new(false);
 
     #[inline(always)]
     pub(super) fn get() -> u8 {
@@ -500,6 +523,13 @@ mod tier {
     pub(super) fn popcnt() -> bool {
         get();
         POPCNT.load(Ordering::Relaxed)
+    }
+
+    /// True if the 1-bit screen may use the AVX2 popcount kernel.
+    #[inline(always)]
+    pub(super) fn screen_avx2() -> bool {
+        get();
+        SCREEN_AVX2.load(Ordering::Relaxed)
     }
 
     #[cold]
@@ -538,10 +568,9 @@ mod tier {
             .rev()
             .find(|&t| supported(t))
             .unwrap_or(SCALAR);
-        POPCNT.store(
-            want != SCALAR && is_x86_feature_detected!("popcnt"),
-            Ordering::Relaxed,
-        );
+        let popcnt = want != SCALAR && is_x86_feature_detected!("popcnt");
+        POPCNT.store(popcnt, Ordering::Relaxed);
+        SCREEN_AVX2.store(popcnt && tier >= AVX2, Ordering::Relaxed);
         TIER.store(tier, Ordering::Relaxed);
         tier
     }
@@ -945,7 +974,6 @@ mod x86 {
     ///
     /// # Safety
     /// The CPU supports `avx2` and `popcnt`.
-    #[cfg(test)]
     #[target_feature(enable = "avx2,popcnt")]
     #[inline]
     pub(super) unsafe fn raw_one_avx2(code: &[u64], planes: &[u64], words: usize) -> u32 {
@@ -1004,7 +1032,6 @@ mod x86 {
     ///
     /// # Safety
     /// The CPU supports `avx2` and `popcnt`.
-    #[cfg(test)]
     #[target_feature(enable = "avx2,popcnt")]
     pub(super) unsafe fn raw_avx2(codes: &[u64], planes: &[u64], words: usize, out: &mut [u32]) {
         assert_eq!(codes.len(), out.len() * words);
@@ -1015,7 +1042,6 @@ mod x86 {
 
     /// Words `k..words` of one row with POPCNT.
     #[inline(always)]
-    #[cfg(test)]
     fn tail_popcnt(code: &[u64], planes: &[u64], words: usize, k: usize) -> u32 {
         (k..words)
             .map(|w| {
@@ -1825,6 +1851,7 @@ mod tests {
     /// Every 1-bit screen kernel this CPU can run, by name: `(name, one row, rows)`. The first
     /// is the scalar reference, `dispatch` is what the index calls.
     fn screen_variants() -> Vec<(&'static str, ScreenRow, ScreenBlock)> {
+        #[cfg_attr(not(target_arch = "x86_64"), allow(unused_mut))]
         let mut v: Vec<(&'static str, ScreenRow, ScreenBlock)> = vec![
             ("scalar", raw_one_scalar, raw_scalar),
             ("dispatch", raw_one, raw_estimates),
@@ -1885,7 +1912,10 @@ mod tests {
     fn every_screen_kernel_matches_scalar() {
         let variants = screen_variants();
         let names: Vec<_> = variants.iter().map(|v| v.0).collect();
-        eprintln!("screen kernels under test on {}: {names:?}", std::env::consts::ARCH);
+        eprintln!(
+            "screen kernels under test on {}: {names:?}",
+            std::env::consts::ARCH
+        );
         let mut rng = SplitMix(23);
         let rows = 5;
         for words in 0..=33usize {
@@ -1965,7 +1995,9 @@ mod tests {
             let buf: Vec<u64> = (0..1 + n * words).map(|_| rng.next_u64()).collect();
             let table = &buf[1..];
             let planes: Vec<u64> = (0..QUERY_BITS * words).map(|_| rng.next_u64()).collect();
-            let ids: Vec<u32> = (0..CALLS).map(|_| (rng.next_u64() % n as u64) as u32).collect();
+            let ids: Vec<u32> = (0..CALLS)
+                .map(|_| (rng.next_u64() % n as u64) as u32)
+                .collect();
             let blocks: Vec<u32> = (0..CALLS / DEG)
                 .map(|_| (rng.next_u64() % (n / DEG) as u64) as u32)
                 .collect();
