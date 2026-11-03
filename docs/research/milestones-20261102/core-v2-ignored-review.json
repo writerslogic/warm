@@ -1,0 +1,18 @@
+{
+  "cases": {
+    "core::documents::search::latency_bench::lexical_latency_microbench": "Lexical latency diagnostic over external or synthetic corpus; timing loops.",
+    "core::engine::document_memory_census::reopened_index_memory_census": "Requires WARM_MEMORY_INDEX and output path for external-index memory census.",
+    "core::qgraph::fastscan::tests::block_scan_microbenchmark": "300K-row block-scan timing experiment.",
+    "core::qgraph::kernels::tests::dot_kernel_microbench": "Hot/cold distance-kernel timing experiment.",
+    "core::qgraph::kernels::tests::microbench_fwht": "Transform timing experiment with repeated reference comparisons.",
+    "core::qgraph::kernels::tests::microbench_i8_x4": "Scalar/batched dot-product timing on cache-resident and 256MiB sets.",
+    "core::qgraph::kernels::tests::raw_screen_microbenchmark": "300K-row screen-versus-dot timing experiment.",
+    "core::qgraph::tests::build_visited_reset_workload": "Synthetic visited-reset timing at 8,421,866 vertices.",
+    "core::qgraph::update::delta::tests::delta_search_live_set": "Large delta-search timing experiment.",
+    "core::qgraph::update::merge::tests::replacement_entry_large_live_set": "Million-row replacement-entry memory/timing experiment.",
+    "core::qgraph::update::tests::consolidation_live_set_peak": "Large consolidation memory/timing experiment with optional Linux RSS instrumentation.",
+    "core::qgraph::vertex::tests::microbench_pool": "Repeated search-shaped pool timing experiment."
+  },
+  "reviewedAgainstFrozenSource": true,
+  "scope": "No skipped functional test is accepted. These 12 declared diagnostics are excluded from this correctness run, not recorded as passed."
+}

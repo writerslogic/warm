@@ -1,0 +1,16 @@
+{
+  "files": {
+    "AMBIENT-WITNESS-PLAN.json": "5ef31dcf713efe47a9ed007078448a4475a65cf577c3257ecc7ecaca24871e8c",
+    "PROOF.md": "6b9f8e2b1e7232ea6800d39edf73c88ba03fc260f9389f38c268446ee4a8b32c",
+    "ambient_witness.py": "69bde0aeffba6a9b008cc8fd7100c778bd000469fece2962ec1072e507572d5f",
+    "matrix_witness.py": "13ef92151ff5384efa6ae9f971dea7da64f53c3547e4f6f14ae62a68fe3b31e8",
+    "probe.py": "76f7543882ae66c5a4ad90d425a15bcf087cd3ada70a3baca238eb4a5f11e9c8",
+    "run_ambient_witness.py": "8a0370836af8a5acbf3b824ef2b48e8fa24d0a888dc18a5bbf9ae841453222bc",
+    "run_witness.py": "591c833b906f0005dedd6f53c6b7cbdfff157e3a6ea7e086af4bf7997e8dee8e",
+    "test_ambient_witness.py": "e7db9aa10a03ec5309b0fa07dbf4473b69119a05aafdc526155e1fe3a8683176",
+    "witness_tightness.py": "cfde5f03fec34714a87229f663438342c4e0938ad5cb0cbef139e96fec2ac7a1"
+  },
+  "frozenAt": "2026-11-03T18:01:17.851357+00:00",
+  "schema": "warm.ambient-witness-freeze/1",
+  "scope": "32 exact families / 37410 withdrawal masks, no performance or novelty claim"
+}

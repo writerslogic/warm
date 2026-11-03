@@ -1,0 +1,10 @@
+# Large evidence is retained at the hash-bound locations in external-evidence.json.
+/adapter-evidence.tar.gz
+/linux-comparators/evidence/postgres-build.log
+/navigation-100k/misses.ndjson.gz
+/navigation-10k/misses.ndjson.gz
+/opensearch-scoring-diagnosis-v2.json
+/opensearch-scoring-diagnosis.json
+/serving-v1-configuration-seal.json
+/serving-v1-observations-summary-v1.json
+/serving-v1-reported-summary.json

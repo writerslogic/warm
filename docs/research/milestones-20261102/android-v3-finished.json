@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "android-lock-test-build failed; retained log: android-lock-test-build.log",
+    "type": "RuntimeError"
+  }
+}

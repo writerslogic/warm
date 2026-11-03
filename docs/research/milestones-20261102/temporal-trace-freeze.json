@@ -1,0 +1,14 @@
+{
+  "machine": "arm64",
+  "mode": "local-development",
+  "python": "3.13.9",
+  "qualifiedClaim": false,
+  "schema": "warm.temporal-trace.freeze/1",
+  "sourceSha256": {
+    "PLAN.json": "4cf5ff752d5d760666d91df82c19b429a12d7fdf9a39555a0286846ed3bf18c9",
+    "probe.py": "6567a20298f8b59ec1c44bfb63ee6228ea50bec64752ccab4511233c41d032d2",
+    "run.py": "4b545b98d6bf0d5ecc9491243a463bfb2c6ecfb44624811235203a808661a27d",
+    "test_probe.py": "ecaaff7bdd6577f6a77f6dcba4d46fa803b89ca15448b68311d07d3874d465bf"
+  },
+  "startedAt": "2026-11-03T10:19:46.467559+00:00"
+}

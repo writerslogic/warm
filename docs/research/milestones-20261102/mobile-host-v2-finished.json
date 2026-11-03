@@ -1,0 +1,28 @@
+{
+  "complete": true,
+  "completedAt": "2026-11-03T15:03:36.253326+00:00",
+  "freezeSha256": "2eb5ecf373ba8563333e6e1b9f9d33151a3325336e8e08a45d4cc6ffc9f25aee",
+  "jvmArchiveSha256": "35264da331b3bf6502af46e7649268207cd512fb1b3735e085abe394b23ba24c",
+  "kotlinTests": 7,
+  "logs": {
+    "launcher.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "swift-consumer-tests.log": "57dd37bf7469fd5dfcfc38b0bec4e707f909465523728313722ce0791773f36d",
+    "swift-xcframework.log": "d97f55cfaeb44d325028332999fb1cb2b8b73ba272d1c65b82259c7fba360a91",
+    "version-rust.log": "7aaf71af0cccdebda4e70ae5216dcf348bccfeb5cc30d148247005558cec03ad",
+    "version-swift.log": "448e3f9c46706640fe62ea0140ecfccbb330baba2076b2916c0423af9642ee06"
+  },
+  "reusedPriorUniFFIAndKotlinEvidence": true,
+  "scope": "macOS arm64 host lifecycle; other platforms, legacy migration and process-death recovery remain open",
+  "swiftArchiveSha256": "cd5acab4f06040c3ab4f7e48156553d0e0fdbab23a2771d6b1b3214cf2bec3f0",
+  "swiftInstalledFiles": {
+    "Frameworks/warm_mobileFFI.xcframework/Info.plist": "7167f14e82a21e00b0d40ebe23b10fb2d42fc014d2e22ed7be214d6fc4da6236",
+    "Frameworks/warm_mobileFFI.xcframework/macos-arm64_x86_64/Headers/module.modulemap": "8c1c8c8ac454dc0fadde9cd76332d005cb0307297b37ec91a5dce6794a9364f4",
+    "Frameworks/warm_mobileFFI.xcframework/macos-arm64_x86_64/Headers/warm_mobileFFI.h": "a0c108a8f7c7e7a4e687d0a745d296c7052262ade8740ec4c8acd05b4907356c",
+    "Frameworks/warm_mobileFFI.xcframework/macos-arm64_x86_64/libwarm_mobile.a": "eab2d115d89066d18e3b2b31be0166d2db3aa01d7b104689db2e622be5f14f3f",
+    "Package.swift": "d2c6a95cb29d770fde694dcf02953c98a0dd1fd17a024944e7124bc6a5c693f0",
+    "Sources/WarmMemory/WarmMobile.swift": "1b7523e87399819d520d9ce6378bd28762b9edafb035d725e79229fe45f9db93",
+    "Tests/WarmMemoryTests/WarmMemoryTests.swift": "2417c1e2fc8928149a1d35947091155397b60c0a27c6cb54306292f5a4aa040e"
+  },
+  "swiftTests": 7,
+  "uniffiTests": 18
+}

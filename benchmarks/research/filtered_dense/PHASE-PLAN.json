@@ -1,0 +1,10 @@
+{
+  "schema": "warm.filtered-dense-phase-diagnostic/1",
+  "question": "After bounding wasted tree work, which phases still dominate filtered exact queries, and can interleaving eight independent ordered dot products reduce the scoring cost without changing a score bit?",
+  "scope": "Diagnosis and a kernel-only experiment in an isolated source copy. Production code stays unchanged. Loop interleaving is established engineering, not an original research claim.",
+  "cohort": "100K COCO/DEEP training vectors and the first 32 exposed calibration queries, baseline and 100 replacements plus 100 deletions/retrain, filters 10pct and 1pct, three repetitions: eight cells and 768 query rows. No held-out vectors.",
+  "phases": "Measure preparation, capture, ranking, text materialization and captured-state release separately on the existing bounded route. Independently capture the scan's eligible embeddings and compare the canonical sequential per-row cosine against fixed-width-eight interleaving, rotating kernel order. Retain all phase times, per-query result fields, dot comparison counts and hashes of ordered score bits.",
+  "correctness": "Every individual score bit must match, including tails of seven/eight/nine rows, signed zero, mixed signs, dimensions one/two/three/96/512. Use the canonical empty-sum identity and preserve each row's coordinate accumulation order. No unsafe code or floating-point reassociation.",
+  "decision": "A kernel lead requires at least 2x median speedup in every cell and exact equality everywhere. Phase fractions determine the possible end-to-end ceiling. A kernel pass alone does not authorize a speed claim or promotion: a full-query prototype and regression gate would still be required.",
+  "resources": "Local/free only; start after package builds stop; preserve all earlier sources and failures."
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "warm.monotone-computed-bound/1",
+  "hypothesis": "For the canonical sequential f64 dot product, monotonicity of rounded multiplication and addition makes the same-order endpoint dot an upper bound without per-coordinate outward rounding. Removing two next_up operations per coordinate reduces trained-tree overhead.",
+  "proof": "docs/research/milestones-20261102/MONOTONE-BOUND.md; finite f32 coordinates, abs(query)<=1, dimension<=4096, identical negative-zero identity/reduction order, unchanged score ties and clamping. No claim about ideal real-valued dot products or established novelty.",
+  "cohort": "The same 32 semantic-scan cells plus four fixed separated low-dimensional cases from BOUNDED-PLAN.json. Three rotated variants: preserved current product, materialization-only candidate with old bounds, combined candidate with computed-score bounds. 3456 query rows and 6912 paired result comparisons.",
+  "gates": "Every complete result matches both controls. Combined/current median speedup >=1.10 in every nonempty filtered corpus cell; no >15% median regression on all/empty controls or low-dimensional cases. Every analytic query completes bounded traversal with fewer exact dots than eligible chunks. Report combined/materialization ratios separately, without treating them as qualified serving performance.",
+  "checks": "All native document tests; existing cancellation/subnormal/signed-zero/extreme stored value cases; additional degenerate-box exact-score equality and dimension boundaries. Preserve all failed materialization-only and ordered-dot experiments.",
+  "constraints": "Isolated source copy, pinned Rust 1.96.0, unchanged canonical row scoring, no paid services, held-out inputs or Intel soak load. The repeated-text native fixture still omits serving/network/durability costs. Promote only after the declared screen, product review and focused integration checks."
+}

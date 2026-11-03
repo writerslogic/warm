@@ -1,0 +1,9 @@
+{
+  "complete": true,
+  "completedAt": "2026-11-03T18:21:36.203182+00:00",
+  "configurationSealSha256": "45ce0a0d974a861ab0e45a47c9bb4940635867e8ed0dd1d77ca77ed4e5382864",
+  "freezeSha256": "25db4682c68d88c949649c123c9b8c363375277174cb1456995a639be154e004",
+  "heldOutVectorsOpened": false,
+  "recoverySha256": "b9bb1d9d0058ae4bcaab3f2c307ea78ae27dd4eea283cf3835b5b2ccca373a55",
+  "scope": "Exact-artifact recovery and selection/component seal; performance and isolation pending."
+}

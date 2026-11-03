@@ -1,0 +1,22 @@
+{
+  "frozenAt": "2026-11-03T12:05:33.239658+00:00",
+  "source": {
+    "MINIWOB-STATE-PLAN.json": "9e62ec7643c5d48db99df63f6baadc7d7fdcfc683d3825e208359daa076ada3f",
+    "sparse_state.py": "c3093c9fe0329b8482c3a8fe79021e32449ff0c6aa35c8808e3121df4afa4e7b",
+    "test_sparse_state.py": "cb7c449c11ddebd9af3505be91863d679bfd9b5dc28b72e7b869c764e7a18916",
+    "run_miniwob_state.py": "4dca29582335b7209da7a43cc1dd71373ecaf6e4d2fb82214485912e859b9997",
+    "state.py": "a384c5f1e272784372ce9d2d1316a3edff49736fa6fba0d87e1be663aaa81758",
+    "probe.py": "76f7543882ae66c5a4ad90d425a15bcf087cd3ada70a3baca238eb4a5f11e9c8",
+    "symbolic_control.py": "89f1b559c750d0d5de4fbe32fab0a27e72da72ccd86741ed543d823062d0853e",
+    "singleton_control.py": "39a195e212bf65b4c55b2523da8a469ef795a884e3bb2ea561cba98d11c53dfa"
+  },
+  "inputs": {
+    "choose-date-nodelay-raw-transitions.json": "a70908adea5946bd36d2d4e058885bcc91ad649e5016c7528d64440422acc4b7",
+    "choose-date-nodelay-target-path-transitions.json": "abbfa34bc4ce2350806b07eec6cd6ae8619a68a8caec483d7ff9aebce773027e",
+    "click-checkboxes-large-raw-transitions.json": "a5b2f3f6cc27f91f2d558ad550901ae57909aa8abbde6abfb6af6df09428bffd",
+    "click-checkboxes-large-target-path-transitions.json": "b0d5e36b4e4b7abd7cef1d15866db6c5bc790fb8b00cbd2874c9960a8d9a9bfc",
+    "click-checkboxes-soft-raw-transitions.json": "d42dc12cb29dac32d87d500bd72481509b50a0ad6e314066f2128d72c4d8aeb2",
+    "click-checkboxes-soft-target-path-transitions.json": "5baf06111234aa38838362d73d15e1f37dd6cf2a88718cf14177ed4d61ab4c23"
+  },
+  "inputRunFreezeSha256": "d25f5b82768bb2ebe71d9e553eaa4a368f5ce4d947322dc906d419be111d58c0"
+}

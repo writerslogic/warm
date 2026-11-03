@@ -1,0 +1,11 @@
+{
+  "launcher": 25856,
+  "signaledPids": [
+    25856,
+    25861,
+    25866
+  ],
+  "integrationStarted": false,
+  "reason": "Replace the queued development-only driver with full lifecycle and independently reproducible payload/resource evidence; old source archive preserved.",
+  "at": "2026-11-03T09:20:07Z"
+}

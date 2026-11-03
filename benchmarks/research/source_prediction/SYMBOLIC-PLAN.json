@@ -1,0 +1,15 @@
+{
+  "schema": "warm.source-prediction-symbolic/1",
+  "scope": "Development comparison of exact representations on constructed profiles, with no system, real-workload or novelty qualification.",
+  "sourceCounts": [4, 8, 12, 16, 20],
+  "outcomes": 4,
+  "weights": ["uniform", "powers-of-two"],
+  "construction": "Compare a source histogram with the histogram multiplied by the number of surviving sources; both probabilities and unknown support must agree.",
+  "controls": "Shared ordered algebraic decision diagrams with a separate root per probability; ascending and descending source orders. Common coefficient gcd is normalized in recursive subproblems; constant distributions compile only their nonempty-support condition.",
+  "repetitions": 3,
+  "candidate": "Unchanged polynomial identity implementation from source-prediction v1.",
+  "limits": {"diagramNodesAndTerminals": 50000, "diagramStates": 100000, "seconds": 600},
+  "failurePolicy": "Record an expected diagram resource-limit result and omit that order's remaining repetitions. Do not assign it infinite latency or count it as a speedup. Other failures abort. Compare finite medians only when both controls complete all repetitions.",
+  "promotion": "No promotion from this cohort. A full source-aware state quotient and real behavioral workload are still required. Exact identity with a decision-diagram control establishes correctness, not originality.",
+  "paidServices": false
+}

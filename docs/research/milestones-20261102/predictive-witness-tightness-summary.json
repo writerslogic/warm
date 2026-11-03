@@ -1,0 +1,230 @@
+[
+  {
+    "anchored": false,
+    "comparisons": 4,
+    "differingMasks": [
+      3
+    ],
+    "existingChecker": {
+      "degreeBound": 2,
+      "equivalent": false,
+      "productPairs": 12,
+      "reason": "distribution",
+      "withdrawn": 3
+    },
+    "groupWidth": 1,
+    "maximumSupportWidth": 1,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 4,
+    "records": [
+      6,
+      4
+    ],
+    "sourceCount": 2,
+    "unknownMasks": 0
+  },
+  {
+    "anchored": false,
+    "comparisons": 16,
+    "differingMasks": [
+      15
+    ],
+    "existingChecker": {
+      "degreeBound": 4,
+      "equivalent": false,
+      "productPairs": 60,
+      "reason": "distribution",
+      "withdrawn": 15
+    },
+    "groupWidth": 2,
+    "maximumSupportWidth": 2,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 16,
+    "records": [
+      12,
+      10
+    ],
+    "sourceCount": 4,
+    "unknownMasks": 0
+  },
+  {
+    "anchored": false,
+    "comparisons": 64,
+    "differingMasks": [
+      63
+    ],
+    "existingChecker": {
+      "degreeBound": 6,
+      "equivalent": false,
+      "productPairs": 264,
+      "reason": "distribution",
+      "withdrawn": 63
+    },
+    "groupWidth": 3,
+    "maximumSupportWidth": 3,
+    "minimumWithdrawals": 6,
+    "polynomialTerms": 64,
+    "records": [
+      24,
+      22
+    ],
+    "sourceCount": 6,
+    "unknownMasks": 0
+  },
+  {
+    "anchored": false,
+    "comparisons": 256,
+    "differingMasks": [
+      255
+    ],
+    "existingChecker": null,
+    "groupWidth": 4,
+    "maximumSupportWidth": 4,
+    "minimumWithdrawals": 8,
+    "polynomialTerms": 256,
+    "records": [
+      48,
+      46
+    ],
+    "sourceCount": 8,
+    "unknownMasks": 0
+  },
+  {
+    "anchored": false,
+    "comparisons": 1024,
+    "differingMasks": [
+      1023
+    ],
+    "existingChecker": null,
+    "groupWidth": 5,
+    "maximumSupportWidth": 5,
+    "minimumWithdrawals": 10,
+    "polynomialTerms": 1024,
+    "records": [
+      96,
+      94
+    ],
+    "sourceCount": 10,
+    "unknownMasks": 0
+  },
+  {
+    "anchored": false,
+    "comparisons": 4096,
+    "differingMasks": [
+      4095
+    ],
+    "existingChecker": null,
+    "groupWidth": 6,
+    "maximumSupportWidth": 6,
+    "minimumWithdrawals": 12,
+    "polynomialTerms": 4096,
+    "records": [
+      192,
+      190
+    ],
+    "sourceCount": 12,
+    "unknownMasks": 0
+  },
+  {
+    "anchored": true,
+    "comparisons": 8,
+    "differingMasks": [
+      3
+    ],
+    "existingChecker": {
+      "degreeBound": 3,
+      "equivalent": false,
+      "productPairs": 12,
+      "reason": "distribution",
+      "withdrawn": 3
+    },
+    "groupWidth": 1,
+    "maximumSupportWidth": 2,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 4,
+    "records": [
+      6,
+      4
+    ],
+    "sourceCount": 3,
+    "unknownMasks": 4
+  },
+  {
+    "anchored": true,
+    "comparisons": 32,
+    "differingMasks": [
+      15
+    ],
+    "existingChecker": {
+      "degreeBound": 5,
+      "equivalent": false,
+      "productPairs": 60,
+      "reason": "distribution",
+      "withdrawn": 15
+    },
+    "groupWidth": 2,
+    "maximumSupportWidth": 3,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 16,
+    "records": [
+      12,
+      10
+    ],
+    "sourceCount": 5,
+    "unknownMasks": 16
+  },
+  {
+    "anchored": true,
+    "comparisons": 128,
+    "differingMasks": [
+      63
+    ],
+    "existingChecker": null,
+    "groupWidth": 3,
+    "maximumSupportWidth": 4,
+    "minimumWithdrawals": 6,
+    "polynomialTerms": 64,
+    "records": [
+      24,
+      22
+    ],
+    "sourceCount": 7,
+    "unknownMasks": 64
+  },
+  {
+    "anchored": true,
+    "comparisons": 512,
+    "differingMasks": [
+      255
+    ],
+    "existingChecker": null,
+    "groupWidth": 4,
+    "maximumSupportWidth": 5,
+    "minimumWithdrawals": 8,
+    "polynomialTerms": 256,
+    "records": [
+      48,
+      46
+    ],
+    "sourceCount": 9,
+    "unknownMasks": 256
+  },
+  {
+    "anchored": true,
+    "comparisons": 2048,
+    "differingMasks": [
+      1023
+    ],
+    "existingChecker": null,
+    "groupWidth": 5,
+    "maximumSupportWidth": 6,
+    "minimumWithdrawals": 10,
+    "polynomialTerms": 1024,
+    "records": [
+      96,
+      94
+    ],
+    "sourceCount": 11,
+    "unknownMasks": 1024
+  }
+]

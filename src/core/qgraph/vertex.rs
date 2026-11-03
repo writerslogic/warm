@@ -39,6 +39,8 @@ thread_local! {
 
 mod file;
 mod gated;
+#[cfg(feature = "experimental")]
+mod navigation;
 pub use file::Residency;
 use file::Slab;
 

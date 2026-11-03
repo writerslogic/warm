@@ -1,0 +1,87 @@
+{
+  "scope": "exposed calibration geometric mean of state medians, not a held-out competitor result",
+  "rows": [
+    {
+      "dataset": "coco",
+      "filter": "all",
+      "configuration": {
+        "route": "graph",
+        "ef": 512
+      },
+      "oldMedianMs": 0.4261400273356116,
+      "newMedianMs": 0.45771119309369124,
+      "oldOverNew": 0.931023828487373
+    },
+    {
+      "dataset": "coco",
+      "filter": "10pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "oldMedianMs": 11.803664809023273,
+      "newMedianMs": 6.783979862048172,
+      "oldOverNew": 1.7399321709453883
+    },
+    {
+      "dataset": "coco",
+      "filter": "1pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "oldMedianMs": 3.663664938672613,
+      "newMedianMs": 0.8120363178326228,
+      "oldOverNew": 4.51170084171995
+    },
+    {
+      "dataset": "coco",
+      "filter": "empty",
+      "configuration": {
+        "route": "exact"
+      },
+      "oldMedianMs": 0.1218413589465197,
+      "newMedianMs": 0.12124723876505428,
+      "oldOverNew": 1.0049000718491963
+    },
+    {
+      "dataset": "deep",
+      "filter": "all",
+      "configuration": {
+        "route": "graph",
+        "ef": 256
+      },
+      "oldMedianMs": 0.2658920123154664,
+      "newMedianMs": 0.27628954709563286,
+      "oldOverNew": 0.9623672524369242
+    },
+    {
+      "dataset": "deep",
+      "filter": "10pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "oldMedianMs": 8.135392788300095,
+      "newMedianMs": 4.430509427004585,
+      "oldOverNew": 1.8362206248143202
+    },
+    {
+      "dataset": "deep",
+      "filter": "1pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "oldMedianMs": 2.471493430257738,
+      "newMedianMs": 0.5087877813833378,
+      "oldOverNew": 4.857611602892704
+    },
+    {
+      "dataset": "deep",
+      "filter": "empty",
+      "configuration": {
+        "route": "exact"
+      },
+      "oldMedianMs": 0.11105753745079659,
+      "newMedianMs": 0.11065147789524668,
+      "oldOverNew": 1.003669716512366
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "warm.captured-owner-membership/1",
+  "hypothesis": "Pure semantic filtered capture has already selected and pinned the current document owners, but trained traversal repeats the JSON/source/ID filter at leaves. A bounded hash set of those captured owner addresses can answer the exact same membership predicate and reject replaced/deleted tree owners.",
+  "scope": "Build the hash set only for a trained pure-semantic filtered scan with at most the existing DENSE_SLOT_LIMIT document owners. Existing sorted owner membership for lexical/hybrid paths stays unchanged. Hashing uses the existing FastSet and adds no dependencies or result cache.",
+  "controls": "Three rotated variants in one binary: preserved shipping product; previous combined semantic materialization plus monotone bound, without owner hashing; combined candidate with owner hashing. Same source/input and 36-cell/3456-query cohort as MONOTONE-PLAN.json, with 6912 paired full-result comparisons.",
+  "gates": "Retain every prior exactness, 10% filtered speedup, <=15% control regression and analytic pruning gate unchanged. Every query must produce identical results to both controls. Native snapshot tests must preserve old captures across replacement/deletion and validate fresh captures against the independent scan.",
+  "ownership": "The captured scan holds Arcs for every hashed current owner; the tree pins stale owners until the query completes, preventing pointer reuse from aliasing stale rows. Hash allocation and construction are inside full-query timing; count eligible owners and hash capacity in raw records. No structure persists beyond the captured query.",
+  "constraints": "Isolated prototype only. Retain the failed materialization and computed-bound screens. Same repeated-text development fixture limitations; no paid services, held-out inputs or Intel soak work. A development pass is not competitive qualification or an originality claim."
+}

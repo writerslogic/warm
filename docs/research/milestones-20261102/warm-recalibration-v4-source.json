@@ -1,0 +1,6 @@
+{
+  "frozenAt": "2026-11-03T14:38:41.567924+00:00",
+  "scriptSha256": "1dcab825796bca2bf4ae8cd1e96ccb5675d11b105f50796c006a05e48d375965",
+  "coordinatorSha256": "82e7b9a8d026aded7b08d2ced088f5701014210c1092c2b4a2a9b70169b87e73",
+  "priorFailure": "v3 stopped before calibration at absent WARM_BENCH_PG_BIN receipt variable; all required comparator paths now explicit; driver, server and cohort unchanged"
+}

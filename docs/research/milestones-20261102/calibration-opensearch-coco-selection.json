@@ -1,0 +1,1654 @@
+{
+  "complete": true,
+  "eligible": true,
+  "selected": {
+    "build": {
+      "engine": "faiss",
+      "m": 16,
+      "ef_construction": 100
+    },
+    "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-opensearch-coco-i2i-512-angular-v2/build-0",
+    "filters": {
+      "all": {
+        "configuration": {
+          "route": "knn",
+          "ef": 256,
+          "candidateK": 10
+        },
+        "median": 0.0008123073569514503,
+        "states": [
+          {
+            "filter": "all",
+            "state": "baseline",
+            "configuration": {
+              "route": "knn",
+              "ef": 256,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.9994,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0008401680006500101,
+            "p95": 0.0010603340015222784,
+            "p99": 0.001217293000081554,
+            "pass": true
+          },
+          {
+            "filter": "all",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "knn",
+              "ef": 256,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.9986,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.000832792000437621,
+            "p95": 0.00103537600080017,
+            "p99": 0.0011312090009596432,
+            "pass": true
+          },
+          {
+            "filter": "all",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "knn",
+              "ef": 256,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.9993,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0007574709998152684,
+            "p95": 0.000959765999141382,
+            "p99": 0.0010775599985208828,
+            "pass": true
+          },
+          {
+            "filter": "all",
+            "state": "reopen",
+            "configuration": {
+              "route": "knn",
+              "ef": 256,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.9993,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0008215100006054854,
+            "p95": 0.00103188799948839,
+            "p99": 0.001120139000704512,
+            "pass": true
+          }
+        ]
+      },
+      "10pct": {
+        "configuration": {
+          "route": "knn",
+          "ef": 512,
+          "candidateK": 10
+        },
+        "median": 0.001211644514009003,
+        "states": [
+          {
+            "filter": "10pct",
+            "state": "baseline",
+            "configuration": {
+              "route": "knn",
+              "ef": 512,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.999,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0011817510003311327,
+            "p95": 0.0015036259992484702,
+            "p99": 0.0016392929992434802,
+            "pass": true
+          },
+          {
+            "filter": "10pct",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "knn",
+              "ef": 512,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.999,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0012391919990477618,
+            "p95": 0.0015441150007973192,
+            "p99": 0.0016747839999879943,
+            "pass": true
+          },
+          {
+            "filter": "10pct",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "knn",
+              "ef": 512,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.9992000000000001,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0012028940000163857,
+            "p95": 0.001538690001325449,
+            "p99": 0.001730276000671438,
+            "pass": true
+          },
+          {
+            "filter": "10pct",
+            "state": "reopen",
+            "configuration": {
+              "route": "knn",
+              "ef": 512,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 0.9992000000000001,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0012235140002303524,
+            "p95": 0.001560059999974328,
+            "p99": 0.0017886459991132142,
+            "pass": true
+          }
+        ]
+      },
+      "1pct": {
+        "configuration": {
+          "route": "knn",
+          "ef": 4096,
+          "candidateK": 10
+        },
+        "median": 0.0004063054414149441,
+        "states": [
+          {
+            "filter": "1pct",
+            "state": "baseline",
+            "configuration": {
+              "route": "knn",
+              "ef": 4096,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.00039287500112550333,
+            "p95": 0.00042050000047311187,
+            "p99": 0.00043766700036940165,
+            "pass": true
+          },
+          {
+            "filter": "1pct",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "knn",
+              "ef": 4096,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0004170079992036335,
+            "p95": 0.00044334199992590584,
+            "p99": 0.0004580080003506737,
+            "pass": true
+          },
+          {
+            "filter": "1pct",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "knn",
+              "ef": 4096,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0004097559994988842,
+            "p95": 0.0004397970005811658,
+            "p99": 0.0004606729999068193,
+            "pass": true
+          },
+          {
+            "filter": "1pct",
+            "state": "reopen",
+            "configuration": {
+              "route": "knn",
+              "ef": 4096,
+              "candidateK": 10
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0004059629991388647,
+            "p95": 0.00043800499952340033,
+            "p99": 0.00048121299914782867,
+            "pass": true
+          }
+        ]
+      },
+      "empty": {
+        "configuration": {
+          "route": "exact"
+        },
+        "median": 0.00020687017195288336,
+        "states": [
+          {
+            "filter": "empty",
+            "state": "baseline",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.00022208300106285606,
+            "p95": 0.0002593339995655697,
+            "p99": 0.00029066699971735943,
+            "pass": true
+          },
+          {
+            "filter": "empty",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0002068370013148524,
+            "p95": 0.00023654600045119878,
+            "p99": 0.00025371300034748856,
+            "pass": true
+          },
+          {
+            "filter": "empty",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.00019725300080608577,
+            "p95": 0.00021941999875707552,
+            "p99": 0.000264296000750619,
+            "pass": true
+          },
+          {
+            "filter": "empty",
+            "state": "reopen",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.00020212700110278092,
+            "p95": 0.00024600299911980983,
+            "p99": 0.0003084620002482552,
+            "pass": true
+          }
+        ]
+      }
+    },
+    "objective": 0.0005363046101495061
+  },
+  "candidates": [
+    {
+      "build": {
+        "engine": "faiss",
+        "m": 16,
+        "ef_construction": 100
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-opensearch-coco-i2i-512-angular-v2/build-0",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "knn",
+            "ef": 256,
+            "candidateK": 10
+          },
+          "median": 0.0008123073569514503,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9994,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0008401680006500101,
+              "p95": 0.0010603340015222784,
+              "p99": 0.001217293000081554,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9986,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.000832792000437621,
+              "p95": 0.00103537600080017,
+              "p99": 0.0011312090009596432,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0007574709998152684,
+              "p95": 0.000959765999141382,
+              "p99": 0.0010775599985208828,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0008215100006054854,
+              "p95": 0.00103188799948839,
+              "p99": 0.001120139000704512,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 512,
+            "candidateK": 10
+          },
+          "median": 0.001211644514009003,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.999,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0011817510003311327,
+              "p95": 0.0015036259992484702,
+              "p99": 0.0016392929992434802,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.999,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0012391919990477618,
+              "p95": 0.0015441150007973192,
+              "p99": 0.0016747839999879943,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9992000000000001,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0012028940000163857,
+              "p95": 0.001538690001325449,
+              "p99": 0.001730276000671438,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9992000000000001,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0012235140002303524,
+              "p95": 0.001560059999974328,
+              "p99": 0.0017886459991132142,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 4096,
+            "candidateK": 10
+          },
+          "median": 0.0004063054414149441,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00039287500112550333,
+              "p95": 0.00042050000047311187,
+              "p99": 0.00043766700036940165,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0004170079992036335,
+              "p95": 0.00044334199992590584,
+              "p99": 0.0004580080003506737,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0004097559994988842,
+              "p95": 0.0004397970005811658,
+              "p99": 0.0004606729999068193,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0004059629991388647,
+              "p95": 0.00043800499952340033,
+              "p99": 0.00048121299914782867,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "exact"
+          },
+          "median": 0.00020687017195288336,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00022208300106285606,
+              "p95": 0.0002593339995655697,
+              "p99": 0.00029066699971735943,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0002068370013148524,
+              "p95": 0.00023654600045119878,
+              "p99": 0.00025371300034748856,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00019725300080608577,
+              "p95": 0.00021941999875707552,
+              "p99": 0.000264296000750619,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00020212700110278092,
+              "p95": 0.00024600299911980983,
+              "p99": 0.0003084620002482552,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0005363046101495061
+    },
+    {
+      "build": {
+        "engine": "faiss",
+        "m": 32,
+        "ef_construction": 500
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-opensearch-coco-i2i-512-angular-v2/build-1",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "knn",
+            "ef": 128,
+            "candidateK": 10
+          },
+          "median": 0.0007522606824023995,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9997,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0007996310014277697,
+              "p95": 0.0009749250002641929,
+              "p99": 0.0010389660001237644,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9989,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.000772588999097934,
+              "p95": 0.0009432980004930869,
+              "p99": 0.0010194650003541028,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9997,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0006828789992141537,
+              "p95": 0.0008555879994673887,
+              "p99": 0.0009317130006820662,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9997,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.000759087000915315,
+              "p95": 0.0009454209994146368,
+              "p99": 0.0010379630002717022,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 512,
+            "candidateK": 32
+          },
+          "median": 0.0015035165698632934,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0014459280009759823,
+              "p95": 0.0019620150014816318,
+              "p99": 0.0021346819994505495,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.001546052000776399,
+              "p95": 0.0020692210000561317,
+              "p99": 0.002228804998594569,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0015190489993983647,
+              "p95": 0.002046051999059273,
+              "p99": 0.002215552000052412,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 512,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0015048400000523543,
+              "p95": 0.002019968000240624,
+              "p99": 0.0021714680005970877,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 2048,
+            "candidateK": 10
+          },
+          "median": 0.00040354511501154147,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003982939997513313,
+              "p95": 0.0004317110015108483,
+              "p99": 0.0004542110000329558,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00041512799907650333,
+              "p95": 0.00045196099927125033,
+              "p99": 0.0004926279998471728,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00040371099930780474,
+              "p95": 0.00046850299986544997,
+              "p99": 0.0006035030000930419,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00039729399941279553,
+              "p95": 0.0004286269995645853,
+              "p99": 0.0004470849999052007,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "exact"
+          },
+          "median": 0.00020513784298308596,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00020979299915779848,
+              "p95": 0.0002514179996069288,
+              "p99": 0.00029041800007689744,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00021987600121065043,
+              "p95": 0.00023708499975327868,
+              "p99": 0.0002537100008339621,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00018579300012788735,
+              "p95": 0.00022529300076712389,
+              "p99": 0.00024621000011393335,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00020662600036303047,
+              "p95": 0.00024308399952133186,
+              "p99": 0.0003097930002695648,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0005531636267338303
+    },
+    {
+      "build": {
+        "engine": "lucene",
+        "m": 16,
+        "ef_construction": 100
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-opensearch-coco-i2i-512-angular-v2/build-2",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "knn",
+            "ef": 256,
+            "candidateK": 32
+          },
+          "median": 0.0007989786702376497,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 0.9987,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0008149619989126222,
+              "p95": 0.001045879000230343,
+              "p99": 0.0011409630005800864,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 0.9987999999999999,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0008012950002012076,
+              "p95": 0.0010235869995085523,
+              "p99": 0.0011481300007289974,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 0.9987,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0007585860003018752,
+              "p95": 0.0009652120006649056,
+              "p99": 0.0010662950007827021,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 256,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 0.9987,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0008226329991884995,
+              "p95": 0.0010787190003611613,
+              "p99": 0.001221302998601459,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 1024,
+            "candidateK": 10
+          },
+          "median": 0.0016662501490812623,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0014757139997527702,
+              "p95": 0.0016991730008157901,
+              "p99": 0.001868841000032262,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0014482560000033118,
+              "p95": 0.001702839999779826,
+              "p99": 0.0018161730004067067,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.001916923998578568,
+              "p95": 0.0021682579990738304,
+              "p99": 0.00254188400140265,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0018815179973898921,
+              "p95": 0.00211951899837004,
+              "p99": 0.0022841459976916667,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 4096,
+            "candidateK": 10
+          },
+          "median": 0.0005406142515089467,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.000512501999764936,
+              "p95": 0.0005512110001291148,
+              "p99": 0.0005859190005139681,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0005636269997921772,
+              "p95": 0.0006043350003892556,
+              "p99": 0.000638711000647163,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0005620429983537178,
+              "p95": 0.000609751999945729,
+              "p99": 0.0006420030003937427,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 4096,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0005261299993435387,
+              "p95": 0.0005688800010830164,
+              "p99": 0.0006154230031825136,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "exact"
+          },
+          "median": 0.00021011619193207035,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00021679299970855936,
+              "p95": 0.0002526680000300985,
+              "p99": 0.0003714600006787805,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00021545900017372333,
+              "p95": 0.0002442089989926899,
+              "p99": 0.0002818339999066666,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00019529299970599823,
+              "p95": 0.00022187600006873254,
+              "p99": 0.00024933399981819093,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00021366899818531238,
+              "p95": 0.0002638360019773245,
+              "p99": 0.0015085970007930882,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0006235992720369958
+    },
+    {
+      "build": {
+        "engine": "lucene",
+        "m": 32,
+        "ef_construction": 500
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-opensearch-coco-i2i-512-angular-v2/build-3",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "knn",
+            "ef": 128,
+            "candidateK": 10
+          },
+          "median": 0.0007725825883858556,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0007978390021889936,
+              "p95": 0.001014673998724902,
+              "p99": 0.0011182580019521993,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0007736299994576257,
+              "p95": 0.00098192299992661,
+              "p99": 0.0011012569993908983,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0007135880005080253,
+              "p95": 0.0009125469987338874,
+              "p99": 0.0009829219998209737,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 128,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0008088790018518921,
+              "p95": 0.0010166719985136297,
+              "p99": 0.0011255479985265993,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 1024,
+            "candidateK": 32
+          },
+          "median": 0.001696735069889992,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0014874689986754674,
+              "p95": 0.001702345001831418,
+              "p99": 0.001791761998902075,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0015751350001664832,
+              "p95": 0.0018111370009137318,
+              "p99": 0.0019787620003626216,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0019136769988108426,
+              "p95": 0.0021625959998345934,
+              "p99": 0.0024984729971038178,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 1024,
+                "candidateK": 32
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0018485099972167518,
+              "p95": 0.002087803000904387,
+              "p99": 0.0021882200016989373,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "knn",
+            "ef": 2048,
+            "candidateK": 10
+          },
+          "median": 0.0005224962866553424,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0005022529985581059,
+              "p95": 0.0005449620002764277,
+              "p99": 0.0005776710022473708,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0005463779998535756,
+              "p95": 0.0005969199992250651,
+              "p99": 0.0006272120008361526,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0005396279993874487,
+              "p95": 0.000578961000428535,
+              "p99": 0.0006072119977034163,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "knn",
+                "ef": 2048,
+                "candidateK": 10
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0005032949993619695,
+              "p95": 0.0005440029999590479,
+              "p99": 0.0005715029983548447,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "exact"
+          },
+          "median": 0.00021549847906911413,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00021845999799552374,
+              "p95": 0.0002658769990375731,
+              "p99": 0.0006066709975129925,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00023529299869551323,
+              "p95": 0.0002546260002418421,
+              "p99": 0.00028058499810867943,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00019900100232916884,
+              "p95": 0.00023275100102182478,
+              "p99": 0.00026087700098287314,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00021083399769850075,
+              "p95": 0.0002514180014259182,
+              "p99": 0.00029162600185372867,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0006198285730123289
+    }
+  ],
+  "failures": [],
+  "freezeSha256": "90f5868b7918fda4f7701994b2652b94391a38f49215da8fc5173d1b9c526962",
+  "selectedBeforeHeldOutQueries": true
+}

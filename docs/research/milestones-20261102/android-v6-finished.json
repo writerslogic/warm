@@ -1,0 +1,106 @@
+{
+  "androidLifecycleTests": 9,
+  "androidNativeLockTests": 10,
+  "artifacts": {
+    "/Volumes/A/.hms-bench-cache/warm-android-qualification-20261103-v3/work/bindings/kotlin/sample-compose/build/outputs/apk/debug/sample-compose-debug.apk": "3126707df404b3e15809d354e56a24e95b743f560f6fb2d29f542cec03072030",
+    "/Volumes/A/.hms-bench-cache/warm-android-qualification-20261103-v4/target/aarch64-linux-android/release/deps/writerslogic_warm-697eb91eb84b705a": "dfccce9613c20df82c3f7d55790c1fcea9dfe1ce68b98c5bd85fcc37a72ca86f",
+    "/Volumes/A/.hms-bench-cache/warm-android-qualification-20261103-v6/android-consumer/build/outputs/apk/androidTest/debug/warm-qualified-android-debug-androidTest.apk": "f938dfe12a325204d032be0ff39c7cdabbf35849166797b1383fcd3a2f4660c2",
+    "/Volumes/A/.hms-bench-cache/warm-android-qualification-20261103-v6/android-consumer/build/outputs/apk/debug/warm-qualified-android-debug.apk": "dfd1e7cf17165385cac31ede28102984a6e6eba15b4129f4a82153bbcb651798",
+    "/Volumes/A/.hms-bench-cache/warm-android-qualification-20261103-v6/android-consumer/libs/warm-android.aar": "d7786be3130e1e830c701c26ab1adbf73a0be35846908cba29d619de1636427d",
+    "/Volumes/A/.hms-bench-cache/warm-android-qualification-20261103-v6/jvm-consumer/libs/warm-jvm.jar": "903d234ad41e957e1c90533ac6536cd193a624561f31e78ac0a75118018e550e"
+  },
+  "complete": true,
+  "completedAt": "2026-11-03T17:24:01.144585+00:00",
+  "device": {
+    "abi": "arm64-v8a",
+    "api": "35",
+    "fingerprint": "google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.043/12960925:userdebug/dev-keys"
+  },
+  "freezeSha256": "538d4e7dfd658472b311072fc8d39da364bdfd03171460da04eb17dd7d7125a7",
+  "jvmTests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 7
+  },
+  "logs": {
+    "adb-root-native-fixtures.log": "cbfc5f4f46947a84c46216ae8ee0bfaebce09bbac37337972e033b39056106eb",
+    "adb-unroot-after-native.log": "7f3e8a86acefcf19aa7019f583c44f7115f2714908aaf4014241cbadd9eb0e43",
+    "android-lifecycle.log": "1fe47a2dbcbb76cdc7918073d3db15f8f4f60de01d23aa964d077b4e1e5d79f8",
+    "android-lock-durable.log": "ee237a83cc9d893b0bd96a25c2a8cb89fa786d3c33c3265215e071be1fab2c85",
+    "android-lock-experimental.log": "d4f5676ffaf3ab8c819ea78387a837338a73ccf732c58604a2e83aebdd6f4b63",
+    "android-lock-store.log": "971fed8e987dc06e81d6d765ad086b18620ad5ed5863918d714d0cd02a493b6f",
+    "android-lock-vector.log": "1ac81432f3ccd9006cc3f32e84e68fad70cc44df719610ef26951e3520681a45",
+    "create-avd.log": "2c9df6356cc07bd5dd937cf8b6233380604373c7a5b6fafdb154e6e6b4d392bc",
+    "emulator.log": "c3725fcd447b198dd3bd171aaa23b84e3705dd81222a3351e0c1b49f8a52034e",
+    "install-consumer.log": "781a31c82430c97897af612ece5e0ca2205e301cb5ff121ce2660541ea5182c7",
+    "install-sample.log": "781a31c82430c97897af612ece5e0ca2205e301cb5ff121ce2660541ea5182c7",
+    "install-tests.log": "781a31c82430c97897af612ece5e0ca2205e301cb5ff121ce2660541ea5182c7",
+    "launch-sample.log": "b4fc268404e5e1856b37785578a0a13c250c8168047efc9e2d8f18630b154240",
+    "launcher.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "push-lock-tests.log": "cb32847eda15a203efe947b96967711bae43745d318b03610f5fbe6660768844",
+    "recovery-encrypted-reader.log": "ac24a188d9e01cada395d90fab25703194739f66682d2a5388107f1289ab02cf",
+    "recovery-encrypted-writer.log": "d109055facd9fdb257ccb863711be49fdc5b4ffb01a1b869afdacb7b8d38e842",
+    "recovery-plain-reader.log": "1a2072d356d781fc6d5de4cec2c373b0d697f067ce36656ed0f7411520240ca7",
+    "recovery-plain-writer.log": "d109055facd9fdb257ccb863711be49fdc5b4ffb01a1b869afdacb7b8d38e842",
+    "strip-arm64-v8a.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "strip-armeabi-v7a.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "strip-x86.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "strip-x86_64.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "version-emulator.log": "ea36a35958c14ba5f003d0e68087a01947b2b1e7d3c26286417430ced3f2b811",
+    "version-java.log": "ac4e6cea3d7076eed918316fa69c2c1d8a308df9518abfec0aa96fbcedd06cc0",
+    "version-rust.log": "7aaf71af0cccdebda4e70ae5216dcf348bccfeb5cc30d148247005558cec03ad"
+  },
+  "nativeMembers": {
+    "jni/arm64-v8a/libwarm_mobile.so": {
+      "compiledSha256": "d03f62c245103f77eaaa2676cde64612150d506098b0b4f8f483b908a0f498f4",
+      "independentStripSha256": "309c0ac58b46ae0a001f3548ac2e1da7d907b1cd8359b5b2d6c21ac782ade94c",
+      "packagedSha256": "309c0ac58b46ae0a001f3548ac2e1da7d907b1cd8359b5b2d6c21ac782ade94c"
+    },
+    "jni/armeabi-v7a/libwarm_mobile.so": {
+      "compiledSha256": "d0b793e63579b3f32acf6bc54911832af2580c151e5949596ef72a0bafa97b89",
+      "independentStripSha256": "2917cdb304db07dcb49c4749a9ef27cf6013b3a2b958c08d4b4a259e414eb1b1",
+      "packagedSha256": "2917cdb304db07dcb49c4749a9ef27cf6013b3a2b958c08d4b4a259e414eb1b1"
+    },
+    "jni/x86/libwarm_mobile.so": {
+      "compiledSha256": "ee6e6343d79a862ee01737aacf3a79546cc7a8bd19fe4bb79b55893b8dc16b83",
+      "independentStripSha256": "636b1611fe92ac76bb43b600b90185665720468a5ae78ecf35b7517cb2a15374",
+      "packagedSha256": "636b1611fe92ac76bb43b600b90185665720468a5ae78ecf35b7517cb2a15374"
+    },
+    "jni/x86_64/libwarm_mobile.so": {
+      "compiledSha256": "b939dc4cc6fe614de075c82f009f42af4c26f67629ef70c78d69066313f11612",
+      "independentStripSha256": "f964c855fcd59fb48026099b299f6ce954bc737e2e62585d2ae9de6a01b29d0b",
+      "packagedSha256": "f964c855fcd59fb48026099b299f6ce954bc737e2e62585d2ae9de6a01b29d0b"
+    }
+  },
+  "recovery": [
+    {
+      "acknowledgementsSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "case": "plain",
+      "termination": "am force-stop",
+      "verified": {
+        "deleted": 8,
+        "phase": "verified",
+        "records": 24,
+        "resumedWrite": true
+      },
+      "writerCommandExitCode": 0,
+      "writerPid": "3424"
+    },
+    {
+      "acknowledgementsSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "case": "encrypted",
+      "termination": "am force-stop",
+      "verified": {
+        "deleted": 8,
+        "phase": "verified",
+        "records": 24,
+        "resumedWrite": true
+      },
+      "writerCommandExitCode": 0,
+      "writerPid": "3674"
+    }
+  ],
+  "sampleStartup": true,
+  "scope": "macOS arm64 JVM; API 35 arm64 emulator; completed-snapshot recovery; other ABIs build-only"
+}

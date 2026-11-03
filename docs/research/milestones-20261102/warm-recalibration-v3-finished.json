@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "coco-i2i-512-angular calibration exited 1",
+    "type": "RuntimeError"
+  }
+}

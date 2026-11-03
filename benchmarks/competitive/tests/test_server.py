@@ -4,6 +4,7 @@
 their verdicts are drawn against warm-server, and a server's whole process tree is stopped."""
 
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -117,3 +118,27 @@ def test_stable_ports_are_reused_while_free(tmp_path):
     first = server_proc.stable_ports(path, 3)
     assert len(set(first)) == 3 and server_proc.stable_ports(path, 3) == first
     assert os.path.exists(path)
+
+
+def test_accounting_includes_children_that_start_new_sessions():
+    child_code = 'import os,sys; data=bytearray(32*1024**2); print(os.getpid(),flush=True); sys.stdin.buffer.read()'
+    parent_code = '''import subprocess,sys
+child=subprocess.Popen([sys.executable,'-c',sys.argv[1]],stdin=subprocess.PIPE,stdout=subprocess.PIPE,start_new_session=True)
+try:
+ print(child.stdout.readline().decode().strip(),flush=True)
+ sys.stdin.buffer.read()
+finally:
+ child.stdin.close()
+ child.wait(timeout=10)
+'''
+    parent = subprocess.Popen([sys.executable, '-c', parent_code, child_code], stdin=subprocess.PIPE,
+                              stdout=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        child = int(parent.stdout.readline())
+        assert child not in server_proc._group_pids(parent.pid)
+        assert set(server_proc.tree_pids(parent.pid)) == {parent.pid, child}
+        assert server_proc.tree_rss_bytes(parent.pid) > 32 * 1024**2
+    finally:
+        parent.stdin.close()
+        parent.wait(timeout=15)
+        parent.stdout.close()

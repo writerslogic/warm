@@ -1,0 +1,174 @@
+{
+  "observedAt": "2026-11-03T18:38:17.781139+00:00",
+  "jobs": [
+    {
+      "job": "job-00",
+      "engine": "warm",
+      "dataset": "coco-i2i-512-angular",
+      "complete": true,
+      "qualityPassed": false,
+      "peakServerPssBytes": 1378537472,
+      "cells": 32,
+      "failedCells": [
+        {
+          "state": "baseline",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9996,
+          "worstRecall": 0.7,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "baseline",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9996,
+          "worstRecall": 0.7,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-before-maintenance",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9996,
+          "worstRecall": 0.7,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-before-maintenance",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9996,
+          "worstRecall": 0.7,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-after-maintenance",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9993,
+          "worstRecall": 0.8,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-after-maintenance",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9993,
+          "worstRecall": 0.8,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "reopen",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9993,
+          "worstRecall": 0.8,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "reopen",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9993,
+          "worstRecall": 0.8,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        }
+      ]
+    },
+    {
+      "job": "job-01",
+      "engine": "pgvector",
+      "dataset": "coco-i2i-512-angular",
+      "complete": true,
+      "qualityPassed": false,
+      "peakServerPssBytes": 57665536,
+      "cells": 32,
+      "failedCells": [
+        {
+          "state": "baseline",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "baseline",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-before-maintenance",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-before-maintenance",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-after-maintenance",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "churn-after-maintenance",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "reopen",
+          "filter": "all",
+          "clients": 1,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        },
+        {
+          "state": "reopen",
+          "filter": "all",
+          "clients": 8,
+          "meanRecall": 0.9976,
+          "worstRecall": 0.5,
+          "errors": 0,
+          "unresolvedExactMembership": 0
+        }
+      ]
+    }
+  ],
+  "auditPending": true,
+  "isolationPassed": false,
+  "claimQualified": false
+}

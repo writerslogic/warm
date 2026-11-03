@@ -1,0 +1,193 @@
+{
+  "allQualityPassed": false,
+  "allRawAuditsPassed": true,
+  "archiveBytes": 148015750,
+  "archiveSha256": "564007b5db46c9ca549b00f5bf7ebf84175935bc5464f6636308a4fc720efc30",
+  "claimQualified": false,
+  "complete": true,
+  "completedAt": "2026-11-03T19:11:08.043327+00:00",
+  "independenceVerified": false,
+  "jobs": [
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "c6f320a23bd5cd91f63b8426de3b52f6e239f45b733eea259d1152f36913e1d7",
+      "job": 0,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "41c59bfaee3cbf4bc335acdbbc1258f1d204ddc24a7eccb50c3785b2989369bc",
+      "job": 1,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "5cd19bd88bf1e824cd2814b834a33e7c3818693e242332e502193e0b03a84eb5",
+      "job": 2,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "6a8206f3c12756d68d15a6e9c2aeee586cb1fbbdc89e9025084680b356a5d742",
+      "job": 3,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "06be84fe1299ae334b921e35f219299299584c2ec50640210d55a6791a86ff26",
+      "job": 4,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "5b91071eaf54c3aa5b985c7dd073500fed2fad79bbca0601f78e0f4a29dba7fc",
+      "job": 5,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "c6fb4f1f7f363db02a9bec08c35c14d782a002c981cddafcaa99b0afed42e8e5",
+      "job": 6,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "f352534af14a975307d6213bde4bc903a22156645132b2d17d2cb3994480042b",
+      "job": 7,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "c2f8e123b4b2a30d5184ee81057413332613a1135dc37bdb14f8985a209b6153",
+      "job": 8,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "057c4429fada0b3505e02aee9ebe4edc1fb737a97b7c3bae2340ffc9916d9f69",
+      "job": 9,
+      "logSha256": "cd6df6d1a6ec0755fc0dd3406fe6b731afe517b5815f639040ed26ae3b11bf69",
+      "qualityPassed": true,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "f2ec02e2bca03b6f744a0b739a5f73e697335630d50fe948cc2a4abbaac51860",
+      "job": 10,
+      "logSha256": "cd6df6d1a6ec0755fc0dd3406fe6b731afe517b5815f639040ed26ae3b11bf69",
+      "qualityPassed": true,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "a96411c7144924e0c0b3584a0f7c7ddfc11af22b7f7a26ff8d3ec9ab865c4377",
+      "job": 11,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "ff6ee24c7c9a688a0f4fdc292087849067d9c409d5169930f87ff0718a2d9c30",
+      "job": 12,
+      "logSha256": "cd6df6d1a6ec0755fc0dd3406fe6b731afe517b5815f639040ed26ae3b11bf69",
+      "qualityPassed": true,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "d035fb3d442dbe4a24795dd18c86a64525f965a1cda852429f66479d54cb1862",
+      "job": 13,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "a49d875d1b198cf2fab18f28ab60cd2472f94465409168278bcc8d0e3526bc3e",
+      "job": 14,
+      "logSha256": "cd6df6d1a6ec0755fc0dd3406fe6b731afe517b5815f639040ed26ae3b11bf69",
+      "qualityPassed": true,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "0c224e6b10b00739a0c78f87b60c628ad7cb0ed9e3ed014fb5478cfa2adbdd31",
+      "job": 15,
+      "logSha256": "50de45a70428cc625b64e716ed91d3cf57739464c6e1e08184216dd3d4213385",
+      "qualityPassed": false,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "24d33bf84c92d59f9fd2b47e054283650684d274adf248b7fcd70a118075eaf3",
+      "job": 16,
+      "logSha256": "cd6df6d1a6ec0755fc0dd3406fe6b731afe517b5815f639040ed26ae3b11bf69",
+      "qualityPassed": true,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    },
+    {
+      "complete": true,
+      "exitCode": 0,
+      "finishedSha256": "fc048ba842a4779ab1d417069036538398806be8d79500a48108a438e1136d0c",
+      "job": 17,
+      "logSha256": "cd6df6d1a6ec0755fc0dd3406fe6b731afe517b5815f639040ed26ae3b11bf69",
+      "qualityPassed": true,
+      "rawJobEvidenceVerified": true,
+      "resourcesPassed": true
+    }
+  ],
+  "manifestSha256": "e08e0cfae30e06e8f5b3ec65a19097a6afaf579fc4ae2f5c36d79c4be63502d7"
+}

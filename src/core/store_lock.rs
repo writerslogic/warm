@@ -26,7 +26,7 @@ impl StoreLock {
         let mut file = super::durable_file::open_regular_read_write_create(&path)
             .with_context(|| format!("failed to open store lock {}", path.display()))?;
 
-        match file.try_lock() {
+        match super::durable_file::try_lock_exclusive(&file) {
             Ok(()) => {}
             Err(TryLockError::WouldBlock) => bail!(
                 "WARM store {} is already open by another engine; concurrent writers are not supported",
@@ -80,7 +80,7 @@ fn single_link(_: &File) -> std::io::Result<bool> {
 
 impl Drop for StoreLock {
     fn drop(&mut self) {
-        if let Err(error) = self.file.unlock() {
+        if let Err(error) = super::durable_file::unlock(&self.file) {
             tracing::warn!(path = %self.path.display(), %error, "failed to release WARM store lock");
         }
     }

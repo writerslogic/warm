@@ -1,0 +1,458 @@
+{
+  "complete": true,
+  "engine": "warm",
+  "dataset": "deep-image-96-angular",
+  "calibrationFreezeSha256": "5b4b26bb7e5dbe54758853f024e8525012f615c5826500f3dcaacdd7f9b205dd",
+  "selectionSha256": "307ca8910f1178ff0413639351ee7c5e759a3ea2897a3ee528d8e384bed00841",
+  "auditorSha256": "4b63c2b70d803b7eda6f15a2b3ce03d97a9416e711c73da7898979617180b3e5",
+  "cells": [
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "baseline",
+      "configuration": {
+        "route": "graph",
+        "ef": 256
+      },
+      "rawSha256": "141c950e9b5f7b8c0012fa11bf722d04387406f5fcbeeb9cbada5d80fe8ef9f1",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 1.6073073560995965e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9994,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00028004200066789053,
+        "p95": 0.00032516799910808913,
+        "p99": 0.00038279300133581273,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "graph",
+        "ef": 256
+      },
+      "rawSha256": "70975c6d88585beb6b50697edfbdf3db5a57d2c069c1f87bc29b97527c18261f",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 1.6073073560995965e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9994,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0002784179996524472,
+        "p95": 0.00031870900056674145,
+        "p99": 0.00037454300036188215,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "graph",
+        "ef": 256
+      },
+      "rawSha256": "23d42b7a7ffec7c3ba7e2d5e9a3038c5acf36c6432d2c999d93708f12863e3ab",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 1.6073073560995965e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9992000000000001,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0002763350021268707,
+        "p95": 0.00031337600012193434,
+        "p99": 0.0003644600001280196,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "reopen",
+      "configuration": {
+        "route": "graph",
+        "ef": 256
+      },
+      "rawSha256": "2e117f744ae19085dc75c4f7eaae7ccd8f90bfa158b571f72299ef6c46df262f",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 1.6073073560995965e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9992000000000001,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00027045900060329586,
+        "p95": 0.000308126000163611,
+        "p99": 0.0003425839968258515,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "fb0510e6dea900b89323f80d9bd93642bd0e30b4281e17b7fa0070589dc08ecc",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.9161283721101938e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.004104513998754555,
+        "p95": 0.00515268399976776,
+        "p99": 0.005623352000839077,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "c4f5a9d5891d73512b500eb6f18f0ea763291c565810a9769dead51a50d220b8",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.9161283721101938e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.004802850999112707,
+        "p95": 0.006450314998801332,
+        "p99": 0.006890399999974761,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "cca1d497b47017f6c037c87ce7cb22e04b26236afd9ad14435719e1e67adac5d",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.9161283721101938e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.004074223001225619,
+        "p95": 0.005214353001065319,
+        "p99": 0.005675103999237763,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "bb3cb09797479cb3316068d423d22a81422fa93889d1cad884d774eef95634f3",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.9161283721101938e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.004797434001375223,
+        "p95": 0.006255023999983678,
+        "p99": 0.006726857998728519,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "cbca977eb42866fb27f7d45b86cf104b30fde8c41f6abe3f93cbf00e4677fa57",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.6800508923230382e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0004408770000736695,
+        "p95": 0.0004970849986420944,
+        "p99": 0.0005513770011020824,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "46a6d947b311f5e3403f83ff17450a638cdff7be2a78bd2a74de1451d686c49d",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.6800508923230382e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0006019190004735719,
+        "p95": 0.0007563779981865082,
+        "p99": 0.0008685870016051922,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "92f719efc827757ff5be5ebbcd6796c18f30f8aa7d2b4884c293298510690894",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.6800508923230382e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00043195999751333147,
+        "p95": 0.0005002100006095134,
+        "p99": 0.0005597520030278247,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "73f57c25c9ab3150996e26dee88f1320ba67517c4557be0e8a5338a651497db4",
+      "queries": 1000,
+      "metadataOrder": [
+        "bucket100",
+        "eligible1",
+        "eligible10",
+        "epoch",
+        "ordinal"
+      ],
+      "maximumScoreError": 2.6800508923230382e-08,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0005845849991601426,
+        "p95": 0.0007128780016500968,
+        "p99": 0.0008205029989767354,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "baseline",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "cb2f667c1dd61442a319e2948c4d9c9c1b1abae072d4ad23aefc0407697a7d17",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00011016700227628462,
+        "p95": 0.00011970900231972337,
+        "p99": 0.0001384169991069939,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "56655727f3fdc7c54f3fc3acf36c58b178b5af1d13c4e81dbd8ae58f2e71770e",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00011245900168432854,
+        "p95": 0.000121667002531467,
+        "p99": 0.00013337500058696605,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "c18b3b5298dda57d898d4e00f077660ecf0278360702b99ae18c0151dba545b0",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00011024999912478961,
+        "p95": 0.00011979200280620717,
+        "p99": 0.00013379200026975013,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "reopen",
+      "configuration": {
+        "route": "exact"
+      },
+      "rawSha256": "91a636d4499ce0bade4e8ddb63b04fa73b25839adbc3e019c8d56496b9f1e126",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00010974999895552173,
+        "p95": 0.00011762500071199611,
+        "p99": 0.00012704199980362318,
+        "pass": true
+      }
+    }
+  ],
+  "heldOutVectorsOpened": false,
+  "rejectedWithoutRaw": [],
+  "oracleMaximumNumericalDifference": 0.0,
+  "scope": "Every declared cell summary and build selection checked; raw responses verified for the selected filter configuration in every eligible build/state. Pre-recording rejections without raw responses are listed explicitly. Rejected configurations, host isolation and resource ceilings are not independently audited here."
+}

@@ -1,0 +1,12 @@
+{
+  "complete": true,
+  "batchSize": 32,
+  "duplicateRetryEffects": 0,
+  "currentAndHistoricalFactsPreserved": true,
+  "deletedRecordReturned": false,
+  "node": "v22.23.4",
+  "platform": "linux-arm64",
+  "interruption": "SIGKILL",
+  "boundary": "After public flush completed and acknowledgement was fsynced by parent",
+  "limitations": "One supported process-death boundary; not power loss or every possible interruption."
+}

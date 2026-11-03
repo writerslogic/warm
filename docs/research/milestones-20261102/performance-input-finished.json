@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "completed": [
+    {
+      "name": "coco-i2i-512-angular",
+      "inputsSha256": "96c8602a6ba6a28a202f08516fdb820dd926f398a491fd0d76d18a3235219c6b"
+    },
+    {
+      "name": "deep-image-96-angular",
+      "inputsSha256": "05ac225a9b8357876e50d7ba5b616e447e1806a9f47c8bf362d0430f1640d78d"
+    }
+  ],
+  "freezeSha256": "2f787fb0cb48ecf7b4d21925d9709e186a460c5a3a8de25622195e942f02c3b7"
+}

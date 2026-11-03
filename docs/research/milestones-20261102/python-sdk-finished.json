@@ -1,0 +1,30 @@
+{
+  "complete": true,
+  "scope": "macOS arm64, base HTTP SDK installed-wheel contracts only; no live server, optional framework or native Python binding qualification",
+  "installed": [
+    {
+      "python": "3.11.14 (main, Nov 19 2025, 23:12:58) [Clang 21.1.4 ]",
+      "package": "/Volumes/A/.hms-bench-cache/warm-python-sdk-qualification-20261103-v1/consumer-3.11.14/.venv/lib/python3.11/site-packages/writerslogic_warm_sdk",
+      "filesVerified": 60,
+      "wheelSha256": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490"
+    },
+    {
+      "python": "3.14.7 (main, Sep  1 2026, 14:05:28) [Clang 22.1.3 ]",
+      "package": "/Volumes/A/.hms-bench-cache/warm-python-sdk-qualification-20261103-v1/consumer-3.14.7/.venv/lib/python3.14/site-packages/writerslogic_warm_sdk",
+      "filesVerified": 60,
+      "wheelSha256": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490"
+    }
+  ],
+  "testsPerInterpreter": {
+    "passed": 54,
+    "subtestsPassed": 46,
+    "failed": 0,
+    "skipped": 0
+  },
+  "artifacts": {
+    ".gitignore": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+    "warm_sdk-0.1.3-py3-none-any.whl": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490",
+    "warm_sdk-0.1.3.tar.gz": "8f415673938be8fc52d3e56c774777c165c757c250354e1b78f3af4170817d69"
+  },
+  "freezeSha256": "5e4501874257a7a5ef2a7d28287c5925f49f416379d881235d6d4d10ab54ff22"
+}

@@ -1,0 +1,105 @@
+{
+  "cases": [
+    {
+      "exitCode": -9,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "kill",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "c"
+    },
+    {
+      "exitCode": -15,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "terminate",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "c"
+    },
+    {
+      "exitCode": -9,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "kill",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "go"
+    },
+    {
+      "exitCode": -15,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "terminate",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "go"
+    },
+    {
+      "exitCode": -9,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "kill",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "java"
+    },
+    {
+      "exitCode": 143,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "terminate",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "java"
+    },
+    {
+      "exitCode": -9,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "kill",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "dotnet"
+    },
+    {
+      "exitCode": 143,
+      "ledgerSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+      "termination": "terminate",
+      "verifiedReaders": [
+        "c",
+        "go",
+        "java",
+        "dotnet"
+      ],
+      "writer": "dotnet"
+    }
+  ],
+  "complete": true,
+  "completedAt": "2026-11-03T13:01:20.959741+00:00",
+  "freezeSha256": "3b13f9536f0bae29738188b12f10ce02bd5fbfe164dca9b4ae53d77612258ffc",
+  "readerChecks": 32,
+  "writerCases": 8
+}

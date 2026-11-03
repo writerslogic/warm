@@ -1,0 +1,116 @@
+[
+  {
+    "id": "warm-sdk@0.6.5",
+    "name": "warm-sdk",
+    "version": "0.6.5",
+    "size": 3895898,
+    "unpackedSize": 11954887,
+    "shasum": "2dc5499dc898fa0d3cc1aaf6a342a15e2a5f70dc",
+    "integrity": "sha512-9Icv8/w1P7Zkjo/0nrwZAQR4PzD/49yCnbaerEBFcQrLI48mE3lObiDFeoMmcsq5bUFXYXuutN6HSybmLiYuOA==",
+    "filename": "warm-sdk-0.6.5.tgz",
+    "files": [
+      {
+        "path": "LICENSE",
+        "size": 10850,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 24038,
+        "mode": 420
+      },
+      {
+        "path": "docs/evaluation.md",
+        "size": 30572,
+        "mode": 420
+      },
+      {
+        "path": "docs/INTEGRATION.md",
+        "size": 2845,
+        "mode": 420
+      },
+      {
+        "path": "docs/integrations/vectra-migration.md",
+        "size": 12192,
+        "mode": 420
+      },
+      {
+        "path": "docs/memory-api/README.md",
+        "size": 29473,
+        "mode": 420
+      },
+      {
+        "path": "docs/PRIVACY.md",
+        "size": 8160,
+        "mode": 420
+      },
+      {
+        "path": "docs/production-readiness.md",
+        "size": 22538,
+        "mode": 420
+      },
+      {
+        "path": "index.d.ts",
+        "size": 17619,
+        "mode": 420
+      },
+      {
+        "path": "index.js",
+        "size": 2029,
+        "mode": 420
+      },
+      {
+        "path": "index.mjs",
+        "size": 320,
+        "mode": 420
+      },
+      {
+        "path": "memory.d.ts",
+        "size": 6933,
+        "mode": 420
+      },
+      {
+        "path": "memory.js",
+        "size": 3970,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 3457,
+        "mode": 420
+      },
+      {
+        "path": "semantic.d.ts",
+        "size": 1383,
+        "mode": 420
+      },
+      {
+        "path": "semantic.js",
+        "size": 6432,
+        "mode": 420
+      },
+      {
+        "path": "vectra-selector.js",
+        "size": 5010,
+        "mode": 420
+      },
+      {
+        "path": "vectra.d.ts",
+        "size": 5913,
+        "mode": 420
+      },
+      {
+        "path": "vectra.js",
+        "size": 26809,
+        "mode": 420
+      },
+      {
+        "path": "warm-sdk.linux-arm64-gnu.node",
+        "size": 11734344,
+        "mode": 493
+      }
+    ],
+    "entryCount": 20,
+    "bundled": []
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "Events": [],
+  "PowerRequests": "DISPLAY:\r\nNone.\r\n\r\nSYSTEM:\r\nNone.\r\n\r\nAWAYMODE:\r\nNone.\r\n\r\nEXECUTION:\r\nNone.\r\n\r\nPERFBOOST:\r\nNone.\r\n\r\nACTIVELOCKSCREEN:\r\nNone.\r\n\r\n",
+  "Task": {
+    "TaskName": "WSL-Tailscale-Keepalive",
+    "State": 4,
+    "Executable": "C:\\Windows\\System32\\wsl.exe"
+  }
+}

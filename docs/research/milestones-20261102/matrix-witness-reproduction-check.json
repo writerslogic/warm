@@ -1,0 +1,31 @@
+{
+  "archive": "/Volumes/A/.hms-bench-cache/warm-matrix-witness-reproduction-20261103-v1/matrix-witness-reproduction-v1.tar.gz",
+  "archiveBytes": 365017,
+  "archiveSha256": "62e759b59265a119909a5d5dd0cd147e5fd11f5f4d1402250bf238cc1b702a8f",
+  "checkedAt": "2026-11-03T15:39:37.907159+00:00",
+  "complete": true,
+  "files": 23,
+  "independenceVerified": false,
+  "manifestSha256": "f415482878091edb0d8b1821e3eb2fd182e847f9e6a61e07421ea5416af0e965",
+  "reproduction": {
+    "benchmarkClaim": false,
+    "complete": true,
+    "independenceVerified": false,
+    "manifestSha256": "f415482878091edb0d8b1821e3eb2fd182e847f9e6a61e07421ea5416af0e965",
+    "matchedOutputs": 7,
+    "python": "3.12.12 (main, Nov 19 2025, 22:30:44) [Clang 21.1.4 ]",
+    "result": {
+      "cases": 5,
+      "complete": true,
+      "distinguishingMasks": 62,
+      "existingCheckerCases": 3,
+      "freezeSha256": "b5d29815276c2d24c94732d4b08dd262aea25e39edd8290ab4d2d8c1fca29fff",
+      "gatePass": true,
+      "jointUnknownMasks": 17841,
+      "readoutComparisons": 37448
+    },
+    "scientificResultReproduced": true,
+    "scope": "Positive-evidence deletion-bound construction; no system advantage"
+  },
+  "tamperedSourceRejectedBeforeRun": true
+}

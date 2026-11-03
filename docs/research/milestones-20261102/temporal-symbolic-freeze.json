@@ -1,0 +1,28 @@
+{
+  "acceptance": "Both compilers must produce byte-identical packets to the already exhaustively verified trace union in every exposed cohort case. Existing byte savings against per-slot controls cannot establish superiority if symbolic compilation produces the same packets. Timings are shared-host development measurements only.",
+  "benchmarkClaim": false,
+  "deadlineSeconds": 30,
+  "files": {
+    "PLAN.json": "4cf5ff752d5d760666d91df82c19b429a12d7fdf9a39555a0286846ed3bf18c9",
+    "audit_symbolic.py": "175e2b28b8e146b4f5ff756ff88d820c6892716758be39ef8d5a45906937d272",
+    "probe.py": "6567a20298f8b59ec1c44bfb63ee6228ea50bec64752ccab4511233c41d032d2",
+    "run.py": "4b545b98d6bf0d5ecc9491243a463bfb2c6ecfb44624811235203a808661a27d",
+    "symbolic_control.py": "3ff80518f63b43e164f0987d1fdf2d2eb0202eba9e87d00b3e6c153cefc773d2",
+    "test_probe.py": "ecaaff7bdd6577f6a77f6dcba4d46fa803b89ca15448b68311d07d3874d465bf",
+    "test_symbolic_control.py": "0f7293e08bc78a4e2e6135dc1cc106fde56200eac5351fa81a3aa941b59f1494"
+  },
+  "methods": [
+    "trace",
+    "symbolic"
+  ],
+  "original": "/Volumes/A/.hms-bench-cache/warm-temporal-trace-20261103-v1",
+  "originalReceiptSha256": "6e46a4eb6c66003e05827278e136435d781bd249b714f2fc5e6dee3f4aec1142",
+  "repetitions": 3,
+  "schema": "warm.temporal-symbolic-control/1",
+  "symbolicBounds": {
+    "expressionStates": 1000000,
+    "nodes": 250000,
+    "operationCache": 1000000
+  },
+  "variableOrder": "ascending source ID; no reordering or tuning"
+}

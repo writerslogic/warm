@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "installed-node-tests failed with exit 1",
+    "type": "RuntimeError"
+  }
+}

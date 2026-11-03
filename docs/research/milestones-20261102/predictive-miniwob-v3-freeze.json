@@ -1,0 +1,12 @@
+{
+  "frozenAt": "2026-11-03T11:59:56.565127+00:00",
+  "amends": "warm-predictive-miniwob-20261103-v2: canonicalize generated text pseudo-element IDs; retain content, tree position and real element refs",
+  "files": {
+    "MINIWOB-PLAN.json": "08ec3dd9f2b525f12af19bb9e0b8144fa3d2dc930590b802ee0bf9dc2ff9fc26",
+    "miniwob.py": "7bd71dad880b3759ef09e2d8117a38556e32096291ffc0c57f19f091a93bcec8",
+    "test_miniwob.py": "a9f46cfa75edab487b2dd740a8bd3340e3f95c45b6d6e57837a1810f9561bc2f",
+    "run_miniwob.py": "60907873c9a8ce31f0a5cfd858018e4dd39d80eba8c3cd4e8b7937294246c311"
+  },
+  "inputManifestSha256": "5f1a4db9c2fa972d309b7a7751b5283a058961624c7ac56191938bc252e8bc3c",
+  "officialRecorderSha256": "1b404b306db2a52612f15ae0a5abf5c1f90211d47ebb305304310220792093f5"
+}

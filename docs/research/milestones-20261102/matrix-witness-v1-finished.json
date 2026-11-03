@@ -1,0 +1,21 @@
+{
+  "cases": 5,
+  "complete": true,
+  "completedAt": "2026-11-03T15:30:59.612123+00:00",
+  "distinguishingMasks": 62,
+  "existingCheckerCases": 3,
+  "freezeSha256": "b5d29815276c2d24c94732d4b08dd262aea25e39edd8290ab4d2d8c1fca29fff",
+  "gatePass": true,
+  "jointUnknownMasks": 17841,
+  "outputs": {
+    "family-1.json": "db6ad519872b4a7bd5f96d64f01821e99c3f9a407ea6f2814c9e5524434ebfca",
+    "family-2.json": "0c1b3d566febaf706b1f3331cf674f9762455ca956d945c1b7ee7a39adb1d727",
+    "family-3.json": "bcb789c30df889b2e28cc4435960e0b2f8c194247601ac60b2c142d936aa88c4",
+    "family-4.json": "388c54fc0bf4077b8ef74d31a1d822ddbf768b5ebef2a0f31ef11f1d8d1bccd2",
+    "family-5.json": "be90ba7285f1be2abc4b8639fd20deeb3ec48fd5590225efe14aae8ea31f681b",
+    "readouts.ndjson": "63c86b8ca7c8a267ab081bfc7971507a868f776b23d89255d0cb5c2bca22b885",
+    "summary.json": "4a42c2aa055975712402ebf31c1b66b7ec65168e1a0a008c592fd6578dbe8d97",
+    "tests.log": "05654878d6887650ef40e5cf6c6782e87571624bc8fa1c207924b46f9e0851f8"
+  },
+  "readoutComparisons": 37448
+}

@@ -1,0 +1,9 @@
+{
+  "archiveSha256": "940aea5ada5768f0e404ca978ad8707e381f6df0410bfc3e0d9edcb50ff70a13",
+  "files": {
+    "linux-serving-observations.py": "67b4c64faf742886768969c9d642e725329889380b2b5defc78c1847e23dbfde"
+  },
+  "frozenAt": "2026-11-03T18:05:13.692531+00:00",
+  "scope": "Guest load/process/paging observer, streamed to host internal disk; no automatic isolation pass.",
+  "servingFreezeSha256": "25db4682c68d88c949649c123c9b8c363375277174cb1456995a639be154e004"
+}

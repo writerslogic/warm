@@ -1,0 +1,23 @@
+{
+  "scope": "Synthetic concurrent runner development only; no held-out vectors or paid services.",
+  "baseline": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+  "files": {
+    "benchmarks/public/matched_server/measure.py": "9a326a50262cec1129cd3c0ca38ca1afbc1a5696cce939dd258c93885f89c424",
+    "benchmarks/public/matched_server/test_measure.py": "a75173013786bdbf08eb7f52a54e4b7cc1221f28b477aac1bc433ce646f27f2f",
+    "benchmarks/public/matched_server/claim_gate.py": "d6bf47296c2d7515c945d756a31f84b976c3d6fadd90334ad0da3720bf1ec2e5",
+    "benchmarks/public/matched_server/test_claim_gate.py": "bf8e21e2bf2096b78b126df4f523ad49c019d10291cd40afba177f590e6af35a",
+    "benchmarks/public/matched_server/check_measure.py": "babb94ef8d3d0c627e4bf62a7a3d39cf39c2dc43430354c2ace615097be372ae",
+    "benchmarks/public/matched_server/adapters.py": "6ee7daba25d1995f53a6b16ee3ccda3c34f19ebef136bf8f87a4931e4d1f1865",
+    "benchmarks/public/matched_server/oracle.py": "6af8eb08d86d157620f61a17b7a59cd4e6aca76900f25c64bf7f0a6eb4248d58",
+    "benchmarks/public/matched_server/calibrate.py": "eac31f8a6f648183d12a4c30f38b2a8754408c8a1c82de35fd0362916708cbc3",
+    "benchmarks/public/matched_server/test_protocol.py": "4682c9fa7fef6e1474dc41c96ea68236432c0c62c2815558adef3f9aa29d4907",
+    "benchmarks/public/matched_server/PLAN.json": "948fb9f4c0a59811495f3571d0d160b1832644e6e8065a5b6c468e7a76bfcf6d",
+    "benchmarks/public/matched_server/pyproject.toml": "c40e7230d65e9267df765ff972b5e94f123241f045222e9d5bff0cb0d2969f5e",
+    "benchmarks/public/matched_server/uv.lock": "df1a45fac2e42bdf441026b5f25815c0c4be1df9a3ff788bc46c191054051bfb",
+    "benchmarks/competitive/warmbench/server_proc.py": "56c2ce86d9a113e6c443d7f730d3ad29708069398891a62e46dd81e8938138b1",
+    "benchmarks/competitive/warmbench/server_worker.py": "dc07c982d1e18faf106edec23a018d7e8812ec4ff04fbc135f7021ab86076a20",
+    "benchmarks/competitive/warmbench/servers.py": "51833e621816aae831ea2dbb642d53b501796db4d3e3a12bf7e060080557f8e5",
+    "benchmarks/competitive/warmbench/ann_worker.py": "5d1448b312b1a1fc239f9b3fc3132ea3b638e329cf494b4bf31f8a32bc55b837",
+    "benchmarks/competitive/warmbench/text_worker.py": "7c08dd533220c1a1e241e60efd7ed73aceac5a8b03a3ebfc9fb080d60f28e489"
+  }
+}

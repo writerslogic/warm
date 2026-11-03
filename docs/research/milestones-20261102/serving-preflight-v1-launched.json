@@ -1,0 +1,6 @@
+{
+  "pid": 54053,
+  "startedAt": "2026-11-03T18:10:29.563544+00:00",
+  "launcherSha256": "70a450f034b6802b661ff6804a776979e08fb847dd3d7c33a2e9345f42abd70a",
+  "scope": "Wait for backed-up VM disk expansion/restart; then DSPy qualification and exact-artifact serving seal. No held-out reads."
+}

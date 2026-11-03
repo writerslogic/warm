@@ -1,0 +1,150 @@
+{
+  "coco-i2i-512-angular": {
+    "built.json": {
+      "seconds": 34.47292189899963,
+      "settings": {
+        "capacityBytes": 268435456.0,
+        "documentIndexTrained": true,
+        "documents": 100000,
+        "tenant": "default",
+        "usedBytes": 224353159.0,
+        "vectorIndex": {
+          "current": true,
+          "graph": true,
+          "rebuildRecommended": false,
+          "rows": 100000,
+          "staleMutations": 0
+        },
+        "vectors": 100000
+      }
+    },
+    "churn.json": {
+      "seconds": 1.6070576410002104,
+      "settings": {
+        "capacityBytes": 268435456.0,
+        "documentIndexTrained": false,
+        "documents": 99900,
+        "tenant": "default",
+        "usedBytes": 224589031.0,
+        "vectorIndex": {
+          "current": false,
+          "graph": true,
+          "rebuildRecommended": true,
+          "rows": 100000,
+          "staleMutations": 200
+        },
+        "vectors": 99900
+      }
+    },
+    "maintenance.json": {
+      "seconds": 14.750875113999427,
+      "settings": {
+        "capacityBytes": 268435456.0,
+        "documentIndexTrained": true,
+        "documents": 99900,
+        "tenant": "default",
+        "usedBytes": 224589031.0,
+        "vectorIndex": {
+          "current": true,
+          "graph": true,
+          "rebuildRecommended": false,
+          "rows": 99900,
+          "staleMutations": 0
+        },
+        "vectors": 99900
+      }
+    },
+    "reopen.json": {
+      "readySeconds": 0.06128749500021513,
+      "settings": {
+        "capacityBytes": 268435456.0,
+        "documentIndexTrained": false,
+        "documents": 99900,
+        "tenant": "default",
+        "usedBytes": 224589031.0,
+        "vectorIndex": {
+          "current": true,
+          "graph": true,
+          "rebuildRecommended": false,
+          "rows": 99900,
+          "staleMutations": 0
+        },
+        "vectors": 99900
+      }
+    }
+  },
+  "deep-image-96-angular": {
+    "built.json": {
+      "seconds": 12.170805608999217,
+      "settings": {
+        "capacityBytes": 67108864.0,
+        "documentIndexTrained": true,
+        "documents": 100000,
+        "tenant": "default",
+        "usedBytes": 56441540.0,
+        "vectorIndex": {
+          "current": true,
+          "graph": true,
+          "rebuildRecommended": false,
+          "rows": 100000,
+          "staleMutations": 0
+        },
+        "vectors": 100000
+      }
+    },
+    "churn.json": {
+      "seconds": 0.38410378800108447,
+      "settings": {
+        "capacityBytes": 67108864.0,
+        "documentIndexTrained": false,
+        "documents": 99900,
+        "tenant": "default",
+        "usedBytes": 56510420.0,
+        "vectorIndex": {
+          "current": false,
+          "graph": true,
+          "rebuildRecommended": true,
+          "rows": 100000,
+          "staleMutations": 200
+        },
+        "vectors": 99900
+      }
+    },
+    "maintenance.json": {
+      "seconds": 4.864360552001017,
+      "settings": {
+        "capacityBytes": 67108864.0,
+        "documentIndexTrained": true,
+        "documents": 99900,
+        "tenant": "default",
+        "usedBytes": 56510420.0,
+        "vectorIndex": {
+          "current": true,
+          "graph": true,
+          "rebuildRecommended": false,
+          "rows": 99900,
+          "staleMutations": 0
+        },
+        "vectors": 99900
+      }
+    },
+    "reopen.json": {
+      "readySeconds": 0.061063717999786604,
+      "settings": {
+        "capacityBytes": 67108864.0,
+        "documentIndexTrained": false,
+        "documents": 99900,
+        "tenant": "default",
+        "usedBytes": 56510420.0,
+        "vectorIndex": {
+          "current": true,
+          "graph": true,
+          "rebuildRecommended": false,
+          "rows": 99900,
+          "staleMutations": 0
+        },
+        "vectors": 99900
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "frozenAt": "2026-11-03T11:54:52.440513+00:00",
+  "files": {
+    "MINIWOB-PLAN.json": "fcf9ed2f433e079b0ca99b078cf249476580e040cf491227bf439c1e4472ae3d",
+    "miniwob.py": "c69095a0c3430f7b5388f6088d13c293378ca1a18ad43a510f6da1d221030c5e",
+    "test_miniwob.py": "3af73c2f3ddbeb684bdb24708919327433ea3e72d836a7f96a11939a961357f4",
+    "run_miniwob.py": "60907873c9a8ce31f0a5cfd858018e4dd39d80eba8c3cd4e8b7937294246c311"
+  },
+  "inputManifestSha256": "5f1a4db9c2fa972d309b7a7751b5283a058961624c7ac56191938bc252e8bc3c"
+}

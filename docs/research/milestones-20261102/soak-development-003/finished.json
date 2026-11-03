@@ -1,0 +1,25 @@
+{
+  "complete": true,
+  "qualified24Hours": false,
+  "elapsedSeconds": 75.52183663400001,
+  "requestCount": 1672,
+  "latencySeconds": {
+    "p50": 0.0027776599999924656,
+    "p95": 0.08175736200018946,
+    "p99": 0.2870932640000774
+  },
+  "recovery": [
+    {
+      "mode": "sigkill",
+      "seconds": 0.1956453390000661,
+      "durableLedgerMatched": true
+    },
+    {
+      "mode": "sigterm",
+      "seconds": 0.17069720300014524,
+      "durableLedgerMatched": true
+    }
+  ],
+  "freezeSha256": "d59926f5c60991ca817620225534d531b80527fb7a998e096215198dd37759a5",
+  "failureCount": 0
+}

@@ -1,0 +1,246 @@
+{
+  "schema": "warm.matched-server/2",
+  "scope": "Local calibration and subsequent matched HTTP/SQL serving qualification; no paid services. This is a control, not an originality claim.",
+  "inputFreezeSha256": "2f787fb0cb48ecf7b4d21925d9709e186a460c5a3a8de25622195e942f02c3b7",
+  "datasets": {
+    "coco-i2i-512-angular": 512,
+    "deep-image-96-angular": 96
+  },
+  "rows": 100000,
+  "queries": 1000,
+  "calibrationOrdinals": [
+    0,
+    999
+  ],
+  "qualificationOrdinals": [
+    1000,
+    1999
+  ],
+  "k": 10,
+  "metric": "cosine of original finite, nonzero float32 vectors; no lossy input projection or quantization",
+  "payload": "Each hit returns ID, score, 1024 ASCII bytes of deterministic revision-sensitive text and the full ordinal/bucket100/eligible10/eligible1/epoch metadata object. All engines ingest identical vectors, text and metadata.",
+  "durability": "Each acknowledged write flushes its journal/WAL/translog and is visible to the next query. No replication. Ingest batches 500 rows; timed mutations are individual writes. Initial ingest atomicity across different engines is not claimed. Verify actual configuration and process-death recovery before timing.",
+  "filters": [
+    "all",
+    "10pct",
+    "1pct",
+    "empty"
+  ],
+  "states": [
+    "baseline",
+    "churn-before-maintenance",
+    "churn-after-maintenance",
+    "reopen"
+  ],
+  "churn": {
+    "replace": [
+      0,
+      99
+    ],
+    "replacementSourceOffset": 1,
+    "delete": [
+      100,
+      199
+    ],
+    "epoch": 1
+  },
+  "calibration": {
+    "data": "Only calibration.f32; never open held-out test.f32 until the selected configuration receipt is sealed.",
+    "selection": "For each build/filter, retain configurations passing all 1000 calibration queries in every declared state. Choose the lowest geometric mean of single-client medians across those states. Select the build minimizing the geometric mean across all filter/state medians. Ties use canonical JSON lexical order. Record every cell and failure; no held-out query used. Freeze separate choices per engine/corpus/hardware.",
+    "repetitions": 1,
+    "warmQueries": 100,
+    "warm": {
+      "builds": [
+        {
+          "index": "graph",
+          "degree": 32,
+          "buildEf": 128,
+          "traversal": "persisted single-hop"
+        }
+      ],
+      "ef": [
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "routes": [
+        "graph",
+        "exact"
+      ],
+      "filteredRoute": "exact"
+    },
+    "pgvector": {
+      "version": "0.8.7",
+      "postgresVersion": "18.6",
+      "builds": [
+        {
+          "index": "hnsw",
+          "m": 16,
+          "ef_construction": 64
+        },
+        {
+          "index": "hnsw",
+          "m": 32,
+          "ef_construction": 500
+        },
+        {
+          "index": "ivfflat",
+          "lists": 100
+        },
+        {
+          "index": "ivfflat",
+          "lists": 316
+        }
+      ],
+      "ef": [
+        64,
+        128,
+        256,
+        512,
+        1000
+      ],
+      "probes": [
+        4,
+        16,
+        32,
+        64,
+        100,
+        316
+      ],
+      "probesConstraint": "Do not exceed lists",
+      "routes": [
+        "planner",
+        "iterative",
+        "exact"
+      ],
+      "iterative": {
+        "hnsw": "strict_order",
+        "ivfflat": "relaxed_order with final materialized-CTE distance sort",
+        "maxScanTuples": 100000,
+        "maxProbes": "lists"
+      },
+      "metadataIndexes": "B-tree on bucket100; partial indexes for eligible10 and eligible1",
+      "sharedBuffers": "1536MB",
+      "workMem": "32MB",
+      "maintenanceWorkMem": "2GB",
+      "parallelWorkersPerGather": 0,
+      "parallelMaintenanceWorkers": 3
+    },
+    "opensearch": {
+      "version": "3.9.0",
+      "builds": [
+        {
+          "engine": "faiss",
+          "m": 16,
+          "ef_construction": 100
+        },
+        {
+          "engine": "faiss",
+          "m": 32,
+          "ef_construction": 500
+        },
+        {
+          "engine": "lucene",
+          "m": 16,
+          "ef_construction": 100
+        },
+        {
+          "engine": "lucene",
+          "m": 32,
+          "ef_construction": 500
+        }
+      ],
+      "ef": [
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "routes": [
+        "knn",
+        "exact"
+      ],
+      "filter": "Inside knn field for efficient filtering; exact uses filtered knn_score script. Final response size remains 10 at both candidate counts.",
+      "shards": 1,
+      "replicas": 0,
+      "heap": "2g",
+      "translogDurability": "request",
+      "concurrentSegmentSearch": "none",
+      "responseRequestCache": false,
+      "candidateK": [
+        10,
+        32
+      ]
+    }
+  },
+  "qualification": {
+    "concurrency": [
+      1,
+      8
+    ],
+    "repetitions": 3,
+    "queryOrder": "Permutation sorted by SHA256(dataset/repetition/sourceOrdinal); same order in all engines, divided into contiguous equal client slices. Each query occurs once per cell.",
+    "engineOrder": [
+      [
+        "warm",
+        "pgvector",
+        "opensearch"
+      ],
+      [
+        "pgvector",
+        "opensearch",
+        "warm"
+      ],
+      [
+        "opensearch",
+        "warm",
+        "pgvector"
+      ]
+    ],
+    "datasetOrder": [
+      "coco-i2i-512-angular",
+      "deep-image-96-angular"
+    ],
+    "warmQueries": 100,
+    "cold": "Clean process restart, page cache retained and explicitly disclosed; measure process start through first validated held-out response. Do not call it cold filesystem cache.",
+    "timingBoundary": "One persistent connection per client process; pre-serialize request; time send through decoded payload. No retries. Validate payload after timer. Throughput is completed queries over global barrier-to-last-completion wall time, including validation/client scheduling overhead; record server and client CPU time.",
+    "quality": {
+      "meanRecallAt10": 0.99,
+      "worstRecallAt10": 0.9,
+      "payloadErrors": 0,
+      "duplicateDeletedIneligibleResults": 0,
+      "errorsTimeouts": 0,
+      "unexplainedExactMembershipErrors": 0
+    },
+    "latencyGate": "Against fastest eligible comparator separately per cell: WARM median and p95 <=0.9 times comparator, p99 <=1.05 times comparator, every repetition. Do not pool failures.",
+    "advantageGate": "Preselected >=2x completed-query throughput against fastest eligible comparator, maintained unfiltered state, 8 clients, both datasets, every repetition, both physical machines. No substitution of another metric after results."
+  },
+  "resources": {
+    "physicalHosts": [
+      "Apple M4 / Linux arm64 Lima",
+      "Intel Ultra9 185H / Linux x86_64 WSL"
+    ],
+    "cpuBudget": "4 logical CPUs shared by server and clients; one engine at a time",
+    "guestOrCgroupBytes": 8589934592,
+    "maxServerPssBytes": 6442450944,
+    "maxClientPssBytes": 1073741824,
+    "maxStoreBytes": 21474836480,
+    "swap": "disabled for run cgroup/guest",
+    "buildSeconds": 7200,
+    "startupSeconds": 600,
+    "querySeconds": 30,
+    "mutationSeconds": 120,
+    "sampleSeconds": 1,
+    "contamination": "Retain host/guest load and memory evidence; unrelated sustained CPU load or memory pressure invalidates performance qualification, not a slower engine. Calibration timings are selection data, not qualified claims."
+  },
+  "oracle": "Independent float64 cosine full scan; resolve every exact membership discrepancy against scalar accumulation and boundary scores. Tolerance alone cannot waive membership. Keep all raw returned IDs, scores, errors, and payload validation hashes.",
+  "freeze": "Hash this plan, driver and imported lifecycle source, dependency lock, actual executable artifacts, inputs and machine settings before calibration. Any correction keeps the old failed run and a new version receipt. Freeze selection before held-out searches.",
+  "revision": "Before any corpus calibration: synthetic churn exposed insufficient OpenSearch candidate count at k=10; add k=32 and Lucene controls, and require calibration quality across all declared states. Prior plan remains in driver-v1..v4 archives. Cohort/objective/quality/durability gates unchanged."
+}

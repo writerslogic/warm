@@ -1,0 +1,6 @@
+{
+  "auditorSha256": "283239c68d58bce3a794247628adf38da060a32a8a4f3bf2f1d85ec799fca960",
+  "runnerSha256": "a5a5bf6b2c2546ab3d1fd319b96b61b0c2aae66b9b267325ed172707a0e673e9",
+  "sourceSha256": "9d002fedda77c9f67b1d7f832225d44543ed2e2f9ac151a88d302557f257990b",
+  "scope": "Existing affected test oracle arrays only, no production changes or test suppression"
+}

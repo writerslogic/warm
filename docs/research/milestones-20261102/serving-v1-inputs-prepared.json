@@ -1,0 +1,11 @@
+{
+  "complete": true,
+  "preparedAt": "2026-11-03T18:22:46.270096+00:00",
+  "configurationSealSha256": "45ce0a0d974a861ab0e45a47c9bb4940635867e8ed0dd1d77ca77ed4e5382864",
+  "heldOutArchiveSha256": "1a170c654cf64f893e595a07151483aa43eeeef1d3f8753617a00a9a89f97235",
+  "datasets": [
+    "coco-i2i-512-angular",
+    "deep-image-96-angular"
+  ],
+  "scope": "Opaque input hash/size verification after seal; no queries executed."
+}

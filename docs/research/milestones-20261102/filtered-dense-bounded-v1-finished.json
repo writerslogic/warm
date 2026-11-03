@@ -1,0 +1,19 @@
+{
+  "cells": 20,
+  "complete": true,
+  "completedAt": "2026-11-03T13:48:36.374102+00:00",
+  "developmentGate": {
+    "failures": [],
+    "pass": true
+  },
+  "freezeSha256": "ee833f7b5f6505efd335917c1f8dc655439c5509a7417102df96ad3e83a3e5b1",
+  "outputs": {
+    "native.log": "fe6211da58f97e16046e1df44dc9a48090a64b6e2e75bad4c55211c2dba1c167",
+    "output/queries.ndjson": "b2a941f07cf14b931f45a7c271ffd6f5d902ffe0299c02bf988b5693113b159a",
+    "summary.json": "066d4691a561e0dfb7e09674d968e870023b50cb23f82e5a01f0b519aa63a2ed"
+  },
+  "pairedComparisons": 3840,
+  "qualification": false,
+  "queryRows": 1920,
+  "rust": "rustc 1.96.0 (ac68faa20 2026-05-25)"
+}

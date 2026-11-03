@@ -1,0 +1,192 @@
+[
+  {
+    "comparisons": 8,
+    "distinguishingMasks": [
+      3,
+      6
+    ],
+    "exactSupportWidth": 1,
+    "existingChecker": {
+      "degreeBound": 2,
+      "equivalent": false,
+      "productPairs": 18,
+      "reason": "distribution",
+      "withdrawn": 6
+    },
+    "groupWidth": 1,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 4,
+    "records": [
+      6,
+      6
+    ],
+    "sourceCount": 3,
+    "unconditionalRecords": 0,
+    "uniformDetectionProbability": [
+      1,
+      4
+    ],
+    "unknownMasks": 1,
+    "witness": 6
+  },
+  {
+    "comparisons": 64,
+    "distinguishingMasks": [
+      27,
+      30,
+      51,
+      54
+    ],
+    "exactSupportWidth": 2,
+    "existingChecker": {
+      "degreeBound": 4,
+      "equivalent": false,
+      "productPairs": 162,
+      "reason": "distribution",
+      "withdrawn": 54
+    },
+    "groupWidth": 2,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 16,
+    "records": [
+      18,
+      18
+    ],
+    "sourceCount": 6,
+    "unconditionalRecords": 0,
+    "uniformDetectionProbability": [
+      1,
+      16
+    ],
+    "unknownMasks": 15,
+    "witness": 54
+  },
+  {
+    "comparisons": 512,
+    "distinguishingMasks": [
+      219,
+      222,
+      243,
+      246,
+      411,
+      414,
+      435,
+      438
+    ],
+    "exactSupportWidth": 3,
+    "existingChecker": {
+      "degreeBound": 6,
+      "equivalent": false,
+      "productPairs": 1458,
+      "reason": "distribution",
+      "withdrawn": 438
+    },
+    "groupWidth": 3,
+    "minimumWithdrawals": 6,
+    "polynomialTerms": 64,
+    "records": [
+      54,
+      54
+    ],
+    "sourceCount": 9,
+    "unconditionalRecords": 0,
+    "uniformDetectionProbability": [
+      1,
+      64
+    ],
+    "unknownMasks": 169,
+    "witness": 438
+  },
+  {
+    "comparisons": 4096,
+    "distinguishingMasks": [
+      1755,
+      1758,
+      1779,
+      1782,
+      1947,
+      1950,
+      1971,
+      1974,
+      3291,
+      3294,
+      3315,
+      3318,
+      3483,
+      3486,
+      3507,
+      3510
+    ],
+    "exactSupportWidth": 4,
+    "existingChecker": null,
+    "groupWidth": 4,
+    "minimumWithdrawals": 8,
+    "polynomialTerms": 256,
+    "records": [
+      162,
+      162
+    ],
+    "sourceCount": 12,
+    "unconditionalRecords": 0,
+    "uniformDetectionProbability": [
+      1,
+      256
+    ],
+    "unknownMasks": 1695,
+    "witness": 3510
+  },
+  {
+    "comparisons": 32768,
+    "distinguishingMasks": [
+      14043,
+      14046,
+      14067,
+      14070,
+      14235,
+      14238,
+      14259,
+      14262,
+      15579,
+      15582,
+      15603,
+      15606,
+      15771,
+      15774,
+      15795,
+      15798,
+      26331,
+      26334,
+      26355,
+      26358,
+      26523,
+      26526,
+      26547,
+      26550,
+      27867,
+      27870,
+      27891,
+      27894,
+      28059,
+      28062,
+      28083,
+      28086
+    ],
+    "exactSupportWidth": 5,
+    "existingChecker": null,
+    "groupWidth": 5,
+    "minimumWithdrawals": 10,
+    "polynomialTerms": 1024,
+    "records": [
+      486,
+      486
+    ],
+    "sourceCount": 15,
+    "unconditionalRecords": 0,
+    "uniformDetectionProbability": [
+      1,
+      1024
+    ],
+    "unknownMasks": 15961,
+    "witness": 28086
+  }
+]

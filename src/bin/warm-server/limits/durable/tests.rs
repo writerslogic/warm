@@ -119,6 +119,41 @@ fn erasure_blocks_admission_scrubs_old_bodies_and_rejects_late_completion() {
 }
 
 #[test]
+fn repeated_erasure_preserves_bodyless_markers_and_late_completion_protection() {
+    let root = tempfile::tempdir().unwrap();
+    let store = open(root.path());
+    begin(&store, "t", "old")
+        .complete(&response("first sensitive body"))
+        .unwrap();
+    let late = begin(&store, "t", "late");
+    store.erase("t", None).unwrap().unwrap().finish().unwrap();
+    store.erase("t", None).unwrap().unwrap().finish().unwrap();
+    late.complete(&response("late sensitive body")).unwrap();
+    drop(store);
+
+    let repeated = child(root.path(), "erase", None, Some("scrub-write"));
+    assert!(
+        repeated.status.success(),
+        "{}",
+        String::from_utf8_lossy(&repeated.stderr)
+    );
+    let store = open(root.path());
+    for key in ["old", "late"] {
+        assert_eq!(
+            store.begin("t", key, [7; 32]).err().unwrap().code,
+            "idempotency_reconciliation_required"
+        );
+    }
+    begin(&store, "t", "new")
+        .complete(&response("new sensitive body"))
+        .unwrap();
+    store.erase("t", None).unwrap().unwrap().finish().unwrap();
+    for path in files(root.path()) {
+        assert!(!String::from_utf8_lossy(&std::fs::read(path).unwrap()).contains("sensitive body"));
+    }
+}
+
+#[test]
 fn restart_preserves_bounds_and_does_not_shorten_recorded_ttl() {
     let retained = response("bounded body");
     for bound in [

@@ -1,0 +1,10 @@
+{
+  "schema": "warm.predictive-miniwob-refinement/1",
+  "inputs": "All six normalized task/action cells from warm-predictive-miniwob-20261103-v3; exact input hashes frozen before refinement.",
+  "model": "Each task processed separately with one common observable label. Missing empirical action evidence is unknown. Singleton-source exact probability refinement; no polynomial advantage claimed.",
+  "comparison": "Current-only probability bisimulation is an unsafe diagnostic, not a matched-withdrawal baseline. The complete source-normalized method is the strong exact control.",
+  "size": "Both packets use identical dictionaries of original state hashes and action JSON; records use dense integer state/action/target/source IDs and counts. Baseline has original records and implicit identity state map. Quotient has explicit original-state-to-block map plus one representative's records per block. Charge all dictionary and map bytes. Raw DOM data, original-episode reconstruction and future arbitrary inserts are outside this interface.",
+  "withdrawals": "Sequentially remove demonstration indices through cumulative counts 1,2,4,8,16,32,64,128. Re-minimize the retained quotient after each step and compare original-state partitions with fresh minimization of every surviving original record. Compare current distributions over each resulting common partition with exact rational readouts.",
+  "reporting": "All six cells, active-state versus sink-only merges, safe/current-only quotients, serialized byte counts, all retraction checks and raw packets. No end-to-end memory, time, agent utility, novelty or milestone qualification claim.",
+  "limits": {"states": 50000, "actions": 20000, "sources": 128, "records": 200000, "iterations": 1000}
+}

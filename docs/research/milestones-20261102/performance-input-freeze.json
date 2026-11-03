@@ -1,0 +1,29 @@
+{
+  "datasets": {
+    "coco-i2i-512-angular": 512,
+    "deep-image-96-angular": 96
+  },
+  "rows": 100000,
+  "calibrationOrdinals": [
+    0,
+    999
+  ],
+  "qualificationOrdinals": [
+    1000,
+    1999
+  ],
+  "queries": 1000,
+  "eligibility": "Fail on any nonfinite/zero selected f32 vector; no replacement or exclusion.",
+  "accuracyInputFreezeSha256": "823bc40babe774cd7361ad6bdfac3802deaa8abb34a439654c5892819bab8450",
+  "sources": {
+    "prepare_inputs.py": "56fdb301089050f759caab6419590ecaa5bb766bd731dcadc192361bf38f532f",
+    "test_prepare_inputs.py": "66de558819bffc616972a1b488564205c9292b1b17e6a6e4458acf903b21627b",
+    "PERFORMANCE.md": "160155be708d9b0a161800796b4f960fe340b7adeaed676399c85fb54a0bb50b",
+    "pyproject.toml": "a787ea1445988dd863a777b3809d79f1d38be48db3b4d6f4894059ceddd93c36",
+    "uv.lock": "e24047b5dc37b10000ee1e37034c202605e64cea85292a12930d289c205623f8"
+  },
+  "started": "2026-11-03T07:18:53Z",
+  "numpy": "2.5.4",
+  "h5py": "3.16.0",
+  "scope": "Input sealing only; calibration grid and executable run plan still must be frozen before calibration."
+}

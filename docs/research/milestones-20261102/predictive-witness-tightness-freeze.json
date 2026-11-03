@@ -1,0 +1,11 @@
+{
+  "files": {
+    "WITNESS-PLAN.json": "e408d4ed5ecf8b9ed8180b395a084d1d1de54b36d60238857ab8901b24a40620",
+    "probe.py": "76f7543882ae66c5a4ad90d425a15bcf087cd3ada70a3baca238eb4a5f11e9c8",
+    "run_witness.py": "591c833b906f0005dedd6f53c6b7cbdfff157e3a6ea7e086af4bf7997e8dee8e",
+    "test_witness_tightness.py": "9e8234edbb48b29393cd1cc4d69590318fec1658cba0ab098b6323ae558e426e",
+    "witness_tightness.py": "cfde5f03fec34714a87229f663438342c4e0938ad5cb0cbef139e96fec2ac7a1"
+  },
+  "frozenAt": "2026-11-03T14:31:17.121003+00:00",
+  "inputs": "The declared analytic family only; no task cohort or paid service."
+}

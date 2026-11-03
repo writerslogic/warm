@@ -1,0 +1,42 @@
+{
+  "benchmarkClaim": false,
+  "complete": true,
+  "consumers": [
+    {
+      "installed": {
+        "filesVerified": 60,
+        "package": "/home/davidcondrey.guest/warm-milestones-20261103/sdk-live-v2/consumer-311/.venv/lib/python3.11/site-packages/writerslogic_warm_sdk",
+        "python": "3.11.14",
+        "wheelSha256": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490"
+      },
+      "live": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 12
+      },
+      "lockSha256": "d5e48e6dc0fae98a0b981684d7e8b4427aeb69c9f3d85d2dbd1274515d63d52d",
+      "python": "3.11.14",
+      "recoveryCases": 2
+    },
+    {
+      "installed": {
+        "filesVerified": 60,
+        "package": "/home/davidcondrey.guest/warm-milestones-20261103/sdk-live-v2/consumer-314/.venv/lib/python3.14/site-packages/writerslogic_warm_sdk",
+        "python": "3.14.7",
+        "wheelSha256": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490"
+      },
+      "live": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 12
+      },
+      "lockSha256": "fc1355858b31c0e445562fb9bd678cac237854646db5db383107ee2eb54b03d2",
+      "python": "3.14.7",
+      "recoveryCases": 2
+    }
+  ],
+  "scope": "Linux arm64 installed HTTP SDK, live temporal/document APIs and two process-recovery cases per interpreter",
+  "sourceSha256": "86054a194043eb2d3b04c91aee4cfca932598036e13e77326627338a2f07b19c"
+}
