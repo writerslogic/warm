@@ -200,6 +200,7 @@ impl WarmCore {
         }
         staging.disarm();
         self.arena.replace_with_compacted(prepared, scrub)?;
+        *self.history_floor.write() = self.initial_history_floor();
         if let Some(intent) = audit_intent {
             self.audit_pending.write().push_back(intent);
         }
