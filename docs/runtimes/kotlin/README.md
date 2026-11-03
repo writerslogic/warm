@@ -63,15 +63,22 @@ Proguard/R8: the AAR ships `consumer-rules.pro` keeping JNA and the binding pack
 - `./gradlew :jvm:test` on macOS arm64 (JDK 17): 7 JUnit cases pass (typed errors, encryption with
   a plaintext scan of the store, snapshot/restore with tamper detection, suspend forms under
   concurrency, BM25 options, `titleWeight`, filters).
-- `./gradlew :android:connectedDebugAndroidTest` on an arm64-v8a emulator (Android 15, API 35,
-  running on the Apple silicon host): 2 instrumented cases pass.
+- A fresh AAR consumer on an arm64-v8a emulator (Android 15, API 35, running on the Apple
+  silicon host) passes nine lifecycle tests, including the two original Android cases.
+- Plaintext and encrypted stores pass forced process termination after completed snapshots,
+  including reopening and further writes; ten native locking/path checks also pass.
+  Source, artifacts, failures and exact scope are recorded in the
+  [qualification evidence](../../research/milestones-20261102/PLATFORMS.md).
 - `:android:assembleRelease` produces the AAR; `:sample-compose:assembleDebug` builds the sample,
   which installed on that emulator, launched, and created its store.
 - All four ABIs build with cargo-ndk (NDK r27.3, API 24).
 
 Not verified: execution of `armeabi-v7a`, `x86` and `x86_64` libraries (built and packaged, not
-run), a physical device, and Android versions other than 15. The macOS host library is built with
-`strip = debuginfo` because `strip = true` produced a dylib that macOS 27's dyld refused to load;
-Linux hosts and the Android libraries use fully stripped builds.
+run), a physical device, and Android versions other than 15. The macOS host library defaults to
+`strip = none`: both symbol and debuginfo stripping can produce misaligned Mach-O libraries
+([Rust issue #157750](https://github.com/rust-lang/rust/issues/157750)). Android builds on macOS
+disable stripping for host build dependencies through Cargo's
+[`build-override`](https://doc.rust-lang.org/cargo/reference/config.html#profilenamebuild-override);
+Android libraries and Linux host libraries retain the release profile's stripping policy.
 
 Sizes and timings: `benchmarks/results/mobile_v1.json`.

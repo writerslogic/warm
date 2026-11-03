@@ -24,7 +24,10 @@ Writes `bindings/swift/Frameworks/warm_mobileFFI.xcframework` (iOS device, iOS s
 arm64+x86_64, macOS arm64+x86_64, Mac Catalyst arm64+x86_64) and regenerates
 `Sources/WarmMemory/WarmMobile.swift` from the library's UniFFI metadata. `SLICES="ios
 ios-sim"` builds a subset; `IPHONEOS_DEPLOYMENT_TARGET` (15.0) and `MACOSX_DEPLOYMENT_TARGET`
-(12.0) set the deployment floor. Add the package by path, or publish the xcframework as a
+(12.0) set the deployment floor. The script defaults release stripping to `none`:
+even debug-info stripping can produce libraries that macOS 27 refuses to load
+([upstream Rust issue](https://github.com/rust-lang/rust/issues/157750)).
+Add the package by path, or publish the xcframework as a
 release asset and switch `Package.swift` to a `url` + `checksum` binary target.
 
 ## Use
