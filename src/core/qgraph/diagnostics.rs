@@ -330,6 +330,7 @@ impl RotationControl {
             upper_ids: graph.upper_ids.clone(),
             layers: graph.layers.clone(),
             build: graph.build.clone(),
+            repaired: graph.repaired,
         };
         let id_bytes = if graph.n < (1 << 24) - 1 { 3 } else { 4 };
         let graph_hash = rotated.structure_hash();

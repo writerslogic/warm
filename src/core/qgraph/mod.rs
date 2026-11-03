@@ -28,11 +28,13 @@ pub mod filter;
 pub(crate) mod kernels;
 mod projection;
 mod rerank;
+mod repair;
 #[cfg(not(target_arch = "wasm32"))]
 mod update;
 mod vertex;
 mod vnni;
 #[cfg(not(target_arch = "wasm32"))]
+pub use repair::{RepairParams, RepairStats};
 pub use update::{
     Consolidation, ConsolidationMode, ConsolidationPolicy, UpdatableVGraph, UpdateError,
 };
@@ -1190,6 +1192,8 @@ pub struct Graph {
     layers: Vec<Vec<Vec<u32>>>,
     /// The parameters the graph was built with; the on-disk cache records and checks them.
     build: BuildParams,
+    /// Changed by [`Graph::apply_query_repair`]: the build parameters no longer describe it.
+    repaired: bool,
 }
 
 struct GraphStructure {
@@ -1485,6 +1489,7 @@ impl Graph {
             upper_ids: structure.upper_ids,
             layers: structure.layers,
             build: params.clone(),
+            repaired: false,
         })
     }
 }
