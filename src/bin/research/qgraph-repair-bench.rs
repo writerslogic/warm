@@ -182,6 +182,33 @@ fn main() -> Result<()> {
     let train_truth = truth(&base, &train_q, dim, angular);
     let train_truth_seconds = start.elapsed().as_secs_f64();
     eprintln!("truth {eval_truth_seconds:.1}s eval, {train_truth_seconds:.1}s train");
+    // At full scale the shipped ground truth must agree with the recomputed truth.
+    let base_rows = fs::metadata(args.data.join("train.f32"))?.len() as usize / (dim * 4);
+    let shipped_agreement = if args.n == base_rows {
+        let bytes = fs::read(args.data.join("neighbors.i32"))?;
+        let width = bytes.len() / 4 / test_rows;
+        ensure!(width >= K && bytes.len() == test_rows * width * 4, "neighbors.i32 shape");
+        let shipped: Vec<u32> = bytes
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|v| i32::from_le_bytes(*v) as u32)
+            .collect();
+        let hits: usize = eval_ids
+            .iter()
+            .enumerate()
+            .map(|(qi, &row)| {
+                let s = &shipped[row as usize * width..row as usize * width + K];
+                eval_truth[qi * K..(qi + 1) * K]
+                    .iter()
+                    .filter(|id| s.contains(id))
+                    .count()
+            })
+            .sum();
+        Some(hits as f64 / (eval_ids.len() * K) as f64)
+    } else {
+        None
+    };
 
     let params = BuildParams {
         metric,
@@ -311,7 +338,8 @@ fn main() -> Result<()> {
         "search": {"k": K, "rerank": 16, "patience": 0, "screen": false, "threads": 1,
             "knobs": "SearchKnobs::OFF", "timing": "one pass over the evaluation queries per (arm, ef, repetition), arm order rotated"},
         "truth": {"eval_seconds": eval_truth_seconds, "train_seconds": train_truth_seconds,
-            "method": "exact f32 brute force over the base prefix"},
+            "method": "exact f32 brute force over the base prefix",
+            "shipped_top10_agreement_on_eval": shipped_agreement},
         "arms": arm_reports, "records": records,
     });
     fs::write(&args.out, serde_json::to_vec_pretty(&report)?)?;
