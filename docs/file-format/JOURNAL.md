@@ -38,8 +38,10 @@ segment (marker, zeros or fewer than 16 bytes) continues at offset 0 of the next
 ## Segment file sizes
 
 Format 2: exactly 1 GiB. Format 3: exactly 64 MiB. Format 4: the final segment is a multiple
-of 64 MiB, at least 64 MiB, at most 1 GiB, and grows in 64 MiB steps (every earlier segment is
-1 GiB; on Windows the engine allocates the full size). Bytes beyond the end marker are zero. A
+of 1 MiB, at least 1 MiB and at most 1 GiB. The engine creates it at 1 MiB and grows it in steps
+that double with its size up to 64 MiB and are 64 MiB beyond; releases before the 1 MiB step
+created it at 64 MiB and grew it in 64 MiB steps, and those files open unchanged (every earlier
+segment is 1 GiB; on Windows the engine allocates the full size). Bytes beyond the end marker are zero. A
 shorter file (a trimmed copy) is extended with zeros on open; a longer file is refused.
 Global journal offsets are `segment_index * segment_size + offset` (the `checkpoint`
 in [CACHES.md](CACHES.md)).

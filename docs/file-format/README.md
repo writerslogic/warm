@@ -66,7 +66,7 @@ reconstructed.
 | Arena 2 | release v0.6.1 (commit 28c4f94) | 1 GiB segments preallocated, zero-header terminator, no checksum sidecars |
 | Arena 2 + end markers + sidecars | commit bf9c322 | same manifest version; frames followed by a 16-byte end marker; `*.crc32` sidecars |
 | Arena 3 | development only | 64 MiB fixed segments; never on `main` as a written default; the reader still accepts it |
-| Arena 4 | commit fd5adf3 | 1 GiB declared segment, file grows in 64 MiB steps; `CURRENT` generations from compaction |
+| Arena 4 | commit fd5adf3 | 1 GiB declared segment, file grows in 64 MiB steps (from 1 MiB, doubling up to 64 MiB, since the 1 MiB growth step; both read); `CURRENT` generations from compaction |
 | Text segment 1 | fd5adf3 | headerless plaintext cache |
 | Text segment 2 | #111 | `WARMT` header; encrypted records |
 | Stores without `store.json` | before the schema | refused; rebuild with `warm-admin reencode` |
