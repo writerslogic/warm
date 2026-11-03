@@ -42,8 +42,9 @@ process at it, and the recovery tests interrupt each one.
 | `finished` | Indices and audit record persisted | free | run | run | ignored |
 
 The point of no return is the final writer lease. Before it, a cancellation, budget or failure
-outcome removes the staging generation. From it on, the job always publishes. A cancel that
-arrives late is recorded as `cancelRequested` on a `completed` report. A job never reports
+outcome removes the staging generation. From it on, cancellation is ignored. The job then
+publishes unless the final tail breaks the disk budget, the `no_progress` check fails, or an
+error occurs; any of these also removes the staging generation. A cancel that arrives late is recorded as `cancelRequested` on a `completed` report. A job never reports
 `cancelled` for a generation it published. A crash before `published` leaves the old
 generation live, and the next compaction removes the stale one. A crash after it opens the new
 generation with every acknowledged write.
@@ -55,8 +56,9 @@ generation with every acknowledged write.
   bounds the job's CPU share from above. Snapshot and publication are never throttled, because
   they hold the lease.
 - **Memory.** `maxMemoryBytes` bounds the estimated size of the cloned snapshot: inline record
-  size plus vector indices and ids. It is checked as each record is cloned, so the job stops
-  at the first record past the limit, before anything is staged. Documents are shared
+  size plus vector indices and ids for vectors, and the encoded length of every other record.
+  Vectors are checked one at a time as they are cloned. Other records are checked once their
+  group is cloned. Either way the job stops before anything is staged. Documents are shared
   (`Arc`), not copied, so each counts at pointer size.
 - **Temporary disk.** `maxTempDiskBytes` bounds the staging generation's allocated file
   length. Before every frame, the job predicts the post-write allocation with the arena's own
