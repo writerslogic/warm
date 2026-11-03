@@ -177,3 +177,16 @@ ae3fc4cb (main), three runs each. All six dumps are byte-identical (sha256 prefi
 match. The row is a boundary case: for `3ba21379` the evidence sessions rank 6th (score 0.3177) and
 8th, just under the 5th hit (0.3203), so a small scoring difference at the time of the original run
 flips it. Which exact build produced 14 was not determined.
+
+Evidence for this appendix and for the pre-filter reading is committed as
+`benchmarks/results/as_of_regression_check_dev.json` (one dump of 40 questions, the six dump
+hashes, the per-commit rows, and the per-question `as_of` list lengths).
+
+## Amendment: direct check of the filter-before-top-k reading
+
+The protocol's reading of `recall.rs` depends on `constrained()`, which is true when any fact has
+`valid_from` or `valid_to` set (`Stamp::windowed`); every fact here has `valid_from`. The reading
+was also checked on the output: under filter-after-top-k at fetch k, an `as_of` list could only
+contain ids from the unfiltered top 10. In 11 of 40 questions the `as_of` list contains ids outside
+the unfiltered top 10, including `gpt4_5dcc0aab` (9 of its 10). Lists shorter than 10 (3 questions)
+occur where fewer eligible facts match the lexical query; they are not a post-filter signature.
