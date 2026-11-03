@@ -124,3 +124,16 @@ recency has no adversarial case here.
   other fusion weights, other lexical/semantic splits.
 - Premise Resistance and Implicit Policy Adaptation as behaviors: only the retrieval of the
   current evidence for those queries is measured.
+
+## Amendment A (committed before the full run, after a 2-instance smoke test)
+
+Embedding 53,000 unique turns at about 32 per second on a shared, loaded machine would not fit
+the time budget. The executed scope is therefore a prefix of the registered split, in the same
+hash order: DEV = first 20 per type (40 instances, 120 queries), TEST = first 40 per type
+(80 instances, 240 queries). Run flags: `--limit-dev 20 --limit-test 40`. Arm (c) is computed on
+TEST only (DEV does not need it; the tau choice for arm d uses arms a and the simulation).
+Nothing else in the protocol changes, including the decision rule. The smoke test (2 instances
+per split and type) was a wiring check; its numbers are not used. Tie-break for "newest current
+successor": newest `effective_from`, then smallest id.
+Consequence: 240 test queries from 80 instances gives wide intervals (about plus or minus 6 points
+on a pooled rate, wider per type); a difference near the 15-point line is not settled by this run.

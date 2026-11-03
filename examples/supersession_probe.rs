@@ -409,28 +409,36 @@ fn run_instance(p: &Prepared, ctx: &Ctx, tau_star: Option<f32>) -> Result<InstRe
         })
         .collect();
 
-    // Arm c: oracle links in a real store.
-    let oracle = oracle_links(p);
-    let (store_c, _dir_c) = build(p, ctx, &oracle)?;
-    let graph_c = WarmGraph {
-        memory: &store_c,
-        cache: RefCell::new(HashMap::new()),
-    };
-    let memo_c = RefCell::new(HashMap::new());
-    let mut c = [M::default(); 3];
-    let mut cf = [M::default(); 3];
-    for dim in 0..3 {
-        let q = &ctx.matrix[p.qrows[dim]];
-        let hits = recall_ids(&store_c, qtext(inst, dim), q, RANK_K, HistoryMode::All)?;
-        c[dim] = measure(inst, &follow(&hits, &graph_c, &memo_c), &session_of);
-        cf[dim] = measure(
-            inst,
-            &recall_ids(&store_c, qtext(inst, dim), q, SHOW as u32, HistoryMode::Current)?,
-            &session_of,
-        );
+    // Arm c: oracle links in a real store (TEST only, to save DEV compute).
+    if tau_star.is_some() {
+        let oracle = oracle_links(p);
+        let (store_c, _dir_c) = build(p, ctx, &oracle)?;
+        let graph_c = WarmGraph {
+            memory: &store_c,
+            cache: RefCell::new(HashMap::new()),
+        };
+        let memo_c = RefCell::new(HashMap::new());
+        let mut c = [M::default(); 3];
+        let mut cf = [M::default(); 3];
+        for dim in 0..3 {
+            let q = &ctx.matrix[p.qrows[dim]];
+            let hits = recall_ids(&store_c, qtext(inst, dim), q, RANK_K, HistoryMode::All)?;
+            c[dim] = measure(inst, &follow(&hits, &graph_c, &memo_c), &session_of);
+            cf[dim] = measure(
+                inst,
+                &recall_ids(
+                    &store_c,
+                    qtext(inst, dim),
+                    q,
+                    SHOW as u32,
+                    HistoryMode::Current,
+                )?,
+                &session_of,
+            );
+        }
+        arms.insert("c", c);
+        arms.insert("c_filter", cf);
     }
-    arms.insert("c", c);
-    arms.insert("c_filter", cf);
 
     // Arm d: real store with the DEV-chosen tau (TEST only).
     let mut mismatch = None;
@@ -571,7 +579,10 @@ fn pooled_cva(items: &[(&Prepared, &InstResult)], arm: &str) -> f64 {
 }
 
 fn sha256_file(path: &Path) -> Result<String> {
-    Ok(Sha256::digest(fs::read(path)?).iter().map(|b| format!("{b:02x}")).collect())
+    Ok(Sha256::digest(fs::read(path)?)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect())
 }
 
 fn arg(args: &[String], name: &str) -> Option<String> {
@@ -589,6 +600,14 @@ fn main() -> Result<()> {
     let scratch =
         PathBuf::from(arg(&args, "--scratch").unwrap_or_else(|| "/Volumes/C/.hms-tmp".into()));
     let limit: Option<usize> = arg(&args, "--limit").map(|v| v.parse()).transpose()?;
+    let limit_dev: Option<usize> = arg(&args, "--limit-dev")
+        .map(|v| v.parse())
+        .transpose()?
+        .or(limit);
+    let limit_test: Option<usize> = arg(&args, "--limit-test")
+        .map(|v| v.parse())
+        .transpose()?
+        .or(limit);
     fs::create_dir_all(&scratch)?;
     let started = Instant::now();
 
@@ -596,14 +615,19 @@ fn main() -> Result<()> {
         .lines()
         .map(serde_json::from_str)
         .collect::<std::result::Result<_, _>>()?;
-    if let Some(n) = limit {
+    {
         let mut kept = HashMap::new();
         insts.retain(|i| {
             let c = kept
                 .entry((i.split.clone(), i.kind.clone()))
                 .or_insert(0usize);
             *c += 1;
-            *c <= n
+            let cap = if i.split == "dev" {
+                limit_dev
+            } else {
+                limit_test
+            };
+            cap.is_none_or(|n| *c <= n)
         });
     }
     for i in &insts {
@@ -792,7 +816,7 @@ fn main() -> Result<()> {
             "stale_data_sha256": "5f3ec375179e20e2e94469e018189188f34e2e7e5f21cbecbd99fcfa648c1876",
             "stale_hf_revision": "617c51dc200b5ab09970834144c7e51c77959af0",
         },
-        "config": { "as_of": AS_OF, "rank_k": RANK_K, "candidate_limit": CANDIDATES, "show": SHOW, "max_links": MAX_LINKS, "limit_per_split_type": limit },
+        "config": { "as_of": AS_OF, "rank_k": RANK_K, "candidate_limit": CANDIDATES, "show": SHOW, "max_links": MAX_LINKS, "limit_dev_per_type": limit_dev, "limit_test_per_type": limit_test },
         "split": { "dev_instances": dev.len(), "test_instances": test.len() },
         "tau_sweep_dev": tau_table,
         "tau_star": tau_star,
