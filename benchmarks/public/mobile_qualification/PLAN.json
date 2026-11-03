@@ -1,0 +1,9 @@
+{
+  "schema": "warm.mobile-host-qualification/1",
+  "scope": "Fresh source-built UniFFI, Kotlin/JVM and Swift packages on macOS arm64, including the bounded filtered-query production patch. This is one host platform, not complete mobile qualification.",
+  "toolchains": "Rust 1.96.0, Temurin 17.0.19+10, Gradle 8.14.6, Kotlin 2.2.21, Swift 6.4.2; use project manifests and checksum-pinned wrapper, with frozen Cargo locks.",
+  "checks": "18 existing UniFFI tests with no failure/ignore; generated Swift and both Kotlin wrapper variants match committed interfaces after trailing-whitespace normalization; host native library packaged in a fresh JAR consumer running all seven existing Kotlin tests; macOS XCFramework built by the existing script, copied into a fresh Swift package consumer running all seven existing tests.",
+  "ownership": "Build only isolated source copies and dedicated targets. Do not modify existing frozen jobs or the Intel soak. Wait until the arm64 serving recalibration and its raw-response audit have stopped before heavy compilation.",
+  "coverage": "Existing tests cover lifecycle, replacement at UniFFI level, filters, encryption, snapshot restore/tamper detection, typed errors and concurrent async calls. Keep exact source, locks, tool versions, generated-interface comparisons, archive/member hashes, reports and failures.",
+  "limits": "No Android/iOS/visionOS/Catalyst execution, x64 execution, legacy migration or process-death recovery is inferred. Those remain separate open gates. No paid services or publication."
+}

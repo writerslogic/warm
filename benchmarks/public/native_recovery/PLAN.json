@@ -1,0 +1,10 @@
+{
+  "schema": "warm.native-binding-recovery/1",
+  "platform": "macOS arm64; reuse the successfully qualified C archive, Go source consumer, bundled Java jar and .NET package with every artifact hash checked.",
+  "writeBoundary": "One writer per binding inserts a 32-record batch and flushes, replaces 16 records and flushes, deletes eight records and flushes. Emit exact acknowledgements after successful flush; the parent fsyncs each acknowledgement into a ledger before forced termination at the final ready boundary.",
+  "termination": ["SIGKILL", "SIGTERM"],
+  "verification": "All four bindings independently open every killed writer's store, check 24 surviving IDs with exact text and revision metadata and eight absent deleted IDs, then perform a new flushed write and verify it after close/reopen. Eight writer/signal cases and 32 cross-language verifications.",
+  "limits": "Writer readiness 120 seconds; shutdown 30 seconds; verifier 120 seconds; compiler command 900 seconds; bounded 16KiB writer protocol. Preserve logs and stores on failure.",
+  "scope": "Flushed document API boundaries, process death and resumed writes on this OS/artifact. Not arbitrary mid-mutation kill, power-loss, format migration, encryption or other-platform qualification. Existing API suites cover additional semantics separately.",
+  "execution": "Local/free tools only. Wait for C-family and dense diagnostic terminal receipts to avoid overlapping earlier local work. Refuse unqualified artifact hashes or a failed C-family receipt. Do not rebuild or load the Intel soak."
+}
