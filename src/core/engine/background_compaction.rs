@@ -335,7 +335,6 @@ impl JobState {
     }
 
     fn finish(&self, report: CompactionReport) {
-        self.set_stage(CompactionStage::Finished);
         *self.result.lock().unwrap_or_else(PoisonError::into_inner) = Some(report);
         self.done.notify_all();
     }
@@ -439,6 +438,7 @@ impl WarmCore {
                         .unwrap_or_else(|| "unknown panic".into());
                     Err(anyhow::anyhow!("compaction worker panicked: {reason}"))
                 });
+                state.set_stage(CompactionStage::Finished);
                 let report = state.report(&outcome);
                 // Released before the report is visible, so `wait` returning means the store
                 // lock is no longer held on this thread's behalf.
