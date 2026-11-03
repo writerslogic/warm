@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashSet;
+use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 
 use anyhow::{ensure, Context, Result};
 use serde::Serialize;
 
+use super::background_compaction::{CompactionStage, JobState, Stop};
 use super::{mutation::Mutation, WarmCore};
 use crate::core::documents::StoredDocument;
 use crate::core::storage::StagedArena;
@@ -54,6 +56,24 @@ struct Snapshot {
     document_checkpoint: Option<Vec<u8>>,
 }
 
+/// Estimated heap and inline bytes of a cloned record other than a live vector: its inline
+/// size plus its JSON-encoded length.
+fn retained_bytes(mutation: &Mutation) -> Result<usize> {
+    struct Count(usize);
+    impl std::io::Write for Count {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0 += bytes.len();
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut count = Count(size_of::<Mutation>());
+    serde_json::to_writer(&mut count, mutation)?;
+    Ok(count.0)
+}
+
 #[derive(Serialize)]
 enum DocumentMutation<'a> {
     Document(crate::core::documents::DocumentWithText<'a>),
@@ -61,7 +81,7 @@ enum DocumentMutation<'a> {
 
 impl WarmCore {
     pub fn compact(&self) -> Result<()> {
-        self.compact_impl(|| {}, || {}, false)
+        self.compact_impl(|| {}, || {}, false, &JobState::foreground())
     }
 
     /// Compacts and then physically erases what the compaction replaced: the old generation
@@ -74,7 +94,7 @@ impl WarmCore {
     /// that never held them and was purged at the same point.
     pub fn compact_scrubbing(&self) -> Result<()> {
         self.sync_text_segment()?;
-        self.compact_impl(|| {}, || {}, true)
+        self.compact_impl(|| {}, || {}, true, &JobState::foreground())
     }
 
     /// Rebuilds the state a delete leaves shaped by history rather than by the live set: the
@@ -110,13 +130,30 @@ impl WarmCore {
             .rebuild_canonical(&self.storage_path.join("documents.text"))
     }
 
-    fn compact_impl(
+    pub(super) fn compact_impl(
         &self,
         after_snapshot: impl FnOnce(),
         before_publication: impl FnOnce(),
         scrub: bool,
+        job: &JobState,
     ) -> Result<()> {
-        let _compaction = self.compaction.lock();
+        let _compaction = if job.background() {
+            self.compaction.try_lock().ok_or(Stop::Busy)?
+        } else {
+            self.compaction.lock()
+        };
+        job.set_stage(CompactionStage::Snapshot);
+        job.check_cancel()?;
+        if !scrub {
+            // A scrubbing compaction overwrites leftovers before unlinking them
+            // (`scrub_unreferenced`); any other compaction just removes them.
+            match self.arena.remove_unreferenced_generations() {
+                Ok(bytes) => job
+                    .stale_bytes
+                    .store(bytes, std::sync::atomic::Ordering::Release),
+                Err(error) => tracing::warn!(%error, "stale arena generation cleanup failed"),
+            }
+        }
         // A checkpoint records the slots as they are, so a scrubbing compaction that writes one
         // lays them out canonically first: its checkpoint is then the one a store that never
         // held the purged documents writes.
@@ -130,27 +167,42 @@ impl WarmCore {
             .file_name()
             .map(|name| name.to_string_lossy().into_owned())
             .context("staging generation has no name")?;
-        let snapshot = self.compaction_snapshot(&staged_name)?;
+        let snapshot = self.compaction_snapshot(&staged_name, job)?;
         let (generation, mut cursor) = snapshot.checkpoint;
         after_snapshot();
+        job.set_stage(CompactionStage::Staging);
+        job.frames_total.store(
+            (snapshot.mutations.len() + snapshot.documents.len()) as u64,
+            Relaxed,
+        );
         let mut arena = StagedArena::new(staging.path(), Some(&self.arena))?;
+        let checkpoint_len = snapshot.document_checkpoint.as_ref().map_or(0, Vec::len);
         if let Some(bytes) = &snapshot.document_checkpoint {
+            job.check_disk(arena.capacity_after_frame(0), checkpoint_len)?;
             // Durable (file and directory synced) before the generation can be published.
             crate::core::durable_file::atomic_write(
                 &staging.path().join(super::image::FILE),
                 bytes,
             )?;
-        }
-        for mutation in snapshot.mutations {
-            self.write_compaction_frame(&mut arena, &[mutation])?;
+            job.bytes_written.store(checkpoint_len as u64, Relaxed);
         }
         let mut payload = Vec::new();
+        for mutation in snapshot.mutations {
+            let payload = self.transaction_payload(&[mutation])?;
+            self.stage_frame(
+                &mut arena,
+                &self.maybe_encrypt(&payload)?,
+                checkpoint_len,
+                job,
+            )?;
+        }
         for document in &snapshot.documents {
             // A document deleted since the snapshot has had its text zeroed; the delete is in
             // the tail, which the replay below applies, so it is simply not carried over.
             {
                 let store = self.documents.read();
                 if store.is_deleted(document) {
+                    job.frames_written.fetch_add(1, Relaxed);
                     continue;
                 }
                 let binary = match self.journal {
@@ -176,30 +228,81 @@ impl WarmCore {
                     )?;
                 }
             }
-            arena.write_slice(&self.maybe_encrypt(&payload)?)?;
+            self.stage_frame(
+                &mut arena,
+                &self.maybe_encrypt(&payload)?,
+                checkpoint_len,
+                job,
+            )?;
         }
         let mut prepared = arena.finish()?.prepare_compacted()?;
+        job.set_stage(CompactionStage::CatchingUp);
+        let mut tail_check = |capacity: usize, _raw: usize| -> Result<()> {
+            job.check_disk(capacity, checkpoint_len)?;
+            job.tail_frames.fetch_add(1, Relaxed);
+            Ok(())
+        };
         for _ in 0..2 {
+            job.check_cancel()?;
             let end = {
                 let _transaction = self.mutation_gate.maintenance();
                 self.compaction_end(&generation)?
             };
-            self.arena
-                .replay_compaction_tail(&mut prepared, &mut cursor, end)?;
+            self.arena.replay_compaction_tail_checked(
+                &mut prepared,
+                &mut cursor,
+                end,
+                &mut tail_check,
+            )?;
+            job.throttle();
         }
+        #[cfg(test)]
+        crate::core::storage::compaction_crash_point("caught-up");
         before_publication();
+        job.check_cancel()?;
+        job.set_stage(CompactionStage::Publishing);
+        // The point of no return: from the final lease on, cancellation is not observed.
         let _transaction = self.mutation_gate.maintenance();
         let end = self.compaction_end(&generation)?;
-        self.arena
-            .replay_compaction_tail(&mut prepared, &mut cursor, end)?;
+        self.arena.replay_compaction_tail_checked(
+            &mut prepared,
+            &mut cursor,
+            end,
+            &mut tail_check,
+        )?;
+        if job.require_reclaim() {
+            let written = prepared.stats().used_bytes.saturating_add(checkpoint_len);
+            let live_checkpoint = std::fs::metadata(self.arena.data_dir().join(super::image::FILE))
+                .map_or(0, |meta| meta.len() as usize);
+            let live = end.saturating_add(live_checkpoint);
+            if written >= live {
+                return Err(Stop::NoProgress(format!(
+                    "the compacted generation ({written} bytes) is not smaller than the live one ({live} bytes)"
+                ))
+                .into());
+            }
+        }
         let audit_intent = self.audit_intent(crate::core::audit::AuditOp::Compact, "");
         if let Some(intent) = &audit_intent {
             let mutations = [Mutation::AuditPending(intent.clone())];
             self.validate_audit_transitions(&mutations)?;
             prepared.append_frame(&self.maybe_encrypt(&self.transaction_payload(&mutations)?)?)?;
         }
+        job.bytes_written.store(
+            (prepared.stats().used_bytes.saturating_add(checkpoint_len)) as u64,
+            Relaxed,
+        );
+        match self.arena.generation_disk_bytes() {
+            Ok(bytes) => job.disk_before.store(bytes, Relaxed),
+            Err(error) => tracing::warn!(%error, "live generation size unavailable"),
+        }
         staging.disarm();
-        self.arena.replace_with_compacted(prepared, scrub)?;
+        let replaced = self.arena.replace_with_compacted(prepared, scrub);
+        if self.arena.checkpoint().0 == staged_name {
+            job.published
+                .store(true, std::sync::atomic::Ordering::Release);
+        }
+        replaced?;
         if let Some(intent) = audit_intent {
             self.audit_pending.write().push_back(intent);
         }
@@ -212,6 +315,13 @@ impl WarmCore {
         // then finds identical metadata and writes nothing.
         let checkpoint = self.arena.checkpoint();
         _transaction.release();
+        job.set_stage(CompactionStage::Persisting);
+        #[cfg(test)]
+        crate::core::storage::compaction_crash_point("released");
+        match self.arena.generation_disk_bytes() {
+            Ok(bytes) => job.disk_after.store(bytes, Relaxed),
+            Err(error) => tracing::warn!(%error, "compacted generation size unavailable"),
+        }
         crate::core::error::after_commit(
             "compaction index persistence",
             self.persist_indices_detached(checkpoint),
@@ -229,16 +339,45 @@ impl WarmCore {
                 self.canonicalize_derived_state(!canonical_first),
             )?;
         }
+        #[cfg(test)]
+        crate::core::storage::compaction_crash_point("finished");
         Ok(())
     }
 
-    fn compaction_snapshot(&self, staged_name: &str) -> Result<Snapshot> {
+    /// Writes one staged frame within the job's disk budget, observing cancellation and the
+    /// CPU budget between frames (no lock is held here).
+    fn stage_frame(
+        &self,
+        arena: &mut StagedArena,
+        payload: &[u8],
+        checkpoint_len: usize,
+        job: &JobState,
+    ) -> Result<()> {
+        job.check_cancel()?;
+        job.check_disk(arena.capacity_after_frame(payload.len()), checkpoint_len)?;
+        arena.write_slice(payload)?;
+        let written = job.frames_written.fetch_add(1, Relaxed) + 1;
+        job.bytes_written.fetch_add(
+            (payload.len() + crate::core::storage::HEADER_SIZE) as u64,
+            Relaxed,
+        );
+        #[cfg(test)]
+        if written == 1 {
+            crate::core::storage::compaction_crash_point("staging");
+        }
+        let _ = written;
+        job.throttle();
+        Ok(())
+    }
+
+    fn compaction_snapshot(&self, staged_name: &str, job: &JobState) -> Result<Snapshot> {
         // Built before any lock is held: the snapshot below reads the store under the shards
         // guard, and a store still served from its checkpoint must not be rebuilt there.
         self.hydrate_documents()?;
         let _transaction = self.mutation_gate.maintenance();
         let shards = self.shards.read();
         let shard_vectors = shards.count();
+        let mut retained = 0u64;
         let mut vectors = Vec::new();
         let composite_ids: HashSet<_> = self
             .composite_memory
@@ -257,6 +396,10 @@ impl WarmCore {
                 if !id.starts_with(crate::core::documents::CHUNK_PREFIX)
                     && !composite_ids.contains(id)
                 {
+                    job.account_memory(
+                        &mut retained,
+                        size_of::<Mutation>() + id.len() + vector.indices.len() * size_of::<u32>(),
+                    )?;
                     vectors.push((id.clone(), vector.clone()));
                 }
             }
@@ -295,11 +438,16 @@ impl WarmCore {
             } else {
                 None
             };
-            let documents = if checkpoint.is_some() {
+            let documents: Vec<_> = if checkpoint.is_some() {
                 Vec::new()
             } else {
                 store.shared_values().collect()
             };
+            job.account_memory(
+                &mut retained,
+                documents.len() * size_of::<Arc<StoredDocument>>()
+                    + checkpoint.as_ref().map_or(0, Vec::len),
+            )?;
             (documents, store.text_segment(), checkpoint)
         };
         mutations.extend(self.graph.snapshot().into_iter().map(Mutation::Relation));
@@ -347,6 +495,14 @@ impl WarmCore {
                 .cloned()
                 .map(Mutation::AuditPending),
         );
+        // Every other record is cloned in its group above; its estimate is its encoded length.
+        let vector_records = mutations
+            .iter()
+            .take_while(|m| matches!(m, Mutation::Vector { .. } | Mutation::DeleteAtom { .. }))
+            .count();
+        for mutation in &mutations[vector_records..] {
+            job.account_memory(&mut retained, retained_bytes(mutation)?)?;
+        }
         Ok(Snapshot {
             checkpoint: self.arena.checkpoint(),
             mutations,
@@ -354,16 +510,6 @@ impl WarmCore {
             text,
             document_checkpoint,
         })
-    }
-
-    fn write_compaction_frame(
-        &self,
-        arena: &mut StagedArena,
-        mutations: &[Mutation],
-    ) -> Result<()> {
-        let payload = self.transaction_payload(mutations)?;
-        arena.write_slice(&self.maybe_encrypt(&payload)?)?;
-        Ok(())
     }
 
     fn compaction_end(&self, generation: &str) -> Result<usize> {
@@ -384,7 +530,7 @@ impl WarmCore {
 }
 
 #[cfg(test)]
-mod tests {
+pub(super) mod tests {
     use super::*;
     use std::sync::mpsc;
     use std::time::Duration;
@@ -416,7 +562,7 @@ mod tests {
         };
         write("snapshot");
         let error = core
-            .compact_impl(|| write("tail"), || {}, false)
+            .compact_impl(|| write("tail"), || {}, false, &JobState::foreground())
             .unwrap_err();
         assert!(error.is::<crate::CommittedMutationError>());
         let intents: Vec<_> = core
@@ -434,11 +580,11 @@ mod tests {
         Ok(())
     }
 
-    fn config() -> WarmConfig {
+    pub(in crate::core::engine) fn config() -> WarmConfig {
         super::super::fixture_config(2)
     }
 
-    fn configurations() -> impl Iterator<Item = WarmConfig> {
+    pub(in crate::core::engine) fn configurations() -> impl Iterator<Item = WarmConfig> {
         [false, true]
             .into_iter()
             .filter(|encrypted| !encrypted || cfg!(feature = "security"))
@@ -453,7 +599,7 @@ mod tests {
             })
     }
 
-    fn document(id: &str, version: &str) -> DocumentInput {
+    pub(in crate::core::engine) fn document(id: &str, version: &str) -> DocumentInput {
         serde_json::from_value(json!({
             "id": id, "version": version, "text": "needle durable source",
             "sourceUri": format!("source:{version}"), "metadata": {"version": version},
@@ -494,6 +640,7 @@ mod tests {
                         },
                         || {},
                         true,
+                        &JobState::foreground(),
                     )
                     .expect_err("canonical replacement discarded failed scrub cleanup");
                 assert!(error.is::<crate::CommittedMutationError>());
@@ -574,6 +721,7 @@ mod tests {
                     std::fs::create_dir(dir.path().join("indices.json")).unwrap();
                 },
                 false,
+                &JobState::foreground(),
             )
             .unwrap_err();
         assert!(error.is::<crate::CommittedMutationError>(), "{error:#}");
@@ -590,7 +738,7 @@ mod tests {
         Ok(())
     }
 
-    fn seed(core: &WarmCore) -> Result<()> {
+    pub(in crate::core::engine) fn seed(core: &WarmCore) -> Result<()> {
         core.memorize_document(document("replace", "old"))?;
         core.memorize_document(document("delete", "old"))?;
         core.memorize("vector".into(), core.encode_text("original"))?;
@@ -602,7 +750,7 @@ mod tests {
         Ok(())
     }
 
-    fn mutate(core: &WarmCore) -> Result<()> {
+    pub(in crate::core::engine) fn mutate(core: &WarmCore) -> Result<()> {
         core.memorize_documents(vec![document("replace", "new"), document("insert", "new")])?;
         core.delete_document("delete")?;
         core.memorize("vector".into(), core.encode_text("replacement"))?;
@@ -611,7 +759,7 @@ mod tests {
         Ok(())
     }
 
-    fn assert_current(core: &WarmCore) -> Result<serde_json::Value> {
+    pub(in crate::core::engine) fn assert_current(core: &WarmCore) -> Result<serde_json::Value> {
         let options = SearchOptions {
             embedding: Some(vec![1.0, 0.0]),
             source_uri: Some("source:new".into()),
@@ -662,6 +810,7 @@ mod tests {
                 },
                 || {},
                 false,
+                &JobState::foreground(),
             );
             writer.join().unwrap()?;
             compacted?;
@@ -696,7 +845,7 @@ mod tests {
             Some(config()),
         )?;
         core.memorize_document(document("replace", "old"))?;
-        let snapshot = core.compaction_snapshot("gen-test")?;
+        let snapshot = core.compaction_snapshot("gen-test", &JobState::foreground())?;
         let owner = core.documents.read().shared_values().next().unwrap();
         assert!(Arc::ptr_eq(&owner, &snapshot.documents[0]));
         let dense_pointer = owner.chunks[0].embedding.as_ref().unwrap().as_ptr();
@@ -725,7 +874,12 @@ mod tests {
             .unwrap();
         let core = WarmCore::new(1024, Some(root), Some(config))?;
         seed(&core)?;
-        core.compact_impl(|| mutate(&core).unwrap(), || {}, false)
+        core.compact_impl(
+            || mutate(&core).unwrap(),
+            || {},
+            false,
+            &JobState::foreground(),
+        )
     }
 
     #[test]
@@ -808,6 +962,7 @@ mod tests {
             },
             || {},
             false,
+            &JobState::foreground(),
         )
     }
 
@@ -907,6 +1062,7 @@ mod tests {
             },
             || {},
             false,
+            &JobState::foreground(),
         )?;
         other.join().unwrap()?;
         let expected = assert_current(&core)?;
@@ -964,6 +1120,7 @@ mod tests {
                     core.memorize_document(document("late", "late")).unwrap();
                 },
                 false,
+                &JobState::foreground(),
             )?;
             let expected =
                 serde_json::to_value(core.search_documents("needle", &Default::default())?)?;
