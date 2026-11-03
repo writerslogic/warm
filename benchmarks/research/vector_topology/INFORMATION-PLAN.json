@@ -1,0 +1,26 @@
+{
+  "schema": "warm.information-navigation/1",
+  "hypothesis": "Among equally bounded, already scored but unexpanded vertices, access to unseen low-indegree neighbors predicts missing-neighbor recovery better than query distance alone.",
+  "scope": "Mechanistic falsification on exposed historical GloVe traces, not a shipping search implementation, novelty proof, held-out result, or latency claim.",
+  "inputs": [
+    {"directory": "/Volumes/A/.hms-bench-cache/warm-navigation-10k-20261102-v1", "rows": 10000},
+    {"directory": "/Volumes/A/.hms-bench-cache/warm-navigation-20261102-v1", "rows": 100000}
+  ],
+  "efs": [128, 256],
+  "queriesPerEf": 1000,
+  "shadowRows": 256,
+  "shadowSelection": "Closest 256 offered, unexpanded vertices by recorded distance then stored ID; includes rejected and evicted vertices. No oracle or answer IDs available to selection.",
+  "newVectorBudgets": [256, 512],
+  "maximumExpansions": 32,
+  "policies": ["distance", "unseen_count", "unseen_rarity", "alternating_distance_rarity"],
+  "unseen_count": "Greedily maximize number of neighbors not evaluated by the original search or selected in this extension; ties use distance then stored ID.",
+  "unseen_rarity": "Greedily maximize sum of 1/(1+directed indegree) over those unseen neighbors; ties use distance then stored ID.",
+  "alternating_distance_rarity": "Alternate distance and unseen_rarity, beginning with distance; no fit or learned parameters.",
+  "extension": "Expand only the fixed shadow vertices; consume previously unseen neighbor IDs in original adjacency order, stopping at the vector or expansion cap. No recursive extension. Selection never receives the exact oracle. Scoring is modeled, not executed.",
+  "outcome": "Oracle coverage of original final top-10 union newly encountered IDs is a candidate-recall ceiling. Report per-query gain, wins/ties/losses, worst coverage, below-90% count, all selected IDs, expansions, new-vector counts, adjacency reads and priority-neighbor visits. This does not establish final reranked recall.",
+  "cost": "All methods share the same shadow, adjacency cache and expansion/vector caps. Report common cache reads and each policy's extra priority scans separately; equal vector caps do not imply equal compute. Full indegree table and graph are counted as required metadata. No speedup inferred from this probe.",
+  "promotion": "A non-distance policy must recover at least 10% more misses than distance in BOTH 100K ef cells at BOTH budgets, with worst candidate coverage no lower in any of the eight size/ef/budget cells. Otherwise reject this proxy family for native implementation. Passing only licenses a native experiment against distance continuation, current two-hop serving search, and adaptive-beam prior art at measured equal quality and total work.",
+  "failureRule": "Freeze source and protocol before running; preserve all cells, including losses. Do not tune policies, shadow size, budgets or thresholds after results. Abort on input hash mismatch, malformed trace, resource failure or correctness-test failure.",
+  "limits": {"seconds": 900, "maxRssBytes": 2147483648},
+  "paidServices": false
+}
