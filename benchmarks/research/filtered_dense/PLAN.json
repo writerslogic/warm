@@ -1,0 +1,13 @@
+{
+  "schema": "warm.filtered-dense-diagnostic/1",
+  "question": "Does the trained bounding-box tree cause the exposed filtered-query slowdown by traversing rows before applying metadata eligibility?",
+  "evidence": "DEEP calibration reports documentIndexTrained=true before/after maintenance, false after 200 mutations and reopen. Filtered median latency is much higher in the trained states. This is correlation until the same-store counterfactual is run.",
+  "inputs": "The already exposed 100K COCO/DEEP train vectors and first 32 calibration queries only. Do not open test.f32 or any held-out query.",
+  "comparison": "Same in-memory DocumentStore, immutable corpus and query; alternate original trained DenseIndex versus the existing exact postings scan by temporarily disabling only dense_index in an isolated test. Same score implementation, complete metadata filtering, payload, k=10, candidate limit=100 and minimum=-1. No product-code change or new search algorithm.",
+  "states": ["baseline", "100 replacements plus 100 deletions, then retrained"],
+  "filters": ["all", "10pct", "1pct", "empty"],
+  "repetitions": 3,
+  "checks": "All fields of every result must match the existing exact scan. Save every query's paired timings, source hashes and index dimensions. Independently count production tree metadata-predicate visits and exact vector dots for the same query/filter; no replicated tree algorithm.",
+  "interpretation": "Shared-host development diagnosis, not original research, competitor qualification or a performance claim. Existing calibration/soak binaries stay frozen. Any serving fix requires its own validation and new qualification source receipts.",
+  "resources": "Run only after macOS C-family checks finish, which already wait for native Python and guest SDK checks; two Cargo build jobs. No Intel-soak workload or paid service."
+}

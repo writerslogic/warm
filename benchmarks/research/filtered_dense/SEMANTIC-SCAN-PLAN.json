@@ -1,0 +1,9 @@
+{
+  "schema": "warm.filtered-semantic-scan-screen/1",
+  "hypothesis": "Capturing documents once and materializing only the top candidate chunks removes avoidable bookkeeping from pure semantic filtered scans while preserving canonical scores and fusion exactly.",
+  "scope": "Conventional implementation optimization, not original research or a qualified serving advantage. Isolated source copy only until exactness and timing gates pass.",
+  "cohort": "COCO-512 and DEEP-96: frozen 100K training rows and first 32 exposed calibration queries; three rotated-order repetitions; untrained/trained baseline and untrained/trained maintained churn; all, 10%, 1% and empty filters. 32 cells and 3072 paired result comparisons.",
+  "control": "Byte-preserved current capture/execution functions in the same build. Retain canonical ordered f64 dot products, thresholds, candidate limit, fusion, tie breaks and captured owner snapshots. No query-result cache or approximate scoring.",
+  "gates": "All complete results equal the preserved implementation. At least 1.10x median full-query speedup in every 10% and 1% cell; no more than 15% median regression on unchanged all/empty controls. Existing native document tests pass, plus threshold, candidate-limit, multi-chunk, missing-embedding and snapshot mutation boundaries.",
+  "resources": "Same core fixture and 1024-byte repeated text as previous diagnostics; neither network/durability timing nor serving payload working-set is represented. Record the complete source/input hashes, raw results, failures and temporary candidate counts. Wait for the local iOS build to finish before timed runs. No held-out inputs, Intel soak work, paid services or publication."
+}
