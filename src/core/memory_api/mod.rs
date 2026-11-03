@@ -66,6 +66,11 @@ use std::sync::Arc;
 use crate::core::WarmCore;
 use index::Index;
 
+/// The memory-API ingest time a stored document records, if it is a fact.
+pub(crate) fn ingest_time(version: &str, metadata: &serde_json::Value) -> Option<Millis> {
+    stamp::Stamp::from_parts(version, metadata).map(|stamp| stamp.ingest)
+}
+
 #[cfg(feature = "conversation-memory")]
 pub use conversation::*;
 pub use json::OPERATIONS;

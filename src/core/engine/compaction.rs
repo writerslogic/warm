@@ -303,6 +303,7 @@ impl WarmCore {
                 .store(true, std::sync::atomic::Ordering::Release);
         }
         replaced?;
+        *self.history_floor.write() = self.initial_history_floor();
         if let Some(intent) = audit_intent {
             self.audit_pending.write().push_back(intent);
         }
