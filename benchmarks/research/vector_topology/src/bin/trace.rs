@@ -13,6 +13,9 @@ use writerslogic_warm::core::qgraph::{
     diagnostics::TraversalDiagnostic, BuildParams, Graph, SearchKnobs, VGraph, VSearchParams,
 };
 
+#[path = "trace/navigation.rs"]
+mod navigation;
+
 const ROWS: usize = 100_000;
 const DIM: usize = 100;
 const QUERIES: usize = 1000;
@@ -43,7 +46,7 @@ fn normalized(row: &[f32]) -> Result<Vec<f64>> {
     Ok(row.iter().map(|&x| (f64::from(x) / scale) / norm).collect())
 }
 
-fn oracle(path: &Path) -> Result<Vec<Vec<u32>>> {
+fn oracle(path: &Path, rows: usize) -> Result<Vec<Vec<u32>>> {
     let mut queries = BTreeMap::new();
     for line in BufReader::new(fs::File::open(path)?).lines() {
         let row: Value = serde_json::from_str(&line?)?;
@@ -53,7 +56,7 @@ fn oracle(path: &Path) -> Result<Vec<Vec<u32>>> {
         let query = row["query"].as_u64().context("oracle query")? as usize;
         ensure!(
             query < QUERIES
-                && row["dataset"] == "glove-100000"
+                && row["dataset"] == format!("glove-{rows}")
                 && row["queryId"] == format!("query-{query}"),
             "invalid oracle query identity"
         );
@@ -69,7 +72,7 @@ fn oracle(path: &Path) -> Result<Vec<Vec<u32>>> {
             })
             .collect::<Result<Vec<_>>>()?;
         ensure!(
-            hits.len() == K && hits.iter().all(|&id| id < ROWS as u32),
+            hits.len() == K && hits.iter().all(|&id| id < rows as u32),
             "invalid oracle hits"
         );
         let mut unique = hits.clone();
@@ -89,7 +92,7 @@ fn oracle(path: &Path) -> Result<Vec<Vec<u32>>> {
 
 fn rank(ids: &[u32], stored: &[f32], q: &[f64]) -> Result<Vec<u32>> {
     ensure!(
-        ids.len() == FETCH && ids.iter().all(|&id| id < ROWS as u32),
+        ids.len() == FETCH && ids.iter().all(|&id| (id as usize) < stored.len() / DIM),
         "invalid candidates"
     );
     let mut distinct = ids.to_vec();
@@ -157,17 +160,24 @@ fn main() -> Result<()> {
     let args: Vec<_> = std::env::args_os().collect();
     ensure!(
         args.len() == 6,
-        "usage: trace CORPUS QUERIES ORACLE OUTPUT default|degree64"
+        "usage: trace CORPUS QUERIES ORACLE OUTPUT default|degree64|navigation|navigation10k"
     );
     let mode = args[5].to_str().context("mode")?;
     let (degree, build_ef, efs): (usize, usize, &[usize]) = match mode {
         "default" => (32, 128, &[512, 2048]),
         "degree64" => (64, 500, &[512]),
+        "navigation" | "navigation10k" => (32, 128, &[128, 256]),
         _ => anyhow::bail!("unsupported diagnostic mode"),
     };
-    let corpus = matrix(Path::new(&args[1]), ROWS)?;
+    let rows = if mode == "navigation10k" {
+        10_000
+    } else {
+        ROWS
+    };
+    let mut corpus = matrix(Path::new(&args[1]), ROWS)?;
+    corpus.truncate(rows * DIM);
     let queries = matrix(Path::new(&args[2]), QUERIES)?;
-    let truth = oracle(Path::new(&args[3]))?;
+    let truth = oracle(Path::new(&args[3]), rows)?;
     let stored = corpus
         .chunks_exact(DIM)
         .map(normalized)
@@ -208,8 +218,11 @@ fn main() -> Result<()> {
     writeln!(
         output,
         "{}",
-        json!({"type":"start", "mode":mode, "degree":degree, "buildEf":build_ef, "graphHash":graph_hash, "buildNs":build_ns, "encodeNs":encode_ns, "indexBytes":index.index_bytes(), "indexBreakdown":index.memory_breakdown(), "scope":"shared-host standalone diagnostic; not study timing"})
+        json!({"type":"start", "mode":mode, "rows":rows, "degree":degree, "buildEf":build_ef, "graphHash":graph_hash, "buildNs":build_ns, "encodeNs":encode_ns, "indexBytes":index.index_bytes(), "indexBreakdown":index.memory_breakdown(), "scope":"shared-host standalone diagnostic; not study timing"})
     )?;
+    if mode == "navigation" || mode == "navigation10k" {
+        return navigation::run(&graph, &mut index, &stored, &q64, &q32, &truth, &mut output);
+    }
     for &ef in efs {
         let params = VSearchParams {
             ef,
