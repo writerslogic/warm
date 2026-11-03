@@ -54,7 +54,7 @@
     "build": "node scripts/build.mjs",
     "build:ts": "tsc -p tsconfig.json",
     "test": "npm run test:node",
-    "test:node": "node --test test/node/",
+    "test:node": "node --test test/node/node.test.mjs",
     "test:deno": "deno test --allow-read --allow-write --allow-env test/deno/",
     "test:bun": "bun test test/bun/",
     "test:browser": "node test/browser/run.mjs",

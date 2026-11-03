@@ -1,0 +1,10 @@
+{
+  "schema": "warm.wasm-package-qualification/1",
+  "scope": "Fresh macOS arm64 build and installed package: scalar/SIMD WebAssembly, Node 22.23.4, Deno 2.9.6, Bun 1.4.1; Chrome 156.0.8078.80 and Firefox 159.0. No other native platform or browser is inferred.",
+  "source": "Promoted bounded dense-query production logic and existing binding, wrapper, lifecycle and browser tests; lock both Rust and npm dependencies before building.",
+  "checks": "All 18 shared lifecycle cases on each installed runtime; packed exports/types checks without optional-runtime skips; seven browser cases plus OPFS/IndexedDB persistence/offline demos per browser; both webpack entry points in Chrome; four Rust browser tests per browser.",
+  "recovery": "For each of three runtimes, plaintext/PBKDF2/Argon2id, and SIGKILL/SIGTERM: 32 inserts/save acknowledgement, 16 replacements/save acknowledgement, eight deletions/save acknowledgement; parent fsyncs all acknowledgements then kills the still-open writer. Three runtimes independently reopen copies of each crash image, verify all 24 surviving original records and eight absences, then save a new record and close/reopen it. Eighteen writer cases and 54 readers. This tests the completed-save boundary, not arbitrary mid-save or power loss.",
+  "encryption": "Public synthetic passphrase, PBKDF2 1000 iterations or default Argon2id test parameters; this is API/recovery compatibility, not a KDF security-strength claim.",
+  "gate": "All declared checks pass with zero unexpected skips/failures, immutable source/lock/artifact verification, exact recovery records. Preserve failures. No paid services, publication or changes to the Intel soak.",
+  "filteredRegression": "Both scalar and automatic SIMD: filtered vector results exactly match an untrained reference across training, mixed missing embeddings, replacement changing eligibility, deletion, insertion, retraining and snapshot reopen."
+}

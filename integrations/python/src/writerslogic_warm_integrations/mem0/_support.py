@@ -33,6 +33,7 @@ IDENTITY_KEYS = frozenset(ENTITY_PARAMS) | {"actor_id"}
 PROMOTED = ("user_id", "agent_id", "run_id", "actor_id", "role", "attributed_to", "expiration_date")
 _CORE_KEYS = frozenset({"data", "hash", "created_at", "updated_at", "id", "text_lemmatized", BUCKET_KEY, *PROMOTED})
 DEFAULT_BUCKETS = 32
+_UNSET = object()
 
 
 # --------------------------------------------------------------------------- validation
