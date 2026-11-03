@@ -147,6 +147,10 @@ name = "vector_record_query"
 harness = false
 
 [[example]]
+name = "supersession_probe"
+required-features = ["local-embed"]
+
+[[example]]
 name = "verify_cogmem_sample"
 required-features = ["provenance"]
 
