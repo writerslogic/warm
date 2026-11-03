@@ -6,6 +6,44 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+#[cfg(any(not(target_arch = "wasm32"), feature = "experimental"))]
+pub(crate) fn try_lock_exclusive(file: &File) -> Result<(), std::fs::TryLockError> {
+    #[cfg(target_os = "android")]
+    {
+        use std::os::fd::AsRawFd;
+        // Rust's File locks exclude Android through 1.96: rust-lang/rust#148325.
+        // SAFETY: the borrowed file keeps its descriptor valid throughout flock.
+        if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0 {
+            Ok(())
+        } else {
+            let error = std::io::Error::last_os_error();
+            if error.kind() == std::io::ErrorKind::WouldBlock {
+                Err(std::fs::TryLockError::WouldBlock)
+            } else {
+                Err(std::fs::TryLockError::Error(error))
+            }
+        }
+    }
+    #[cfg(not(target_os = "android"))]
+    file.try_lock()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn unlock(file: &File) -> std::io::Result<()> {
+    #[cfg(target_os = "android")]
+    {
+        use std::os::fd::AsRawFd;
+        // SAFETY: the borrowed file keeps its descriptor valid throughout flock.
+        if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_UN) } == 0 {
+            Ok(())
+        } else {
+            Err(std::io::Error::last_os_error())
+        }
+    }
+    #[cfg(not(target_os = "android"))]
+    file.unlock()
+}
+
 pub(crate) fn open_regular(path: &Path, write: bool) -> std::io::Result<std::fs::File> {
     open_regular_mode(path, !write, write, false)
 }
@@ -397,6 +435,65 @@ pub(crate) fn arena_generation(base: &Path) -> Result<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn exclusive_locks_interoperate_with_native_flock() -> Result<()> {
+        use std::os::fd::AsRawFd;
+        let root = tempfile::tempdir()?;
+        let path = root.path().join("lock");
+        let first = open_regular_read_write_create(&path)?;
+        let second = open_regular_read_write(&path)?;
+        try_lock_exclusive(&first)?;
+        // SAFETY: both files own live descriptors throughout each call.
+        assert_eq!(
+            unsafe { libc::flock(second.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) },
+            -1
+        );
+        assert_eq!(
+            std::io::Error::last_os_error().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        assert!(matches!(
+            try_lock_exclusive(&second),
+            Err(std::fs::TryLockError::WouldBlock)
+        ));
+        unlock(&first)?;
+        // SAFETY: second owns its descriptor for the duration of flock.
+        assert_eq!(
+            unsafe { libc::flock(second.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) },
+            0
+        );
+        assert!(matches!(
+            try_lock_exclusive(&first),
+            Err(std::fs::TryLockError::WouldBlock)
+        ));
+        // SAFETY: second owns its descriptor for the duration of flock.
+        assert_eq!(unsafe { libc::flock(second.as_raw_fd(), libc::LOCK_UN) }, 0);
+        try_lock_exclusive(&first)?;
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cloned_descriptor_keeps_lock_until_explicit_release() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let path = root.path().join("lock");
+        let first = open_regular_read_write_create(&path)?;
+        let second = open_regular_read_write(&path)?;
+        try_lock_exclusive(&first)?;
+        let inherited = first.try_clone()?;
+        drop(first);
+        assert!(matches!(
+            try_lock_exclusive(&second),
+            Err(std::fs::TryLockError::WouldBlock)
+        ));
+        unlock(&inherited)?;
+        try_lock_exclusive(&second)?;
+        drop(second);
+        try_lock_exclusive(&inherited)?;
+        Ok(())
+    }
 
     #[test]
     fn scrub_rejects_non_files_and_preserves_external_hardlinks() -> Result<()> {
