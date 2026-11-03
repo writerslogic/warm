@@ -117,6 +117,14 @@ Held-out, fixed ef: failure +0.0024..+0.0075, failure_antihub +0.0040..+0.0083, 
 Verdict under the preregistered rule: **park** (no arm beats base at matched cost on either
 set at either scale).
 
+Prior art (abstracts only, not checked against the papers): NGFix/RFix (arXiv 2510.22316,
+SIGMOD 2026) reports query-driven edge repair winning mainly on out-of-distribution queries,
+up to 2.25x over RoarGraph at 99% recall, and only about 10% on single-modal sets, with no
+GloVe result. Catapults (arXiv 2603.02164) reports cached entry points up to 2.51x faster on
+skewed queries but 20-25% slower on uniform ones. Both fit what we measured. GloVe and SIFT
+test queries come from the base distribution, the repair did not generalize, and fixed
+medoid entries lost.
+
 Full-scale rerun on dedicated cores (not launched here):
 `uv run --with modal modal run --detach benchmarks/public/ann_modal_repair.py --rev <commit> --cap-usd 8`
 after the two `modal volume put` lines in that script's docstring. Not tested: degree-preserving edge replacement, more than 5,000 train queries at full
