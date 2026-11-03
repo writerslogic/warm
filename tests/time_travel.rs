@@ -10,11 +10,11 @@ use std::sync::Arc;
 
 use serde_json::{json, Value};
 use writerslogic_warm::core::memory_api::*;
+use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{
     DocumentInput, EmbeddingSpace, EntangledHVec, HistoryError, JournalPosition, RevisionKind,
     SearchOptions, WarmCore,
 };
-use writerslogic_warm::core::WarmConfig;
 
 const DIM: u32 = 1024;
 const QUERIES: [&str; 5] = [
@@ -245,7 +245,11 @@ fn every_earlier_position_matches_a_store_that_stopped_there() {
     // The current position is the current state.
     let last = positions.last().unwrap();
     assert_eq!(&core.journal_position(), last);
-    assert_same(&observe_view(&core, last), &observe_live(&core, steps.len()), "current");
+    assert_same(
+        &observe_view(&core, last),
+        &observe_live(&core, steps.len()),
+        "current",
+    );
     // Spot checks against the writes themselves.
     let at = |i: usize| core.history_view(&positions[i]).unwrap();
     assert_eq!(at(0).document_count().unwrap(), 0);
@@ -356,21 +360,22 @@ fn positions_outside_the_journal_fail_closed() {
     ));
 }
 
+/// A revision as (kind, id, version, written offset, ended offset, deleted).
+type Revision = (
+    RevisionKind,
+    String,
+    Option<String>,
+    Option<u64>,
+    Option<u64>,
+    bool,
+);
+
 /// Revisions live at some position of `[from, to]`, with where each began and ended.
 #[test]
 fn interval_lists_each_revision_live_in_it() {
     let dir = tempfile::tempdir().unwrap();
     let (core, p) = written(&dir.path().join("store"));
-    let summary = |from: usize,
-                   to: usize|
-     -> Vec<(
-        RevisionKind,
-        String,
-        Option<String>,
-        Option<u64>,
-        Option<u64>,
-        bool,
-    )> {
+    let summary = |from: usize, to: usize| -> Vec<Revision> {
         core.history_revisions(&p[from], &p[to], 100)
             .unwrap()
             .into_iter()
