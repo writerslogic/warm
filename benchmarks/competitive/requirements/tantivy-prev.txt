@@ -1,4 +1,0 @@
-numpy==2.5.4
-    # via -r requirements/tantivy-prev.in
-tantivy==0.26.2
-    # via -r requirements/tantivy-prev.in

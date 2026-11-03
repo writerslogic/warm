@@ -2,11 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod audit_delivery;
-mod background_compaction;
-pub use background_compaction::{
-    CompactionHandle, CompactionOptions, CompactionProgress, CompactionReport, CompactionResource,
-    CompactionStage, CompactionStatus,
-};
 mod compaction;
 pub(crate) mod concepts;
 mod document_api;
@@ -14,13 +9,8 @@ mod document_batch;
 #[cfg(feature = "local-embed")]
 mod embed_api;
 mod governance;
-mod history;
 mod image;
 mod index_cache;
-pub use history::{
-    HistoryBounds, HistoryError, HistoryOptions, HistoryRevision, HistoryView, JournalPosition,
-    RevisionKind, TimeResolution,
-};
 pub(crate) mod journal;
 pub(crate) mod knowledge;
 pub(crate) mod memory_access;
@@ -102,8 +92,6 @@ pub struct WarmCore {
     /// Word interner carried from one document batch to the next.
     stem_memos: crate::core::documents::StemMemoPool,
     compaction: crate::core::sync::Mutex<()>,
-    /// Generation and offset where retained history starts (see `history`).
-    history_floor: RwLock<(String, usize)>,
     /// The index metadata (`indices.json`) last written by this process: identical metadata
     /// means identical index files at the same checkpoint, so a repeated persist skips the
     /// writes.
@@ -309,7 +297,6 @@ impl WarmCore {
             mutation_gate: mutation_gate::MutationGate::default(),
             stem_memos: Default::default(),
             compaction: crate::core::sync::Mutex::new(()),
-            history_floor: RwLock::new((String::new(), 0)),
             persisted_indices: crate::core::sync::Mutex::new(Vec::new()),
             revision: std::sync::atomic::AtomicU64::new(super::documents::opaque_counter_start()),
             vector_record_instance: rand::random(),
@@ -384,7 +371,6 @@ impl WarmCore {
                 core.load_from_log()?;
             }
         }
-        *core.history_floor.write() = core.initial_history_floor();
         core.load_indices()?;
         {
             let shards = core.shards.read();

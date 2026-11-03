@@ -614,14 +614,9 @@ impl Store {
             .inner
             .lock()
             .records
-            .iter()
-            .filter(|(id, record)| {
-                id.0 == tenant
-                    && Some(*id) != preserved.as_ref()
-                    // These states already have a durable, bodyless Unknown receipt.
-                    && !matches!(record.state, State::Unreplayable | State::RunningInvalidated)
-            })
-            .map(|(id, _)| id.clone())
+            .keys()
+            .filter(|id| id.0 == tenant && Some(*id) != preserved.as_ref())
+            .cloned()
             .collect();
         for id in &keys {
             let mut file = open_regular(&self.path(id), false)?;

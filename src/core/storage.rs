@@ -37,30 +37,11 @@ pub(crate) fn list_segments(dir: &Path) -> Result<Vec<usize>> {
     Ok(ids)
 }
 
-/// The fixed segment size of format 3, and the largest step by which a format-4 active
-/// segment's file grows toward its declared size.
+/// The fixed segment size of format 3, and the step by which a format-4 active segment's
+/// file grows toward its declared size.
 pub(crate) const SEGMENT_SIZE: usize = 64 * 1024 * 1024;
-/// The first allocation of a format-4 active segment and the granularity of its length. Open
-/// reads the active segment through its zero tail (`discover_offset` proves nothing committed
-/// follows the end marker), so a journal that starts at this size instead of [`SEGMENT_SIZE`]
-/// keeps an empty or small journal from faulting in 64 MiB at every open. Segments that earlier
-/// releases grew in [`SEGMENT_SIZE`] steps are multiples of it and open unchanged.
-pub(crate) const GROWTH_STEP: usize = 1024 * 1024;
-
-/// The capacity a format-4 active segment is allocated at to hold `required` bytes: a power of
-/// two from [`GROWTH_STEP`] up to [`SEGMENT_SIZE`] (so it doubles: six more grows than fixed
-/// 64 MiB steps, each a resize and sync), then [`SEGMENT_SIZE`] multiples as before, never past
-/// the declared `limit`.
-pub(crate) fn allocation(required: usize, limit: usize) -> usize {
-    let capacity = if required <= SEGMENT_SIZE {
-        required.max(GROWTH_STEP).next_power_of_two()
-    } else {
-        required.div_ceil(SEGMENT_SIZE).saturating_mul(SEGMENT_SIZE)
-    };
-    capacity.min(limit)
-}
 /// The segment size formats 1, 2 and 4 declare in their manifest (format 4 allocates it in
-/// steps, [`allocation`]); only format 3 declared [`SEGMENT_SIZE`].
+/// [`SEGMENT_SIZE`] steps); only format 3 declared [`SEGMENT_SIZE`].
 pub(crate) const LEGACY_SEGMENT_SIZE: usize = 1024 * 1024 * 1024;
 // Windows requires unmapping all views before extending a mapped file.
 const INCREMENTAL_ALLOCATION: bool = cfg!(unix);
@@ -190,10 +171,6 @@ impl PreparedCompaction {
         );
         Ok(())
     }
-
-    pub(crate) fn stats(&self) -> ArenaStats {
-        self.arena.stats()
-    }
 }
 
 impl PersistentArena {
@@ -237,10 +214,11 @@ impl PersistentArena {
             "active segment exceeds its declared size"
         );
         let active_capacity = if manifest.version >= 4 && INCREMENTAL_ALLOCATION {
-            allocation(
-                usize::try_from(length).context("arena capacity exceeds address space")?,
-                manifest.segment_size,
-            )
+            usize::try_from(length)
+                .context("arena capacity exceeds address space")?
+                .max(SEGMENT_SIZE)
+                .div_ceil(SEGMENT_SIZE)
+                * SEGMENT_SIZE
         } else {
             manifest.segment_size
         };
@@ -797,7 +775,7 @@ impl PersistentArena {
                 && required > active.map.len(),
             "invalid arena growth request"
         );
-        let capacity = allocation(required, self.segment_size);
+        let capacity = required.div_ceil(SEGMENT_SIZE) * SEGMENT_SIZE;
         let path = self.data_path.read().join(format!(
             "seg_{}.bin",
             self.active_id.load(Ordering::Acquire)
@@ -840,7 +818,7 @@ impl PersistentArena {
         #[cfg(test)]
         tests::fail_point("rotation after create")?;
         let capacity = if self.format_version >= 4 && INCREMENTAL_ALLOCATION {
-            GROWTH_STEP
+            SEGMENT_SIZE
         } else {
             self.segment_size
         };
@@ -859,12 +837,11 @@ impl PersistentArena {
         Ok(())
     }
 
-    fn replay_compaction_tail_inner(
+    pub(crate) fn replay_compaction_tail(
         &self,
         prepared: &mut PreparedCompaction,
         cursor: &mut usize,
         end: usize,
-        check: &mut dyn FnMut(usize, usize) -> Result<()>,
     ) -> Result<()> {
         ensure!(
             *cursor <= end,
@@ -907,117 +884,10 @@ impl PersistentArena {
             let (data, _) = self
                 .read_frame(*cursor)
                 .with_context(|| format!("cannot replay compaction frame at {}", *cursor))?;
-            check(prepared.arena.capacity_after_frame(data.len()), data.len())?;
             prepared.append_frame(&data)?;
             *cursor = next;
         }
         Ok(())
-    }
-
-    /// [`Self::replay_compaction_tail`], calling `check(capacity, raw_len)` before each frame
-    /// is appended with the prepared arena's allocated length after that append
-    /// ([`Self::capacity_after_frame`]); an error from `check` stops the replay.
-    pub(crate) fn replay_compaction_tail_checked(
-        &self,
-        prepared: &mut PreparedCompaction,
-        cursor: &mut usize,
-        end: usize,
-        check: &mut dyn FnMut(usize, usize) -> Result<()>,
-    ) -> Result<()> {
-        self.replay_compaction_tail_inner(prepared, cursor, end, check)
-    }
-
-    #[cfg(test)]
-    pub(crate) fn replay_compaction_tail(
-        &self,
-        prepared: &mut PreparedCompaction,
-        cursor: &mut usize,
-        end: usize,
-    ) -> Result<()> {
-        self.replay_compaction_tail_inner(prepared, cursor, end, &mut |_, _| Ok(()))
-    }
-
-    /// An upper bound on the arena's allocated file length after appending a frame with a
-    /// `raw_len`-byte payload, by the growth and rotation rules of `write_frame` (a stored
-    /// payload is never longer than its raw form). Sealed segments count at full size.
-    pub(crate) fn capacity_after_frame(&self, raw_len: usize) -> usize {
-        let frame = HEADER_SIZE.saturating_add(raw_len);
-        let stats = self.stats();
-        let offset = self.write_offset.load(Ordering::Acquire);
-        let incremental = self.format_version >= 4 && INCREMENTAL_ALLOCATION;
-        let required = offset.saturating_add(frame);
-        if required > self.segment_size || self.rotation_pending.load(Ordering::Acquire) {
-            let next = if incremental {
-                allocation(frame, self.segment_size)
-            } else {
-                self.segment_size
-            };
-            stats
-                .segment_count
-                .saturating_mul(self.segment_size)
-                .saturating_add(next)
-        } else if required > self.active_capacity.load(Ordering::Acquire) {
-            (stats.segment_count - 1)
-                .saturating_mul(self.segment_size)
-                .saturating_add(allocation(required, self.segment_size))
-        } else {
-            stats.capacity_bytes
-        }
-    }
-
-    /// Summed length of the live generation's files: the segments of a store that has never
-    /// compacted, or every file of the generation directory.
-    pub(crate) fn generation_disk_bytes(&self) -> Result<u64> {
-        let live = self.data_path.read().clone();
-        let legacy = live == self.base_path;
-        let mut total = 0u64;
-        for entry in std::fs::read_dir(&live)? {
-            let entry = entry?;
-            let name = entry.file_name();
-            let name = name.to_string_lossy();
-            if legacy && !(name.starts_with("seg_") && name.ends_with(".bin")) {
-                continue;
-            }
-            let meta = entry.metadata()?;
-            if meta.is_file() {
-                total = total.saturating_add(meta.len());
-            }
-        }
-        Ok(total)
-    }
-
-    /// Removes generation directories the live pointer does not reference: leftovers of a
-    /// compaction that stopped before publishing. Returns the bytes removed. The caller holds
-    /// the compaction lock, so no staging generation is in progress; a scrubbing compaction
-    /// uses [`Self::scrub_unreferenced`] instead.
-    pub(crate) fn remove_unreferenced_generations(&self) -> Result<u64> {
-        let live = self.data_path.read().clone();
-        let mut removed = 0u64;
-        for entry in std::fs::read_dir(&self.base_path)? {
-            let entry = entry?;
-            let path = entry.path();
-            let name = entry.file_name();
-            if !entry.file_type()?.is_dir()
-                || !name.to_string_lossy().starts_with("gen-")
-                || path == live
-            {
-                continue;
-            }
-            let mut bytes = 0u64;
-            for file in std::fs::read_dir(&path)? {
-                let meta = file?.metadata()?;
-                if meta.is_file() {
-                    bytes = bytes.saturating_add(meta.len());
-                }
-            }
-            std::fs::remove_dir_all(&path)
-                .with_context(|| format!("removing stale generation {}", path.display()))?;
-            removed = removed.saturating_add(bytes);
-        }
-        if removed > 0 {
-            super::durable_file::sync_directory(&self.base_path)?;
-        }
-        Ok(removed)
     }
 
     pub(crate) fn prepare_compacted(self) -> Result<PreparedCompaction> {
@@ -1225,7 +1095,7 @@ impl Drop for PersistentArena {
 }
 
 #[cfg(test)]
-pub(crate) fn compaction_crash_point(phase: &str) {
+fn compaction_crash_point(phase: &str) {
     if crate::compatibility::var("WARM_TEST_COMPACTION_PHASE").as_deref() == Ok(phase) {
         std::process::exit(73);
     }

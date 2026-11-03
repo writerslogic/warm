@@ -13,10 +13,6 @@ use crate::{
 
 mod api;
 pub use api::WarmMemorySystem;
-mod compaction;
-pub use compaction::{
-    CompactionJob, CompactionOptionsJs, CompactionProgressJs, CompactionReportJs,
-};
 mod config;
 mod types;
 
