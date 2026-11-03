@@ -204,10 +204,7 @@ impl Graph {
                     {
                         continue;
                     }
-                    match sources[..len]
-                        .iter()
-                        .find(|&&s| room(&self.adj, &added, s))
-                    {
+                    match sources[..len].iter().find(|&&s| room(&self.adj, &added, s)) {
                         Some(&s) => {
                             added[s as usize].push(m);
                             planned.push((s, m));
@@ -426,10 +423,13 @@ impl Graph {
         sample.truncate(sample_len);
         let dim = self.dim;
         let row = |id: u32| &self.vectors[id as usize * dim..(id as usize + 1) * dim];
-        let d2 = |a: &[f32], b: &[f32]| -> f32 {
-            a.iter().zip(b).map(|(x, y)| (x - y) * (x - y)).sum()
-        };
-        let mut centroids: Vec<f32> = sample[..k].iter().flat_map(|&id| row(id)).copied().collect();
+        let d2 =
+            |a: &[f32], b: &[f32]| -> f32 { a.iter().zip(b).map(|(x, y)| (x - y) * (x - y)).sum() };
+        let mut centroids: Vec<f32> = sample[..k]
+            .iter()
+            .flat_map(|&id| row(id))
+            .copied()
+            .collect();
         let nearest = |centroids: &[f32], x: &[f32]| -> usize {
             centroids
                 .chunks_exact(dim)

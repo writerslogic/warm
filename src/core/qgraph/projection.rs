@@ -229,7 +229,11 @@ impl Graph {
         )
     }
 
-    pub(super) fn training_neighbors(&self, queries: &[f32], neighbors: usize) -> Result<Vec<u32>, WarmError> {
+    pub(super) fn training_neighbors(
+        &self,
+        queries: &[f32],
+        neighbors: usize,
+    ) -> Result<Vec<u32>, WarmError> {
         let count = queries.len() / self.dim;
         let base_len = self
             .n

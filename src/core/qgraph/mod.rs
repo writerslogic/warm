@@ -27,8 +27,8 @@ mod fastscan;
 pub mod filter;
 pub(crate) mod kernels;
 mod projection;
-mod rerank;
 mod repair;
+mod rerank;
 #[cfg(not(target_arch = "wasm32"))]
 mod update;
 mod vertex;
