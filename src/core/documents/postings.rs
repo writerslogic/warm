@@ -267,9 +267,37 @@ impl TermDictionary {
     }
 }
 
-pub(super) const BLOCK_LEN: usize = 128;
+/// Postings per block. Blocks are derived memory state, rebuilt from the journal and never
+/// persisted (see `docs/file-format/LEXICAL.md`), so the length is a build-time parameter that
+/// no stored byte records: `WARM_POSTINGS_BLOCK_LEN` selects it for sweeps.
+pub(super) const BLOCK_LEN: usize = block_len(option_env!("WARM_POSTINGS_BLOCK_LEN"));
 /// The fewest postings a block other than the last keeps after in-place removals.
 const MIN_BLOCK_LEN: usize = BLOCK_LEN / 4;
+
+/// `setting` as a block length: a multiple of 8 from 32 to 4096, or 128 when unset.
+const fn block_len(setting: Option<&str>) -> usize {
+    let Some(setting) = setting else {
+        return 128;
+    };
+    let digits = setting.as_bytes();
+    assert!(!digits.is_empty(), "WARM_POSTINGS_BLOCK_LEN is empty");
+    let mut value = 0usize;
+    let mut at = 0;
+    while at < digits.len() {
+        assert!(
+            digits[at].is_ascii_digit(),
+            "WARM_POSTINGS_BLOCK_LEN is not a number"
+        );
+        value = value * 10 + (digits[at] - b'0') as usize;
+        assert!(value <= 4096, "WARM_POSTINGS_BLOCK_LEN above 4096");
+        at += 1;
+    }
+    assert!(
+        value >= 32 && value % 8 == 0,
+        "WARM_POSTINGS_BLOCK_LEN must be a multiple of 8 from 32"
+    );
+    value
+}
 
 #[derive(Clone, Debug)]
 struct Block {
