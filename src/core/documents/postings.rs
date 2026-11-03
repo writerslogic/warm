@@ -293,7 +293,7 @@ const fn block_len(setting: Option<&str>) -> usize {
         at += 1;
     }
     assert!(
-        value >= 32 && value % 8 == 0,
+        value >= 32 && value.is_multiple_of(8),
         "WARM_POSTINGS_BLOCK_LEN must be a multiple of 8 from 32"
     );
     value
