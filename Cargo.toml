@@ -512,3 +512,8 @@ path = "src/bin/research/resonator-sweep.rs"
 [[bin]]
 name = "ridge-memory"
 path = "src/bin/research/ridge-memory.rs"
+
+[[bin]]
+name = "kmer-eval"
+path = "src/bin/research/kmer-eval.rs"
+required-features = ["experimental"]
