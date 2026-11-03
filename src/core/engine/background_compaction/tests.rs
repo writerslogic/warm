@@ -269,6 +269,7 @@ fn worker_panic_fails_cleanly_and_dropping_the_handle_releases_the_store() -> Re
     let dir = tempfile::tempdir()?;
     let core = open(dir.path(), &config())?;
     seed(&core)?;
+    let count = core.vector_count();
     let report = core
         .spawn_compaction(
             CompactionOptions::default(),
@@ -290,7 +291,7 @@ fn worker_panic_fails_cleanly_and_dropping_the_handle_releases_the_store() -> Re
     drop(handle);
     let reopened = open(dir.path(), &config())?;
     assert_eq!(generations(dir.path())?.len(), 0);
-    assert_eq!(reopened.vector_count(), 2);
+    assert_eq!(reopened.vector_count(), count);
     Ok(())
 }
 
