@@ -238,7 +238,8 @@ class Bm25s:
         raise Unsupported("immutable index; any change is a full rebuild")
 
 
-SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s}
+SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s,
+           "sqlite-fts5-prev": SqliteFts5, "tantivy-prev": Tantivy}
 
 
 def main():

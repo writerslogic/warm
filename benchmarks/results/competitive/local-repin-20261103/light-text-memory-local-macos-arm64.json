@@ -1,0 +1,3361 @@
+{
+  "schema_version": 1,
+  "kind": "text",
+  "suite": "light",
+  "commit": "0ca75dc58294eb6780c98c445b5c2a4d2331170a",
+  "date": "2026-11-03T14:55:53-0800",
+  "hardware": {
+    "class": "local-macos-arm64",
+    "cpu": "Apple M4",
+    "logical_cores": 10,
+    "memory_bytes": 34359738368,
+    "os": "Darwin 27.0.0",
+    "machine": "arm64",
+    "hosted_runner": false,
+    "load_1m": 4.62109375
+  },
+  "dataset": {
+    "dataset": "longmemeval-s-dev-sessions",
+    "documents": 4559,
+    "queries": 100,
+    "truncated_words": 4000,
+    "source": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_s_cleaned.json",
+    "id": "memory"
+  },
+  "protocol": {
+    "measurement_version": 2,
+    "resampling_unit": "independent process-round summaries",
+    "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied",
+    "rounds": 5,
+    "build_repeats": 2,
+    "k": 100,
+    "passes_per_round": 3,
+    "retrieval": "lexical only, OR over the lowercase alphanumeric query word set, top 100; each system's own analyzer and default BM25",
+    "timing": "one query at a time, single client thread; WARM timed inside its process, Python systems inside their worker",
+    "warm_rows": "warm = `--encode lexical` (BM25 index only, like-for-like); warm-eager = default eager encoding (chunk hypervectors at ingest); every build repeat is one cold process",
+    "interleaving": "each round runs WARM and every comparator once, order rotated per round",
+    "peak_rss": "wait4 rusage of that phase's own process, forked from a small helper so it never inherits the orchestrator's RSS (Linux)",
+    "disk": "allocated bytes of the store directory (du); where the filesystem reports sparse files as fully allocated, only non-zero 4 KiB blocks count",
+    "passes": "per timed pass: queries, total_ns and p50/p90/p99/max ns of the per-query latencies"
+  },
+  "facts": {
+    "warm": {
+      "service_needed": {
+        "value": "no",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "in-process library; 0 egress sockets in the security matrix"
+      },
+      "encrypted_at_rest": {
+        "value": "yes",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "AES-GCM with Argon2id (feature `security`); encrypted QPS ratio 0.929 of plain; not enabled in the rows above"
+      }
+    },
+    "hnswlib": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "faiss-hnsw": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "faiss-flat": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "faiss-ivfpq": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "usearch": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "annoy": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "sqlite-vec": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no (SQLCipher is a separate build)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "lancedb": {
+      "service_needed": {
+        "value": "no (embedded)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "chroma": {
+      "service_needed": {
+        "value": "no (PersistentClient)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "qdrant-local": {
+      "service_needed": {
+        "value": "no (local mode; server needed for indexed ANN)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "milvus-lite": {
+      "service_needed": {
+        "value": "no (embedded)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "duckdb-vss": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "database-file encryption (DuckDB 1.4+); not exercised with the vss index",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "sqlite-fts5": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no (SQLCipher is a separate build)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "tantivy": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "whoosh": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "bm25s": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "lucene": {
+      "service_needed": {
+        "value": "no (library; needs a JVM)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no (filesystem-level only)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "warm-eager": {
+      "service_needed": {
+        "value": "no",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "in-process library; 0 egress sockets in the security matrix"
+      },
+      "encrypted_at_rest": {
+        "value": "yes",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "AES-GCM with Argon2id (feature `security`); encrypted QPS ratio 0.929 of plain; not enabled in the rows above"
+      }
+    },
+    "ngt": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "scann": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "pynndescent": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "voyager": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "diskann": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "warm-server": {
+      "service_needed": {
+        "value": "yes (this row; the library needs none)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "yes with feature `security` (not enabled in these rows)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "qdrant-server": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "weaviate": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "opensearch-knn": {
+      "service_needed": {
+        "value": "yes (JVM)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "pgvector": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "redis-vss": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "meilisearch": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "typesense": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "opensearch-bm25": {
+      "service_needed": {
+        "value": "yes (JVM)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "pg-tsvector": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "paradedb": {
+      "service_needed": {
+        "value": "yes (PostgreSQL extension)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    }
+  },
+  "timing_boundary": {
+    "warm": "native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop",
+    "warm-eager": "native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`)",
+    "hnswlib": "CPython binding call per query",
+    "faiss-hnsw": "CPython (SWIG) call per query",
+    "faiss-flat": "CPython (SWIG) call per query",
+    "faiss-ivfpq": "CPython (SWIG) call per query",
+    "usearch": "CPython binding call per query",
+    "annoy": "CPython binding call per query",
+    "sqlite-vec": "CPython sqlite3 call per query",
+    "lancedb": "CPython + Arrow call per query (multi-threaded Rust runtime inside)",
+    "chroma": "CPython client call per query (Rust core inside)",
+    "qdrant-local": "CPython client call per query (embedded local mode)",
+    "milvus-lite": "CPython client call per query (embedded server process)",
+    "duckdb-vss": "CPython duckdb call per query",
+    "sqlite-fts5": "CPython sqlite3 call per query (query string built outside the timer)",
+    "tantivy": "CPython tantivy-py call per query (stored id fetched per hit)",
+    "whoosh": "pure Python",
+    "bm25s": "CPython + NumPy (single-threaded retrieve)",
+    "lucene": "in-process JVM API call, after a full untimed JIT warm-up pass",
+    "ngt": "CPython (pybind11) call per query",
+    "scann": "CPython (pybind11) call per query; the ScaNN searcher runs its own thread pool for training only",
+    "pynndescent": "CPython + numba-compiled kernel per query (JIT compile inside cold start)",
+    "voyager": "CPython 3.12 binding call per query",
+    "diskann": "CPython 3.11 binding call per query (diskannpy StaticMemoryIndex)",
+    "warm-server": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; ANN: POST /api/v1/query with index=graph and per-request ef; text: POST /api/v1/memory/recall, lexical weight only",
+    "qdrant-server": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; POST /collections/c/points/query (REST, not gRPC); max_search_threads=1",
+    "weaviate": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; GraphQL nearVector (REST, not gRPC); ef set on the class between sweep points",
+    "opensearch-knn": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; _search knn query with method_parameters.ef_search; concurrent segment search off, one shard",
+    "pgvector": "psycopg 3 over one TCP connection, server-side prepared statement; max_parallel_workers_per_gather=0; enable_seqscan=off",
+    "redis-vss": "redis-py over one TCP connection, FT.SEARCH KNN with NOCONTENT; query engine WORKERS 0 (main thread)",
+    "meilisearch": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; POST /indexes/docs/search (its own ranking rules, not BM25; at most 10 query words are used)",
+    "typesense": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; GET search with drop_tokens_threshold=100 (its own text-match ranking, not BM25)",
+    "opensearch-bm25": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; _search match query (OR), english analyzer, default BM25; one shard",
+    "pg-tsvector": "psycopg 3 over one TCP connection, server-side prepared statement; OR of the query words via to_tsquery, ranked by ts_rank (not BM25)",
+    "paradedb": "psycopg 3 over one TCP connection, server-side prepared statement; `|||` (match any word) over an english-stemmed field, BM25 via pdb.score"
+  },
+  "not_run": {
+    "mem0": "agent-memory systems belong to the next harness stage (plug in through the same adapter interface)",
+    "zep": "agent-memory systems belong to the next harness stage",
+    "letta": "agent-memory systems belong to the next harness stage",
+    "langmem": "agent-memory systems belong to the next harness stage",
+    "scann": "no macOS wheel for scann 1.4.2 (manylinux_2_27 x86_64 and aarch64 only); Linux x86_64 runs it",
+    "diskann": "no macOS wheel for diskannpy 0.7.0 (manylinux_2_28 x86_64 and win_amd64, CPython 3.9-3.11 only); Linux x86_64 runs it",
+    "milvus-standalone": "no non-Docker artifact: releases 3.0.3 and 2.6.25 ship only Docker Compose files; the last native package (milvus_2.6.4 .deb/.rpm, Linux only) is superseded"
+  },
+  "systems": {
+    "warm": {
+      "display": "WARM",
+      "build_runs": [
+        {
+          "documents": 4559,
+          "encode": "lexical",
+          "ingest_s": 9.151808125,
+          "peak_rss_bytes": 237993984,
+          "wall_s": 14.960170750040561,
+          "disk_bytes": 3709632
+        },
+        {
+          "documents": 4559,
+          "encode": "lexical",
+          "ingest_s": 9.034268083,
+          "peak_rss_bytes": 240025600,
+          "wall_s": 14.66649558302015,
+          "disk_bytes": 3709632
+        }
+      ],
+      "serve_rounds": [
+        {
+          "open_s": 0.282168708,
+          "cold_start_s": 0.336564,
+          "memory": null,
+          "quality": {
+            "ndcg_at_10": 0.4561419499447157,
+            "recall_at_10": 0.5701666666666667,
+            "recall_at_100": 0.8203333333333334,
+            "per_query_ndcg_at_10": [
+              1.0,
+              0.6309297535714575,
+              0.5,
+              1.0,
+              0.0,
+              0.5,
+              1.0,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.0,
+              0.3333333333333333,
+              0.6309297535714575,
+              0.0,
+              0.0,
+              0.0,
+              0.3065735963827292,
+              0.431733884398313,
+              0.0,
+              0.38268031849431083,
+              0.0,
+              0.5307212739772434,
+              1.0,
+              0.0,
+              0.0,
+              0.3903800499921017,
+              0.17723928678404774,
+              0.0,
+              0.0,
+              0.14126697285982898,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.3562071871080222,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.9197207891481876,
+              0.6131471927654584,
+              0.0,
+              0.0,
+              0.8772153153380493,
+              0.7903864795495061,
+              0.46845052016107697,
+              1.0,
+              0.6131471927654584,
+              0.0,
+              0.0,
+              0.9197207891481876,
+              0.7903864795495061,
+              0.0,
+              0.7903864795495061,
+              0.45560514958746035,
+              0.3065735963827292,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.18154179253735267,
+              0.0,
+              0.448643819352159,
+              0.6108377030333358,
+              0.6131471927654584,
+              0.8315546295836225,
+              0.6240505200038379,
+              0.5012658353418871,
+              0.0,
+              0.6131471927654584,
+              0.2640681225725909,
+              0.8772153153380493,
+              0.8503449055347546,
+              0.8503449055347546,
+              0.9197207891481876,
+              0.20438239758848611,
+              1.0,
+              1.0,
+              0.5802792108518124,
+              0.6131471927654584,
+              1.0,
+              1.0,
+              0.6131471927654584,
+              0.38685280723454163,
+              0.0,
+              1.0,
+              0.3065735963827292,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.2890648263178879,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "per_query_recall_at_100": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.25,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.6666666666666666,
+              0.6666666666666666,
+              1.0,
+              0.4,
+              1.0,
+              0.25,
+              1.0,
+              0.6666666666666666,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              0.5,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              0.6666666666666666,
+              0.0,
+              1.0,
+              0.8,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "queries": 100
+          },
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 12705879,
+              "p50_ns": 107417,
+              "p90_ns": 197208,
+              "p99_ns": 355625,
+              "max_ns": 363625
+            },
+            {
+              "queries": 100,
+              "total_ns": 10045832,
+              "p50_ns": 85000,
+              "p90_ns": 161708,
+              "p99_ns": 223291,
+              "max_ns": 317667
+            },
+            {
+              "queries": 100,
+              "total_ns": 15507007,
+              "p50_ns": 156917,
+              "p90_ns": 227042,
+              "p99_ns": 331667,
+              "max_ns": 376083
+            }
+          ],
+          "peak_rss_bytes": 15089664,
+          "wall_s": 0.9199982499703765
+        },
+        {
+          "open_s": 0.294234541,
+          "cold_start_s": 0.298601,
+          "memory": null,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 11025958,
+              "p50_ns": 96500,
+              "p90_ns": 172000,
+              "p99_ns": 199292,
+              "max_ns": 214458
+            },
+            {
+              "queries": 100,
+              "total_ns": 9191130,
+              "p50_ns": 76417,
+              "p90_ns": 152583,
+              "p99_ns": 223792,
+              "max_ns": 242500
+            },
+            {
+              "queries": 100,
+              "total_ns": 15120999,
+              "p50_ns": 85750,
+              "p90_ns": 199250,
+              "p99_ns": 875167,
+              "max_ns": 3314625
+            }
+          ],
+          "peak_rss_bytes": 14974976,
+          "wall_s": 1.8294965829700232
+        },
+        {
+          "open_s": 0.169293834,
+          "cold_start_s": 0.176663,
+          "memory": null,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 13871706,
+              "p50_ns": 119375,
+              "p90_ns": 222167,
+              "p99_ns": 277750,
+              "max_ns": 355708
+            },
+            {
+              "queries": 100,
+              "total_ns": 11110207,
+              "p50_ns": 93834,
+              "p90_ns": 181958,
+              "p99_ns": 218958,
+              "max_ns": 221666
+            },
+            {
+              "queries": 100,
+              "total_ns": 10776496,
+              "p50_ns": 94375,
+              "p90_ns": 166834,
+              "p99_ns": 243042,
+              "max_ns": 279500
+            }
+          ],
+          "peak_rss_bytes": 15089664,
+          "wall_s": 0.8213183751795441
+        },
+        {
+          "open_s": 0.410127459,
+          "cold_start_s": 0.573719,
+          "memory": null,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 10550538,
+              "p50_ns": 94916,
+              "p90_ns": 158292,
+              "p99_ns": 202792,
+              "max_ns": 204708
+            },
+            {
+              "queries": 100,
+              "total_ns": 9010129,
+              "p50_ns": 79375,
+              "p90_ns": 140583,
+              "p99_ns": 187625,
+              "max_ns": 190417
+            },
+            {
+              "queries": 100,
+              "total_ns": 8773660,
+              "p50_ns": 78833,
+              "p90_ns": 129959,
+              "p99_ns": 176916,
+              "max_ns": 183000
+            }
+          ],
+          "peak_rss_bytes": 15056896,
+          "wall_s": 2.661486000055447
+        },
+        {
+          "open_s": 0.243245667,
+          "cold_start_s": 0.247142,
+          "memory": null,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 12499919,
+              "p50_ns": 106750,
+              "p90_ns": 185958,
+              "p99_ns": 278083,
+              "max_ns": 313792
+            },
+            {
+              "queries": 100,
+              "total_ns": 11053503,
+              "p50_ns": 93209,
+              "p90_ns": 174375,
+              "p99_ns": 213708,
+              "max_ns": 234708
+            },
+            {
+              "queries": 100,
+              "total_ns": 11283631,
+              "p50_ns": 97125,
+              "p90_ns": 168667,
+              "p99_ns": 404833,
+              "max_ns": 424416
+            }
+          ],
+          "peak_rss_bytes": 14974976,
+          "wall_s": 1.6233646250329912
+        }
+      ],
+      "ops": {
+        "error": "skipped: WARM_BENCH_SKIP_OPS"
+      },
+      "version": {
+        "writerslogic-warm": "0.6.5",
+        "commit": "0ca75dc58294eb6780c98c445b5c2a4d2331170a"
+      },
+      "install": {
+        "competitive_text": {
+          "bytes": 2604432,
+          "non_system_dynamic_libraries": 0,
+          "profile": "dist",
+          "symbols": "stripped"
+        },
+        "_crate_dependencies": {
+          "count": 0,
+          "note": "unique crates in the default-feature normal dependency tree, including CLI-only crates; compiled in, not installed"
+        }
+      },
+      "encode": "lexical"
+    },
+    "sqlite-fts5": {
+      "display": "SQLite FTS5",
+      "build_runs": [
+        {
+          "documents": 4559,
+          "ingest_s": 11.147357583977282,
+          "peak_rss_bytes_self": 222527488,
+          "peak_rss_bytes": 222609408,
+          "wall_s": 11.806289749918506,
+          "disk_bytes": 20189184
+        },
+        {
+          "documents": 4559,
+          "ingest_s": 30.95623766607605,
+          "peak_rss_bytes_self": 214990848,
+          "peak_rss_bytes": 214990848,
+          "wall_s": 31.85220987489447,
+          "disk_bytes": 20189184
+        }
+      ],
+      "serve_rounds": [
+        {
+          "open_s": 0.019623999949544668,
+          "cold_start_s": 1.754574,
+          "peak_rss_bytes_self": 28835840,
+          "quality": {
+            "ndcg_at_10": 0.45009623895127726,
+            "recall_at_10": 0.5468333333333333,
+            "recall_at_100": 0.8391666666666667,
+            "per_query_ndcg_at_10": [
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              0.0,
+              0.43067655807339306,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.6309297535714575,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.46927872602275644,
+              0.0,
+              0.4441228664487979,
+              0.0,
+              0.36926780146674987,
+              0.8503449055347546,
+              0.0,
+              0.17723928678404774,
+              0.3903800499921017,
+              0.0,
+              0.0,
+              0.0,
+              0.14126697285982898,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.38685280723454163,
+              0.31546487678572877,
+              0.0,
+              0.0,
+              0.9197207891481876,
+              0.38685280723454163,
+              0.0,
+              0.18457569677956817,
+              0.8315546295836225,
+              0.7903864795495061,
+              0.5249810332008933,
+              1.0,
+              0.5640920940185894,
+              0.0,
+              0.0,
+              1.0,
+              0.7977228895450266,
+              0.0,
+              0.7903864795495061,
+              0.46845052016107697,
+              0.38685280723454163,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1480409554829326,
+              0.0,
+              0.2640681225725909,
+              0.48160565320269266,
+              0.6131471927654584,
+              0.8175295903539445,
+              0.5437713091520254,
+              0.5437713091520254,
+              0.0,
+              0.6131471927654584,
+              0.3065735963827292,
+              0.8772153153380493,
+              0.9197207891481876,
+              0.8772153153380493,
+              1.0,
+              0.18457569677956817,
+              1.0,
+              1.0,
+              0.4911492931622974,
+              0.6131471927654584,
+              1.0,
+              1.0,
+              0.6131471927654584,
+              0.6131471927654584,
+              0.0,
+              1.0,
+              0.3065735963827292,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.43067655807339306,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "per_query_recall_at_100": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.25,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              0.8,
+              1.0,
+              0.6666666666666666,
+              0.6666666666666666,
+              1.0,
+              0.4,
+              1.0,
+              0.5,
+              1.0,
+              0.6666666666666666,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              1.0,
+              0.8,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "queries": 100
+          },
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 6347534499,
+              "p50_ns": 43561875,
+              "p90_ns": 154526000,
+              "p99_ns": 247646917,
+              "max_ns": 288920500
+            },
+            {
+              "queries": 100,
+              "total_ns": 1600124996,
+              "p50_ns": 11921333,
+              "p90_ns": 36257208,
+              "p99_ns": 55629750,
+              "max_ns": 61419458
+            },
+            {
+              "queries": 100,
+              "total_ns": 1616518787,
+              "p50_ns": 12178542,
+              "p90_ns": 36535583,
+              "p99_ns": 61942291,
+              "max_ns": 63770333
+            }
+          ],
+          "peak_rss_bytes": 30261248,
+          "wall_s": 12.969560791971162
+        },
+        {
+          "open_s": 0.01557224988937378,
+          "cold_start_s": 0.862942,
+          "peak_rss_bytes_self": 28835840,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 5807990539,
+              "p50_ns": 40753417,
+              "p90_ns": 134524958,
+              "p99_ns": 274788417,
+              "max_ns": 293132291
+            },
+            {
+              "queries": 100,
+              "total_ns": 1823251251,
+              "p50_ns": 13678500,
+              "p90_ns": 38104666,
+              "p99_ns": 74145333,
+              "max_ns": 82017458
+            },
+            {
+              "queries": 100,
+              "total_ns": 1694978291,
+              "p50_ns": 13661083,
+              "p90_ns": 30518334,
+              "p99_ns": 57383417,
+              "max_ns": 63238208
+            }
+          ],
+          "peak_rss_bytes": 30261248,
+          "wall_s": 11.943826541071758
+        },
+        {
+          "open_s": 0.05706733395345509,
+          "cold_start_s": 1.254162,
+          "peak_rss_bytes_self": 28786688,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 7527159543,
+              "p50_ns": 55808709,
+              "p90_ns": 164192000,
+              "p99_ns": 306501792,
+              "max_ns": 377115792
+            },
+            {
+              "queries": 100,
+              "total_ns": 1651178998,
+              "p50_ns": 12563208,
+              "p90_ns": 32953708,
+              "p99_ns": 59537417,
+              "max_ns": 62836792
+            },
+            {
+              "queries": 100,
+              "total_ns": 1629521250,
+              "p50_ns": 12607292,
+              "p90_ns": 32164417,
+              "p99_ns": 59957292,
+              "max_ns": 65518125
+            }
+          ],
+          "peak_rss_bytes": 30212096,
+          "wall_s": 13.88418404199183
+        },
+        {
+          "open_s": 0.01951379096135497,
+          "cold_start_s": 0.968497,
+          "peak_rss_bytes_self": 28934144,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 5998963705,
+              "p50_ns": 42411292,
+              "p90_ns": 143382083,
+              "p99_ns": 226824000,
+              "max_ns": 293659416
+            },
+            {
+              "queries": 100,
+              "total_ns": 1577014503,
+              "p50_ns": 12015208,
+              "p90_ns": 33373875,
+              "p99_ns": 55455125,
+              "max_ns": 61339542
+            },
+            {
+              "queries": 100,
+              "total_ns": 1668938170,
+              "p50_ns": 12625167,
+              "p90_ns": 31989000,
+              "p99_ns": 57659667,
+              "max_ns": 61803250
+            }
+          ],
+          "peak_rss_bytes": 30359552,
+          "wall_s": 11.724475666182116
+        },
+        {
+          "open_s": 0.000218207947909832,
+          "cold_start_s": 0.134176,
+          "peak_rss_bytes_self": 28917760,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 1986092331,
+              "p50_ns": 16092667,
+              "p90_ns": 37817375,
+              "p99_ns": 73847792,
+              "max_ns": 90962167
+            },
+            {
+              "queries": 100,
+              "total_ns": 2003465117,
+              "p50_ns": 15507667,
+              "p90_ns": 35813958,
+              "p99_ns": 61914334,
+              "max_ns": 73139834
+            },
+            {
+              "queries": 100,
+              "total_ns": 1512906129,
+              "p50_ns": 11775042,
+              "p90_ns": 27894917,
+              "p99_ns": 55572917,
+              "max_ns": 62362917
+            }
+          ],
+          "peak_rss_bytes": 30359552,
+          "wall_s": 5.995632249861956
+        }
+      ],
+      "ops": {
+        "error": "skipped: WARM_BENCH_SKIP_OPS"
+      },
+      "version": {
+        "python-sqlite3": "3.53.1"
+      },
+      "install": {
+        "bytes": 0,
+        "distributions": 0,
+        "ships_with_interpreter": true,
+        "note": "standard library or already-installed dependency"
+      }
+    },
+    "lucene": {
+      "display": "Apache Lucene 10.6.0 (JVM)",
+      "build_runs": [
+        {
+          "documents": 4559,
+          "ingest_s": 20.915402375,
+          "peak_rss_bytes_self": 353452032,
+          "peak_rss_bytes": 364134400,
+          "wall_s": 21.716709499945864,
+          "disk_bytes": 10823582
+        },
+        {
+          "documents": 4559,
+          "ingest_s": 34.684592292,
+          "peak_rss_bytes_self": 350535680,
+          "peak_rss_bytes": 361201664,
+          "wall_s": 35.54341404186562,
+          "disk_bytes": 10823582
+        }
+      ],
+      "serve_rounds": [
+        {
+          "open_s": 0.546423583,
+          "cold_start_s": 0.966162,
+          "peak_rss_bytes_self": 149389312,
+          "quality": {
+            "ndcg_at_10": 0.46265299364569407,
+            "recall_at_10": 0.5771666666666667,
+            "recall_at_100": 0.8236666666666665,
+            "per_query_ndcg_at_10": [
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              0.0,
+              0.5,
+              1.0,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.0,
+              0.3333333333333333,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              0.3065735963827292,
+              0.23463936301137822,
+              0.09803928583135704,
+              0.4441228664487979,
+              0.0,
+              0.5307212739772434,
+              1.0,
+              0.0,
+              0.17723928678404774,
+              0.3903800499921017,
+              0.0,
+              0.0,
+              0.0,
+              0.14126697285982898,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.3562071871080222,
+              0.6309297535714575,
+              0.0,
+              0.0,
+              0.9197207891481876,
+              0.6131471927654584,
+              0.0,
+              0.17723928678404774,
+              0.8315546295836225,
+              0.7903864795495061,
+              0.46845052016107697,
+              1.0,
+              0.38685280723454163,
+              0.0,
+              0.0,
+              1.0,
+              0.7977228895450266,
+              0.0,
+              0.8065735963827293,
+              0.4415801103577823,
+              0.3065735963827292,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.3171937659698004,
+              0.0,
+              0.44130740935663865,
+              0.48160565320269266,
+              0.6131471927654584,
+              0.8503449055347546,
+              0.6240505200038379,
+              0.5012658353418871,
+              0.0,
+              0.6131471927654584,
+              0.2640681225725909,
+              0.8772153153380493,
+              0.9197207891481876,
+              0.8503449055347546,
+              0.9197207891481876,
+              0.20438239758848611,
+              1.0,
+              1.0,
+              0.5802792108518124,
+              0.6131471927654584,
+              1.0,
+              1.0,
+              0.6131471927654584,
+              0.38685280723454163,
+              0.0,
+              1.0,
+              0.3065735963827292,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.31546487678572877,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "per_query_recall_at_100": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.25,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.6666666666666666,
+              0.6666666666666666,
+              1.0,
+              0.4,
+              1.0,
+              0.25,
+              1.0,
+              0.6666666666666666,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              0.5,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              1.0,
+              0.8,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "queries": 100
+          },
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 99505287,
+              "p50_ns": 675709,
+              "p90_ns": 1304625,
+              "p99_ns": 8033084,
+              "max_ns": 8264250
+            },
+            {
+              "queries": 100,
+              "total_ns": 92020042,
+              "p50_ns": 862917,
+              "p90_ns": 1272834,
+              "p99_ns": 2515875,
+              "max_ns": 3557583
+            },
+            {
+              "queries": 100,
+              "total_ns": 77945080,
+              "p50_ns": 677917,
+              "p90_ns": 1080542,
+              "p99_ns": 2786750,
+              "max_ns": 4127500
+            }
+          ],
+          "peak_rss_bytes": 151289856,
+          "wall_s": 2.162458375096321
+        },
+        {
+          "open_s": 0.416865167,
+          "cold_start_s": 0.709627,
+          "peak_rss_bytes_self": 147095552,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 93689284,
+              "p50_ns": 880584,
+              "p90_ns": 1336166,
+              "p99_ns": 2482375,
+              "max_ns": 2618083
+            },
+            {
+              "queries": 100,
+              "total_ns": 61773047,
+              "p50_ns": 533708,
+              "p90_ns": 923291,
+              "p99_ns": 1219791,
+              "max_ns": 2362917
+            },
+            {
+              "queries": 100,
+              "total_ns": 60105619,
+              "p50_ns": 483500,
+              "p90_ns": 959541,
+              "p99_ns": 2154833,
+              "max_ns": 2465833
+            }
+          ],
+          "peak_rss_bytes": 149569536,
+          "wall_s": 3.5036943331360817
+        },
+        {
+          "open_s": 0.352838625,
+          "cold_start_s": 0.493128,
+          "peak_rss_bytes_self": 143933440,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 83005044,
+              "p50_ns": 607958,
+              "p90_ns": 1376750,
+              "p99_ns": 2262667,
+              "max_ns": 2723584
+            },
+            {
+              "queries": 100,
+              "total_ns": 63325211,
+              "p50_ns": 545208,
+              "p90_ns": 938625,
+              "p99_ns": 1389750,
+              "max_ns": 2116250
+            },
+            {
+              "queries": 100,
+              "total_ns": 69042758,
+              "p50_ns": 548042,
+              "p90_ns": 1066167,
+              "p99_ns": 1998541,
+              "max_ns": 2487917
+            }
+          ],
+          "peak_rss_bytes": 146407424,
+          "wall_s": 2.386131417006254
+        },
+        {
+          "open_s": 0.337873417,
+          "cold_start_s": 0.562659,
+          "peak_rss_bytes_self": 145276928,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 67662706,
+              "p50_ns": 563375,
+              "p90_ns": 1012250,
+              "p99_ns": 2198625,
+              "max_ns": 2344959
+            },
+            {
+              "queries": 100,
+              "total_ns": 58582793,
+              "p50_ns": 525083,
+              "p90_ns": 774292,
+              "p99_ns": 1226125,
+              "max_ns": 2210209
+            },
+            {
+              "queries": 100,
+              "total_ns": 62409250,
+              "p50_ns": 533417,
+              "p90_ns": 963250,
+              "p99_ns": 1676542,
+              "max_ns": 2059875
+            }
+          ],
+          "peak_rss_bytes": 147800064,
+          "wall_s": 1.988752249861136
+        },
+        {
+          "open_s": 0.133458083,
+          "cold_start_s": 5.512623,
+          "peak_rss_bytes_self": 182501376,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 58242628,
+              "p50_ns": 538042,
+              "p90_ns": 730291,
+              "p99_ns": 1510750,
+              "max_ns": 1524458
+            },
+            {
+              "queries": 100,
+              "total_ns": 49276248,
+              "p50_ns": 462875,
+              "p90_ns": 602666,
+              "p99_ns": 1143375,
+              "max_ns": 1444042
+            },
+            {
+              "queries": 100,
+              "total_ns": 50494340,
+              "p50_ns": 456541,
+              "p90_ns": 626708,
+              "p99_ns": 1124459,
+              "max_ns": 1497417
+            }
+          ],
+          "peak_rss_bytes": 184582144,
+          "wall_s": 5.989740709075704
+        }
+      ],
+      "ops": {
+        "error": "skipped: WARM_BENCH_SKIP_OPS"
+      },
+      "version": {
+        "lucene": "10.6.0",
+        "jvm": "openjdk version \"26.0.1\" 2026-04-21"
+      },
+      "install": {
+        "bytes": 6594747,
+        "distributions": 2,
+        "note": "two jars; also requires a JVM (not counted)"
+      }
+    },
+    "tantivy": {
+      "display": "tantivy",
+      "build_runs": [
+        {
+          "documents": 4559,
+          "ingest_s": 10.552150000119582,
+          "peak_rss_bytes_self": 336265216,
+          "peak_rss_bytes": 336265216,
+          "wall_s": 11.365047166123986,
+          "disk_bytes": 14372347
+        },
+        {
+          "documents": 4559,
+          "ingest_s": 9.91263670893386,
+          "peak_rss_bytes_self": 341655552,
+          "peak_rss_bytes": 341655552,
+          "wall_s": 10.515218541957438,
+          "disk_bytes": 14372347
+        }
+      ],
+      "serve_rounds": [
+        {
+          "open_s": 0.20157604198902845,
+          "cold_start_s": 0.834276,
+          "peak_rss_bytes_self": 34160640,
+          "quality": {
+            "ndcg_at_10": 0.45324379736331205,
+            "recall_at_10": 0.5718333333333333,
+            "recall_at_100": 0.8203333333333334,
+            "per_query_ndcg_at_10": [
+              1.0,
+              0.6309297535714575,
+              0.5,
+              1.0,
+              0.0,
+              0.5,
+              1.0,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.0,
+              0.3333333333333333,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              0.3065735963827292,
+              0.2960819109658652,
+              0.0,
+              0.37590633587120725,
+              0.0,
+              0.7653606369886217,
+              0.9197207891481876,
+              0.0,
+              0.0,
+              0.3903800499921017,
+              0.17723928678404774,
+              0.0,
+              0.0,
+              0.14126697285982898,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.3562071871080222,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.9197207891481876,
+              0.7903864795495061,
+              0.0,
+              0.0,
+              0.8175295903539445,
+              0.7977228895450266,
+              0.46845052016107697,
+              1.0,
+              0.6131471927654584,
+              0.0,
+              0.0,
+              0.9197207891481876,
+              0.8065735963827293,
+              0.0,
+              0.7977228895450266,
+              0.45560514958746035,
+              0.3065735963827292,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1480409554829326,
+              0.0,
+              0.448643819352159,
+              0.4856637624942473,
+              0.6131471927654584,
+              0.8315546295836225,
+              0.5437713091520254,
+              0.5012658353418871,
+              0.0,
+              0.6131471927654584,
+              0.2640681225725909,
+              0.8772153153380493,
+              0.8503449055347546,
+              0.8503449055347546,
+              0.9197207891481876,
+              0.20438239758848611,
+              1.0,
+              1.0,
+              0.5,
+              0.6131471927654584,
+              1.0,
+              1.0,
+              0.6131471927654584,
+              0.38685280723454163,
+              0.0,
+              1.0,
+              0.3065735963827292,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.2890648263178879,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "per_query_recall_at_100": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.25,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.6666666666666666,
+              0.6666666666666666,
+              1.0,
+              0.4,
+              1.0,
+              0.25,
+              1.0,
+              0.6666666666666666,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              0.5,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              0.6666666666666666,
+              0.0,
+              1.0,
+              0.8,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "queries": 100
+          },
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 49496667,
+              "p50_ns": 234292,
+              "p90_ns": 522125,
+              "p99_ns": 2327125,
+              "max_ns": 16105792
+            },
+            {
+              "queries": 100,
+              "total_ns": 21955429,
+              "p50_ns": 198542,
+              "p90_ns": 313750,
+              "p99_ns": 402041,
+              "max_ns": 402250
+            },
+            {
+              "queries": 100,
+              "total_ns": 25473669,
+              "p50_ns": 209916,
+              "p90_ns": 377750,
+              "p99_ns": 697291,
+              "max_ns": 1089917
+            }
+          ],
+          "peak_rss_bytes": 35651584,
+          "wall_s": 1.4099372080527246
+        },
+        {
+          "open_s": 0.8364686251152307,
+          "cold_start_s": 1.165642,
+          "peak_rss_bytes_self": 34013184,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 25839833,
+              "p50_ns": 180792,
+              "p90_ns": 275292,
+              "p99_ns": 1377333,
+              "max_ns": 4604375
+            },
+            {
+              "queries": 100,
+              "total_ns": 18375420,
+              "p50_ns": 173542,
+              "p90_ns": 237750,
+              "p99_ns": 308208,
+              "max_ns": 326041
+            },
+            {
+              "queries": 100,
+              "total_ns": 18239048,
+              "p50_ns": 173167,
+              "p90_ns": 248416,
+              "p99_ns": 320083,
+              "max_ns": 321125
+            }
+          ],
+          "peak_rss_bytes": 35536896,
+          "wall_s": 1.3948208750225604
+        },
+        {
+          "open_s": 0.8830633340403438,
+          "cold_start_s": 2.740553,
+          "peak_rss_bytes_self": 34062336,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 21266126,
+              "p50_ns": 188542,
+              "p90_ns": 318667,
+              "p99_ns": 427125,
+              "max_ns": 540167
+            },
+            {
+              "queries": 100,
+              "total_ns": 19957461,
+              "p50_ns": 179375,
+              "p90_ns": 280750,
+              "p99_ns": 375000,
+              "max_ns": 571750
+            },
+            {
+              "queries": 100,
+              "total_ns": 21269535,
+              "p50_ns": 189291,
+              "p90_ns": 311250,
+              "p99_ns": 394625,
+              "max_ns": 464459
+            }
+          ],
+          "peak_rss_bytes": 35454976,
+          "wall_s": 1.3565892500337213
+        },
+        {
+          "open_s": 0.002004832960665226,
+          "cold_start_s": 0.164408,
+          "peak_rss_bytes_self": 34160640,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 20320158,
+              "p50_ns": 183875,
+              "p90_ns": 260833,
+              "p99_ns": 391000,
+              "max_ns": 771625
+            },
+            {
+              "queries": 100,
+              "total_ns": 18633207,
+              "p50_ns": 180000,
+              "p90_ns": 240583,
+              "p99_ns": 308583,
+              "max_ns": 331958
+            },
+            {
+              "queries": 100,
+              "total_ns": 18402743,
+              "p50_ns": 170958,
+              "p90_ns": 280250,
+              "p99_ns": 353875,
+              "max_ns": 423125
+            }
+          ],
+          "peak_rss_bytes": 35651584,
+          "wall_s": 0.3734856671653688
+        },
+        {
+          "open_s": 0.29353274987079203,
+          "cold_start_s": 0.439924,
+          "peak_rss_bytes_self": 33931264,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 26250461,
+              "p50_ns": 176500,
+              "p90_ns": 268666,
+              "p99_ns": 3896667,
+              "max_ns": 4160959
+            },
+            {
+              "queries": 100,
+              "total_ns": 17419158,
+              "p50_ns": 165083,
+              "p90_ns": 241541,
+              "p99_ns": 311625,
+              "max_ns": 315375
+            },
+            {
+              "queries": 100,
+              "total_ns": 17446422,
+              "p50_ns": 166958,
+              "p90_ns": 210125,
+              "p99_ns": 306375,
+              "max_ns": 361917
+            }
+          ],
+          "peak_rss_bytes": 35438592,
+          "wall_s": 0.7538615840021521
+        }
+      ],
+      "ops": {
+        "error": "skipped: WARM_BENCH_SKIP_OPS"
+      },
+      "version": {
+        "tantivy": "0.27.0",
+        "python": "3.13.15"
+      },
+      "install": {
+        "bytes": 30002780,
+        "distributions": 1,
+        "dists": [
+          "tantivy-0.27.0"
+        ]
+      }
+    },
+    "sqlite-fts5-prev": {
+      "display": "SQLite FTS5 (previous pin, SQLite 3.50.4)",
+      "build_runs": [
+        {
+          "documents": 4559,
+          "ingest_s": 10.579833999974653,
+          "peak_rss_bytes_self": 222330880,
+          "peak_rss_bytes": 222363648,
+          "wall_s": 11.248574792174622,
+          "disk_bytes": 20189184
+        },
+        {
+          "documents": 4559,
+          "ingest_s": 10.075988540891558,
+          "peak_rss_bytes_self": 222298112,
+          "peak_rss_bytes": 222330880,
+          "wall_s": 11.171751333866268,
+          "disk_bytes": 20189184
+        }
+      ],
+      "serve_rounds": [
+        {
+          "open_s": 0.04304162482731044,
+          "cold_start_s": 1.056946,
+          "peak_rss_bytes_self": 28753920,
+          "quality": {
+            "ndcg_at_10": 0.45009623895127726,
+            "recall_at_10": 0.5468333333333333,
+            "recall_at_100": 0.8391666666666667,
+            "per_query_ndcg_at_10": [
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              0.0,
+              0.43067655807339306,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.6309297535714575,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.46927872602275644,
+              0.0,
+              0.4441228664487979,
+              0.0,
+              0.36926780146674987,
+              0.8503449055347546,
+              0.0,
+              0.17723928678404774,
+              0.3903800499921017,
+              0.0,
+              0.0,
+              0.0,
+              0.14126697285982898,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.38685280723454163,
+              0.31546487678572877,
+              0.0,
+              0.0,
+              0.9197207891481876,
+              0.38685280723454163,
+              0.0,
+              0.18457569677956817,
+              0.8315546295836225,
+              0.7903864795495061,
+              0.5249810332008933,
+              1.0,
+              0.5640920940185894,
+              0.0,
+              0.0,
+              1.0,
+              0.7977228895450266,
+              0.0,
+              0.7903864795495061,
+              0.46845052016107697,
+              0.38685280723454163,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1480409554829326,
+              0.0,
+              0.2640681225725909,
+              0.48160565320269266,
+              0.6131471927654584,
+              0.8175295903539445,
+              0.5437713091520254,
+              0.5437713091520254,
+              0.0,
+              0.6131471927654584,
+              0.3065735963827292,
+              0.8772153153380493,
+              0.9197207891481876,
+              0.8772153153380493,
+              1.0,
+              0.18457569677956817,
+              1.0,
+              1.0,
+              0.4911492931622974,
+              0.6131471927654584,
+              1.0,
+              1.0,
+              0.6131471927654584,
+              0.6131471927654584,
+              0.0,
+              1.0,
+              0.3065735963827292,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.43067655807339306,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "per_query_recall_at_100": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.25,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              0.8,
+              1.0,
+              0.6666666666666666,
+              0.6666666666666666,
+              1.0,
+              0.4,
+              1.0,
+              0.5,
+              1.0,
+              0.6666666666666666,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              1.0,
+              0.8,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "queries": 100
+          },
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 6531865584,
+              "p50_ns": 50554250,
+              "p90_ns": 121783250,
+              "p99_ns": 242631416,
+              "max_ns": 348463709
+            },
+            {
+              "queries": 100,
+              "total_ns": 1966991543,
+              "p50_ns": 14492667,
+              "p90_ns": 37032083,
+              "p99_ns": 74590250,
+              "max_ns": 83800708
+            },
+            {
+              "queries": 100,
+              "total_ns": 1824647205,
+              "p50_ns": 14210958,
+              "p90_ns": 35438083,
+              "p99_ns": 69441667,
+              "max_ns": 74636084
+            }
+          ],
+          "peak_rss_bytes": 30195712,
+          "wall_s": 12.817359332926571
+        },
+        {
+          "open_s": 0.020808125147596,
+          "cold_start_s": 1.133684,
+          "peak_rss_bytes_self": 28868608,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 5868854328,
+              "p50_ns": 42143083,
+              "p90_ns": 129622458,
+              "p99_ns": 195575334,
+              "max_ns": 235249958
+            },
+            {
+              "queries": 100,
+              "total_ns": 1558705666,
+              "p50_ns": 11908333,
+              "p90_ns": 28850709,
+              "p99_ns": 58952958,
+              "max_ns": 65498958
+            },
+            {
+              "queries": 100,
+              "total_ns": 1636344049,
+              "p50_ns": 12418875,
+              "p90_ns": 37748667,
+              "p99_ns": 67953459,
+              "max_ns": 68078625
+            }
+          ],
+          "peak_rss_bytes": 30146560,
+          "wall_s": 12.70411254093051
+        },
+        {
+          "open_s": 0.00017424998804926872,
+          "cold_start_s": 0.192497,
+          "peak_rss_bytes_self": 28770304,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 1802451165,
+              "p50_ns": 13339708,
+              "p90_ns": 34950625,
+              "p99_ns": 67506750,
+              "max_ns": 71067250
+            },
+            {
+              "queries": 100,
+              "total_ns": 2160240207,
+              "p50_ns": 17150875,
+              "p90_ns": 42524667,
+              "p99_ns": 73644625,
+              "max_ns": 86277292
+            },
+            {
+              "queries": 100,
+              "total_ns": 2083402248,
+              "p50_ns": 15837042,
+              "p90_ns": 39303041,
+              "p99_ns": 73325500,
+              "max_ns": 76960375
+            }
+          ],
+          "peak_rss_bytes": 30212096,
+          "wall_s": 6.345500000054017
+        },
+        {
+          "open_s": 0.00018479209393262863,
+          "cold_start_s": 0.133159,
+          "peak_rss_bytes_self": 28655616,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 2086655584,
+              "p50_ns": 15908583,
+              "p90_ns": 37900166,
+              "p99_ns": 72946708,
+              "max_ns": 82352459
+            },
+            {
+              "queries": 100,
+              "total_ns": 1627369875,
+              "p50_ns": 12351500,
+              "p90_ns": 28931042,
+              "p99_ns": 59102792,
+              "max_ns": 76903375
+            },
+            {
+              "queries": 100,
+              "total_ns": 1617084873,
+              "p50_ns": 12525250,
+              "p90_ns": 34119917,
+              "p99_ns": 60260875,
+              "max_ns": 63750209
+            }
+          ],
+          "peak_rss_bytes": 30031872,
+          "wall_s": 5.7786979579832405
+        },
+        {
+          "open_s": 0.013676542090252042,
+          "cold_start_s": 0.884089,
+          "peak_rss_bytes_self": 28901376,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 6566263331,
+              "p50_ns": 55813042,
+              "p90_ns": 144479792,
+              "p99_ns": 211958125,
+              "max_ns": 253428542
+            },
+            {
+              "queries": 100,
+              "total_ns": 1738460166,
+              "p50_ns": 12609458,
+              "p90_ns": 35231417,
+              "p99_ns": 73794084,
+              "max_ns": 95217791
+            },
+            {
+              "queries": 100,
+              "total_ns": 1866306545,
+              "p50_ns": 13388167,
+              "p90_ns": 37950584,
+              "p99_ns": 74238166,
+              "max_ns": 92731666
+            }
+          ],
+          "peak_rss_bytes": 30359552,
+          "wall_s": 12.647038292139769
+        }
+      ],
+      "ops": {
+        "error": "skipped: WARM_BENCH_SKIP_OPS"
+      },
+      "version": {
+        "python-sqlite3": "3.50.4"
+      },
+      "install": {
+        "bytes": 0,
+        "distributions": 0,
+        "ships_with_interpreter": true,
+        "note": "standard library or already-installed dependency"
+      }
+    },
+    "lucene-prev": {
+      "display": "Apache Lucene 9.12.3 (JVM, previous pin)",
+      "build_runs": [
+        {
+          "documents": 4559,
+          "ingest_s": 16.92407575,
+          "peak_rss_bytes_self": 467058688,
+          "peak_rss_bytes": 477757440,
+          "wall_s": 17.44155983394012,
+          "disk_bytes": 10814958
+        },
+        {
+          "documents": 4559,
+          "ingest_s": 20.72661275,
+          "peak_rss_bytes_self": 362217472,
+          "peak_rss_bytes": 372785152,
+          "wall_s": 21.56748816696927,
+          "disk_bytes": 10814958
+        }
+      ],
+      "serve_rounds": [
+        {
+          "open_s": 0.419256875,
+          "cold_start_s": 1.047784,
+          "peak_rss_bytes_self": 141934592,
+          "quality": {
+            "ndcg_at_10": 0.46265299364569407,
+            "recall_at_10": 0.5771666666666667,
+            "recall_at_100": 0.8236666666666665,
+            "per_query_ndcg_at_10": [
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              0.0,
+              0.5,
+              1.0,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.0,
+              0.3333333333333333,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              0.3065735963827292,
+              0.23463936301137822,
+              0.09803928583135704,
+              0.4441228664487979,
+              0.0,
+              0.5307212739772434,
+              1.0,
+              0.0,
+              0.17723928678404774,
+              0.3903800499921017,
+              0.0,
+              0.0,
+              0.0,
+              0.14126697285982898,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.3562071871080222,
+              0.6309297535714575,
+              0.0,
+              0.0,
+              0.9197207891481876,
+              0.6131471927654584,
+              0.0,
+              0.17723928678404774,
+              0.8315546295836225,
+              0.7903864795495061,
+              0.46845052016107697,
+              1.0,
+              0.38685280723454163,
+              0.0,
+              0.0,
+              1.0,
+              0.7977228895450266,
+              0.0,
+              0.8065735963827293,
+              0.4415801103577823,
+              0.3065735963827292,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.3171937659698004,
+              0.0,
+              0.44130740935663865,
+              0.48160565320269266,
+              0.6131471927654584,
+              0.8503449055347546,
+              0.6240505200038379,
+              0.5012658353418871,
+              0.0,
+              0.6131471927654584,
+              0.2640681225725909,
+              0.8772153153380493,
+              0.9197207891481876,
+              0.8503449055347546,
+              0.9197207891481876,
+              0.20438239758848611,
+              1.0,
+              1.0,
+              0.5802792108518124,
+              0.6131471927654584,
+              1.0,
+              1.0,
+              0.6131471927654584,
+              0.38685280723454163,
+              0.0,
+              1.0,
+              0.3065735963827292,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.31546487678572877,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "per_query_recall_at_100": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.25,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.6666666666666666,
+              0.6666666666666666,
+              1.0,
+              0.4,
+              1.0,
+              0.25,
+              1.0,
+              0.6666666666666666,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              0.5,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              1.0,
+              0.8,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "queries": 100
+          },
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 86769246,
+              "p50_ns": 689041,
+              "p90_ns": 1393750,
+              "p99_ns": 2163333,
+              "max_ns": 2218417
+            },
+            {
+              "queries": 100,
+              "total_ns": 90290501,
+              "p50_ns": 834333,
+              "p90_ns": 1376916,
+              "p99_ns": 1703750,
+              "max_ns": 2743750
+            },
+            {
+              "queries": 100,
+              "total_ns": 80437964,
+              "p50_ns": 697958,
+              "p90_ns": 1177667,
+              "p99_ns": 1708334,
+              "max_ns": 2052083
+            }
+          ],
+          "peak_rss_bytes": 144736256,
+          "wall_s": 3.566917625023052
+        },
+        {
+          "open_s": 0.291967375,
+          "cold_start_s": 0.682686,
+          "peak_rss_bytes_self": 141426688,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 85553373,
+              "p50_ns": 692042,
+              "p90_ns": 1363375,
+              "p99_ns": 2150792,
+              "max_ns": 2676500
+            },
+            {
+              "queries": 100,
+              "total_ns": 73503040,
+              "p50_ns": 603333,
+              "p90_ns": 1093583,
+              "p99_ns": 1876959,
+              "max_ns": 2605666
+            },
+            {
+              "queries": 100,
+              "total_ns": 68568752,
+              "p50_ns": 585708,
+              "p90_ns": 1089375,
+              "p99_ns": 1383291,
+              "max_ns": 1646708
+            }
+          ],
+          "peak_rss_bytes": 143949824,
+          "wall_s": 2.864462584024295
+        },
+        {
+          "open_s": 0.357667458,
+          "cold_start_s": 0.524215,
+          "peak_rss_bytes_self": 141803520,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 120098790,
+              "p50_ns": 1170833,
+              "p90_ns": 1719833,
+              "p99_ns": 2469416,
+              "max_ns": 2905875
+            },
+            {
+              "queries": 100,
+              "total_ns": 105759619,
+              "p50_ns": 1011458,
+              "p90_ns": 1329834,
+              "p99_ns": 2134333,
+              "max_ns": 2189166
+            },
+            {
+              "queries": 100,
+              "total_ns": 85568248,
+              "p50_ns": 738667,
+              "p90_ns": 1177917,
+              "p99_ns": 2395542,
+              "max_ns": 2642667
+            }
+          ],
+          "peak_rss_bytes": 144326656,
+          "wall_s": 2.30651683290489
+        },
+        {
+          "open_s": 0.308720833,
+          "cold_start_s": 0.528014,
+          "peak_rss_bytes_self": 142147584,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 83026039,
+              "p50_ns": 736250,
+              "p90_ns": 1175833,
+              "p99_ns": 1869542,
+              "max_ns": 3248000
+            },
+            {
+              "queries": 100,
+              "total_ns": 77282460,
+              "p50_ns": 642125,
+              "p90_ns": 1142083,
+              "p99_ns": 2269916,
+              "max_ns": 2689542
+            },
+            {
+              "queries": 100,
+              "total_ns": 66581751,
+              "p50_ns": 600667,
+              "p90_ns": 907833,
+              "p99_ns": 1186417,
+              "max_ns": 2084500
+            }
+          ],
+          "peak_rss_bytes": 144687104,
+          "wall_s": 3.239824583986774
+        },
+        {
+          "open_s": 0.324450208,
+          "cold_start_s": 0.478347,
+          "peak_rss_bytes_self": 143015936,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 111563703,
+              "p50_ns": 947333,
+              "p90_ns": 1929333,
+              "p99_ns": 2896334,
+              "max_ns": 2964666
+            },
+            {
+              "queries": 100,
+              "total_ns": 108843918,
+              "p50_ns": 921500,
+              "p90_ns": 1565833,
+              "p99_ns": 3493500,
+              "max_ns": 3795666
+            },
+            {
+              "queries": 100,
+              "total_ns": 82677414,
+              "p50_ns": 724167,
+              "p90_ns": 1154083,
+              "p99_ns": 2164291,
+              "max_ns": 2278708
+            }
+          ],
+          "peak_rss_bytes": 145506304,
+          "wall_s": 1.8881666669622064
+        }
+      ],
+      "ops": {
+        "error": "skipped: WARM_BENCH_SKIP_OPS"
+      },
+      "version": {
+        "lucene": "9.12.3",
+        "jvm": "openjdk version \"26.0.1\" 2026-04-21"
+      },
+      "install": {
+        "bytes": 5992790,
+        "distributions": 2,
+        "note": "two jars; also requires a JVM (not counted)"
+      }
+    },
+    "tantivy-prev": {
+      "display": "tantivy-py 0.26.2 (previous pin)",
+      "build_runs": [
+        {
+          "documents": 4559,
+          "ingest_s": 9.710407667094842,
+          "peak_rss_bytes_self": 339460096,
+          "peak_rss_bytes": 339460096,
+          "wall_s": 10.486145625123754,
+          "disk_bytes": 14372815
+        },
+        {
+          "documents": 4559,
+          "ingest_s": 6.97360995807685,
+          "peak_rss_bytes_self": 335118336,
+          "peak_rss_bytes": 335118336,
+          "wall_s": 7.315699541009963,
+          "disk_bytes": 14372815
+        }
+      ],
+      "serve_rounds": [
+        {
+          "open_s": 0.8781073749996722,
+          "cold_start_s": 1.266951,
+          "peak_rss_bytes_self": 33718272,
+          "quality": {
+            "ndcg_at_10": 0.4491250108653578,
+            "recall_at_10": 0.5668333333333333,
+            "recall_at_100": 0.8203333333333334,
+            "per_query_ndcg_at_10": [
+              1.0,
+              0.6309297535714575,
+              0.5,
+              1.0,
+              0.0,
+              0.5,
+              1.0,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.0,
+              0.3333333333333333,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              0.3065735963827292,
+              0.2960819109658652,
+              0.0,
+              0.37590633587120725,
+              0.0,
+              0.5307212739772434,
+              0.9197207891481876,
+              0.0,
+              0.0,
+              0.3903800499921017,
+              0.17723928678404774,
+              0.0,
+              0.0,
+              0.14126697285982898,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.3562071871080222,
+              0.0,
+              0.2890648263178879,
+              0.0,
+              0.9197207891481876,
+              0.6131471927654584,
+              0.0,
+              0.0,
+              0.8175295903539445,
+              0.7977228895450266,
+              0.46845052016107697,
+              1.0,
+              0.6131471927654584,
+              0.0,
+              0.0,
+              0.9197207891481876,
+              0.8065735963827293,
+              0.0,
+              0.7977228895450266,
+              0.45560514958746035,
+              0.3065735963827292,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.1480409554829326,
+              0.0,
+              0.448643819352159,
+              0.4856637624942473,
+              0.6131471927654584,
+              0.8315546295836225,
+              0.5437713091520254,
+              0.5012658353418871,
+              0.0,
+              0.6131471927654584,
+              0.2640681225725909,
+              0.8772153153380493,
+              0.8503449055347546,
+              0.8503449055347546,
+              0.9197207891481876,
+              0.20438239758848611,
+              1.0,
+              1.0,
+              0.5,
+              0.6131471927654584,
+              1.0,
+              1.0,
+              0.6131471927654584,
+              0.38685280723454163,
+              0.0,
+              1.0,
+              0.3065735963827292,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.2890648263178879,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "per_query_recall_at_100": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.25,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.6666666666666666,
+              0.6666666666666666,
+              1.0,
+              0.4,
+              1.0,
+              0.25,
+              1.0,
+              0.6666666666666666,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              0.5,
+              1.0,
+              1.0,
+              0.5,
+              0.5,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.3333333333333333,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              0.6666666666666666,
+              0.0,
+              1.0,
+              0.8,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "queries": 100
+          },
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 38548416,
+              "p50_ns": 201708,
+              "p90_ns": 337708,
+              "p99_ns": 4724208,
+              "max_ns": 8361708
+            },
+            {
+              "queries": 100,
+              "total_ns": 20442083,
+              "p50_ns": 193583,
+              "p90_ns": 292583,
+              "p99_ns": 343667,
+              "max_ns": 355834
+            },
+            {
+              "queries": 100,
+              "total_ns": 18410626,
+              "p50_ns": 178625,
+              "p90_ns": 238583,
+              "p99_ns": 313416,
+              "max_ns": 326667
+            }
+          ],
+          "peak_rss_bytes": 35160064,
+          "wall_s": 2.0035758330486715
+        },
+        {
+          "open_s": 0.7984137500170618,
+          "cold_start_s": 1.052581,
+          "peak_rss_bytes_self": 33472512,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 45935459,
+              "p50_ns": 181917,
+              "p90_ns": 284583,
+              "p99_ns": 3022083,
+              "max_ns": 22967917
+            },
+            {
+              "queries": 100,
+              "total_ns": 19014328,
+              "p50_ns": 178625,
+              "p90_ns": 265541,
+              "p99_ns": 330459,
+              "max_ns": 335958
+            },
+            {
+              "queries": 100,
+              "total_ns": 17840912,
+              "p50_ns": 169000,
+              "p90_ns": 220708,
+              "p99_ns": 338875,
+              "max_ns": 351458
+            }
+          ],
+          "peak_rss_bytes": 34979840,
+          "wall_s": 1.243079415988177
+        },
+        {
+          "open_s": 0.0048352498561143875,
+          "cold_start_s": 0.085509,
+          "peak_rss_bytes_self": 33882112,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 45262875,
+              "p50_ns": 418250,
+              "p90_ns": 664209,
+              "p99_ns": 1215500,
+              "max_ns": 1529333
+            },
+            {
+              "queries": 100,
+              "total_ns": 40442546,
+              "p50_ns": 326250,
+              "p90_ns": 726500,
+              "p99_ns": 1073208,
+              "max_ns": 2011209
+            },
+            {
+              "queries": 100,
+              "total_ns": 38911587,
+              "p50_ns": 371584,
+              "p90_ns": 531500,
+              "p99_ns": 679291,
+              "max_ns": 1061125
+            }
+          ],
+          "peak_rss_bytes": 35176448,
+          "wall_s": 0.38586058281362057
+        },
+        {
+          "open_s": 0.8998881250154227,
+          "cold_start_s": 1.23962,
+          "peak_rss_bytes_self": 33570816,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 18631329,
+              "p50_ns": 176917,
+              "p90_ns": 255709,
+              "p99_ns": 326750,
+              "max_ns": 336584
+            },
+            {
+              "queries": 100,
+              "total_ns": 18159796,
+              "p50_ns": 171083,
+              "p90_ns": 251542,
+              "p99_ns": 313834,
+              "max_ns": 333666
+            },
+            {
+              "queries": 100,
+              "total_ns": 18807080,
+              "p50_ns": 171417,
+              "p90_ns": 240208,
+              "p99_ns": 483208,
+              "max_ns": 527000
+            }
+          ],
+          "peak_rss_bytes": 34979840,
+          "wall_s": 1.463210582965985
+        },
+        {
+          "open_s": 0.23911237507127225,
+          "cold_start_s": 0.381122,
+          "peak_rss_bytes_self": 33767424,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 100,
+              "total_ns": 31972287,
+              "p50_ns": 290250,
+              "p90_ns": 480667,
+              "p99_ns": 1221750,
+              "max_ns": 1457583
+            },
+            {
+              "queries": 100,
+              "total_ns": 19904087,
+              "p50_ns": 187958,
+              "p90_ns": 266209,
+              "p99_ns": 340750,
+              "max_ns": 352083
+            },
+            {
+              "queries": 100,
+              "total_ns": 21793207,
+              "p50_ns": 191583,
+              "p90_ns": 313083,
+              "p99_ns": 568375,
+              "max_ns": 658333
+            }
+          ],
+          "peak_rss_bytes": 35078144,
+          "wall_s": 0.7054646660108119
+        }
+      ],
+      "ops": {
+        "error": "skipped: WARM_BENCH_SKIP_OPS"
+      },
+      "version": {
+        "tantivy": "0.26.2",
+        "python": "3.13.15"
+      },
+      "install": {
+        "bytes": 24252020,
+        "distributions": 1,
+        "dists": [
+          "tantivy-0.26.2"
+        ]
+      }
+    }
+  },
+  "skipped": {},
+  "qrels_queries": 100
+}
