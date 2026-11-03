@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "purpose": "Quality-only development evidence for prefix candidate search followed by full-vector reranking",
+  "base_commit": "81f9a126ead5617e4bdfae3be7d69b0bb6f79d1e",
+  "dimensions": [
+    128,
+    256,
+    512,
+    1024
+  ],
+  "candidate_limits": [
+    20,
+    50,
+    100
+  ],
+  "final_k": 10,
+  "queries": 100,
+  "positive_gold_queries": 94,
+  "abstention_queries": 6,
+  "turn_occurrences": 24391,
+  "positive_turn_gold_queries": 84,
+  "positive_session_gold_queries": 94,
+  "answer_session_support": "Every source answer_session_id for all 94 non-abstention queries has at least one cached eligible user turn; all were verified before scoring. Session-level evidence coverage does not establish retrieval of an answer-bearing user turn.",
+  "non_abstention_queries_without_eligible_gold_user_turn": [
+    "89527b6b",
+    "7e00a6cb",
+    "0e5e2d1a",
+    "8464fc84",
+    "e8a79c70",
+    "d596882b",
+    "e3fc4d6e",
+    "352ab8bd",
+    "b759caee",
+    "e48988bc"
+  ],
+  "eligible_turns_total": 24389,
+  "deduplication": {
+    "policy": "Only identical IDs within one question collapse to their first source occurrence after exact content and cached-vector byte equality checks; no cross-question deduplication",
+    "original_occurrences_preserved_in_mapping": true,
+    "duplicates": [
+      {
+        "qid": "18bc8abd",
+        "turn_id": "sharegpt_vyHqfrX_0_1",
+        "retained_global_row": 19612,
+        "duplicate_global_row": 19745,
+        "source_content_equal": true,
+        "cached_vector_bytes_equal": true
+      },
+      {
+        "qid": "18bc8abd",
+        "turn_id": "sharegpt_vyHqfrX_0_3",
+        "retained_global_row": 19613,
+        "duplicate_global_row": 19746,
+        "source_content_equal": true,
+        "cached_vector_bytes_equal": true
+      }
+    ]
+  },
+  "source_dimension": 1024,
+  "source_dtype": "<f2",
+  "math_dtype": "float64",
+  "ranking": "L2-normalize each prefix independently; exact cosine; ties by ascending turn ID then local row; rerank shortlisted rows with the same full-vector cosine scores as the full-search baseline",
+  "gold": "Original user-turn has_answer labels restricted to answer sessions; original answer_session_ids map to the cached session IDs even when the evidence is assistant-only. Session coverage is measured among the final ten returned turns, not a separate top-ten-session search. Exclude six abstentions from positive-gold metrics; ten assistant-only questions lack any eligible gold user turn, so turn metrics are undefined for them and use denominator 84, while session metrics use denominator 94. All 100 remain in agreement metrics.",
+  "metrics": [
+    "candidate coverage of full-vector top10",
+    "ordered final top10 equality",
+    "final top10 overlap",
+    "missed full-top10 IDs",
+    "turn and session recall any/all/fraction at ten returned turns"
+  ],
+  "decision": "Report every predeclared cell and per-query failures. No tuned acceptance threshold, no unconditional recall guarantee; root decides whether implementation warrants further work.",
+  "model": {
+    "id": "Qwen/Qwen3-Embedding-0.6B",
+    "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+    "query_prompt": "Instruct: Given a question a user asks about their earlier conversations with an AI assistant, retrieve the user messages that contain the information needed to answer it\nQuery:",
+    "document_prompt": "",
+    "pooling": "last token",
+    "max_input_tokens": 2048,
+    "cache_generation": "Historical sentence-transformers T4 fp16 inference, L2-normalized then cached fp16; original questions only, no rewritten queries",
+    "provenance_limit": "Export has no embedded per-file model-revision receipt; attribution follows the recovered exporter and its pinned model/cache-key implementation, not a new inference verification"
+  },
+  "dataset": {
+    "id": "xiaowu0162/longmemeval-cleaned/longmemeval_s_cleaned.json",
+    "revision": "98d7416c24c778c2fee6e6f3006e7a073259d48f",
+    "partition": "Previously used frozen DEVELOPMENT split; not held-out validation"
+  },
+  "inputs": {
+    "turn_vectors": {
+      "path": "/Volumes/A/.hms-bench-cache/holo_dev/turn_emb.f16",
+      "bytes": 49952768,
+      "sha256": "15d996d5bc5aa2331b5be730e8e0aae0b8ed6949ce6bf398d8e07863ffa7b28c"
+    },
+    "query_vectors": {
+      "path": "/Volumes/A/.hms-bench-cache/holo_dev/q_emb.f16",
+      "bytes": 204800,
+      "sha256": "cb9ff8ece64f55f3ac23ec9ebfca4fef521712a834d8d9ea8e0f96a2bbe5a32f"
+    },
+    "export_mapping": {
+      "path": "/Volumes/A/.hms-bench-cache/holo_dev/turns_dev.json",
+      "bytes": 831837,
+      "sha256": "7e04b0ccd6865d953fea5f5920b139aa6bdc384f9a6481d19721e970e9d77e0d"
+    },
+    "source_dataset": {
+      "path": "/Volumes/A/.hms-bench-cache/downloads/longmemeval_s_cleaned.json",
+      "bytes": 277383467,
+      "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+    },
+    "dev_split": {
+      "path": "/Volumes/A/warm-matryoshka-eval/benchmarks/public/longmemeval_split.json",
+      "bytes": 8422,
+      "sha256": "ef9c00e7bc8d029a4f4cf2c177098c35e3ee347893680e1fe26ee98ed9d16ba7"
+    }
+  },
+  "mapping": {
+    "file": "mapping.json.gz",
+    "sha256": "b2aa6251cf6ed656849513816bf70b88459703e3a145a0952600819bd654e919",
+    "verification": "All cached question texts/types/dates and every ordered session/turn ID matched the source dataset before scoring; corpus text is not committed"
+  },
+  "historical_sources": {
+    "benchmarks/public/holographic_memory_proto.py": {
+      "commit": "8ed8ba7ffcf3fb8db1b2d59b3de67351ab3b7a51",
+      "sha256": "fe0e87dc2ec78980614e3a3d87f13197d4d82280277a61cb9f1a71406a5dd6ca"
+    },
+    "benchmarks/public/longmemeval_modal.py": {
+      "commit": "8ed8ba7ffcf3fb8db1b2d59b3de67351ab3b7a51",
+      "sha256": "cd35ed77e8e910d55a1e9f7864dc6049444188ef4b75a83410609f7d626c688b"
+    },
+    "benchmarks/public/longmemeval_pipeline.py": {
+      "commit": "8ed8ba7ffcf3fb8db1b2d59b3de67351ab3b7a51",
+      "sha256": "5083323399c8de2fa67ffcf4ef2054ab9022600944571c85dd1ce7dee66eeda2"
+    }
+  },
+  "environment": {
+    "python": "3.13.9",
+    "numpy": "2.5.4",
+    "executable": "/Volumes/A/.hms-bench-cache/competitive/envs/stdlib/bin/python",
+    "uv": "uv 0.12.10 (3c979abda 2026-09-04 aarch64-apple-darwin)"
+  },
+  "constraints": [
+    "Single frozen run after independent fixture validation and signed plan commit",
+    "No model downloads, inference, paid services, Modal, LLM judges or native builds",
+    "No latency, memory-performance, answer-accuracy, native-Candle-parity, long-context, held-out or 100K-scale claim"
+  ],
+  "scripts": {
+    "prepare.py": "70bc3dcd6e37d4e2aa604254a61da0b239f1bfcc27b525cc711ad69fa47b4c81",
+    "probe.py": "f1dd7581633792a208d1cddd97be76efbc5841810dc821dca381aecf93d330aa",
+    "test_probe.py": "18390ab5e368c4ac7bb09e2502e7ad34a04ec8456d38647989a70e36e02adf8e"
+  }
+}

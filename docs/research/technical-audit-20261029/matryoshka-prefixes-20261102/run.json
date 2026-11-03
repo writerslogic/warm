@@ -1,0 +1,16 @@
+{
+  "plan_commit": "d1b8853d599754be194d44986554e1128cc77153",
+  "plan_sha256": "00a539928977366c3aa1e7761cc7ff0492a894712d794084c8d0448ba52333de",
+  "single_frozen_run": true,
+  "python": "3.13.9",
+  "numpy": "2.5.4",
+  "scripts": {
+    "prepare.py": "70bc3dcd6e37d4e2aa604254a61da0b239f1bfcc27b525cc711ad69fa47b4c81",
+    "probe.py": "f1dd7581633792a208d1cddd97be76efbc5841810dc821dca381aecf93d330aa",
+    "test_probe.py": "18390ab5e368c4ac7bb09e2502e7ad34a04ec8456d38647989a70e36e02adf8e"
+  },
+  "outputs": {
+    "per-query.jsonl.gz": "51e349cab3ac6d31972d8fed636c299773b2a87001bcc9e232927565a84d3b5e",
+    "summary.json": "682bacfaf85c4a4983af4dfd130a336d7376ddcf4141b03ebe3ffa97ebfc2bee"
+  }
+}
