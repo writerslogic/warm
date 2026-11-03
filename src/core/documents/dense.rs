@@ -348,6 +348,29 @@ impl DenseIndex {
         minimum: f64,
         matches: impl Fn(&StoredDocument) -> bool,
     ) -> (Vec<DenseHit>, usize) {
+        self.search_where_with_work::<false>(query, limit, minimum, matches, 0)
+            .expect("unlimited dense traversal exhausted its work budget")
+    }
+
+    pub(super) fn search_where_limited(
+        &self,
+        query: &[f64],
+        limit: usize,
+        minimum: f64,
+        matches: impl Fn(&StoredDocument) -> bool,
+        work: usize,
+    ) -> Option<(Vec<DenseHit>, usize)> {
+        self.search_where_with_work::<true>(query, limit, minimum, matches, work)
+    }
+
+    fn search_where_with_work<const LIMITED: bool>(
+        &self,
+        query: &[f64],
+        limit: usize,
+        minimum: f64,
+        matches: impl Fn(&StoredDocument) -> bool,
+        mut work: usize,
+    ) -> Option<(Vec<DenseHit>, usize)> {
         assert_eq!(
             query.len(),
             self.dimensions,
@@ -359,6 +382,13 @@ impl DenseIndex {
         assert!(query
             .iter()
             .all(|value| value.is_finite() && value.abs() <= 1.0));
+        let mut spend = |cost: usize| -> Option<()> {
+            if LIMITED {
+                work = work.checked_sub(cost)?;
+            }
+            Some(())
+        };
+        spend(self.dimensions)?;
         let mut pending = BinaryHeap::new();
         pending.push(Candidate {
             node: 0,
@@ -378,6 +408,7 @@ impl DenseIndex {
             let node = &self.nodes[candidate.node];
             if let Some((left, right)) = node.children {
                 for child in [left, right] {
+                    spend(self.dimensions)?;
                     let upper = self.upper(child, query);
                     if upper >= threshold {
                         pending.push(Candidate { node: child, upper });
@@ -385,9 +416,11 @@ impl DenseIndex {
                 }
             } else {
                 for (row, point) in self.rows[node.start..node.end].iter().enumerate() {
+                    spend(1)?;
                     if !matches(&point.document) {
                         continue;
                     }
+                    spend(self.dimensions)?;
                     let score = point.stored().cosine(query);
                     dots += 1;
                     if !score.is_finite() || score < minimum {
@@ -418,7 +451,7 @@ impl DenseIndex {
                 }
             })
             .collect();
-        (hits, dots)
+        Some((hits, dots))
     }
 }
 
