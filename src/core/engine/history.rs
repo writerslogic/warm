@@ -194,6 +194,7 @@ impl WarmCore {
             for mutation in &frame.mutations {
                 state.apply(mutation)?;
             }
+            state.flush()?;
             offset = frame.next;
         }
         if offset != target {
@@ -526,6 +527,10 @@ impl Pinned<'_> {
 /// The document and raw-vector state being replayed.
 struct State {
     documents: DocumentStore,
+    /// Consecutive document writes installed together, as the engine's replay does: one
+    /// store write per run instead of one per document.
+    pending: Vec<Arc<StoredDocument>>,
+    pending_ids: std::collections::HashSet<String>,
     sizes: HashMap<String, usize>,
     vectors: BTreeMap<String, EntangledHVec>,
     derived: BTreeMap<String, Vec<String>>,
@@ -556,6 +561,8 @@ impl State {
     fn new(limit: usize) -> Self {
         Self {
             documents: DocumentStore::default(),
+            pending: Vec::new(),
+            pending_ids: std::collections::HashSet::new(),
             sizes: HashMap::new(),
             vectors: BTreeMap::new(),
             derived: BTreeMap::new(),
@@ -590,10 +597,27 @@ impl State {
         let size = document_bytes(&document);
         let old = self.sizes.insert(document.id.clone(), size).unwrap_or(0);
         self.grow(size, old)?;
-        self.documents.insert_batch(vec![document])
+        if !self.pending_ids.insert(document.id.clone()) {
+            // A repeated id diffs against the first copy, as one at a time would.
+            self.flush()?;
+            self.pending_ids.insert(document.id.clone());
+        }
+        self.pending.push(document);
+        Ok(())
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        self.pending_ids.clear();
+        if self.pending.is_empty() {
+            return Ok(());
+        }
+        self.documents.insert_batch(std::mem::take(&mut self.pending))
     }
 
     fn apply(&mut self, mutation: &Mutation) -> Result<()> {
+        if !matches!(mutation, Mutation::Document(_)) {
+            self.flush()?;
+        }
         match mutation {
             Mutation::Document(document) => self.put_document(Arc::clone(document))?,
             Mutation::DeleteDocument { id } => {
