@@ -3,6 +3,8 @@
 """x86 kernel microbenchmark on Modal CPU containers, with a CPU-flag probe (platform area).
 
   uv run --with modal modal run benchmarks/public/platform_modal_avx512.py --probes 12 --cap-usd 2
+  uv run --with modal modal run benchmarks/public/platform_modal_avx512.py --probes 12 --cap-usd 2 \
+      --bench screen_popcount_microbench --out benchmarks/results/platform_x86_modal_screen_popcount_v1.json
 
 Modal does not let a function pick its CPU model, so this builds the `kernels` test binary once
 in the image (rustc, no target-cpu flags, so every kernel is chosen by runtime detection) and
@@ -66,7 +68,7 @@ image = (
 
 
 @app.function(image=image, cpu=CPU, memory=MEM_GIB * 1024, timeout=1800, max_containers=12)
-def probe(i: int) -> dict:
+def probe(i: int, test: str = "dot_kernel_microbench") -> dict:
     started = time.time()
     info = Path("/proc/cpuinfo").read_text().splitlines()
     model = next((l.split(":", 1)[1].strip() for l in info if l.startswith("model name")), "?")
@@ -77,8 +79,9 @@ def probe(i: int) -> dict:
         ["/opt/kbench", "qgraph::kernels", "--test-threads=1"], text=True, capture_output=True
     )
     bench = subprocess.run(
-        ["/opt/kbench", "dot_kernel_microbench", "--ignored", "--nocapture", "--test-threads=1"],
-        text=True, capture_output=True, env={"WARM_PLATFORM_BENCH_OUT": str(out)},
+        ["/opt/kbench", test, "--ignored", "--nocapture", "--test-threads=1"],
+        text=True, capture_output=True,
+        env={"WARM_PLATFORM_BENCH_OUT": str(out), "WARM_SCREEN_POPCOUNT_BENCH_OUT": str(out)},
     )
     return {
         "probe": i, "cpu_model": model, "flags": wanted,
@@ -93,17 +96,21 @@ def probe(i: int) -> dict:
 
 @app.local_entrypoint()
 def main(probes: int = 12, cap_usd: float = 2.0,
-         out: str = "benchmarks/results/platform_x86_modal_microbench_v1.json"):
+         out: str = "benchmarks/results/platform_x86_modal_microbench_v1.json",
+         bench: str = "dot_kernel_microbench"):
     # Worst case: every probe runs ten minutes. Refuse a fan-out that could pass the cap.
     worst = probes * (600 / 3600) * USD_PER_HOUR
     if worst > cap_usd:
         raise SystemExit(f"{probes} probes could cost ${worst:.2f} > cap ${cap_usd}")
-    rows = list(probe.map(range(probes)))
+    rows = list(probe.map(range(probes), kwargs={"test": bench}))
     spent = sum(r["wall_s"] for r in rows) / 3600 * USD_PER_HOUR
     report = {
         "schema_version": 1, "category": "platform_kernels", "date": time.strftime("%Y-%m-%d"),
+        "bench": bench,
         "protocol": "dot_kernel_microbench (kernels.rs): 400k random rows, 64-row prefetched batches (cold) "
-                    "and 64 L1-resident rows (hot); best of 7 passes of 2^20 calls; fn-pointer calls for all variants",
+                    "and 64 L1-resident rows (hot); best of 7 passes of 2^20 calls; fn-pointer calls for all variants"
+                    if bench == "dot_kernel_microbench" else
+                    "screen_popcount_microbench (kernels.rs): paired rounds, see its doc comment",
         "harness": "benchmarks/public/platform_modal_avx512.py", "cap_usd": cap_usd,
         "spend_usd_estimate": round(spent, 3), "probes": rows,
     }
