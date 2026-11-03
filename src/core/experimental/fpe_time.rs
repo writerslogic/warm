@@ -308,7 +308,9 @@ mod tests {
         let enc = FpeTime::new(Kernel::Laplace, sigma, 1024, 164).unwrap();
         let (start, end) = (10_000.0, 10_500.0);
         let window = enc.window(start, end).unwrap();
-        for t in [9_900.0, 9_990.0, 10_000.0, 10_003.0, 10_250.0, 10_497.0, 10_500.0, 10_600.0] {
+        for t in [
+            9_900.0, 9_990.0, 10_000.0, 10_003.0, 10_250.0, 10_497.0, 10_500.0, 10_600.0,
+        ] {
             let f = |s: f64| {
                 if s >= t {
                     1.0 - (-(s - t) / sigma).exp()
