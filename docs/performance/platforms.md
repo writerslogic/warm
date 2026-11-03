@@ -29,6 +29,46 @@ Raw data: `benchmarks/results/platform_aarch64_microbench_v1.json` (M4, 6 runs, 
 | x86 AVX512-VNNI | i4 | `vpdpbusd` | `vpdpwssd` ymm | 1.27, 1.21 | 1.20, 1.13 | killed |
 | x86 AVX2-only hosts | all | scalar | AVX2 (already shipped) | 0.23, 0.41 (i8) | 0.18, 0.15 (i8) | unchanged |
 
+## 1-bit screen popcount (`raw_estimates`, `raw_one`)
+
+Kill test: `cargo test --release --lib screen_popcount_microbench -- --ignored --nocapture`
+(paired: all variants in one binary, alternated inside each of 11 rounds, ratio taken per
+round; shapes `row_cold` = one call per random row of a 64 MiB table, `block_hot` = one call
+over a 64-row L1 block, the search loop's shape, `block_cold` = random blocks). Equivalence:
+`every_screen_kernel_matches_scalar` (0 to 33 words, every 8-byte offset modulo 64 bytes,
+all-ones rows). Ship rule, applied per row width: median paired ratio below 1 against the
+incumbent in every shape, in both runs. The x86 incumbent is hardware POPCNT (what auto
+dispatch already ran); plain `count_ones` runs only under `WARM_QGRAPH_KERNEL=scalar`.
+Raw data: `benchmarks/results/platform_x86_screen_popcount_v1.json` (2 runs, Core Ultra 9
+185H under WSL2, one pinned logical CPU, load about 1 to 2).
+
+| Arch | Words (dims) | Incumbent | Candidate | median ratio row_cold / block_hot / block_cold, run 1; run 2 | Decision |
+|---|---|---|---|---|---|
+| x86 AVX2 | 2 (128) | POPCNT | AVX2 `vpshufb` nibble table + `vpsadbw` | 1.06 / 1.67 / 1.17; 1.08 / 1.66 / 1.18 | killed: POPCNT stays below 4 words |
+| x86 AVX2 | 4 (256) | POPCNT | same | 0.57 / 0.90 / 0.95; 0.57 / 0.82 / 0.94 | shipped (run 1 block_cold range 0.92 to 1.11) |
+| x86 AVX2 | 8 (512) | POPCNT | same | 0.66 / 0.78 / 0.86; 0.66 / 0.77 / 0.86 | shipped |
+| x86 AVX2 | 16 (1024) | POPCNT | same | 0.82 / 0.57 / 0.73; 0.77 / 0.58 / 0.74 | shipped |
+| x86 AVX-512 | all | POPCNT / AVX2 | VPOPCNTDQ (zmm, then ymm), BITALG `vpopcntb` | not measured | not wired: no AVX-512 host; test-only in `src/` so the Modal run below times and checks them |
+
+Against plain `count_ones` the AVX2 kernel is 0.24 to 0.27 of the time in `block_hot` (about
+4x), but that is not the path any x86 host ran; against the POPCNT incumbent the best gain is
+0.57 (16 words, `block_hot`), so the issue's 4 to 10x is not met. To time AVX-512 (spends
+Modal credit): `uv run --with modal modal run benchmarks/public/platform_modal_avx512.py
+--probes 12 --cap-usd 2 --bench screen_popcount_microbench --out
+benchmarks/results/platform_x86_modal_screen_popcount_v1.json`; each probe also runs the
+equivalence tests for the kernels its CPU supports.
+
+aarch64: the screen already uses NEON `cnt` for 1 to 16 words. A paired run on the M4 at load
+99 to 106 (other jobs) gave ranges of 0.03 to 8x per round, which is noise, so no paired NEON
+factor is claimed; the older unpaired figure is 0.64 of scalar per neighbour, cold
+(`qgraph_screen_microbench.json`).
+
+Sparse `EntangledHVec::hamming` (`src/core/intersection.rs`): a NEON block-intersection
+candidate was already measured and lost to the shipped merge/galloping path in every cell
+(64 to 16384 elements, 0 to 100 percent overlap, `benchmarks/results/intersection_kernels.json`,
+one M4 run under load about 36); AVX-512 (`vp2intersect` or a conflict-detect
+form) was not built, because no host here has AVX-512 to time it.
+
 Apple M4: the existing SDOT kernels were already at the memory-bound floor. Nothing on aarch64
 beat them, so the aarch64 hot path is unchanged. Dispatch there is compile-time SDOT where the
 target enables `dotprod` (all Apple cores) and runtime detection otherwise.
@@ -61,7 +101,8 @@ the AVX512 container once per tier (`WARM_QGRAPH_KERNEL=scalar`, `avx2`, `vnni`)
 ## Knob
 
 x86: `WARM_QGRAPH_KERNEL=scalar|avx2|vnni|auto` (read once, never above what the CPU supports).
-Default `auto`.
+Default `auto`. The 1-bit screen follows it: `scalar` takes `count_ones`, any AVX2 tier the AVX2
+popcount from 4 words and POPCNT below.
 
 ## Not obtained
 
