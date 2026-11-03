@@ -41,7 +41,7 @@ def summarize(path: str) -> dict:
             best = [(r[arm]["qps_median"], r["ef"], r[arm]["recall"]) for r in rows if r[arm]["recall"] >= t]
             frontier[arm][t] = max(best) if best else None
     return {"path": path, "n": report["n"], "metric": report["metric"], "arms": arms,
-            "stats": {a["arm"]: {k: a[k] for k in ("repair_seconds", "index_bytes", "stats")} for a in report["arms"]},
+            "stats": {a["arm"]: {k: a.get(k) for k in ("repair_seconds", "index_bytes", "stats", "train_recall_at_repair_ef_served")} for a in report["arms"]},
             "build_seconds": report["build"]["build_seconds"], "rows": rows, "frontier": frontier}
 
 
@@ -53,7 +53,7 @@ def main() -> None:
             stats = st["stats"] or {}
             print(f"  {arm:16} repair {st['repair_seconds']:6.1f}s bytes {st['index_bytes']:>11} "
                   f"added {stats.get('added_edges', 0):>7} skipped {stats.get('skipped_full', 0):>6} "
-                  f"train_recall@ef {stats.get('train_recall_before', float('nan')):.4f}")
+                  f"in-sample served recall {st['train_recall_at_repair_ef_served'] or float('nan'):.4f}")
         print("  ef  " + "  ".join(f"{a:>24}" for a in s["arms"]))
         for r in s["rows"]:
             cells = []
@@ -68,7 +68,11 @@ def main() -> None:
                 else f"{a} unreached" for a in s["arms"]))
         for a in s["arms"][1:]:
             print(f"  {a:16} recall minus base recall at matched cost (interpolated on base, log scale): "
-                  + " ".join(f"ef{ef}:{dq:+.4f}/{de:+.4f}" for ef, dq, de in matched(s, a)))
+                  + " ".join(f"ef{ef}:{fmt(dq)}/{fmt(de)}" for ef, dq, de in matched(s, a)))
+
+
+def fmt(x: float | None) -> str:
+    return "n/a" if x is None else f"{x:+.4f}"
 
 
 def interpolate(xs: list[float], ys: list[float], x: float) -> float | None:
@@ -85,7 +89,7 @@ def interpolate(xs: list[float], ys: list[float], x: float) -> float | None:
 
 def matched(s: dict, arm: str) -> list[tuple[int, float, float]]:
     """Per ef of `arm`: its recall minus base recall at the same median QPS, and at the same
-    mean evaluations per query (load independent). Points outside the base range are skipped."""
+    mean evaluations per query (load independent); None outside the measured base range."""
     rows = s["rows"]
     base_q = [r["base"]["qps_median"] for r in rows]
     base_e = [r["base"]["evals"] for r in rows]
@@ -95,8 +99,8 @@ def matched(s: dict, arm: str) -> list[tuple[int, float, float]]:
         c = r[arm]
         at_q = interpolate(base_q, base_r, c["qps_median"])
         at_e = interpolate(base_e, base_r, c["evals"])
-        if at_q is not None and at_e is not None:
-            out.append((r["ef"], c["recall"] - at_q, c["recall"] - at_e))
+        out.append((r["ef"], None if at_q is None else c["recall"] - at_q,
+                    None if at_e is None else c["recall"] - at_e))
     return out
 
 

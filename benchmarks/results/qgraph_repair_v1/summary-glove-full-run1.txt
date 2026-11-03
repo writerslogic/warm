@@ -1,0 +1,28 @@
+## glove-full-run1.json  n=1183514 metric=angular base build 135.8s
+  base             repair    0.0s bytes   412301856 added       0 skipped      0 in-sample served recall nan
+  failure          repair    0.2s bytes   440706192 added   14233 skipped      0 in-sample served recall nan
+  failure_antihub  repair    0.3s bytes   440706192 added  583351 skipped   1416 in-sample served recall nan
+  full             repair    0.3s bytes   435548000 added  583351 skipped   1416 in-sample served recall nan
+  control_random   repair    0.4s bytes   435548000 added  583351 skipped   1416 in-sample served recall nan
+  entry_only       repair    0.2s bytes   435548000 added       0 skipped      0 in-sample served recall nan
+  ef                      base                   failure           failure_antihub                      full            control_random                entry_only
+    10    0.5200   88571 x1.000     0.5202   94590 x1.101     0.5238   87829 x0.992     0.5203   92986 x1.050     0.5174   87008 x0.975     0.5164   87353 x1.011
+    16    0.6033   72606 x1.000     0.6033   71529 x0.983     0.6072   70541 x0.981     0.6083   69976 x0.990     0.6033   70153 x0.966     0.6026   72601 x1.017
+    20    0.6405   60438 x1.000     0.6409   59730 x0.987     0.6439   57904 x0.957     0.6467   59655 x0.993     0.6425   57470 x0.965     0.6418   60633 x1.008
+    24    0.6702   52955 x1.000     0.6708   52943 x1.001     0.6750   52077 x0.962     0.6781   51468 x1.000     0.6732   51908 x0.959     0.6728   53432 x1.007
+    32    0.7144   41804 x1.000     0.7150   42242 x0.975     0.7195   40039 x0.916     0.7202   41194 x0.943     0.7158   38742 x0.887     0.7153   41725 x1.007
+    48    0.7668   29640 x1.000     0.7674   30391 x0.989     0.7728   29001 x0.970     0.7706   28829 x0.980     0.7660   29727 x0.985     0.7657   31380 x1.026
+    64    0.7983   24679 x1.000     0.7987   24598 x0.997     0.8027   23679 x0.965     0.8015   23583 x0.956     0.7980   23170 x0.939     0.7979   25187 x1.010
+    96    0.8370   16243 x1.000     0.8370   16859 x1.020     0.8414   16744 x1.041     0.8408   16824 x1.045     0.8376   16682 x1.013     0.8377   17412 x1.062
+   128    0.8608    8184 x1.000     0.8608   10085 x1.094     0.8641   12020 x1.225     0.8640   13020 x0.961     0.8608   13055 x1.410     0.8610   13285 x1.516
+   192    0.8909    9240 x1.000     0.8909    8814 x0.950     0.8946    8808 x0.949     0.8941    8952 x0.965     0.8902    9048 x0.983     0.8903    9230 x0.995
+   256    0.9073    7047 x1.000     0.9074    7002 x0.994     0.9113    6717 x0.953     0.9112    6664 x0.954     0.9072    6803 x0.958     0.9071    6551 x0.917
+  recall>=0.8: base 16243qps@ef96, failure 16859qps@ef96, failure_antihub 23679qps@ef64, full 23583qps@ef64, control_random 16682qps@ef96, entry_only 17412qps@ef96
+  recall>=0.9: base 7047qps@ef256, failure 7002qps@ef256, failure_antihub 6717qps@ef256, full 6664qps@ef256, control_random 6803qps@ef256, entry_only 6551qps@ef256
+  recall>=0.95: base unreached, failure unreached, failure_antihub unreached, full unreached, control_random unreached, entry_only unreached
+  recall>=0.98: base unreached, failure unreached, failure_antihub unreached, full unreached, control_random unreached, entry_only unreached
+  failure          recall minus base recall at matched cost (interpolated on base, log scale): ef10:n/a/-0.0004 ef16:-0.0031/-0.0006 ef20:-0.0023/-0.0003 ef24:+0.0005/-0.0001 ef32:+0.0025/+0.0001 ef48:+0.0044/+0.0001 ef64:+0.0001/+0.0001 ef96:+0.0035/-0.0002 ef128:-0.0218/-0.0003 ef192:+0.0118/-0.0001 ef256:n/a/n/a
+  failure_antihub  recall minus base recall at matched cost (interpolated on base, log scale): ef10:+0.0003/-0.0068 ef16:-0.0020/-0.0058 ef20:-0.0062/-0.0056 ef24:+0.0017/-0.0035 ef32:-0.0015/-0.0018 ef48:+0.0022/+0.0001 ef64:+0.0006/-0.0005 ef96:+0.0072/+0.0001 ef128:-0.0016/-0.0004 ef192:+0.0156/+0.0007 ef256:n/a/n/a
+  full             recall minus base recall at matched cost (interpolated on base, log scale): ef10:n/a/-0.0372 ef16:-0.0025/-0.0245 ef20:+0.0033/-0.0193 ef24:+0.0026/-0.0139 ef32:+0.0036/-0.0094 ef48:-0.0010/-0.0066 ef64:-0.0010/-0.0048 ef96:+0.0070/-0.0024 ef128:+0.0059/-0.0019 ef192:+0.0111/-0.0004 ef256:n/a/n/a
+  control_random   recall minus base recall at matched cost (interpolated on base, log scale): ef10:-0.0101/-0.0404 ef16:-0.0070/-0.0298 ef20:-0.0093/-0.0242 ef24:-0.0007/-0.0194 ef32:-0.0101/-0.0145 ef48:-0.0003/-0.0116 ef64:-0.0061/-0.0088 ef96:+0.0031/-0.0061 ef128:+0.0029/-0.0056 ef192:+0.0046/-0.0046 ef256:n/a/n/a
+  entry_only       recall minus base recall at matched cost (interpolated on base, log scale): ef10:-0.0094/-0.0298 ef16:-0.0008/-0.0197 ef20:+0.0020/-0.0148 ef24:+0.0047/-0.0105 ef32:+0.0006/-0.0074 ef48:+0.0076/-0.0055 ef64:+0.0031/-0.0035 ef96:+0.0071/-0.0013 ef128:+0.0048/-0.0012 ef192:-0.0003/-0.0012 ef256:n/a/n/a

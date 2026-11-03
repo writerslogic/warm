@@ -285,9 +285,28 @@ fn main() -> Result<()> {
         let index = VGraph::from_graph_with(&g, 8, 8, true, false, 3, false)?;
         let encode_seconds = start.elapsed().as_secs_f64();
         eprintln!("{name}: repair {repair_seconds:.1}s, {stats:?}");
+        // In-sample check: recall of the construction queries themselves at the repair ef.
+        let mut searcher = index.searcher_with(SearchKnobs::OFF);
+        let mut in_sample = Vec::new();
+        let mut hits = 0usize;
+        for (qi, q) in train_q.chunks_exact(dim).enumerate() {
+            let search = VSearchParams {
+                ef: args.repair_ef,
+                rerank: 16,
+                patience: 0,
+                screen: false,
+                ..Default::default()
+            };
+            searcher.search(q, K, search, &mut in_sample)?;
+            let t = &train_truth[qi * K..(qi + 1) * K];
+            hits += in_sample.iter().filter(|id| t.contains(id)).count();
+        }
+        let train_recall = hits as f64 / (train_q.len() / dim * K) as f64;
+        drop(searcher);
         arm_reports.push(json!({"arm": name, "repair": repair, "stats": stats,
             "repair_seconds": repair_seconds, "encode_seconds": encode_seconds,
-            "structure_hash": hash, "index_bytes": index.index_bytes()}));
+            "structure_hash": hash, "index_bytes": index.index_bytes(),
+            "train_recall_at_repair_ef_served": train_recall}));
         indexes.push(index);
     }
 
