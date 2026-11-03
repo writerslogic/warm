@@ -1,0 +1,10 @@
+{
+  "complete": true,
+  "completedAt": "2026-11-03T18:25:48.057142+00:00",
+  "exitCode": 0,
+  "freezeSha256": "cbf253a0d0d01b6875373246e24ddcc51deabf5ba0d96f8f6a16973ed3856bf8",
+  "ignoredReviewSha256": "22b3e02bff1ba75eb2f6af3294491f3a53cbc939c1afb1b8c084d5c87f9d5306",
+  "summary": "test result: ok. 893 passed; 0 failed; 12 ignored; 0 measured; 0 filtered out; finished in 102.87s",
+  "testsSha256": "db1128cf729c033076e204f5e7054d57e0765ecdb09ecdd2609a746b9ec588e0",
+  "unexplainedSkips": 0
+}

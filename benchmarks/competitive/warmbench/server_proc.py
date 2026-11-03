@@ -3,8 +3,8 @@
 """Lifecycle of one server process tree for the server-mode rows (standard library only; the
 server worker imports it inside its pinned environment).
 
-A server starts in its own session, so its process group is the whole tree it forks (Postgres
-backends, OpenSearch's JVM); stop() signals the group and waits, then kills the group. RSS of
+A server starts in its own session; accounting also follows descendants that create separate
+sessions, including Postgres backends. stop() signals the original group and waits, then kills it. RSS of
 the tree is sampled, never read from wait4: the client is not the server's parent. On Linux a
 sample is the sum of PSS (smaps_rollup), so shared memory such as Postgres shared buffers counts
 once; on macOS it is the sum of per-process RSS from ps, which counts shared pages once per
@@ -91,11 +91,39 @@ def _group_pids(pgid):
     return [int(pid) for pid, group in (line.split() for line in out.splitlines() if line.strip()) if int(group) == pgid]
 
 
+def tree_pids(root_pid):
+    processes = {}
+    if LINUX:
+        for entry in Path('/proc').iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                fields = (entry / 'stat').read_text().rsplit(')', 1)[1].split()
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+            processes[int(entry.name)] = int(fields[1]), int(fields[2])
+    else:
+        output = subprocess.check_output(['ps', '-ax', '-o', 'pid=,ppid=,pgid='], text=True)
+        processes = {int(pid): (int(parent), int(group))
+                     for pid, parent, group in (line.split() for line in output.splitlines() if line.strip())}
+    selected = {pid for pid, (_, group) in processes.items() if pid == root_pid or group == root_pid}
+    pending = list(selected)
+    children = {}
+    for pid, (parent, _) in processes.items():
+        children.setdefault(parent, []).append(pid)
+    while pending:
+        for pid in children.get(pending.pop(), ()):
+            if pid not in selected:
+                selected.add(pid)
+                pending.append(pid)
+    return sorted(selected)
+
+
 def tree_rss_bytes(pgid):
-    """Memory of every process in group `pgid` (see the module note for the per-OS meaning)."""
+    """Memory of the original process group and its observed descendants."""
     if LINUX:
         total = 0
-        for pid in _group_pids(pgid):
+        for pid in tree_pids(pgid):
             try:
                 text = Path(f"/proc/{pid}/smaps_rollup").read_text()
                 total += next(int(line.split()[1]) for line in text.splitlines() if line.startswith("Pss:")) * 1024
@@ -106,12 +134,13 @@ def tree_rss_bytes(pgid):
                     # The process exited between listing and reading; it holds no memory.
                     pass
         return total
-    out = subprocess.run(["ps", "-ax", "-o", "pgid=,rss="], capture_output=True, text=True).stdout
-    return sum(int(rss) * 1024 for group, rss in (line.split() for line in out.splitlines() if line.strip()) if int(group) == pgid)
+    selected = set(tree_pids(pgid))
+    out = subprocess.check_output(["ps", "-ax", "-o", "pid=,rss="], text=True)
+    return sum(int(rss) * 1024 for pid, rss in (line.split() for line in out.splitlines() if line.strip()) if int(pid) in selected)
 
 
-RSS_METHOD = ("sum of PSS over the server process group (/proc/<pid>/smaps_rollup), sampled" if LINUX else
-              "sum of RSS over the server process group (ps), sampled; shared pages count once per process")
+RSS_METHOD = ("sum of PSS over the server group and observed descendants (/proc/<pid>/smaps_rollup), sampled" if LINUX else
+              "sum of RSS over the server group and observed descendants (ps), sampled; shared pages count once per process")
 
 
 def _drop_privileges():

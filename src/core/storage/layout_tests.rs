@@ -133,7 +133,7 @@ fn manifest_geometry_boundaries_fail_before_segment_mutation() -> Result<()> {
                 assert_eq!(
                     inspection.allocated_bytes,
                     if version == 4 && INCREMENTAL_ALLOCATION {
-                        SEGMENT_SIZE
+                        GROWTH_STEP
                     } else {
                         expected
                     } as u64
@@ -337,5 +337,68 @@ fn oversized_read_only_mapping_cannot_extend_declared_segment_bounds() -> Result
         }
         assert!(restored.read_slice(size - 1, usize::MAX).is_err());
     }
+    Ok(())
+}
+
+#[test]
+fn active_segment_growth_doubles_to_the_fixed_step() {
+    let mib = GROWTH_STEP;
+    for (required, allocated) in [
+        (0, mib),
+        (mib - 1, mib),
+        (mib, mib),
+        (mib + 1, 2 * mib),
+        (3 * mib, 4 * mib),
+        (SEGMENT_SIZE - 1, SEGMENT_SIZE),
+        (SEGMENT_SIZE, SEGMENT_SIZE),
+        (SEGMENT_SIZE + 1, 2 * SEGMENT_SIZE),
+        (2 * SEGMENT_SIZE + 1, 3 * SEGMENT_SIZE),
+        (LEGACY_SEGMENT_SIZE - 1, LEGACY_SEGMENT_SIZE),
+        (LEGACY_SEGMENT_SIZE, LEGACY_SEGMENT_SIZE),
+    ] {
+        let capacity = allocation(required, LEGACY_SEGMENT_SIZE);
+        assert_eq!(capacity, allocated, "{required}");
+        assert!(capacity >= required && capacity.is_multiple_of(GROWTH_STEP));
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn journal_starts_at_the_growth_step_and_earlier_segments_open_unchanged() -> Result<()> {
+    let root = tempdir()?;
+    let segment = root.path().join("seg_0.bin");
+    let length = || -> Result<u64> { Ok(std::fs::metadata(&segment)?.len()) };
+    // Incompressible, so the frame outgrows the first allocation after LZ4.
+    let mut state = 0x9e37_79b9_7f4a_7c15u64;
+    let large: Vec<u8> = (0..GROWTH_STEP + 1)
+        .map(|_| {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            state as u8
+        })
+        .collect();
+    let (small_at, large_at) = {
+        let arena = PersistentArena::new(root.path())?;
+        assert_eq!(length()?, GROWTH_STEP as u64);
+        let small_at = arena.write_slice(b"small")?;
+        (small_at, arena.write_slice(&large)?)
+    };
+    let grown = length()?;
+    assert!(grown > GROWTH_STEP as u64 && grown.is_multiple_of(GROWTH_STEP as u64));
+    // A segment an earlier release allocated in 64 MiB steps keeps its length and frames.
+    OpenOptions::new()
+        .write(true)
+        .open(&segment)?
+        .set_len(SEGMENT_SIZE as u64)?;
+    let arena = PersistentArena::new(root.path())?;
+    assert_eq!(length()?, SEGMENT_SIZE as u64);
+    assert_eq!(arena.read_frame(small_at)?.0, b"small");
+    assert_eq!(arena.read_frame(large_at)?.0, large);
+    let last = arena.write_slice(b"after")?;
+    drop(arena);
+    let arena = PersistentArena::new(root.path())?;
+    assert_eq!(arena.read_frame(last)?.0, b"after");
+    assert_eq!(arena.stats().capacity_bytes, SEGMENT_SIZE);
     Ok(())
 }

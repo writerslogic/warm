@@ -1,0 +1,21 @@
+{
+  "complete": true,
+  "scientificResultReproduced": true,
+  "benchmarkClaim": false,
+  "independenceVerified": false,
+  "python": "3.12.12 (main, Nov 19 2025, 22:30:44) [Clang 21.1.4 ]",
+  "manifestSha256": "af5938f4d72d4c862893fc8baf0295901cd7ca38d6dac04fd3c98eb4a1a81b24",
+  "traceSummary": {
+    "cases": 3932,
+    "snapshotWithdrawalChecks": 86846,
+    "negativeControlAnswerMismatches": 45725,
+    "correctnessPassed": true,
+    "sizeScreenPassed": false,
+    "sizeCellsPassed": 4,
+    "sizeCellsRequired": 8,
+    "qualifiedClaim": false
+  },
+  "symbolicPacketsMatched": 12,
+  "timingPolicy": "Recorded, not required to match across machines",
+  "scope": "Temporal research correctness, failed size screen and matching established control; not the eight-milestone system claim"
+}

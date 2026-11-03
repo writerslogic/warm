@@ -1,0 +1,123 @@
+"""Execute the frozen filtered semantic scan screen after local compilation ends."""
+from datetime import datetime, timezone
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import signal
+import statistics
+import subprocess
+import time
+
+ROOT = Path('/Volumes/A/.hms-bench-cache/warm-filtered-semantic-scan-20261103-v1')
+INPUTS = Path('/Volumes/A/.hms-bench-cache/warm-performance-inputs-20261103-v1')
+PREREQUISITE = Path('/Volumes/A/.hms-bench-cache/warm-ios-simulator-qualification-20261103-v4/finished.json')
+ENV = {name: value for name, value in os.environ.items()
+       if name in ('HOME', 'PATH', 'LANG', 'LC_ALL', 'TMPDIR', 'CARGO_HOME', 'RUSTUP_HOME')}
+ENV.update({'CARGO_TARGET_DIR': '/Users/davidcondrey/.cache/warm-filtered-dense-bounded-target',
+            'CARGO_BUILD_JOBS': '2', 'RAYON_NUM_THREADS': '2',
+            'WARM_DENSE_DIAGNOSTIC_INPUT': str(INPUTS),
+            'WARM_DENSE_DIAGNOSTIC_OUTPUT': str(ROOT / 'output')})
+
+
+def digest(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def write(path, value):
+    with path.open('x') as stream:
+        json.dump(value, stream, indent=2, sort_keys=True, allow_nan=False)
+        stream.write('\n')
+
+
+def main():
+    freeze = json.loads((ROOT / 'freeze.json').read_text())
+    def verify():
+        for directory, files in ((ROOT / 'source', freeze['files']), (INPUTS, freeze['inputs'])):
+            for name, expected in files.items():
+                if digest(directory / name) != expected:
+                    raise ValueError('frozen source or input changed: ' + name)
+        for name, expected in freeze['artifacts'].items():
+            if digest(ROOT / name) != expected:
+                raise ValueError('frozen artifact changed: ' + name)
+    verify()
+    deadline = time.monotonic() + 7200
+    while not PREREQUISITE.exists():
+        if time.monotonic() >= deadline:
+            raise TimeoutError('local simulator job has not finished')
+        time.sleep(30)
+    prerequisite = json.loads(PREREQUISITE.read_text())
+    write(ROOT / 'prerequisite.json', {'path': str(PREREQUISITE), 'sha256': digest(PREREQUISITE),
+                                     'complete': prerequisite.get('complete'),
+                                     'purpose': 'Avoid simultaneous local qualification load; no result reuse'})
+    with (ROOT / 'native.log').open('xb') as log:
+        command = ['cargo', 'test', '--release', '--locked', '--lib', '--features', 'security',
+                   'core::documents::search::semantic_scan_probe::frozen_semantic_scan_comparison',
+                   '--', '--exact', '--ignored', '--nocapture', '--test-threads=1']
+        process = subprocess.Popen(command, cwd=ROOT / 'source', env=ENV,
+                                   stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            if process.wait(timeout=7200):
+                raise RuntimeError('native screen failed; log retained')
+        finally:
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait(timeout=30)
+    if 'test result: ok. 1 passed; 0 failed; 0 ignored;' not in (ROOT / 'native.log').read_text():
+        raise ValueError('exactly one screen must execute')
+    states = ('baseline-untrained', 'baseline-trained', 'churn-untrained', 'churn-trained')
+    expected = {(dataset, state, name) for dataset in ('coco-i2i-512-angular', 'deep-image-96-angular')
+                for state in states for name in ('all', '10pct', '1pct', 'empty')}
+    ordinals = {(repetition, ordinal) for repetition in range(3) for ordinal in range(32)}
+    cells = {}
+    with (ROOT / 'output/queries.ndjson').open() as stream:
+        for line in stream:
+            if len(line) > 65536:
+                raise ValueError('oversized query record')
+            row = json.loads(line)
+            key = row['dataset'], row['state'], row['filter']
+            identity = row['repetition'], row['queryOrdinal']
+            if key not in expected or identity not in ordinals or identity in cells.setdefault(key, {}):
+                raise ValueError('undeclared or duplicate query')
+            for field in ('baselineSeconds', 'candidateSeconds'):
+                value = row[field]
+                if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+                    raise ValueError('invalid timing')
+            cells[key][identity] = row
+    if set(cells) != expected or any(set(rows) != ordinals for rows in cells.values()):
+        raise ValueError('incomplete screen cohort')
+    summaries = []
+    for key, rows in sorted(cells.items()):
+        medians = {field: statistics.median(row[field + 'Seconds'] for row in rows.values())
+                   for field in ('baseline', 'candidate')}
+        speedup = medians['baseline'] / medians['candidate']
+        minimum = 1.1 if key[2] in ('10pct', '1pct') else 1 / 1.15
+        repetitions = []
+        for repetition in range(3):
+            group = [row for (rep, _), row in rows.items() if rep == repetition]
+            repetitions.append({field: statistics.median(row[field + 'Seconds'] for row in group)
+                                for field in ('baseline', 'candidate')})
+        summaries.append({'dataset': key[0], 'state': key[1], 'filter': key[2],
+                          'queries': len(rows), 'medianSeconds': medians, 'speedup': speedup,
+                          'gatePass': speedup >= minimum, 'minimumSpeedup': minimum,
+                          'repetitionMedians': repetitions})
+    write(ROOT / 'summary.json', summaries)
+    verify()
+    return {'complete': True, 'completedAt': datetime.now(timezone.utc).isoformat(),
+            'cells': 32, 'pairedComparisons': 3072,
+            'developmentGatePass': all(case['gatePass'] for case in summaries),
+            'qualification': False, 'productionChanged': False, 'freezeSha256': digest(ROOT / 'freeze.json'),
+            'outputs': {name: digest(ROOT / name) for name in ('summary.json', 'native.log', 'output/queries.ndjson', 'prerequisite.json')}}
+
+
+if __name__ == '__main__':
+    result = {'complete': False}
+    try:
+        result = main()
+    except Exception as error:
+        result['error'] = {'type': type(error).__name__, 'message': str(error)}
+        raise
+    finally:
+        write(ROOT / 'finished.json', result)

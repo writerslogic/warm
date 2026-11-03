@@ -1,0 +1,1632 @@
+{
+  "complete": true,
+  "eligible": true,
+  "selected": {
+    "build": {
+      "index": "hnsw",
+      "m": 16,
+      "ef_construction": 64
+    },
+    "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-deep-image-96-angular-v2/build-0",
+    "filters": {
+      "all": {
+        "configuration": {
+          "route": "planner",
+          "ef": 512
+        },
+        "median": 0.002023882889933007,
+        "states": [
+          {
+            "filter": "all",
+            "state": "baseline",
+            "configuration": {
+              "route": "planner",
+              "ef": 512
+            },
+            "queries": 1000,
+            "meanRecall": 0.9993,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0020340519986348227,
+            "p95": 0.0029518060000555124,
+            "p99": 0.003219266000087373,
+            "pass": true
+          },
+          {
+            "filter": "all",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "planner",
+              "ef": 512
+            },
+            "queries": 1000,
+            "meanRecall": 0.9993,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.002018551000219304,
+            "p95": 0.0029392639989964664,
+            "p99": 0.0032285160013998393,
+            "pass": true
+          },
+          {
+            "filter": "all",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "planner",
+              "ef": 512
+            },
+            "queries": 1000,
+            "meanRecall": 0.9993,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0020048430014867336,
+            "p95": 0.002894389002904063,
+            "p99": 0.0031682650005677715,
+            "pass": true
+          },
+          {
+            "filter": "all",
+            "state": "reopen",
+            "configuration": {
+              "route": "planner",
+              "ef": 512
+            },
+            "queries": 1000,
+            "meanRecall": 0.9993,
+            "worstRecall": 0.9,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.002038259000983089,
+            "p95": 0.0029675559999304824,
+            "p99": 0.003263222999521531,
+            "pass": true
+          }
+        ]
+      },
+      "10pct": {
+        "configuration": {
+          "route": "planner",
+          "ef": 1000
+        },
+        "median": 0.0017012329566801325,
+        "states": [
+          {
+            "filter": "10pct",
+            "state": "baseline",
+            "configuration": {
+              "route": "planner",
+              "ef": 1000
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0017027169997163583,
+            "p95": 0.0017927170010807458,
+            "p99": 0.0019501759998092894,
+            "pass": true
+          },
+          {
+            "filter": "10pct",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "planner",
+              "ef": 1000
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.001720841999485856,
+            "p95": 0.0018817589989339467,
+            "p99": 0.00258005399882677,
+            "pass": true
+          },
+          {
+            "filter": "10pct",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "planner",
+              "ef": 1000
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0016941750000114553,
+            "p95": 0.0018162160013162065,
+            "p99": 0.001956258998689009,
+            "pass": true
+          },
+          {
+            "filter": "10pct",
+            "state": "reopen",
+            "configuration": {
+              "route": "planner",
+              "ef": 1000
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0016873819986358285,
+            "p95": 0.0017780500020307954,
+            "p99": 0.0018736330021056347,
+            "pass": true
+          }
+        ]
+      },
+      "1pct": {
+        "configuration": {
+          "route": "planner",
+          "ef": 128
+        },
+        "median": 0.00037092737246431607,
+        "states": [
+          {
+            "filter": "1pct",
+            "state": "baseline",
+            "configuration": {
+              "route": "planner",
+              "ef": 128
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.00036429299871088006,
+            "p95": 0.00038925099943298846,
+            "p99": 0.0004375440003059339,
+            "pass": true
+          },
+          {
+            "filter": "1pct",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "planner",
+              "ef": 128
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.00036841800101683475,
+            "p95": 0.00039316900074481964,
+            "p99": 0.0004279610002413392,
+            "pass": true
+          },
+          {
+            "filter": "1pct",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "planner",
+              "ef": 128
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0003744179994100705,
+            "p95": 0.0003905849989678245,
+            "p99": 0.0004105439984414261,
+            "pass": true
+          },
+          {
+            "filter": "1pct",
+            "state": "reopen",
+            "configuration": {
+              "route": "planner",
+              "ef": 128
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1.0,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 0.0003767099988181144,
+            "p95": 0.00039400199966621585,
+            "p99": 0.00043820999781019054,
+            "pass": true
+          }
+        ]
+      },
+      "empty": {
+        "configuration": {
+          "route": "exact"
+        },
+        "median": 5.4339188116317035e-05,
+        "states": [
+          {
+            "filter": "empty",
+            "state": "baseline",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 5.7958997786045074e-05,
+            "p95": 6.429200220736675e-05,
+            "p99": 6.741700053680688e-05,
+            "pass": true
+          },
+          {
+            "filter": "empty",
+            "state": "churn-before-maintenance",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 5.3708998166257516e-05,
+            "p95": 6.387500252458267e-05,
+            "p99": 6.787600068491884e-05,
+            "pass": true
+          },
+          {
+            "filter": "empty",
+            "state": "churn-after-maintenance",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 5.166700066183694e-05,
+            "p95": 6.308400043053553e-05,
+            "p99": 6.687499990221113e-05,
+            "pass": true
+          },
+          {
+            "filter": "empty",
+            "state": "reopen",
+            "configuration": {
+              "route": "exact"
+            },
+            "queries": 1000,
+            "meanRecall": 1.0,
+            "worstRecall": 1,
+            "errors": 0,
+            "unresolvedExactMembership": 0,
+            "median": 5.42090019735042e-05,
+            "p95": 6.462500095949508e-05,
+            "p99": 6.995799776632339e-05,
+            "pass": true
+          }
+        ]
+      }
+    },
+    "objective": 0.0005132604479771757
+  },
+  "candidates": [
+    {
+      "build": {
+        "index": "hnsw",
+        "m": 16,
+        "ef_construction": 64
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-deep-image-96-angular-v2/build-0",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "planner",
+            "ef": 512
+          },
+          "median": 0.002023882889933007,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0020340519986348227,
+              "p95": 0.0029518060000555124,
+              "p99": 0.003219266000087373,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.002018551000219304,
+              "p95": 0.0029392639989964664,
+              "p99": 0.0032285160013998393,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0020048430014867336,
+              "p95": 0.002894389002904063,
+              "p99": 0.0031682650005677715,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 0.9993,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.002038259000983089,
+              "p95": 0.0029675559999304824,
+              "p99": 0.003263222999521531,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "planner",
+            "ef": 1000
+          },
+          "median": 0.0017012329566801325,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "ef": 1000
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0017027169997163583,
+              "p95": 0.0017927170010807458,
+              "p99": 0.0019501759998092894,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 1000
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.001720841999485856,
+              "p95": 0.0018817589989339467,
+              "p99": 0.00258005399882677,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 1000
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016941750000114553,
+              "p95": 0.0018162160013162065,
+              "p99": 0.001956258998689009,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "ef": 1000
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016873819986358285,
+              "p95": 0.0017780500020307954,
+              "p99": 0.0018736330021056347,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "planner",
+            "ef": 128
+          },
+          "median": 0.00037092737246431607,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00036429299871088006,
+              "p95": 0.00038925099943298846,
+              "p99": 0.0004375440003059339,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00036841800101683475,
+              "p95": 0.00039316900074481964,
+              "p99": 0.0004279610002413392,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003744179994100705,
+              "p95": 0.0003905849989678245,
+              "p99": 0.0004105439984414261,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003767099988181144,
+              "p95": 0.00039400199966621585,
+              "p99": 0.00043820999781019054,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "exact"
+          },
+          "median": 5.4339188116317035e-05,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.7958997786045074e-05,
+              "p95": 6.429200220736675e-05,
+              "p99": 6.741700053680688e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.3708998166257516e-05,
+              "p95": 6.387500252458267e-05,
+              "p99": 6.787600068491884e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.166700066183694e-05,
+              "p95": 6.308400043053553e-05,
+              "p99": 6.687499990221113e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "exact"
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.42090019735042e-05,
+              "p95": 6.462500095949508e-05,
+              "p99": 6.995799776632339e-05,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0005132604479771757
+    },
+    {
+      "build": {
+        "index": "hnsw",
+        "m": 32,
+        "ef_construction": 500
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-deep-image-96-angular-v2/build-1",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "planner",
+            "ef": 256
+          },
+          "median": 0.0018459455633115687,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "ef": 256
+              },
+              "queries": 1000,
+              "meanRecall": 0.9996,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0018501339982321952,
+              "p95": 0.0029481380006473046,
+              "p99": 0.0032555149991821963,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 256
+              },
+              "queries": 1000,
+              "meanRecall": 0.9996,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.001871216001745779,
+              "p95": 0.002959180001198547,
+              "p99": 0.003307723000034457,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 256
+              },
+              "queries": 1000,
+              "meanRecall": 0.9996,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0018325500022911,
+              "p95": 0.002954679999675136,
+              "p99": 0.0033993069991993252,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "ef": 256
+              },
+              "queries": 1000,
+              "meanRecall": 0.9996,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0018301749987585936,
+              "p95": 0.0028987220030103344,
+              "p99": 0.0032163060022867285,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "iterative",
+            "ef": 512
+          },
+          "median": 0.0017114392725722351,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "iterative",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0017185079996124841,
+              "p95": 0.0017915909993462265,
+              "p99": 0.0019578419996832963,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0017004239998641424,
+              "p95": 0.0018000919990299735,
+              "p99": 0.001977841999178054,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0017519240027468186,
+              "p95": 0.001974757997231791,
+              "p99": 0.002195010001742048,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "iterative",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016757990015321411,
+              "p95": 0.0018229670022265054,
+              "p99": 0.0026033449976239353,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "iterative",
+            "ef": 128
+          },
+          "median": 0.00038211123656560584,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "iterative",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003991679986938834,
+              "p95": 0.0004287939991627354,
+              "p99": 0.00045612699977937154,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003909599981852807,
+              "p95": 0.00040796000030240975,
+              "p99": 0.00042020999899250455,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003753769997274503,
+              "p95": 0.00040587699913885444,
+              "p99": 0.0004336679994594306,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "iterative",
+                "ef": 128
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00036391799949342385,
+              "p95": 0.00039445999937015586,
+              "p99": 0.00041162699926644564,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "planner",
+            "ef": 512
+          },
+          "median": 5.974838185706645e-05,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 6.033300087437965e-05,
+              "p95": 6.420899808290415e-05,
+              "p99": 6.820900307502598e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.570899884332903e-05,
+              "p95": 6.470799780800007e-05,
+              "p99": 0.00012662600056501105,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 6.345800284179859e-05,
+              "p95": 6.687600034638308e-05,
+              "p99": 6.945899804122746e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "ef": 512
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.9750000218627974e-05,
+              "p95": 6.679200305370614e-05,
+              "p99": 6.89999978931155e-05,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0005182318312103474
+    },
+    {
+      "build": {
+        "index": "ivfflat",
+        "lists": 100
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-deep-image-96-angular-v2/build-2",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "planner",
+            "probes": 64,
+            "lists": 100
+          },
+          "median": 0.009430774164851155,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 0.9997999999999999,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.009445707997656427,
+              "p95": 0.01024658599999384,
+              "p99": 0.01051063000340946,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 0.9997999999999999,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.009438290999241872,
+              "p95": 0.010282170002028579,
+              "p99": 0.010579337002127431,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 0.9997999999999999,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.009446914998989087,
+              "p95": 0.010256501998810563,
+              "p99": 0.010527419999561971,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 0.9997999999999999,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.009392290001414949,
+              "p95": 0.010303877999831457,
+              "p99": 0.010666752998076845,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "iterative",
+            "probes": 32,
+            "lists": 100
+          },
+          "median": 0.0016847266316426738,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "iterative",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016612159997748677,
+              "p95": 0.001746841000567656,
+              "p99": 0.0019254660001024604,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.001727131999359699,
+              "p95": 0.001968258999113459,
+              "p99": 0.002260717999888584,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016725070017855614,
+              "p95": 0.0017925909996847622,
+              "p99": 0.0019338419988343958,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "iterative",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016787969980214257,
+              "p95": 0.0018000059972109739,
+              "p99": 0.0019441719996393658,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "planner",
+            "probes": 64,
+            "lists": 100
+          },
+          "median": 0.0003720258114001225,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003694599981827196,
+              "p95": 0.0003925019991584122,
+              "p99": 0.0004705020000983495,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00037979300032020546,
+              "p95": 0.00039533499875687994,
+              "p99": 0.00042137700074817985,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003682099995785393,
+              "p95": 0.00039562700112583116,
+              "p99": 0.00042258499888703227,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "probes": 64,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003707510004460346,
+              "p95": 0.00039291799839702435,
+              "p99": 0.0004114599978493061,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "planner",
+            "probes": 32,
+            "lists": 100
+          },
+          "median": 5.6876175558102664e-05,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.595899710897356e-05,
+              "p95": 6.445799954235554e-05,
+              "p99": 7.108299905667081e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 6.050099909771234e-05,
+              "p95": 6.479199873865582e-05,
+              "p99": 7.487599941669032e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.3832998673897237e-05,
+              "p95": 6.845900134067051e-05,
+              "p99": 0.00011100000119768083,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 100
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.741700078942813e-05,
+              "p95": 6.6917000367539e-05,
+              "p99": 6.90829983795993e-05,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0007614564350018606
+    },
+    {
+      "build": {
+        "index": "ivfflat",
+        "lists": 316
+      },
+      "directory": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-deep-image-96-angular-v2/build-3",
+      "filters": {
+        "all": {
+          "configuration": {
+            "route": "planner",
+            "probes": 100,
+            "lists": 316
+          },
+          "median": 0.004606492454601472,
+          "states": [
+            {
+              "filter": "all",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 0.9991,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.004630139999790117,
+              "p95": 0.0053311010015022475,
+              "p99": 0.005590977001702413,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 0.9991,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.004621973999746842,
+              "p95": 0.005319559000781737,
+              "p99": 0.0055382270002155565,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 0.9991,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.004663641997467494,
+              "p95": 0.005353894001018489,
+              "p99": 0.005597978000878356,
+              "pass": true
+            },
+            {
+              "filter": "all",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 0.9991,
+              "worstRecall": 0.9,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.004511642000579741,
+              "p95": 0.005186184997000964,
+              "p99": 0.005377019999286858,
+              "pass": true
+            }
+          ]
+        },
+        "10pct": {
+          "configuration": {
+            "route": "iterative",
+            "probes": 64,
+            "lists": 316
+          },
+          "median": 0.001677781414517829,
+          "states": [
+            {
+              "filter": "10pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "iterative",
+                "probes": 64,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016825060010887682,
+              "p95": 0.0017689230007817969,
+              "p99": 0.0019120069991913624,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "probes": 64,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.001677214000665117,
+              "p95": 0.0017999650008277968,
+              "p99": 0.0019277149986010045,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "iterative",
+                "probes": 64,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0016661310000927188,
+              "p95": 0.0017713809975248296,
+              "p99": 0.0020759250000992324,
+              "pass": true
+            },
+            {
+              "filter": "10pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "iterative",
+                "probes": 64,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.001685339000687236,
+              "p95": 0.0017548389987496193,
+              "p99": 0.001953923998371465,
+              "pass": true
+            }
+          ]
+        },
+        "1pct": {
+          "configuration": {
+            "route": "planner",
+            "probes": 100,
+            "lists": 316
+          },
+          "median": 0.00037021619954514265,
+          "states": [
+            {
+              "filter": "1pct",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003629179991548881,
+              "p95": 0.00039179300074465573,
+              "p99": 0.00045370999941951595,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00037741800042567775,
+              "p95": 0.00039362700044875965,
+              "p99": 0.000404751997848507,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.00036650100082624704,
+              "p95": 0.00039579299846081994,
+              "p99": 0.0004597100014507305,
+              "pass": true
+            },
+            {
+              "filter": "1pct",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "probes": 100,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1.0,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 0.0003742100016097538,
+              "p95": 0.00039183400076581165,
+              "p99": 0.00041454299935139716,
+              "pass": true
+            }
+          ]
+        },
+        "empty": {
+          "configuration": {
+            "route": "planner",
+            "probes": 32,
+            "lists": 316
+          },
+          "median": 5.678466992748161e-05,
+          "states": [
+            {
+              "filter": "empty",
+              "state": "baseline",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.770899952040054e-05,
+              "p95": 6.399999983841553e-05,
+              "p99": 6.633399971178733e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-before-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.820899968966842e-05,
+              "p95": 6.454200047301129e-05,
+              "p99": 0.0001243759979843162,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "churn-after-maintenance",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.325100210029632e-05,
+              "p95": 6.645899702562019e-05,
+              "p99": 6.98750009178184e-05,
+              "pass": true
+            },
+            {
+              "filter": "empty",
+              "state": "reopen",
+              "configuration": {
+                "route": "planner",
+                "probes": 32,
+                "lists": 316
+              },
+              "queries": 1000,
+              "meanRecall": 1.0,
+              "worstRecall": 1,
+              "errors": 0,
+              "unresolvedExactMembership": 0,
+              "median": 5.812499875901267e-05,
+              "p95": 6.354200013447553e-05,
+              "p99": 6.595800005015917e-05,
+              "pass": true
+            }
+          ]
+        }
+      },
+      "objective": 0.0006348893862510085
+    }
+  ],
+  "failures": [],
+  "freezeSha256": "3547829c29fcbfa85f6623f57cb2ece0ea966cd2697a20b92acbc49ebfdf4a62",
+  "selectedBeforeHeldOutQueries": true
+}

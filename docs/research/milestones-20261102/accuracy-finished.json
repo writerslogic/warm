@@ -1,0 +1,1382 @@
+{
+  "complete": true,
+  "qualified": true,
+  "failure": null,
+  "cells": [
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9998,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9998,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fallbackExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9998,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9998,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9998,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9998,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9999,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9999,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fallbackExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9999,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9999,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9999,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9999,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-exact",
+      "mode": "exact",
+      "key": "baseline/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9999,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9999,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "baseline-graph",
+      "mode": "graph",
+      "key": "baseline/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fallbackExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/before-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9999,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9999,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-graph",
+      "mode": "graph",
+      "key": "churn/after-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "churn-exact",
+      "mode": "exact",
+      "key": "churn/prepared/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/all",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 9999,
+      "worstRecall": 0.9,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "fullGraph": 1000
+      },
+      "meanRecall": 0.9999,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/10pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/1pct",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 10000,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": 1,
+      "pass": true
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "run": "reopen-graph",
+      "mode": "graph",
+      "key": "churn/after-flush-separate-process-reopen-and-maintenance/empty",
+      "queries": 1000,
+      "correct": 1000,
+      "hits": 0,
+      "worstRecall": 1,
+      "below90": 0,
+      "unresolvedExactMembership": 0,
+      "routes": {
+        "filteredExact": 1000
+      },
+      "meanRecall": null,
+      "pass": true
+    }
+  ],
+  "receipts": [
+    {
+      "dataset": "lastfm-64-dot",
+      "phase": "oracle",
+      "outputSha256": "e6e61f2d4bfcedb8a4b461fe674860d3624e3b880811eea3ac51dca61d87e944",
+      "receiptSha256": "de5955b59195c8a3988d0c56fc2b3292bc07048ee8d3059702fd041ac12c673f",
+      "peakOwnedTreeRssBytes": 277135360
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "phase": "prepare",
+      "outputSha256": "6c970e6a9eb7173bd46a287690b6c672e1b62966cfabcef82dffb57d47d46b74",
+      "receiptSha256": "53393f8a6591d6d4bf03d7908e429ae030532a19778b916be4e0c39aa8343818",
+      "peakOwnedTreeRssBytes": 1011400704
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "phase": "baseline-exact",
+      "outputSha256": "35d71d39c28179761eb392a87056ff823d3a6c3e261d41391a7e0b77688820ac",
+      "receiptSha256": "f63ecd9779f885fe24f2bca989d15cc26339942b000aca28f35f1ce68fc01196",
+      "peakOwnedTreeRssBytes": 926744576
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "phase": "baseline-graph",
+      "outputSha256": "c9c2c04cae15b2035ff08dffb9bb1ab537b8d952238a6d9de825db65718a961b",
+      "receiptSha256": "b243976ef35df1c0ab4bec054a4f65a109928290531dfadd03c9b911397595ff",
+      "peakOwnedTreeRssBytes": 1006501888
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "phase": "churn-graph",
+      "outputSha256": "ac128b9fe096bc37963adf8faf88d5e25f7118c8e62fa993e4e7823bf8618414",
+      "receiptSha256": "f063a7b71a2e518d593e3a1d52a60d5475e9e2798072f3e4081c05eb1a3a4cd4",
+      "peakOwnedTreeRssBytes": 1389772800
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "phase": "churn-exact",
+      "outputSha256": "aeb28916b6facf0729e9325338aac194dd8022fc317ec60e898aa1fe36cc3202",
+      "receiptSha256": "9ec14ba52d9d368a9794470a6d7ebe2bfa3578d304218a0aab3e0e2b5076086b",
+      "peakOwnedTreeRssBytes": 922435584
+    },
+    {
+      "dataset": "lastfm-64-dot",
+      "phase": "reopen-graph",
+      "outputSha256": "5e8aa931acd58c56c7cfd0863c565cff4fb18b334e03b7dee0d4bb9cb20d1c97",
+      "receiptSha256": "f86a8c6120fa3b5e1ec956855311a6ef252b614cb82fc2743501946c29a02e73",
+      "peakOwnedTreeRssBytes": 1032830976
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "phase": "oracle",
+      "outputSha256": "040b5497d9033460c8133f4544baf63378a930804035e059b8a37fe49a61edbf",
+      "receiptSha256": "4455fe62e81b5bfe017fbad7aceaa694d9e9614fa68dbd2aa375173e312d075f",
+      "peakOwnedTreeRssBytes": 1142947840
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "phase": "prepare",
+      "outputSha256": "ab9707f139cfbdb410e4d7d9d77cdf26cebaefae05e0dc004f132ad0697924dc",
+      "receiptSha256": "9d5da1e0447bddf8e12b80e2133e07a9815e0337f9ea32a9f722ea855d57d92d",
+      "peakOwnedTreeRssBytes": 2959212544
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "phase": "baseline-exact",
+      "outputSha256": "c2f946edabb1a01cec161e5f9fa9182d061410bbb2fc2f07ae45bde03bd12cab",
+      "receiptSha256": "0b4450bf36c59231a7eddec4bb5ddb1e53dbf60d89d56fc0613be8d0c05f6534",
+      "peakOwnedTreeRssBytes": 2434973696
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "phase": "baseline-graph",
+      "outputSha256": "026e7236134583ed91436b9a7834b373b1da3bc7b1e81b2c42fcb5b7bf182e65",
+      "receiptSha256": "3a6d1f41a0ea4c4bbd94315bfc2bea2e8fe0a63825a0005c8c74e72c5168ef63",
+      "peakOwnedTreeRssBytes": 2376351744
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "phase": "churn-graph",
+      "outputSha256": "2e7784e3e347757a022386158ae2101aa17074465afcf8fdb93da988c356f6cb",
+      "receiptSha256": "1071164337ac5ae7fb0f7bfc0841ce54d27abfb816083727047ed64a1d5afafd",
+      "peakOwnedTreeRssBytes": 3786964992
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "phase": "churn-exact",
+      "outputSha256": "a92bc9e912e846d7f3e37b8595a8bee1db917d1eb97cf059ea8c54b670997043",
+      "receiptSha256": "c497aa32c105076fb7415ea86f455cb241f31265658867aaaae4dcf9eb4fadde",
+      "peakOwnedTreeRssBytes": 2442952704
+    },
+    {
+      "dataset": "coco-i2i-512-angular",
+      "phase": "reopen-graph",
+      "outputSha256": "82f8ac9f265b334ac5086c6e1342e3be6293ea84c0385e31702b57cd5962cb81",
+      "receiptSha256": "7fca6f3e4f78c2a31d7dc63d7f02f61592e5413b8ca09f317c7430a8a73198c4",
+      "peakOwnedTreeRssBytes": 2392768512
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "phase": "oracle",
+      "outputSha256": "a31e92ab6a3e95f42bd4b34473ab39f1917d4bc411116a52a2e1a270003d77c8",
+      "receiptSha256": "7c9ce05e294aa914c0202d9b03d55a42898c99cc0ae3b293f65d71a27508e485",
+      "peakOwnedTreeRssBytes": 333152256
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "phase": "prepare",
+      "outputSha256": "c8d9e074bc28c4a9e5f512173759fdc805ff504b1289d74be8c9c8b102d2f714",
+      "receiptSha256": "13aa2278122fab6c38a34d4bff3746af6ef562382c3aefb604866e7584bfb085",
+      "peakOwnedTreeRssBytes": 1186676736
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "phase": "baseline-exact",
+      "outputSha256": "43c61a73e5b97088dc9ef42164f6317c9071e047fd0869ffe18c9a968d0dc9af",
+      "receiptSha256": "f6c325138de13d676b6ac75d063e80c8273a5258ef9611e3a1cdf689827f0d53",
+      "peakOwnedTreeRssBytes": 1067122688
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "phase": "baseline-graph",
+      "outputSha256": "5f38c45fe5ec63d14b5d95a95493aaf1e2352a05e1c8fbc8c58e385ab3c4e16b",
+      "receiptSha256": "9515a8239b203e88567607d4a4d7d4a38c62eb9fb6c88ae49eca3c677a61644d",
+      "peakOwnedTreeRssBytes": 1053802496
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "phase": "churn-graph",
+      "outputSha256": "3dbdfe66b7f5ff7b307ad002db7c99a35aeaf49d2bd7c7a88ad61df785ba09f9",
+      "receiptSha256": "1edee21dea25e2a51e1bb6c60ddcafc72008ef5d71a526408be1bc3d355b4c85",
+      "peakOwnedTreeRssBytes": 1956954112
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "phase": "churn-exact",
+      "outputSha256": "7c8f364a9fbf60671f130af8d426eea21124a7131620d8c57daf77dba72ab269",
+      "receiptSha256": "e4ef5948a9eb205c80e7c13c9e8ba6647ca56466292ef2a770549c6cd0631934",
+      "peakOwnedTreeRssBytes": 1047281664
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "phase": "reopen-graph",
+      "outputSha256": "1755d9c63d947749e08a9c83ae83983f419dcd68a9894bf7371b7876fff0e9ef",
+      "receiptSha256": "7916837a51681921c5434765430adedc8e11a56886a1cafafbeaddc6b1358651",
+      "peakOwnedTreeRssBytes": 1086259200
+    }
+  ],
+  "freezeSha256": "0d5909b5ab4b486bfd96dd1c69616c970e2b1e0faf9745dd04701aaa00f0f06d",
+  "finished": "2026-11-03T06:37:28.765Z"
+}

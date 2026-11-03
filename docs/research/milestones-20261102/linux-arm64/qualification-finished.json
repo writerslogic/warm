@@ -1,0 +1,53 @@
+{
+  "complete": true,
+  "scope": "Linux arm64 glibc, Node22, local packed binding",
+  "sourceFilesVerified": 433,
+  "sourceTarSha256": "ddfc3d5fa66afb4317b66742e6724691c489ed9c2f0071ca9e2194d398cc350a",
+  "supplementSha256": "8194367e5c1775bc7710a870cda04027f36b33bf3150485fd7457a94aef8fdb6",
+  "nodeTests": {
+    "passed": 36,
+    "failed": 0,
+    "skipped": 3,
+    "skipReason": "local-embed not enabled in standard node-api+security artifact"
+  },
+  "typesPassed": true,
+  "packedApiPassed": true,
+  "recovery": {
+    "complete": true,
+    "batchSize": 32,
+    "duplicateRetryEffects": 0,
+    "currentAndHistoricalFactsPreserved": true,
+    "deletedRecordReturned": false,
+    "node": "v22.23.4",
+    "platform": "linux-arm64",
+    "interruption": "SIGKILL",
+    "boundary": "After public flush completed and acknowledgement was fsynced by parent",
+    "limitations": "One supported process-death boundary; not power loss or every possible interruption."
+  },
+  "versions": [
+    "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "v22.23.4",
+    "10.9.9",
+    "uv 0.12.10 (aarch64-unknown-linux-gnu)"
+  ],
+  "artifacts": {
+    "node": {
+      "sha256": "0ded4eca7588873c109c34e96abc8475ee6b0ecca5e1e528064d43281ca8ab53",
+      "bytes": 11734344
+    },
+    "server": {
+      "sha256": "e10107257731bb3e0c18c8ef4bf43e6fb606e0eb1ef4cc801c3a6e55356d5361",
+      "bytes": 12809272
+    },
+    "package": {
+      "sha256": "c535dcc9d402ba0c3962ec40c97d174ebf0ad7e173c76c01ff81d0eb9fbfb92b",
+      "bytes": 3895898
+    }
+  },
+  "virtualization": "Lima VZ on physical Apple M4; not a third hardware configuration",
+  "limits": [
+    "Other platforms and optional native-package selection remain unqualified",
+    "Local embedding optional feature remains outside this artifact",
+    "Node recovery boundary follows a completed public flush; no power-loss claim"
+  ]
+}

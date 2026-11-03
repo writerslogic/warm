@@ -1,0 +1,6 @@
+{
+  "frozenAt": "2026-11-03T14:42:18.390077+00:00",
+  "scriptSha256": "c5ec3c1c072ba8a677320202d80aa5f48b25630da4e3dab9afa02c69ac380c23",
+  "coordinatorSha256": "bcdd860c9c01773922189febd9dd98bb4f5feff3544dfe5087660c03e19c12fa",
+  "priorFailures": "v3 omitted PG receipt environment; v4 coordinator retained v3 local root and deployed the old runner. Both stopped before queries. Fresh coordinator uses explicit v5 paths; server/driver/cohort unchanged."
+}

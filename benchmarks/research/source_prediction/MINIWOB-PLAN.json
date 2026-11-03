@@ -1,0 +1,21 @@
+{
+  "schema": "warm.predictive-miniwob-screen/3",
+  "amendment": "Version 1 rejected 21 zero-state files; version 2 retained all as empty evidence. Version 2 also made each capture unique because generated text-node refs decrement on every observation. The official recorder confirms that allocation. Version 3 normalizes negative ref on tag=t to -1 while preserving tree position, content and positive element refs. Same 384-file exposed cohort, both earlier runs preserved; no success filtering or new held-out claim.",
+  "purpose": "Test a necessary condition for useful withdrawal-preserving predictive compaction on exposed human task traces.",
+  "inputManifest": "/Volumes/A/.hms-bench-cache/warm-predictive-miniwob-20261103-v1/input-manifest.json",
+  "selection": "384 files selected from pinned repository metadata before reading cohort contents; no success filtering. A separate choose-date-easy schema sample was inspected.",
+  "limits": {"compressedBytesPerFile": 1048576, "decodedBytesPerFile": 8388608, "statesPerFile": 20000, "jsonDepth": 128, "jsonItems": 500000},
+  "stateIdentity": "SHA256 of task, utterance and recorded DOM with recordingTarget removed recursively and generated negative refs of tag=t text pseudo-elements normalized to -1. Preserve tree order, geometry, text, positive element refs, focus and all other fields.",
+  "referenceAllocationSource": "https://github.com/Farama-Foundation/MiniWoB-plusplus/blob/33c3b4ddef8c6eb67c57a29663d844b1eda7e614/miniwob/html/core/core.js: core.nextTextRefCode-- in addDOMInfosOfTextNode, versus persistent element.dataset.wob_ref for HTML elements. This current source explains observed recording behavior; exact 2017 recorder revision is unavailable.",
+  "transition": "Only adjacent capture timing=1 and bubble timing=3 with identical action dictionaries after removal of timing. Keep every unmatched event in a ledger; never infer its outcome or bridge across it.",
+  "actions": {
+    "raw": "All event fields except timing; exact coordinates retained.",
+    "target-path": "For exactly one recordingTarget in capture DOM, replace x/y with ordered DOM child path and retain other event fields except timing. Otherwise use explicitly tagged raw fallback. This is a declared action projection, not equivalent to exact coordinates."
+  },
+  "source": "One demonstration identity per file; every paired transition has one source. The complete singleton-source control applies; no algebraic-kernel advantage is expected.",
+  "observableLabels": "Use only task identity for the most permissive support ceiling. Goal and DOM remain in state identity; not requiring their preservation as output labels makes the ceiling optimistic, not a safe behavioral quotient.",
+  "analysis": "Group states with at least one observed outgoing transition by action-to-source-support signatures. Under unlimited withdrawals, identical supports per action are necessary for equivalent unknown states. For withdrawal budget k, supports larger than k are always nonempty, while supports of size at most k must match. Report k=0,1,2,unlimited; separate states with no observed outgoing edges.",
+  "outputs": ["input receipts and hashes", "all per-demo unmatched-event indices", "normalized paired transition records for both action projections", "support-group assignments", "task-level support ceilings and source coverage"],
+  "interpretation": "Support-group reduction is only an upper bound on state compaction; distribution and successor refinement can remove it. No empirical missing action is asserted impossible in the environment. No interactive-agent, memory-byte, generalization, novelty, milestone-4 or milestone-6 claim.",
+  "execution": "Local standard-library Python; four download workers; no paid services or timing claim. Freeze source/protocol before downloading cohort files. Retain parser failures rather than excluding demonstrations."
+}

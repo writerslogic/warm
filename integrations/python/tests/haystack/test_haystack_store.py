@@ -104,7 +104,7 @@ def test_enumeration_limit_boundary(server_factory, count):
     srv = server_factory(DIM, max_top_k=10, max_tenants=100000)
     store = WarmDocumentStore(url=srv.url, tenant_id=srv.tenant(), embedding_dim=DIM, list_buckets=1, max_fetch=10)
     store.write_documents(docs(count))
-    if count < 10:
+    if count <= 10:
         assert store.count_documents() == count
     else:
         with pytest.raises(WarmError, match="list_buckets"):

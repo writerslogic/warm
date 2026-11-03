@@ -1,0 +1,57 @@
+{
+  "plan": {
+    "schema": "warm.certified-association/1",
+    "hypothesis": "A low-rank association tensor with explicit rare corrections and an error-bounded exact fallback can accelerate soft-cue association retrieval while preserving every selected answer, including after updates and forgetting.",
+    "novelty": "Tensor trains, sparse corrections and margin bounds are established methods. This probes their joint behavior; no invention or general memory advantage is asserted.",
+    "scope": "Generated continuous association weights only; not nearest-neighbor search, natural-language memory utility, held-out qualification or a production implementation.",
+    "shape": [
+      128,
+      128,
+      64
+    ],
+    "rank": 4,
+    "robustIterations": 8,
+    "correctionThreshold": 0.1,
+    "maxCorrectionFraction": 0.02,
+    "seeds": [
+      101,
+      211,
+      307
+    ],
+    "scenarios": [
+      "correlated",
+      "rare_exceptions",
+      "independent"
+    ],
+    "rareFraction": 0.001,
+    "rareMagnitude": 0.5,
+    "queriesPerFamily": 64,
+    "cueSupports": [
+      4,
+      64,
+      128
+    ],
+    "iterations": "All fits infer factors from the observed tensor. Alternate rank-4 TT-SVD and explicit corrections above the fixed threshold eight times. Never supply generator factors to the candidate.",
+    "query": "Two nonnegative normalized cue vectors contract the first two axes; return the highest-scoring third-axis identity with smallest-ID ties. Small-support queries use the exact gather control. Other queries may return a factorized answer only when the top-two gap exceeds twice a conservative residual-plus-roundoff bound; otherwise evaluate the original tensor.",
+    "controls": "Exact dense two-stage BLAS contraction and exact indexed gather contraction. Use gather when support product is less than one quarter of the first-two-axis domain. Retain raw input in the candidate for fallback and count it in all memory reports.",
+    "mutation": "For each case overwrite one association, delete another by setting it to zero, then rebuild from the surviving observed tensor. Verify rebuilt readout and byte-identical state against a separate fresh rebuild. Report rebuild cost; do not present negative delta masking as physical forgetting.",
+    "qualityGate": "Zero wrong final winners and zero incorrectly certified winners across every case/query and mutation check. Reject nonfinite inputs. Include tiny-gap and exact-tie cases in correctness tests.",
+    "promotion": "For both correlated and rare-exception scenarios, at every seed and both support64/support128 workloads, candidate median and p95 query times must each be <= half the exact control and at least 90% of queries must avoid fallback. All quality checks must pass. Independent and support4 results stay reported. Passing licenses a native development experiment only.",
+    "timing": "One warmup per query, then three alternating control/candidate repetitions. Shared-host NumPy timings are exploratory; no milestone 3 or 6 claim. Charge certification and fallback time.",
+    "resources": {
+      "seconds": 900,
+      "rssBytes": 2147483648
+    },
+    "paidServices": false
+  },
+  "hashes": {
+    "PLAN.json": "d3c1a4b25367b8d9117bf1213fc004e418f5390c286ed68a9738fbc5e8d343c9",
+    "probe.py": "7f59da8c7cb9d6eacdbaaf05d9ac3d0a91f09f23b0dbb229baa752988e61c3c2",
+    "test_probe.py": "72cd5fc2bccb28e23a51576c7de685b7e9189d4f1877e15419dd766e25171d06",
+    "pyproject.toml": "e9f33d4a4df3941e282fe36303ba9388b8d6fbaa10f32869d40b5cf16bc56a83",
+    "uv.lock": "c2c2e3c57fb69af39f5edfa11761a808a1a76e5b0139fe2f37aaa59588be24cf"
+  },
+  "numpy": "2.5.4",
+  "python": "3.14.7",
+  "started": "2026-11-03T06:29:18Z"
+}

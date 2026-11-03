@@ -1,0 +1,23 @@
+{
+  "original": "/Volumes/A/.hms-bench-cache/warm-source-lift-refinement-20261103-v1",
+  "files": {
+    "source_lift/probe.py": "58c70a63f43f7ebe1d0c17a68ce92934c4361499c7aa1349913020cfc2f758b6",
+    "source_lift_refinement/PLAN.json": "96d0c732edcdcc99948ec755e506662884b16d96fcf824c80fdcac89ea759a1b",
+    "source_lift_refinement/audit_basis_control.py": "a5c65b9a2a74fceed3b18af815b5d3f6f019a6ad3b4d7efa2dc8fda20e8ac607",
+    "source_lift_refinement/basis_control.py": "8b259377f863ad68fd3ea0c4941f9ded0c23eccab3dd9c061cf3ad8d78963611",
+    "source_lift_refinement/refine.py": "2c8d807f283b877e54a070e7ea93d40fc282c5e26ab1231909badb668594d139",
+    "source_lift_refinement/run.py": "3ce4531e45f9b3f079bdb9d50637cc8067e932b5e12f3c80eb261595a668f5f3",
+    "source_lift_refinement/test_basis_control.py": "1648cd0079cc3f5f5ceea8e0c5bbee988a6b22fe5fb592ba2b7587a9533b527d",
+    "source_lift_refinement/test_refine.py": "0562d31204720e2adc2f2bce1068f41f5d258fcd8a5e69a2e475b76a27e84522"
+  },
+  "scope": "Stronger-control audit on already exposed development inputs; no new held-out or novelty claim.",
+  "methods": [
+    "lift-refine",
+    "proof-union",
+    "proof-union-refine"
+  ],
+  "repetitions": 3,
+  "acceptance": "New controls must produce byte-identical packets to the already exhaustively verified union and union-refine controls. Repeat candidate and new controls in rotated order. A faster matched-size new control falsifies the original 2x candidate advantage; this audit cannot by itself certify superiority over all algorithms.",
+  "deadlineSecondsPerCompiler": 30,
+  "benchmarkClaim": false
+}

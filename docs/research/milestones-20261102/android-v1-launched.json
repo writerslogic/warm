@@ -1,0 +1,9 @@
+{
+  "freezeSha256": "81d6a82c35ef2ad8ded082c3e318d3e3e00c0ab3022c762d7762f521b1147bdc",
+  "inheritedFixtures": [
+    "benchmarks/research/filtered_dense/original_capture.rs"
+  ],
+  "launchedAt": "2026-11-03T16:38:54.272743+00:00",
+  "pid": 48199,
+  "sourceFiles": 508
+}

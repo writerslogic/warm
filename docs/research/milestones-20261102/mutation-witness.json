@@ -1,0 +1,58 @@
+{
+  "complete": true,
+  "first": [
+    [
+      8,
+      8
+    ],
+    [
+      4,
+      0
+    ]
+  ],
+  "second": [
+    [
+      1,
+      1
+    ],
+    [
+      4,
+      0
+    ]
+  ],
+  "sharedContrastCoefficients": [
+    0,
+    4
+  ],
+  "allCueProof": "Equal coefficients imply identical output-score differences for every cue, not only the checked grid.",
+  "operation": "Set the contribution at input row 0, output 0 to zero; command carries no old weight.",
+  "cue": [
+    "1/2",
+    "1/2"
+  ],
+  "beforeScores": [
+    [
+      "6",
+      "4"
+    ],
+    [
+      "5/2",
+      "1/2"
+    ]
+  ],
+  "afterScores": [
+    [
+      "2",
+      "4"
+    ],
+    [
+      "2",
+      "1/2"
+    ]
+  ],
+  "afterWinners": [
+    1,
+    0
+  ],
+  "scope": "An analytical counterexample for contrast-only encoding, not a flaw in the prototype that retains raw input or a novelty claim."
+}

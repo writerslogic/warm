@@ -1,0 +1,18 @@
+{
+  "schema": "warm.shipping-accuracy/1",
+  "purpose": "Milestone 2 evaluation of the frozen current public API default search policy; preserve failures without selecting a different ef after seeing results.",
+  "policy": {"sourceRevision": "ab978afd94a2d92a89c162c1e2af77372ffeeb16", "api": "VectraMigrationIndex", "highRecall": false, "graphDegree": 64, "graphBuildEf": 256, "traversal": "shipping two-hop", "ef": 128, "rerank": 128, "k": 10, "candidateDimensions": "full", "environmentKnobs": "unset", "controls": ["public exact mode"]},
+  "datasets": [
+    {"name": "lastfm-64-dot", "dimensions": 65, "url": "https://ann-benchmarks.com/lastfm-64-dot.hdf5", "source": "ANN-Benchmarks Last.fm matrix-factorization item/user factors with angular augmentation", "maxDownloadBytes": 629145600},
+    {"name": "coco-i2i-512-angular", "dimensions": 512, "url": "https://github.com/fabiocarrara/str-encoders/releases/download/v0.1.3/coco-i2i-512-angular.hdf5", "source": "ANN-Benchmarks COCO image CLIP features, producer release v0.1.3", "maxDownloadBytes": 629145600},
+    {"name": "deep-image-96-angular", "dimensions": 96, "url": "https://ann-benchmarks.com/deep-image-96-angular.hdf5", "source": "ANN-Benchmarks DEEP1B image descriptors", "maxDownloadBytes": 5368709120}
+  ],
+  "inputSelection": {"rows": 100000, "queries": 1000, "train": "First 100000 finite nonzero rows in the published train split after float32 conversion, preserving source order", "test": "First 1000 finite nonzero rows in the published test split after float32 conversion, preserving source order", "eligibility": "Finite nonzero cosine vectors only, fixed before inspection; record every skipped ordinal and reason. Do not filter by results, difficulty, duplicates or answer margin.", "priorExposure": "Targeted repository search found no earlier result references for these three exact dataset names. NYTimes and GloVe are excluded because of extensive prior development exposure. Public availability is not proof of no exposure elsewhere; report this limit."},
+  "workloads": {"states": ["baseline", "churn-before-maintenance", "churn-after-maintenance"], "filters": ["all", "10pct", "1pct", "empty"], "churn": "Existing vector comparison liveState: replace ordinals 0..99 with vectors 1..100; delete ordinals 100..199; preserve returned metadata and raw vectors exactly", "graphRoute": "Unfiltered baseline and after-maintenance must report fullGraph with the frozen construction profile; filtered requests must use filteredExact; staleExact/fallbackExact before maintenance is reported explicitly"},
+  "gates": {"queriesPerCorpusPerWorkload": 1000, "meanRecallAt10": 0.99, "worstRecallAt10": 0.9, "unexplainedExactMembershipErrors": 0, "payloadErrors": 0, "duplicateOrDeletedOrIneligibleResults": 0, "emptyFilter": "Exactly zero results for all queries"},
+  "oracle": "Independent existing JavaScript cosine oracle and scalar score validation; retain exact membership substitutions and independently resolve every boundary discrepancy before qualification. Tolerance alone is not a resolved membership explanation.",
+  "freeze": "Seal this plan before download/extraction. Seal executable, wrappers, driver, source and all extracted input hashes before any search. Data preparation and oracle computation do not tune the search policy. Keep all failed attempts and consumed query ordinals.",
+  "limits": {"downloadSecondsPerDataset": 900, "phaseSeconds": 7200, "rssBytesPerProcess": 8589934592},
+  "claims": "Accuracy only at the declared 100000-row scale and workloads. No competitive latency or noteworthy advantage inferred. This baseline qualification does not replace original research.",
+  "paidServices": false
+}

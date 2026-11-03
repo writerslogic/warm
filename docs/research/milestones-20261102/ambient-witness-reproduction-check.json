@@ -1,0 +1,31 @@
+{
+  "archive": "/Volumes/A/.hms-bench-cache/warm-ambient-witness-reproduction-20261103-v1/ambient-witness-reproduction-v1.tar.gz",
+  "archiveBytes": 330046,
+  "archiveSha256": "4a9327b9fb6d7768fa253e2055fbc7a04731d33dfd545c955e4cfba7c3994292",
+  "checkedAt": "2026-11-03T18:04:04.457541+00:00",
+  "complete": true,
+  "files": 51,
+  "independenceVerified": false,
+  "manifestSha256": "9c97619ee52605ef4f1235f83b2a80f8edbe654142b5e00fe99e0b684d7a2c6d",
+  "reproduction": {
+    "benchmarkClaim": false,
+    "complete": true,
+    "independenceVerified": false,
+    "manifestSha256": "9c97619ee52605ef4f1235f83b2a80f8edbe654142b5e00fe99e0b684d7a2c6d",
+    "matchedOutputs": 34,
+    "python": "3.12.12 (main, Nov 19 2025, 22:30:44) [Clang 21.1.4 ]",
+    "result": {
+      "cases": 32,
+      "complete": true,
+      "distinguishingMasks": 408,
+      "existingCheckerCases": 21,
+      "freezeSha256": "e1fc05b0a0ffd124037dca9f206f624881eca69450ac429e1c4e343d56f1f61a",
+      "gatePass": true,
+      "jointUnknownMasks": 14346,
+      "readoutComparisons": 37410
+    },
+    "scientificResultReproduced": true,
+    "scope": "Positive-evidence deletion-bound construction; no system advantage"
+  },
+  "tamperedSourceRejectedBeforeRun": true
+}

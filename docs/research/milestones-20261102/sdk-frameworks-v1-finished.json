@@ -1,0 +1,27 @@
+{
+  "benchmarkClaim": false,
+  "complete": true,
+  "counts": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 94
+  },
+  "exclusions": [
+    "DSPy",
+    "separate integrations package",
+    "cloud importer services",
+    "model-generated answer quality",
+    "other Python and platform combinations"
+  ],
+  "installed": {
+    "filesVerified": 60,
+    "package": "/home/davidcondrey.guest/warm-milestones-20261103/sdk-frameworks-v1/consumer/lib/python3.12/site-packages/writerslogic_warm_sdk",
+    "python": "3.12.12",
+    "wheelSha256": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490"
+  },
+  "network": "private network namespace with loopback only",
+  "scope": "Six installed HTTP SDK framework adapters, Python 3.12.12, Linux arm64",
+  "sourceSha256": "094d3fd93164d795d10d528822011a2e620bbdd033e8821105c62abbcbe6aae1",
+  "testFunctions": 33
+}

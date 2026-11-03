@@ -115,6 +115,40 @@ def test_expiration(server):
             m.add("x", user_id="u", expiration_date="tomorrow")
 
 
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("days", [-1, 0, 1])
+async def test_update_distinguishes_omitted_and_cleared_expiration(server, asynchronous, days):
+    memory = amake(server) if asynchronous else make(server)
+
+    async def call(name, *args, **kwargs):
+        result = getattr(memory, name)(*args, **kwargs)
+        return await result if asynchronous else result
+
+    try:
+        today = datetime.datetime.now(datetime.timezone.utc).date()
+        expiration = (today + datetime.timedelta(days=days)).isoformat()
+        added = await call("add", "original fact", user_id="u", expiration_date=expiration, infer=False)
+        mid = added["results"][0]["id"]
+        visible = await call("get_all", filters={"user_id": "u"})
+        assert bool(visible["results"]) == (days >= 0)
+        with pytest.raises(ValueError, match="At least one"):
+            await call("update", mid)
+        await call("update", mid, text="updated fact")
+        assert (await call("get", mid))["expiration_date"] == expiration
+        with pytest.raises(ValueError, match="YYYY-MM-DD"):
+            await call("update", mid, expiration_date="tomorrow")
+        assert [row["event"] for row in await call("history", mid)] == ["ADD", "UPDATE"]
+        await call("update", mid, expiration_date=None)
+        result = await call("get", mid)
+        assert result["expiration_date"] is None and result["memory"] == "updated fact"
+        assert [row["id"] for row in (await call("get_all", filters={"user_id": "u"}))["results"]] == [mid]
+    finally:
+        if asynchronous:
+            await memory.aclose()
+        else:
+            memory.close()
+
+
 def test_delete_all_pages_past_the_service_cap(server_factory):
     srv = server_factory(64, max_top_k=10)
     m = Memory(warm=WarmConfig(url=srv.url, tenant_id=srv.tenant(), input_dim=64, max_fetch=10), buckets=8)

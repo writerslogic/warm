@@ -1,0 +1,78 @@
+{
+  "plan": {
+    "schema": "warm.source-lift/1",
+    "question": "Can source identity be encoded together with a constraint so that a small subset preserves all changed conclusions after bounded source withdrawal, including facts requiring several sources jointly?",
+    "contract": "Each original row is an augmented linear equation over a declared prime field, with a nonempty provenance set of at most g source IDs. Withdrawing a source removes every row depending on it. Preserve the entire augmented row span after any set of at most k source withdrawals, including contradictions and underdetermined answers. This is supplied symbolic evidence, not natural-language extraction or learned rule discovery.",
+    "candidate": "Assign distinct field values to source IDs. Pad provenance to size g with globally reserved nonwithdrawable IDs. Lift each row by the g-fold exterior product of its source Vandermonde vectors in dimension k+g, tensor its coefficients with that exterior vector, and retain original rows whose lifts extend a basis. The proposed retained-row bound is rank(A) times binomial(k+g,g).",
+    "controls": [
+      "All original packed rows",
+      "A separate original-row basis for every distinct provenance set",
+      "The union of original-row bases for every admissible deletion set",
+      "For k=1 and g=1, a primary basis plus quotient-space repairs for each of its sources",
+      "Ordinary row basis as an explicitly insufficient negative control"
+    ],
+    "exhaustive": {
+      "field": 7,
+      "width": 2,
+      "sourceGroups": 3,
+      "spacesPerGroup": "The zero space, each of the eight one-dimensional subspaces, and the full two-dimensional space",
+      "provenanceModes": [
+        "single-source",
+        "source-pairs"
+      ],
+      "withdrawalBudgets": [
+        0,
+        1,
+        2
+      ]
+    },
+    "larger": {
+      "field": 257,
+      "width": 12,
+      "sources": 16,
+      "bundles": 48,
+      "rowsPerBundle": 8,
+      "seeds": [
+        3101,
+        3102,
+        3103
+      ],
+      "families": [
+        "redundant-single-source",
+        "redundant-source-pairs",
+        "rare-direction",
+        "contradiction"
+      ],
+      "withdrawalBudget": 2
+    },
+    "tightCases": {
+      "ranks": [
+        1,
+        3
+      ],
+      "withdrawalBudgets": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "provenanceWidths": [
+        1,
+        2,
+        3
+      ],
+      "construction": "For each of r independent directions, include one copy for every g-subset of a fixed k+g-source universe. Its complementary k withdrawals make that copy essential."
+    },
+    "acceptance": "Every admissible deletion produces exactly the independent reference row span for candidate and positive controls. Every selected original row has unchanged coefficients and provenance. Candidate size never exceeds rank(A)*binomial(k+g,g), and all tight cases attain it. Preserve all cases and any mismatch. Beyond-budget requests must fail rather than silently claim correctness.",
+    "mechanismScreen": "On both redundant families, all three seeds must use at most half the packed bytes of the per-provenance basis and at most 1.1 times the packed bytes of the exhaustive-deletion union basis. This is a retained-certificate feasibility screen only. Record compilation time, peak traced allocation and serialized bytes for every control. No timing superiority or whole-process memory claim follows on a shared host.",
+    "priorArt": "Vandermonde/exterior representative families, colored matroid fault tolerance, and learning-unlearning are established. The candidate is a memory-oriented construction from these tools; mathematical priority and practical advantage are unestablished. Direct quotient repairs and exhaustive union bases are required strong exact controls. Do not rename this a novel algebra or infer agent utility from supplied equations.",
+    "limits": "Bounded counterfactual withdrawal, fixed prime and source universe, exact finite-field constraints. Not arbitrary indefinite forgetting, secure erasure, full original-text provenance retention, temporal policy resolution, approximate embeddings, or general agent QA. Row-span equality is stronger than consistency alone. Original source archives are outside the compact certificate and must be charged in any future total-memory claim.",
+    "resources": "One local standard-library process via uv, no model or paid-service calls, no held-out serving vectors, no changes to calibration or frozen soak."
+  },
+  "files": {
+    "PLAN.json": "14af63077f4b928925b6bb7aac7a8710ff10d284848f6f20a95a6b9ce4a37963",
+    "probe.py": "58c70a63f43f7ebe1d0c17a68ce92934c4361499c7aa1349913020cfc2f758b6",
+    "test_probe.py": "17cd7a89500334c285e8d21da3203f9cc59b572c072de26100819b69d9259299"
+  }
+}

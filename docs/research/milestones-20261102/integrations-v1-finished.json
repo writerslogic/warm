@@ -1,0 +1,267 @@
+{
+  "complete": false,
+  "completedAt": "2026-11-03T19:08:43.019815+00:00",
+  "freezeSha256": "34a313379444280a61fa74b4ea8b99b899c8b53c28fbe56219eb645b85d85c99",
+  "gatePass": false,
+  "paidServicesUsed": false,
+  "profiles": [
+    {
+      "collectionSha256": "ada61103ef39e1450e88f019bc2430fe7106322ff6bb6e8e4fd5813d13792dc9",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 43
+      },
+      "dependencyFreezeSha256": "a5ccb23bcbc695564cc6ed966f9116b511306efe47c2a4d9887c4cae836e33fe",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "core",
+      "reportSha256": "0aa364a96a030dad901fcb532f17a35f9cdd8dbee2f88861eb877ceb95a686e8",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "23a4ac395230806626e8e8db643182959bde639d4b8558c212e0c19cdb497327",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 44
+      },
+      "dependencyFreezeSha256": "6a179dc20da8d602d2a44507cf1e9151d19237cfd597b2dc275b01194e93c64f",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "langchain",
+      "reportSha256": "4bed28b29cd85bac75ba1b55bea566dffb53326cdd576f33ecee67972038f29f",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "f199f809380a7c0ad2b7f27913ed5ae5ebf3e4b5be00134a8a4e893a59275f98",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 35
+      },
+      "dependencyFreezeSha256": "34beae0e0004b1f92098d2f4d5e1d024dde8f75f66459d70265afbb0471793fa",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "langgraph",
+      "reportSha256": "67ca7c00951c0712c959242a1f54a896af0f6b9e499660ae360404ed9e7c0fac",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "2801d52143f994ecec568bce58dc2359643107e2463fa361a48b3dfbc73a70a4",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 1,
+        "skipped": 0,
+        "tests": 51
+      },
+      "dependencyFreezeSha256": "7d89283ae1fe4e76ed3352130d0dfcb1160b307908c8314df00f89c45b3a1221",
+      "exitCode": 1,
+      "gatePass": false,
+      "profile": "llamaindex",
+      "reportSha256": "89e0982caa2872b97d4d731ff0a501cb3a70444c10b27e8092c94d9db797388c",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "b1f28567495ab0ad13106c94e146abf7c7cc36f729586185bc0d318dd2da1e4a",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 1,
+        "skipped": 2,
+        "tests": 100
+      },
+      "dependencyFreezeSha256": "31c8198c2fb4d8e0068cd58dc7e4f24cba1b6fdf32a141fb02009773c5d8d425",
+      "exitCode": 1,
+      "gatePass": false,
+      "profile": "haystack",
+      "reportSha256": "07b46eb5a003c0b4c28459fb61973841ba3e33593b1b4dc1ea37fb7b975b8b0a",
+      "skipReviewRequired": true,
+      "skipped": [
+        {
+          "class": "tests.haystack.test_haystack_conformance.TestHolographicDocumentStore",
+          "name": "test_delete_all_documents_without_recreate_index",
+          "reason": "delete_all_documents has no recreate_index or recreate_collection parameter"
+        },
+        {
+          "class": "tests.haystack.test_haystack_conformance.TestHolographicDocumentStore",
+          "name": "test_delete_all_documents_with_recreate_index",
+          "reason": "delete_all_documents has no recreate_index or recreate_collection parameter"
+        }
+      ]
+    },
+    {
+      "collectionSha256": "e9ee20ba3949bb4991a638e8ae1bf69c726a975d6ded9ad6c2f899a0740c38e0",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 14
+      },
+      "dependencyFreezeSha256": "df16b215055817992799913c07e4c56d10f3f66b906c64b7022ea6c701f015b8",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "openai-agents",
+      "reportSha256": "8046cc2a06128650e52e82d5db6703ffc3aa6d7d4f1ceb7ec14ab40d5bb597c8",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "b1af2528246155021f32da8d58d00bbd7518f35ec717f17116d558cba7cb39f6",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 12
+      },
+      "dependencyFreezeSha256": "712024c280597ad66012a8ff7526a5ec2fb1da58a12f53ddad55e60e56a00ff6",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "pydantic-ai",
+      "reportSha256": "f0a2c518b14a6bb06d25a1cda02d331ff17fbf883cd7c54375f61d7f2f77935e",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "9b5833ebb4a0791ed7ae4c96b38da23937502f5fc98653ff8a6bf38b4729e162",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 5
+      },
+      "dependencyFreezeSha256": "61ea83fbc33c52e9a24713260428a5b437b7773264c2a0e258b7594b95495a62",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "smolagents",
+      "reportSha256": "f0ab0ee973db3d1db4165a8466f64cf933c7d4b638f236ad6b5c7d9ade9158c8",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "d377a76c45af09296d73cd5b53cf2f709b05d32fbdf0b800dbd2b6c97a152439",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 8
+      },
+      "dependencyFreezeSha256": "6606d8c5154f37ee9f79d3d00c63b9a8a4c6d3e4f3fda74713f4278834989ad1",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "litellm",
+      "reportSha256": "720d8c6e45942bb990ba291c8d4eb27a7e4b02f325cebfb8b95d09c17392b0de",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "7fe0968442ec6fc73ce339a3b73c9fc297b34ddb431c95d0e44c345555ea9edb",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 18
+      },
+      "dependencyFreezeSha256": "5c52e374b13457b8d14f7bb0c26d2e2f185edaa8cd5de780dbc5b222a80222bf",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "crewai",
+      "reportSha256": "0fe2dd2bc6fbb21ddd88f6974c4c25dc885aee87b1f2fd9ff0869c481862a602",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "a1b3536fe88af4203ec2b467d46a4503a7c07ba850267263982593bdd3736678",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 6
+      },
+      "dependencyFreezeSha256": "79f4f0f7886ee2b430a0420ee2fbad62624f015a825a347992db9f160256adc4",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "autogen",
+      "reportSha256": "a8563bf25c0393040923e834a8e91812dac226dc1f1e19227e53432b0144442d",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "e11eb67da25b3d883e57cf6b563cd4acc51958a2813d71ed395f3ac810cfaf50",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 3
+      },
+      "dependencyFreezeSha256": "358c8c4630a3281c304e0edf5a6c932f17546f4c6c5d69a99a14f848f4b4b390",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "ag2",
+      "reportSha256": "8e4cdb736c57f80cc81dabcf5a071bc2d95de1038c03432e178816ed19c2704b",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "3c13079d4326297f90f4e63dd571d48d477ca4cf01ae579b845e4967a78e4ad0",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 12
+      },
+      "dependencyFreezeSha256": "40fa87671ae766c5fce2016b37ff6cdd96048fc9ecb0266238d277f784be1e20",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "semantic-kernel",
+      "reportSha256": "34bc2126a51268d1b0cc137194b214859f5d22d58f02b75cd2fa27f08eddd172",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "complete": false,
+      "error": {
+        "message": "test collection does not cover all frozen modules",
+        "type": "ValueError"
+      },
+      "profile": "mem0"
+    },
+    {
+      "collectionSha256": "419135a2ec1d6c2e7685e91bb3a3f43642f1e038d08e71d7746957b22f469bd3",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 15
+      },
+      "dependencyFreezeSha256": "de505c6a34abc51133483605b9cbb9551050af45285f9f3f72bf871394018f17",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "letta",
+      "reportSha256": "c2eb6ae5252a82038fb172bf60cc3436792508d8a4d101e305114b24d20c26ec",
+      "skipReviewRequired": false,
+      "skipped": []
+    }
+  ],
+  "scope": "Fresh Linux arm64/Python 3.12.12 wheels, real WARM server, local scripted models in loopback-only namespaces. Wire-only tests retain that limit; no real Letta server or local-model text-query claim."
+}

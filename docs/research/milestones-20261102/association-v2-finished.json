@@ -1,0 +1,667 @@
+{
+  "complete": true,
+  "qualityChecksPassed": true,
+  "promoteToNativeExperiment": false,
+  "failure": null,
+  "cases": [
+    {
+      "scenario": "correlated",
+      "seed": 101,
+      "enabled": true,
+      "residualBound": 1.466485823761e-14,
+      "inputSha256": "802a029d6332b221e2c426957e73074dd2e368bcf6f77eb3a12f1860f47bbd52",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "dd26844fc95de4b815a895e86d688a23d0c18c51ed1cf14424232dd9eca8bab3",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 0,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 405575625,
+      "rebuildNs": 395976875,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 28854.5,
+            "p95": 30750.0
+          },
+          "candidateNs": {
+            "median": 35375.0,
+            "p95": 37709.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 21708.0,
+            "p95": 23125.0
+          },
+          "candidateNs": {
+            "median": 18584.0,
+            "p95": 21792.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 22041.0,
+            "p95": 24333.0
+          },
+          "candidateNs": {
+            "median": 18479.5,
+            "p95": 19875.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "correlated",
+      "seed": 211,
+      "enabled": true,
+      "residualBound": 1.5096369725415398e-14,
+      "inputSha256": "fcf8d2328ae98588d4991ad719ce04acc8bc3f63d6b2c59bfaba074d0979d909",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "675d37839a20b50969b648e13154d65b9d232f7ec3357d64b033f3ee5842aefc",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 0,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 398479417,
+      "rebuildNs": 401916541,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 26083.0,
+            "p95": 30917.0
+          },
+          "candidateNs": {
+            "median": 32500.0,
+            "p95": 37916.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 18416.5,
+            "p95": 19959.0
+          },
+          "candidateNs": {
+            "median": 16812.5,
+            "p95": 18709.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 19500.0,
+            "p95": 20750.0
+          },
+          "candidateNs": {
+            "median": 18375.0,
+            "p95": 19541.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "correlated",
+      "seed": 307,
+      "enabled": true,
+      "residualBound": 1.613605712880205e-14,
+      "inputSha256": "36c8c299aaae79ed0297e9800c68e51ca59baa7deb4455e1b464a53d268da739",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "780dd6582610594f58b414dd9f9ce68cdf79cc631c647419efc09f0991263319",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 0,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 410177583,
+      "rebuildNs": 409261792,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 29667.0,
+            "p95": 31541.0
+          },
+          "candidateNs": {
+            "median": 36645.5,
+            "p95": 38708.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 23125.0,
+            "p95": 28792.0
+          },
+          "candidateNs": {
+            "median": 19292.0,
+            "p95": 20250.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 22979.5,
+            "p95": 26333.0
+          },
+          "candidateNs": {
+            "median": 19125.0,
+            "p95": 20250.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "rare_exceptions",
+      "seed": 101,
+      "enabled": true,
+      "residualBound": 1.9771884150885734e-14,
+      "inputSha256": "c43177ab51e4f280324722c9fc3bc4cb1cdda412644fb6c04c9296436c83aae1",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "d6bb4f810e92ddcfb0fe2718fc8d18081603fc0d12fe045f894f8094b9102972",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 20960,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 426160208,
+      "rebuildNs": 429880334,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 29708.0,
+            "p95": 31916.0
+          },
+          "candidateNs": {
+            "median": 36917.0,
+            "p95": 39625.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 21229.5,
+            "p95": 25250.0
+          },
+          "candidateNs": {
+            "median": 23333.0,
+            "p95": 26542.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 22125.5,
+            "p95": 26875.0
+          },
+          "candidateNs": {
+            "median": 23770.5,
+            "p95": 27959.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "rare_exceptions",
+      "seed": 211,
+      "enabled": true,
+      "residualBound": 2.0165273684976065e-14,
+      "inputSha256": "2a6ff6fbd474d9e2b9489169e7954e2c7300901ab648eb99b14ff3c4c3f97810",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "4aca8a8cf387689e860f6c33878717cdf4c7f7f61874b6d2895fa5aa4d19827d",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 20960,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 437149125,
+      "rebuildNs": 424604667,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 29000.0,
+            "p95": 30583.0
+          },
+          "candidateNs": {
+            "median": 35541.5,
+            "p95": 37000.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 20562.5,
+            "p95": 23250.0
+          },
+          "candidateNs": {
+            "median": 24625.0,
+            "p95": 25875.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 20625.0,
+            "p95": 23167.0
+          },
+          "candidateNs": {
+            "median": 24562.5,
+            "p95": 25750.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "rare_exceptions",
+      "seed": 307,
+      "enabled": true,
+      "residualBound": 3.706376114298629e-14,
+      "inputSha256": "80a990f970bedb65a3536aec1d8b800c3739f4aebbaf20b2e530efb0bccafb94",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "56de6f2e7a3cb0900a6faed1830ea5bfdb92e2cb984eea43dceb02cdedcf5361",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 20960,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 424174125,
+      "rebuildNs": 456240375,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 29500.0,
+            "p95": 31417.0
+          },
+          "candidateNs": {
+            "median": 36500.0,
+            "p95": 38958.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 22750.0,
+            "p95": 24666.0
+          },
+          "candidateNs": {
+            "median": 23875.0,
+            "p95": 26375.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 64,
+          "queries": 64,
+          "controlNs": {
+            "median": 23542.0,
+            "p95": 27209.0
+          },
+          "candidateNs": {
+            "median": 26458.5,
+            "p95": 32500.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "independent",
+      "seed": 101,
+      "enabled": false,
+      "residualBound": 0.09999933054021418,
+      "inputSha256": "e40c408745616a942c1e338b1c43501c923c53fbb3fff27e5eb250e450934b64",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "d42b241c05d3184352a5c73b7e716f1076209a798c16e2849d09bd46225cb11b",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 18845640,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 436491625,
+      "rebuildNs": 419839792,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 26208.5,
+            "p95": 30583.0
+          },
+          "candidateNs": {
+            "median": 31291.5,
+            "p95": 35541.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 86375.0,
+            "p95": 100916.0
+          },
+          "candidateNs": {
+            "median": 87833.0,
+            "p95": 103459.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 85833.0,
+            "p95": 102417.0
+          },
+          "candidateNs": {
+            "median": 87917.0,
+            "p95": 104416.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "independent",
+      "seed": 211,
+      "enabled": false,
+      "residualBound": 0.09999976373494188,
+      "inputSha256": "5067a3c63c11ecc1ca54cc1a883f6ffaedd7aedaebca37a3e6f938cc33d44f04",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "c32f75adfafc02ab80d5c1520b1cd256eb4e7c136d4403f4d94f42f45535d237",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 18851520,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 419976958,
+      "rebuildNs": 415479875,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 29083.0,
+            "p95": 30625.0
+          },
+          "candidateNs": {
+            "median": 34416.5,
+            "p95": 36125.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 78437.5,
+            "p95": 92792.0
+          },
+          "candidateNs": {
+            "median": 79645.5,
+            "p95": 97291.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 78375.0,
+            "p95": 103709.0
+          },
+          "candidateNs": {
+            "median": 80187.5,
+            "p95": 99542.0
+          },
+          "passes": false
+        }
+      ]
+    },
+    {
+      "scenario": "independent",
+      "seed": 307,
+      "enabled": false,
+      "residualBound": 0.09999675600627017,
+      "inputSha256": "2ea8bafb57edbad7e3936efd25e21563ce79bc908e239f460f498bdba7b82516",
+      "inputLayout": {
+        "cContiguous": true,
+        "strides": [
+          65536,
+          512,
+          8
+        ],
+        "controlReshapeSharesMemory": true
+      },
+      "updatedInputSha256": "9da2c1a9fbc98d0e8d24ec7715959601dc712dd0a921f4abb968587a8522a97e",
+      "bytes": {
+        "retainedOriginalBytes": 8388608,
+        "coreBytes": 22528,
+        "correctionBytes": 18857000,
+        "note": "Numeric payload only; original tensor remains resident. Process peak RSS is separately reported."
+      },
+      "buildNs": 418208500,
+      "rebuildNs": 424681958,
+      "freshRebuildMatched": true,
+      "families": [
+        {
+          "support": 4,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 29250.0,
+            "p95": 31209.0
+          },
+          "candidateNs": {
+            "median": 34666.0,
+            "p95": 36792.0
+          },
+          "passes": false
+        },
+        {
+          "support": 64,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 78416.5,
+            "p95": 97250.0
+          },
+          "candidateNs": {
+            "median": 84229.0,
+            "p95": 102125.0
+          },
+          "passes": false
+        },
+        {
+          "support": 128,
+          "wrong": 0,
+          "certified": 0,
+          "queries": 64,
+          "controlNs": {
+            "median": 78250.0,
+            "p95": 95125.0
+          },
+          "candidateNs": {
+            "median": 83521.0,
+            "p95": 101458.0
+          },
+          "passes": false
+        }
+      ]
+    }
+  ],
+  "queriesSha256": "37d45ffe1cb8eb72fc99067e5788fc0ab2c8a9edb9b11bb6022020ca8fdf7215",
+  "peakRssBytes": 245284864
+}

@@ -1,0 +1,6 @@
+{
+  "consumerShellUid": 2000,
+  "nativeFixtureUid": 0,
+  "scope": "Only the new owned emulator; hardlink/FIFO attack fixtures require debug-root privileges.",
+  "selinux": "Enforcing"
+}

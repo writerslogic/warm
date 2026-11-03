@@ -1,0 +1,852 @@
+{
+  "cases": [
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 104,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 3.945804201066494e-05
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 104,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 2.6624882593750954e-05
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 104,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 2.1042069420218468e-05
+        }
+      ],
+      "candidateOverFastestControl": 0.12302582882913898,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 29,
+            "seconds": 0.00029954081401228905,
+            "states": 54,
+            "terminals": 6,
+            "visits": 154
+          },
+          {
+            "complete": true,
+            "nodes": 29,
+            "seconds": 0.00021808408200740814,
+            "states": 54,
+            "terminals": 6,
+            "visits": 154
+          },
+          {
+            "complete": true,
+            "nodes": 29,
+            "seconds": 0.00021329103037714958,
+            "states": 54,
+            "terminals": 6,
+            "visits": 154
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 29,
+            "seconds": 0.00022137491032481194,
+            "states": 54,
+            "terminals": 6,
+            "visits": 154
+          },
+          {
+            "complete": true,
+            "nodes": 29,
+            "seconds": 0.00021641701459884644,
+            "states": 54,
+            "terminals": 6,
+            "visits": 154
+          },
+          {
+            "complete": true,
+            "nodes": 29,
+            "seconds": 0.00021637510508298874,
+            "states": 54,
+            "terminals": 6,
+            "visits": 154
+          }
+        ]
+      },
+      "sources": 4,
+      "weights": "uniform"
+    },
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 104,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 2.4625100195407867e-05
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 104,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 2.333289012312889e-05
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 104,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 2.0541949197649956e-05
+        }
+      ],
+      "candidateOverFastestControl": 0.06464893821534508,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 46,
+            "seconds": 0.00039179204031825066,
+            "states": 88,
+            "terminals": 22,
+            "visits": 276
+          },
+          {
+            "complete": true,
+            "nodes": 46,
+            "seconds": 0.0003647501580417156,
+            "states": 88,
+            "terminals": 22,
+            "visits": 276
+          },
+          {
+            "complete": true,
+            "nodes": 46,
+            "seconds": 0.0003606670070439577,
+            "states": 88,
+            "terminals": 22,
+            "visits": 276
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 46,
+            "seconds": 0.00036404188722372055,
+            "states": 88,
+            "terminals": 22,
+            "visits": 276
+          },
+          {
+            "complete": true,
+            "nodes": 46,
+            "seconds": 0.0003609168343245983,
+            "states": 88,
+            "terminals": 22,
+            "visits": 276
+          },
+          {
+            "complete": true,
+            "nodes": 46,
+            "seconds": 0.0003559170290827751,
+            "states": 88,
+            "terminals": 22,
+            "visits": 276
+          }
+        ]
+      },
+      "sources": 4,
+      "weights": "powers-of-two"
+    },
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 768,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 9.425007738173008e-05
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 768,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 8.91250092536211e-05
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 768,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 8.537503890693188e-05
+        }
+      ],
+      "candidateOverFastestControl": 0.05611964324591387,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 180,
+            "seconds": 0.0017055829521268606,
+            "states": 356,
+            "terminals": 12,
+            "visits": 850
+          },
+          {
+            "complete": true,
+            "nodes": 180,
+            "seconds": 0.0016265001613646746,
+            "states": 356,
+            "terminals": 12,
+            "visits": 850
+          },
+          {
+            "complete": true,
+            "nodes": 180,
+            "seconds": 0.0016159580554813147,
+            "states": 356,
+            "terminals": 12,
+            "visits": 850
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 180,
+            "seconds": 0.001612124964594841,
+            "states": 356,
+            "terminals": 12,
+            "visits": 850
+          },
+          {
+            "complete": true,
+            "nodes": 180,
+            "seconds": 0.0015881250146776438,
+            "states": 356,
+            "terminals": 12,
+            "visits": 850
+          },
+          {
+            "complete": true,
+            "nodes": 180,
+            "seconds": 0.0015810830518603325,
+            "states": 356,
+            "terminals": 12,
+            "visits": 850
+          }
+        ]
+      },
+      "sources": 8,
+      "weights": "uniform"
+    },
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 768,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.00010562501847743988
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 768,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.00010595796629786491
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 768,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.00010775006376206875
+        }
+      ],
+      "candidateOverFastestControl": 0.014456782626802925,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 886,
+            "seconds": 0.007717958884313703,
+            "states": 1768,
+            "terminals": 398,
+            "visits": 5316
+          },
+          {
+            "complete": true,
+            "nodes": 886,
+            "seconds": 0.0073867919854819775,
+            "states": 1768,
+            "terminals": 398,
+            "visits": 5316
+          },
+          {
+            "complete": true,
+            "nodes": 886,
+            "seconds": 0.007401708047837019,
+            "states": 1768,
+            "terminals": 398,
+            "visits": 5316
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 886,
+            "seconds": 0.00735583296045661,
+            "states": 1768,
+            "terminals": 398,
+            "visits": 5316
+          },
+          {
+            "complete": true,
+            "nodes": 886,
+            "seconds": 0.0073292909655719995,
+            "states": 1768,
+            "terminals": 398,
+            "visits": 5316
+          },
+          {
+            "complete": true,
+            "nodes": 886,
+            "seconds": 0.007256041979417205,
+            "states": 1768,
+            "terminals": 398,
+            "visits": 5316
+          }
+        ]
+      },
+      "sources": 8,
+      "weights": "powers-of-two"
+    },
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 2520,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0003029170911759138
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 2520,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.00028783315792679787
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 2520,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0002800829242914915
+        }
+      ],
+      "candidateOverFastestControl": 0.046029061925071425,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 557,
+            "seconds": 0.007113874889910221,
+            "states": 1110,
+            "terminals": 23,
+            "visits": 2498
+          },
+          {
+            "complete": true,
+            "nodes": 557,
+            "seconds": 0.0068625828716903925,
+            "states": 1110,
+            "terminals": 23,
+            "visits": 2498
+          },
+          {
+            "complete": true,
+            "nodes": 557,
+            "seconds": 0.006775957997888327,
+            "states": 1110,
+            "terminals": 23,
+            "visits": 2498
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 557,
+            "seconds": 0.006388666108250618,
+            "states": 1110,
+            "terminals": 23,
+            "visits": 2498
+          },
+          {
+            "complete": true,
+            "nodes": 557,
+            "seconds": 0.006253291852772236,
+            "states": 1110,
+            "terminals": 23,
+            "visits": 2498
+          },
+          {
+            "complete": true,
+            "nodes": 557,
+            "seconds": 0.0062433339189738035,
+            "states": 1110,
+            "terminals": 23,
+            "visits": 2498
+          }
+        ]
+      },
+      "sources": 12,
+      "weights": "uniform"
+    },
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 2520,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.00033016595989465714
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 2520,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0003779169637709856
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 2520,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0003588749095797539
+        }
+      ],
+      "candidateOverFastestControl": 0.002419784484080455,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 15292,
+            "seconds": 0.1473909590858966,
+            "states": 30580,
+            "terminals": 7254,
+            "visits": 91752
+          },
+          {
+            "complete": true,
+            "nodes": 15292,
+            "seconds": 0.15700104204006493,
+            "states": 30580,
+            "terminals": 7254,
+            "visits": 91752
+          },
+          {
+            "complete": true,
+            "nodes": 15292,
+            "seconds": 0.15509495791047812,
+            "states": 30580,
+            "terminals": 7254,
+            "visits": 91752
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 15292,
+            "seconds": 0.1495300829410553,
+            "states": 30580,
+            "terminals": 7254,
+            "visits": 91752
+          },
+          {
+            "complete": true,
+            "nodes": 15292,
+            "seconds": 0.14830862497910857,
+            "states": 30580,
+            "terminals": 7254,
+            "visits": 91752
+          },
+          {
+            "complete": true,
+            "nodes": 15292,
+            "seconds": 0.14727216679602861,
+            "states": 30580,
+            "terminals": 7254,
+            "visits": 91752
+          }
+        ]
+      },
+      "sources": 12,
+      "weights": "powers-of-two"
+    },
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 5888,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0006744167767465115
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 5888,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0006707501597702503
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 5888,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0006671249866485596
+        }
+      ],
+      "candidateOverFastestControl": 0.0339003845405162,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 1256,
+            "seconds": 0.02217829180881381,
+            "states": 2508,
+            "terminals": 35,
+            "visits": 5482
+          },
+          {
+            "complete": true,
+            "nodes": 1256,
+            "seconds": 0.0218239170499146,
+            "states": 2508,
+            "terminals": 35,
+            "visits": 5482
+          },
+          {
+            "complete": true,
+            "nodes": 1256,
+            "seconds": 0.022041374817490578,
+            "states": 2508,
+            "terminals": 35,
+            "visits": 5482
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 1256,
+            "seconds": 0.019694332964718342,
+            "states": 2508,
+            "terminals": 35,
+            "visits": 5482
+          },
+          {
+            "complete": true,
+            "nodes": 1256,
+            "seconds": 0.0198016669601202,
+            "states": 2508,
+            "terminals": 35,
+            "visits": 5482
+          },
+          {
+            "complete": true,
+            "nodes": 1256,
+            "seconds": 0.019785915967077017,
+            "states": 2508,
+            "terminals": 35,
+            "visits": 5482
+          }
+        ]
+      },
+      "sources": 16,
+      "weights": "uniform"
+    },
+    {
+      "bothOrdersComplete": false,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 5888,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0007677918765693903
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 5888,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0008213750552386045
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 5888,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0007987499702721834
+        }
+      ],
+      "candidateOverFastestControl": null,
+      "controls": {
+        "ascending": [
+          {
+            "complete": false,
+            "nodes": 26142,
+            "reason": "decision diagram node/terminal limit exceeded",
+            "secondsUntilLimit": 0.1350333751179278,
+            "states": 26142,
+            "terminals": 23858,
+            "visits": 78455
+          }
+        ],
+        "descending": [
+          {
+            "complete": false,
+            "nodes": 26903,
+            "reason": "decision diagram node/terminal limit exceeded",
+            "secondsUntilLimit": 0.13990720896981657,
+            "states": 26903,
+            "terminals": 23097,
+            "visits": 80740
+          }
+        ]
+      },
+      "sources": 16,
+      "weights": "powers-of-two"
+    },
+    {
+      "bothOrdersComplete": true,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 11400,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0013112081214785576
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 11400,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0012984999921172857
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 11400,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0012779578100889921
+        }
+      ],
+      "candidateOverFastestControl": 0.027208104572470915,
+      "controls": {
+        "ascending": [
+          {
+            "complete": true,
+            "nodes": 2373,
+            "seconds": 0.054506958927959204,
+            "states": 4742,
+            "terminals": 56,
+            "visits": 10186
+          },
+          {
+            "complete": true,
+            "nodes": 2373,
+            "seconds": 0.05308479210361838,
+            "states": 4742,
+            "terminals": 56,
+            "visits": 10186
+          },
+          {
+            "complete": true,
+            "nodes": 2373,
+            "seconds": 0.05343162501230836,
+            "states": 4742,
+            "terminals": 56,
+            "visits": 10186
+          }
+        ],
+        "descending": [
+          {
+            "complete": true,
+            "nodes": 2373,
+            "seconds": 0.04778758296743035,
+            "states": 4742,
+            "terminals": 56,
+            "visits": 10186
+          },
+          {
+            "complete": true,
+            "nodes": 2373,
+            "seconds": 0.0477247501257807,
+            "states": 4742,
+            "terminals": 56,
+            "visits": 10186
+          },
+          {
+            "complete": true,
+            "nodes": 2373,
+            "seconds": 0.047545542009174824,
+            "states": 4742,
+            "terminals": 56,
+            "visits": 10186
+          }
+        ]
+      },
+      "sources": 20,
+      "weights": "uniform"
+    },
+    {
+      "bothOrdersComplete": false,
+      "candidate": [
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 11400,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0015188748948276043
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 11400,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0016030841507017612
+        },
+        {
+          "result": {
+            "equivalent": true,
+            "productPairs": 11400,
+            "reason": "polynomial-identity",
+            "withdrawn": null
+          },
+          "seconds": 0.0015523750334978104
+        }
+      ],
+      "candidateOverFastestControl": null,
+      "controls": {
+        "ascending": [
+          {
+            "complete": false,
+            "nodes": 26142,
+            "reason": "decision diagram node/terminal limit exceeded",
+            "secondsUntilLimit": 0.14298420795239508,
+            "states": 26142,
+            "terminals": 23858,
+            "visits": 78459
+          }
+        ],
+        "descending": [
+          {
+            "complete": false,
+            "nodes": 26903,
+            "reason": "decision diagram node/terminal limit exceeded",
+            "secondsUntilLimit": 0.14182758308015764,
+            "states": 26903,
+            "terminals": 23097,
+            "visits": 80744
+          }
+        ]
+      },
+      "sources": 20,
+      "weights": "powers-of-two"
+    }
+  ],
+  "complete": true,
+  "finishedAt": "2026-11-03T11:26:22.266134+00:00",
+  "freezeSha256": "9296145affaf957f7894120a578fec34534e895067db493fc97142a70f661c7d",
+  "noveltyEstablished": false,
+  "performanceQualified": false,
+  "rawSha256": {
+    "case-12-powers-of-two.json": "4e667277174b3f346ec4300304d1a89c1b43638418762fb12b6db92550cc96e6",
+    "case-12-uniform.json": "b53cff065d676ce62566c2b4d0f0856404b607d705ac88496bc27e29914feb96",
+    "case-16-powers-of-two.json": "7306f2c663e82bcd4c219fbbefdae2a34129477c96348a6495d91000d1d9bda5",
+    "case-16-uniform.json": "36558408ee53ec6f318a1020143a972e27268d30fdd89967022403f327b763f9",
+    "case-20-powers-of-two.json": "ae2daa4ed1ca2e0893844cb8b7e0dedab83caefaa32cea53f4e59002ed6e7419",
+    "case-20-uniform.json": "82af5c2a466f7ba3a11f3670876798d86859f67d7ef23d7741ca422095f41815",
+    "case-4-powers-of-two.json": "188246bb52ab4416a73d54811e77c2330a78b71aa4e0e5d5722ed7f39e7db34c",
+    "case-4-uniform.json": "18b91fe329b433879b2982dc72a7f243663dd2c93df36d4310fd8d25b83a1919",
+    "case-8-powers-of-two.json": "df9cb0634a33987becc832318834f758ac5384c4709390727e54eb3bffa9ac09",
+    "case-8-uniform.json": "92120573de74033752b54edf1b9763c798d3330b85e4e7d956a67ba97ab92e2d"
+  },
+  "seconds": 2.198260499862954
+}

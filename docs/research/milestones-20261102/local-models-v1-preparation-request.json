@@ -1,0 +1,89 @@
+{
+  "basisFreezeSha256": "cbf253a0d0d01b6875373246e24ddcc51deabf5ba0d96f8f6a16973ed3856bf8",
+  "launcherSha256": "37d2e186f766a9afa9008cb1fd9fbc223f9f92c64093b7559bc90481e320adce",
+  "models": {
+    "Qwen3-4B-Instruct-2507": {
+      "directory": "/Volumes/A/hms-models/Qwen3-4B-Instruct-2507",
+      "files": {
+        "config.json": {
+          "bytes": 727,
+          "etag": "6988f134db143052042f2bd6e0c897bc6a605189"
+        },
+        "generation_config.json": {
+          "bytes": 238,
+          "etag": "432531a002c181a19de338313d2375e9d7494d7e"
+        },
+        "model-00001-of-00003.safetensors": {
+          "bytes": 3957900840,
+          "etag": "75311d91bb08cf0b882913da464a1e722a31fb44db35208663487efb7a3d8ed6"
+        },
+        "model-00002-of-00003.safetensors": {
+          "bytes": 3987450520,
+          "etag": "0b48adbb1f60e901153d91907ba11ce63bd4b8b584482e730f48808d055dfba1"
+        },
+        "model-00003-of-00003.safetensors": {
+          "bytes": 99630640,
+          "etag": "7dd39ccca5e4de123c74c14af44c9bf2eb75df33b4614382af0134528e060d5d"
+        },
+        "model.safetensors.index.json": {
+          "bytes": 32819,
+          "etag": "4747b0297d3109f14db49886972e3369c9a00b2a"
+        },
+        "tokenizer.json": {
+          "bytes": 11422654,
+          "etag": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+        }
+      },
+      "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+    },
+    "Qwen3-Embedding-0.6B": {
+      "directory": "/Volumes/A/hms-models/Qwen3-Embedding-0.6B",
+      "files": {
+        "config.json": {
+          "bytes": 727,
+          "etag": "cef2749ee93607b8f9a58ec72f4f6bfaf874e71d"
+        },
+        "generation_config.json": {
+          "bytes": 117,
+          "etag": "d46f1983345269c582611bbedb3ca0a13f8e5f7b"
+        },
+        "model.safetensors": {
+          "bytes": 1191586416,
+          "etag": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd"
+        },
+        "tokenizer.json": {
+          "bytes": 11423705,
+          "etag": "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a"
+        }
+      },
+      "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3"
+    },
+    "Qwen3-Reranker-0.6B": {
+      "directory": "/Volumes/A/hms-models/Qwen3-Reranker-0.6B",
+      "files": {
+        "config.json": {
+          "bytes": 727,
+          "etag": "39784456e9de7a06590f8a4a38760ac1fb38d65e"
+        },
+        "generation_config.json": {
+          "bytes": 214,
+          "etag": "e4f1d3193e99a3e5d7047edf56e93a6e933fa31b"
+        },
+        "model.safetensors": {
+          "bytes": 1191588280,
+          "etag": "27cd75a405b9c1b46b59abfd88aaa209e6fed2a1972cde9b70e7659537c5e65b"
+        },
+        "tokenizer.json": {
+          "bytes": 11422654,
+          "etag": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+        }
+      },
+      "revision": "e61197ed45024b0ed8a2d74b80b4d909f1255473"
+    }
+  },
+  "preparedAt": "2026-11-03T18:53:16.796875+00:00",
+  "scope": "Metadata inventory only so far; verify every weight digest after serving and integration execution end, before builds/tests. No downloads, paid services or held-out QA.",
+  "testFiles": {
+    "tests/conversation_models.rs": "1876cb0ffe14963fd989cb2db892b1af2a92da6bc380a580dc92a68f6ef7b80e"
+  }
+}

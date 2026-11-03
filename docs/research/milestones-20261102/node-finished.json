@@ -1,0 +1,91 @@
+{
+  "complete": true,
+  "qualifiedScope": "macOS arm64, Node 22.23.4, node-api+security local packed package",
+  "publicApiTests": {
+    "passed": 36,
+    "failed": 0,
+    "skipped": 3,
+    "skips": "local-embed feature not built in standard node-api+security artifact"
+  },
+  "initialFailuresResolved": [
+    "missing v4-audit golden fixture restored and test passed",
+    "missing temporal-memory example restored and test passed",
+    "TypeScript native optional dependency restored using ordinary npm ci; type test passed"
+  ],
+  "packedSha256": "1fd004aa63d0f35434a28621c7fe55ed4482e41cc4f53194a8c826973758b381",
+  "nativeSha256": "bd38731775e91b6728661ac23b94fefe55a7509d029b73fe6b69d6c6b43fec7b",
+  "freezeSha256": "0eb095162fee7452a651b53892e4a491d190f0914d2f2916827a78c46ff00459",
+  "typeCheck": true,
+  "packedApiCheck": true,
+  "recovery": {
+    "complete": true,
+    "batchSize": 32,
+    "duplicateRetryEffects": 0,
+    "currentAndHistoricalFactsPreserved": true,
+    "deletedRecordReturned": false,
+    "node": "v22.23.4",
+    "platform": "darwin-arm64",
+    "interruption": "SIGKILL",
+    "boundary": "After public flush completed and acknowledgement was fsynced by parent",
+    "limitations": "One supported process-death boundary; not power loss or every possible interruption."
+  },
+  "finalCommands": [
+    {
+      "name": "development-install-with-optional",
+      "argv": [
+        "/Users/davidcondrey/.cache/warm-qualification-toolchains/node-v22.23.4-darwin-arm64/bin/node",
+        "/Users/davidcondrey/.cache/warm-qualification-toolchains/node-v22.23.4-darwin-arm64/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/Volumes/A/.hms-bench-cache/warm-node-qualification-20261103-v1/package-source",
+      "exitCode": 0,
+      "seconds": 2.1792349815368652
+    },
+    {
+      "name": "type-tests-recheck",
+      "argv": [
+        "/Users/davidcondrey/.cache/warm-qualification-toolchains/node-v22.23.4-darwin-arm64/bin/node",
+        "/Users/davidcondrey/.cache/warm-qualification-toolchains/node-v22.23.4-darwin-arm64/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "test:types"
+      ],
+      "cwd": "/Volumes/A/.hms-bench-cache/warm-node-qualification-20261103-v1/package-source",
+      "exitCode": 0,
+      "seconds": 0.37560200691223145
+    },
+    {
+      "name": "packed-api-tests",
+      "argv": [
+        "/Users/davidcondrey/.cache/warm-qualification-toolchains/node-v22.23.4-darwin-arm64/bin/node",
+        "/Users/davidcondrey/.cache/warm-qualification-toolchains/node-v22.23.4-darwin-arm64/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "test:package"
+      ],
+      "cwd": "/Volumes/A/.hms-bench-cache/warm-node-qualification-20261103-v1/package-source",
+      "exitCode": 0,
+      "seconds": 1.415687084197998
+    },
+    {
+      "name": "crash-recovery",
+      "argv": [
+        "/Users/davidcondrey/.cache/warm-qualification-toolchains/node-v22.23.4-darwin-arm64/bin/node",
+        "/Volumes/A/holographic-memory/benchmarks/public/node_recovery.cjs",
+        "/Volumes/A/.hms-bench-cache/warm-node-qualification-20261103-v1/consumer/node_modules/warm-sdk",
+        "/Volumes/A/.hms-bench-cache/warm-node-qualification-20261103-v1/crash-recovery"
+      ],
+      "cwd": "/Volumes/A/.hms-bench-cache/warm-node-qualification-20261103-v1/package-source",
+      "exitCode": 0,
+      "seconds": 3.588153839111328
+    }
+  ],
+  "limits": [
+    "Other runtimes, CPU targets and APIs remain unqualified",
+    "Embedded native binding tested; optional platform-package selection is not tested",
+    "Local embedding optional feature not qualified",
+    "Process death after flush; not power-loss simulation"
+  ],
+  "runnerSha256": "da8a55e3117d2160c20a8d824bf185995b0c28cb02d65bc5fb561e4e36b801f8"
+}

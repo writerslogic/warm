@@ -1,0 +1,210 @@
+[
+  {
+    "dataset": "coco-i2i-512-angular",
+    "dotComparisons": 960000,
+    "filter": "10pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 1.123908545638102,
+    "medianPhaseFractions": {
+      "capture": 0.315423883850989,
+      "prepare": 0.00019607701156413698,
+      "rank": 0.6802692445395366,
+      "read": 0.0003914129852578129,
+      "release": 0.0033990812481973923
+    },
+    "medianSeconds": {
+      "capture": 0.001664104,
+      "interleaved": 0.002104875,
+      "prepare": 1.041e-06,
+      "rank": 0.0035581665000000004,
+      "read": 2.042e-06,
+      "release": 1.7875e-05,
+      "scalar": 0.002365687,
+      "total": 0.0052453335
+    },
+    "queries": 96,
+    "state": "baseline"
+  },
+  {
+    "dataset": "coco-i2i-512-angular",
+    "dotComparisons": 96000,
+    "filter": "1pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 1.2404938218278319,
+    "medianPhaseFractions": {
+      "capture": 0.26857550344024955,
+      "prepare": 0.001385873194560322,
+      "rank": 0.7240707720379373,
+      "read": 0.0033465471097975734,
+      "release": 0.002275662438026887
+    },
+    "medianSeconds": {
+      "capture": 0.0001489795,
+      "interleaved": 0.0001852085,
+      "prepare": 7.5e-07,
+      "rank": 0.0003984165,
+      "read": 1.834e-06,
+      "release": 1.25e-06,
+      "scalar": 0.00022975,
+      "total": 0.0005517915
+    },
+    "queries": 96,
+    "state": "baseline"
+  },
+  {
+    "dataset": "coco-i2i-512-angular",
+    "dotComparisons": 959040,
+    "filter": "10pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 1.1345622940600235,
+    "medianPhaseFractions": {
+      "capture": 0.3149888567620639,
+      "prepare": 0.00019385174243802147,
+      "rank": 0.6809756959629064,
+      "read": 0.00035993524782724346,
+      "release": 0.0033830283016369946
+    },
+    "medianSeconds": {
+      "capture": 0.0016557920000000001,
+      "interleaved": 0.0021054374999999997,
+      "prepare": 1.042e-06,
+      "rank": 0.0035945415,
+      "read": 1.875e-06,
+      "release": 1.7792e-05,
+      "scalar": 0.0023887500000000002,
+      "total": 0.0052625625
+    },
+    "queries": 96,
+    "state": "churn-maintained"
+  },
+  {
+    "dataset": "coco-i2i-512-angular",
+    "dotComparisons": 95904,
+    "filter": "1pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 1.232015473804444,
+    "medianPhaseFractions": {
+      "capture": 0.2702390456640153,
+      "prepare": 0.0013807388597203635,
+      "rank": 0.7225750419555526,
+      "read": 0.003241684126863126,
+      "release": 0.0023250818424778346
+    },
+    "medianSeconds": {
+      "capture": 0.0001475415,
+      "interleaved": 0.000185604,
+      "prepare": 7.5e-07,
+      "rank": 0.0003934585,
+      "read": 1.7705e-06,
+      "release": 1.25e-06,
+      "scalar": 0.000228667,
+      "total": 0.0005440415
+    },
+    "queries": 96,
+    "state": "churn-maintained"
+  },
+  {
+    "dataset": "deep-image-96-angular",
+    "dotComparisons": 960000,
+    "filter": "10pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 0.7665985891333248,
+    "medianPhaseFractions": {
+      "capture": 0.5727229477966578,
+      "prepare": 0.00015799325141712528,
+      "rank": 0.41876772305763843,
+      "read": 0.0008294613479239257,
+      "release": 0.007490335119599009
+    },
+    "medianSeconds": {
+      "capture": 0.001360979,
+      "interleaved": 0.000373104,
+      "prepare": 3.75e-07,
+      "rank": 0.0009961879999999998,
+      "read": 2e-06,
+      "release": 1.775e-05,
+      "scalar": 0.000286021,
+      "total": 0.002380062
+    },
+    "queries": 96,
+    "state": "baseline"
+  },
+  {
+    "dataset": "deep-image-96-angular",
+    "dotComparisons": 96000,
+    "filter": "1pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 0.8254271685761048,
+    "medianPhaseFractions": {
+      "capture": 0.6166516737133452,
+      "prepare": 0.0008731471635148477,
+      "rank": 0.3691758655813875,
+      "read": 0.007896714820398349,
+      "release": 0.0053878197368473785
+    },
+    "medianSeconds": {
+      "capture": 0.0001478335,
+      "interleaved": 3.81875e-05,
+      "prepare": 2.08e-07,
+      "rank": 8.8625e-05,
+      "read": 1.917e-06,
+      "release": 1.292e-06,
+      "scalar": 3.1521e-05,
+      "total": 0.0002397295
+    },
+    "queries": 96,
+    "state": "baseline"
+  },
+  {
+    "dataset": "deep-image-96-angular",
+    "dotComparisons": 959040,
+    "filter": "10pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 0.7600777219430487,
+    "medianPhaseFractions": {
+      "capture": 0.5737355564237124,
+      "prepare": 0.00017756988518496957,
+      "rank": 0.4176278176491136,
+      "read": 0.0007908088593380717,
+      "release": 0.00747307981611323
+    },
+    "medianSeconds": {
+      "capture": 0.0013626045,
+      "interleaved": 0.000373125,
+      "prepare": 4.17e-07,
+      "rank": 0.0009929165,
+      "read": 1.875e-06,
+      "release": 1.775e-05,
+      "scalar": 0.000283604,
+      "total": 0.002376479
+    },
+    "queries": 96,
+    "state": "churn-maintained"
+  },
+  {
+    "dataset": "deep-image-96-angular",
+    "dotComparisons": 95904,
+    "filter": "1pct",
+    "kernelGatePass": false,
+    "kernelSpeedup": 0.8178452327810309,
+    "medianPhaseFractions": {
+      "capture": 0.6160360766072536,
+      "prepare": 0.0009209489395726205,
+      "rank": 0.3686975568832822,
+      "read": 0.008113818447537292,
+      "release": 0.005601596382397869
+    },
+    "medianSeconds": {
+      "capture": 0.000140938,
+      "interleaved": 3.8083e-05,
+      "prepare": 2.08e-07,
+      "rank": 8.34585e-05,
+      "read": 1.875e-06,
+      "release": 1.292e-06,
+      "scalar": 3.1146e-05,
+      "total": 0.0002294585
+    },
+    "queries": 96,
+    "state": "churn-maintained"
+  }
+]

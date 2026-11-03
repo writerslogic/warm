@@ -1,0 +1,13 @@
+{
+  "files": {
+    "MATRIX-WITNESS-PLAN.json": "611a7a193c3e1e410c11f28f3fe3994e3b83d4c03d261e91207bbca8a64a15bf",
+    "matrix_witness.py": "13ef92151ff5384efa6ae9f971dea7da64f53c3547e4f6f14ae62a68fe3b31e8",
+    "probe.py": "76f7543882ae66c5a4ad90d425a15bcf087cd3ada70a3baca238eb4a5f11e9c8",
+    "run_matrix_witness.py": "707c7f99802646962329559d1ff3c0ecf4c2f85cf17bb5e7a50f8d5901066e53",
+    "run_witness.py": "591c833b906f0005dedd6f53c6b7cbdfff157e3a6ea7e086af4bf7997e8dee8e",
+    "test_matrix_witness.py": "56f2d866f0698f65a6bf9a44a43a34284e68d9d7d4b978dab8774210c12e036e",
+    "witness_tightness.py": "cfde5f03fec34714a87229f663438342c4e0938ad5cb0cbef139e96fec2ac7a1"
+  },
+  "frozenAt": "2026-11-03T15:30:58.589274+00:00",
+  "inputs": "Declared analytic source-matrix family only; no task data or model calls."
+}

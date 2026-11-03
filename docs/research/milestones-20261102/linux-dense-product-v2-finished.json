@@ -1,0 +1,14 @@
+{
+  "binarySha256": "b61f4e70bcddb3673ef551ea921903124d364b6fb34dc48bb01af8642bd58709",
+  "complete": true,
+  "completedAt": "2026-11-03T14:06:31.899328+00:00",
+  "documentIgnored": [
+    "lexical_latency_microbench"
+  ],
+  "documentTests": 154,
+  "freezeSha256": "925947bdabe7721d2170bf7c2ba53c88e8b155335eee63834abdd991236d8e87",
+  "runnerSha256": "c5050359b0f1f63510919b862397eaff261ef40b0dd5ebc0613ef67fcd17d6d6",
+  "rust": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+  "serverIgnored": 0,
+  "serverTests": 100
+}

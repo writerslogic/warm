@@ -1,0 +1,13 @@
+{
+  "schema": "warm.predictive-source-fiber/1",
+  "question": "Can a shared transition template plus an explicit source binding preserve retractable predictions with materially fewer total bytes on the existing real demonstration cohort?",
+  "priorArt": "Single-register/nominal automata and factorized provenance are established. This tests an empirical representation opportunity; neither renaming nor this restricted construction is claimed as an invention.",
+  "cohort": "All six unchanged task/action cells from warm-predictive-miniwob-20261103-v3. No new task choice, event exclusion or action projection.",
+  "candidate": "Compute the greatest closed subset whose active states each have one source, and whose active successors carry that same source. Minimize its source-erased transition behavior, then retain one source register per control instance. Source-crossing or mixed states and all their predecessors remain exact fallback states. Include every original-state mapping, source binding, fallback record and action/state dictionary.",
+  "contract": "Exact empirical normalized predictions, missing-action unknown states, and observable traces under arbitrary source withdrawals. Common task labels as before. No original episode/DOM reconstruction, unseen behavior, arbitrary inserts, secure byte erasure or model-generated QA is claimed.",
+  "correctness": "Small random/cyclic/shared-source models against exhaustive-withdrawal refinement; on every corpus, the original and expanded template models must have equivalent mapped states in their joint exact withdrawal-preserving quotient. Check exact rational readouts initially and after cumulative withdrawal counts 1,2,4,8,16,32,64,128.",
+  "controls": "Original record model and existing exact source-aware quotient. For both, compare canonical JSON, packed integer rows and hierarchical delta-coded adjacency; normalize each state/action source histogram by its common gcd. Charge identical binary original-state hash and action dictionaries in both packed formats. Use uncompressed, zlib level 9 and XZ preset 6 for every declared format. Choose the smallest complete exact control packet, not only the largest JSON baseline.",
+  "promotion": "At least 20% smaller complete packet than the strongest exact control on at least two distinct tasks, with no cell growing more than 5%. This is a development screen, not a milestone, novelty, runtime or whole-process-memory claim.",
+  "limits": {"states": 50000, "actions": 20000, "sources": 128, "records": 200000, "iterations": 1000},
+  "preserve": "All six input hashes, complete packets, failed cells, source freeze, correctness results and all codec lengths. No paid services or held-out performance vectors."
+}

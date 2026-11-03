@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-03T12:07:12.549211+00:00",
+  "freezeStartedUtc": "2026-11-03T05:40:28Z",
+  "resourceSample": {
+    "elapsed": 21166.669119802,
+    "rssBytes": 179503104,
+    "allocatedStoreBytes": 375808000,
+    "pid": 14128
+  },
+  "resourceModifiedAt": "2026-11-03T12:07:08.545590+00:00",
+  "projectedEndByRemainingMonotonicSeconds": "2026-11-04T06:14:25.880091+00:00",
+  "finished": false,
+  "note": "Frozen UTC start and current wall/monotonic alignment differ by about 34 minutes; cause not established. Harness requires 86400 monotonic workload seconds, so initial UTC projection is not completion evidence."
+}

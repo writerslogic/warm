@@ -1,0 +1,189 @@
+{
+  "cases": [
+    {
+      "build": {
+        "buildEf": 128,
+        "degree": 32,
+        "index": "graph",
+        "traversal": "persisted single-hop"
+      },
+      "dataset": "coco-i2i-512-angular",
+      "engine": "warm",
+      "filters": {
+        "10pct": {
+          "route": "exact"
+        },
+        "1pct": {
+          "route": "exact"
+        },
+        "all": {
+          "ef": 512,
+          "route": "graph"
+        },
+        "empty": {
+          "route": "exact"
+        }
+      }
+    },
+    {
+      "build": {
+        "ef_construction": 500,
+        "index": "hnsw",
+        "m": 32
+      },
+      "dataset": "coco-i2i-512-angular",
+      "engine": "pgvector",
+      "filters": {
+        "10pct": {
+          "ef": 256,
+          "route": "planner"
+        },
+        "1pct": {
+          "ef": 128,
+          "route": "planner"
+        },
+        "all": {
+          "ef": 64,
+          "route": "planner"
+        },
+        "empty": {
+          "ef": 128,
+          "route": "iterative"
+        }
+      }
+    },
+    {
+      "build": {
+        "ef_construction": 100,
+        "engine": "faiss",
+        "m": 16
+      },
+      "dataset": "coco-i2i-512-angular",
+      "engine": "opensearch",
+      "filters": {
+        "10pct": {
+          "candidateK": 10,
+          "ef": 512,
+          "route": "knn"
+        },
+        "1pct": {
+          "candidateK": 10,
+          "ef": 4096,
+          "route": "knn"
+        },
+        "all": {
+          "candidateK": 10,
+          "ef": 256,
+          "route": "knn"
+        },
+        "empty": {
+          "route": "exact"
+        }
+      }
+    },
+    {
+      "build": {
+        "buildEf": 128,
+        "degree": 32,
+        "index": "graph",
+        "traversal": "persisted single-hop"
+      },
+      "dataset": "deep-image-96-angular",
+      "engine": "warm",
+      "filters": {
+        "10pct": {
+          "route": "exact"
+        },
+        "1pct": {
+          "route": "exact"
+        },
+        "all": {
+          "ef": 256,
+          "route": "graph"
+        },
+        "empty": {
+          "route": "exact"
+        }
+      }
+    },
+    {
+      "build": {
+        "ef_construction": 64,
+        "index": "hnsw",
+        "m": 16
+      },
+      "dataset": "deep-image-96-angular",
+      "engine": "pgvector",
+      "filters": {
+        "10pct": {
+          "ef": 1000,
+          "route": "planner"
+        },
+        "1pct": {
+          "ef": 128,
+          "route": "planner"
+        },
+        "all": {
+          "ef": 512,
+          "route": "planner"
+        },
+        "empty": {
+          "route": "exact"
+        }
+      }
+    },
+    {
+      "build": {
+        "ef_construction": 500,
+        "engine": "faiss",
+        "m": 32
+      },
+      "dataset": "deep-image-96-angular",
+      "engine": "opensearch",
+      "filters": {
+        "10pct": {
+          "candidateK": 10,
+          "ef": 1024,
+          "route": "knn"
+        },
+        "1pct": {
+          "candidateK": 10,
+          "ef": 4096,
+          "route": "knn"
+        },
+        "all": {
+          "candidateK": 10,
+          "ef": 128,
+          "route": "knn"
+        },
+        "empty": {
+          "candidateK": 10,
+          "ef": 2048,
+          "route": "knn"
+        }
+      }
+    }
+  ],
+  "checkedAt": "2026-11-03T14:57:28.017062+00:00",
+  "complete": true,
+  "currentBinaries": {
+    "pgvectorBinarySha256": "91e0a08e8302790b230fa631d598830aa750cd6acf46eebfd7a8c99269e15401",
+    "postgresBinarySha256": "842d08a6e95fcd3a6750799b17587c38ed03ca7406b73c360a3e4c197d973cab",
+    "warmBinarySha256": "b61f4e70bcddb3673ef551ea921903124d364b6fb34dc48bb01af8642bd58709"
+  },
+  "heldOutVectorsOpened": false,
+  "scope": "Selection validation only; no configuration seal, OpenSearch distribution revalidation or performance qualification",
+  "sealerSha256": "a54dfad01d7c8b9396946a232afb22ca2aa83fe01bc0ffa9f0810c10a258cc33",
+  "sourceHashes": {
+    "PLAN.json": "948fb9f4c0a59811495f3571d0d160b1832644e6e8065a5b6c468e7a76bfcf6d",
+    "adapters.py": "6ee7daba25d1995f53a6b16ee3ccda3c34f19ebef136bf8f87a4931e4d1f1865",
+    "ann_worker.py": "5d1448b312b1a1fc239f9b3fc3132ea3b638e329cf494b4bf31f8a32bc55b837",
+    "oracle.py": "6af8eb08d86d157620f61a17b7a59cd4e6aca76900f25c64bf7f0a6eb4248d58",
+    "pyproject.toml": "c40e7230d65e9267df765ff972b5e94f123241f045222e9d5bff0cb0d2969f5e",
+    "server_proc.py": "56c2ce86d9a113e6c443d7f730d3ad29708069398891a62e46dd81e8938138b1",
+    "server_worker.py": "dc07c982d1e18faf106edec23a018d7e8812ec4ff04fbc135f7021ab86076a20",
+    "servers.py": "51833e621816aae831ea2dbb642d53b501796db4d3e3a12bf7e060080557f8e5",
+    "text_worker.py": "7c08dd533220c1a1e241e60efd7ed73aceac5a8b03a3ebfc9fb080d60f28e489",
+    "uv.lock": "df1a45fac2e42bdf441026b5f25815c0c4be1df9a3ff788bc46c191054051bfb"
+  }
+}

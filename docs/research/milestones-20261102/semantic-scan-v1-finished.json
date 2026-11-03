@@ -1,0 +1,16 @@
+{
+  "cells": 32,
+  "complete": true,
+  "completedAt": "2026-11-03T15:59:28.477024+00:00",
+  "developmentGatePass": false,
+  "freezeSha256": "076e786177b08f74200ad65ac93965744f320c822f66bfa29fb1db536d744caa",
+  "outputs": {
+    "native.log": "73d4b1f47a1c3f9363bead6e7d4a394bb9d63adfac6f9b8ff85bfae614e7e8c2",
+    "output/queries.ndjson": "a8aec91146e1fe3b60c6faf3be5600ae6da6f46639142cc6d7b0a3aa5b9f86fa",
+    "prerequisite.json": "af67271d9cabda44fb540f61ae9ceb6fe0ca835bfcf8282ea079b878ae9b1899",
+    "summary.json": "784fb9491641abb00b41954cf32f7fbb74822a11c78c5456df2ec72fae4d4845"
+  },
+  "pairedComparisons": 3072,
+  "productionChanged": false,
+  "qualification": false
+}

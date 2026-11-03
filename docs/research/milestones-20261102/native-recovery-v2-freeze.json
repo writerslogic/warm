@@ -1,0 +1,16 @@
+{
+  "frozenAt": "2026-11-03T12:49:47.233500+00:00",
+  "files": {
+    "PLAN.json": "97c9a10d22d7625707c52e8671891a43750c50cc5be86861a5ed0442764335e1",
+    "recovery.c": "0437af0e54ed6b2dd0de780665d6be9e7fa917dc1d75f64609cfc557c01ae2a2",
+    "recovery.go": "f3609aa73f3b78d8b4491d17e0f2e989f6c8dac66e68943aa1786bd0499ade6d",
+    "RecoveryConsumer.java": "49663a4fb4aa394b2b0fe2d3c121f4ad3e918f8b35ca1d0b48d05f61c3c7461c",
+    "Program.cs": "dda8968c7476b9977dd02d2beede961120c1737282e916e13fd09c87875a5763",
+    "run.py": "5a90bf8775606a1261a0712113056c6940d1da21f5de2b12085f21af61b15be8",
+    "test_protocol.py": "eafb677ea459d0d34b7c5ae0b78be615cef0241c955daee8cdbf05b307dc7d3c"
+  },
+  "familyFreezeSha256": "a917970f91ea5d6a5eceb196fbcbbdc4238061c6bbcdfb18ac45d929dddc5d2a",
+  "validated": "C syntax and two Python acknowledgement protocol tests; runtime consumers remain uncompiled/unexecuted until artifacts qualify",
+  "supersedes": "/Volumes/A/.hms-bench-cache/warm-native-binding-recovery-20261103-v1",
+  "revisionReason": "Wait for corrected C-family/diagnostic v2 drivers; recovery protocol unchanged"
+}

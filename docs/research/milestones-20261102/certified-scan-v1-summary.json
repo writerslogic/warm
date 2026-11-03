@@ -1,0 +1,1334 @@
+[
+  {
+    "combinedOverPreviousSpeedup": 1.107330043922789,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 10000,
+    "medianCanonicalFraction": 0.01,
+    "medianSeconds": {
+      "baseline": 0.0045144165,
+      "candidate": 0.003646854,
+      "previous": 0.0040382709999999995
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0045510410000000005,
+        "candidate": 0.0036822915,
+        "previous": 0.004070646
+      },
+      {
+        "baseline": 0.0045114795,
+        "candidate": 0.0036494789999999997,
+        "previous": 0.004032458500000001
+      },
+      {
+        "baseline": 0.0044914585,
+        "candidate": 0.003618021,
+        "previous": 0.004016708000000001
+      }
+    ],
+    "speedup": 1.2378934007229243,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 960000
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0913826750746765,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 1000,
+    "medianCanonicalFraction": 0.1,
+    "medianSeconds": {
+      "baseline": 0.000529333,
+      "candidate": 0.000376625,
+      "previous": 0.000411042
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0005328959999999999,
+        "candidate": 0.0003787085,
+        "previous": 0.0004135
+      },
+      {
+        "baseline": 0.0005288335,
+        "candidate": 0.0003758335,
+        "previous": 0.0004096455
+      },
+      {
+        "baseline": 0.000528396,
+        "candidate": 0.000376375,
+        "previous": 0.0004107505
+      }
+    ],
+    "speedup": 1.4054643212744773,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 96000
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.000177206140659,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.053999167,
+      "candidate": 0.047498354000000007,
+      "previous": 0.047506771
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.053973,
+        "candidate": 0.047471125,
+        "previous": 0.0475253125
+      },
+      {
+        "baseline": 0.0540562085,
+        "candidate": 0.0474705205,
+        "previous": 0.04756175
+      },
+      {
+        "baseline": 0.0539343955,
+        "candidate": 0.0475107705,
+        "previous": 0.047473416500000004
+      }
+    ],
+    "speedup": 1.1368639637491438,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 6.167e-06,
+      "candidate": 1.042e-06,
+      "previous": 1.042e-06
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 6.208e-06,
+        "candidate": 1.0625e-06,
+        "previous": 1.083e-06
+      },
+      {
+        "baseline": 6.167e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.042e-06
+      },
+      {
+        "baseline": 6.167e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.042e-06
+      }
+    ],
+    "speedup": 5.9184261036468335,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.1310284600389862,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.01,
+    "medianSeconds": {
+      "baseline": 0.0043508539999999995,
+      "candidate": 0.0030459375,
+      "previous": 0.0034450419999999997
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0042993535,
+        "candidate": 0.0030375000000000003,
+        "previous": 0.003450604
+      },
+      {
+        "baseline": 0.004360021,
+        "candidate": 0.003015458,
+        "previous": 0.0034296045
+      },
+      {
+        "baseline": 0.0043696665,
+        "candidate": 0.0030754795,
+        "previous": 0.0034549999999999997
+      }
+    ],
+    "speedup": 1.4284121062891144,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 960000
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.1029442139061532,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.1,
+    "medianSeconds": {
+      "baseline": 0.0004838545,
+      "candidate": 0.000319542,
+      "previous": 0.000352437
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000489042,
+        "candidate": 0.00032106249999999995,
+        "previous": 0.00035672899999999997
+      },
+      {
+        "baseline": 0.0004772915,
+        "candidate": 0.0003157085,
+        "previous": 0.000351146
+      },
+      {
+        "baseline": 0.00048241699999999996,
+        "candidate": 0.00031870849999999997,
+        "previous": 0.00035056249999999996
+      }
+    ],
+    "speedup": 1.5142125291823922,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 96000
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0001248473756048,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.032044833,
+      "candidate": 0.0320431245,
+      "previous": 0.032047125
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.031930104,
+        "candidate": 0.032001875,
+        "previous": 0.0318583125
+      },
+      {
+        "baseline": 0.0320063335,
+        "candidate": 0.0320494165,
+        "previous": 0.0320140835
+      },
+      {
+        "baseline": 0.032156937,
+        "candidate": 0.0320962495,
+        "previous": 0.032172916999999995
+      }
+    ],
+    "speedup": 1.000053318770459,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 4.542e-06,
+      "candidate": 8.75e-07,
+      "previous": 8.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 4.542e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.75e-07
+      },
+      {
+        "baseline": 4.542e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.75e-07
+      },
+      {
+        "baseline": 4.542e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.75e-07
+      }
+    ],
+    "speedup": 5.190857142857142,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.1119298607529657,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 9990,
+    "medianCanonicalFraction": 0.01001001001001001,
+    "medianSeconds": {
+      "baseline": 0.0046750625,
+      "candidate": 0.0037568124999999997,
+      "previous": 0.004177312000000001
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.004622875,
+        "candidate": 0.00373825,
+        "previous": 0.0041417085
+      },
+      {
+        "baseline": 0.0046842915,
+        "candidate": 0.003773917,
+        "previous": 0.0042160415
+      },
+      {
+        "baseline": 0.0046834170000000005,
+        "candidate": 0.003748875,
+        "previous": 0.004175041
+      }
+    ],
+    "speedup": 1.2444226322181373,
+    "state": "churn-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 959040
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.091101600493748,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 999,
+    "medianCanonicalFraction": 0.1001001001001001,
+    "medianSeconds": {
+      "baseline": 0.000518,
+      "candidate": 0.0003702295,
+      "previous": 0.000403958
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000531229,
+        "candidate": 0.0003781255,
+        "previous": 0.0004125625
+      },
+      {
+        "baseline": 0.0005183335,
+        "candidate": 0.000370646,
+        "previous": 0.00040335450000000004
+      },
+      {
+        "baseline": 0.0005122085000000001,
+        "candidate": 0.0003650415,
+        "previous": 0.0004006665
+      }
+    ],
+    "speedup": 1.3991321599170246,
+    "state": "churn-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 95904
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.999335565934747,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.054183896,
+      "candidate": 0.047658604,
+      "previous": 0.047626938
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.054128125,
+        "candidate": 0.0476806875,
+        "previous": 0.0476748125
+      },
+      {
+        "baseline": 0.0542153125,
+        "candidate": 0.0475965,
+        "previous": 0.047580374999999994
+      },
+      {
+        "baseline": 0.054190229,
+        "candidate": 0.047651958,
+        "previous": 0.0475920205
+      }
+    ],
+    "speedup": 1.136917396909066,
+    "state": "churn-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 6.125e-06,
+      "candidate": 1.042e-06,
+      "previous": 1.042e-06
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 6.125e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.042e-06
+      },
+      {
+        "baseline": 6.125e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.042e-06
+      },
+      {
+        "baseline": 6.125e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.042e-06
+      }
+    ],
+    "speedup": 5.878119001919386,
+    "state": "churn-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.1241322252227797,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.01001001001001001,
+    "medianSeconds": {
+      "baseline": 0.0044100415,
+      "candidate": 0.0031147915,
+      "previous": 0.0035014375
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0044992295,
+        "candidate": 0.003198083,
+        "previous": 0.003550354
+      },
+      {
+        "baseline": 0.004426729,
+        "candidate": 0.0031147915,
+        "previous": 0.0035199585
+      },
+      {
+        "baseline": 0.004385479,
+        "candidate": 0.0030867710000000003,
+        "previous": 0.003472063
+      }
+    ],
+    "speedup": 1.415838427708564,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 959040
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.1005841698206351,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.1001001001001001,
+    "medianSeconds": {
+      "baseline": 0.0005185624999999999,
+      "candidate": 0.000340312,
+      "previous": 0.000374542
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0005045,
+        "candidate": 0.00032820799999999997,
+        "previous": 0.0003629585
+      },
+      {
+        "baseline": 0.0005182085,
+        "candidate": 0.0003411045,
+        "previous": 0.0003753545
+      },
+      {
+        "baseline": 0.0005293335000000001,
+        "candidate": 0.00034481249999999996,
+        "previous": 0.000379146
+      }
+    ],
+    "speedup": 1.5237855262229951,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 95904
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.999500616122569,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.032733021,
+      "candidate": 0.032748354,
+      "previous": 0.032732
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.032372604,
+        "candidate": 0.032446188,
+        "previous": 0.032469625
+      },
+      {
+        "baseline": 0.032741708,
+        "candidate": 0.032583688,
+        "previous": 0.032695
+      },
+      {
+        "baseline": 0.0329838955,
+        "candidate": 0.0329283545,
+        "previous": 0.032968687499999996
+      }
+    ],
+    "speedup": 0.9995317932620369,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 4.667e-06,
+      "candidate": 9.17e-07,
+      "previous": 9.17e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 4.625e-06,
+        "candidate": 9.17e-07,
+        "previous": 9.17e-07
+      },
+      {
+        "baseline": 4.666e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.75e-07
+      },
+      {
+        "baseline": 5.2705e-06,
+        "candidate": 9.374999999999999e-07,
+        "previous": 9.17e-07
+      }
+    ],
+    "speedup": 5.089422028353327,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9697373852846846,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 10000,
+    "medianCanonicalFraction": 0.01,
+    "medianSeconds": {
+      "baseline": 0.0020160415000000003,
+      "candidate": 0.0019681875,
+      "previous": 0.001908625
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0020378125,
+        "candidate": 0.0019789375,
+        "previous": 0.001924458
+      },
+      {
+        "baseline": 0.0020160415000000003,
+        "candidate": 0.0019680415,
+        "previous": 0.0019076255
+      },
+      {
+        "baseline": 0.0020014165,
+        "candidate": 0.001955958,
+        "previous": 0.0018942709999999999
+      }
+    ],
+    "speedup": 1.024313740433775,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 960000
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9218456095104628,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 1000,
+    "medianCanonicalFraction": 0.1,
+    "medianSeconds": {
+      "baseline": 0.000203875,
+      "candidate": 0.00018766699999999998,
+      "previous": 0.000173
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000206104,
+        "candidate": 0.00018835450000000001,
+        "previous": 0.00017475
+      },
+      {
+        "baseline": 0.0002031245,
+        "candidate": 0.00018733349999999998,
+        "previous": 0.00017275
+      },
+      {
+        "baseline": 0.00020352100000000002,
+        "candidate": 0.000186104,
+        "previous": 0.000172229
+      }
+    ],
+    "speedup": 1.0863657435777203,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 96000
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9981931072906706,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.018365104,
+      "candidate": 0.017271916499999998,
+      "previous": 0.017240708
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.018362,
+        "candidate": 0.017288645999999998,
+        "previous": 0.017227333499999997
+      },
+      {
+        "baseline": 0.0183201045,
+        "candidate": 0.0172582285,
+        "previous": 0.017249104
+      },
+      {
+        "baseline": 0.0183830835,
+        "candidate": 0.017273875,
+        "previous": 0.0172449165
+      }
+    ],
+    "speedup": 1.063292773561058,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 5.625e-06,
+      "candidate": 3.75e-07,
+      "previous": 3.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 5.625e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.955e-07
+      },
+      {
+        "baseline": 5.625e-06,
+        "candidate": 3.75e-07,
+        "previous": 4.16e-07
+      },
+      {
+        "baseline": 5.625e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      }
+    ],
+    "speedup": 15.0,
+    "state": "baseline-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9603532095552292,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.01,
+    "medianSeconds": {
+      "baseline": 0.0023825415,
+      "candidate": 0.001568021,
+      "previous": 0.001505854
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.002356792,
+        "candidate": 0.0015533955000000001,
+        "previous": 0.0014821455
+      },
+      {
+        "baseline": 0.0023807915,
+        "candidate": 0.001572521,
+        "previous": 0.0015113955000000002
+      },
+      {
+        "baseline": 0.002393417,
+        "candidate": 0.0015857710000000001,
+        "previous": 0.001509875
+      }
+    ],
+    "speedup": 1.519457647569771,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 960000
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9172732811698306,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.1,
+    "medianSeconds": {
+      "baseline": 0.000318604,
+      "candidate": 0.000187104,
+      "previous": 0.0001716255
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000320063,
+        "candidate": 0.000186875,
+        "previous": 0.0001722295
+      },
+      {
+        "baseline": 0.00031920799999999997,
+        "candidate": 0.00018816649999999998,
+        "previous": 0.0001731875
+      },
+      {
+        "baseline": 0.00031775,
+        "candidate": 0.0001857705,
+        "previous": 0.0001703335
+      }
+    ],
+    "speedup": 1.702817684282538,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 96000
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9980991132962762,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.0157400205,
+      "candidate": 0.015749229,
+      "previous": 0.0157192915
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.015740188000000002,
+        "candidate": 0.0157575625,
+        "previous": 0.015749271000000002
+      },
+      {
+        "baseline": 0.015703917,
+        "candidate": 0.015702667,
+        "previous": 0.015676250000000003
+      },
+      {
+        "baseline": 0.0157754585,
+        "candidate": 0.015798416,
+        "previous": 0.015757062500000002
+      }
+    ],
+    "speedup": 0.9994153047111068,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.8906666666666666,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 3.9165000000000005e-06,
+      "candidate": 3.75e-07,
+      "previous": 3.34e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 3.875e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 3.917e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.34e-07
+      },
+      {
+        "baseline": 3.917e-06,
+        "candidate": 3.545e-07,
+        "previous": 3.3349999999999996e-07
+      }
+    ],
+    "speedup": 10.444,
+    "state": "baseline-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9696124323265005,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 9990,
+    "medianCanonicalFraction": 0.01001001001001001,
+    "medianSeconds": {
+      "baseline": 0.00198175,
+      "candidate": 0.0019415835,
+      "previous": 0.0018825835
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0020395415,
+        "candidate": 0.0019896665,
+        "previous": 0.001926146
+      },
+      {
+        "baseline": 0.001965375,
+        "candidate": 0.0019130415,
+        "previous": 0.0018671249999999999
+      },
+      {
+        "baseline": 0.001948958,
+        "candidate": 0.0019144375,
+        "previous": 0.0018624380000000001
+      }
+    ],
+    "speedup": 1.0206874955416545,
+    "state": "churn-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 959040
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9179752887441824,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 999,
+    "medianCanonicalFraction": 0.1001001001001001,
+    "medianSeconds": {
+      "baseline": 0.000200917,
+      "candidate": 0.0001848955,
+      "previous": 0.00016972949999999998
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.00020616649999999999,
+        "candidate": 0.000187396,
+        "previous": 0.000173771
+      },
+      {
+        "baseline": 0.0002005,
+        "candidate": 0.00018468800000000002,
+        "previous": 0.000169417
+      },
+      {
+        "baseline": 0.000199875,
+        "candidate": 0.0001824795,
+        "previous": 0.000168479
+      }
+    ],
+    "speedup": 1.0866516491748042,
+    "state": "churn-trained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 95904
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9979414719978696,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.018386479499999997,
+      "candidate": 0.0173264585,
+      "previous": 0.0172907915
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.018329271,
+        "candidate": 0.017246354,
+        "previous": 0.017272521
+      },
+      {
+        "baseline": 0.018395416499999998,
+        "candidate": 0.017341500000000003,
+        "previous": 0.0172709375
+      },
+      {
+        "baseline": 0.018410937500000002,
+        "candidate": 0.017348604,
+        "previous": 0.017323625
+      }
+    ],
+    "speedup": 1.0611793229412692,
+    "state": "churn-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 5.4585e-06,
+      "candidate": 3.75e-07,
+      "previous": 3.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 5.458e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 5.459e-06,
+        "candidate": 3.955e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 5.459e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      }
+    ],
+    "speedup": 14.556000000000001,
+    "state": "churn-trained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9595072417634887,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.01001001001001001,
+    "medianSeconds": {
+      "baseline": 0.0023780625,
+      "candidate": 0.00157075,
+      "previous": 0.001507146
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0023773335,
+        "candidate": 0.0015607709999999999,
+        "previous": 0.0014925205
+      },
+      {
+        "baseline": 0.002395896,
+        "candidate": 0.001593271,
+        "previous": 0.0015193960000000001
+      },
+      {
+        "baseline": 0.0023275,
+        "candidate": 0.0015475005,
+        "previous": 0.0014724999999999999
+      }
+    ],
+    "speedup": 1.5139662581569313,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 959040
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9224377432344273,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": 0.1001001001001001,
+    "medianSeconds": {
+      "baseline": 0.00030852099999999997,
+      "candidate": 0.000177812,
+      "previous": 0.0001640205
+    },
+    "minimumSpeedup": 1.25,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0002943125,
+        "candidate": 0.0001731665,
+        "previous": 0.0001591875
+      },
+      {
+        "baseline": 0.00029468750000000003,
+        "candidate": 0.00017504149999999997,
+        "previous": 0.0001594375
+      },
+      {
+        "baseline": 0.0003097705,
+        "candidate": 0.0001836455,
+        "previous": 0.000169208
+      }
+    ],
+    "speedup": 1.7350966189008612,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 9600,
+    "totalScreenedRows": 95904
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0000066366651115,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.015683541500000002,
+      "candidate": 0.015670521,
+      "previous": 0.015670625
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0156741665,
+        "candidate": 0.015683667,
+        "previous": 0.0156418745
+      },
+      {
+        "baseline": 0.0157623125,
+        "candidate": 0.0157197915,
+        "previous": 0.015693271
+      },
+      {
+        "baseline": 0.0156543535,
+        "candidate": 0.0156584165,
+        "previous": 0.0156775415
+      }
+    ],
+    "speedup": 1.0008308913277357,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 4.208e-06,
+      "candidate": 3.75e-07,
+      "previous": 3.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 3.917e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.34e-07
+      },
+      {
+        "baseline": 4.229e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 4.25e-06,
+        "candidate": 3.545e-07,
+        "previous": 3.75e-07
+      }
+    ],
+    "speedup": 11.221333333333334,
+    "state": "churn-untrained",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9996882647969949,
+    "dataset": "separated-32768-2",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 28672,
+    "maxOwnerCount": 16384,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.0018985835,
+      "candidate": 0.0020738755,
+      "previous": 0.0020732290000000002
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.001888396,
+        "candidate": 0.0020613755,
+        "previous": 0.0020606245000000002
+      },
+      {
+        "baseline": 0.001942167,
+        "candidate": 0.0020883125,
+        "previous": 0.0020842085000000003
+      },
+      {
+        "baseline": 0.0018887915,
+        "candidate": 0.002055979,
+        "previous": 0.002053125
+      }
+    ],
+    "speedup": 0.9154761218790618,
+    "state": "baseline",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0008692905135796,
+    "dataset": "separated-32768-4",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 28672,
+    "maxOwnerCount": 16384,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.001936208,
+      "candidate": 0.0020844584999999997,
+      "previous": 0.0020862705
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0019568125000000002,
+        "candidate": 0.0020986045,
+        "previous": 0.002088271
+      },
+      {
+        "baseline": 0.0018815,
+        "candidate": 0.0020579785,
+        "previous": 0.0020548955
+      },
+      {
+        "baseline": 0.0019360415,
+        "candidate": 0.002100125,
+        "previous": 0.002108646
+      }
+    ],
+    "speedup": 0.9288781714771488,
+    "state": "baseline",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0018420910435077,
+    "dataset": "separated-8192-2",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 7168,
+    "maxOwnerCount": 4096,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.000396792,
+      "candidate": 0.000407146,
+      "previous": 0.000407896
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.00039220849999999996,
+        "candidate": 0.00039708349999999996,
+        "previous": 0.000399396
+      },
+      {
+        "baseline": 0.0003969795,
+        "candidate": 0.000407625,
+        "previous": 0.00040820799999999996
+      },
+      {
+        "baseline": 0.000398542,
+        "candidate": 0.00040756250000000005,
+        "previous": 0.00040850049999999996
+      }
+    ],
+    "speedup": 0.9745693191140279,
+    "state": "baseline",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9987589202606267,
+    "dataset": "separated-8192-4",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 7168,
+    "maxOwnerCount": 4096,
+    "medianCanonicalFraction": null,
+    "medianSeconds": {
+      "baseline": 0.0004005835,
+      "candidate": 0.000402875,
+      "previous": 0.000402375
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000400125,
+        "candidate": 0.0004027295,
+        "previous": 0.000403563
+      },
+      {
+        "baseline": 0.00040035449999999996,
+        "candidate": 0.000402875,
+        "previous": 0.0004016455
+      },
+      {
+        "baseline": 0.000401437,
+        "candidate": 0.000402917,
+        "previous": 0.0004038745
+      }
+    ],
+    "speedup": 0.9943121315544523,
+    "state": "baseline",
+    "totalCanonicalRows": 0,
+    "totalScreenedRows": 0
+  }
+]

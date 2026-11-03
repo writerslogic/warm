@@ -1,0 +1,9 @@
+{
+  "root": "/Volumes/A/.hms-bench-cache/warm-temporal-reproduction-20261103-v1",
+  "archive": "/Volumes/A/.hms-bench-cache/warm-temporal-reproduction-20261103-v1/temporal-reproduction-v1.tar.gz",
+  "archiveSha256": "902d1860acf7e47532d6ce24426bbbb479248dce6431172a378df845d586a412",
+  "manifestSha256": "af5938f4d72d4c862893fc8baf0295901cd7ca38d6dac04fd3c98eb4a1a81b24",
+  "files": 10,
+  "bytes": 21556,
+  "independenceVerified": false
+}

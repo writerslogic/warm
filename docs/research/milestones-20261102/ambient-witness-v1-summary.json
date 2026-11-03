@@ -1,0 +1,698 @@
+[
+  {
+    "bound": 0,
+    "comparisons": 2,
+    "distinguishingMasks": 1,
+    "existingChecker": {
+      "degreeBound": 1,
+      "equivalent": false,
+      "productPairs": 2,
+      "reason": "distribution",
+      "withdrawn": 0
+    },
+    "factorSizes": [
+      1
+    ],
+    "groupWidth": 1,
+    "jointUnknownMasks": 1,
+    "minimumWithdrawals": 0,
+    "polynomialTerms": 1,
+    "recordsPerProfile": 2,
+    "sourceCount": 1,
+    "witness": 0
+  },
+  {
+    "bound": 1,
+    "comparisons": 4,
+    "distinguishingMasks": 2,
+    "existingChecker": {
+      "degreeBound": 1,
+      "equivalent": false,
+      "productPairs": 8,
+      "reason": "distribution",
+      "withdrawn": 2
+    },
+    "factorSizes": [
+      2
+    ],
+    "groupWidth": 1,
+    "jointUnknownMasks": 1,
+    "minimumWithdrawals": 1,
+    "polynomialTerms": 2,
+    "recordsPerProfile": 4,
+    "sourceCount": 2,
+    "witness": 2
+  },
+  {
+    "bound": 2,
+    "comparisons": 8,
+    "distinguishingMasks": 2,
+    "existingChecker": {
+      "degreeBound": 2,
+      "equivalent": false,
+      "productPairs": 18,
+      "reason": "distribution",
+      "withdrawn": 6
+    },
+    "factorSizes": [
+      3
+    ],
+    "groupWidth": 1,
+    "jointUnknownMasks": 1,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 4,
+    "recordsPerProfile": 6,
+    "sourceCount": 3,
+    "witness": 6
+  },
+  {
+    "bound": 2,
+    "comparisons": 16,
+    "distinguishingMasks": 6,
+    "existingChecker": {
+      "degreeBound": 2,
+      "equivalent": false,
+      "productPairs": 32,
+      "reason": "distribution",
+      "withdrawn": 12
+    },
+    "factorSizes": [
+      4
+    ],
+    "groupWidth": 1,
+    "jointUnknownMasks": 1,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 6,
+    "recordsPerProfile": 8,
+    "sourceCount": 4,
+    "witness": 12
+  },
+  {
+    "bound": 2,
+    "comparisons": 32,
+    "distinguishingMasks": 14,
+    "existingChecker": {
+      "degreeBound": 2,
+      "equivalent": false,
+      "productPairs": 50,
+      "reason": "distribution",
+      "withdrawn": 24
+    },
+    "factorSizes": [
+      5
+    ],
+    "groupWidth": 1,
+    "jointUnknownMasks": 1,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 8,
+    "recordsPerProfile": 10,
+    "sourceCount": 5,
+    "witness": 24
+  },
+  {
+    "bound": 0,
+    "comparisons": 4,
+    "distinguishingMasks": 1,
+    "existingChecker": {
+      "degreeBound": 2,
+      "equivalent": false,
+      "productPairs": 2,
+      "reason": "distribution",
+      "withdrawn": 0
+    },
+    "factorSizes": [
+      1,
+      1
+    ],
+    "groupWidth": 2,
+    "jointUnknownMasks": 3,
+    "minimumWithdrawals": 0,
+    "polynomialTerms": 1,
+    "recordsPerProfile": 2,
+    "sourceCount": 2,
+    "witness": 0
+  },
+  {
+    "bound": 1,
+    "comparisons": 8,
+    "distinguishingMasks": 2,
+    "existingChecker": {
+      "degreeBound": 2,
+      "equivalent": false,
+      "productPairs": 8,
+      "reason": "distribution",
+      "withdrawn": 2
+    },
+    "factorSizes": [
+      2,
+      1
+    ],
+    "groupWidth": 2,
+    "jointUnknownMasks": 5,
+    "minimumWithdrawals": 1,
+    "polynomialTerms": 2,
+    "recordsPerProfile": 4,
+    "sourceCount": 3,
+    "witness": 2
+  },
+  {
+    "bound": 2,
+    "comparisons": 16,
+    "distinguishingMasks": 2,
+    "existingChecker": {
+      "degreeBound": 3,
+      "equivalent": false,
+      "productPairs": 18,
+      "reason": "distribution",
+      "withdrawn": 6
+    },
+    "factorSizes": [
+      3,
+      1
+    ],
+    "groupWidth": 2,
+    "jointUnknownMasks": 9,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 4,
+    "recordsPerProfile": 6,
+    "sourceCount": 4,
+    "witness": 6
+  },
+  {
+    "bound": 3,
+    "comparisons": 32,
+    "distinguishingMasks": 4,
+    "existingChecker": {
+      "degreeBound": 3,
+      "equivalent": false,
+      "productPairs": 72,
+      "reason": "distribution",
+      "withdrawn": 22
+    },
+    "factorSizes": [
+      3,
+      2
+    ],
+    "groupWidth": 2,
+    "jointUnknownMasks": 11,
+    "minimumWithdrawals": 3,
+    "polynomialTerms": 8,
+    "recordsPerProfile": 12,
+    "sourceCount": 5,
+    "witness": 22
+  },
+  {
+    "bound": 4,
+    "comparisons": 64,
+    "distinguishingMasks": 4,
+    "existingChecker": {
+      "degreeBound": 4,
+      "equivalent": false,
+      "productPairs": 162,
+      "reason": "distribution",
+      "withdrawn": 54
+    },
+    "factorSizes": [
+      3,
+      3
+    ],
+    "groupWidth": 2,
+    "jointUnknownMasks": 15,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 16,
+    "recordsPerProfile": 18,
+    "sourceCount": 6,
+    "witness": 54
+  },
+  {
+    "bound": 4,
+    "comparisons": 128,
+    "distinguishingMasks": 12,
+    "existingChecker": {
+      "degreeBound": 4,
+      "equivalent": false,
+      "productPairs": 288,
+      "reason": "distribution",
+      "withdrawn": 108
+    },
+    "factorSizes": [
+      4,
+      3
+    ],
+    "groupWidth": 2,
+    "jointUnknownMasks": 23,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 24,
+    "recordsPerProfile": 24,
+    "sourceCount": 7,
+    "witness": 108
+  },
+  {
+    "bound": 4,
+    "comparisons": 256,
+    "distinguishingMasks": 28,
+    "existingChecker": {
+      "degreeBound": 4,
+      "equivalent": false,
+      "productPairs": 450,
+      "reason": "distribution",
+      "withdrawn": 216
+    },
+    "factorSizes": [
+      5,
+      3
+    ],
+    "groupWidth": 2,
+    "jointUnknownMasks": 39,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 32,
+    "recordsPerProfile": 30,
+    "sourceCount": 8,
+    "witness": 216
+  },
+  {
+    "bound": 0,
+    "comparisons": 8,
+    "distinguishingMasks": 1,
+    "existingChecker": {
+      "degreeBound": 3,
+      "equivalent": false,
+      "productPairs": 2,
+      "reason": "distribution",
+      "withdrawn": 0
+    },
+    "factorSizes": [
+      1,
+      1,
+      1
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 7,
+    "minimumWithdrawals": 0,
+    "polynomialTerms": 1,
+    "recordsPerProfile": 2,
+    "sourceCount": 3,
+    "witness": 0
+  },
+  {
+    "bound": 1,
+    "comparisons": 16,
+    "distinguishingMasks": 2,
+    "existingChecker": {
+      "degreeBound": 3,
+      "equivalent": false,
+      "productPairs": 8,
+      "reason": "distribution",
+      "withdrawn": 2
+    },
+    "factorSizes": [
+      2,
+      1,
+      1
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 13,
+    "minimumWithdrawals": 1,
+    "polynomialTerms": 2,
+    "recordsPerProfile": 4,
+    "sourceCount": 4,
+    "witness": 2
+  },
+  {
+    "bound": 2,
+    "comparisons": 32,
+    "distinguishingMasks": 2,
+    "existingChecker": {
+      "degreeBound": 4,
+      "equivalent": false,
+      "productPairs": 18,
+      "reason": "distribution",
+      "withdrawn": 6
+    },
+    "factorSizes": [
+      3,
+      1,
+      1
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 25,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 4,
+    "recordsPerProfile": 6,
+    "sourceCount": 5,
+    "witness": 6
+  },
+  {
+    "bound": 3,
+    "comparisons": 64,
+    "distinguishingMasks": 4,
+    "existingChecker": {
+      "degreeBound": 4,
+      "equivalent": false,
+      "productPairs": 72,
+      "reason": "distribution",
+      "withdrawn": 22
+    },
+    "factorSizes": [
+      3,
+      2,
+      1
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 43,
+    "minimumWithdrawals": 3,
+    "polynomialTerms": 8,
+    "recordsPerProfile": 12,
+    "sourceCount": 6,
+    "witness": 22
+  },
+  {
+    "bound": 4,
+    "comparisons": 128,
+    "distinguishingMasks": 4,
+    "existingChecker": {
+      "degreeBound": 5,
+      "equivalent": false,
+      "productPairs": 162,
+      "reason": "distribution",
+      "withdrawn": 54
+    },
+    "factorSizes": [
+      3,
+      3,
+      1
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 79,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 16,
+    "recordsPerProfile": 18,
+    "sourceCount": 7,
+    "witness": 54
+  },
+  {
+    "bound": 5,
+    "comparisons": 256,
+    "distinguishingMasks": 8,
+    "existingChecker": {
+      "degreeBound": 5,
+      "equivalent": false,
+      "productPairs": 648,
+      "reason": "distribution",
+      "withdrawn": 182
+    },
+    "factorSizes": [
+      3,
+      3,
+      2
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 109,
+    "minimumWithdrawals": 5,
+    "polynomialTerms": 32,
+    "recordsPerProfile": 36,
+    "sourceCount": 8,
+    "witness": 182
+  },
+  {
+    "bound": 6,
+    "comparisons": 512,
+    "distinguishingMasks": 8,
+    "existingChecker": {
+      "degreeBound": 6,
+      "equivalent": false,
+      "productPairs": 1458,
+      "reason": "distribution",
+      "withdrawn": 438
+    },
+    "factorSizes": [
+      3,
+      3,
+      3
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 169,
+    "minimumWithdrawals": 6,
+    "polynomialTerms": 64,
+    "recordsPerProfile": 54,
+    "sourceCount": 9,
+    "witness": 438
+  },
+  {
+    "bound": 6,
+    "comparisons": 1024,
+    "distinguishingMasks": 24,
+    "existingChecker": {
+      "degreeBound": 6,
+      "equivalent": false,
+      "productPairs": 2592,
+      "reason": "distribution",
+      "withdrawn": 876
+    },
+    "factorSizes": [
+      4,
+      3,
+      3
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 289,
+    "minimumWithdrawals": 6,
+    "polynomialTerms": 96,
+    "recordsPerProfile": 72,
+    "sourceCount": 10,
+    "witness": 876
+  },
+  {
+    "bound": 6,
+    "comparisons": 2048,
+    "distinguishingMasks": 56,
+    "existingChecker": {
+      "degreeBound": 6,
+      "equivalent": false,
+      "productPairs": 4050,
+      "reason": "distribution",
+      "withdrawn": 1752
+    },
+    "factorSizes": [
+      5,
+      3,
+      3
+    ],
+    "groupWidth": 3,
+    "jointUnknownMasks": 529,
+    "minimumWithdrawals": 6,
+    "polynomialTerms": 128,
+    "recordsPerProfile": 90,
+    "sourceCount": 11,
+    "witness": 1752
+  },
+  {
+    "bound": 0,
+    "comparisons": 16,
+    "distinguishingMasks": 1,
+    "existingChecker": null,
+    "factorSizes": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 15,
+    "minimumWithdrawals": 0,
+    "polynomialTerms": 1,
+    "recordsPerProfile": 2,
+    "sourceCount": 4,
+    "witness": 0
+  },
+  {
+    "bound": 1,
+    "comparisons": 32,
+    "distinguishingMasks": 2,
+    "existingChecker": null,
+    "factorSizes": [
+      2,
+      1,
+      1,
+      1
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 29,
+    "minimumWithdrawals": 1,
+    "polynomialTerms": 2,
+    "recordsPerProfile": 4,
+    "sourceCount": 5,
+    "witness": 2
+  },
+  {
+    "bound": 2,
+    "comparisons": 64,
+    "distinguishingMasks": 2,
+    "existingChecker": null,
+    "factorSizes": [
+      3,
+      1,
+      1,
+      1
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 57,
+    "minimumWithdrawals": 2,
+    "polynomialTerms": 4,
+    "recordsPerProfile": 6,
+    "sourceCount": 6,
+    "witness": 6
+  },
+  {
+    "bound": 3,
+    "comparisons": 128,
+    "distinguishingMasks": 4,
+    "existingChecker": null,
+    "factorSizes": [
+      3,
+      2,
+      1,
+      1
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 107,
+    "minimumWithdrawals": 3,
+    "polynomialTerms": 8,
+    "recordsPerProfile": 12,
+    "sourceCount": 7,
+    "witness": 22
+  },
+  {
+    "bound": 4,
+    "comparisons": 256,
+    "distinguishingMasks": 4,
+    "existingChecker": null,
+    "factorSizes": [
+      3,
+      3,
+      1,
+      1
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 207,
+    "minimumWithdrawals": 4,
+    "polynomialTerms": 16,
+    "recordsPerProfile": 18,
+    "sourceCount": 8,
+    "witness": 54
+  },
+  {
+    "bound": 5,
+    "comparisons": 512,
+    "distinguishingMasks": 8,
+    "existingChecker": null,
+    "factorSizes": [
+      3,
+      3,
+      2,
+      1
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 365,
+    "minimumWithdrawals": 5,
+    "polynomialTerms": 32,
+    "recordsPerProfile": 36,
+    "sourceCount": 9,
+    "witness": 182
+  },
+  {
+    "bound": 6,
+    "comparisons": 1024,
+    "distinguishingMasks": 8,
+    "existingChecker": null,
+    "factorSizes": [
+      3,
+      3,
+      3,
+      1
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 681,
+    "minimumWithdrawals": 6,
+    "polynomialTerms": 64,
+    "recordsPerProfile": 54,
+    "sourceCount": 10,
+    "witness": 438
+  },
+  {
+    "bound": 7,
+    "comparisons": 2048,
+    "distinguishingMasks": 16,
+    "existingChecker": null,
+    "factorSizes": [
+      3,
+      3,
+      3,
+      2
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 1019,
+    "minimumWithdrawals": 7,
+    "polynomialTerms": 128,
+    "recordsPerProfile": 108,
+    "sourceCount": 11,
+    "witness": 1462
+  },
+  {
+    "bound": 8,
+    "comparisons": 4096,
+    "distinguishingMasks": 16,
+    "existingChecker": null,
+    "factorSizes": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 1695,
+    "minimumWithdrawals": 8,
+    "polynomialTerms": 256,
+    "recordsPerProfile": 162,
+    "sourceCount": 12,
+    "witness": 3510
+  },
+  {
+    "bound": 8,
+    "comparisons": 8192,
+    "distinguishingMasks": 48,
+    "existingChecker": null,
+    "factorSizes": [
+      4,
+      3,
+      3,
+      3
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 3047,
+    "minimumWithdrawals": 8,
+    "polynomialTerms": 384,
+    "recordsPerProfile": 216,
+    "sourceCount": 13,
+    "witness": 7020
+  },
+  {
+    "bound": 8,
+    "comparisons": 16384,
+    "distinguishingMasks": 112,
+    "existingChecker": null,
+    "factorSizes": [
+      5,
+      3,
+      3,
+      3
+    ],
+    "groupWidth": 4,
+    "jointUnknownMasks": 5751,
+    "minimumWithdrawals": 8,
+    "polynomialTerms": 512,
+    "recordsPerProfile": 270,
+    "sourceCount": 14,
+    "witness": 14040
+  }
+]

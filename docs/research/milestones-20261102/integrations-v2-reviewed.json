@@ -1,0 +1,32 @@
+{
+  "complete": true,
+  "counts": {
+    "tests": 391,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  "passed": 389,
+  "sourceGatePass": false,
+  "rawRoot": "/Volumes/A/.hms-bench-cache/warm-integrations-qualification-20261103-v2",
+  "archive": "results-export-v3.tar.gz",
+  "archiveSha256": "5d536140b41dd95f8924cb605e377eab967b1007f2992d3e6da8601e5757dafb",
+  "filesVerified": 272,
+  "skips": [
+    {
+      "class": "tests.haystack.test_haystack_conformance.TestHolographicDocumentStore",
+      "name": "test_delete_all_documents_without_recreate_index",
+      "reason": "delete_all_documents has no recreate_index or recreate_collection parameter"
+    },
+    {
+      "class": "tests.haystack.test_haystack_conformance.TestHolographicDocumentStore",
+      "name": "test_delete_all_documents_with_recreate_index",
+      "reason": "delete_all_documents has no recreate_index or recreate_collection parameter"
+    }
+  ],
+  "skipAssessment": "Haystack upstream conformance optionally checks recreate_index/recreate_collection arguments. WARM delete_all_documents exposes neither; both skips are outside the advertised API. Ordinary delete-all conformance passes. Exclusions are not executed passes.",
+  "upstreamSource": "/Volumes/A/.hms-bench-cache/warm-integrations-qualification-20261103-v1/guest-results/review/haystack-document-store.py",
+  "upstreamLines": "654-696",
+  "paidServicesUsed": false,
+  "previousExport": "v2 export rejected before extraction because it included consumer executables and symlinks; preserved without using them"
+}

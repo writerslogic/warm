@@ -1,0 +1,15 @@
+{
+  "schema": "warm.source-prediction-state/1",
+  "contract": "Coarsest common labeled probabilistic bisimulation of a supplied empirical action/state model for every fixed source-withdrawal set. Missing observations produce an observable unknown result. The partition must be valid uniformly; this does not claim the smallest separately chosen quotient for each withdrawal set.",
+  "candidate": "Refine observable-label blocks by exact Boolean-polynomial equivalence of every action's transition probabilities into the current blocks, including unknown support.",
+  "controls": ["independent enumeration of all set partitions and raw rational probabilities on small models", "shared per-outcome decision diagrams in both fixed source orders", "direct source-normalized comparison, complete for exactly one source per observation, with constant-distribution support simplification for joint sources", "current-evidence-only merging as a negative control"],
+  "random": {"seed": 202611033, "models": 100, "states": 4, "actions": 2, "sources": 3, "labels": 2, "records": 12, "maximumCount": 7},
+  "correlated": {"sourceCounts": [4, 8, 12], "weights": ["uniform", "powers-of-two"], "states": 4, "actions": 2, "labels": [0, 0, 1, 1], "construction": "Even states retain base source histograms; odd states multiply them by surviving-source count. Target state identity varies while target label follows source/action parity."},
+  "independentHistories": {"states": 4, "actions": 2, "sources": 8, "construction": "Every state/action pair has its own source; current distributions agree by label but evidence availability differs under withdrawals."},
+  "verification": {"exhaustiveWithdrawalMaximumSources": 8, "sampledWithdrawalsOtherwise": 256, "seed": 202611034, "sequentialOrdersPerModel": 3, "traceHorizon": 3},
+  "acceptance": "Exact candidate/independent-oracle/diagram partition agreement wherever each control completes; original and quotient transition distributions agree in every checked withdrawal; sequential retraction and re-minimization from the quotient agrees with fresh minimization of surviving observations. Record the no-compaction stress case and the current-only negative control. Preserve raw models, partitions, checks and serialized sizes.",
+  "accounting": "Packet bytes include quotient records, labels, dimensions and the map for every original state. These are serialized bytes, not whole-process memory or reader tokens. Original episodic records are not reconstructable from the declared readout; applications requiring them must retain and charge them separately.",
+  "limits": {"seconds": 600, "diagramNodesAndTerminals": 50000, "diagramStates": 100000},
+  "promotion": "No system promotion: the constructed source correlations and supplied state labels still require a real behavioral workload and comparison with established parametric algebra tools.",
+  "paidServices": false
+}

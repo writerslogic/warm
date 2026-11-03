@@ -1,0 +1,13 @@
+{
+  "acknowledgementsSha256": "76a6721e1de52b656bb9240b4f8f3de860f574b27fad3f155dbfe6ff2b473ad0",
+  "case": "encrypted",
+  "termination": "am force-stop",
+  "verified": {
+    "deleted": 8,
+    "phase": "verified",
+    "records": 24,
+    "resumedWrite": true
+  },
+  "writerCommandExitCode": 0,
+  "writerPid": "3674"
+}

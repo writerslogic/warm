@@ -1,0 +1,103 @@
+{
+  "checksPassed": true,
+  "results": [
+    {
+      "contract": "row",
+      "stateCoordinates": 6,
+      "encodedCoordinates": 4,
+      "rankTrace": [
+        4,
+        4
+      ],
+      "initialStates": 729,
+      "mutationChecks": 4374,
+      "cueReadouts": 15309,
+      "sequenceChecks": 1000,
+      "denseEncodingCoefficients": 24,
+      "denseUpdateCoefficients": 32
+    },
+    {
+      "contract": "cell",
+      "stateCoordinates": 6,
+      "encodedCoordinates": 6,
+      "rankTrace": [
+        4,
+        6,
+        6
+      ],
+      "initialStates": 729,
+      "mutationChecks": 13122,
+      "cueReadouts": 15309,
+      "sequenceChecks": 1000,
+      "denseEncodingCoefficients": 36,
+      "denseUpdateCoefficients": 216
+    }
+  ],
+  "ranks": [
+    {
+      "rows": 2,
+      "outputs": 2,
+      "contract": "row",
+      "rank": 2,
+      "rankTrace": [
+        2,
+        2
+      ]
+    },
+    {
+      "rows": 2,
+      "outputs": 2,
+      "contract": "cell",
+      "rank": 4,
+      "rankTrace": [
+        2,
+        4,
+        4
+      ]
+    },
+    {
+      "rows": 2,
+      "outputs": 3,
+      "contract": "row",
+      "rank": 4,
+      "rankTrace": [
+        4,
+        4
+      ]
+    },
+    {
+      "rows": 2,
+      "outputs": 3,
+      "contract": "cell",
+      "rank": 6,
+      "rankTrace": [
+        4,
+        6,
+        6
+      ]
+    },
+    {
+      "rows": 4,
+      "outputs": 8,
+      "contract": "row",
+      "rank": 28,
+      "rankTrace": [
+        28,
+        28
+      ]
+    },
+    {
+      "rows": 4,
+      "outputs": 8,
+      "contract": "cell",
+      "rank": 32,
+      "rankTrace": [
+        28,
+        32,
+        32
+      ]
+    }
+  ],
+  "claim": "Exact restricted-contract identities only; no invention, byte savings, speed or product-memory claim.",
+  "freezeSha256": "9314814d4fb631a088c20c05feb2e8ec7211ecc5d97372e7ec73247a51d9e00d"
+}

@@ -1,0 +1,16 @@
+{
+  "CheckedAt": "2026-11-03T12:26:52.8153566Z",
+  "Computer": "WRITERSLOGIC-03",
+  "Commands": [
+    {
+      "Name": "python.exe",
+      "Source": "C:\\Users\\David Condrey\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe"
+    },
+    {
+      "Name": "dotnet.exe",
+      "Source": "C:\\Program Files\\dotnet\\dotnet.exe"
+    }
+  ],
+  "Sshd": "Running",
+  "Tailscale": "Running"
+}

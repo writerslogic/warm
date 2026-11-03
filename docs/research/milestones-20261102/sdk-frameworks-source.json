@@ -1,0 +1,21 @@
+{
+  "schema": "warm.sdk-framework-source/1",
+  "baseRevision": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+  "serverSha256": "e10107257731bb3e0c18c8ef4bf43e6fb606e0eb1ef4cc801c3a6e55356d5361",
+  "files": {
+    "check_installed.py": "8c5e2ada0e182473de8e760609c5ed81ff7e09fbf83d6cbe50e595e25e162024",
+    "dependency-profile/pyproject.toml": "e46ddd5ee93644f6d58850985b0a02c9326c9d994dfc66276ecfa3db6b82a3e3",
+    "dependency-profile/uv.lock": "b5cf50abf1e4b4b60c8a235f288727061145102bdb81759f965272e7b84e5fec",
+    "dist/warm_sdk-0.1.3-py3-none-any.whl": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490",
+    "requirements.txt": "ecc43889996f5de146d06e4b2f0db831f32a93bb9f285612959bba078c06caa2",
+    "run.py": "75736b9efdc412e328978943e4fea62894d451955ed6e636a2182033a339031e",
+    "tests/test_framework_tools_live.py": "ca0b3fc535a918c3ce0fed4ccaf3fbcebc4a6823814f1a1c4d2d8bb5ec8db8c6",
+    "tests/test_haystack_live.py": "218ad0267eadcc80d46b0a3ed896e094830bd1a9a1f97ef2d32a71488191ae41",
+    "tests/test_langchain_live.py": "ab46aef7821c97d1e89f6e47c7ee03c9ff0e28aae5cb08df6bbe320fe21e1abb",
+    "tests/test_live_server.py": "789cad63c3dc335a3e23ca92d7ea45ff78b3297d2686ad542499aa3f2cfba8ee",
+    "tests/test_llamaindex_live.py": "eb57a711f6d8e9804285265a99bff31cac10e6e9d97a49ebb071b742d8529ddd",
+    "tests/test_pydantic_ai_live.py": "5a82d57f2649ee76afe2b38d0423abe4990a5abefd442a5a76565de62ce01f2b"
+  },
+  "scope": "Six installed HTTP SDK framework adapters, frozen repository dependencies, Python 3.12.12, private loopback-only network; queued, not passed",
+  "archiveSha256": "4cf7d14b39426da594328d7922cbcf8a58948db5677b6de11babf22a0cf3e42b"
+}

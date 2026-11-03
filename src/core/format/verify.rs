@@ -18,7 +18,7 @@ use super::{
     STORAGE_FORMAT_OLDEST, STORE_SCHEMA_OLDEST, STORE_SCHEMA_VERSION,
 };
 use crate::core::storage::{
-    list_segments, FormatManifest, FORMAT_MAGIC, LEGACY_SEGMENT_SIZE, SEGMENT_SIZE,
+    list_segments, FormatManifest, FORMAT_MAGIC, GROWTH_STEP, LEGACY_SEGMENT_SIZE, SEGMENT_SIZE,
 };
 
 /// Directory of the arena inside a store.
@@ -848,14 +848,14 @@ fn check_segment_size(
             format!("segment is {length} bytes, longer than the declared {declared}"),
         );
     } else if manifest.version >= 4 && is_final {
-        if !length.is_multiple_of(SEGMENT_SIZE as u64) || length < SEGMENT_SIZE as u64 {
+        if !length.is_multiple_of(GROWTH_STEP as u64) || length < GROWTH_STEP as u64 {
             report.add(
                 Severity::Warning,
                 "segment-size-unaligned",
                 relative,
                 None,
                 format!(
-                    "the active segment of a format-{} store is allocated in {SEGMENT_SIZE}-byte \
+                    "the active segment of a format-{} store is allocated in {GROWTH_STEP}-byte \
                      steps; this one is {length} bytes (a copy that was trimmed? the engine \
                      extends it with zeros on open)",
                     manifest.version

@@ -37,11 +37,30 @@ pub(crate) fn list_segments(dir: &Path) -> Result<Vec<usize>> {
     Ok(ids)
 }
 
-/// The fixed segment size of format 3, and the step by which a format-4 active segment's
-/// file grows toward its declared size.
+/// The fixed segment size of format 3, and the largest step by which a format-4 active
+/// segment's file grows toward its declared size.
 pub(crate) const SEGMENT_SIZE: usize = 64 * 1024 * 1024;
+/// The first allocation of a format-4 active segment and the granularity of its length. Open
+/// reads the active segment through its zero tail (`discover_offset` proves nothing committed
+/// follows the end marker), so a journal that starts at this size instead of [`SEGMENT_SIZE`]
+/// keeps an empty or small journal from faulting in 64 MiB at every open. Segments that earlier
+/// releases grew in [`SEGMENT_SIZE`] steps are multiples of it and open unchanged.
+pub(crate) const GROWTH_STEP: usize = 1024 * 1024;
+
+/// The capacity a format-4 active segment is allocated at to hold `required` bytes: a power of
+/// two from [`GROWTH_STEP`] up to [`SEGMENT_SIZE`] (so it doubles: six more grows than fixed
+/// 64 MiB steps, each a resize and sync), then [`SEGMENT_SIZE`] multiples as before, never past
+/// the declared `limit`.
+pub(crate) fn allocation(required: usize, limit: usize) -> usize {
+    let capacity = if required <= SEGMENT_SIZE {
+        required.max(GROWTH_STEP).next_power_of_two()
+    } else {
+        required.div_ceil(SEGMENT_SIZE).saturating_mul(SEGMENT_SIZE)
+    };
+    capacity.min(limit)
+}
 /// The segment size formats 1, 2 and 4 declare in their manifest (format 4 allocates it in
-/// [`SEGMENT_SIZE`] steps); only format 3 declared [`SEGMENT_SIZE`].
+/// steps, [`allocation`]); only format 3 declared [`SEGMENT_SIZE`].
 pub(crate) const LEGACY_SEGMENT_SIZE: usize = 1024 * 1024 * 1024;
 // Windows requires unmapping all views before extending a mapped file.
 const INCREMENTAL_ALLOCATION: bool = cfg!(unix);
@@ -214,11 +233,10 @@ impl PersistentArena {
             "active segment exceeds its declared size"
         );
         let active_capacity = if manifest.version >= 4 && INCREMENTAL_ALLOCATION {
-            usize::try_from(length)
-                .context("arena capacity exceeds address space")?
-                .max(SEGMENT_SIZE)
-                .div_ceil(SEGMENT_SIZE)
-                * SEGMENT_SIZE
+            allocation(
+                usize::try_from(length).context("arena capacity exceeds address space")?,
+                manifest.segment_size,
+            )
         } else {
             manifest.segment_size
         };
@@ -775,7 +793,7 @@ impl PersistentArena {
                 && required > active.map.len(),
             "invalid arena growth request"
         );
-        let capacity = required.div_ceil(SEGMENT_SIZE) * SEGMENT_SIZE;
+        let capacity = allocation(required, self.segment_size);
         let path = self.data_path.read().join(format!(
             "seg_{}.bin",
             self.active_id.load(Ordering::Acquire)
@@ -818,7 +836,7 @@ impl PersistentArena {
         #[cfg(test)]
         tests::fail_point("rotation after create")?;
         let capacity = if self.format_version >= 4 && INCREMENTAL_ALLOCATION {
-            SEGMENT_SIZE
+            GROWTH_STEP
         } else {
             self.segment_size
         };

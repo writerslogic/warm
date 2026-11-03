@@ -1,0 +1,11 @@
+postgres (PostgreSQL) 18.6
+comment = 'vector data type and ivfflat and hnsw access methods'
+default_version = '0.8.7'
+module_pathname = '$libdir/vector'
+relocatable = true
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by net.bytebuddy.dynamic.loading.ClassInjector$UsingUnsafe$Dispatcher$CreationAction
+WARNING: Please consider reporting this to the maintainers of class net.bytebuddy.dynamic.loading.ClassInjector$UsingUnsafe$Dispatcher$CreationAction
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+Version: 3.9.0, Build: tar/4ee42a94e87f66fbf1e62a9871b1b87f91e02472/2026-09-23T01:00:48.264305421Z, JVM: 25.0.4.1

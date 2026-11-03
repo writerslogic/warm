@@ -1,0 +1,25 @@
+{
+  "calibrationTerminalSha256": "9d86cc56817350069e1a44d1cf5dfdbd17e732540df9728c7354374e38b0c489",
+  "cases": [
+    {
+      "cells": 16,
+      "dataset": "coco-i2i-512-angular",
+      "maximumScoreError": 2.6652970896989814e-07,
+      "oracleMaximumNumericalDifference": 0.0,
+      "queries": 16000,
+      "receiptSha256": "b0fe1345fe3909f095379fae9698fa80dd3de7a25fba4dcc68b61f04556a2706"
+    },
+    {
+      "cells": 16,
+      "dataset": "deep-image-96-angular",
+      "maximumScoreError": 1.6073073560995965e-07,
+      "oracleMaximumNumericalDifference": 0.0,
+      "queries": 16000,
+      "receiptSha256": "4f39ffd2e7056f83a2d656e5a93b277d35c1a385e41949ecd0b9a45bc74f2d0f"
+    }
+  ],
+  "complete": true,
+  "completedAt": "2026-11-03T14:49:26.587839+00:00",
+  "heldOutVectorsOpened": false,
+  "sourceManifestSha256": "bae6c148f79f8ecc2f7bc1c007dd8db31410f0e2563a52546869ed0b29976a79"
+}

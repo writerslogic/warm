@@ -1,0 +1,12 @@
+{
+  "cells": 16,
+  "complete": true,
+  "completedAt": "2026-11-03T12:55:45.184988+00:00",
+  "freezeSha256": "d709d7175c0fa5e16004d7ee14926a38457359d00c605b2e9bc9f2fa9d824086",
+  "outputs": {
+    "output/coco-i2i-512-angular.ndjson": "b485c322e89666e25e5d851f06a3962a44683e424f66d2e603ee01d0cb366f5b",
+    "output/deep-image-96-angular.ndjson": "7f6ca2890e81aa9d33bb876523982b37fe0e8c4162b00b908d714a4bec09890d"
+  },
+  "pairedComparisons": 1536,
+  "rust": "rustc 1.96.0 (ac68faa20 2026-05-25)"
+}

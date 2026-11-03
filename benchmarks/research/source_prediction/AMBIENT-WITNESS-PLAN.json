@@ -1,0 +1,9 @@
+{
+  "schema": "warm.ambient-source-witness/1",
+  "hypothesis": "For normalized nonnegative count profiles whose records each depend on exactly g of n sources, any disagreement where both profiles are known has a withdrawal witness of size at most min(2g,n-g). Positive integer binary-outcome profiles with identical unknown support attain this bound for every n>=g>=1.",
+  "construction": "Compose g positive 2x2 matrix factors. A singleton factor uses A; a two-source factor uses aA+cC; a factor of r>=3 sources uses (r-2)aA+(sum b_j)B+(r-2)cC. For n<=3g distribute singleton/double/triple factors; for n>3g add central sources to the first triple factor. Every expanded record has exactly one source per factor.",
+  "cohort": "g=1..4 and every n from g through 3g+2: 32 families and 37410 exhaustive withdrawal-mask comparisons. Do not change the existing Profile checker's width limit; use it only for g<=3.",
+  "checks": "Positive bounded integer counts; exactly-g dependencies; matching unknown support; explicit expanded-record sums versus independent scalar recurrence; exact rational predictions; full cross-polynomial coefficients versus factored determinant; first differing withdrawal size exactly min(2g,n-g); known checker witness; predicted count of distinguishing/unknown masks. Unit tests include ambient/group/mask boundaries, random small common-support profiles, and an unknown-support counterexample outside the distribution-only bound.",
+  "decision": "Every declared identity and readout must pass. Retain any failed attempt. Freeze source and cohort before execution. No performance or compression gate and no novelty assertion.",
+  "scope": "A refinement of the existing determinant construction using standard Boolean interpolation and source support. Local exact integer/rational computation only; no model, paid service, held-out corpus or production change. Unknown-status equivalence remains a separate obligation."
+}

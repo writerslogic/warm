@@ -1,0 +1,27 @@
+minimumLimaVersion: 2.0.0
+vmType: vz
+os: Linux
+arch: aarch64
+images:
+  - location: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img
+    arch: aarch64
+    digest: sha256:50e24e1fb79e89116e939d90aa7738f7af48c442fa1bc2510131e0b39c50348e
+cpus: 4
+memory: 8GiB
+disk: 48GiB
+mounts: []
+containerd:
+  system: false
+  user: false
+ssh:
+  loadDotSSHPubKeys: false
+  forwardAgent: false
+upgradePackages: false
+provision:
+  - mode: system
+    script: |
+      #!/bin/sh
+      set -eu
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y --no-install-recommends build-essential pkg-config libssl-dev curl ca-certificates python3-venv git unzip xz-utils

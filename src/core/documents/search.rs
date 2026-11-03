@@ -130,6 +130,7 @@ struct CapturedQuery {
     words: usize,
     use_postings: bool,
     dense: Option<Arc<DenseIndex>>,
+    scan: Option<Vec<Arc<StoredDocument>>>,
     eligible: Option<EligibleOwners>,
     excluded_owners: FastSet<usize>,
     dfs: Option<[BTreeMap<String, usize>; 2]>,
@@ -374,6 +375,7 @@ fn capture_postings(store: &DocumentStore, prepared: PreparedSearch) -> Captured
         words,
         use_postings,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -390,7 +392,8 @@ fn capture_ranked_lexical(store: &DocumentStore, prepared: PreparedSearch) -> Ca
     let mut chunks = Vec::new();
     let mut scores = Vec::new();
     if prepared.lexical_weight > 0.0 {
-        let ranked = LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(store, &prepared));
+        let ranked =
+            LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(store, &prepared, false));
         chunks.reserve_exact(ranked.len());
         scores.reserve_exact(ranked.len());
         for (score, slot) in ranked {
@@ -413,6 +416,7 @@ fn capture_ranked_lexical(store: &DocumentStore, prepared: PreparedSearch) -> Ca
         words: store.word_count,
         use_postings: true,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -500,7 +504,8 @@ fn capture_image(image: &ServingImage, prepared: PreparedSearch) -> anyhow::Resu
     let mut chunks = Vec::new();
     let mut scores = Vec::new();
     if prepared.lexical_weight > 0.0 {
-        let ranked = LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(image, &prepared));
+        let ranked =
+            LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(image, &prepared, true));
         chunks.reserve_exact(ranked.len());
         scores.reserve_exact(ranked.len());
         for (score, slot) in ranked {
@@ -523,6 +528,7 @@ fn capture_image(image: &ServingImage, prepared: PreparedSearch) -> anyhow::Resu
         words: image.word_count(),
         use_postings: true,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -557,7 +563,8 @@ fn capture_overlaid(
     let mut chunks = Vec::new();
     let mut scores = Vec::new();
     if prepared.lexical_weight > 0.0 {
-        let ranked = LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(&source, &prepared));
+        let ranked =
+            LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(&source, &prepared, false));
         chunks.reserve_exact(ranked.len());
         scores.reserve_exact(ranked.len());
         for (score, slot) in ranked {
@@ -583,6 +590,7 @@ fn capture_overlaid(
         words: source.word_count(),
         use_postings: true,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -636,6 +644,52 @@ struct LexicalScratch {
     /// Set while a query runs; a query that finds it set (an earlier one panicked midway)
     /// zeroes every score first.
     dirty: bool,
+    hot: HotLists,
+}
+
+/// The most postings a thread keeps decoded and weighted (12 bytes each).
+const HOT_POSTINGS: usize = 1 << 18;
+
+/// The shortest posting list worth keeping decoded, as a fraction of the slot count and an
+/// absolute floor.
+const HOT_MIN_LEN: usize = 32;
+const HOT_MIN_SLOTS: usize = 32;
+
+/// What a thread's decoded posting lists belong to: one immutable checkpoint under fixed BM25
+/// constants, so each list's idf and every posting's weight are fixed too.
+#[derive(Clone, Copy, PartialEq)]
+struct HotKey {
+    norm: NormKey,
+    chunks: usize,
+    words: usize,
+}
+
+/// A long posting list as slots and the BM25 weights `rank` computes for them. A query that
+/// meets it again adds the stored weights in slot order instead of decoding the list and
+/// weighing each posting, so the sum for every slot is the one the cold path computes.
+struct HotList {
+    slots: Box<[u32]>,
+    weights: Box<[f64]>,
+}
+
+/// Per-thread decoded lists of an immutable checkpoint, by form and term, bounded by
+/// [`HOT_POSTINGS`] and dropped when the checkpoint or the BM25 constants change.
+#[derive(Default)]
+struct HotLists {
+    key: Option<HotKey>,
+    lists: [FastMap<String, std::rc::Rc<HotList>>; 2],
+    postings: usize,
+}
+
+/// One term's postings in a query: kept decoded, or still to read from the source.
+enum Listed<'a, L> {
+    Hot(std::rc::Rc<HotList>),
+    Cold {
+        idf: f64,
+        list: L,
+        form: usize,
+        word: &'a str,
+    },
 }
 
 thread_local! {
@@ -647,7 +701,15 @@ impl LexicalScratch {
     /// score descending, then document id and chunk index ascending. Scores are the sums
     /// `execute_chunks` computes from captured postings: the same terms in the same order
     /// (form 0 terms, then form 1 terms, each sorted), the same expressions, from 0.
-    fn rank<S: LexicalSource>(&mut self, store: &S, prepared: &PreparedSearch) -> Vec<(f64, u32)> {
+    ///
+    /// With `hot` set, `store` is an immutable checkpoint whose long posting lists this thread
+    /// may keep decoded and weighted between queries (see [`HotList`]).
+    fn rank<S: LexicalSource>(
+        &mut self,
+        store: &S,
+        prepared: &PreparedSearch,
+        hot: bool,
+    ) -> Vec<(f64, u32)> {
         let slots = store.slot_count();
         if self.dirty {
             self.scores.fill(0.0);
@@ -662,20 +724,6 @@ impl LexicalScratch {
         let n = store.chunk_count() as f64;
         let average = (store.word_count() as f64 / n).max(1.0);
         let bm25 = prepared.bm25;
-        let mut lists = Vec::new();
-        let mut postings = 0usize;
-        for (form, terms) in prepared.query_terms.iter().enumerate() {
-            for word in terms {
-                if let Some(list) = store.postings(form, word) {
-                    let df = list.len() as f64;
-                    postings = postings.saturating_add(list.len());
-                    lists.push((Bm25::idf(n, df), list));
-                }
-            }
-        }
-        // A query whose postings cover a good part of the store reads every slot's norm and
-        // score; a sparser one keeps its norms lazy and its selection to the slots it reached.
-        let dense = postings >= slots / 2;
         let (identity, generation) = store.state();
         let key = NormKey {
             store: identity,
@@ -695,6 +743,45 @@ impl LexicalScratch {
                 }
             };
         }
+        if hot {
+            let hot_key = HotKey {
+                norm: key,
+                chunks: store.chunk_count(),
+                words: store.word_count(),
+            };
+            if self.hot.key != Some(hot_key) {
+                self.hot = HotLists {
+                    key: Some(hot_key),
+                    ..HotLists::default()
+                };
+            }
+        }
+        let mut lists = Vec::new();
+        let mut postings = 0usize;
+        for (form, terms) in prepared.query_terms.iter().enumerate() {
+            for word in terms {
+                if hot {
+                    if let Some(list) = self.hot.lists[form].get(word.as_str()) {
+                        postings = postings.saturating_add(list.slots.len());
+                        lists.push(Listed::Hot(std::rc::Rc::clone(list)));
+                        continue;
+                    }
+                }
+                if let Some(list) = store.postings(form, word) {
+                    let df = list.len() as f64;
+                    postings = postings.saturating_add(list.len());
+                    lists.push(Listed::Cold {
+                        idf: Bm25::idf(n, df),
+                        list,
+                        form,
+                        word,
+                    });
+                }
+            }
+        }
+        // A query whose postings cover a good part of the store reads every slot's norm and
+        // score; a sparser one keeps its norms lazy and its selection to the slots it reached.
+        let dense = postings >= slots / 2;
         if !self.complete && dense {
             for slot in 0..slots {
                 if self.norm_epochs[slot] != self.epoch {
@@ -708,11 +795,46 @@ impl LexicalScratch {
         self.touched.clear();
         if dense {
             let norms = &self.norms[..slots];
-            for (idf, list) in &lists {
-                let idf = *idf;
-                list.for_each(|slot, frequency| {
-                    scores[slot] += bm25.weight(idf, f64::from(frequency), norms[slot]);
-                });
+            let admit_from = HOT_MIN_LEN.max(slots / HOT_MIN_SLOTS);
+            for listed in &lists {
+                match listed {
+                    Listed::Hot(list) => {
+                        for (&slot, &weight) in list.slots.iter().zip(&list.weights) {
+                            scores[slot as usize] += weight;
+                        }
+                    }
+                    &Listed::Cold {
+                        idf,
+                        ref list,
+                        form,
+                        word,
+                    } => {
+                        let length = list.len();
+                        if hot && length >= admit_from && length <= HOT_POSTINGS - self.hot.postings
+                        {
+                            let mut kept_slots = Vec::with_capacity(length);
+                            let mut kept_weights = Vec::with_capacity(length);
+                            list.for_each(|slot, frequency| {
+                                let weight = bm25.weight(idf, f64::from(frequency), norms[slot]);
+                                scores[slot] += weight;
+                                kept_slots.push(slot as u32);
+                                kept_weights.push(weight);
+                            });
+                            self.hot.postings += kept_slots.len();
+                            self.hot.lists[form].insert(
+                                word.to_owned(),
+                                std::rc::Rc::new(HotList {
+                                    slots: kept_slots.into_boxed_slice(),
+                                    weights: kept_weights.into_boxed_slice(),
+                                }),
+                            );
+                        } else {
+                            list.for_each(|slot, frequency| {
+                                scores[slot] += bm25.weight(idf, f64::from(frequency), norms[slot]);
+                            });
+                        }
+                    }
+                }
             }
         } else {
             self.touched.resize(postings, 0);
@@ -720,20 +842,31 @@ impl LexicalScratch {
                 (&mut self.norms, &mut self.norm_epochs, &mut self.touched);
             let (epoch, complete) = (self.epoch, self.complete);
             let mut reached = 0;
-            for (idf, list) in &lists {
-                let idf = *idf;
-                list.for_each(|slot, frequency| {
-                    if !complete && norm_epochs[slot] != epoch {
-                        norm_epochs[slot] = epoch;
-                        norms[slot] = bm25.norm(f64::from(store.slot_word_count(slot)), average);
+            for listed in &lists {
+                match listed {
+                    Listed::Hot(list) => {
+                        for (&slot, &weight) in list.slots.iter().zip(&list.weights) {
+                            let score = scores[slot as usize];
+                            touched[reached] = slot;
+                            reached += usize::from(score == 0.0);
+                            scores[slot as usize] = score + weight;
+                        }
                     }
-                    // Weights are never -0, so a slot reads +0 until its first nonzero weight;
-                    // a slot recorded twice reads 0 the second time in the selection.
-                    let score = scores[slot];
-                    touched[reached] = slot as u32;
-                    reached += usize::from(score == 0.0);
-                    scores[slot] = score + bm25.weight(idf, f64::from(frequency), norms[slot]);
-                });
+                    &Listed::Cold { idf, ref list, .. } => list.for_each(|slot, frequency| {
+                        if !complete && norm_epochs[slot] != epoch {
+                            norm_epochs[slot] = epoch;
+                            norms[slot] =
+                                bm25.norm(f64::from(store.slot_word_count(slot)), average);
+                        }
+                        // Weights are never -0, so a slot reads +0 until its first nonzero
+                        // weight; a slot recorded twice reads 0 the second time in the
+                        // selection.
+                        let score = scores[slot];
+                        touched[reached] = slot as u32;
+                        reached += usize::from(score == 0.0);
+                        scores[slot] = score + bm25.weight(idf, f64::from(frequency), norms[slot]);
+                    }),
+                }
             }
             self.touched.truncate(reached);
         }
@@ -865,6 +998,7 @@ fn capture_planned_query(
     dense: Option<Arc<DenseIndex>>,
 ) -> CapturedQuery {
     let mut eligible = None;
+    let mut scan = None;
     let (count, words, dfs, ranked) = if prepared.unfiltered {
         let dfs = std::array::from_fn(|form| {
             prepared.query_terms[form]
@@ -879,7 +1013,7 @@ fn capture_planned_query(
         });
         let ranked = if prepared.lexical_weight > 0.0 {
             LEXICAL_SCRATCH
-                .with(|scratch| scratch.borrow_mut().rank(store, &prepared))
+                .with(|scratch| scratch.borrow_mut().rank(store, &prepared, false))
                 .into_iter()
                 .map(|(score, slot)| (score, slot as usize))
                 .collect::<Vec<_>>()
@@ -897,6 +1031,17 @@ fn capture_planned_query(
         let count: usize = documents.iter().map(|document| document.chunks.len()).sum();
         if count < super::dense::MIN_ROWS {
             return capture_postings(store, prepared);
+        }
+        if dense.is_some()
+            && prepared.lexical_weight == 0.0
+            && prepared.query_terms.iter().all(BTreeSet::is_empty)
+        {
+            scan = Some(
+                documents
+                    .iter()
+                    .map(|document| Arc::clone(document))
+                    .collect(),
+            );
         }
         let posting_work = prepared
             .query_terms
@@ -960,7 +1105,7 @@ fn capture_planned_query(
                     identity: super::index::StoreIdentity::default(),
                 };
                 ranked = LEXICAL_SCRATCH
-                    .with(|scratch| scratch.borrow_mut().rank(&source, &prepared))
+                    .with(|scratch| scratch.borrow_mut().rank(&source, &prepared, false))
                     .into_iter()
                     .map(|(score, slot)| (score, slot as usize))
                     .collect();
@@ -1067,6 +1212,7 @@ fn capture_planned_query(
         words,
         use_postings: false,
         dense,
+        scan,
         eligible,
         excluded_owners,
         dfs: Some(dfs),
@@ -1148,24 +1294,50 @@ fn execute_query(captured: &CapturedQuery) -> Vec<RankedHit> {
             .embedding
             .as_ref()
             .expect("indexed search lost its query embedding");
-        let (hits, _) = if captured.prepared.unfiltered && captured.excluded_owners.is_empty() {
+        let matches = |document: &StoredDocument| {
+            captured.eligible.as_ref().map_or_else(
+                || {
+                    !captured
+                        .excluded_owners
+                        .contains(&(document as *const StoredDocument as usize))
+                        && captured.prepared.matches(document)
+                },
+                |eligible| eligible.contains(&(document as *const StoredDocument as usize)),
+            )
+        };
+        let (hits, _) = if let Some(documents) = &captured.scan {
+            let work = captured.count.saturating_mul(query.len() + 1) / 16;
+            match index.search_where_limited(
+                query,
+                captured.prepared.limit,
+                captured.prepared.minimum,
+                matches,
+                work,
+            ) {
+                Some(result) => result,
+                None => {
+                    let mut chunks = Vec::with_capacity(captured.count);
+                    for document in documents {
+                        for (index, chunk) in document.chunks.iter().enumerate() {
+                            chunks.push(CapturedChunk {
+                                document: Arc::clone(document),
+                                index,
+                                word_count: super::index::slot_words(chunk.word_count),
+                                semantic_cache: None,
+                            });
+                        }
+                    }
+                    return execute_chunks(captured, &chunks);
+                }
+            }
+        } else if captured.prepared.unfiltered && captured.excluded_owners.is_empty() {
             index.search(query, captured.prepared.limit, captured.prepared.minimum)
         } else {
             index.search_where(
                 query,
                 captured.prepared.limit,
                 captured.prepared.minimum,
-                |document| {
-                    captured.eligible.as_ref().map_or_else(
-                        || {
-                            !captured
-                                .excluded_owners
-                                .contains(&(document as *const StoredDocument as usize))
-                                && captured.prepared.matches(document)
-                        },
-                        |eligible| eligible.contains(&(document as *const StoredDocument as usize)),
-                    )
-                },
+                matches,
             )
         };
         let mut chunks = captured.chunks.clone();
@@ -1391,6 +1563,203 @@ fn score_chunks(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn bounded_filtered_scan_preserves_missing_embeddings_and_minimum_scores() {
+        let mut store = DocumentStore::default();
+        for id in 0..257 {
+            let mut document = document(id, 1);
+            if id % 3 == 0 {
+                document.chunks[0].embedding = None;
+            }
+            store.insert(document.id.clone(), document);
+        }
+        let trained = super::super::build_dense_index(
+            super::super::capture_dense_index(&store, 3)
+                .unwrap()
+                .unwrap(),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(super::super::publish_dense_index(&mut store, &trained));
+        for fusion in ["blend", "rrf"] {
+            for minimum in [-1.0, 0.0, 0.9, 1.0] {
+                let options = SearchOptions {
+                    embedding: Some(vec![1.0, 0.0, 0.0]),
+                    filter: Some(json!({"group": 0})),
+                    lexical_weight: Some(0.0),
+                    semantic_weight: Some(1.0),
+                    min_semantic_score: Some(minimum),
+                    fusion: Some(fusion.into()),
+                    k: Some(10),
+                    candidate_limit: Some(100),
+                    ..Default::default()
+                };
+                let captured =
+                    capture_search(&store, vec![prepare_search("", &options, Some(3)).unwrap()]);
+                assert!(captured.queries[0].scan.is_some());
+                let expected =
+                    super::super::search_impl(&store, "", &options, Some(3), false).unwrap();
+                assert_eq!(
+                    serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+                    serde_json::to_value(expected).unwrap()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn bounded_filtered_pruning_merges_live_deltas_and_excludes_replaced_rows() {
+        let document = |id: usize, positive: bool| {
+            let vector = if positive {
+                vec![1.0, 0.0]
+            } else {
+                vec![-1.0, (id % 5) as f64 / 100.0]
+            };
+            let input =
+                serde_json::from_value(json!({"id": format!("d{id:04}"), "text": "current owner",
+                "metadata": {"group": id % 2}, "embeddings": [vector]}))
+                .unwrap();
+            super::super::prepare(input, 1024, Some(2), TextEncoder::default()).unwrap()
+        };
+        let mut store = DocumentStore::default();
+        for id in 0..8192 {
+            let document = document(id, id < 256);
+            store.insert(document.id.clone(), document);
+        }
+        let trained = super::super::build_dense_index(
+            super::super::capture_dense_index(&store, 2)
+                .unwrap()
+                .unwrap(),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(super::super::publish_dense_index(&mut store, &trained));
+        let replacement = document(0, false);
+        store.insert(replacement.id.clone(), replacement);
+        store.remove("d0002").unwrap();
+        let mut added = document(8192, true);
+        added.id = "a-new".into();
+        store.insert(added.id.clone(), added);
+        assert!(store.dense_index.is_some());
+        for fusion in ["blend", "rrf"] {
+            let options = SearchOptions {
+                embedding: Some(vec![1.0, 0.0]),
+                filter: Some(json!({"group": 0})),
+                lexical_weight: Some(0.0),
+                semantic_weight: Some(1.0),
+                min_semantic_score: Some(-1.0),
+                fusion: Some(fusion.into()),
+                k: Some(50),
+                candidate_limit: Some(100),
+                ..Default::default()
+            };
+            let captured =
+                capture_search(&store, vec![prepare_search("", &options, Some(2)).unwrap()]);
+            let query = &captured.queries[0];
+            let (_, dots) = query
+                .dense
+                .as_ref()
+                .unwrap()
+                .search_where_limited(
+                    query.prepared.embedding.as_ref().unwrap(),
+                    query.prepared.limit,
+                    query.prepared.minimum,
+                    |document| {
+                        !query
+                            .excluded_owners
+                            .contains(&(document as *const StoredDocument as usize))
+                            && query.prepared.matches(document)
+                    },
+                    query.count * 3 / 16,
+                )
+                .unwrap();
+            assert!(dots < query.count);
+            let expected = super::super::search_impl(&store, "", &options, Some(2), false).unwrap();
+            assert!(expected.iter().any(|hit| hit.document_id == "a-new"));
+            assert!(!expected
+                .iter()
+                .any(|hit| matches!(hit.document_id.as_str(), "d0000" | "d0002")));
+            assert_eq!(
+                serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+                serde_json::to_value(expected).unwrap()
+            );
+        }
+    }
+
+    #[test]
+    fn bounded_filtered_snapshot_keeps_current_owners_across_mutation_and_store_drop() {
+        let mut store = store(256);
+        let trained = super::super::build_dense_index(
+            super::super::capture_dense_index(&store, 3)
+                .unwrap()
+                .unwrap(),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(super::super::publish_dense_index(&mut store, &trained));
+        let options = SearchOptions {
+            embedding: Some(vec![1.0, 0.0, 0.0]),
+            filter: Some(json!({"group": 0})),
+            lexical_weight: Some(0.0),
+            semantic_weight: Some(1.0),
+            min_semantic_score: Some(-1.0),
+            k: Some(10),
+            candidate_limit: Some(100),
+            ..Default::default()
+        };
+        let captured = capture_search(&store, vec![prepare_search("", &options, Some(3)).unwrap()]);
+        assert_eq!(captured.queries[0].scan.as_ref().unwrap().len(), 128);
+        let query = &captured.queries[0];
+        assert!(query
+            .dense
+            .as_ref()
+            .unwrap()
+            .search_where_limited(
+                query.prepared.embedding.as_ref().unwrap(),
+                query.prepared.limit,
+                query.prepared.minimum,
+                |document| query.prepared.matches(document),
+                query.count * 4 / 16,
+            )
+            .is_none());
+        let expected = serde_json::to_value(
+            super::super::search_impl(&store, "", &options, Some(3), false).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+            expected
+        );
+        let mut replacement = document(0, 99);
+        replacement.metadata = json!({"group": 1});
+        store.insert(replacement.id.clone(), replacement);
+        store.remove("d002").unwrap();
+        let added = document(1000, 1);
+        store.insert(added.id.clone(), added);
+        assert!(store.dense_index.is_some());
+        for fusion in ["blend", "rrf"] {
+            let options = SearchOptions {
+                fusion: Some(fusion.into()),
+                ..options.clone()
+            };
+            let fresh =
+                capture_search(&store, vec![prepare_search("", &options, Some(3)).unwrap()]);
+            let expected = serde_json::to_value(
+                super::super::search_impl(&store, "", &options, Some(3), false).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(
+                serde_json::to_value(execute_search(&fresh, 0).unwrap()).unwrap(),
+                expected
+            );
+        }
+        drop(store);
+        assert_eq!(
+            serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+            expected
+        );
+    }
+
     use super::*;
     use crate::core::encoding::TextEncoder;
     use crate::core::sync::RwLock;
@@ -2124,6 +2493,96 @@ mod tests {
                 expected,
                 "{text:?}"
             );
+        }
+    }
+
+    /// The lines of the repository changelog as one-chunk lexical documents, `every`th line
+    /// from `first`: real prose, whose common words have the long posting lists a thread keeps
+    /// decoded.
+    fn prose_store(first: usize, every: usize) -> DocumentStore {
+        let mut store = DocumentStore::default();
+        let lines = include_str!("../../../CHANGELOG.md")
+            .lines()
+            .filter(|line| line.len() >= 20);
+        for (id, line) in lines.enumerate().skip(first).step_by(every) {
+            let input = serde_json::from_value(json!({
+                "id": format!("p{id:04}"), "text": line, "chunkWords": 4096, "overlapWords": 0,
+            }))
+            .unwrap();
+            let mut document =
+                super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+            for chunk in &mut document.chunks {
+                chunk.vector_state = super::super::VectorState::Lexical;
+                chunk.vector =
+                    crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+            }
+            store.insert(document.id.clone(), document);
+        }
+        store
+    }
+
+    /// Long posting lists decoded and weighted once and reused across queries rank real prose
+    /// exactly as the exhaustive posting capture does, in the queries that build them, in the
+    /// ones that reuse them and after the checkpoint under the thread changes.
+    #[test]
+    fn decoded_hot_lists_rank_prose_as_the_exhaustive_capture() {
+        let queries: Vec<String> = include_str!("../../../CHANGELOG.md")
+            .lines()
+            .filter(|line| line.len() >= 20)
+            .step_by(5)
+            .take(40)
+            .map(str::to_owned)
+            .chain(["the", "the of and to in", "fix the cache and the index"].map(str::to_owned))
+            .collect();
+        let options = [
+            SearchOptions {
+                k: Some(10),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(100),
+                candidate_limit: Some(100),
+                bm25_k1: Some(1.6),
+                bm25_b: Some(0.4),
+                ..Default::default()
+            },
+        ];
+        for (first, every) in [(0, 1), (1, 2)] {
+            let store = prose_store(first, every);
+            let bytes = super::super::image::encode(&store, 1, 1024)
+                .unwrap()
+                .unwrap();
+            let image = ServingImage::new(super::super::Backing::Owned(bytes)).unwrap();
+            for round in 0..3 {
+                for options in &options {
+                    for text in &queries {
+                        let expected = ranked_and_exhaustive(&store, text, options).1;
+                        let mapped = CapturedSearch {
+                            queries: vec![capture_image(
+                                &image,
+                                prepare_search(text, options, None).unwrap(),
+                            )
+                            .unwrap()],
+                        };
+                        assert_eq!(
+                            serde_json::to_value(execute_search(&mapped, 0).unwrap()).unwrap(),
+                            expected,
+                            "round {round} {text:?}"
+                        );
+                    }
+                }
+                let kept = LEXICAL_SCRATCH.with(|scratch| {
+                    let scratch = scratch.borrow();
+                    (
+                        scratch.hot.postings,
+                        scratch.hot.lists.iter().map(|l| l.len()).sum::<usize>(),
+                    )
+                });
+                assert!(
+                    kept.0 > 0 && kept.0 <= HOT_POSTINGS && kept.1 > 0,
+                    "{kept:?}"
+                );
+            }
         }
     }
 

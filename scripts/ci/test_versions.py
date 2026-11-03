@@ -77,6 +77,37 @@ class VersionTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("docs/server/openapi.json is 0.0.0", result.stderr)
 
+    def test_stale_or_missing_npm_lock_versions_are_rejected(self) -> None:
+        path = self.tree / "package-lock.json"
+        original = path.read_text()
+        package = json.loads((self.tree / "package.json").read_text())
+        name = next(iter(package["optionalDependencies"]))
+        cases = (
+            ((), "version", "0.0.0"),
+            (("packages", ""), "version", "0.0.0"),
+            (("packages", ""), "version", None),
+            (("packages", "", "optionalDependencies"), name, "0.0.0"),
+            (("packages", "", "optionalDependencies"), name, None),
+            (("packages", "", "optionalDependencies"), "unexpected-platform", package["version"]),
+            (("packages", f"node_modules/{name}"), "version", "0.0.0"),
+            (("packages",), f"node_modules/{name}", None),
+            (("packages",), "", None),
+        )
+        for parents, key, value in cases:
+            with self.subTest(parents=parents, key=key, value=value):
+                lock = json.loads(original)
+                target = lock
+                for parent in parents:
+                    target = target[parent]
+                if value is None:
+                    del target[key]
+                else:
+                    target[key] = value
+                path.write_text(json.dumps(lock))
+                result = self.run_script("check-versions.py")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("package-lock.json", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

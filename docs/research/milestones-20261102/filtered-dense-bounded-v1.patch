@@ -1,0 +1,252 @@
+--- a/src/core/documents/dense.rs
++++ b/src/core/documents/dense.rs
+@@ -348,6 +348,29 @@
+         minimum: f64,
+         matches: impl Fn(&StoredDocument) -> bool,
+     ) -> (Vec<DenseHit>, usize) {
++        self.search_where_with_work::<false>(query, limit, minimum, matches, 0)
++            .expect("unlimited dense traversal exhausted its work budget")
++    }
++
++    pub(super) fn search_where_limited(
++        &self,
++        query: &[f64],
++        limit: usize,
++        minimum: f64,
++        matches: impl Fn(&StoredDocument) -> bool,
++        work: usize,
++    ) -> Option<(Vec<DenseHit>, usize)> {
++        self.search_where_with_work::<true>(query, limit, minimum, matches, work)
++    }
++
++    fn search_where_with_work<const LIMITED: bool>(
++        &self,
++        query: &[f64],
++        limit: usize,
++        minimum: f64,
++        matches: impl Fn(&StoredDocument) -> bool,
++        mut work: usize,
++    ) -> Option<(Vec<DenseHit>, usize)> {
+         assert_eq!(
+             query.len(),
+             self.dimensions,
+@@ -359,6 +382,13 @@
+         assert!(query
+             .iter()
+             .all(|value| value.is_finite() && value.abs() <= 1.0));
++        let mut spend = |cost: usize| -> Option<()> {
++            if LIMITED {
++                work = work.checked_sub(cost)?;
++            }
++            Some(())
++        };
++        spend(self.dimensions)?;
+         let mut pending = BinaryHeap::new();
+         pending.push(Candidate {
+             node: 0,
+@@ -378,6 +408,7 @@
+             let node = &self.nodes[candidate.node];
+             if let Some((left, right)) = node.children {
+                 for child in [left, right] {
++                    spend(self.dimensions)?;
+                     let upper = self.upper(child, query);
+                     if upper >= threshold {
+                         pending.push(Candidate { node: child, upper });
+@@ -385,9 +416,11 @@
+                 }
+             } else {
+                 for (row, point) in self.rows[node.start..node.end].iter().enumerate() {
++                    spend(1)?;
+                     if !matches(&point.document) {
+                         continue;
+                     }
++                    spend(self.dimensions)?;
+                     let score = point.stored().cosine(query);
+                     dots += 1;
+                     if !score.is_finite() || score < minimum {
+@@ -418,7 +451,7 @@
+                 }
+             })
+             .collect();
+-        (hits, dots)
++        Some((hits, dots))
+     }
+ }
+ 
+--- a/src/core/documents/search.rs
++++ b/src/core/documents/search.rs
+@@ -130,6 +130,7 @@
+     words: usize,
+     use_postings: bool,
+     dense: Option<Arc<DenseIndex>>,
++    scan: Option<Vec<Arc<StoredDocument>>>,
+     eligible: Option<EligibleOwners>,
+     excluded_owners: FastSet<usize>,
+     dfs: Option<[BTreeMap<String, usize>; 2]>,
+@@ -374,6 +375,7 @@
+         words,
+         use_postings,
+         dense: None,
++        scan: None,
+         eligible: None,
+         excluded_owners: FastSet::default(),
+         dfs: None,
+@@ -413,6 +415,7 @@
+         words: store.word_count,
+         use_postings: true,
+         dense: None,
++        scan: None,
+         eligible: None,
+         excluded_owners: FastSet::default(),
+         dfs: None,
+@@ -523,6 +526,7 @@
+         words: image.word_count(),
+         use_postings: true,
+         dense: None,
++        scan: None,
+         eligible: None,
+         excluded_owners: FastSet::default(),
+         dfs: None,
+@@ -583,6 +587,7 @@
+         words: source.word_count(),
+         use_postings: true,
+         dense: None,
++        scan: None,
+         eligible: None,
+         excluded_owners: FastSet::default(),
+         dfs: None,
+@@ -865,6 +870,7 @@
+     dense: Option<Arc<DenseIndex>>,
+ ) -> CapturedQuery {
+     let mut eligible = None;
++    let mut scan = None;
+     let (count, words, dfs, ranked) = if prepared.unfiltered {
+         let dfs = std::array::from_fn(|form| {
+             prepared.query_terms[form]
+@@ -897,6 +903,17 @@
+         let count: usize = documents.iter().map(|document| document.chunks.len()).sum();
+         if count < super::dense::MIN_ROWS {
+             return capture_postings(store, prepared);
++        }
++        if dense.is_some()
++            && prepared.lexical_weight == 0.0
++            && prepared.query_terms.iter().all(BTreeSet::is_empty)
++        {
++            scan = Some(
++                documents
++                    .iter()
++                    .map(|document| Arc::clone(document))
++                    .collect(),
++            );
+         }
+         let posting_work = prepared
+             .query_terms
+@@ -1067,6 +1084,7 @@
+         words,
+         use_postings: false,
+         dense,
++        scan,
+         eligible,
+         excluded_owners,
+         dfs: Some(dfs),
+@@ -1148,24 +1166,50 @@
+             .embedding
+             .as_ref()
+             .expect("indexed search lost its query embedding");
+-        let (hits, _) = if captured.prepared.unfiltered && captured.excluded_owners.is_empty() {
++        let matches = |document: &StoredDocument| {
++            captured.eligible.as_ref().map_or_else(
++                || {
++                    !captured
++                        .excluded_owners
++                        .contains(&(document as *const StoredDocument as usize))
++                        && captured.prepared.matches(document)
++                },
++                |eligible| eligible.contains(&(document as *const StoredDocument as usize)),
++            )
++        };
++        let (hits, _) = if let Some(documents) = &captured.scan {
++            let work = captured.count.saturating_mul(query.len() + 1) / 16;
++            match index.search_where_limited(
++                query,
++                captured.prepared.limit,
++                captured.prepared.minimum,
++                matches,
++                work,
++            ) {
++                Some(result) => result,
++                None => {
++                    let mut chunks = Vec::with_capacity(captured.count);
++                    for document in documents {
++                        for (index, chunk) in document.chunks.iter().enumerate() {
++                            chunks.push(CapturedChunk {
++                                document: Arc::clone(document),
++                                index,
++                                word_count: super::index::slot_words(chunk.word_count),
++                                semantic_cache: None,
++                            });
++                        }
++                    }
++                    return execute_chunks(captured, &chunks);
++                }
++            }
++        } else if captured.prepared.unfiltered && captured.excluded_owners.is_empty() {
+             index.search(query, captured.prepared.limit, captured.prepared.minimum)
+         } else {
+             index.search_where(
+                 query,
+                 captured.prepared.limit,
+                 captured.prepared.minimum,
+-                |document| {
+-                    captured.eligible.as_ref().map_or_else(
+-                        || {
+-                            !captured
+-                                .excluded_owners
+-                                .contains(&(document as *const StoredDocument as usize))
+-                                && captured.prepared.matches(document)
+-                        },
+-                        |eligible| eligible.contains(&(document as *const StoredDocument as usize)),
+-                    )
+-                },
++                matches,
+             )
+         };
+         let mut chunks = captured.chunks.clone();
+@@ -1390,7 +1434,21 @@
+ }
+ 
+ #[cfg(test)]
++include!(concat!(
++    env!("CARGO_MANIFEST_DIR"),
++    "/benchmarks/research/filtered_dense/original_capture.rs"
++));
++
++#[cfg(test)]
+ mod tests {
++    include!(concat!(
++        env!("CARGO_MANIFEST_DIR"),
++        "/benchmarks/research/filtered_dense/bounded_benchmark.rs"
++    ));
++    include!(concat!(
++        env!("CARGO_MANIFEST_DIR"),
++        "/benchmarks/research/filtered_dense/bounded_search_tests.rs"
++    ));
+     use super::*;
+     use crate::core::encoding::TextEncoder;
+     use crate::core::sync::RwLock;
+--- a/src/core/documents/dense_tests.rs
++++ b/src/core/documents/dense_tests.rs
+@@ -676,3 +676,13 @@
+         assert!(store.dense_changes.keys().map(String::len).sum::<usize>() <= MAX_DELTA_ID_BYTES);
+     }
+ }
++
++include!(concat!(
++    env!("CARGO_MANIFEST_DIR"),
++    "/benchmarks/research/filtered_dense/diagnostic.rs"
++));
++
++include!(concat!(
++    env!("CARGO_MANIFEST_DIR"),
++    "/benchmarks/research/filtered_dense/bounded_dense_tests.rs"
++));

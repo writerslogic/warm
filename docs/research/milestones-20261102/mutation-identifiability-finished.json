@@ -1,0 +1,53 @@
+{
+  "complete": true,
+  "failure": null,
+  "cases": 2115,
+  "winnerQueries": 48306,
+  "cells": [
+    {
+      "rows": 2,
+      "outputs": 2,
+      "bound": 5,
+      "cases": 625,
+      "projectiveClasses": 607,
+      "winnerQueries": 8440,
+      "exhaustive": true,
+      "pass": true
+    },
+    {
+      "rows": 2,
+      "outputs": 3,
+      "bound": 3,
+      "cases": 729,
+      "projectiveClasses": 727,
+      "winnerQueries": 10530,
+      "exhaustive": true,
+      "pass": true
+    },
+    {
+      "rows": 3,
+      "outputs": 2,
+      "bound": 3,
+      "cases": 729,
+      "projectiveClasses": 727,
+      "winnerQueries": 10530,
+      "exhaustive": true,
+      "pass": true
+    },
+    {
+      "rows": 8,
+      "outputs": 8,
+      "bound": 31,
+      "cases": 32,
+      "projectiveClasses": 32,
+      "winnerQueries": 18806,
+      "exhaustive": false,
+      "pass": true
+    }
+  ],
+  "freezeSha256": "37b5e756103656293c38c4a1fb945dfdb9fe7f28fbfdc18fbb53c7c6a0e21b04",
+  "evidenceSha256": {
+    "queries.ndjson": "b737d33245150243c51b64fcaafcf6ed47800c80fc00924c5d22e6f08c9636a0",
+    "cases.ndjson": "c63ebc4aa9a030f7fa2e68b64901eeb526e4c2683ca7db7952ad073357f88dfe"
+  }
+}

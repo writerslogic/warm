@@ -1,0 +1,29 @@
+{
+  "archive": "/Volumes/A/.hms-bench-cache/warm-witness-reproduction-20261103-v1/witness-reproduction-v1.tar.gz",
+  "archiveBytes": 53247,
+  "archiveSha256": "7e200ab655cb18c2e0f8db9838fbe6a8ecc50cd9969aba179815549cf66c1967",
+  "checkedAt": "2026-11-03T14:41:07.157116+00:00",
+  "complete": true,
+  "files": 26,
+  "independenceVerified": false,
+  "manifestSha256": "9074ac17e4e5bfdbfdde6d3f58320e7af66ca758ee3193ea8c105207132e4c0a",
+  "reproduction": {
+    "benchmarkClaim": false,
+    "complete": true,
+    "independenceVerified": false,
+    "manifestSha256": "9074ac17e4e5bfdbfdde6d3f58320e7af66ca758ee3193ea8c105207132e4c0a",
+    "matchedOutputs": 13,
+    "python": "3.12.12 (main, Nov 19 2025, 22:30:44) [Clang 21.1.4 ]",
+    "result": {
+      "cases": 11,
+      "complete": true,
+      "existingCheckerCases": 5,
+      "freezeSha256": "0a6e2f66a35fbfd85b00f0c76c213e63b615de5e331564c2a3312d7e642eef9b",
+      "gatePass": true,
+      "readoutComparisons": 8188
+    },
+    "scientificResultReproduced": true,
+    "scope": "Positive-evidence deletion-bound construction; no system advantage"
+  },
+  "tamperedSourceRejectedBeforeRun": true
+}

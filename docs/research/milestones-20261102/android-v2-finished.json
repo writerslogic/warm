@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "instrumentation did not pass the exact declared cohort",
+    "type": "ValueError"
+  }
+}

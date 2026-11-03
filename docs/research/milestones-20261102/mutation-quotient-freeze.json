@@ -1,0 +1,56 @@
+{
+  "plan": {
+    "schema": "warm.mutation-quotient/1",
+    "question": "Can an exact representation compiler determine the state required by future mutations, rather than selecting a compression solely from current answers?",
+    "status": "Mechanism screen using established observability algebra; no novelty or product advantage claimed.",
+    "state": "A finite association table flattened to a rational vector. Each row contributes to every output under a supplied cue weight.",
+    "observations": "All per-row output-score contrasts relative to output zero. These determine every linear soft-cue argmax, including ties. Preserving contrasts is stronger than preserving argmax alone.",
+    "mutations": [
+      "Delete or replace an entire contribution row",
+      "Delete or replace an individual contribution cell"
+    ],
+    "algorithm": "Close the observation row space under right multiplication by every allowed deletion mask; use the resulting canonical exact rational basis as the encoding. Compile compressed mutation matrices and readout matrices by exact row-space coordinates. Replacement adds an explicitly supplied new row or cell after deletion.",
+    "proofObligations": [
+      "C = R E for every original observation",
+      "E D = U_D E for every allowed deletion mask",
+      "Compiled updates equal full-state update followed by fresh encoding",
+      "A raw-state reconstruction claim is forbidden when rank is smaller than state dimension"
+    ],
+    "screen": {
+      "rows": 2,
+      "outputs": 3,
+      "weights": [
+        0,
+        1,
+        2
+      ],
+      "allInitialStates": 729,
+      "cueGridDenominator": 20,
+      "mutationSequenceLength": 1000,
+      "seed": 829,
+      "scaleRankCases": [
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          4,
+          8
+        ]
+      ]
+    },
+    "reject": "Any failed matrix identity, fresh-encoding mismatch or readout mismatch rejects the compiler. Full closure rank rejects linear state compression for that operation contract; do not remove required mutations to manufacture compression.",
+    "limits": "This is exact algebra over a restricted linear association contract. It does not store source text, provenance or arbitrary temporal facts. Rank reductions are not byte or process-memory reductions; encoding values, operators and their numeric widths must be charged before any performance claim.",
+    "researchBoundary": "Row-space closure and unobservable invariant subspaces are established control theory, not a new theorem. A useful future contribution would need a scalable memory representation/algorithm with capabilities or costs unavailable to strong existing controls."
+  },
+  "sources": {
+    "PLAN.json": "b1145e33d413f1197801130968f63d8888940b3a75a75558e6ab59d3a33c47eb",
+    "probe.py": "6308b37743b2a06be35f9e39da044f316eccb7547fdab339891e69e6d9580063",
+    "test_probe.py": "75335d2db9d7d681d58da8fdf8a8e0cc7b1d1f46c34ebeeedfa7b0787186d95d"
+  },
+  "started": "2026-11-03T07:36:23Z"
+}

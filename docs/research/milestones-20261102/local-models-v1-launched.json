@@ -1,0 +1,6 @@
+{
+  "pid": 57095,
+  "launchedAt": "2026-11-03T18:53:16.829861+00:00",
+  "requestSha256": "caf43c9411cbafc4d95de72134506159523e42942f5932d6346bc16bde1c2759",
+  "scope": "Waiting for integration qualification after the serving sequence; weights have not been loaded."
+}

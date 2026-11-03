@@ -1,0 +1,23 @@
+{
+  "complete": true,
+  "completedAt": "2026-11-03T15:58:02.376173+00:00",
+  "freezeSha256": "4e01e83d9c01930d43ec0157174340f43580be7c7dc343eb6da2bcc008e1dea0",
+  "installed": "/Users/davidcondrey/.cache/warm-ios-simulator-consumer-v4",
+  "installedFilesSha256": "129de5add0adad3a133bb08b496e3b36abf8af5c88264d94e50eb1b6dde8d3e9",
+  "logs": {
+    "launcher.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "prior-simulator-state.log": "486ead67c9608a0a52dea818f64d12e9b987db178d618917b66174a3f14b7b94",
+    "simulator-boot.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "simulator-create.log": "622bf115f5e648520b279ebe2e046f0ad3710a35f153af11d583f5e9a90b0d62",
+    "simulator-ready.log": "d7a7273dbd9691122da3c6402527c19dcf600a10279e1eadd54ebb9044443de6",
+    "simulator-shutdown.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "swift-consumer-tests.log": "c9609ffdf5e853e6d247f9abbc5ef789325d1618a4f18f9a35de2de27b1f9360",
+    "xcresult-summary.log": "00b38fa2d37fabcf830205cf126543694027eeb3deef248303b68bf0fb2feb5a"
+  },
+  "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+  "scope": "iOS 27.0 arm64 simulator lifecycle only; no physical-device, legacy migration or process-death claim",
+  "simulator": "EB541DCE-6600-4874-A023-1CB7361773CC",
+  "swiftArchiveSha256": "cb2a922e7dab902394eca94833f43f06c5039c4d5b615bd94be6333551835ef6",
+  "swiftTests": 7,
+  "testSummarySha256": "36e90affe4a71d782901ba90b7e662426d6281f80e579f4497ac4a96ac67c490"
+}

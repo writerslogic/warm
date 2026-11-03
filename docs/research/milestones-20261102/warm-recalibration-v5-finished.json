@@ -1,0 +1,18 @@
+{
+  "binarySha256": "b61f4e70bcddb3673ef551ea921903124d364b6fb34dc48bb01af8642bd58709",
+  "cases": [
+    {
+      "dataset": "coco-i2i-512-angular",
+      "selection": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-warm-coco-i2i-512-angular-v5/selection.json",
+      "selectionSha256": "52bba8390c4bc76cdd5e5356c91c8e73cdd6ecdf50c08252e7349de73271b56d"
+    },
+    {
+      "dataset": "deep-image-96-angular",
+      "selection": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-warm-deep-image-96-angular-v5/selection.json",
+      "selectionSha256": "307ca8910f1178ff0413639351ee7c5e759a3ea2897a3ee528d8e384bed00841"
+    }
+  ],
+  "complete": true,
+  "completedAt": "2026-11-03T14:48:57.155728+00:00",
+  "driverArchiveSha256": "fba17b05dc9c207c7acf896c2e7f35cda844754f7006fb008175a35a5639ac50"
+}

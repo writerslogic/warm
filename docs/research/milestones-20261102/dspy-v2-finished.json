@@ -1,0 +1,34 @@
+{
+  "complete": true,
+  "completedAt": "2026-11-03T18:21:17.678513+00:00",
+  "freezeSha256": "fa1581edd06e9485b473796e4a83ff3826a68b3a04cca29ac7040c981c7f8408",
+  "model": "DSPy DummyLM and local hashing/deterministic embeddings; no answer-quality claim",
+  "network": "Private loopback-only namespace, ordinary user, no inherited service credentials",
+  "pending": [
+    "Other integration packages and hosts",
+    "Migration and remaining recovery surfaces"
+  ],
+  "results": {
+    "integrations": {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 11
+      },
+      "functions": 11,
+      "reportSha256": "92313c53f455713e93211c9de1126c1c97371dfd7d6adb80037fb2e4490982d3"
+    },
+    "sdk": {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 9
+      },
+      "functions": 4,
+      "reportSha256": "21a0d22eafb11497477f7a13ff68cf855bb75d10e20c224158017ffd7190003b"
+    }
+  },
+  "scope": "Fresh wheel consumers on Linux arm64 / Python 3.12.12, pinned documented DSPy profile"
+}

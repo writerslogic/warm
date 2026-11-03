@@ -1,0 +1,28 @@
+{
+  "complete": true,
+  "consumers": [
+    {
+      "python": "3.9.6",
+      "numpy": "2.0.2",
+      "pytest": "8.3.5",
+      "lockSha256": "b591c71facf69d49c00d53dfab07fab73a3e988f1d095986d6c7494a43d73e49"
+    },
+    {
+      "python": "3.12.12",
+      "numpy": "2.0.2",
+      "pytest": "8.3.5",
+      "lockSha256": "e20dbe490812ce5c5ac1a3ed776dc29a7933ab925dc16f47d566374ac6127cd6"
+    },
+    {
+      "python": "3.14.7",
+      "numpy": "2.5.4",
+      "pytest": "9.2.0",
+      "lockSha256": "93962cb872dd3b73988d9e96d21389e36719da5f58b47941973235afdf57188c"
+    }
+  ],
+  "artifacts": {
+    "warm_python-0.6.5.tar.gz": "fe17735deea2371e24a7ed2c2c13b223355e3ec63ac57a965729e60346a03207",
+    "warm_python-0.6.5-cp39-abi3-macosx_11_0_arm64.whl": "e45356597e82edb63f6fbc424bf99165fd2369ae1ef42e2a64271c3821c114d8"
+  },
+  "freezeSha256": "4d2123879d6c230a4fb3453ec4b33b7bce236d5358aaa00dca5ea09876f1e357"
+}

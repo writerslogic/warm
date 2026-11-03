@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "server-tests failed with exit 101",
+    "type": "RuntimeError"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "AAR changed native member: jni/arm64-v8a/libwarm_mobile.so",
+    "type": "ValueError"
+  }
+}

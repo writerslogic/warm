@@ -1,0 +1,11 @@
+test_dedup_keeps_first_identity_only_when_vector_bytes_match (__main__.PrefixTests.test_dedup_keeps_first_identity_only_when_vector_bytes_match) ... ok
+test_fp16_rows_match_independent_scalar_reference_and_full_control (__main__.PrefixTests.test_fp16_rows_match_independent_scalar_reference_and_full_control) ... ok
+test_gold_session_coverage_deduplicates_returned_turns (__main__.PrefixTests.test_gold_session_coverage_deduplicates_returned_turns) ... ok
+test_malformed_vectors_and_invalid_limits_fail (__main__.PrefixTests.test_malformed_vectors_and_invalid_limits_fail) ... ok
+test_prefix_renormalization_and_deterministic_ties (__main__.PrefixTests.test_prefix_renormalization_and_deterministic_ties) ... ok
+test_shortlist_can_miss_full_winner_and_reranking_cannot_restore_it (__main__.PrefixTests.test_shortlist_can_miss_full_winner_and_reranking_cannot_restore_it) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.087s
+
+OK

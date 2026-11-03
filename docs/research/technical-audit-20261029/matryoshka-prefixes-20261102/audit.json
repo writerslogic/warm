@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "method": "stdlib audit of saved identities, hashes, denominators and aggregates; no vector scoring",
+  "questions": 100,
+  "query_routes": 1200,
+  "plan_commit": "d1b8853d599754be194d44986554e1128cc77153",
+  "checker_sha256": "69cd0bf2fb48c40a0390b4758f197f07548d09696ade8e71b5d259223d173724",
+  "validated_artifacts": {
+    "plan.json": "00a539928977366c3aa1e7761cc7ff0492a894712d794084c8d0448ba52333de",
+    "mapping.json.gz": "b2aa6251cf6ed656849513816bf70b88459703e3a145a0952600819bd654e919",
+    "per-query.jsonl.gz": "51e349cab3ac6d31972d8fed636c299773b2a87001bcc9e232927565a84d3b5e",
+    "summary.json": "682bacfaf85c4a4983af4dfd130a336d7376ddcf4141b03ebe3ffa97ebfc2bee",
+    "run.json": "57dfbb15834c3f6fc3accfdf5f6861967ed6528d5955c3c10d7b37553fbc0be1"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "frozenAt": "2026-11-03T12:24:11.072919+00:00",
+  "files": {
+    "PLAN.json": "97c9a10d22d7625707c52e8671891a43750c50cc5be86861a5ed0442764335e1",
+    "recovery.c": "0437af0e54ed6b2dd0de780665d6be9e7fa917dc1d75f64609cfc557c01ae2a2",
+    "recovery.go": "f3609aa73f3b78d8b4491d17e0f2e989f6c8dac66e68943aa1786bd0499ade6d",
+    "RecoveryConsumer.java": "49663a4fb4aa394b2b0fe2d3c121f4ad3e918f8b35ca1d0b48d05f61c3c7461c",
+    "Program.cs": "dda8968c7476b9977dd02d2beede961120c1737282e916e13fd09c87875a5763",
+    "run.py": "9f728f648d9bc68ec56b510abd308c4b8ab1d9ed878569715d129e0405ae084b",
+    "test_protocol.py": "eafb677ea459d0d34b7c5ae0b78be615cef0241c955daee8cdbf05b307dc7d3c"
+  },
+  "familyFreezeSha256": "e00b3af33801f62edfe51e2107173b28ec4b0e9b628d0d98f61570b554e10951",
+  "validated": "C syntax and two Python acknowledgement protocol tests; runtime consumers remain uncompiled/unexecuted until artifacts qualify"
+}

@@ -1,0 +1,13 @@
+{
+  "CheckedAt": "2026-11-03T12:29:05.3852810Z",
+  "ExistingKnownPaths": [
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+  ],
+  "VisualStudio": {
+    "value": [],
+    "Count": 0
+  },
+  "DotnetSdks": [
+    "8.0.427 [C:\\Program Files\\dotnet\\sdk]"
+  ]
+}

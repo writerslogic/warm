@@ -1,0 +1,9 @@
+{
+  "firstSampleCommandFailures": 0,
+  "freezeSha256": "25db4682c68d88c949649c123c9b8c363375277174cb1456995a639be154e004",
+  "isolationPassed": false,
+  "pid": 54463,
+  "rawDirectory": "/Users/davidcondrey/.cache/warm-serving-isolation-20261103-v1",
+  "started": true,
+  "startedAt": "2026-11-03T18:23:48.426203+00:00"
+}

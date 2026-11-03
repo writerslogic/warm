@@ -1,0 +1,38 @@
+{
+  "artifacts": {
+    "dist/WritersLogic.WarmMemory.0.1.0.nupkg": "ff11e398866e7322e566023cf21ab2c1d3bccc2152e1fe31ac157be0593784ad",
+    "dist/writerslogic-warm-c-0.1.0-linux-arm64.tar.gz": "03beeed1eade1daa7046ee417c89f86636b99d0e8ee6fe5f1090eff1e3c9c463",
+    "installed-c/writerslogic-warm-c-0.1.0-linux-arm64/lib/libwriterslogic_warm_c.a": "52a51235fa474c841235f702427e810f61cd210b3da80d6e0abd1b0f28479382",
+    "installed-c/writerslogic-warm-c-0.1.0-linux-arm64/lib/libwriterslogic_warm_c.so": "1c83e71b32cccccc8f5befb67956f71fcc4cecdcd5c62e83bf391a4332c601fd",
+    "work/bindings/java/target/writerslogic-warm-0.1.0.jar": "9994cce1d3c6d18f82ae9dc5bf5d36016a7385d48006605f63e58c5fa25f42af"
+  },
+  "complete": true,
+  "completedAt": "2026-11-03T13:04:50.405165+00:00",
+  "dotnetTests": {
+    "aborted": "0",
+    "completed": "0",
+    "disconnected": "0",
+    "error": "0",
+    "executed": "19",
+    "failed": "0",
+    "inProgress": "0",
+    "inconclusive": "0",
+    "notExecuted": "0",
+    "notRunnable": "0",
+    "passed": "19",
+    "passedButRunAborted": "0",
+    "pending": "0",
+    "timeout": "0",
+    "total": "19",
+    "warning": "0"
+  },
+  "freezeSha256": "c2e8fa47d9ff6b415910b9a0a63dd1f5e2fe7fa308ce2e3a149d976f004e7746",
+  "goTestPasses": 15,
+  "javaTests": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 30
+  },
+  "scope": "Linux arm64 glibc C packaged static/shared, Go source consumer with race checks, installed Java jar and .NET package tests; explicit crash/migration and other OS targets remain open"
+}
