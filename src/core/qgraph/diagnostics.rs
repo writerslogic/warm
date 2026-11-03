@@ -22,6 +22,30 @@ pub struct TraversalDiagnostic {
     pub rerank_candidates: Vec<u32>,
 }
 
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum NavigationEvent {
+    Offer {
+        id: u32,
+        stored_id: u32,
+        parent: Option<u32>,
+        distance: f32,
+        worst: Option<(f32, u32)>,
+        admitted: bool,
+        evicted: Option<u32>,
+    },
+    Expand {
+        id: u32,
+    },
+}
+
+#[derive(Debug)]
+pub struct NavigationDiagnostic {
+    pub stages: TraversalDiagnostic,
+    pub entry: u32,
+    pub events: Vec<NavigationEvent>,
+}
+
 #[derive(Clone, Copy, Debug)]
 struct Candidate(f64, u32);
 
@@ -420,6 +444,9 @@ mod tests {
                 .diagnose(&graph, query, 7, params, None, false)
                 .unwrap();
             assert_eq!(report.results, production);
+            let navigation = index.diagnose_navigation(&graph, query, 7, params).unwrap();
+            assert_eq!(navigation.stages.results, production);
+            assert_eq!(navigation.stages.evaluated, report.evaluated);
             assert!(report
                 .retained
                 .iter()

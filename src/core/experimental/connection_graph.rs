@@ -132,7 +132,7 @@ impl ConnectionGraph {
             .read(true)
             .write(true)
             .open(&path)?;
-        file.try_lock().map_err(|error| match error {
+        crate::core::durable_file::try_lock_exclusive(&file).map_err(|error| match error {
             TryLockError::WouldBlock => std::io::Error::new(
                 std::io::ErrorKind::WouldBlock,
                 "connection graph is already open by a writer",

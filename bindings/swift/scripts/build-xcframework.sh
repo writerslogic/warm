@@ -28,6 +28,8 @@ if [ "${VISIONOS:-0}" = 1 ]; then slices="$slices visionos visionos-sim"; fi
 export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-15.0}"
 export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-12.0}"
 export XROS_DEPLOYMENT_TARGET="${XROS_DEPLOYMENT_TARGET:-1.0}"
+# Even debuginfo stripping can misalign Mach-O dylibs: rust-lang/rust#157750.
+export CARGO_PROFILE_RELEASE_STRIP="${CARGO_PROFILE_RELEASE_STRIP:-none}"
 
 command -v xcodebuild >/dev/null || { echo "xcodebuild not found: install Xcode" >&2; exit 1; }
 command -v rustup >/dev/null || { echo "rustup not found" >&2; exit 1; }
