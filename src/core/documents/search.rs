@@ -130,6 +130,7 @@ struct CapturedQuery {
     words: usize,
     use_postings: bool,
     dense: Option<Arc<DenseIndex>>,
+    scan: Option<Vec<Arc<StoredDocument>>>,
     eligible: Option<EligibleOwners>,
     excluded_owners: FastSet<usize>,
     dfs: Option<[BTreeMap<String, usize>; 2]>,
@@ -374,6 +375,7 @@ fn capture_postings(store: &DocumentStore, prepared: PreparedSearch) -> Captured
         words,
         use_postings,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -413,6 +415,7 @@ fn capture_ranked_lexical(store: &DocumentStore, prepared: PreparedSearch) -> Ca
         words: store.word_count,
         use_postings: true,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -523,6 +526,7 @@ fn capture_image(image: &ServingImage, prepared: PreparedSearch) -> anyhow::Resu
         words: image.word_count(),
         use_postings: true,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -583,6 +587,7 @@ fn capture_overlaid(
         words: source.word_count(),
         use_postings: true,
         dense: None,
+        scan: None,
         eligible: None,
         excluded_owners: FastSet::default(),
         dfs: None,
@@ -865,6 +870,7 @@ fn capture_planned_query(
     dense: Option<Arc<DenseIndex>>,
 ) -> CapturedQuery {
     let mut eligible = None;
+    let mut scan = None;
     let (count, words, dfs, ranked) = if prepared.unfiltered {
         let dfs = std::array::from_fn(|form| {
             prepared.query_terms[form]
@@ -897,6 +903,17 @@ fn capture_planned_query(
         let count: usize = documents.iter().map(|document| document.chunks.len()).sum();
         if count < super::dense::MIN_ROWS {
             return capture_postings(store, prepared);
+        }
+        if dense.is_some()
+            && prepared.lexical_weight == 0.0
+            && prepared.query_terms.iter().all(BTreeSet::is_empty)
+        {
+            scan = Some(
+                documents
+                    .iter()
+                    .map(|document| Arc::clone(document))
+                    .collect(),
+            );
         }
         let posting_work = prepared
             .query_terms
@@ -1067,6 +1084,7 @@ fn capture_planned_query(
         words,
         use_postings: false,
         dense,
+        scan,
         eligible,
         excluded_owners,
         dfs: Some(dfs),
@@ -1148,24 +1166,50 @@ fn execute_query(captured: &CapturedQuery) -> Vec<RankedHit> {
             .embedding
             .as_ref()
             .expect("indexed search lost its query embedding");
-        let (hits, _) = if captured.prepared.unfiltered && captured.excluded_owners.is_empty() {
+        let matches = |document: &StoredDocument| {
+            captured.eligible.as_ref().map_or_else(
+                || {
+                    !captured
+                        .excluded_owners
+                        .contains(&(document as *const StoredDocument as usize))
+                        && captured.prepared.matches(document)
+                },
+                |eligible| eligible.contains(&(document as *const StoredDocument as usize)),
+            )
+        };
+        let (hits, _) = if let Some(documents) = &captured.scan {
+            let work = captured.count.saturating_mul(query.len() + 1) / 16;
+            match index.search_where_limited(
+                query,
+                captured.prepared.limit,
+                captured.prepared.minimum,
+                matches,
+                work,
+            ) {
+                Some(result) => result,
+                None => {
+                    let mut chunks = Vec::with_capacity(captured.count);
+                    for document in documents {
+                        for (index, chunk) in document.chunks.iter().enumerate() {
+                            chunks.push(CapturedChunk {
+                                document: Arc::clone(document),
+                                index,
+                                word_count: super::index::slot_words(chunk.word_count),
+                                semantic_cache: None,
+                            });
+                        }
+                    }
+                    return execute_chunks(captured, &chunks);
+                }
+            }
+        } else if captured.prepared.unfiltered && captured.excluded_owners.is_empty() {
             index.search(query, captured.prepared.limit, captured.prepared.minimum)
         } else {
             index.search_where(
                 query,
                 captured.prepared.limit,
                 captured.prepared.minimum,
-                |document| {
-                    captured.eligible.as_ref().map_or_else(
-                        || {
-                            !captured
-                                .excluded_owners
-                                .contains(&(document as *const StoredDocument as usize))
-                                && captured.prepared.matches(document)
-                        },
-                        |eligible| eligible.contains(&(document as *const StoredDocument as usize)),
-                    )
-                },
+                matches,
             )
         };
         let mut chunks = captured.chunks.clone();
@@ -1391,6 +1435,203 @@ fn score_chunks(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn bounded_filtered_scan_preserves_missing_embeddings_and_minimum_scores() {
+        let mut store = DocumentStore::default();
+        for id in 0..257 {
+            let mut document = document(id, 1);
+            if id % 3 == 0 {
+                document.chunks[0].embedding = None;
+            }
+            store.insert(document.id.clone(), document);
+        }
+        let trained = super::super::build_dense_index(
+            super::super::capture_dense_index(&store, 3)
+                .unwrap()
+                .unwrap(),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(super::super::publish_dense_index(&mut store, &trained));
+        for fusion in ["blend", "rrf"] {
+            for minimum in [-1.0, 0.0, 0.9, 1.0] {
+                let options = SearchOptions {
+                    embedding: Some(vec![1.0, 0.0, 0.0]),
+                    filter: Some(json!({"group": 0})),
+                    lexical_weight: Some(0.0),
+                    semantic_weight: Some(1.0),
+                    min_semantic_score: Some(minimum),
+                    fusion: Some(fusion.into()),
+                    k: Some(10),
+                    candidate_limit: Some(100),
+                    ..Default::default()
+                };
+                let captured =
+                    capture_search(&store, vec![prepare_search("", &options, Some(3)).unwrap()]);
+                assert!(captured.queries[0].scan.is_some());
+                let expected =
+                    super::super::search_impl(&store, "", &options, Some(3), false).unwrap();
+                assert_eq!(
+                    serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+                    serde_json::to_value(expected).unwrap()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn bounded_filtered_pruning_merges_live_deltas_and_excludes_replaced_rows() {
+        let document = |id: usize, positive: bool| {
+            let vector = if positive {
+                vec![1.0, 0.0]
+            } else {
+                vec![-1.0, (id % 5) as f64 / 100.0]
+            };
+            let input =
+                serde_json::from_value(json!({"id": format!("d{id:04}"), "text": "current owner",
+                "metadata": {"group": id % 2}, "embeddings": [vector]}))
+                .unwrap();
+            super::super::prepare(input, 1024, Some(2), TextEncoder::default()).unwrap()
+        };
+        let mut store = DocumentStore::default();
+        for id in 0..8192 {
+            let document = document(id, id < 256);
+            store.insert(document.id.clone(), document);
+        }
+        let trained = super::super::build_dense_index(
+            super::super::capture_dense_index(&store, 2)
+                .unwrap()
+                .unwrap(),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(super::super::publish_dense_index(&mut store, &trained));
+        let replacement = document(0, false);
+        store.insert(replacement.id.clone(), replacement);
+        store.remove("d0002").unwrap();
+        let mut added = document(8192, true);
+        added.id = "a-new".into();
+        store.insert(added.id.clone(), added);
+        assert!(store.dense_index.is_some());
+        for fusion in ["blend", "rrf"] {
+            let options = SearchOptions {
+                embedding: Some(vec![1.0, 0.0]),
+                filter: Some(json!({"group": 0})),
+                lexical_weight: Some(0.0),
+                semantic_weight: Some(1.0),
+                min_semantic_score: Some(-1.0),
+                fusion: Some(fusion.into()),
+                k: Some(50),
+                candidate_limit: Some(100),
+                ..Default::default()
+            };
+            let captured =
+                capture_search(&store, vec![prepare_search("", &options, Some(2)).unwrap()]);
+            let query = &captured.queries[0];
+            let (_, dots) = query
+                .dense
+                .as_ref()
+                .unwrap()
+                .search_where_limited(
+                    query.prepared.embedding.as_ref().unwrap(),
+                    query.prepared.limit,
+                    query.prepared.minimum,
+                    |document| {
+                        !query
+                            .excluded_owners
+                            .contains(&(document as *const StoredDocument as usize))
+                            && query.prepared.matches(document)
+                    },
+                    query.count * 3 / 16,
+                )
+                .unwrap();
+            assert!(dots < query.count);
+            let expected = super::super::search_impl(&store, "", &options, Some(2), false).unwrap();
+            assert!(expected.iter().any(|hit| hit.document_id == "a-new"));
+            assert!(!expected
+                .iter()
+                .any(|hit| matches!(hit.document_id.as_str(), "d0000" | "d0002")));
+            assert_eq!(
+                serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+                serde_json::to_value(expected).unwrap()
+            );
+        }
+    }
+
+    #[test]
+    fn bounded_filtered_snapshot_keeps_current_owners_across_mutation_and_store_drop() {
+        let mut store = store(256);
+        let trained = super::super::build_dense_index(
+            super::super::capture_dense_index(&store, 3)
+                .unwrap()
+                .unwrap(),
+        )
+        .unwrap()
+        .unwrap();
+        assert!(super::super::publish_dense_index(&mut store, &trained));
+        let options = SearchOptions {
+            embedding: Some(vec![1.0, 0.0, 0.0]),
+            filter: Some(json!({"group": 0})),
+            lexical_weight: Some(0.0),
+            semantic_weight: Some(1.0),
+            min_semantic_score: Some(-1.0),
+            k: Some(10),
+            candidate_limit: Some(100),
+            ..Default::default()
+        };
+        let captured = capture_search(&store, vec![prepare_search("", &options, Some(3)).unwrap()]);
+        assert_eq!(captured.queries[0].scan.as_ref().unwrap().len(), 128);
+        let query = &captured.queries[0];
+        assert!(query
+            .dense
+            .as_ref()
+            .unwrap()
+            .search_where_limited(
+                query.prepared.embedding.as_ref().unwrap(),
+                query.prepared.limit,
+                query.prepared.minimum,
+                |document| query.prepared.matches(document),
+                query.count * 4 / 16,
+            )
+            .is_none());
+        let expected = serde_json::to_value(
+            super::super::search_impl(&store, "", &options, Some(3), false).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+            expected
+        );
+        let mut replacement = document(0, 99);
+        replacement.metadata = json!({"group": 1});
+        store.insert(replacement.id.clone(), replacement);
+        store.remove("d002").unwrap();
+        let added = document(1000, 1);
+        store.insert(added.id.clone(), added);
+        assert!(store.dense_index.is_some());
+        for fusion in ["blend", "rrf"] {
+            let options = SearchOptions {
+                fusion: Some(fusion.into()),
+                ..options.clone()
+            };
+            let fresh =
+                capture_search(&store, vec![prepare_search("", &options, Some(3)).unwrap()]);
+            let expected = serde_json::to_value(
+                super::super::search_impl(&store, "", &options, Some(3), false).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(
+                serde_json::to_value(execute_search(&fresh, 0).unwrap()).unwrap(),
+                expected
+            );
+        }
+        drop(store);
+        assert_eq!(
+            serde_json::to_value(execute_search(&captured, 0).unwrap()).unwrap(),
+            expected
+        );
+    }
+
     use super::*;
     use crate::core::encoding::TextEncoder;
     use crate::core::sync::RwLock;
