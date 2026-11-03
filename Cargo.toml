@@ -512,3 +512,8 @@ path = "src/bin/research/resonator-sweep.rs"
 [[bin]]
 name = "ridge-memory"
 path = "src/bin/research/ridge-memory.rs"
+
+[[bin]]
+name = "fpe-timestamps-eval"
+path = "src/bin/research/fpe-timestamps-eval.rs"
+required-features = ["experimental", "cli"]
