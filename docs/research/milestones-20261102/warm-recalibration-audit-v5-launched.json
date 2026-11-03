@@ -1,0 +1,7 @@
+{
+  "launchedAt": "2026-11-03T14:47:35.019554+00:00",
+  "pid": 59132,
+  "scriptSha256": "fcbcf8eaf22d6fb52118bb7fd1535eec8e6cb1407e37afb17c2cfb8e95ccbc3b",
+  "waitingFor": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/warm-recalibration-v5/finished.json",
+  "scope": "Only changed WARM calibration responses; no held-out data"
+}

@@ -1,0 +1,18 @@
+{
+  "cells": 36,
+  "complete": true,
+  "completedAt": "2026-11-03T16:31:35.718787+00:00",
+  "developmentGatePass": false,
+  "freezeSha256": "64df4d0a793916b6fbb59680797e675941c952248b5cebf0ab6178ae37ead414",
+  "outputs": {
+    "native.log": "e81fcc08253d1e7c5cbcf11a6c1c2897d3039f33dafcb167247573e9a024f5e6",
+    "output/queries.ndjson": "13633c05e39cfeebd6174163bb8fb726067bd711bad725d065f16ec36ef8c8b0",
+    "prerequisite.json": "af67271d9cabda44fb540f61ae9ceb6fe0ca835bfcf8282ea079b878ae9b1899",
+    "summary.json": "a422e59538f8ee1e3ada6cb24d6ccf3c1ec2ca9fd8658240431258f1ad451ff1"
+  },
+  "pairedComparisons": 6912,
+  "productionChanged": false,
+  "qualification": false,
+  "queryRows": 3456,
+  "rustcVersion": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: aarch64-apple-darwin\nrelease: 1.96.0\nLLVM version: 22.1.2\n"
+}

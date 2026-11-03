@@ -1,0 +1,162 @@
+{
+  "benchmarkClaim": false,
+  "cases": [
+    {
+      "bothPacketsIdentical": true,
+      "case": "independent-guards-16-5201",
+      "inheritedSnapshotWithdrawalChecks": 548,
+      "medians": {
+        "symbolic": 0.00044049997813999653,
+        "trace": 0.0015197920147329569
+      },
+      "packetBytes": 4367,
+      "symbolicToTraceConstructionRatio": 0.28984227701538284
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "independent-guards-16-5202",
+      "inheritedSnapshotWithdrawalChecks": 548,
+      "medians": {
+        "symbolic": 0.00043533300049602985,
+        "trace": 0.001666500000283122
+      },
+      "packetBytes": 4546,
+      "symbolicToTraceConstructionRatio": 0.26122592284552715
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "independent-guards-64-5201",
+      "inheritedSnapshotWithdrawalChecks": 8324,
+      "medians": {
+        "symbolic": 0.00044570816680788994,
+        "trace": 0.0019114578608423471
+      },
+      "packetBytes": 4548,
+      "symbolicToTraceConstructionRatio": 0.2331770822357935
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "independent-guards-64-5202",
+      "inheritedSnapshotWithdrawalChecks": 8068,
+      "medians": {
+        "symbolic": 0.0004377500154078007,
+        "trace": 0.0018037499394267797
+      },
+      "packetBytes": 4551,
+      "symbolicToTraceConstructionRatio": 0.2426888593808712
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "joint-guards-16-5201",
+      "inheritedSnapshotWithdrawalChecks": 548,
+      "medians": {
+        "symbolic": 0.002076457953080535,
+        "trace": 0.003228291869163513
+      },
+      "packetBytes": 24550,
+      "symbolicToTraceConstructionRatio": 0.6432063881567711
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "joint-guards-16-5202",
+      "inheritedSnapshotWithdrawalChecks": 548,
+      "medians": {
+        "symbolic": 0.0022537079639732838,
+        "trace": 0.0033839158713817596
+      },
+      "packetBytes": 24750,
+      "symbolicToTraceConstructionRatio": 0.6660059084308806
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "joint-guards-64-5201",
+      "inheritedSnapshotWithdrawalChecks": 8324,
+      "medians": {
+        "symbolic": 0.0025259589310735464,
+        "trace": 0.006665833061560988
+      },
+      "packetBytes": 26584,
+      "symbolicToTraceConstructionRatio": 0.37894122276173886
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "joint-guards-64-5202",
+      "inheritedSnapshotWithdrawalChecks": 8068,
+      "medians": {
+        "symbolic": 0.002377999946475029,
+        "trace": 0.006282416870817542
+      },
+      "packetBytes": 27249,
+      "symbolicToTraceConstructionRatio": 0.37851673891955145
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "unconditional-16-5201",
+      "inheritedSnapshotWithdrawalChecks": 548,
+      "medians": {
+        "symbolic": 0.001298458082601428,
+        "trace": 0.007029708009213209
+      },
+      "packetBytes": 26524,
+      "symbolicToTraceConstructionRatio": 0.18471010188469497
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "unconditional-16-5202",
+      "inheritedSnapshotWithdrawalChecks": 548,
+      "medians": {
+        "symbolic": 0.0014746671076864004,
+        "trace": 0.006911291973665357
+      },
+      "packetBytes": 27066,
+      "symbolicToTraceConstructionRatio": 0.21337068572785542
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "unconditional-64-5201",
+      "inheritedSnapshotWithdrawalChecks": 8324,
+      "medians": {
+        "symbolic": 0.0014827919658273458,
+        "trace": 0.033640250097960234
+      },
+      "packetBytes": 27498,
+      "symbolicToTraceConstructionRatio": 0.04407791147537439
+    },
+    {
+      "bothPacketsIdentical": true,
+      "case": "unconditional-64-5202",
+      "inheritedSnapshotWithdrawalChecks": 8068,
+      "medians": {
+        "symbolic": 0.0012477920390665531,
+        "trace": 0.028530499897897243
+      },
+      "packetBytes": 27824,
+      "symbolicToTraceConstructionRatio": 0.04373537244464889
+    }
+  ],
+  "complete": true,
+  "filesSha256": {
+    "freeze.json": "471a75e3dab0bcd707e6ce9a2473b97604868b5b59c55945e0499719670c587d",
+    "independent-guards-16-5201.json": "d465fa2fee6fe77c472a7beffa912dadccc9f8f4f4354ff01eb76669e4f2a1c5",
+    "independent-guards-16-5202.json": "2658f7a14d4552914ac3a9b11bf03db867d3a0b2ba21a479f9d974662e60e35a",
+    "independent-guards-64-5201.json": "4f0ac0e55e68bef93ff9bb26a5b0033131312398eced740122db4b385ef9107d",
+    "independent-guards-64-5202.json": "ae1e8b0aebebfd9e17a195294db37ce19b60b30a9f352e9e4aceb54e79c500ba",
+    "joint-guards-16-5201.json": "5be627c1ec4a622e04063b704757fbb857bd3098a33576391e95f75e24796946",
+    "joint-guards-16-5202.json": "24c0a15da6364b47c45d7d87036a0a5405d3999c4c5063a17a91148e862a6b27",
+    "joint-guards-64-5201.json": "ccdcd82d9dc0df98c5cf3aec49f610be07b619dc17dca891138acfece35e8c25",
+    "joint-guards-64-5202.json": "f69ca2ea8a3d69b3a7763fbce07a445768c6147427a31c6fb5a5bdd3fd6f96b2",
+    "source/PLAN.json": "4cf5ff752d5d760666d91df82c19b429a12d7fdf9a39555a0286846ed3bf18c9",
+    "source/audit_symbolic.py": "175e2b28b8e146b4f5ff756ff88d820c6892716758be39ef8d5a45906937d272",
+    "source/probe.py": "6567a20298f8b59ec1c44bfb63ee6228ea50bec64752ccab4511233c41d032d2",
+    "source/run.py": "4b545b98d6bf0d5ecc9491243a463bfb2c6ecfb44624811235203a808661a27d",
+    "source/symbolic_control.py": "3ff80518f63b43e164f0987d1fdf2d2eb0202eba9e87d00b3e6c153cefc773d2",
+    "source/test_probe.py": "ecaaff7bdd6577f6a77f6dcba4d46fa803b89ca15448b68311d07d3874d465bf",
+    "source/test_symbolic_control.py": "0f7293e08bc78a4e2e6135dc1cc106fde56200eac5351fa81a3aa941b59f1494",
+    "unconditional-16-5201.json": "6a4a74313ea6278abfa7be6582ba185829ff5e785889878e09992477a7baeb86",
+    "unconditional-16-5202.json": "0202835877d4bcefb449c8268c9ab11d16e8f38788aa8de78462c221f37a6563",
+    "unconditional-64-5201.json": "f71623b66054604df281e5493d87ffc4a1df009cf51230994e3ef04d14ea7da6",
+    "unconditional-64-5202.json": "117bb96ebaf2b55e8f6d8907d87c66b06b108ac726170a5ce94d4a8d0891b242"
+  },
+  "freezeSha256": "471a75e3dab0bcd707e6ce9a2473b97604868b5b59c55945e0499719670c587d",
+  "sizeSuperiorityOverSymbolicControl": false
+}

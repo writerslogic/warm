@@ -1,0 +1,46 @@
+{
+  "authorizedBy": "User explicitly requested bypassing merge restrictions",
+  "startedAt": "2026-11-03T19:22:06.518546+00:00",
+  "merges": [
+    {
+      "number": 377,
+      "expectedHead": "96b1c0a5d2db520ab4fff2449aa162f6713d924c",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "number": 379,
+      "expectedHead": "30e1605906f71c4a316bf73eb0d00d2caae4bfbe",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "number": 380,
+      "expectedHead": "bff39125e5e65dd41807824392358b65e61c3733",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "number": 384,
+      "expectedHead": "8e813f8c735211860765d520485deb81d0edc7c0",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "disableAdminEnforcement": {
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "restoreAdminEnforcement": {
+    "exitCode": 0,
+    "stdout": "{\"url\":\"https://api.github.com/repos/writerslogic/warm/branches/main/protection/enforce_admins\",\"enabled\":true}",
+    "stderr": ""
+  },
+  "protectionRestored": true,
+  "finishedAt": "2026-11-03T19:22:26.839095+00:00"
+}

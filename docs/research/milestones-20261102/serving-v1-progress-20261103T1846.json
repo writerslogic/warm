@@ -1,0 +1,64 @@
+{
+  "jobs": [
+    {
+      "job": "job-00",
+      "engine": "warm",
+      "dataset": "coco-i2i-512-angular",
+      "repetition": 0,
+      "complete": true,
+      "qualityPassed": false,
+      "failedCells": 8,
+      "minimumRecall": 0.7,
+      "errors": 0
+    },
+    {
+      "job": "job-01",
+      "engine": "pgvector",
+      "dataset": "coco-i2i-512-angular",
+      "repetition": 0,
+      "complete": true,
+      "qualityPassed": false,
+      "failedCells": 8,
+      "minimumRecall": 0.5,
+      "errors": 0
+    },
+    {
+      "job": "job-02",
+      "engine": "opensearch",
+      "dataset": "coco-i2i-512-angular",
+      "repetition": 0,
+      "complete": true,
+      "qualityPassed": false,
+      "failedCells": 8,
+      "minimumRecall": 0.7,
+      "errors": 0
+    },
+    {
+      "job": "job-03",
+      "engine": "pgvector",
+      "dataset": "coco-i2i-512-angular",
+      "repetition": 1,
+      "complete": true,
+      "qualityPassed": false,
+      "failedCells": 8,
+      "minimumRecall": 0.5,
+      "errors": 0
+    },
+    {
+      "job": "job-04",
+      "engine": "opensearch",
+      "dataset": "coco-i2i-512-angular",
+      "repetition": 1,
+      "complete": true,
+      "qualityPassed": false,
+      "failedCells": 8,
+      "minimumRecall": 0.5,
+      "errors": 0
+    }
+  ],
+  "terminal": false,
+  "activeLogs": [
+    "job-05.log"
+  ],
+  "observedAt": "2026-11-03T18:46:56.011480+00:00"
+}

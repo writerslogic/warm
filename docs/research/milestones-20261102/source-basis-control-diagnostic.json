@@ -1,0 +1,15 @@
+{
+  "scope": "Post-screen control diagnosis on an already exposed development case; one timing sample, not qualification.",
+  "input": "/Volumes/A/.hms-bench-cache/warm-source-lift-refinement-20261103-v1/single-source-256-4101/input.json",
+  "inputSha256": "6aec8b848a0a134c9566b55e3f3fcadf82d90ef509ac21936f8a008e077f919e",
+  "controlSourceSha256": "8b259377f863ad68fd3ea0c4941f9ded0c23eccab3dd9c061cf3ad8d78963611",
+  "packetBytes": 850,
+  "identicalToExhaustiveUnion": true,
+  "secondsSingleSample": 0.02549241716042161,
+  "basisOracle": {
+    "basisBuilds": 6,
+    "evidenceRowsExamined": 130,
+    "allPossibleWithdrawalSets": 32897
+  },
+  "benchmarkClaim": false
+}

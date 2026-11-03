@@ -1,0 +1,50 @@
+{
+  "reason": "CONTRIBUTING.md keeps large benchmark evidence outside git. Local canonical copies remain present; these verified copies preserve them independently.",
+  "files": {
+    "adapter-evidence.tar.gz": {
+      "sha256": "15d75ed3f463eb968dcdd5caa74980126d553c46593cb898b9ace8310403204c",
+      "bytes": 256474,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/adapter-evidence.tar.gz"
+    },
+    "linux-comparators/evidence/postgres-build.log": {
+      "sha256": "9654641cfe4324008405ac1bd62e1af04adf83790d3c9df06d4233f2ba4e2107",
+      "bytes": 849883,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/linux-comparators/evidence/postgres-build.log"
+    },
+    "navigation-100k/misses.ndjson.gz": {
+      "sha256": "0e04d2f065817070209609a12ff0351db7d1936f66315860a31a672a5d008b32",
+      "bytes": 578761,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/navigation-100k/misses.ndjson.gz"
+    },
+    "navigation-10k/misses.ndjson.gz": {
+      "sha256": "7d5567b8e37b67e57629e40a8269dbc0d7c469f072198df0e27b609fdbc640d9",
+      "bytes": 167713,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/navigation-10k/misses.ndjson.gz"
+    },
+    "opensearch-scoring-diagnosis-v2.json": {
+      "sha256": "542a4deed270ff0e3886b09841df9c8bc28f3920a38cc0d7d870f427751b8b17",
+      "bytes": 177462,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/opensearch-scoring-diagnosis-v2.json"
+    },
+    "opensearch-scoring-diagnosis.json": {
+      "sha256": "5e520379cab02ca8fcc2f2f5f3aa4b1c9ad050eb39736988dc7e53a8adb9f078",
+      "bytes": 160079,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/opensearch-scoring-diagnosis.json"
+    },
+    "serving-v1-configuration-seal.json": {
+      "sha256": "45ce0a0d974a861ab0e45a47c9bb4940635867e8ed0dd1d77ca77ed4e5382864",
+      "bytes": 1296417,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/serving-v1-configuration-seal.json"
+    },
+    "serving-v1-observations-summary-v1.json": {
+      "sha256": "bc8338efa12e6a74499316f5ac884959e319195285ce91c769ce6b9a83c2e34f",
+      "bytes": 917488,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/serving-v1-observations-summary-v1.json"
+    },
+    "serving-v1-reported-summary.json": {
+      "sha256": "6a7c217496a98f045df6ed2a7b3116446bdba7939e469c8b2b6b8c005141c146",
+      "bytes": 2325838,
+      "path": "/Volumes/A/.hms-bench-cache/warm-milestone-evidence-20261103/serving-v1-reported-summary.json"
+    }
+  }
+}

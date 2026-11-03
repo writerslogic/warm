@@ -1,0 +1,12 @@
+{
+  "tests/golden/v4-audit/audit.bin": "9a2d0aa08d8864378b584e5841ac8007a523aa270b385417f1efba6ca214da2a",
+  "tests/golden/v4-audit/documents.text": "3bde384907092851a3f9d809e694b2998ad5b14fa0ba70240f79369fa9c33a86",
+  "tests/golden/v4-audit/golden.json": "3522a7edcebc63b4bbc13e4da204b511737ff62698456e6ee0fd68c2c828b47a",
+  "tests/golden/v4-audit/indices.json": "95a957b1430978123f8db0a85943f54842b9fb5e7994b668f0ecbc8bad563a1d",
+  "tests/golden/v4-audit/store.json": "89df254f7a42ccc7d66edeba28a205963a65434f54b91b27827eb8bf60b98742",
+  "tests/golden/v4-audit/store.json.crc32": "57cf14e7932d2872e145fa9e388c17b6282768a6d8d19e9056f37bcac2b38ae7",
+  "tests/golden/v4-audit/vectors_data.bin/format.json": "8e29b545c982a572ff88b6e848036e82c91265cfb07f0d689fe3d9b02d3d8139",
+  "tests/golden/v4-audit/vectors_data.bin/format.json.crc32": "02dcaf319409edd211bd14220f5a8f8b31de4928f6dde00867b1decf184debec",
+  "tests/golden/v4-audit/vectors_data.bin/seg_0.bin": "b29fdd992b1e57902b7586790d11ff119f666e6e8e055bf01a343750cfcff276",
+  "examples/temporal-memory.cjs": "246382aaef2de3efb58e607a1cf1e978ac0ba84160f5ebfd196c7bc70c003ced"
+}

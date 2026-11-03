@@ -1,0 +1,36 @@
+{
+  "benchmarkClaim": false,
+  "cases": [
+    {
+      "atomicBatchSize": 32,
+      "complete": true,
+      "currentHistoricalKnownTimeAndProvenanceMatched": true,
+      "deletedOrCrossTenantResults": 0,
+      "duplicateMemoryRetryEffects": 0,
+      "exitCode": -9,
+      "initialStartSeconds": 0.02700360900053056,
+      "interruption": "SIGKILL",
+      "lostAcknowledgedWrites": 0,
+      "postPurgeStartSeconds": 0.02027295700099785,
+      "purgedChainAbsentAfterReopen": true,
+      "recoverySeconds": 0.022262090002186596,
+      "replacedDocumentCount": 32
+    },
+    {
+      "atomicBatchSize": 32,
+      "complete": true,
+      "currentHistoricalKnownTimeAndProvenanceMatched": true,
+      "deletedOrCrossTenantResults": 0,
+      "duplicateMemoryRetryEffects": 0,
+      "exitCode": 0,
+      "initialStartSeconds": 0.061985041000298224,
+      "interruption": "SIGTERM",
+      "lostAcknowledgedWrites": 0,
+      "postPurgeStartSeconds": 0.022736342001735466,
+      "purgedChainAbsentAfterReopen": true,
+      "recoverySeconds": 0.02141583600314334,
+      "replacedDocumentCount": 32
+    }
+  ],
+  "complete": true
+}

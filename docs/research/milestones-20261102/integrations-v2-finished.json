@@ -1,0 +1,276 @@
+{
+  "complete": true,
+  "completedAt": "2026-11-03T19:13:50.800767+00:00",
+  "freezeSha256": "3ab19cc984deba049b90c13fb765a86f2ddcf25cb3fbda7e11d80d1d403c4cad",
+  "gatePass": false,
+  "paidServicesUsed": false,
+  "profiles": [
+    {
+      "collectionSha256": "0c03557d1e53974871ac543ecdd2000fa84782dd5c06ff3c8bf49de37b81cd06",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 43
+      },
+      "dependencyFreezeSha256": "704c9bd0b13f3405ec94161e033fe7b24feb2d1ef2d451e0ee697fd3d2df1eb3",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "core",
+      "reportSha256": "3b520e972d740c49e46964b876f963a620a5715119c8b60f6f2e1e66e017e9bc",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "cc8a51acd69cb3594de6c6e0aa896bbbd7a57b09fe06071757e9d19854eac670",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 44
+      },
+      "dependencyFreezeSha256": "5adb9a35890117f0333786a5c8871e20b24f98bb4484b7d43db601a7e856069d",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "langchain",
+      "reportSha256": "e22e30ee0a476644cc72e77b7c29313fe723a9b040376ee6260ed53896f55044",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "ecd42b0fc352c6f1ee6b0ed9eab383c8063776a690c671e36d885fc09a4d6073",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 35
+      },
+      "dependencyFreezeSha256": "f860344b245aa1468c122e2de1b0c34e11abf335932e02796ebd7bf8ec9adcfa",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "langgraph",
+      "reportSha256": "3461f918676fa1f91c27e628e4e38a8cf7cadb02a117b29a4ec59d5de47d9f79",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "dcef73ca80928cd7d159983dfd9f3b51b670d8da373065455496754f49356e4d",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 51
+      },
+      "dependencyFreezeSha256": "d6ef8a957337e863fc144cce570967edb84728f67d62951a17afb1c7aea4ced7",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "llamaindex",
+      "reportSha256": "52a9036380f5431505ab1bb727e7ddc4213277ab21ff00e85c81847bc9354299",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "4e1288d6c84a2dbfc89fc42b449a3101fb179e9b752002830724b6572dc8d6c9",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 2,
+        "tests": 100
+      },
+      "dependencyFreezeSha256": "3ef9ae0cd40d2127df547d02228e07dff952198eeb88b03f154a7823641e92de",
+      "exitCode": 0,
+      "gatePass": false,
+      "profile": "haystack",
+      "reportSha256": "1822a20748ed304a35895f8c5189be4d809c297477a77b70cf7b9ddc4d726253",
+      "skipReviewRequired": true,
+      "skipped": [
+        {
+          "class": "tests.haystack.test_haystack_conformance.TestHolographicDocumentStore",
+          "name": "test_delete_all_documents_without_recreate_index",
+          "reason": "delete_all_documents has no recreate_index or recreate_collection parameter"
+        },
+        {
+          "class": "tests.haystack.test_haystack_conformance.TestHolographicDocumentStore",
+          "name": "test_delete_all_documents_with_recreate_index",
+          "reason": "delete_all_documents has no recreate_index or recreate_collection parameter"
+        }
+      ]
+    },
+    {
+      "collectionSha256": "89f537276c1201ada0707b979440fb466401d89c07d49f41c5f59175e6f1c85c",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 14
+      },
+      "dependencyFreezeSha256": "6a728c1c3980da5f810378eb93cc575d2a80f062f9fffc5f596c0874800ef1c8",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "openai-agents",
+      "reportSha256": "459deb5f0ce7bd3d472b51139b48bfe023adc5a6844c605ce06d75a1c91f6dd1",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "0365a0206323b7263286cb28e640b27ed2c2945bb635a159ef7bbc4bfd611467",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 12
+      },
+      "dependencyFreezeSha256": "81c6dc83e09f70e961ecdf398f12cf480c5f3a95673e697928d5e6ddc89cd546",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "pydantic-ai",
+      "reportSha256": "77ea81c029e3c2a1299e06cb490b0b78f8f39c1f70840a0537e43b7158fcfad6",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "0ab80e322285f86dae624d5d82beb0e4e4dea1cc4c18091ee44f5861e6cb89dc",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 5
+      },
+      "dependencyFreezeSha256": "fb11fae09770b630f1f5a6b91945f1fc4ea859fff7c15e08943f05472a877255",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "smolagents",
+      "reportSha256": "da4ef0480f18b87df3df90beeac5fe926ee0557e7067e33e038f52281874160a",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "85b5873be34f1f3fe583ca7ffaf5e213c38a187e716d18ae687d2890fd3610ea",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 8
+      },
+      "dependencyFreezeSha256": "b624183d4ed389b5c999897c4725f813e96070d43fc3a7b820ed5d97a86dea30",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "litellm",
+      "reportSha256": "ca25e339837a4894d5b42c48e747b9dd59f62fab66e25d291da67e446268748c",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "e7e1b44289546441045ba96acd704e2ae026169263634a841bb4d0ad434aca7f",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 18
+      },
+      "dependencyFreezeSha256": "21c2d5695d7790866433ed22c6d6967e6d1e0231e0b57ca10edd55b9bf7f5aa3",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "crewai",
+      "reportSha256": "14bc3dc49998f54fcd45e11e29426b3a55fffa9af595e607f13057313824f128",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "1bfad1b4c79bcb7b38f521864f61d3fcad36092e2bb1c2f6b5b8d85fd3c3bb4e",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 6
+      },
+      "dependencyFreezeSha256": "82f99beea9dba8dd06084a6b6a549f8c24c99ac295feb4f1f1cdae3a6aac2397",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "autogen",
+      "reportSha256": "e1464183b60ba068d3585b954d61c106633c87d7d3a037b90885c5be5cb34a57",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "c03b7a95007f087736956ec91c5b512bc65c656677037fd2238fc253dbdf7ffe",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 3
+      },
+      "dependencyFreezeSha256": "3812ea7278afd78ad2f55953f315060c630566b9ae63ace880dbaefd6df7ca50",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "ag2",
+      "reportSha256": "287b2afef45e8c75e38eb9586256160703d67bbe301a2113fd981ba9fcfb681b",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "76d26397482054bf97cdefec0e840dcd68bd4ff468457437476f259c3c2e4fd2",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 12
+      },
+      "dependencyFreezeSha256": "2674484a1b90b3df84e25db71cf249411953fa952ae347505a2e54a98581fbcf",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "semantic-kernel",
+      "reportSha256": "4839eff9f2a3eb38a9f9c7ae1ad504bd4621c0c5b7b6986342936adbf5e766e2",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "fd58eb84c504abf695e248f051fe3c35d6bb50738d7a244eb21d8d37fdc248dd",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 25
+      },
+      "dependencyFreezeSha256": "8c586485a0c1efb23f7ed733f8373bcf7e04c4093bd33c4e454a08e64e26426c",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "mem0",
+      "reportSha256": "24a6e7c97ff2cbb643bd5c850f0943f8dfc7ddf12266c5e15273b426c0833df7",
+      "skipReviewRequired": false,
+      "skipped": []
+    },
+    {
+      "collectionSha256": "83287d58d6d40f1f341604ba4d14b3cb5188e958ba931fc23868cd39a4a6246e",
+      "complete": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 15
+      },
+      "dependencyFreezeSha256": "882d3653f88ce0483bcb0ca303912010be881eb5fdb6321ed2defd95a7c45e05",
+      "exitCode": 0,
+      "gatePass": true,
+      "profile": "letta",
+      "reportSha256": "3594e1ef79d8a03f7838337a72a732a92d6ddc1c5203d14a1a64f91e6791b54c",
+      "skipReviewRequired": false,
+      "skipped": []
+    }
+  ],
+  "scope": "Fresh Linux arm64/Python 3.12.12 wheels, real WARM server, local scripted models in loopback-only namespaces. Wire-only tests retain that limit; no real Letta server or local-model text-query claim."
+}

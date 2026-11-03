@@ -1,0 +1,155 @@
+{
+  "runtimes": [
+    {
+      "name": "iOS 26.5",
+      "version": "26.5",
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-5",
+      "isAvailable": true
+    },
+    {
+      "name": "iOS 27.0",
+      "version": "27.0",
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "isAvailable": true
+    }
+  ],
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [
+      {
+        "name": "iPhone 18 Pro",
+        "udid": "649C1603-2986-4B38-B10F-3B2D035771B8",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone 18 Pro Max",
+        "udid": "C7209E28-6D7D-45B0-BBBA-DB00B25ABA0B",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone 17e",
+        "udid": "CA75FD85-4268-43C7-982F-415266E96088",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone Air",
+        "udid": "DB08C29E-0939-4607-A6C8-DF19E9991D6E",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone 17",
+        "udid": "095E078E-EFC3-40A1-817C-F2D6F40D12CF",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Pro 13-inch (M5)",
+        "udid": "9DA0693C-9433-4DA7-A5F7-45AA4753BF9C",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Pro 11-inch (M5)",
+        "udid": "91A4541A-80F0-4F46-9652-47D4AB9F5D99",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad mini (A17 Pro)",
+        "udid": "B67D1552-987D-4D48-BD89-EBF3AC066038",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Air 13-inch (M4)",
+        "udid": "CD11760F-BE1A-4B70-85F4-1674D237DA45",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Air 11-inch (M4)",
+        "udid": "C786EF9D-D8F2-4E9D-A403-74D49577FA1F",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad (A16)",
+        "udid": "FAFB5F50-6980-4A00-8C22-149CB7D7DC0D",
+        "state": "Shutdown",
+        "isAvailable": true
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-5": [
+      {
+        "name": "iPhone 17 Pro",
+        "udid": "C2912685-4113-48A5-A015-EA037B25CFB1",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone 17 Pro Max",
+        "udid": "B0A7C815-FFDC-4D59-9A7D-3E0A188C3C68",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone 17e",
+        "udid": "841F5C04-B086-4BAC-88E3-0F8498E8E819",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone Air",
+        "udid": "6D996E9E-EED6-43B1-9E8C-B30F9ECFE6F3",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPhone 17",
+        "udid": "9BF7FB6A-BDB0-4484-991D-50F2DAFC8CB3",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Pro 13-inch (M5)",
+        "udid": "58EA64D7-2718-4F1E-AA84-0C03F772BEB5",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Pro 11-inch (M5)",
+        "udid": "181B5A17-221C-4DF3-B516-12458150B123",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad mini (A17 Pro)",
+        "udid": "33C3F56F-17C2-4EEE-BCBC-11BF8C8F0250",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Air 13-inch (M4)",
+        "udid": "F2580077-3160-4373-9028-D3E9BCEC5057",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad Air 11-inch (M4)",
+        "udid": "E651338F-816B-4F90-A19D-A8CDDD724A91",
+        "state": "Shutdown",
+        "isAvailable": true
+      },
+      {
+        "name": "iPad (A16)",
+        "udid": "79539D8B-78E7-4D47-B3DD-D5DBB22B646E",
+        "state": "Shutdown",
+        "isAvailable": true
+      }
+    ]
+  },
+  "androidAvds": []
+}

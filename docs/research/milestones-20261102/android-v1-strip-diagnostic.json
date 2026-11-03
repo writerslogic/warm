@@ -1,0 +1,44 @@
+{
+  "tool": "/Volumes/A/android-sdk/ndk/27.3.13750724/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-strip",
+  "toolSha256": "3a14db9182b9d3efb90a456fc14c2e3278e985060515a23d7bcb2a8cda13e95a",
+  "arguments": [
+    "--strip-unneeded",
+    "-o",
+    "OUTPUT",
+    "INPUT"
+  ],
+  "rows": [
+    {
+      "abi": "arm64-v8a",
+      "compiledSha256": "0e3ad02f45fad0d642b0b0b608df74d5fc7abd292347eb55af25f1edae0dd733",
+      "packagedSha256": "5d88c9b61527d3985951cae9457988e1934ee7b710914cb2b976935e82c29157",
+      "independentStripSha256": "5d88c9b61527d3985951cae9457988e1934ee7b710914cb2b976935e82c29157",
+      "gradleStrippedSha256": "5d88c9b61527d3985951cae9457988e1934ee7b710914cb2b976935e82c29157",
+      "exactTransformationMatch": true
+    },
+    {
+      "abi": "armeabi-v7a",
+      "compiledSha256": "09c2cd5407ee3c8d07ee44c32df03227568af3199e405b20491c2d144f52e584",
+      "packagedSha256": "52b04a9eb328720351503aaca2bcaf02c71c5c6372661749766a224eecf3d666",
+      "independentStripSha256": "52b04a9eb328720351503aaca2bcaf02c71c5c6372661749766a224eecf3d666",
+      "gradleStrippedSha256": "52b04a9eb328720351503aaca2bcaf02c71c5c6372661749766a224eecf3d666",
+      "exactTransformationMatch": true
+    },
+    {
+      "abi": "x86_64",
+      "compiledSha256": "6b48f9338a1f285bf0d6cf39a20e85c215750d6e1a191f3fd1a59d7972421ffd",
+      "packagedSha256": "78bde5bb9d117156ecfeb9ab8f9ed1bc7ad545174bbe8e633d8f87ec512caf4d",
+      "independentStripSha256": "78bde5bb9d117156ecfeb9ab8f9ed1bc7ad545174bbe8e633d8f87ec512caf4d",
+      "gradleStrippedSha256": "78bde5bb9d117156ecfeb9ab8f9ed1bc7ad545174bbe8e633d8f87ec512caf4d",
+      "exactTransformationMatch": true
+    },
+    {
+      "abi": "x86",
+      "compiledSha256": "7766627f065a451c69866c84e5de6f59b71dcd11b6066058cc4611c8b48192fc",
+      "packagedSha256": "d5433f04f41c82c72399ce7e6437ad5a619b29c01fb9120abcc1a2a7bb0d9191",
+      "independentStripSha256": "d5433f04f41c82c72399ce7e6437ad5a619b29c01fb9120abcc1a2a7bb0d9191",
+      "gradleStrippedSha256": "d5433f04f41c82c72399ce7e6437ad5a619b29c01fb9120abcc1a2a7bb0d9191",
+      "exactTransformationMatch": true
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "live.log exited with status 1",
+    "type": "RuntimeError"
+  }
+}

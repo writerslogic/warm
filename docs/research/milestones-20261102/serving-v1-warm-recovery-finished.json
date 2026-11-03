@@ -1,0 +1,295 @@
+{
+  "complete": true,
+  "engine": "warm",
+  "synthetic": true,
+  "benchmarkClaim": false,
+  "failure": null,
+  "cells": [
+    {
+      "churn": false,
+      "filter": "all",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.0001702089999753298,
+      "p95": 0.00030204299997649287,
+      "p99": 0.00030204299997649287,
+      "pass": true
+    },
+    {
+      "churn": false,
+      "filter": "all",
+      "configuration": {
+        "route": "graph",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.0002164179999795124,
+      "p95": 0.0002875010000025213,
+      "p99": 0.0002875010000025213,
+      "pass": true
+    },
+    {
+      "churn": false,
+      "filter": "10pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.0001754179999693406,
+      "p95": 0.00025575199998684184,
+      "p99": 0.00025575199998684184,
+      "pass": true
+    },
+    {
+      "churn": false,
+      "filter": "10pct",
+      "configuration": {
+        "route": "exact",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.0001738340000088101,
+      "p95": 0.0014112580000187336,
+      "p99": 0.0014112580000187336,
+      "pass": true
+    },
+    {
+      "churn": false,
+      "filter": "1pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.0001476680000109809,
+      "p95": 0.00020325100001628016,
+      "p99": 0.00020325100001628016,
+      "pass": true
+    },
+    {
+      "churn": false,
+      "filter": "1pct",
+      "configuration": {
+        "route": "exact",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.00014308400000118127,
+      "p95": 0.0001907509999909962,
+      "p99": 0.0001907509999909962,
+      "pass": true
+    },
+    {
+      "churn": false,
+      "filter": "empty",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 9.933400002637427e-05,
+      "p95": 0.00015025100003640546,
+      "p99": 0.00015025100003640546,
+      "pass": true
+    },
+    {
+      "churn": false,
+      "filter": "empty",
+      "configuration": {
+        "route": "exact",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 8.762499999193096e-05,
+      "p95": 0.00016025099995431447,
+      "p99": 0.00016025099995431447,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "all",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.0001515010000048278,
+      "p95": 0.000385710999978528,
+      "p99": 0.000385710999978528,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "all",
+      "configuration": {
+        "route": "graph",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.00020316800004138713,
+      "p95": 0.00027958500004388043,
+      "p99": 0.00027958500004388043,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "10pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.00015070899996771914,
+      "p95": 0.00020833400003539282,
+      "p99": 0.00020833400003539282,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "10pct",
+      "configuration": {
+        "route": "exact",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.00014033400003654606,
+      "p95": 0.00019316800000979129,
+      "p99": 0.00019316800000979129,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "1pct",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.0001298759999599497,
+      "p95": 0.00019191700005194434,
+      "p99": 0.00019191700005194434,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "1pct",
+      "configuration": {
+        "route": "exact",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1.0,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 0.00013133399994558204,
+      "p95": 0.0002040020000322329,
+      "p99": 0.0002040020000322329,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "empty",
+      "configuration": {
+        "route": "exact"
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 8.5458999990351e-05,
+      "p95": 0.00013408399996706066,
+      "p99": 0.00013408399996706066,
+      "pass": true
+    },
+    {
+      "churn": true,
+      "filter": "empty",
+      "configuration": {
+        "route": "exact",
+        "ef": 512
+      },
+      "queries": 12,
+      "meanRecall": 1.0,
+      "worstRecall": 1,
+      "errors": 0,
+      "unresolvedExactMembership": 0,
+      "median": 8.941800001593947e-05,
+      "p95": 0.0001366260000281727,
+      "p99": 0.0001366260000281727,
+      "pass": true
+    }
+  ],
+  "details": [
+    {
+      "capacityBytes": 67108864.0,
+      "documentIndexTrained": true,
+      "documents": 1024,
+      "tenant": "default",
+      "usedBytes": 244412.0,
+      "vectorIndex": {
+        "current": true,
+        "graph": true,
+        "rebuildRecommended": false,
+        "rows": 1024,
+        "staleMutations": 0
+      },
+      "vectors": 1024
+    },
+    {
+      "recoverySeconds": 0.16439133300002595,
+      "acknowledgedReplacements": 100,
+      "acknowledgedDeletions": 100
+    }
+  ]
+}

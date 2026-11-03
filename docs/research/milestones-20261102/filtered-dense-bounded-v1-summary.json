@@ -1,0 +1,862 @@
+[
+  {
+    "boundedOverOriginal": 0.21883070133505395,
+    "boundedOverScan": 1.1191079514202464,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.005667396,
+      "original": 0.0258985415,
+      "scan": 0.0050642085
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.005724292000000001,
+          "original": 0.0262159165,
+          "scan": 0.005085312999999999
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.005659188000000001,
+          "original": 0.025747271000000002,
+          "scan": 0.0050270835
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0056327705,
+          "original": 0.025790979,
+          "scan": 0.0050727294999999995
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 0.0500821135590927,
+    "boundedOverScan": 0.9156597306555222,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0008746455,
+      "original": 0.017464229,
+      "scan": 0.0009552079999999999
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.0009576459999999999,
+          "original": 0.0177441875,
+          "scan": 0.0010349375
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0008972705,
+          "original": 0.017376125,
+          "scan": 0.0009885624999999999
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0007477499999999999,
+          "original": 0.0172688335,
+          "scan": 0.0008751875
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 1.0019769164361554,
+    "boundedOverScan": 1.7997349290729951,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0596062085,
+      "original": 0.0594886045,
+      "scan": 0.0331194375
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.059610792,
+          "original": 0.059701896000000004,
+          "scan": 0.033201312999999996
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.059608417,
+          "original": 0.0594578745,
+          "scan": 0.033108250000000006
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0595949585,
+          "original": 0.059415479,
+          "scan": 0.033067292
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "unlimited-tree": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 1.0130196078431373,
+    "boundedOverScan": 1.02638270820089,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 6.458e-06,
+      "original": 6.375e-06,
+      "scan": 6.292e-06
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 6.458e-06,
+          "original": 6.416e-06,
+          "scan": 6.3125e-06
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 6.458e-06,
+          "original": 6.375e-06,
+          "scan": 6.292e-06
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 6.417e-06,
+          "original": 6.375e-06,
+          "scan": 6.292e-06
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "scan": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 0.2207073757648483,
+    "boundedOverScan": 1.1290156494488393,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0056662710000000005,
+      "original": 0.025673229,
+      "scan": 0.005018771
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.0056735,
+          "original": 0.0256908545,
+          "scan": 0.005002375
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0056312915,
+          "original": 0.025570541500000002,
+          "scan": 0.004993208
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0057153329999999995,
+          "original": 0.025778292,
+          "scan": 0.0050378745
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 0.04110832517871773,
+    "boundedOverScan": 0.8470533734899376,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0007076249999999999,
+      "original": 0.017213666500000002,
+      "scan": 0.000835396
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.0008826045,
+          "original": 0.0172981455,
+          "scan": 0.0009884795
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0007035205,
+          "original": 0.0170763335,
+          "scan": 0.000835396
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.000679792,
+          "original": 0.0170601455,
+          "scan": 0.000799833
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 1.0011722315377436,
+    "boundedOverScan": 1.7918478729688165,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.059677979000000006,
+      "original": 0.059608104499999995,
+      "scan": 0.033305271
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.059579916999999996,
+          "original": 0.0594836245,
+          "scan": 0.033137666499999996
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.059855624499999996,
+          "original": 0.059753520500000004,
+          "scan": 0.0331703125
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0596834375,
+          "original": 0.0596604165,
+          "scan": 0.0334728125
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "unlimited-tree": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 1.00638927847904,
+    "boundedOverScan": 1.0197378809411022,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 6.458e-06,
+      "original": 6.417e-06,
+      "scan": 6.333e-06
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 6.458e-06,
+          "original": 6.4165e-06,
+          "scan": 6.333e-06
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 6.459e-06,
+          "original": 6.417e-06,
+          "scan": 6.3125e-06
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 6.458e-06,
+          "original": 6.416e-06,
+          "scan": 6.292e-06
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "scan": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 0.1750531163343457,
+    "boundedOverScan": 0.9356139476412078,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0026513545,
+      "original": 0.015146,
+      "scan": 0.0028338125
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.0026340415,
+          "original": 0.015108771,
+          "scan": 0.002833125
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0026850420000000003,
+          "original": 0.015156312,
+          "scan": 0.0028441869999999998
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0026434375,
+          "original": 0.0151919585,
+          "scan": 0.0028316255
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 0.03506254670682591,
+    "boundedOverScan": 0.5630768759131389,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.000348979,
+      "original": 0.009953042,
+      "scan": 0.0006197715
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.00033027100000000004,
+          "original": 0.0099247705,
+          "scan": 0.0005869375
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0003079585,
+          "original": 0.009974354000000001,
+          "scan": 0.0005765205
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0004586455,
+          "original": 0.0099458125,
+          "scan": 0.0006664165
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 1.0087300094380616,
+    "boundedOverScan": 1.4076223677554756,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0191494995,
+      "original": 0.018983771,
+      "scan": 0.013604145500000001
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.019087021,
+          "original": 0.018785583,
+          "scan": 0.013484125
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0191719375,
+          "original": 0.0191128545,
+          "scan": 0.0135932085
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.019163187499999998,
+          "original": 0.019072125000000002,
+          "scan": 0.0137253545
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "unlimited-tree": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 1.0070277682550564,
+    "boundedOverScan": 1.0217391304347825,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 5.875e-06,
+      "original": 5.834e-06,
+      "scan": 5.75e-06
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 5.875e-06,
+          "original": 5.833e-06,
+          "scan": 5.7295e-06
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 5.916e-06,
+          "original": 5.834e-06,
+          "scan": 5.75e-06
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 5.875e-06,
+          "original": 5.834e-06,
+          "scan": 5.75e-06
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "scan": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 0.17497443909723978,
+    "boundedOverScan": 0.9344057927027555,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0026938335000000002,
+      "original": 0.015395583000000001,
+      "scan": 0.0028829375
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.003271396,
+          "original": 0.0159173545,
+          "scan": 0.0031191455
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0026140625,
+          "original": 0.0151919165,
+          "scan": 0.0028418545
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0026712085,
+          "original": 0.015084,
+          "scan": 0.0028535210000000004
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 0.031587279432309434,
+    "boundedOverScan": 0.5476679175514064,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.00030925,
+      "original": 0.0097903335,
+      "scan": 0.000564667
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.000299979,
+          "original": 0.0097152085,
+          "scan": 0.0005446665
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.00030925,
+          "original": 0.0097896455,
+          "scan": 0.000564667
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0003924165,
+          "original": 0.010071041499999999,
+          "scan": 0.0006523125
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "exhausted-then-scan": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 1.0171207111796488,
+    "boundedOverScan": 1.3975587143321477,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.019080083,
+      "original": 0.018758917,
+      "scan": 0.0136524375
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.019134625000000002,
+          "original": 0.0187728125,
+          "scan": 0.0136655835
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.019038625,
+          "original": 0.0187850625,
+          "scan": 0.0136454375
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.019066604,
+          "original": 0.0187420835,
+          "scan": 0.013649999999999999
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "unlimited-tree": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 1.0071489361702128,
+    "boundedOverScan": 1.02175790018995,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 5.917e-06,
+      "original": 5.875e-06,
+      "scan": 5.791e-06
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 5.875e-06,
+          "original": 5.833e-06,
+          "scan": 5.7085e-06
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 5.9375e-06,
+          "original": 5.875e-06,
+          "scan": 5.792e-06
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 5.9375e-06,
+          "original": 5.917e-06,
+          "scan": 5.792e-06
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "scan": 96
+    },
+    "state": "churn-maintained"
+  },
+  {
+    "boundedOverOriginal": 1.0613323969717983,
+    "boundedOverScan": 0.5327295867729366,
+    "dataset": "separated-32768-2",
+    "filter": "50pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0019752505,
+      "original": 0.0018611044999999999,
+      "scan": 0.003707792
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.002001813,
+          "original": 0.0019081665,
+          "scan": 0.003742104
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0019432289999999999,
+          "original": 0.0018436665,
+          "scan": 0.0036887915
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0019821250000000004,
+          "original": 0.001868229,
+          "scan": 0.0036984375000000003
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "tree": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 1.0647214689104956,
+    "boundedOverScan": 0.5339355722183765,
+    "dataset": "separated-32768-4",
+    "filter": "50pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0019854169999999997,
+      "original": 0.001864729,
+      "scan": 0.003718458
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.002004125,
+          "original": 0.0018800835,
+          "scan": 0.003726834
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0019708125,
+          "original": 0.001862229,
+          "scan": 0.0037186665
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.001964188,
+          "original": 0.0018591254999999998,
+          "scan": 0.0037119585
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "tree": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 1.063650347636922,
+    "boundedOverScan": 0.5801928840558003,
+    "dataset": "separated-8192-2",
+    "filter": "50pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0003989795,
+      "original": 0.000375104,
+      "scan": 0.000687667
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.000395479,
+          "original": 0.0003752085,
+          "scan": 0.0006865005
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0003955,
+          "original": 0.000373479,
+          "scan": 0.0006846039999999999
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0004069375,
+          "original": 0.0003778125,
+          "scan": 0.000690021
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "tree": 96
+    },
+    "state": "baseline"
+  },
+  {
+    "boundedOverOriginal": 1.068559363133216,
+    "boundedOverScan": 0.5815462366018291,
+    "dataset": "separated-8192-4",
+    "filter": "50pct",
+    "gateFailures": [],
+    "medianSeconds": {
+      "bounded": 0.0003955,
+      "original": 0.0003701245,
+      "scan": 0.0006800834999999999
+    },
+    "queries": 96,
+    "repetitions": [
+      {
+        "medianSeconds": {
+          "bounded": 0.0003989375,
+          "original": 0.0003706665,
+          "scan": 0.0006824579999999999
+        },
+        "repetition": 0
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0003958335,
+          "original": 0.0003695205,
+          "scan": 0.0006783545
+        },
+        "repetition": 1
+      },
+      {
+        "medianSeconds": {
+          "bounded": 0.0003936455,
+          "original": 0.000370521,
+          "scan": 0.0006809995
+        },
+        "repetition": 2
+      }
+    ],
+    "routes": {
+      "tree": 96
+    },
+    "state": "baseline"
+  }
+]

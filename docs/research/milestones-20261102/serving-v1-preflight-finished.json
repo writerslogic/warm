@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "Command '['limactl', 'shell', 'warm-arm64', '--', 'python3', '/home/davidcondrey.guest/warm-milestones-20261103/dspy-qualification-v1/linux-dspy-qualification.py']' returned non-zero exit status 1.",
+    "type": "CalledProcessError"
+  }
+}

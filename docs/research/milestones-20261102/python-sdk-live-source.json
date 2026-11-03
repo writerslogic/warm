@@ -1,0 +1,23 @@
+{
+  "schema": "warm.python-sdk-live-source/1",
+  "baseRevision": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+  "serverSha256": "e10107257731bb3e0c18c8ef4bf43e6fb606e0eb1ef4cc801c3a6e55356d5361",
+  "wheelSha256": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490",
+  "files": {
+    "check_installed.py": "8c5e2ada0e182473de8e760609c5ed81ff7e09fbf83d6cbe50e595e25e162024",
+    "consumer-311/.python-version": "ad0ad3b23d82790cd22132e05dcf874476f8182063748eb6a7ac14252f3dd6e8",
+    "consumer-311/pyproject.toml": "0e7f27a465110c0ae087e91b0392cfce179a90a4d63fdafe966b7bd6421e43dd",
+    "consumer-311/uv.lock": "d5e48e6dc0fae98a0b981684d7e8b4427aeb69c9f3d85d2dbd1274515d63d52d",
+    "consumer-314/.python-version": "922fe0c3de073b01988e23348ea184456161678c5e329e6f34be89be24383f93",
+    "consumer-314/pyproject.toml": "c1978b5ebfc6e8b24dff93af314d60b773ef7287afe16fd46f4c002b95b303a2",
+    "consumer-314/uv.lock": "fc1355858b31c0e445562fb9bd678cac237854646db5db383107ee2eb54b03d2",
+    "dist/warm_sdk-0.1.3-py3-none-any.whl": "dfcfe3ce48e9b8bb4f136175009e92746a04737b58c8df4913d6e8d63c315490",
+    "python_sdk_recovery.py": "4aa6819d035a28b776b6d36296f5c41ed8dbdd73fa98f1f2ae11b6d07b133db3",
+    "run.py": "0cc5ce2eaa0dcab65286ac1a3912962cf7e85b459902d00ef5971a2243d48e67",
+    "tests/test_document_chunks_live.py": "212b381730eed7dd695ac9966407f7c0a82593c7102fcf118cc6c07009d302ed",
+    "tests/test_live_server.py": "789cad63c3dc335a3e23ca92d7ea45ff78b3297d2686ad542499aa3f2cfba8ee",
+    "tests/test_memory_live.py": "734a7a00f5f89d6c57d0cb93dcb71456aaaef2c9a40d1e7f16727cd1d8b4e85b"
+  },
+  "scope": "12 installed-wheel live tests and two recovery boundaries on each of Python 3.11.14/3.14.7; queued, not passed",
+  "archiveSha256": "cd5a215af34fac89562a634bb3f372dcb85031f1e3b5d5e9a3e41f4d0e8e624f"
+}

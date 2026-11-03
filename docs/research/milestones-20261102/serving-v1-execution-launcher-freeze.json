@@ -1,0 +1,5 @@
+{
+  "launcherSha256": "b38085374b00b20e4b70ca718d491315a07fbf9a0a8184b926f1651324f714fd",
+  "configurationSealSha256": "45ce0a0d974a861ab0e45a47c9bb4940635867e8ed0dd1d77ca77ed4e5382864",
+  "scope": "Launch/stop observations and invoke the unchanged frozen 18-job queue. No automatic isolation pass."
+}

@@ -1,0 +1,1226 @@
+[
+  {
+    "combinedOverPreviousSpeedup": 1.0315244113078497,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 10000,
+    "medianSeconds": {
+      "baseline": 0.004895917,
+      "candidate": 0.0043465205,
+      "previous": 0.004483542
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0049393335,
+        "candidate": 0.0043843755,
+        "previous": 0.004528271
+      },
+      {
+        "baseline": 0.0049068335,
+        "candidate": 0.004353021,
+        "previous": 0.0044933755
+      },
+      {
+        "baseline": 0.0048091255,
+        "candidate": 0.0042792915,
+        "previous": 0.0043903334999999995
+      }
+    ],
+    "speedup": 1.1263991507689886,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0569887640449438,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 1000,
+    "medianSeconds": {
+      "baseline": 0.0005326465000000001,
+      "candidate": 0.000411625,
+      "previous": 0.000435083
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000532542,
+        "candidate": 0.000414583,
+        "previous": 0.0004338745
+      },
+      {
+        "baseline": 0.0005321045,
+        "candidate": 0.000410583,
+        "previous": 0.0004337915
+      },
+      {
+        "baseline": 0.0005338750000000001,
+        "candidate": 0.0004087085,
+        "previous": 0.0004363125
+      }
+    ],
+    "speedup": 1.2940091102338296,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9994667414777653,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.0598533965,
+      "candidate": 0.053172146,
+      "previous": 0.053143791499999996
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.059787020999999996,
+        "candidate": 0.052964771,
+        "previous": 0.052989292
+      },
+      {
+        "baseline": 0.0600167915,
+        "candidate": 0.053213542,
+        "previous": 0.053264042
+      },
+      {
+        "baseline": 0.059864457999999995,
+        "candidate": 0.0534588125,
+        "previous": 0.0534629375
+      }
+    ],
+    "speedup": 1.1256532038409734,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 6.25e-06,
+      "candidate": 1.042e-06,
+      "previous": 1.042e-06
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 6.271e-06,
+        "candidate": 1.083e-06,
+        "previous": 1.083e-06
+      },
+      {
+        "baseline": 6.25e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.041e-06
+      },
+      {
+        "baseline": 6.25e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.041e-06
+      }
+    ],
+    "speedup": 5.998080614203456,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0042654905955684,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.004623438,
+      "candidate": 0.0037022705,
+      "previous": 0.0037180625
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0046104375,
+        "candidate": 0.0036844165,
+        "previous": 0.0037122505
+      },
+      {
+        "baseline": 0.0045850625,
+        "candidate": 0.003679271,
+        "previous": 0.003676812
+      },
+      {
+        "baseline": 0.004673062,
+        "candidate": 0.0037395625,
+        "previous": 0.0037558955
+      }
+    ],
+    "speedup": 1.2488115063445526,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.014875959575884,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.0005303335,
+      "candidate": 0.0003823955,
+      "previous": 0.000388084
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000533292,
+        "candidate": 0.0003860835,
+        "previous": 0.000389479
+      },
+      {
+        "baseline": 0.000531021,
+        "candidate": 0.0003828545,
+        "previous": 0.00038910400000000003
+      },
+      {
+        "baseline": 0.0005213959999999999,
+        "candidate": 0.00038045799999999997,
+        "previous": 0.000380229
+      }
+    ],
+    "speedup": 1.3868717074337955,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9999844014952629,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.033365458,
+      "candidate": 0.033368583,
+      "previous": 0.033368062500000004
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.033140854,
+        "candidate": 0.033092833,
+        "previous": 0.0331234995
+      },
+      {
+        "baseline": 0.0334530205,
+        "candidate": 0.0333790215,
+        "previous": 0.033393979000000004
+      },
+      {
+        "baseline": 0.033703771,
+        "candidate": 0.033764708000000004,
+        "previous": 0.033687459
+      }
+    ],
+    "speedup": 0.999906349034959,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 4.75e-06,
+      "candidate": 8.75e-07,
+      "previous": 8.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 4.709e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.75e-07
+      },
+      {
+        "baseline": 4.7295e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.75e-07
+      },
+      {
+        "baseline": 4.75e-06,
+        "candidate": 8.545e-07,
+        "previous": 8.545e-07
+      }
+    ],
+    "speedup": 5.428571428571429,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0312428311724209,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 9990,
+    "medianSeconds": {
+      "baseline": 0.004862104,
+      "candidate": 0.0043090205,
+      "previous": 0.0044436465000000005
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0049253330000000005,
+        "candidate": 0.0043519795,
+        "previous": 0.0045064995
+      },
+      {
+        "baseline": 0.0048111460000000005,
+        "candidate": 0.0042504585,
+        "previous": 0.0043989170000000005
+      },
+      {
+        "baseline": 0.004862104,
+        "candidate": 0.0043189795,
+        "previous": 0.0044409585
+      }
+    ],
+    "speedup": 1.1283548082447044,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.037836298549637,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 999,
+    "medianSeconds": {
+      "baseline": 0.000517646,
+      "candidate": 0.00040910450000000004,
+      "previous": 0.00042458350000000003
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0005151665,
+        "candidate": 0.0004055835,
+        "previous": 0.000422333
+      },
+      {
+        "baseline": 0.0005153745,
+        "candidate": 0.000404458,
+        "previous": 0.000423125
+      },
+      {
+        "baseline": 0.0005330005,
+        "candidate": 0.000419667,
+        "previous": 0.000437229
+      }
+    ],
+    "speedup": 1.2653148523176838,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0004430513558595,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.061325604000000006,
+      "candidate": 0.0542160625,
+      "previous": 0.054240082999999994
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.060949729,
+        "candidate": 0.054025958,
+        "previous": 0.0539782085
+      },
+      {
+        "baseline": 0.061455542,
+        "candidate": 0.0543122915,
+        "previous": 0.0544246455
+      },
+      {
+        "baseline": 0.061575917,
+        "candidate": 0.054337290999999996,
+        "previous": 0.054128938
+      }
+    ],
+    "speedup": 1.1311334901902919,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0009606147934678,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 6.25e-06,
+      "candidate": 1.041e-06,
+      "previous": 1.042e-06
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 6.25e-06,
+        "candidate": 1.042e-06,
+        "previous": 1.042e-06
+      },
+      {
+        "baseline": 6.25e-06,
+        "candidate": 1.041e-06,
+        "previous": 1.041e-06
+      },
+      {
+        "baseline": 6.25e-06,
+        "candidate": 1e-06,
+        "previous": 1.0205e-06
+      }
+    ],
+    "speedup": 6.003842459173871,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0025106042272078,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.004709771,
+      "candidate": 0.0037837505,
+      "previous": 0.0037932499999999997
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0047303955,
+        "candidate": 0.0037921255,
+        "previous": 0.003794375
+      },
+      {
+        "baseline": 0.004732333,
+        "candidate": 0.003811104,
+        "previous": 0.0038046875
+      },
+      {
+        "baseline": 0.004680125,
+        "candidate": 0.0037415210000000003,
+        "previous": 0.0037628124999999997
+      }
+    ],
+    "speedup": 1.244736142089707,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0079316574724844,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.000501,
+      "candidate": 0.000373062,
+      "previous": 0.000376021
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000503458,
+        "candidate": 0.00037020849999999997,
+        "previous": 0.00037602100000000004
+      },
+      {
+        "baseline": 0.0005032085,
+        "candidate": 0.000374521,
+        "previous": 0.00037724950000000003
+      },
+      {
+        "baseline": 0.0004977499999999999,
+        "candidate": 0.0003705625,
+        "previous": 0.0003756255
+      }
+    ],
+    "speedup": 1.3429403155507664,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0001621838150945,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.0341775835,
+      "candidate": 0.034168021,
+      "previous": 0.034173562500000004
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.034208688,
+        "candidate": 0.034173999499999996,
+        "previous": 0.0341362915
+      },
+      {
+        "baseline": 0.0341481665,
+        "candidate": 0.0342016045,
+        "previous": 0.034174458500000005
+      },
+      {
+        "baseline": 0.0341775835,
+        "candidate": 0.034142125,
+        "previous": 0.03418425
+      }
+    ],
+    "speedup": 1.0002798669551274,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "coco-i2i-512-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 4.833e-06,
+      "candidate": 8.75e-07,
+      "previous": 8.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 4.833e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.75e-07
+      },
+      {
+        "baseline": 4.833e-06,
+        "candidate": 8.75e-07,
+        "previous": 8.545e-07
+      },
+      {
+        "baseline": 4.833e-06,
+        "candidate": 8.34e-07,
+        "previous": 8.34e-07
+      }
+    ],
+    "speedup": 5.523428571428572,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0256400169342497,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 10000,
+    "medianSeconds": {
+      "baseline": 0.0021060619999999997,
+      "candidate": 0.0019191874999999999,
+      "previous": 0.0019683955
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0021198125,
+        "candidate": 0.001914271,
+        "previous": 0.001974271
+      },
+      {
+        "baseline": 0.0021125205000000003,
+        "candidate": 0.0019343329999999999,
+        "previous": 0.0019804790000000003
+      },
+      {
+        "baseline": 0.0020946669999999997,
+        "candidate": 0.0019220415,
+        "previous": 0.001954417
+      }
+    ],
+    "speedup": 1.097371674211092,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0814196642685852,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 1000,
+    "medianSeconds": {
+      "baseline": 0.0002172915,
+      "candidate": 0.00018243749999999998,
+      "previous": 0.0001972915
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.000218083,
+        "candidate": 0.0001836245,
+        "previous": 0.00019877099999999998
+      },
+      {
+        "baseline": 0.000215854,
+        "candidate": 0.00018039599999999999,
+        "previous": 0.000196042
+      },
+      {
+        "baseline": 0.0002180415,
+        "candidate": 0.00018516650000000002,
+        "previous": 0.0001982915
+      }
+    ],
+    "speedup": 1.1910462487153135,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0008038319322883,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.0194507085,
+      "candidate": 0.018245729500000002,
+      "previous": 0.018260395999999998
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.019140625,
+        "candidate": 0.017978916999999997,
+        "previous": 0.017983666000000002
+      },
+      {
+        "baseline": 0.019707166499999998,
+        "candidate": 0.0184879795,
+        "previous": 0.0184805625
+      },
+      {
+        "baseline": 0.019467291999999997,
+        "candidate": 0.018263020499999998,
+        "previous": 0.0182974375
+      }
+    ],
+    "speedup": 1.0660417003332203,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 5.666e-06,
+      "candidate": 3.75e-07,
+      "previous": 3.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 5.667e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 5.666e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 5.666e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      }
+    ],
+    "speedup": 15.109333333333332,
+    "state": "baseline-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0072968266769653,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.0025253545,
+      "candidate": 0.001613167,
+      "previous": 0.001624938
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0025354585,
+        "candidate": 0.001657333,
+        "previous": 0.001676896
+      },
+      {
+        "baseline": 0.002515,
+        "candidate": 0.0015874375,
+        "previous": 0.0016018955
+      },
+      {
+        "baseline": 0.0025043545,
+        "candidate": 0.0015765835,
+        "previous": 0.0016033125000000001
+      }
+    ],
+    "speedup": 1.565463774054391,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0166544240761346,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.000321812,
+      "candidate": 0.000185146,
+      "previous": 0.0001882295
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.00032741650000000003,
+        "candidate": 0.000187104,
+        "previous": 0.0001904165
+      },
+      {
+        "baseline": 0.00032041649999999997,
+        "candidate": 0.00018558300000000002,
+        "previous": 0.000187792
+      },
+      {
+        "baseline": 0.0003193545,
+        "candidate": 0.0001842295,
+        "previous": 0.00018614549999999998
+      }
+    ],
+    "speedup": 1.7381525930886976,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9997103118497258,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.013285854,
+      "candidate": 0.0133056875,
+      "previous": 0.013301832999999999
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0131884375,
+        "candidate": 0.013201146,
+        "previous": 0.013241666999999999
+      },
+      {
+        "baseline": 0.0133377915,
+        "candidate": 0.0133351875,
+        "previous": 0.0133190625
+      },
+      {
+        "baseline": 0.013348875,
+        "candidate": 0.013393875,
+        "previous": 0.013358541500000001
+      }
+    ],
+    "speedup": 0.9985093968274845,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 4.333e-06,
+      "candidate": 3.34e-07,
+      "previous": 3.34e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 4.333e-06,
+        "candidate": 3.34e-07,
+        "previous": 3.34e-07
+      },
+      {
+        "baseline": 4.333e-06,
+        "candidate": 3.34e-07,
+        "previous": 3.34e-07
+      },
+      {
+        "baseline": 4.334e-06,
+        "candidate": 3.3349999999999996e-07,
+        "previous": 3.33e-07
+      }
+    ],
+    "speedup": 12.97305389221557,
+    "state": "baseline-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0234093683756895,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": false,
+    "maxOwnerCapacity": 14336,
+    "maxOwnerCount": 9990,
+    "medianSeconds": {
+      "baseline": 0.002136979,
+      "candidate": 0.001944542,
+      "previous": 0.0019900625
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0021832085,
+        "candidate": 0.0019784579999999998,
+        "previous": 0.002062584
+      },
+      {
+        "baseline": 0.0021281035,
+        "candidate": 0.0019458754999999999,
+        "previous": 0.001977833
+      },
+      {
+        "baseline": 0.0021190840000000002,
+        "candidate": 0.001909396,
+        "previous": 0.0019534585
+      }
+    ],
+    "speedup": 1.0989626349032315,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0687821681864236,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 1792,
+    "maxOwnerCount": 999,
+    "medianSeconds": {
+      "baseline": 0.0002161875,
+      "candidate": 0.0001850625,
+      "previous": 0.0001977915
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0002187705,
+        "candidate": 0.000186062,
+        "previous": 0.000199
+      },
+      {
+        "baseline": 0.000214562,
+        "candidate": 0.000184917,
+        "previous": 0.00019754149999999998
+      },
+      {
+        "baseline": 0.000213458,
+        "candidate": 0.00018441650000000003,
+        "previous": 0.00019599949999999999
+      }
+    ],
+    "speedup": 1.1681864235055723,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9989649417755136,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.019744958,
+      "candidate": 0.0185376045,
+      "previous": 0.018518417
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0194578335,
+        "candidate": 0.0183639375,
+        "previous": 0.018265125
+      },
+      {
+        "baseline": 0.0198096465,
+        "candidate": 0.018557563,
+        "previous": 0.0185416875
+      },
+      {
+        "baseline": 0.0197362495,
+        "candidate": 0.018549354,
+        "previous": 0.018535917
+      }
+    ],
+    "speedup": 1.0651299632592766,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 5.875e-06,
+      "candidate": 3.75e-07,
+      "previous": 3.75e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 5.875e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 5.875e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 5.875e-06,
+        "candidate": 3.75e-07,
+        "previous": 3.75e-07
+      }
+    ],
+    "speedup": 15.666666666666666,
+    "state": "churn-trained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0092028073876287,
+    "dataset": "deep-image-96-angular",
+    "filter": "10pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.0025160625,
+      "candidate": 0.001623146,
+      "previous": 0.0016380835
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.002488458,
+        "candidate": 0.0016152085,
+        "previous": 0.001605042
+      },
+      {
+        "baseline": 0.0025228330000000004,
+        "candidate": 0.0016244795,
+        "previous": 0.0016417085000000001
+      },
+      {
+        "baseline": 0.0025188125000000002,
+        "candidate": 0.001630688,
+        "previous": 0.0016508125
+      }
+    ],
+    "speedup": 1.5501147154969424,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0289114763591862,
+    "dataset": "deep-image-96-angular",
+    "filter": "1pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.0003169375,
+      "candidate": 0.0001830415,
+      "previous": 0.0001883335
+    },
+    "minimumSpeedup": 1.1,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0003278335,
+        "candidate": 0.0001869795,
+        "previous": 0.0001936875
+      },
+      {
+        "baseline": 0.0003196665,
+        "candidate": 0.000183146,
+        "previous": 0.0001883335
+      },
+      {
+        "baseline": 0.00030093700000000004,
+        "candidate": 0.000175375,
+        "previous": 0.0001780415
+      }
+    ],
+    "speedup": 1.7315062431197297,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9996872119341278,
+    "dataset": "deep-image-96-angular",
+    "filter": "all",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 0.013324916499999999,
+      "candidate": 0.013320521,
+      "previous": 0.0133163545
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.013288417,
+        "candidate": 0.0132754585,
+        "previous": 0.0132885625
+      },
+      {
+        "baseline": 0.0133382705,
+        "candidate": 0.0133305205,
+        "previous": 0.013335833
+      },
+      {
+        "baseline": 0.01331175,
+        "candidate": 0.0133385625,
+        "previous": 0.013332729
+      }
+    ],
+    "speedup": 1.0003299795856333,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 1.0,
+    "dataset": "deep-image-96-angular",
+    "filter": "empty",
+    "gatePass": true,
+    "maxOwnerCapacity": 0,
+    "maxOwnerCount": 0,
+    "medianSeconds": {
+      "baseline": 3.791e-06,
+      "candidate": 3.34e-07,
+      "previous": 3.34e-07
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 3.6665e-06,
+        "candidate": 3.34e-07,
+        "previous": 3.75e-07
+      },
+      {
+        "baseline": 3.792e-06,
+        "candidate": 3.3349999999999996e-07,
+        "previous": 3.3349999999999996e-07
+      },
+      {
+        "baseline": 3.792e-06,
+        "candidate": 3.33e-07,
+        "previous": 3.3349999999999996e-07
+      }
+    ],
+    "speedup": 11.350299401197605,
+    "state": "churn-untrained"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9043718172305546,
+    "dataset": "separated-32768-2",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 28672,
+    "maxOwnerCount": 16384,
+    "medianSeconds": {
+      "baseline": 0.0019445209999999998,
+      "candidate": 0.00215025,
+      "previous": 0.0019446255
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.001965125,
+        "candidate": 0.002151854,
+        "previous": 0.0019472295
+      },
+      {
+        "baseline": 0.0019667915,
+        "candidate": 0.0021559580000000004,
+        "previous": 0.0019555205000000003
+      },
+      {
+        "baseline": 0.0019174374999999999,
+        "candidate": 0.002140021,
+        "previous": 0.0019187085
+      }
+    ],
+    "speedup": 0.9043232182304384,
+    "state": "baseline"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.8939127670549286,
+    "dataset": "separated-32768-4",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 28672,
+    "maxOwnerCount": 16384,
+    "medianSeconds": {
+      "baseline": 0.0019579165000000003,
+      "candidate": 0.002167438,
+      "previous": 0.0019375005000000002
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0020037705,
+        "candidate": 0.0022304165,
+        "previous": 0.002021854
+      },
+      {
+        "baseline": 0.0019464795,
+        "candidate": 0.0021626040000000003,
+        "previous": 0.001923958
+      },
+      {
+        "baseline": 0.001951875,
+        "candidate": 0.0021519585,
+        "previous": 0.001924813
+      }
+    ],
+    "speedup": 0.9033321829736308,
+    "state": "baseline"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9779120698943621,
+    "dataset": "separated-8192-2",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 7168,
+    "maxOwnerCount": 4096,
+    "medianSeconds": {
+      "baseline": 0.0004032295,
+      "candidate": 0.0004055835,
+      "previous": 0.000396625
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.0004029585,
+        "candidate": 0.0004070835,
+        "previous": 0.0003954795
+      },
+      {
+        "baseline": 0.000403875,
+        "candidate": 0.000404167,
+        "previous": 0.00039675
+      },
+      {
+        "baseline": 0.0004019585,
+        "candidate": 0.0004070415,
+        "previous": 0.000397416
+      }
+    ],
+    "speedup": 0.9941960163566812,
+    "state": "baseline"
+  },
+  {
+    "combinedOverPreviousSpeedup": 0.9790660920573937,
+    "dataset": "separated-8192-4",
+    "filter": "50pct",
+    "gatePass": true,
+    "maxOwnerCapacity": 7168,
+    "maxOwnerCount": 4096,
+    "medianSeconds": {
+      "baseline": 0.00041064599999999997,
+      "candidate": 0.000416979,
+      "previous": 0.00040825
+    },
+    "minimumSpeedup": 0.8695652173913044,
+    "queries": 96,
+    "repetitionMedians": [
+      {
+        "baseline": 0.00041064599999999997,
+        "candidate": 0.000418021,
+        "previous": 0.000408938
+      },
+      {
+        "baseline": 0.000410854,
+        "candidate": 0.00041685400000000003,
+        "previous": 0.000408021
+      },
+      {
+        "baseline": 0.000409959,
+        "candidate": 0.00041629199999999996,
+        "previous": 0.000408125
+      }
+    ],
+    "speedup": 0.9848121847862842,
+    "state": "baseline"
+  }
+]

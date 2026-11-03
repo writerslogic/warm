@@ -1,0 +1,2007 @@
+{
+  "complete": true,
+  "engine": "pgvector",
+  "dataset": "coco-i2i-512-angular",
+  "calibrationFreezeSha256": "3b3a370c729d2ad168d16653a14aa79ecd445c6e42c9f977ddcd426f13ba849b",
+  "selectionSha256": "37927d37993d1cf85ee7979f51d812226a3badacba9a2656bace5fbb001cf96f",
+  "auditorSha256": "4b63c2b70d803b7eda6f15a2b3ce03d97a9416e711c73da7898979617180b3e5",
+  "cells": [
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "65ca4227606afd1f03bd914ac98a19d8d7608040bc1dca048cf7de5cddd00e6c",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9993,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0013996310003676626,
+        "p95": 0.0022693010000693903,
+        "p99": 0.0024953020001703408,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "b04566e0c299ebe153cf1d88141b927ada7c1d477b8cfde94f8ebe344c89e3c1",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9993,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0013826309996147756,
+        "p95": 0.002269177000016498,
+        "p99": 0.0024974269999802345,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "05fa6b549afe6000036ed8e87ca686aeb78c973196ad90b45bc797e13f34f9dd",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9993,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0013848399999005778,
+        "p95": 0.0022867600000608945,
+        "p99": 0.002577344999735942,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "all",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "a6f1c050ca4b3dd35c2213c15c4edcbf3ce04cb07af8fb9ab4bfe516231177df",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9993,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0014169149999361252,
+        "p95": 0.0024037880002651946,
+        "p99": 0.0026692470000853064,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "fbcd3dac6c893e5bf2de9db751209b49dfec32f1d9f90e1d99420a59fa71bbd9",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012570678999964002,
+        "p95": 0.015800401999968017,
+        "p99": 0.016661906000081217,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "f54c4f49010540f9e7a0bfa956ef23f8ca74ef139462b38319f66b76d0c94391",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012498054999923625,
+        "p95": 0.013893186000132118,
+        "p99": 0.01485814899979232,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "2e94b09bd2f3f22eeb695a506988d9fbffed224d60806d1ea96b2aaebbb6c85f",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012472016999709012,
+        "p95": 0.013859843000318506,
+        "p99": 0.014777546999539481,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "10pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "0aaa62a2f88a9183aea5e6fe97a1ef5a947fc5ef126dfcf4bde7d2c279b28446",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012718240000140213,
+        "p95": 0.014411780000045837,
+        "p99": 0.015243654000187234,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "2bc961bf1180b09853042b710ec341fad8f07a818005bac2124fd984f01c5319",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.001589172999956645,
+        "p95": 0.0016660910000609874,
+        "p99": 0.0017809239998314297,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "9ec04fcbf8516d95fa8cb852a55bd82e61de29783eedb4013647757d93f96490",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015622569999322877,
+        "p95": 0.0016512580000380694,
+        "p99": 0.001767715999903885,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "6f3ababc7f941cfc12ed73cfaa168f2f6c2f9a68a013649bbc39e8538e7d0cac",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015889520000200719,
+        "p95": 0.0016589100005148794,
+        "p99": 0.001760742999977083,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "1pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "6d65b86c9c7b3939efe343bef9ff1c0e348d83ced9eee671bb55dc34625fcce8",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015865000004851026,
+        "p95": 0.0016574989995206124,
+        "p99": 0.0017552489998706733,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "baseline",
+      "configuration": {
+        "route": "iterative",
+        "ef": 256
+      },
+      "rawSha256": "a024b577d3552e5c4134b1da6c8a28b1a67cd14698517513970f41664b3a070c",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.066700002018479e-05,
+        "p95": 8.408299981965683e-05,
+        "p99": 8.925000020099105e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "ef": 256
+      },
+      "rawSha256": "e97993f0a9622dd6cfbfe251a597772d56a467785e368084979ad57c78d00889",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 7.97090001469769e-05,
+        "p95": 8.533400023225113e-05,
+        "p99": 8.962499987319461e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "ef": 256
+      },
+      "rawSha256": "f95289052d70a7808ac7757e677113f091737b476bed92689e016b26b128331d",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.2208000094397e-05,
+        "p95": 8.549900030629942e-05,
+        "p99": 9.233299988409271e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 0,
+      "filter": "empty",
+      "state": "reopen",
+      "configuration": {
+        "route": "iterative",
+        "ef": 256
+      },
+      "rawSha256": "64cd6c461d8d42e70869541e1354c696a3abbb724674a217946487f0e9261537",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.32919995445991e-05,
+        "p95": 8.812499982013833e-05,
+        "p99": 0.00010362499961047433,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "all",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "ef": 64
+      },
+      "rawSha256": "a9463a5337f37b4121def1b5a5aeb8caf8e71b4b5e0814a5fc2d7c9271d97c4f",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.999,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0008927090002543991,
+        "p95": 0.0014702520002174424,
+        "p99": 0.0016937099999267957,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "all",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 64
+      },
+      "rawSha256": "f9b0c228e2fe61f0b9ab1602022b973dc3342d8d9c44c56af776c68b8f95caf2",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.999,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0008847100007187692,
+        "p95": 0.0014340030002131243,
+        "p99": 0.0017010870005833567,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "all",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 64
+      },
+      "rawSha256": "164b0722cbd4a6de190d0253ae9e5347920e8e6ef330072a228748647c68abb1",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.999,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.000874710999596573,
+        "p95": 0.0014170029999149847,
+        "p99": 0.0017007959995680721,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "all",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "ef": 64
+      },
+      "rawSha256": "0c585cf015cac4f5d2f52180b35a5a18a9f5167a80689fabd08070d6d1f64314",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.999,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0008307990001412691,
+        "p95": 0.0013739699998041033,
+        "p99": 0.0015851379994273884,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "10pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "f09578b18f3aa025ab58de00e8407c606aa21c283bfdc845394d0972592ffb11",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012544230999992578,
+        "p95": 0.01530036099939025,
+        "p99": 0.019743411000490596,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "10pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "4875c3317181303b65963ea69582f16989709b5e13a11363a2e8562a8bcd4400",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012497282000367704,
+        "p95": 0.014573245999599749,
+        "p99": 0.015523455999755242,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "10pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "333b5b98c5987dfa29aebcfa8465001976e331786b8c56d48666480b9dec862d",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012471523000385787,
+        "p95": 0.0138860820006812,
+        "p99": 0.014979304000007687,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "10pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "ef": 256
+      },
+      "rawSha256": "2e4d5856cbf7787f023761958c8f29b7fac0179ec8de6c372e4ebbd73b4d05ba",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012442919000022812,
+        "p95": 0.014131470999927842,
+        "p99": 0.015387563000331284,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "1pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "ef": 128
+      },
+      "rawSha256": "9fe9cb7f58434773c99fbe48b9d9d5f1082f513cea0ff48b71f80a78f5af5c53",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015707539996583364,
+        "p95": 0.0017497540002295864,
+        "p99": 0.00219887999992352,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "1pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 128
+      },
+      "rawSha256": "cd470b5db43f7ef986c3fbb684eaa7586f11ed89ad9f01e7ac3bdc9beb6c0bf6",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.001580961999934516,
+        "p95": 0.0016501300005984376,
+        "p99": 0.0017367130003549391,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "1pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "ef": 128
+      },
+      "rawSha256": "f7f7728c17f9bd8fa6c0d98ee86983bd96bd2ba3cea398aea6126094b679b5e4",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015690579994043219,
+        "p95": 0.001643225999941933,
+        "p99": 0.0017263930003537098,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "1pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "ef": 128
+      },
+      "rawSha256": "539eae42dd880a7779f34dedbdd3155c459cfa7eec41bc5d6d3405403a1df57e",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015915099993435433,
+        "p95": 0.0016734689997974783,
+        "p99": 0.0017570109994267114,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "empty",
+      "state": "baseline",
+      "configuration": {
+        "route": "iterative",
+        "ef": 128
+      },
+      "rawSha256": "af8a1df3d0495ad5b9ded6712b7f710bcad7f2e06106db18578f3afd22d35788",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.324999998876592e-05,
+        "p95": 8.629199965071166e-05,
+        "p99": 0.00010604199997032993,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "empty",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "ef": 128
+      },
+      "rawSha256": "f126d1a2e98ffc157997f832bbfd570a8accda05ac6ba25b3fa9544ed02c1cfc",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.395900022151181e-05,
+        "p95": 9.083399982046103e-05,
+        "p99": 9.649999992689118e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "empty",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "ef": 128
+      },
+      "rawSha256": "5e12c175c968ac17bc7a8d31cc2f9cd09eca4dced8cde9eefef4f37716bc486f",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.058399998844834e-05,
+        "p95": 8.775100013735937e-05,
+        "p99": 0.0001165429994216538,
+        "pass": true
+      }
+    },
+    {
+      "build": 1,
+      "filter": "empty",
+      "state": "reopen",
+      "configuration": {
+        "route": "iterative",
+        "ef": 128
+      },
+      "rawSha256": "78ad5985e6afd6d061fb551b9ee36e35ac629088507ec77ba515a1d950dfdfa2",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 7.791699954395881e-05,
+        "p95": 8.912600060284603e-05,
+        "p99": 9.958400005416479e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "all",
+      "state": "baseline",
+      "configuration": {
+        "route": "iterative",
+        "probes": 32,
+        "lists": 100
+      },
+      "rawSha256": "fe123554ca3de3573472ebfd403d5925a005ad667474b3bb62163e410fd44ac9",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9996,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.007907287999842083,
+        "p95": 0.008931500000471715,
+        "p99": 0.009368211000037263,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "all",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "probes": 32,
+        "lists": 100
+      },
+      "rawSha256": "79fb27c9910dce9d72c174dc4ef430fd3c365ddfd67c7ee62285cf65c5dfb404",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9996,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.007898763000412146,
+        "p95": 0.008967686999312718,
+        "p99": 0.009341523000330199,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "all",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "probes": 32,
+        "lists": 100
+      },
+      "rawSha256": "a1d6c10b7252a61a567e1bc74eab01cb4d652a6c88db7a3d4f4cc280fd5fcaff",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9996,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.007831664999685017,
+        "p95": 0.008892754000044079,
+        "p99": 0.009220587999152485,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "all",
+      "state": "reopen",
+      "configuration": {
+        "route": "iterative",
+        "probes": 32,
+        "lists": 100
+      },
+      "rawSha256": "9c75c5e337c14fba2b17631217d5cdc866fce63514a1d14e15ce2dff5a49592a",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9996,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.008014361999812536,
+        "p95": 0.009114527001656825,
+        "p99": 0.009574943000188796,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "10pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "6ff161423f07d16826a67f50243b54d49bfcc02f9c0984547e2d984eadc7b01e",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.01288897700032976,
+        "p95": 0.014606485000513203,
+        "p99": 0.015064696000081312,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "10pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "c0ca0fa2a03d30cc7375b18ba96688a4a95f161902cd189087e1e01b748d12bd",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012793833999239723,
+        "p95": 0.014751680000699707,
+        "p99": 0.01604006400157232,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "10pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "a187f3196fe365250f3fac470a5fe017df7944da13795b326e5757e2dc5136c1",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012449437999748625,
+        "p95": 0.013069524000457022,
+        "p99": 0.014957033999962732,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "10pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "ca73c5e59d82ddfa8753af3f324b337989345c5ad5f8521d94ddbc4f09ab4dff",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.013222823001342476,
+        "p95": 0.01624048799931188,
+        "p99": 0.016921238000577432,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "1pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 100
+      },
+      "rawSha256": "8687a67dbc648664ee65126544b82422a4305ad74d2a1f98fa27bb4e0991052b",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015842570001041167,
+        "p95": 0.0016856329993970576,
+        "p99": 0.0020535100002234685,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "1pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 100
+      },
+      "rawSha256": "851d2ffdd54f1e81df9bfd69de8e9db7fc05b9bb8b72fb5f662a32bb5acd1f6c",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.001582385000801878,
+        "p95": 0.001671969001108664,
+        "p99": 0.0017341349994239863,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "1pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 100
+      },
+      "rawSha256": "5c5f85b6f13de0b5d87124dd9662534c2b27ca620ad8a8cd6a1f70bed666d12b",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015731330004200572,
+        "p95": 0.0016390490000048885,
+        "p99": 0.0017234250008186791,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "1pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 100
+      },
+      "rawSha256": "4d26c63ca8d4c35f08f308a6abd1ea39776c7cd798a4829ba038ce7c0058ce06",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0017229170007340144,
+        "p95": 0.002098000999467331,
+        "p99": 0.0022652089992334368,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "empty",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "9ef31a8ac097553516bb58f2758555f2e548fe6e7d3e75a18e27f084d1ae40ba",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 7.991700022103032e-05,
+        "p95": 8.845899992593331e-05,
+        "p99": 0.00010920800013991538,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "empty",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "90d6db63c4fa5da18a8740e72b6ebeee682efe45fcb34a1c0eb6af20ee63788a",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.179199903679546e-05,
+        "p95": 9.445899922866374e-05,
+        "p99": 0.00013700000090466347,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "empty",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "e3b0524d4f811af27529f4389aba2fa94ff0c941b5445c274d84517f23af412b",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 7.883400030550547e-05,
+        "p95": 8.616699960839469e-05,
+        "p99": 0.00010462499994901009,
+        "pass": true
+      }
+    },
+    {
+      "build": 2,
+      "filter": "empty",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "probes": 4,
+        "lists": 100
+      },
+      "rawSha256": "7638022bcbbe5a110b1506a0761301dab935fb013d9fbb544c3866db51a059b9",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.066599912126549e-05,
+        "p95": 8.566699943912681e-05,
+        "p99": 9.0501000158838e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "all",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "bce2ae389ad15bf78700c1893281cc50bb64451c307a09a4d7a86ff9a894e6f0",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9995,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.006476388000010047,
+        "p95": 0.007575349000035203,
+        "p99": 0.008056225000473205,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "all",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "c1c4d46f4bd6b7758688e8a317f9ce9a4b2ab13c1b3b35302155791b92f931e2",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9995,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.005909311999857891,
+        "p95": 0.00677748199996131,
+        "p99": 0.007180358999903547,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "all",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "5828d610fcdf857b139afc464519d8bdc88cc6641b2b65c51eaf78bf0f997f54",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9995,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.006036304999724962,
+        "p95": 0.007049751999147702,
+        "p99": 0.007508081000196398,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "all",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "68e23065a93242105a77ec1af9ef4e077a29e3a6904e2675f7ffd854bd2cc8ee",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.426579343075332e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 0.9995,
+        "worstRecall": 0.9,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.00606032299947401,
+        "p95": 0.0070871959997020895,
+        "p99": 0.0075332790001994,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "10pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "iterative",
+        "probes": 316,
+        "lists": 316
+      },
+      "rawSha256": "5a0e636ac87a01b71ead70f490b9be35f59352d050d7cf8ca762d757bc0604f4",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012657833000048413,
+        "p95": 0.01403392100110068,
+        "p99": 0.015132800001083524,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "10pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "probes": 316,
+        "lists": 316
+      },
+      "rawSha256": "c266812f6e70adfa6b4951e522119a2f65d14b3830fdb93c8ad6a920696246f4",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012644463999095024,
+        "p95": 0.014326345999506884,
+        "p99": 0.015300099999876693,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "10pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "probes": 316,
+        "lists": 316
+      },
+      "rawSha256": "f7278a753b90685944844f3b333f97685ecc2e31685e3907b68ce3f5e8f28aa9",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.012695950999841443,
+        "p95": 0.014402821001567645,
+        "p99": 0.015323609000915894,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "10pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "iterative",
+        "probes": 316,
+        "lists": 316
+      },
+      "rawSha256": "4ed9688424557654e7cdca8078d02ac1832f2b002d4b4384dddf3b92c14549fa",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 3.558533776537587e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.01304508399880433,
+        "p95": 0.016009000999474665,
+        "p99": 0.01725995999913721,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "1pct",
+      "state": "baseline",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "5283c5faa997ecaea814325bde3b93ccf6e998481eb3228b0398f64c7ae5d50c",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015796719999343622,
+        "p95": 0.001675839001109125,
+        "p99": 0.0018113810001523234,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "1pct",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "7b32ea496398a012e89f7ec20ee64938374d794c9556e474093ff78114186781",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0015620480007783044,
+        "p95": 0.0016618809986539418,
+        "p99": 0.001747799000440864,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "1pct",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "c46ade31f4195270586c0fc0a8ea8b87bd03dbb81cbfe258866f32da83ed17e6",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0016076609990705037,
+        "p95": 0.001679868999417522,
+        "p99": 0.0018062439994537272,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "1pct",
+      "state": "reopen",
+      "configuration": {
+        "route": "planner",
+        "probes": 64,
+        "lists": 316
+      },
+      "rawSha256": "2a326b2b0fda7964aa4f481560e6dab5690fa8b3e1204a103f1e53116eba533a",
+      "queries": 1000,
+      "metadataOrder": [
+        "epoch",
+        "ordinal",
+        "bucket100",
+        "eligible1",
+        "eligible10"
+      ],
+      "maximumScoreError": 4.023611760439749e-07,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1.0,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 0.0016005000015866244,
+        "p95": 0.0016830420008773217,
+        "p99": 0.0017892510004458018,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "empty",
+      "state": "baseline",
+      "configuration": {
+        "route": "iterative",
+        "probes": 4,
+        "lists": 316
+      },
+      "rawSha256": "a58d3c13e18597ecf90922cb06be4a77f13803098c60b6b0dff92eb28b978337",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.358299965038896e-05,
+        "p95": 8.81670002854662e-05,
+        "p99": 0.00012812500062864274,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "empty",
+      "state": "churn-before-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "probes": 4,
+        "lists": 316
+      },
+      "rawSha256": "7b943048c9be4eddc82e0a773515397fe5f82935bc9081a65824d64c17bea315",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.054200043261517e-05,
+        "p95": 8.408299981965683e-05,
+        "p99": 8.66250011313241e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "empty",
+      "state": "churn-after-maintenance",
+      "configuration": {
+        "route": "iterative",
+        "probes": 4,
+        "lists": 316
+      },
+      "rawSha256": "830c2cb760292fb8924e5e1ac307e16fe7cbe7e87bdb62b9d25f19cab55a53ec",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 5.816699922434054e-05,
+        "p95": 8.904100104700774e-05,
+        "p99": 9.812400094233453e-05,
+        "pass": true
+      }
+    },
+    {
+      "build": 3,
+      "filter": "empty",
+      "state": "reopen",
+      "configuration": {
+        "route": "iterative",
+        "probes": 4,
+        "lists": 316
+      },
+      "rawSha256": "d2f4e52058a313b017cda605f9cc459bd5d35bf98b11e1ee71f897c4e827b483",
+      "queries": 1000,
+      "metadataOrder": null,
+      "maximumScoreError": 0.0,
+      "recomputed": {
+        "queries": 1000,
+        "meanRecall": 1.0,
+        "worstRecall": 1,
+        "errors": 0,
+        "unresolvedExactMembership": 0,
+        "median": 8.125000022118911e-05,
+        "p95": 8.612600140622817e-05,
+        "p99": 0.00016608299847575836,
+        "pass": true
+      }
+    }
+  ],
+  "heldOutVectorsOpened": false,
+  "rejectedWithoutRaw": [
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "baseline",
+        "configuration": {
+          "route": "planner",
+          "ef": 64
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "38638aba9144bb519b80fe031f8914aa3530fc3b5195305798b8f3683b1b8931",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-0/baseline-10pct-1.ndjson"
+    },
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "churn-before-maintenance",
+        "configuration": {
+          "route": "planner",
+          "ef": 64
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "e33abeeb678d1cd196af46024fc5f1431aece5faf132360877fa097704038f43",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-0/churn-before-maintenance-10pct-1.ndjson"
+    },
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "churn-after-maintenance",
+        "configuration": {
+          "route": "planner",
+          "ef": 64
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "56a227b5b28c18de45ae583741470c26a46e89be97f482410090a6271066ce6c",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-0/churn-after-maintenance-10pct-1.ndjson"
+    },
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "churn-after-maintenance",
+        "configuration": {
+          "route": "planner",
+          "ef": 128
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "728e738fe89420cc595f8840d030b187067ef3b97c2f22903c8fb95fbcb2a03c",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-0/churn-after-maintenance-10pct-2.ndjson"
+    },
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "reopen",
+        "configuration": {
+          "route": "planner",
+          "ef": 64
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "0414d4e2334565a07f28bc457a0b87baf47d539f25a61f38193a09835d06d414",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-0/reopen-10pct-1.ndjson"
+    },
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "reopen",
+        "configuration": {
+          "route": "planner",
+          "ef": 128
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "b2eaf6b6cd493b85237d577801d0862d769634bce4e6fa3e7d51a56d9f4f6f91",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-0/reopen-10pct-2.ndjson"
+    },
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "churn-after-maintenance",
+        "configuration": {
+          "route": "planner",
+          "ef": 64
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "56a227b5b28c18de45ae583741470c26a46e89be97f482410090a6271066ce6c",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-1/churn-after-maintenance-10pct-1.ndjson"
+    },
+    {
+      "summary": {
+        "filter": "10pct",
+        "state": "reopen",
+        "configuration": {
+          "route": "planner",
+          "ef": 64
+        },
+        "pass": false,
+        "error": {
+          "type": "ValueError",
+          "message": "incorrect hit count"
+        }
+      },
+      "summarySha256": "0414d4e2334565a07f28bc457a0b87baf47d539f25a61f38193a09835d06d414",
+      "rawPath": "/home/davidcondrey.guest/warm-milestones-20261103/evidence/calibration-pgvector-coco-i2i-512-angular-v1/build-1/reopen-10pct-1.ndjson"
+    }
+  ],
+  "oracleMaximumNumericalDifference": 0.0,
+  "scope": "Every declared cell summary and build selection checked; raw responses verified for the selected filter configuration in every eligible build/state. Pre-recording rejections without raw responses are listed explicitly. Rejected configurations, host isolation and resource ceilings are not independently audited here."
+}

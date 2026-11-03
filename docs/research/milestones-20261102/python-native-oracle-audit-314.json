@@ -1,0 +1,80 @@
+{
+  "complete": true,
+  "python": "3.14.7",
+  "numpy": "2.5.4",
+  "sourceSha256": "9d002fedda77c9f67b1d7f832225d44543ed2e2f9ac151a88d302557f257990b",
+  "cases": [
+    {
+      "name": "angular",
+      "scoreComparisons": 800000,
+      "queries": 200,
+      "maximumDifference": 3.552713678800501e-15,
+      "maximumSampledFsumDifference": 8.881784197001252e-16,
+      "identicalTop10": true,
+      "allFinite": true,
+      "warnings": [],
+      "scoresSha256": "ecf9cd9792611c67228f800bea442d67898afaa6492e1377f3064904b306c3bf"
+    },
+    {
+      "name": "scaled-angular-9",
+      "scoreComparisons": 800000,
+      "queries": 200,
+      "maximumDifference": 3.552713678800501e-15,
+      "maximumSampledFsumDifference": 8.881784197001252e-16,
+      "identicalTop10": true,
+      "allFinite": true,
+      "warnings": [],
+      "scoresSha256": "efa7c13d71f64ebac92ff7da034685e793fd2462841114f11bd9f48bc01a5adb"
+    },
+    {
+      "name": "scaled-angular-10",
+      "scoreComparisons": 800000,
+      "queries": 200,
+      "maximumDifference": 3.552713678800501e-15,
+      "maximumSampledFsumDifference": 9.853229343548264e-16,
+      "identicalTop10": true,
+      "allFinite": true,
+      "warnings": [],
+      "scoresSha256": "06a5ed37a610c06d31642fb14d511b08105215219a4331082891ab26e3148a99"
+    },
+    {
+      "name": "inner-product",
+      "scoreComparisons": 800000,
+      "queries": 200,
+      "maximumDifference": 8.526512829121202e-14,
+      "maximumSampledFsumDifference": 2.1316282072803006e-14,
+      "identicalTop10": true,
+      "allFinite": true,
+      "warnings": [],
+      "scoresSha256": "30d52472412ef1a04c62cd560dd7e797d70d93a67e7bccb71c437183c08ec0a5"
+    },
+    {
+      "name": "training-query-inner-product",
+      "scoreComparisons": 4096,
+      "queries": 16,
+      "maximumDifference": 7.105427357601002e-15,
+      "maximumSampledFsumDifference": 2.220446049250313e-16,
+      "identicalTop10": true,
+      "allFinite": true,
+      "warnings": [],
+      "scoresSha256": "a7b9dd2d11956a9adc48f0fd0f6d4a7ec7474803b814537fb3e0700929e48d52"
+    },
+    {
+      "name": "identity-14",
+      "exactIdentity": true,
+      "warnings": []
+    },
+    {
+      "name": "identity-15",
+      "exactIdentity": true,
+      "warnings": []
+    },
+    {
+      "name": "identity-784",
+      "exactIdentity": true,
+      "warnings": []
+    }
+  ],
+  "reference": "Non-BLAS einsum over every score plus sampled Python math.fsum; exact top-10 identities required",
+  "upstream": "https://github.com/numpy/numpy/pull/29223"
+}

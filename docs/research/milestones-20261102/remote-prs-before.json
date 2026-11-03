@@ -1,0 +1,3018 @@
+[
+  {
+    "headRefName": "fix-readme-broken-server-link",
+    "headRefOid": "8e813f8c735211860765d520485deb81d0edc7c0",
+    "mergeStateStatus": "BLOCKED",
+    "number": 384,
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:32Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268208/job/126029565583",
+        "name": "signoff",
+        "startedAt": "2026-11-03T15:52:19Z",
+        "status": "COMPLETED",
+        "workflowName": "DCO"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:54:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582762",
+        "name": "lint (fmt, clippy)",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:35Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268858/job/126029581790",
+        "name": "review",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "Dependency Review"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:59:45Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268439/job/126029571779",
+        "name": "build",
+        "startedAt": "2026-11-03T15:52:19Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:38Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268205/job/126029559236",
+        "name": "quickstart-rust",
+        "startedAt": "2026-11-03T15:52:18Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268366/job/126029577826",
+        "name": "golden stores are append-only",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "Format drift"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582858",
+        "name": "clippy (node-api)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:55:55Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268439/job/126029572190",
+        "name": "browser-checks",
+        "startedAt": "2026-11-03T15:52:19Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:54:57Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268205/job/126029558657",
+        "name": "quickstart-node",
+        "startedAt": "2026-11-03T15:52:18Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:00Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582578",
+        "name": "clippy (python)",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:06Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582995",
+        "name": "clippy (security)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582656",
+        "name": "clippy (provenance)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582698",
+        "name": "clippy (provenance-scitt)",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582754",
+        "name": "clippy (experimental)",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:16Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029583663",
+        "name": "clippy (private-search)",
+        "startedAt": "2026-11-03T15:52:22Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029583011",
+        "name": "clippy (server)",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582657",
+        "name": "clippy (local-models)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:16Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582793",
+        "name": "clippy (conversation-memory)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:17Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268439/job/126029574656",
+        "name": "rebuild-for-tag",
+        "startedAt": "2026-11-03T15:52:17Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582842",
+        "name": "docs (rustdoc, warnings denied)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:55:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268205/job/126029559483",
+        "name": "quickstart-python",
+        "startedAt": "2026-11-03T15:52:18Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:59:45Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268439/job/126033950803",
+        "name": "deploy",
+        "startedAt": "2026-11-03T15:59:45Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:56:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582733",
+        "name": "test (default features)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:54:17Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268205/job/126029559274",
+        "name": "demo-offline-agent",
+        "startedAt": "2026-11-03T15:52:18Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T16:00:13Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582703",
+        "name": "test (all features)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T16:24:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582540",
+        "name": "test (windows-latest)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268205/job/126029559277",
+        "name": "readme-rust-snippet",
+        "startedAt": "2026-11-03T15:52:18Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:55:50Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029583064",
+        "name": "benchmarks compile",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:35Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268205/job/126029559290",
+        "name": "docs-unit-tests",
+        "startedAt": "2026-11-03T15:52:18Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:48Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582595",
+        "name": "deny",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:53:03Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582794",
+        "name": "msrv (1.89)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:54:36Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582917",
+        "name": "retrieval-quality",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:55:42Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582744",
+        "name": "python sdk (live server)",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:58:27Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582919",
+        "name": "node (ubuntu-latest)",
+        "startedAt": "2026-11-03T15:52:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:54:58Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582985",
+        "name": "node (macos-latest)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:58:29Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029583075",
+        "name": "node (windows-latest)",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T15:52:54Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126029582339",
+        "name": "workflow lint and pins",
+        "startedAt": "2026-11-03T15:52:21Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T16:24:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41611268651/job/126048856204",
+        "name": "check",
+        "startedAt": "2026-11-03T16:24:04Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "title": "docs: fix broken server documentation link"
+  },
+  {
+    "headRefName": "dependabot/github_actions/github-actions-b25ed438e6",
+    "headRefOid": "bff39125e5e65dd41807824392358b65e61c3733",
+    "mergeStateStatus": "BEHIND",
+    "number": 380,
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:13Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325739/job/125327396934",
+        "name": "signoff",
+        "startedAt": "2026-11-02T14:16:13Z",
+        "status": "COMPLETED",
+        "workflowName": "DCO"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:18:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327393838",
+        "name": "lint (fmt, clippy)",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:27Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325665/job/125327397475",
+        "name": "review",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Dependency Review"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:00Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325577/job/125327394894",
+        "name": "build",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:18:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325499/job/125327394228",
+        "name": "quickstart-rust",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:30Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325545/job/125327392607",
+        "name": "golden stores are append-only",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Format drift"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:30Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125327394174",
+        "name": "version",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327393816",
+        "name": "wheels / versions",
+        "startedAt": "2026-11-02T14:16:19Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:35Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327395922",
+        "name": "python / versions",
+        "startedAt": "2026-11-02T14:16:26Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327393535",
+        "name": "versions",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:13Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327396305",
+        "name": "verify npm publishing credentials",
+        "startedAt": "2026-11-02T14:16:13Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:17:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394461",
+        "name": "clippy (node-api)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:21:21Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325577/job/125327395571",
+        "name": "browser-checks",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:18:49Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325499/job/125327393945",
+        "name": "quickstart-node",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:22:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125327550791",
+        "name": "binary aarch64-apple-darwin",
+        "startedAt": "2026-11-02T14:16:33Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507482",
+        "name": "wheels / wheel manylinux2014-x86_64",
+        "startedAt": "2026-11-02T14:16:28Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:33Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327596820",
+        "name": "python / wheel manylinux2014-x86_64",
+        "startedAt": "2026-11-02T14:16:38Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:55Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394116",
+        "name": "clippy (python)",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:31:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125327550728",
+        "name": "binary x86_64-apple-darwin",
+        "startedAt": "2026-11-02T14:16:37Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:44Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507470",
+        "name": "wheels / wheel manylinux2014-aarch64",
+        "startedAt": "2026-11-02T14:16:30Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327597096",
+        "name": "python / wheel manylinux2014-aarch64",
+        "startedAt": "2026-11-02T14:16:41Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394119",
+        "name": "clippy (security)",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:57Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125327550714",
+        "name": "binary x86_64-unknown-linux-gnu",
+        "startedAt": "2026-11-02T14:16:33Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507692",
+        "name": "wheels / wheel musllinux-x86_64",
+        "startedAt": "2026-11-02T14:16:28Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327597138",
+        "name": "python / wheel musllinux-x86_64",
+        "startedAt": "2026-11-02T14:16:38Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394453",
+        "name": "clippy (provenance)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125327550713",
+        "name": "binary aarch64-unknown-linux-gnu",
+        "startedAt": "2026-11-02T14:16:35Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:33Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507704",
+        "name": "wheels / wheel musllinux-aarch64",
+        "startedAt": "2026-11-02T14:16:30Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:31Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327596939",
+        "name": "python / wheel musllinux-aarch64",
+        "startedAt": "2026-11-02T14:16:40Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:17:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394127",
+        "name": "clippy (provenance-scitt)",
+        "startedAt": "2026-11-02T14:16:18Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125327550884",
+        "name": "binary x86_64-pc-windows-msvc",
+        "startedAt": "2026-11-02T14:16:34Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:21:12Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507656",
+        "name": "wheels / wheel macos-arm64",
+        "startedAt": "2026-11-02T14:16:29Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:21:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327596979",
+        "name": "python / wheel macos-arm64",
+        "startedAt": "2026-11-02T14:16:46Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394193",
+        "name": "clippy (experimental)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:29Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507478",
+        "name": "wheels / wheel macos-x86_64",
+        "startedAt": "2026-11-02T14:16:29Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:25:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327596917",
+        "name": "python / wheel macos-x86_64",
+        "startedAt": "2026-11-02T14:16:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:17:12Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394191",
+        "name": "clippy (private-search)",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:22:55Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507459",
+        "name": "wheels / wheel windows-x64",
+        "startedAt": "2026-11-02T14:16:28Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327596934",
+        "name": "python / wheel windows-x64",
+        "startedAt": "2026-11-02T14:16:38Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:57Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327393963",
+        "name": "clippy (server)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394477",
+        "name": "clippy (local-models)",
+        "startedAt": "2026-11-02T14:16:19Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:17:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394046",
+        "name": "clippy (conversation-memory)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:13Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325577/job/125327397223",
+        "name": "rebuild-for-tag",
+        "startedAt": "2026-11-02T14:16:13Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:18:01Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394414",
+        "name": "docs (rustdoc, warnings denied)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:18:44Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325499/job/125327394051",
+        "name": "quickstart-python",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:31:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125335638755",
+        "name": "package",
+        "startedAt": "2026-11-02T14:31:21Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:18:48Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125327507275",
+        "name": "wheels / sdist",
+        "startedAt": "2026-11-02T14:16:28Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327596605",
+        "name": "python / sdist",
+        "startedAt": "2026-11-02T14:16:38Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:37Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327501927",
+        "name": "build darwin-arm64",
+        "startedAt": "2026-11-02T14:16:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327502135",
+        "name": "build darwin-x64",
+        "startedAt": "2026-11-02T14:16:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:44Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327502315",
+        "name": "build linux-x64-gnu",
+        "startedAt": "2026-11-02T14:16:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:12Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327502061",
+        "name": "build linux-arm64-gnu",
+        "startedAt": "2026-11-02T14:16:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:32Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327502030",
+        "name": "build linux-x64-musl",
+        "startedAt": "2026-11-02T14:16:28Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:54Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327501862",
+        "name": "build linux-arm64-musl",
+        "startedAt": "2026-11-02T14:16:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:22:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327502005",
+        "name": "build win32-x64-msvc",
+        "startedAt": "2026-11-02T14:16:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:22:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125327502046",
+        "name": "build win32-arm64-msvc",
+        "startedAt": "2026-11-02T14:16:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:00Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325577/job/125331654283",
+        "name": "deploy",
+        "startedAt": "2026-11-02T14:24:00Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:31:43Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125335861942",
+        "name": "release",
+        "startedAt": "2026-11-02T14:31:43Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:29Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325579/job/125331924120",
+        "name": "Publish warm-python to PyPI",
+        "startedAt": "2026-11-02T14:24:30Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:20:06Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394221",
+        "name": "test (default features)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:18:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325499/job/125327394478",
+        "name": "demo-offline-agent",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:28Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327395813",
+        "name": "npm / versions",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:22Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331042050",
+        "name": "package",
+        "startedAt": "2026-11-02T14:22:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:50Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394147",
+        "name": "test (all features)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:28:59Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327393902",
+        "name": "test (windows-latest)",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:31:43Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125335863218",
+        "name": "npm-publish",
+        "startedAt": "2026-11-02T14:31:43Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:13Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327397704",
+        "name": "npm / verify npm publishing credentials",
+        "startedAt": "2026-11-02T14:16:13Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:17:27Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325499/job/125327393692",
+        "name": "readme-rust-snippet",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312407",
+        "name": "install and search darwin-arm64",
+        "startedAt": "2026-11-02T14:23:25Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312473",
+        "name": "install and search darwin-x64",
+        "startedAt": "2026-11-02T14:23:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:40Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312434",
+        "name": "install and search linux-x64-gnu",
+        "startedAt": "2026-11-02T14:23:25Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312366",
+        "name": "install and search linux-x64-gnu",
+        "startedAt": "2026-11-02T14:23:25Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312522",
+        "name": "install and search linux-arm64-gnu",
+        "startedAt": "2026-11-02T14:23:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:49Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312421",
+        "name": "install and search linux-arm64-gnu",
+        "startedAt": "2026-11-02T14:23:27Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:42Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312772",
+        "name": "install and search linux-x64-musl",
+        "startedAt": "2026-11-02T14:23:25Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:47Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312319",
+        "name": "install and search linux-arm64-musl",
+        "startedAt": "2026-11-02T14:23:26Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312326",
+        "name": "install and search win32-x64-msvc",
+        "startedAt": "2026-11-02T14:23:25Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:25:13Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125331312512",
+        "name": "install and search win32-arm64-msvc",
+        "startedAt": "2026-11-02T14:23:24Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:31:43Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125335863304",
+        "name": "pypi-publish",
+        "startedAt": "2026-11-02T14:31:43Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:25:14Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125332334186",
+        "name": "attest verified npm artifacts",
+        "startedAt": "2026-11-02T14:25:14Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:19Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327393566",
+        "name": "benchmarks compile",
+        "startedAt": "2026-11-02T14:16:20Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:33Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325499/job/125327393940",
+        "name": "docs-unit-tests",
+        "startedAt": "2026-11-02T14:16:25Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:06Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327529780",
+        "name": "npm / build darwin-arm64",
+        "startedAt": "2026-11-02T14:16:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:21:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327529945",
+        "name": "npm / build darwin-x64",
+        "startedAt": "2026-11-02T14:16:35Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327529763",
+        "name": "npm / build linux-x64-gnu",
+        "startedAt": "2026-11-02T14:16:32Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:50Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327530296",
+        "name": "npm / build linux-arm64-gnu",
+        "startedAt": "2026-11-02T14:16:31Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327529764",
+        "name": "npm / build linux-x64-musl",
+        "startedAt": "2026-11-02T14:16:31Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:19:54Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327529886",
+        "name": "npm / build linux-arm64-musl",
+        "startedAt": "2026-11-02T14:16:32Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:13Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327529795",
+        "name": "npm / build win32-x64-msvc",
+        "startedAt": "2026-11-02T14:16:31Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:21:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125327529957",
+        "name": "npm / build win32-arm64-msvc",
+        "startedAt": "2026-11-02T14:16:41Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:31:43Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125335864773",
+        "name": "verify published MCP npm launcher",
+        "startedAt": "2026-11-02T14:31:44Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:25:14Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125332333297",
+        "name": "attest npm SBOM (${{ matrix.artifact }})",
+        "startedAt": "2026-11-02T14:25:14Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327394064",
+        "name": "deny",
+        "startedAt": "2026-11-02T14:16:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:23:44Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125331233106",
+        "name": "npm / package",
+        "startedAt": "2026-11-02T14:23:16Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:31:43Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325716/job/125335864867",
+        "name": "mcp-registry",
+        "startedAt": "2026-11-02T14:31:44Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP launcher release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:25:14Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325611/job/125332335222",
+        "name": "publish verified WARM packages to npm",
+        "startedAt": "2026-11-02T14:25:14Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:16:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325500/job/125327393870",
+        "name": "msrv (1.89)",
+        "startedAt": "2026-11-02T14:16:15Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125331508872",
+        "name": "npm / install and search darwin-arm64",
+        "startedAt": "2026-11-02T14:23:50Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125331508856",
+        "name": "npm / install and search darwin-x64",
+        "startedAt": "2026-11-02T14:23:47Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T14:24:11Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41460325813/job/125331508929",
+        "name": "npm / install and search linux-x64-gnu",
+        "startedAt": "2026-11-02T14:23:46Z",
+        "status": "COMPLETED",
+        "workflowName": "Release"
+      }
+    ],
+    "title": "ci(deps)(deps): bump taiki-e/install-action from 2.88.0 to 2.88.1 in the github-actions group across 1 directory"
+  },
+  {
+    "headRefName": "dependabot/cargo/rust-minor-patch-6e8df72b46",
+    "headRefOid": "30e1605906f71c4a316bf73eb0d00d2caae4bfbe",
+    "mergeStateStatus": "BLOCKED",
+    "number": 379,
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:40Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657601/job/125760039509",
+        "name": "signoff",
+        "startedAt": "2026-11-03T06:14:49Z",
+        "status": "COMPLETED",
+        "workflowName": "DCO"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:16:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989190",
+        "name": "lint (fmt, clippy)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657567/job/125759988634",
+        "name": "review",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Dependency Review"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657414/job/125759987955",
+        "name": "build",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:59Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657362/job/125759987432",
+        "name": "quickstart-rust",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657837/job/125759989283",
+        "name": "golden stores are append-only",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Format drift"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:37Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988965",
+        "name": "fuzz wire_inputs",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:23:11Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657645/job/125759988404",
+        "name": "build",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "MCP container"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:33Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657807/job/125759989784",
+        "name": "Build default offline embedding pack",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Python models release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125759988722",
+        "name": "wheels / versions",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:23:22Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657663/job/125759989074",
+        "name": "build first",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Reproducible build"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:16:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657679/job/125759989561",
+        "name": "interop",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Standards interop"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125759987735",
+        "name": "versions",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:51Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988719",
+        "name": "fuzz document_chunking",
+        "startedAt": "2026-11-03T06:14:46Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:23:51Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657663/job/125759988754",
+        "name": "build second",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Reproducible build"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:38Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988794",
+        "name": "fuzz document_engine",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:35Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988795",
+        "name": "fuzz store_open",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:49Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988371",
+        "name": "fuzz ivf_decode",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:04Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988810",
+        "name": "fuzz jumbf_decode",
+        "startedAt": "2026-11-03T06:14:44Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:59Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988862",
+        "name": "fuzz cose_envelopes",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:20:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988825",
+        "name": "fuzz cawg_identity",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988786",
+        "name": "fuzz did_parse",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:20:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988804",
+        "name": "fuzz provenance_json",
+        "startedAt": "2026-11-03T06:14:45Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:44Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988739",
+        "name": "fuzz private_query",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:20:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988689",
+        "name": "fuzz server_requests",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:20Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988663",
+        "name": "fuzz operand_question",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988894",
+        "name": "fuzz connection_graph_log",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:23:33Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657537/job/125759988700",
+        "name": "fuzz llm_output",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Fuzz"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:14Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657414/job/125759988191",
+        "name": "browser-checks",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:34Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657807/job/125761291907",
+        "name": "Publish warm-models to PyPI",
+        "startedAt": "2026-11-03T06:18:34Z",
+        "status": "COMPLETED",
+        "workflowName": "Python models release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:40Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125759989593",
+        "name": "verify npm publishing credentials",
+        "startedAt": "2026-11-03T06:14:40Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989442",
+        "name": "clippy (node-api)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:16:45Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657362/job/125759987841",
+        "name": "quickstart-node",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:32Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060792",
+        "name": "wheels / wheel manylinux2014-x86_64",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:24:04Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657663/job/125763061706",
+        "name": "compare",
+        "startedAt": "2026-11-03T06:23:53Z",
+        "status": "COMPLETED",
+        "workflowName": "Reproducible build"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989438",
+        "name": "clippy (python)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:07Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060732",
+        "name": "wheels / wheel manylinux2014-aarch64",
+        "startedAt": "2026-11-03T06:14:57Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:11Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989636",
+        "name": "clippy (security)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060657",
+        "name": "wheels / wheel musllinux-x86_64",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:20Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989444",
+        "name": "clippy (provenance)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060896",
+        "name": "wheels / wheel musllinux-aarch64",
+        "startedAt": "2026-11-03T06:14:57Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:21Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989440",
+        "name": "clippy (provenance-scitt)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:19:32Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060685",
+        "name": "wheels / wheel macos-arm64",
+        "startedAt": "2026-11-03T06:14:56Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989321",
+        "name": "clippy (experimental)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:24:40Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060699",
+        "name": "wheels / wheel macos-x86_64",
+        "startedAt": "2026-11-03T06:14:58Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989203",
+        "name": "clippy (private-search)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:20:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060702",
+        "name": "wheels / wheel windows-x64",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:16Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989456",
+        "name": "clippy (server)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989455",
+        "name": "clippy (local-models)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989562",
+        "name": "clippy (conversation-memory)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:40Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657414/job/125759990073",
+        "name": "rebuild-for-tag",
+        "startedAt": "2026-11-03T06:14:41Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:27Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989183",
+        "name": "docs (rustdoc, warnings denied)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:13Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657362/job/125759987714",
+        "name": "quickstart-python",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125760060535",
+        "name": "wheels / sdist",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:23Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061902",
+        "name": "build darwin-arm64",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:20:44Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061857",
+        "name": "build darwin-x64",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:22Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061813",
+        "name": "build linux-x64-gnu",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061836",
+        "name": "build linux-arm64-gnu",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:19Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061927",
+        "name": "build linux-x64-musl",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061841",
+        "name": "build linux-arm64-musl",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061873",
+        "name": "build win32-x64-msvc",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125760061844",
+        "name": "build win32-arm64-msvc",
+        "startedAt": "2026-11-03T06:14:55Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:43Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657414/job/125762347030",
+        "name": "deploy",
+        "startedAt": "2026-11-03T06:21:43Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:24:40Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657595/job/125763342589",
+        "name": "Publish warm-python to PyPI",
+        "startedAt": "2026-11-03T06:24:40Z",
+        "status": "COMPLETED",
+        "workflowName": "Python native release"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989141",
+        "name": "test (default features)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657362/job/125759987708",
+        "name": "demo-offline-agent",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762133946",
+        "name": "package",
+        "startedAt": "2026-11-03T06:21:07Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759988828",
+        "name": "test (all features)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:44:51Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989174",
+        "name": "test (windows-latest)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:38Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657362/job/125759987748",
+        "name": "readme-rust-snippet",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252657",
+        "name": "install and search darwin-arm64",
+        "startedAt": "2026-11-03T06:21:29Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:04Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252755",
+        "name": "install and search darwin-x64",
+        "startedAt": "2026-11-03T06:21:31Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252735",
+        "name": "install and search linux-x64-gnu",
+        "startedAt": "2026-11-03T06:21:29Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:47Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252730",
+        "name": "install and search linux-x64-gnu",
+        "startedAt": "2026-11-03T06:21:29Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252839",
+        "name": "install and search linux-arm64-gnu",
+        "startedAt": "2026-11-03T06:21:31Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:51Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252708",
+        "name": "install and search linux-arm64-gnu",
+        "startedAt": "2026-11-03T06:21:31Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:49Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252767",
+        "name": "install and search linux-x64-musl",
+        "startedAt": "2026-11-03T06:21:29Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:51Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252783",
+        "name": "install and search linux-arm64-musl",
+        "startedAt": "2026-11-03T06:21:31Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252771",
+        "name": "install and search win32-x64-msvc",
+        "startedAt": "2026-11-03T06:21:29Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762252806",
+        "name": "install and search win32-arm64-msvc",
+        "startedAt": "2026-11-03T06:21:29Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:15Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762525214",
+        "name": "attest verified npm artifacts",
+        "startedAt": "2026-11-03T06:22:15Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989210",
+        "name": "benchmarks compile",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657362/job/125759987746",
+        "name": "docs-unit-tests",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:15Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762525898",
+        "name": "attest npm SBOM (${{ matrix.artifact }})",
+        "startedAt": "2026-11-03T06:22:15Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:19Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989191",
+        "name": "deny",
+        "startedAt": "2026-11-03T06:14:44Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:15Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762525982",
+        "name": "publish verified WARM packages to npm",
+        "startedAt": "2026-11-03T06:22:15Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:11Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989100",
+        "name": "msrv (1.89)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:22:15Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657491/job/125762526964",
+        "name": "install published WARM and search",
+        "startedAt": "2026-11-03T06:22:15Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:16:57Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989231",
+        "name": "retrieval-quality",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:17:21Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989197",
+        "name": "python sdk (live server)",
+        "startedAt": "2026-11-03T06:14:43Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:20:47Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989537",
+        "name": "node (ubuntu-latest)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:18:40Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989536",
+        "name": "node (macos-latest)",
+        "startedAt": "2026-11-03T06:14:44Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:21:00Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989419",
+        "name": "node (windows-latest)",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:15:07Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125759989224",
+        "name": "workflow lint and pins",
+        "startedAt": "2026-11-03T06:14:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:44:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41588657447/job/125770095682",
+        "name": "check",
+        "startedAt": "2026-11-03T06:44:53Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-03T06:14:37Z",
+        "conclusion": "NEUTRAL",
+        "detailsUrl": "https://github.com/writerslogic/warm/runs/125759965126",
+        "name": "CodeQL",
+        "startedAt": "2026-11-03T06:14:36Z",
+        "status": "COMPLETED",
+        "workflowName": ""
+      }
+    ],
+    "title": "deps(rust)(deps): Bump the rust-minor-patch group across 1 directory with 2 updates"
+  },
+  {
+    "headRefName": "dependabot/npm_and_yarn/npm-minor-patch-ad441a7b4e",
+    "headRefOid": "96b1c0a5d2db520ab4fff2449aa162f6713d924c",
+    "mergeStateStatus": "BEHIND",
+    "number": 377,
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:03Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927575/job/125179642719",
+        "name": "signoff",
+        "startedAt": "2026-11-02T08:50:04Z",
+        "status": "COMPLETED",
+        "workflowName": "DCO"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:52:30Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641137",
+        "name": "lint (fmt, clippy)",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:31Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927508/job/125179640234",
+        "name": "review",
+        "startedAt": "2026-11-02T08:50:15Z",
+        "status": "COMPLETED",
+        "workflowName": "Dependency Review"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:56:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927507/job/125179641275",
+        "name": "build",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:51:23Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927610/job/125179640732",
+        "name": "quickstart-rust",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927634/job/125179640200",
+        "name": "golden stores are append-only",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "Format drift"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:16Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179640999",
+        "name": "versions",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:03Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179642844",
+        "name": "verify npm publishing credentials",
+        "startedAt": "2026-11-02T08:50:04Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:37Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641190",
+        "name": "clippy (node-api)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:39Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927507/job/125179640480",
+        "name": "browser-checks",
+        "startedAt": "2026-11-02T08:50:08Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:05Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927610/job/125179640482",
+        "name": "quickstart-node",
+        "startedAt": "2026-11-02T08:50:12Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:57Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641345",
+        "name": "clippy (python)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:31Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641327",
+        "name": "clippy (security)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641200",
+        "name": "clippy (provenance)",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:36Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641294",
+        "name": "clippy (provenance-scitt)",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:51Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641210",
+        "name": "clippy (experimental)",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:38Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641394",
+        "name": "clippy (private-search)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:39Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641552",
+        "name": "clippy (server)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641182",
+        "name": "clippy (local-models)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641536",
+        "name": "clippy (conversation-memory)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:03Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927507/job/125179642243",
+        "name": "rebuild-for-tag",
+        "startedAt": "2026-11-02T08:50:04Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:51:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641104",
+        "name": "docs (rustdoc, warnings denied)",
+        "startedAt": "2026-11-02T08:50:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:03Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927610/job/125179640708",
+        "name": "quickstart-python",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:54:49Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179725809",
+        "name": "build darwin-arm64",
+        "startedAt": "2026-11-02T08:50:18Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:54:45Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179725790",
+        "name": "build darwin-x64",
+        "startedAt": "2026-11-02T08:50:18Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:52:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179725874",
+        "name": "build linux-x64-gnu",
+        "startedAt": "2026-11-02T08:50:18Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179726042",
+        "name": "build linux-arm64-gnu",
+        "startedAt": "2026-11-02T08:50:18Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:24Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179725880",
+        "name": "build linux-x64-musl",
+        "startedAt": "2026-11-02T08:50:18Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:38Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179725950",
+        "name": "build linux-arm64-musl",
+        "startedAt": "2026-11-02T08:50:18Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:56:13Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179725781",
+        "name": "build win32-x64-msvc",
+        "startedAt": "2026-11-02T08:50:18Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:56:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125179725845",
+        "name": "build win32-arm64-msvc",
+        "startedAt": "2026-11-02T08:50:19Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:56:41Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927507/job/125182318276",
+        "name": "deploy",
+        "startedAt": "2026-11-02T08:56:41Z",
+        "status": "COMPLETED",
+        "workflowName": "Docs"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:54:06Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641271",
+        "name": "test (default features)",
+        "startedAt": "2026-11-02T08:50:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:52:45Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927610/job/125179640990",
+        "name": "demo-offline-agent",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:56:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182160199",
+        "name": "package",
+        "startedAt": "2026-11-02T08:56:20Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:11Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641213",
+        "name": "test (all features)",
+        "startedAt": "2026-11-02T08:50:16Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T09:25:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641347",
+        "name": "test (windows-latest)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:51:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927610/job/125179641021",
+        "name": "readme-rust-snippet",
+        "startedAt": "2026-11-02T08:50:05Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315493",
+        "name": "install and search darwin-arm64",
+        "startedAt": "2026-11-02T08:56:44Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:21Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315423",
+        "name": "install and search darwin-x64",
+        "startedAt": "2026-11-02T08:56:45Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:07Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315301",
+        "name": "install and search linux-x64-gnu",
+        "startedAt": "2026-11-02T08:56:53Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315283",
+        "name": "install and search linux-x64-gnu",
+        "startedAt": "2026-11-02T08:56:43Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:56:59Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315260",
+        "name": "install and search linux-arm64-gnu",
+        "startedAt": "2026-11-02T08:56:45Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315389",
+        "name": "install and search linux-arm64-gnu",
+        "startedAt": "2026-11-02T08:56:52Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315456",
+        "name": "install and search linux-x64-musl",
+        "startedAt": "2026-11-02T08:56:43Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315325",
+        "name": "install and search linux-arm64-musl",
+        "startedAt": "2026-11-02T08:56:47Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:24Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315466",
+        "name": "install and search win32-x64-msvc",
+        "startedAt": "2026-11-02T08:56:48Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:45Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182315471",
+        "name": "install and search win32-arm64-msvc",
+        "startedAt": "2026-11-02T08:56:54Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:45Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182738456",
+        "name": "attest verified npm artifacts",
+        "startedAt": "2026-11-02T08:57:45Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:18Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641229",
+        "name": "benchmarks compile",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:17Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927610/job/125179640825",
+        "name": "docs-unit-tests",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "Examples"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:45Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182738053",
+        "name": "attest npm SBOM (${{ matrix.artifact }})",
+        "startedAt": "2026-11-02T08:57:45Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:54Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641162",
+        "name": "deny",
+        "startedAt": "2026-11-02T08:50:13Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:45Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182738254",
+        "name": "publish verified WARM packages to npm",
+        "startedAt": "2026-11-02T08:57:45Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:42Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179640879",
+        "name": "msrv (1.89)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:57:45Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927857/job/125182738630",
+        "name": "install published WARM and search",
+        "startedAt": "2026-11-02T08:57:45Z",
+        "status": "COMPLETED",
+        "workflowName": "npm packages"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:52:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641099",
+        "name": "retrieval-quality",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:53:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641332",
+        "name": "python sdk (live server)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:56:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641214",
+        "name": "node (ubuntu-latest)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:54:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641383",
+        "name": "node (macos-latest)",
+        "startedAt": "2026-11-02T08:50:14Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:54:49Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641218",
+        "name": "node (windows-latest)",
+        "startedAt": "2026-11-02T08:50:06Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125179641148",
+        "name": "workflow lint and pins",
+        "startedAt": "2026-11-02T08:50:13Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T09:26:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/writerslogic/warm/actions/runs/41415927491/job/125194858988",
+        "name": "check",
+        "startedAt": "2026-11-02T09:25:56Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-02T08:50:00Z",
+        "conclusion": "NEUTRAL",
+        "detailsUrl": "https://github.com/writerslogic/warm/runs/125179611856",
+        "name": "CodeQL",
+        "startedAt": "2026-11-02T08:49:59Z",
+        "status": "COMPLETED",
+        "workflowName": ""
+      }
+    ],
+    "title": "deps(npm)(deps-dev): bump @types/node from 26.6.5 to 26.6.6 in the npm-minor-patch group across 1 directory"
+  }
+]

@@ -1,0 +1,133 @@
+{
+  "basisFreezeSha256": "fa1581edd06e9485b473796e4a83ff3826a68b3a04cca29ac7040c981c7f8408",
+  "files": {
+    "docs/research/milestones-20261102/integrations-qualification-plan.json": {
+      "destination": "plan.json",
+      "sha256": "444533b49b63138ee67abc3abf5945643917cd268d0d16aeca984fe1f5256d9b"
+    },
+    "docs/research/milestones-20261102/linux-integrations-qualification.py": {
+      "destination": "linux-integrations-qualification.py",
+      "sha256": "ff133754cdb7e6fd5bd4f32724c99ff64a3e4b2e8785d7521fa360881a313ca6"
+    },
+    "docs/research/milestones-20261102/mac-integrations-prepare.py": {
+      "destination": "mac-integrations-prepare.py",
+      "sha256": "38fa6e83088c4f2bfdaf0651e317c5e372f9c2439de1e75927fb0ea11b024714"
+    },
+    "docs/research/milestones-20261102/run-integration-tests.py": {
+      "destination": "run-integration-tests.py",
+      "sha256": "ca9cbb448e334e3c0f3879db12b0f5a6cf82f84a7192bda2212c829c95ff2b0d"
+    },
+    "integrations/python/tests/autogen/test_ag2_toolkit.py": {
+      "destination": "source/integrations/python/tests/autogen/test_ag2_toolkit.py",
+      "sha256": "41a53c93e1f61fa69cf9245dca135cf03baa0b7b85be1775b802422a81f15bec"
+    },
+    "integrations/python/tests/autogen/test_autogen_memory.py": {
+      "destination": "source/integrations/python/tests/autogen/test_autogen_memory.py",
+      "sha256": "edba28b5b92b367d553f744145a502686d1977c90ea71ef7d068267e3c614b9d"
+    },
+    "integrations/python/tests/conftest.py": {
+      "destination": "source/integrations/python/tests/conftest.py",
+      "sha256": "6066fbcefdb1f617e65a3753f2acaa8463933ee32bf33499dd9ce05bcefa3107"
+    },
+    "integrations/python/tests/crewai/conftest.py": {
+      "destination": "source/integrations/python/tests/crewai/conftest.py",
+      "sha256": "5b9139c046dce3dd0845adbb1768cae14ee0a7dd401c1fe993b9963d8f497e55"
+    },
+    "integrations/python/tests/crewai/test_crewai.py": {
+      "destination": "source/integrations/python/tests/crewai/test_crewai.py",
+      "sha256": "76adbfc6631beeab1b41fede65a448dfa0fc970b3d9f6ae854679343b09c27da"
+    },
+    "integrations/python/tests/dspy/test_cache_isolation.py": {
+      "destination": "source/integrations/python/tests/dspy/test_cache_isolation.py",
+      "sha256": "1f6e461f5cf12dcbeab8cb73cdcc90ea093fedee91f6b7505b96f84c9367f06e"
+    },
+    "integrations/python/tests/dspy/test_dspy_retriever.py": {
+      "destination": "source/integrations/python/tests/dspy/test_dspy_retriever.py",
+      "sha256": "ccf3579d974cceeb99a1f2b6fef98a3860a6f0ee83a6d355c473c0e62ba35736"
+    },
+    "integrations/python/tests/haystack/test_haystack_conformance.py": {
+      "destination": "source/integrations/python/tests/haystack/test_haystack_conformance.py",
+      "sha256": "e5dc203692ae7220bcc930b96dc6ac2b57ce11cd7dd11a08ae92f89c4afd5f9b"
+    },
+    "integrations/python/tests/haystack/test_haystack_store.py": {
+      "destination": "source/integrations/python/tests/haystack/test_haystack_store.py",
+      "sha256": "89b188402df3f87823706d63bb5a099801682ef1985a528e61d726aaae96bf82"
+    },
+    "integrations/python/tests/langchain_adapter/test_langchain_adapter.py": {
+      "destination": "source/integrations/python/tests/langchain_adapter/test_langchain_adapter.py",
+      "sha256": "97c91b2259ebcc6aabd7b0a22f6d8b23873fee699aba81239904329d6ec2f098"
+    },
+    "integrations/python/tests/langchain_adapter/test_langchain_conformance.py": {
+      "destination": "source/integrations/python/tests/langchain_adapter/test_langchain_conformance.py",
+      "sha256": "834669e7afdb7f6eb142bac0e3928ad0c671299b4e3732989ac03190452a4561"
+    },
+    "integrations/python/tests/langgraph_adapter/test_langgraph_checkpoint.py": {
+      "destination": "source/integrations/python/tests/langgraph_adapter/test_langgraph_checkpoint.py",
+      "sha256": "1e3b90bfc63d028e38776e645143fc9073955b8d0da0c223a8179a5f28c5097f"
+    },
+    "integrations/python/tests/langgraph_adapter/test_langgraph_store.py": {
+      "destination": "source/integrations/python/tests/langgraph_adapter/test_langgraph_store.py",
+      "sha256": "a68bc8f49f95b2f14faf878055971e8dc430f4944c8b323e70d608723fccffab"
+    },
+    "integrations/python/tests/letta/test_letta_archival.py": {
+      "destination": "source/integrations/python/tests/letta/test_letta_archival.py",
+      "sha256": "32f34ec09fef91f435fff434232377fad0f7e73bca7ab1ee999a1fca29ff3f53"
+    },
+    "integrations/python/tests/litellm/test_litellm.py": {
+      "destination": "source/integrations/python/tests/litellm/test_litellm.py",
+      "sha256": "49c790c91a0118a0b7ad5ba7a0efd725378b79ba46c1aff26a3159e4ebd02e84"
+    },
+    "integrations/python/tests/llamaindex/test_storage_and_memory.py": {
+      "destination": "source/integrations/python/tests/llamaindex/test_storage_and_memory.py",
+      "sha256": "d91a4be66c291b1177c2a5d901688a6b0b867aea8ece60377eb29120f05307cb"
+    },
+    "integrations/python/tests/llamaindex/test_text_queries_wire.py": {
+      "destination": "source/integrations/python/tests/llamaindex/test_text_queries_wire.py",
+      "sha256": "f20b4cf9ca4d290a86822f892b581ca0ec9608c61a0729adbd2ce8d39c2c15f1"
+    },
+    "integrations/python/tests/llamaindex/test_vector_store.py": {
+      "destination": "source/integrations/python/tests/llamaindex/test_vector_store.py",
+      "sha256": "7a4cdcee3965aaf7a6556a2a74117b8f824b39b8d8178e246a14242f06b7ea67"
+    },
+    "integrations/python/tests/mem0/test_mem0_conformance.py": {
+      "destination": "source/integrations/python/tests/mem0/test_mem0_conformance.py",
+      "sha256": "938bbd6f931a84499696a2d5ab4e46b87266d2b9b546854796d439d743b6c13b"
+    },
+    "integrations/python/tests/mem0/test_mem0_shim.py": {
+      "destination": "source/integrations/python/tests/mem0/test_mem0_shim.py",
+      "sha256": "ee5d1c2e811aaca479c7bc365620e65220bac893d23c51f9a53e79af06029d3b"
+    },
+    "integrations/python/tests/openai_agents/test_openai_agents.py": {
+      "destination": "source/integrations/python/tests/openai_agents/test_openai_agents.py",
+      "sha256": "f8e6513a373d72c3442c4ab7d0a5a6af129336735060057a21fa721037c3273d"
+    },
+    "integrations/python/tests/pydantic_ai/test_pydantic_ai.py": {
+      "destination": "source/integrations/python/tests/pydantic_ai/test_pydantic_ai.py",
+      "sha256": "8b7b1e5b6b145837d9e2cd11cf5ae7c5af2ed81adb8c1f9e80a47a01c56416b2"
+    },
+    "integrations/python/tests/semantic_kernel/test_semantic_kernel.py": {
+      "destination": "source/integrations/python/tests/semantic_kernel/test_semantic_kernel.py",
+      "sha256": "2f658ef52fb3e62210665f57765a06b8d24c46c4e3cb5835e040f204e7fa9ee6"
+    },
+    "integrations/python/tests/smolagents/test_smolagents.py": {
+      "destination": "source/integrations/python/tests/smolagents/test_smolagents.py",
+      "sha256": "f5a003c4b0e8ab51f9272a8f2b76dc7fe52146ce3fa25baddcd6726c7817b684"
+    },
+    "integrations/python/tests/test_core.py": {
+      "destination": "source/integrations/python/tests/test_core.py",
+      "sha256": "8b2205c7e322dee454a39ed52508610058b74ec318b6d1e1d82e98d9b67a7d2d"
+    },
+    "integrations/python/tests/test_core_capabilities.py": {
+      "destination": "source/integrations/python/tests/test_core_capabilities.py",
+      "sha256": "594efcf35b8c5e39fdb7f7d20dd34a6ddf4bc45be0a9042744308bd504eb1bed"
+    },
+    "integrations/python/tests/test_paged.py": {
+      "destination": "source/integrations/python/tests/test_paged.py",
+      "sha256": "709ea1f57b29960c03c28a38227111ba67a2ea7bc711eb1bd90fcc198374f1de"
+    }
+  },
+  "preparedAt": "2026-11-03T18:45:50.875654+00:00",
+  "profiles": 15,
+  "testModules": 23,
+  "waitFor": "Completed serving queue and both terminal observers; no concurrent performance execution."
+}

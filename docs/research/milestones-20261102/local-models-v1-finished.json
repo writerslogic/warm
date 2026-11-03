@@ -1,0 +1,26 @@
+{
+  "binaries": {
+    "public-bench": "014a3bdf4b217cf140b99766d4f41c43c740c5df0ed8b2b8de8cb5c044f1f5eb",
+    "warm-server": "e108993617bb95d7c1ef08c8b5f7b4d6d07e3b4fe178a8ed719afcc29e5e164f"
+  },
+  "complete": true,
+  "completedAt": "2026-11-03T19:26:58.832436+00:00",
+  "freezeSha256": "930099d5d26d11e9e85508469aff9368a63132300e06ce9596c59aa397511844",
+  "paidServicesUsed": false,
+  "pending": [
+    "HTTP local-model lifecycle and recovery",
+    "Full generator/reranker workflows",
+    "Real memory utility",
+    "Other platforms and devices"
+  ],
+  "tests": {
+    "conversation-model-tests": {
+      "logSha256": "51fda78a132052e4d0ba9ea052f8b2eca9b2370593b79d300f7a5f6243743108",
+      "passed": 2
+    },
+    "model-unit-tests": {
+      "logSha256": "4b28c27cf2304b56bd739ba97a927a9d72006f1dbc54ca7af335e409d4535d2e",
+      "passed": 32
+    }
+  }
+}

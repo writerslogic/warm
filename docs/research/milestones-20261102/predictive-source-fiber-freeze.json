@@ -1,0 +1,39 @@
+{
+  "frozenAt": "2026-11-03T13:16:12.631115+00:00",
+  "source": {
+    "audit_symbolic.py": "114eb9721b4a2a4de72aa0ac29cc05f97614d824abedfdcb650c116381e63711",
+    "FIBER-PLAN.json": "cb8e63939cdc803c425c2d4dec51bea4c35ef0555b72a7121d5fc5e07bb4cae7",
+    "fiber.py": "e40f1eb83184252d71b4fdb91341ccc819133a8082e5994f1b0943141e349d48",
+    "fiber_codec.py": "fa440629b8c36b527ef386aa6152a0f6c2be2d9ce0bd15caae3165fe4c0db65f",
+    "miniwob.py": "7bd71dad880b3759ef09e2d8117a38556e32096291ffc0c57f19f091a93bcec8",
+    "probe.py": "76f7543882ae66c5a4ad90d425a15bcf087cd3ada70a3baca238eb4a5f11e9c8",
+    "run.py": "4869d30559e79ae5022a67bda324b66922cab231f74177e410a55c1157285494",
+    "run_fiber.py": "bfbd1f8deab755ff24e65dff60f06bb23caa62e6c99bc60bcf092b90a38ba92f",
+    "run_miniwob.py": "60907873c9a8ce31f0a5cfd858018e4dd39d80eba8c3cd4e8b7937294246c311",
+    "run_miniwob_state.py": "4dca29582335b7209da7a43cc1dd71373ecaf6e4d2fb82214485912e859b9997",
+    "run_state.py": "33f5e77853ae49b846ecc7c187076ef20c20ef2d86bdfe43beba512724fd2ceb",
+    "singleton_control.py": "39a195e212bf65b4c55b2523da8a469ef795a884e3bb2ea561cba98d11c53dfa",
+    "sparse_state.py": "c3093c9fe0329b8482c3a8fe79021e32449ff0c6aa35c8808e3121df4afa4e7b",
+    "state.py": "a384c5f1e272784372ce9d2d1316a3edff49736fa6fba0d87e1be663aaa81758",
+    "symbolic_control.py": "89f1b559c750d0d5de4fbe32fab0a27e72da72ccd86741ed543d823062d0853e",
+    "test_fiber.py": "0ebb1888b9a273f1caf0e5b0b678940f3f58726db13b6f03b6fc40539ed8906d",
+    "test_fiber_codec.py": "9487315dd6b1134dde0a1f010e0b620352be6a5ee285303fc75e5546402627aa",
+    "test_miniwob.py": "a9f46cfa75edab487b2dd740a8bd3340e3f95c45b6d6e57837a1810f9561bc2f",
+    "test_probe.py": "5855e0e6f1e5685f3a25f6c99212cc0935115756430df96d042666a5f9688f7e",
+    "test_singleton_control.py": "b518edc1c0e0ee8b4c1933711b5cc08474c2964a6050f4b50397f3d8616034b9",
+    "test_sparse_state.py": "cb7c449c11ddebd9af3505be91863d679bfd9b5dc28b72e7b869c764e7a18916",
+    "test_state.py": "0c05ca399c9f6ef08536e12a29d386843078ed7d83b91fce23d35f73f84974b1",
+    "test_symbolic_control.py": "cdb2f84c448e8b9edc0aafe2afc04550ad39d0a80ebc033d548eaf308df1d817"
+  },
+  "inputs": {
+    "choose-date-nodelay-raw-transitions.json": "a70908adea5946bd36d2d4e058885bcc91ad649e5016c7528d64440422acc4b7",
+    "choose-date-nodelay-target-path-transitions.json": "abbfa34bc4ce2350806b07eec6cd6ae8619a68a8caec483d7ff9aebce773027e",
+    "click-checkboxes-large-raw-transitions.json": "a5b2f3f6cc27f91f2d558ad550901ae57909aa8abbde6abfb6af6df09428bffd",
+    "click-checkboxes-large-target-path-transitions.json": "b0d5e36b4e4b7abd7cef1d15866db6c5bc790fb8b00cbd2874c9960a8d9a9bfc",
+    "click-checkboxes-soft-raw-transitions.json": "d42dc12cb29dac32d87d500bd72481509b50a0ad6e314066f2128d72c4d8aeb2",
+    "click-checkboxes-soft-target-path-transitions.json": "5baf06111234aa38838362d73d15e1f37dd6cf2a88718cf14177ed4d61ab4c23"
+  },
+  "priorArt": "Known nominal/register symmetry and factorized provenance; scoped empirical screen, no novelty claim",
+  "planSha256": "cb8e63939cdc803c425c2d4dec51bea4c35ef0555b72a7121d5fc5e07bb4cae7",
+  "tests": "six focused tests passed before the corpus run"
+}

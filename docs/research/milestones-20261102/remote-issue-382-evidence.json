@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-11-03T19:18:14.405478+00:00",
+  "crateIndex": {
+    "url": "https://index.crates.io/wa/rm/warm-rust",
+    "status": 200,
+    "finalUrl": "https://index.crates.io/wa/rm/warm-rust",
+    "versions": [
+      "0.6.4",
+      "0.6.5"
+    ]
+  },
+  "serverLink": {
+    "url": "https://writerslogic.com/warm/docs/latest/server/",
+    "status": 200,
+    "finalUrl": "https://writerslogic.com/warm/docs/latest/server/"
+  },
+  "sourceTag": {
+    "url": "https://github.com/writerslogic/warm/tree/v0.6.1",
+    "status": 200,
+    "finalUrl": "https://github.com/writerslogic/warm/tree/v0.6.1"
+  }
+}

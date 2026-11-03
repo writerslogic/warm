@@ -1,0 +1,124 @@
+{
+  "allQualityPassed": false,
+  "claimQualified": false,
+  "complete": true,
+  "completedAt": "2026-11-03T19:06:19.408436+00:00",
+  "freezeSha256": "25db4682c68d88c949649c123c9b8c363375277174cb1456995a639be154e004",
+  "jobs": [
+    {
+      "exitCode": 1,
+      "finishedSha256": "ca70ae35121008bf52133cdbbac76c106b02f266077974d79b8a613c4edf9db6",
+      "job": 0,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "ba32faadd4fce474f343fa76225f91c709e20f55b183b0cf39d465949a04752c",
+      "job": 1,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "19572240c6a019ba9a3b20630601bea0933e0c324cab485c8b3e7f3f1cb1ef99",
+      "job": 2,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "8b1ffdfc153799c918039ca56c96e0b41291a701842ff83a07716ab4e4990cdf",
+      "job": 3,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "aabe6ef9ea9edd93d169dec9e74e0baaaf106a5841765b71e7a9c026babb6bfa",
+      "job": 4,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "4bbfe452aef1b5a5108299719aebb6c1f2b15d65d084ea082600d45b40e9127e",
+      "job": 5,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "a20d1e99072ffc7cc05170b845869ca8f529dbc8b872d07dac3e79ac246c24b2",
+      "job": 6,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "ab41b05648bef02eb2d769eaca7829f910236a08845090ad8ce32004e293e9df",
+      "job": 7,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "7d4d9e7730e700ed9ac4928d8ab779530a0833a4064d6e818708a80482a6b35b",
+      "job": 8,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 0,
+      "finishedSha256": "8f1f96312473216aff49d11880d6bd2d9c95e0002d4f7ecc24e4e7cca5cb1ac0",
+      "job": 9,
+      "qualityPassed": true
+    },
+    {
+      "exitCode": 0,
+      "finishedSha256": "77076b8b4abe68e772d1ec4aab20e5e011dbd6e9c988a184a35f1104e4a20d27",
+      "job": 10,
+      "qualityPassed": true
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "4ec9ef5f7eb40d9f146b09d078ab7cddad2d1698857599d2183eb88b00c81240",
+      "job": 11,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 0,
+      "finishedSha256": "9119558749e28654d8327b762147f8f4dea0df79343f32698173500dc58d5b09",
+      "job": 12,
+      "qualityPassed": true
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "2fc69a60c2aa250280f8f4d6d274165a27b1da469ffcd2f507e2f7ae3ce752f8",
+      "job": 13,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 0,
+      "finishedSha256": "0423e05157be802211b13c435e6e4de83e2a6a505f56bc462e655814cbb2325b",
+      "job": 14,
+      "qualityPassed": true
+    },
+    {
+      "exitCode": 1,
+      "finishedSha256": "2a94543989ac5cdb39dc6d309c2f1ef9caf49b1ef4ffd80b0b59f90061ed6160",
+      "job": 15,
+      "qualityPassed": false
+    },
+    {
+      "exitCode": 0,
+      "finishedSha256": "392d2d5c8e7886e9d01b69fa6f237c3f566e0bad1062d833c970eafd0c60f5f9",
+      "job": 16,
+      "qualityPassed": true
+    },
+    {
+      "exitCode": 0,
+      "finishedSha256": "9d3ea20b8d223c88aaf725f4034b42654cf76c2d3f695de330dbc23220941fa6",
+      "job": 17,
+      "qualityPassed": true
+    }
+  ],
+  "pending": [
+    "Raw serving-job audit",
+    "Physical-host isolation review",
+    "Actual engine settings and resource review",
+    "Second physical host",
+    "Comparison gates"
+  ]
+}

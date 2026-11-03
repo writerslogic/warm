@@ -1,0 +1,13 @@
+{
+  "claimQualified": false,
+  "complete": true,
+  "completedAt": "2026-11-03T19:06:19.724403+00:00",
+  "finishedSha256": "427082848c06dbd8844d28141b30ee1a7559f0b8822c9cacf6b04bcb921d42d6",
+  "pending": [
+    "Raw serving audits",
+    "Whole-run host/guest isolation review",
+    "Actual settings and resource review",
+    "Second physical host",
+    "Comparison gates"
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "schema": "warm.integrations-qualification/1",
+  "profiles": {
+    "core": {
+      "dependencies": [],
+      "modules": [
+        "test_core.py",
+        "test_core_capabilities.py",
+        "test_paged.py"
+      ]
+    },
+    "langchain": {
+      "dependencies": [
+        "langchain-core==1.6.12",
+        "langchain-tests==1.1.9"
+      ],
+      "modules": [
+        "langchain_adapter/test_langchain_adapter.py",
+        "langchain_adapter/test_langchain_conformance.py"
+      ]
+    },
+    "langgraph": {
+      "dependencies": [
+        "langgraph==1.2.16",
+        "langgraph-checkpoint==4.3.0",
+        "langgraph-checkpoint-conformance==0.0.2"
+      ],
+      "modules": [
+        "langgraph_adapter/test_langgraph_checkpoint.py",
+        "langgraph_adapter/test_langgraph_store.py"
+      ]
+    },
+    "llamaindex": {
+      "dependencies": [
+        "llama-index-core==0.14.25"
+      ],
+      "modules": [
+        "llamaindex/test_storage_and_memory.py",
+        "llamaindex/test_text_queries_wire.py",
+        "llamaindex/test_vector_store.py"
+      ]
+    },
+    "haystack": {
+      "dependencies": [
+        "haystack-ai==3.4.0"
+      ],
+      "modules": [
+        "haystack/test_haystack_conformance.py",
+        "haystack/test_haystack_store.py"
+      ]
+    },
+    "openai-agents": {
+      "dependencies": [
+        "openai-agents==0.24.0"
+      ],
+      "modules": [
+        "openai_agents/test_openai_agents.py"
+      ]
+    },
+    "pydantic-ai": {
+      "dependencies": [
+        "pydantic-ai-slim==2.58.0"
+      ],
+      "modules": [
+        "pydantic_ai/test_pydantic_ai.py"
+      ]
+    },
+    "smolagents": {
+      "dependencies": [
+        "smolagents==1.26.0"
+      ],
+      "modules": [
+        "smolagents/test_smolagents.py"
+      ]
+    },
+    "litellm": {
+      "dependencies": [
+        "litellm==1.103.10",
+        "mcp>=2.3.0",
+        "filelock==4.2.6"
+      ],
+      "modules": [
+        "litellm/test_litellm.py"
+      ]
+    },
+    "crewai": {
+      "dependencies": [
+        "crewai==1.15.28"
+      ],
+      "modules": [
+        "crewai/test_crewai.py"
+      ]
+    },
+    "autogen": {
+      "dependencies": [
+        "autogen-agentchat==0.7.5",
+        "autogen-core==0.7.5",
+        "autogen-ext==0.7.5"
+      ],
+      "modules": [
+        "autogen/test_autogen_memory.py"
+      ]
+    },
+    "ag2": {
+      "dependencies": [
+        "ag2==1.1.2"
+      ],
+      "modules": [
+        "autogen/test_ag2_toolkit.py"
+      ]
+    },
+    "semantic-kernel": {
+      "dependencies": [
+        "semantic-kernel==1.45.0",
+        "werkzeug>=3.1.9"
+      ],
+      "modules": [
+        "semantic_kernel/test_semantic_kernel.py"
+      ]
+    },
+    "mem0": {
+      "dependencies": [
+        "mem0ai==2.2.1"
+      ],
+      "modules": [
+        "mem0/test_mem0_conformance.py",
+        "mem0/test_mem0_shim.py"
+      ]
+    },
+    "letta": {
+      "dependencies": [
+        "letta-client==1.12.1"
+      ],
+      "modules": [
+        "letta/test_letta_archival.py"
+      ]
+    }
+  },
+  "pinsBasis": "docs/integrations/frameworks/MATRIX.md and integrations/python/pyproject.toml; dependency locks freeze before each profile test starts.",
+  "sourceBasis": "Unchanged fresh wheels from warm-dspy-qualification-20261103-v2; all installed package files verified.",
+  "gate": "Every selected module and top-level function collected; complete JUnit coverage; zero failures/errors/unexplained skips. Any skip prevents automatic gate pass and requires a separate source-based review. No pytest skip is silently converted to pass.",
+  "network": "Test processes run as the ordinary guest user in a private loopback-only namespace with a sanitized environment; all models are scripted/local. Dependency installation uses free public packages.",
+  "exclusions": [
+    "DSPy already passed separately",
+    "Real Letta server",
+    "Server-side text embedding: wire-only tests do not qualify local-model execution",
+    "Other Python/OS combinations",
+    "Migration and recovery beyond the checked framework workflows"
+  ],
+  "scheduling": "Do not prepare dependencies or execute tests until the 18-job serving queue and both observers finish.",
+  "paidServices": false
+}

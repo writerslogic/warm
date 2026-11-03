@@ -1,0 +1,9 @@
+{
+  "startedAt": "2026-11-03T18:28:57.848597+00:00",
+  "pid": 55007,
+  "rawDirectory": "/Users/davidcondrey/.cache/warm-serving-guest-isolation-20261103-v1",
+  "activeSessionAssertionPid": 55008,
+  "activeSessionAssertionSeconds": 600,
+  "sourceSha256": "67b4c64faf742886768969c9d642e725329889380b2b5defc78c1847e23dbfde",
+  "isolationPassed": false
+}

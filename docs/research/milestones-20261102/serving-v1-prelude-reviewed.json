@@ -1,0 +1,90 @@
+{
+  "readyToStart": true,
+  "reviewedAt": "2026-11-03T18:32:30.817445+00:00",
+  "configurationSealSha256": "45ce0a0d974a861ab0e45a47c9bb4940635867e8ed0dd1d77ca77ed4e5382864",
+  "inspection": {
+    "reviewedAt": "2026-11-03T18:31:32.828842+00:00",
+    "windowStart": "2026-11-03T18:30:04.060160+00:00",
+    "windowEnd": "2026-11-03T18:31:29.220717+00:00",
+    "seconds": 85.16010416601785,
+    "topCPU": [
+      {
+        "cpuPercentOfOneCore": 11.31985463663412,
+        "pid": 79247,
+        "command": "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal"
+      },
+      {
+        "cpuPercentOfOneCore": 11.038032529498775,
+        "pid": 92511,
+        "command": "/opt/homebrew/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex"
+      },
+      {
+        "cpuPercentOfOneCore": 4.978857226077891,
+        "pid": 652,
+        "command": "/System/Library/CoreServices/WindowManager.app/Contents/MacOS/WindowManager"
+      },
+      {
+        "cpuPercentOfOneCore": 1.8435862841904265,
+        "pid": 407,
+        "command": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer"
+      },
+      {
+        "cpuPercentOfOneCore": 1.0098625505718382,
+        "pid": 1,
+        "command": "/sbin/launchd"
+      },
+      {
+        "cpuPercentOfOneCore": 0.821981145818857,
+        "pid": 706,
+        "command": "/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder"
+      },
+      {
+        "cpuPercentOfOneCore": 0.7750107946252717,
+        "pid": 1123,
+        "command": "/Library/Printers/Canon/CUPS_SFP/BackGrounder/Canon CUPSSFP BackGrounder.app/Contents/MacOS/Canon CUPSSFP BackGrounder"
+      },
+      {
+        "cpuPercentOfOneCore": 0.7750107946243747,
+        "pid": 54086,
+        "command": "/System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine"
+      },
+      {
+        "cpuPercentOfOneCore": 0.5401590386787051,
+        "pid": 636,
+        "command": "/System/Library/DriverExtensions/com.apple.DriverKit-AppleBCMWLAN.dext/com.apple.DriverKit-AppleBCMWLAN"
+      },
+      {
+        "cpuPercentOfOneCore": 0.42273316070420364,
+        "pid": 50722,
+        "command": "adb"
+      },
+      {
+        "cpuPercentOfOneCore": 0.42273316070381983,
+        "pid": 411,
+        "command": "/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow"
+      },
+      {
+        "cpuPercentOfOneCore": 0.3405350461227885,
+        "pid": 701,
+        "command": "/System/Library/CoreServices/ControlCenter.app/Contents/MacOS/ControlCenter"
+      }
+    ],
+    "pagingDeltas": {
+      "Pageouts": 0,
+      "Swapins": 4,
+      "Swapouts": 0
+    },
+    "memoryPressure": "The system has 34359738368 (2097152 pages with a page size of 16384).\nSystem-wide memory free percentage: 75%\n",
+    "thermal": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n",
+    "commandFailures": 0,
+    "guestLoad": "0.00 0.02 0.05 1/145 2016\n",
+    "guestPressure": {
+      "pressure/cpu": "some avg10=0.00 avg60=0.00 avg300=0.00 total=435647\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "pressure/io": "some avg10=0.00 avg60=0.01 avg300=1.05 total=42772920\nfull avg10=0.00 avg60=0.01 avg300=1.05 total=42419316\n",
+      "pressure/memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=22\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=21\n"
+    }
+  },
+  "interpretation": "Media-analysis CPU burst ended; no independent build, emulator, or benchmark active. Guest idle with no CPU/memory pressure. Four host swap-in pages, zero swap-outs/page-outs, 75% free memory, no recorded thermal/performance warning. Dominant foreground CPU is this controller (PID 92511) and its Terminal ancestor (79247), verified through the execution process ancestry; their overhead remains in physical-host evidence. This is admission to measurement, not a whole-run isolation pass.",
+  "isolationPassed": false,
+  "fullRunReviewRequired": true
+}

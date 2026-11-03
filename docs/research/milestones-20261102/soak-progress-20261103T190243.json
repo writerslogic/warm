@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-11-03T19:02:39.615562+00:00",
+  "finished": null,
+  "lastResource": {
+    "elapsed": 43620.925399147,
+    "rssBytes": 275456000,
+    "allocatedStoreBytes": 768794624,
+    "pid": 14128
+  },
+  "resourceModifiedAt": "2026-11-03T19:02:38.263775+00:00",
+  "processes": "  14118    12:07:03  1296 Sl   uv\n  14128    12:07:03 244368 Ssl warm-server\n",
+  "services": [
+    "active",
+    "active"
+  ]
+}

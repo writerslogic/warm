@@ -1,0 +1,86 @@
+{
+  "complete": true,
+  "currentOnlyWrongPairs": 1166,
+  "equivalentPairs": 155,
+  "factorCases": [
+    {
+      "candidate": {
+        "equivalent": true,
+        "productPairs": 104,
+        "reason": "polynomial-identity",
+        "withdrawn": null
+      },
+      "exhaustiveOracle": true,
+      "multipliedRecords": 16,
+      "oracleChecks": 16,
+      "originalRecords": 4,
+      "sources": 4
+    },
+    {
+      "candidate": {
+        "equivalent": true,
+        "productPairs": 768,
+        "reason": "polynomial-identity",
+        "withdrawn": null
+      },
+      "exhaustiveOracle": true,
+      "multipliedRecords": 64,
+      "oracleChecks": 256,
+      "originalRecords": 8,
+      "sources": 8
+    },
+    {
+      "candidate": {
+        "equivalent": true,
+        "productPairs": 2520,
+        "reason": "polynomial-identity",
+        "withdrawn": null
+      },
+      "exhaustiveOracle": true,
+      "multipliedRecords": 144,
+      "oracleChecks": 4096,
+      "originalRecords": 12,
+      "sources": 12
+    },
+    {
+      "candidate": {
+        "equivalent": true,
+        "productPairs": 5888,
+        "reason": "polynomial-identity",
+        "withdrawn": null
+      },
+      "exhaustiveOracle": false,
+      "multipliedRecords": 256,
+      "oracleChecks": 1000,
+      "originalRecords": 16,
+      "sources": 16
+    },
+    {
+      "candidate": {
+        "equivalent": true,
+        "productPairs": 11400,
+        "reason": "polynomial-identity",
+        "withdrawn": null
+      },
+      "exhaustiveOracle": false,
+      "multipliedRecords": 400,
+      "oracleChecks": 1000,
+      "originalRecords": 20,
+      "sources": 20
+    }
+  ],
+  "finishedAt": "2026-11-03T11:20:35.702507+00:00",
+  "freezeSha256": "63d5ff943de490d16ba0ac1f17efec5947a2475fd074f32b5b71c5476fcc0b3a",
+  "noSupportWrongPairs": 622,
+  "noveltyEstablished": false,
+  "pairs": 8597,
+  "performanceQualified": false,
+  "rawSha256": {
+    "pairs.ndjson": "8d4135ccf3743a4da8f0dce1a004743ef0241fd82846bf8db3eaff55f89788a5",
+    "profiles.ndjson": "45a90c8d840b1c30d4d755deae1e1f48f13324b4e1e84d138ae8c4681384c676"
+  },
+  "scope": "Exact empirical predictive-profile equivalence; not a state minimizer or performance claim",
+  "seconds": 0.36610104190185666,
+  "structuralMissedPairs": 27,
+  "withdrawalChecks": 81120
+}

@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "error": {
+    "message": "installed-deno-tests failed with exit 1",
+    "type": "RuntimeError"
+  }
+}

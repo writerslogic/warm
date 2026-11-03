@@ -1,0 +1,8 @@
+{
+  "archiveSha256": "edb4ce972277910a242ee0d3a5903c79b3e561567676ebbf3df7cf0dc3b8b867",
+  "freezeSha256": "25db4682c68d88c949649c123c9b8c363375277174cb1456995a639be154e004",
+  "files": 33,
+  "archiveBytes": 471040,
+  "root": "/Volumes/A/.hms-bench-cache/warm-serving-qualification-20261103-v1",
+  "guestRoot": "/home/davidcondrey.guest/warm-milestones-20261103/serving-qualification-v1"
+}

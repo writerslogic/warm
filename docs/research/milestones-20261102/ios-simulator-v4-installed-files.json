@@ -1,0 +1,9 @@
+{
+  "Frameworks/warm_mobileFFI.xcframework/Info.plist": "aa0818b05ec337f8d4a829a722172191cf84329426eaf6210dafad0fdc811cd7",
+  "Frameworks/warm_mobileFFI.xcframework/ios-arm64_x86_64-simulator/Headers/module.modulemap": "8c1c8c8ac454dc0fadde9cd76332d005cb0307297b37ec91a5dce6794a9364f4",
+  "Frameworks/warm_mobileFFI.xcframework/ios-arm64_x86_64-simulator/Headers/warm_mobileFFI.h": "a0c108a8f7c7e7a4e687d0a745d296c7052262ade8740ec4c8acd05b4907356c",
+  "Frameworks/warm_mobileFFI.xcframework/ios-arm64_x86_64-simulator/libwarm_mobile.a": "48d612c38ebce85aa8e7d7660f593efbefde118a44d5860092368da9ddb35c58",
+  "Package.swift": "d2c6a95cb29d770fde694dcf02953c98a0dd1fd17a024944e7124bc6a5c693f0",
+  "Sources/WarmMemory/WarmMobile.swift": "1b7523e87399819d520d9ce6378bd28762b9edafb035d725e79229fe45f9db93",
+  "Tests/WarmMemoryTests/WarmMemoryTests.swift": "2417c1e2fc8928149a1d35947091155397b60c0a27c6cb54306292f5a4aa040e"
+}

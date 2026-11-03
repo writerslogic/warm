@@ -1,0 +1,121 @@
+{
+  "sourceCommit": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+  "patchSha256": "df4159baaef26354ee3cb203495c321a17938fe22a95f276b7a8c8bfbaf1b039",
+  "sources": {
+    "Cargo.toml": "259706334829c934ce0130812fd320f2de6d54bb72a605fd2c11e5f2c3abb693",
+    "Cargo.lock": "2fc4a034e5af215be9c559b8b34d47acb5df94e83acbb39e3e7260121f05add1",
+    "src/core/qgraph/diagnostics.rs": "b6790b95927510d027aaddf1385c09c33046e1257f166693c121708aefcd611b",
+    "src/core/qgraph/vertex.rs": "1d5e6e559c777a499f12f5a93cc699596d79ce867431b8d747dc8895b7ab9a95",
+    "src/core/qgraph/vertex/navigation.rs": "307d20040d6b7558512d2714e599d08cfade447d2116c991194d8e027c5c6f35",
+    "benchmarks/research/vector_topology/Cargo.toml": "de48a04508de986db29f4d148c4d27061a95d88be5594fe66eef43e5fdfd5aa9",
+    "benchmarks/research/vector_topology/Cargo.lock": "f13dbfb8916afa867b08438b8230a0dbbf962007b0801f9d346493a5f336bb20",
+    "benchmarks/research/vector_topology/NAVIGATION-PLAN.md": "adfe5d2689dc7a4debbe58e98b18f14bf28d8225fc677cb022b3bb0dcec55dd3",
+    "benchmarks/research/vector_topology/navigation-analysis.mjs": "deb2e7cf264baf8d81d5b15481e6559db52b022c5b309efccecf277a9040d377",
+    "benchmarks/research/vector_topology/navigation-test.mjs": "8520603f8be08b220a7b1f710f8a62b6a62f05424c1b9de1bc3b8dfc18edbaed",
+    "benchmarks/research/vector_topology/navigation-run.mjs": "9fba4ffcd5dc72bd9b41154d8e20aae1a00ad66ad1314d0d1b411fd765635efe",
+    "benchmarks/research/vector_topology/trace-worker.mjs": "5fa83e7b7fd7348ab56a6ec0cd45fc402cae2c11251179ef857676460a684a89",
+    "benchmarks/research/vector_topology/src/bin/trace.rs": "b81783032a35137dc625bfec5ecd6a510e20304f3c71932644e70b9897ffb2d0",
+    "benchmarks/research/vector_topology/src/bin/trace/navigation.rs": "976f0897979bbd81ddc9c80afb7a3564b12920c2b8e6ac6efdd2c245a39a98d0",
+    "benchmarks/public/vectra_comparison/vector-receipts.mjs": "b759dd1c9a799a10a7457197c3252e67d794c326f3c55d973f4f73637201ed44"
+  },
+  "corpus": "/Volumes/A/.hms-bench-cache/competitive/data/glove-100-angular-n100000-q1000/train.f32",
+  "corpusSha256": "119360a40fed67fd92d9a16ff15b21e5566ecaef1865f93ff07efc53e2bca8e7",
+  "queries": "/Volumes/A/.hms-bench-cache/competitive/data/glove-100-angular-n100000-q1000/test.f32",
+  "queriesSha256": "d834585869aac11aba8de8dffe22ec50006b22d223ed1cce1ad357611091d613",
+  "referenceFiles": {
+    "128": {
+      "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0027-glove-10000-warm-quality.ndjson",
+      "sha256": "54e1d8e2cf95e5dfb797d60f3decafd8eea5dbbd399a9558efead623327f0290"
+    },
+    "256": {
+      "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0028-glove-10000-warm-quality.ndjson",
+      "sha256": "4e1b0474b9e49e0572a614e81cfe331bf88b8df00e27e5920214c976e1ab072b"
+    },
+    "oracle": {
+      "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0020-glove-10000-oracle-oracle.ndjson",
+      "sha256": "a4b91500c62d94d71c6f965dc2ac5f48ce928a6e50df7dec426bbc234391aa94"
+    },
+    "exact": {
+      "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0026-glove-10000-warm-quality.ndjson",
+      "sha256": "944ce4b9e9b6ec9e8b859626072ceab3360405432baeac9ede3986f89e0e0c2b"
+    }
+  },
+  "binarySha256": "244a054acb20d055a7f49e64d24ccb40eab8beb3d0ae5d32b66faff0c4f143b2",
+  "node": "v26.8.1",
+  "rust": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+  "started": "2026-11-03T05:25:46.269Z",
+  "corpusRows": 10000,
+  "efs": [
+    128,
+    256
+  ],
+  "queriesPerEf": 1000,
+  "expectedGraphHash": null,
+  "scope": "Exposed-data failure diagnosis only. No latency, held-out quality, or competitive claim.",
+  "deadlineMs": 7200000,
+  "rssLimitBytes": 8589934592,
+  "complete": true,
+  "failure": null,
+  "result": {
+    "graphHash": "1252cb6267c5dd80",
+    "cells": [
+      {
+        "ef": 128,
+        "queries": 1000,
+        "hits": 9847,
+        "worstHits": 7,
+        "missing": 153,
+        "classes": {
+          "bounded_traversal": 153
+        },
+        "barriers": {
+          "evicted_before_expansion": 144,
+          "rejected": 9
+        },
+        "firstMissing": [
+          153,
+          0,
+          0,
+          0,
+          0
+        ],
+        "reachableMin": 10000,
+        "reachableMax": 10000,
+        "meanRecall": 0.9847,
+        "worstRecall": 0.7
+      },
+      {
+        "ef": 256,
+        "queries": 1000,
+        "hits": 9976,
+        "worstHits": 9,
+        "missing": 24,
+        "classes": {
+          "bounded_traversal": 24
+        },
+        "barriers": {
+          "rejected": 3,
+          "evicted_before_expansion": 21
+        },
+        "firstMissing": [
+          24,
+          0,
+          0,
+          0,
+          0
+        ],
+        "reachableMin": 10000,
+        "reachableMax": 10000,
+        "meanRecall": 0.9976,
+        "worstRecall": 0.9
+      }
+    ],
+    "rawSha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5",
+    "gzipSha256": "7a91d2bf0acb59e8da9d4146b43d46739131243e928d998b913801c7f354ef4c",
+    "missesSha256": "b242ee350d1d06c8539229454c047c69529205eeb243516a746934f2efb650a9",
+    "originalRankingsMatched": 2000,
+    "originalExactRankingsMatched": 1000,
+    "peakOwnedTreeRssBytes": 146866176
+  },
+  "finished": "2026-11-03T05:26:08.918Z"
+}

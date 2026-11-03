@@ -1,0 +1,60 @@
+{
+  "complete": true,
+  "heldOutVectorsOpened": false,
+  "cells": [
+    {
+      "engine": "opensearch",
+      "dataset": "deep-image-96-angular",
+      "cells": 64,
+      "queries": 64000,
+      "rejectedWithoutRaw": 0,
+      "maxScoreError": 5.296880547511762e-07,
+      "oracleMaximumNumericalDifference": 0.0
+    },
+    {
+      "engine": "opensearch",
+      "dataset": "coco-i2i-512-angular",
+      "cells": 64,
+      "queries": 64000,
+      "rejectedWithoutRaw": 0,
+      "maxScoreError": 4.7285156468124256e-07,
+      "oracleMaximumNumericalDifference": 0.0
+    },
+    {
+      "engine": "warm",
+      "dataset": "deep-image-96-angular",
+      "cells": 16,
+      "queries": 16000,
+      "rejectedWithoutRaw": 0,
+      "maxScoreError": 1.6073073560995965e-07,
+      "oracleMaximumNumericalDifference": 0.0
+    },
+    {
+      "engine": "warm",
+      "dataset": "coco-i2i-512-angular",
+      "cells": 16,
+      "queries": 16000,
+      "rejectedWithoutRaw": 0,
+      "maxScoreError": 2.6652970896989814e-07,
+      "oracleMaximumNumericalDifference": 0.0
+    },
+    {
+      "engine": "pgvector",
+      "dataset": "coco-i2i-512-angular",
+      "cells": 64,
+      "queries": 64000,
+      "rejectedWithoutRaw": 8,
+      "maxScoreError": 4.426579343075332e-07,
+      "oracleMaximumNumericalDifference": 0.0
+    },
+    {
+      "engine": "pgvector",
+      "dataset": "deep-image-96-angular",
+      "cells": 64,
+      "queries": 64000,
+      "rejectedWithoutRaw": 16,
+      "maxScoreError": 1.912370286571985e-07,
+      "oracleMaximumNumericalDifference": 0.0
+    }
+  ]
+}

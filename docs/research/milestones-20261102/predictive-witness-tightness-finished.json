@@ -1,0 +1,25 @@
+{
+  "cases": 11,
+  "complete": true,
+  "completedAt": "2026-11-03T14:31:17.322028+00:00",
+  "existingCheckerCases": 5,
+  "freezeSha256": "0a6e2f66a35fbfd85b00f0c76c213e63b615de5e331564c2a3312d7e642eef9b",
+  "gatePass": true,
+  "outputs": {
+    "family-1-0.json": "330822ff72027126d894a9b8e5bdd6a9a72da6e7b18150c24ad9b2704a8891ab",
+    "family-1-1.json": "6d26791cc57b626cde2d02e7cf31dffcf341dbbcbdc641b64ce40b17d06423c8",
+    "family-2-0.json": "407f182f2ec1550eb81866d0dc3d4002706b56ea373774ec3b594b4b22a59251",
+    "family-2-1.json": "b62bde5ad6c4974f3cfaed3963bb3117da4ba51169510463ed34400e45f03f8b",
+    "family-3-0.json": "b5c358541fc0636b674dd5b55aaa0a37c8a46193a024c82e3e498103b2c83d2b",
+    "family-3-1.json": "2b11ea0974b78ffd9b0c45cfb82d9f10491ee2f88a93fb0a8bd047807df8084f",
+    "family-4-0.json": "6832f7367562f6f6c31542d6986c6f0b27498093fa76fd0aae32623c7946dc3f",
+    "family-4-1.json": "024c2272ef827a6903ab4b2d2b68458f0f382edfd9a11e5d1a4683d3eb82ff74",
+    "family-5-0.json": "72f1529f8a133b353af7758d924c8099194afc3b600f062ed032dbab46479411",
+    "family-5-1.json": "00c38c627622857262d8793dfa64f2eba9a66049b23442541dc07e5443921dd8",
+    "family-6-0.json": "7e8a421b72a68034ca14cc564e82362ec8748bdf5320e36bf10c2231c73dc587",
+    "readouts.ndjson": "b4968ff6e635aa708c7aca4a82dbfbf486c0595c2f1b7b65900df84aa226c767",
+    "summary.json": "d71bb22d17b8fa1c9495a0af17be41b852a2082d1773f90ad154778b469560b8",
+    "tests.log": "073935ab64d0f1946041aeb79b89c13eb1c51bcdf55c424e0d434fc0267c7d7e"
+  },
+  "readoutComparisons": 8188
+}

@@ -1,0 +1,6 @@
+{
+  "createdAt": "2026-11-03T19:02:14.266434+00:00",
+  "guestRunnerSha256": "e54b5826495affc3a76f75860c78a352056b80706ba5bb9eb4445fa49962941a",
+  "hostRunnerSha256": "6e37dbf8e3942f71914978d58899bf821bc386cf129cd2fc1e49e2034f5041d5",
+  "purpose": "Audit unchanged frozen serving measurements and preserve failures; no new performance measurement or qualification assertion."
+}
