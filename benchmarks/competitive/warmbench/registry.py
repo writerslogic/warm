@@ -9,6 +9,8 @@ carries a claim that has no source in the results directory.
 
 import platform
 
+from . import jars
+
 WARM = "warm"
 # The WARM text arm runs twice: `warm` ingests with `--encode lexical` (BM25 index only, the
 # like-for-like row against the lexical comparators) and `warm-eager` with the default eager
@@ -34,8 +36,13 @@ SYSTEMS = {
     "milvus-lite": {"display": "Milvus Lite", "kind": "ann", "env": "milvus", "package": "pymilvus", "family": "hnsw"},
     "duckdb-vss": {"display": "DuckDB vss", "kind": "ann", "env": "duckdb", "package": "duckdb", "family": "hnsw"},
     "sqlite-fts5": {"display": "SQLite FTS5", "kind": "text", "env": "stdlib", "package": "sqlite3", "family": "lexical"},
-    "lucene": {"display": "Apache Lucene 9.12.3 (JVM)", "kind": "text", "env": None, "package": "lucene-core", "family": "lexical"},
+    "lucene": {"display": f"Apache Lucene {jars.VERSION} (JVM)", "kind": "text", "env": None, "package": "lucene-core", "family": "lexical"},
     "tantivy": {"display": "tantivy", "kind": "text", "env": "tantivy", "package": "tantivy", "family": "lexical"},
+    # Version controls: the previous pin of each current comparator, never in a default run or a verdict.
+    # Select them with `--systems` to measure the version effect inside the same interleaved rounds.
+    "sqlite-fts5-prev": {"display": "SQLite FTS5 (previous pin, SQLite 3.50.4)", "kind": "text-control", "env": "stdlib-prev", "package": "sqlite3", "family": "lexical"},
+    "lucene-prev": {"display": f"Apache Lucene {jars.PREVIOUS} (JVM, previous pin)", "kind": "text-control", "env": None, "package": "lucene-core", "family": "lexical"},
+    "tantivy-prev": {"display": "tantivy-py 0.26.2 (previous pin)", "kind": "text-control", "env": "tantivy-prev", "package": "tantivy", "family": "lexical"},
     "whoosh": {"display": "Whoosh", "kind": "text", "env": "whoosh", "package": "whoosh-reloaded", "family": "lexical"},
     "bm25s": {"display": "bm25s", "kind": "text", "env": "bm25s", "package": "bm25s", "family": "lexical"},
 }
@@ -114,6 +121,7 @@ NOT_RUN.update({k: v[platform.system()] for k, v in _PLATFORM_NOT_RUN.items() if
 
 ANN_SYSTEMS = [k for k, v in SYSTEMS.items() if v["kind"] == "ann"]
 TEXT_SYSTEMS = [k for k, v in SYSTEMS.items() if v["kind"] == "text"]
+TEXT_CONTROL_SYSTEMS = [k for k, v in SYSTEMS.items() if v["kind"] == "text-control"]
 
 # Server-mode systems (own table sections, measured against warm-server): server_registry.py.
 from .server_registry import SERVER_FACTS, SERVER_NOT_RUN, SERVER_SYSTEMS, SERVER_TIMING_BOUNDARY  # noqa: E402

@@ -433,7 +433,7 @@ Bold marks the best value in the row.
 | hnswlib | no | no | documentation (not exercised) |
 | WARM | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | SQLite FTS5 | no | no (SQLCipher is a separate build) | documentation (not exercised) |
-| Apache Lucene 9.12.3 (JVM) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
+| Apache Lucene (JVM) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
 | tantivy | no | no | documentation (not exercised) |
 | WARM (eager hypervectors) | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | Whoosh | no | no | documentation (not exercised) |
@@ -444,9 +444,9 @@ Bold marks the best value in the row.
 | System | Pinned version(s) |
 |---|---|
 | hnswlib | hnswlib 0.8.0 |
-| WARM | holographic-memory 0.6.1, commit d5f3f3b8cbf963003d282181409e6a0203f9e96d |
-| SQLite FTS5 | python-sqlite3 3.40.1 |
-| Apache Lucene 9.12.3 (JVM) | lucene 9.12.3, jvm openjdk version "17.0.20.1" 2026-08-18 |
+| WARM | holographic-memory 0.6.1, commit unknown; holographic-memory 0.6.1, commit d5f3f3b8cbf963003d282181409e6a0203f9e96d |
+| SQLite FTS5 | python-sqlite3 3.53.1; python-sqlite3 3.40.1 |
+| Apache Lucene (JVM) | lucene 9.12.3, jvm openjdk version "21.0.12.1" 2026-08-18 LTS; lucene 9.12.3, jvm openjdk version "17.0.20.1" 2026-08-18 |
 | tantivy | tantivy 0.26.2 |
 | WARM (eager hypervectors) | holographic-memory 0.6.1, commit d5f3f3b8cbf963003d282181409e6a0203f9e96d |
 | Whoosh | whoosh-reloaded 2.7.5 |

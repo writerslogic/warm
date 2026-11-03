@@ -1,2 +1,2 @@
-tantivy==0.26.2
+tantivy==0.27.0
     # via -r requirements/tantivy.footprint.in

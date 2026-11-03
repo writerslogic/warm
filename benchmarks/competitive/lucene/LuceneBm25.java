@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Apache Lucene 9.12.3 BM25 comparator for warm-bench: same phases and output shape as
+// Apache Lucene BM25 comparator for warm-bench (version pinned in warmbench/jars.py): same phases and output shape as
 // text_worker.py (build, serve, ops). EnglishAnalyzer (Porter stemming, English stop words)
 // and the default BM25Similarity (k1 1.2, b 0.75) are Lucene's documented defaults.
 //
