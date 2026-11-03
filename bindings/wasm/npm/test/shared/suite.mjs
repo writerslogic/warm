@@ -329,6 +329,55 @@ export function defineSuite({ test, api, FileStorage, scratch }) {
     await Promise.all([store.close(), restored.close()]);
   });
 
+  test("filtered dense results survive training, mutations and snapshot reopening", async () => {
+    const vector = (id) => Array.from({ length: 8 }, (_, dimension) => Math.sin(id * 1.7 + dimension) + dimension * 0.01);
+    const document = (id) => ({
+      id: `d${String(id).padStart(4, "0")}`, text: `filtered record ${id}`,
+      metadata: { eligible: id % 2 === 0 },
+      ...(id % 17 === 0 ? {} : { embeddings: [vector(id)] }),
+    });
+    for (const simd of [false, "auto"]) {
+      const options = { dimensions: 1024, embeddingDimensions: 8, simd };
+      const reference = await api.openStore(options);
+      let indexed = await api.openStore(options);
+      try {
+        const documents = Array.from({ length: 512 }, (_, id) => document(id));
+        await reference.memorizeDocuments(documents);
+        await indexed.memorizeDocuments(documents);
+        assert.equal(await indexed.trainDocumentIndex(), true);
+        const compare = async () => {
+          assert.equal(reference.documentIndexTrained, false);
+          for (const fusion of ["blend", "rrf"]) {
+            for (const id of [42, 172]) {
+              const query = { embedding: vector(id), filter: { eligible: true }, lexicalWeight: 0,
+                semanticWeight: 1, minSemanticScore: -1, k: 20, candidateLimit: 100, fusion };
+              assert.deepEqual(await indexed.searchDocuments("", query), await reference.searchDocuments("", query));
+            }
+          }
+        };
+        await compare();
+        const changes = [
+          { ...document(0), metadata: { eligible: false }, embeddings: [vector(7)] },
+          document(512),
+        ];
+        for (const store of [reference, indexed]) {
+          await store.memorizeDocuments(changes);
+          assert.equal(await store.deleteDocument("d0002"), true);
+        }
+        assert.equal(indexed.documentIndexTrained, false);
+        await compare();
+        assert.equal(await indexed.trainDocumentIndex(), true);
+        await compare();
+        const snapshot = await indexed.exportSnapshot();
+        await indexed.close();
+        indexed = await api.openStore({ snapshot, simd });
+        await compare();
+      } finally {
+        await Promise.all([reference.close(), indexed.close()]);
+      }
+    }
+  });
+
   test("a store without an embedding space rejects dense queries; closed stores reject use", async () => {
     const store = await filled(api);
     await assert.rejects(store.searchDocuments("x", { embedding: [1, 0] }), /embedding space/);
