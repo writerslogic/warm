@@ -244,4 +244,4 @@ closed-form kernel, and is absent on the lexical path. FPE's distinct capability
 inside a vector that an index can use, was out of scope and is untested, so this is not evidence
 against it for ANN integration. What may deserve one held-out run by the maintainer is the
 scalar symmetric proximity factor (not FPE), and the finding that the hard `as_of` filter costs
-2 to 3 questions of 40 on dense retrieval here; neither is an FPE result.
+1 to 3 questions of 40 at k=5 on dense retrieval here; neither is an FPE result.
