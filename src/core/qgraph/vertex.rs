@@ -4329,7 +4329,7 @@ impl Graph {
     /// quantized_search, metric), the adjacency and the upper layers; the vectors are not
     /// stored.
     pub fn save(&self, path: &std::path::Path) -> std::io::Result<()> {
-        if self.degree != self.build.degree {
+        if self.degree != self.build.degree || self.repaired {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "query-trained graph cannot use an untrained graph cache key; encode and save VGraph instead",
@@ -4461,6 +4461,7 @@ impl Graph {
             upper_ids,
             layers,
             build: params.clone(),
+            repaired: false,
         })
     }
 }
