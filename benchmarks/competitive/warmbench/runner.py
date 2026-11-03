@@ -389,6 +389,9 @@ def run_text(dataset, spec, systems, out_path=None):
             except Exception as error:
                 results["skipped"][system] = str(error)[-600:]
     for system in live:
+        if os.environ.get("WARM_BENCH_SKIP_OPS"):  # durable replace/delete fsync per operation dominates a loaded local disk
+            runs[system]["ops"] = {"error": "skipped: WARM_BENCH_SKIP_OPS"}
+            continue
         copy = stores[system].with_name(stores[system].name + "-ops")
         shutil.rmtree(copy, ignore_errors=True)
         shutil.copytree(stores[system], copy)
