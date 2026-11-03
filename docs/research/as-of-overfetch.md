@@ -188,5 +188,5 @@ The protocol's reading of `recall.rs` depends on `constrained()`, which is true 
 `valid_from` or `valid_to` set (`Stamp::windowed`); every fact here has `valid_from`. The reading
 was also checked on the output: under filter-after-top-k at fetch k, an `as_of` list could only
 contain ids from the unfiltered top 10. In 11 of 40 questions the `as_of` list contains ids outside
-the unfiltered top 10, including `gpt4_5dcc0aab` (9 of its 10). Lists shorter than 10 (3 questions)
+the unfiltered top 10, including `gpt4_5dcc0aab` (9 of its 10). Lists shorter than 10 (2 questions: 3 and 5 ids)
 occur where fewer eligible facts match the lexical query; they are not a post-filter signature.
