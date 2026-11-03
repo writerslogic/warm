@@ -1,0 +1,17 @@
+{
+  "schema": "warm.source-prediction/1",
+  "hypothesis": "Exact equality of source-dependent empirical outcome distributions under every source withdrawal can be decided by Boolean polynomial identities plus equality of nonempty-evidence conditions, without enumerating all source subsets.",
+  "scope": "A local exact-arithmetic prerequisite for retractable predictive-state abstraction. No learned agent, memory-product change, novelty, timing superiority, or held-out result is claimed.",
+  "contract": "Each observation has a positive integer multiplicity, one outcome, and an AND dependency on at most three source identities. A withdrawal removes all observations depending on any withdrawn source. Readout is the exact normalized outcome histogram, or a distinct unknown value when no observations survive. Source identities remain shared. Absolute counts, individual episodes, temporal last-write selection and arbitrary future insertions are outside this readout contract.",
+  "candidate": "Represent counts as multilinear polynomials in source-survival bits. Compare minimal source-support antichains, then reduce each cross-multiplied probability difference modulo x_i^2=x_i. A nonzero difference yields a concrete withdrawal witness. Its size is at most twice the largest provenance width; support/unknown discrepancies can require more withdrawals.",
+  "controls": ["exhaustive exact normalized histograms", "current-distribution-only negative control", "cross multiplication without unknown-state support checking negative control", "global-gcd-normalized source histograms as a sound but incomplete structural control"],
+  "exhaustive": [
+    {"sources": 3, "outcomes": 2, "dependencyMasks": [1, 2, 4], "counts": [0, 1], "profiles": 64, "orderedPairs": 4096},
+    {"sources": 2, "outcomes": 2, "dependencyMasks": [1, 2, 3], "counts": [0, 1], "profiles": 64, "orderedPairs": 4096}
+  ],
+  "random": {"seed": 202611031, "pairs": 400, "sources": 6, "outcomes": 3, "maximumWidth": 3, "recordsPerProfile": 24, "maximumCount": 7},
+  "factorCases": {"sourceCounts": [4, 8, 12, 16, 20], "outcomes": 4, "weights": "2^source", "multiplier": "number of surviving sources", "fullEnumerationMaximumSources": 12, "sampledWithdrawalsOtherwise": 1000, "seed": 202611032},
+  "acceptance": "Zero candidate/oracle disagreements; every returned witness changes the readout; every distribution-only witness respects the 2g bound; required empty-evidence counterexample defeats the naive bound. Record structural-control disagreements and all failed hypotheses. No performance promotion without a per-outcome algebraic decision-diagram control and a complete state-abstraction workload.",
+  "limits": {"maximumSources": 32, "maximumOutcomes": 32, "maximumRecords": 4096, "maximumCount": 2147483647, "maximumWidth": 3, "maximumPolynomialTerms": 250000, "maximumProductPairs": 10000000, "seconds": 600},
+  "paidServices": false
+}
