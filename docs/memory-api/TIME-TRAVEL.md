@@ -10,7 +10,8 @@ LongMemEval was lower with as-of retrieval (recall_any@5 0.76 against 0.88 witho
 history is something a caller asks for and never a default.
 
 Rust API (`WarmCore`): `journal_position`, `history_bounds`, `history_view`,
-`history_view_with`, `history_view_at_time`, `resolve_history_time` and `history_revisions`.
+`history_view_with`, `history_view_at_time`, `resolve_history_time`, `history_revisions` and
+`clear_history_cache`.
 The types are `JournalPosition`, `HistoryView`, `HistoryOptions`, `HistoryRevision` and
 `HistoryError`, all exported from the crate root.
 
@@ -112,14 +113,17 @@ return a truncated list. To read a revision's content, open a view at its `writt
      compaction lock and checks that the view's generation is still live, so after any
      compaction the view fails with `Compacted` and returns nothing more. A view is built
      under the same lock, so a compaction cannot swap the generation while frames are being
-     read.
+     read. The views kept for reuse (see [Cost and limits](#cost-and-limits)) are dropped
+     before any compaction publishes its generation.
 - Bytes a caller already received before the purge are outside any API's control, as in
   [README.md](README.md#forgetting).
 
 ## What a view contains
 
 - **Documents**: `Document`, `DeleteDocument` and `EncodeDocument` replayed with the store's
-  own rules, into a private in-memory document store. `get_document`, `list_documents`,
+  own rules. The revisions live at the position are then indexed in one bulk insert into a
+  private in-memory document store, which reaches the same answers as installing them frame
+  by frame. `get_document`, `list_documents`,
   `document_count` and `search_documents` read it. Search uses the built-in lexical and exact
   dense path, the same ranking code the live store uses. It applies no trained dense index,
   installed model stages or local text embedder; pass `SearchOptions::embedding` for semantic
@@ -134,24 +138,47 @@ return a truncated list. To read a revision's content, open a view at its `writt
 
 Building a view decodes every frame from offset `0` to the position, one frame at a time, and
 validates each mutation with the same checks that replay uses. A frame that is damaged, fails
-to decrypt or fails validation fails the whole call. No partial view is returned. Memory is the
-decoded state at the position plus one frame. `HistoryOptions::max_state_bytes` (default
-1 GiB) bounds the estimated state, and a larger state fails with `StateTooLarge`. A time query
-decodes the journal twice: once to resolve the time and once to build the view. Building a
-view never writes anything. It does not touch the live documents, shards, text segment,
-indices or audit queue, and it blocks a compaction only while it builds or reads.
+to decrypt or fails validation fails the whole call. No partial view is returned. The
+document revisions live at the position are then indexed in one bulk insert: the index states
+in between are never built. Memory is the decoded state at the position plus one frame, and
+then the view's index. `HistoryOptions::max_state_bytes` (default 1 GiB) bounds the estimated
+state, and a state that exceeds it at any frame fails with `StateTooLarge`. A time query
+decodes the journal twice: once to resolve the time and once to build the view (the second
+decode is skipped when the resolved position is reused, as below). Building a view never
+writes anything. It does not touch the live documents, shards, text segment, indices or audit
+queue, and it blocks a compaction only while it builds or reads.
 
-Measured cost against a current-state query, from `benchmarks/results/history_view_cost.json`
-(`examples/history_cost.rs`, Apple M4, shared machine, 31 paired repetitions, median of the
-per-repetition ratios). The corpus is ingested in batches of 100, followed by single-document
-updates of a tenth and deletes of a twentieth. Only these two scales were tested:
+**Reuse.** The store keeps the last 4 views it built (at most 256 MiB of estimated state),
+and opening a view at one of those positions shares it instead of building. Positions are
+immutable within a generation, so a shared view is the state a build would produce. Consequences:
 
-| ingested | journal bytes | live search p50 | build + search at the end p50 | factor | build + search at the middle, factor | search on a built view, factor |
-|---|---|---|---|---|---|---|
-| 1 000 | 172 637 | 18 us | 14.2 ms | 813x | 158x | 0.65x |
-| 10 000 | 1 739 295 | 51 us | 216.7 ms | 4 246x | 790x | 0.89x |
+- Up to that much state stays resident after the caller drops its views, until a compaction
+  publishes (every compaction, a purge included, empties the cache before publishing) or the
+  caller calls `clear_history_cache`.
+- Reopening a kept position does not read the journal again, so damage to the journal after
+  the first build is not detected at that position. Any position not kept is built and
+  validated as above.
+- `max_state_bytes` is still enforced on a reused view: it fails with `StateTooLarge` exactly
+  when building it under that bound would.
 
-Building the view is the whole cost, and it grows with the journal replayed. The
-single-document update and delete frames after the middle position cost more than the batched
-ingest before it. Once built, a view answers searches as fast as the live store. Callers that
-query one position repeatedly should keep the view.
+Measured cost against a current-state query, from `benchmarks/results/history_view_cost_v2.json`
+(`examples/history_cost.rs`, Apple M4, shared machine with load averages 10 to 18, 31 paired
+repetitions, median of the per-repetition ratios). The corpus is ingested in batches of 100,
+followed by single-document updates of a tenth and deletes of a twentieth. *Cold* clears the
+cache first, so the view is built from the journal; *reused* opens a kept position. Each open
+is followed by one search. Only these two scales were tested:
+
+| ingested | journal bytes | live search p50 | cold open + search at the end p50, factor | cold at the middle, factor | reused at the end, factor | reused at the middle, factor | search on a built view, factor |
+|---|---|---|---|---|---|---|---|
+| 1 000 | 172 637 | 56 us | 8.0 ms, 136x | 78x | 0.60x | 0.32x | 0.36x |
+| 10 000 | 1 739 295 | 127 us | 83.0 ms, 690x | 278x | 0.63x | 0.35x | 0.56x |
+
+Against the frame-at-a-time builder (`benchmarks/results/history_view_cost.json`, whose
+factors were 813x and 158x at 1 000 and 4 246x and 790x at 10 000, end and middle), the
+paired factor of a cold open is 5.98x and 2.01x lower at 1 000 and 6.15x and 2.84x lower at
+10 000 (`versus_v1` in the v2 file). The gain is largest where the journal holds superseded
+revisions: the end position follows the single-document update and delete frames (1 500 at
+10 000) that the old builder indexed one at a time, while the middle position is batched ingest only, so its
+remaining cost is decoding and validating the frames plus one bulk index of the survivors. A
+cold build still grows with the journal replayed. Reopening a kept position costs about as
+much as a search.
