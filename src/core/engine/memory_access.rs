@@ -48,6 +48,11 @@ impl WarmCore {
         .map(drop)
     }
 
+    /// The store's lexical analyzer, recorded in its `store.json`.
+    pub fn analyzer(&self) -> crate::core::documents::Analyzer {
+        self.analyzer
+    }
+
     /// Advances by one per write transaction this process commits or replays, so equal values
     /// bracket an unchanged store and the difference of two readings counts the transactions
     /// between them. It starts at a random value per open, so one reading does not reveal how

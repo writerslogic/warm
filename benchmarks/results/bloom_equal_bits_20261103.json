@@ -1,0 +1,71 @@
+{
+ "D": 16384,
+ "bits_counting_arm": 524288,
+ "seeds": 20,
+ "auc_mean": {
+  "700": {
+   "count": 0.99951125,
+   "bin_k64": 0.993375,
+   "bin_kopt": 1.0,
+   "bin_kopt_k": 16.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 519.0
+  },
+  "1000": {
+   "count": 0.99760375,
+   "bin_k64": 0.8685,
+   "bin_kopt": 0.9995,
+   "bin_kopt_k": 11.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 363.0
+  },
+  "1500": {
+   "count": 0.989686875,
+   "bin_k64": 0.5805,
+   "bin_kopt": 0.9971249999999999,
+   "bin_kopt_k": 8.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 242.0
+  },
+  "2000": {
+   "count": 0.9803118750000002,
+   "bin_k64": 0.512,
+   "bin_kopt": 0.988875,
+   "bin_kopt_k": 6.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 182.0
+  },
+  "3000": {
+   "count": 0.949014375,
+   "bin_k64": 0.5001249999999999,
+   "bin_kopt": 0.9636250000000001,
+   "bin_kopt_k": 4.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 121.0
+  },
+  "4000": {
+   "count": 0.923153125,
+   "bin_k64": 0.5,
+   "bin_kopt": 0.9305000000000001,
+   "bin_kopt_k": 3.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 91.0
+  },
+  "6000": {
+   "count": 0.8843256250000001,
+   "bin_k64": 0.5,
+   "bin_kopt": 0.86875,
+   "bin_kopt_k": 2.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 61.0
+  },
+  "8000": {
+   "count": 0.8431225,
+   "bin_k64": 0.5,
+   "bin_kopt": 0.8053750000000001,
+   "bin_kopt_k": 1.0,
+   "bloom_eq": 1.0,
+   "bloom_eq_k": 45.0
+  }
+ }
+}

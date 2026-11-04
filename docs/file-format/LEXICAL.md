@@ -50,3 +50,30 @@ The 128-entry bitpacked posting blocks, their skip endpoints, maximum frequencie
 and conservative minimum lengths are derived memory state. Journal replay rebuilds
 them from live term tables. No old posting bytes are reinterpreted as blocks and
 no persisted block cache is added by this change.
+
+## Analyzers
+
+A store's lexical analyzer is fixed at creation (`WarmConfig::analyzer`) and recorded in
+`store.json` `lexical_analyzer` ([LAYOUT.md](LAYOUT.md)); ingest, search, counts, Boolean and
+phrase queries and recall explanations all analyze through it. Without the key the store uses
+the legacy analysis: maximal alphanumeric runs, `str::to_lowercase`, English Snowball, which
+every store written before analyzers used and every default store still uses. The others:
+
+| Name | Analysis |
+|---|---|
+| `english` | legacy after Unicode NFC, Turkish dotted and dotless I folded together, script digits to ASCII |
+| `arabic`, `danish`, `dutch`, `finnish`, `french`, `german`, `greek`, `hungarian`, `italian`, `norwegian`, `portuguese`, `romanian`, `russian`, `spanish`, `swedish`, `tamil` | as `english`, with that language's Snowball stemmer |
+| `turkish` | NFC, Turkish lowercasing, Snowball Turkish |
+| `persian` | NFC; Arabic and Persian letter normalization and the Persian light stemmer (Lucene); ZWNJ ends a word |
+| `hindi` | NFC; words keep virama, nukta and joiners; Hindi normalization and light stemmer (Lucene) |
+| `bigram` | NFC; overlapping character-cluster bigrams over Thai, Lao, Khmer, Myanmar and CJK text |
+
+A chunk written by a non-legacy analyzer carries the analyzed mark (journal chunk flag bit 7,
+checkpoint chunk flag bit 2): a release that predates analyzers refuses such a store, and replay
+refuses a chunk whose mark disagrees with `store.json`. A store's analyzer cannot change; to
+change it, re-ingest the source documents into a new store.
+
+Limits and follow-ups: no stop words; Lucene's `IndicNormalizer` is not ported; a phrase over a
+chunk with neither stored positions nor the legacy analyzer is refused; the Node (`config.rs`),
+Python and WASM bindings do not expose the setting yet (WASM stores have no `store.json`), and
+`warm-admin reencode` creates its new store with the legacy analyzer.

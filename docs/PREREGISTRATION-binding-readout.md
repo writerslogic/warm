@@ -649,6 +649,30 @@ compactness for capacity), still a deterministic integer fold (replay-verifiable
 A direct, actionable win for `core::bloom_memory`; the next step is a production
 counting-membership store behind the `experimental` gate.
 
+### Erratum (2026-11-03): the 4x gain is an artifact of k = 64 and of unequal bits
+
+The comparison above fixes k = 64 for the binary arm. At n = 1000 the optimal Bloom k is
+about ln2 * D / n = 11, so the binary arm was run far from its optimum, and the counting arm
+stores 32 bits per index against 1. Re-running the same harness (D = 16384, 20 seeds, 200
+members vs 200 non-members, AUC; `benchmarks/research/bloom_equal_bits/sim.py`, result
+`benchmarks/results/bloom_equal_bits_20261103.json`; the `count` and `bin_k64` columns
+reproduce the table above to within 0.007) adds two arms:
+
+| n    | count (u32, k=64) | binary k=64 | binary, k = ln2*D/n (same D) | binary, same bits (D*32), k = ln2*m/n |
+|------|-------------------|-------------|------------------------------|----------------------------------------|
+| 1000 | 0.998             | 0.869       | 0.9995 (k=11)                | 1.000 (k=363)                          |
+| 2000 | 0.980             | 0.512       | 0.989 (k=6)                  | 1.000 (k=182)                          |
+| 4000 | 0.923             | 0.500       | 0.931 (k=3)                  | 1.000 (k=91)                           |
+| 8000 | 0.843             | 0.500       | 0.805 (k=1)                  | 1.000 (k=45)                           |
+
+With k tuned, a binary Bloom at the same dimension matches or beats the counting readout up
+to n = 4000 and trails it only at n >= 6000 (0.869 vs 0.884 at 6000), where both are below
+0.95. At equal memory (524,288 bits) a plain Bloom filter is at AUC 1.000 across the sweep.
+The supported claim is therefore: counting readout is more robust than a binary readout at
+a fixed, mis-tuned k; it does not extend membership capacity per bit past a tuned Bloom
+filter. Membership of a known item set is not a use case where superposition beats an
+explicit Bloom filter or hash table.
+
 ## 20. Deterministic quantized resonator for factorization (pre-registered 2026-07-05)
 
 **Prior-art note (read first).** The quantized-phase-FHRR substrate used in §15–§18

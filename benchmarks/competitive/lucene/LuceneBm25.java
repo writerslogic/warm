@@ -6,7 +6,10 @@
 // and the default BM25Similarity (k1 1.2, b 0.75) are Lucene's documented defaults.
 //
 // Usage: java -cp lucene-core.jar:lucene-analysis-common.jar:classes LuceneBm25
-//        <build|serve|ops> <input.json> <store dir> <out.json> <t0 epoch ns> <passes> <ops>
+//        <build|serve|ops> <input.json> <store dir> <out.json> <t0 epoch ns> <passes> <ops> [analyzer]
+// The optional analyzer (default english) selects a Lucene analyzer for multilingual runs; any
+// analyzer other than english reads the whole query text through it, since the alphanumeric
+// pre-split below breaks words at combining marks.
 // The input is the {documents, queries} JSON written by warm-bench; it is parsed with a small
 // purpose-built reader so the harness needs only the two Lucene jars.
 
@@ -182,9 +185,30 @@ public final class LuceneBm25 {
     return new ArrayList<>(out);
   }
 
+  static boolean rawQueries = false;
+
+  static Analyzer analyzer(String name) {
+    return switch (name) {
+      case "english" -> new EnglishAnalyzer();
+      case "standard" -> new org.apache.lucene.analysis.standard.StandardAnalyzer();
+      case "hindi" -> new org.apache.lucene.analysis.hi.HindiAnalyzer();
+      case "thai" -> new org.apache.lucene.analysis.th.ThaiAnalyzer();
+      case "persian" -> new org.apache.lucene.analysis.fa.PersianAnalyzer();
+      case "arabic" -> new org.apache.lucene.analysis.ar.ArabicAnalyzer();
+      case "finnish" -> new org.apache.lucene.analysis.fi.FinnishAnalyzer();
+      case "indonesian" -> new org.apache.lucene.analysis.id.IndonesianAnalyzer();
+      case "turkish" -> new org.apache.lucene.analysis.tr.TurkishAnalyzer();
+      case "russian" -> new org.apache.lucene.analysis.ru.RussianAnalyzer();
+      case "spanish" -> new org.apache.lucene.analysis.es.SpanishAnalyzer();
+      case "french" -> new org.apache.lucene.analysis.fr.FrenchAnalyzer();
+      case "german" -> new org.apache.lucene.analysis.de.GermanAnalyzer();
+      default -> throw new IllegalArgumentException("unknown analyzer " + name);
+    };
+  }
+
   static Query query(Analyzer analyzer, String text) throws IOException {
     Set<String> terms = new LinkedHashSet<>();
-    for (String w : words(text)) {
+    for (String w : rawQueries ? List.of(text) : words(text)) {
       try (TokenStream ts = analyzer.tokenStream("body", w)) {
         CharTermAttribute attr = ts.addAttribute(CharTermAttribute.class);
         ts.reset();
@@ -224,7 +248,9 @@ public final class LuceneBm25 {
     List<Doc> docs = new ArrayList<>();
     List<Q> queries = new ArrayList<>();
     load(input, docs, queries);
-    Analyzer analyzer = new EnglishAnalyzer();
+    String analyzerName = a.length > 7 ? a[7] : "english";
+    rawQueries = !analyzerName.equals("english");
+    Analyzer analyzer = analyzer(analyzerName);
     StringBuilder json = new StringBuilder("{");
     switch (phase) {
       case "build" -> {
