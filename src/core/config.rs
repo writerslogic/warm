@@ -26,6 +26,9 @@ pub struct WarmConfig {
     /// Opt-in degree-64/build-500 graph with single-hop traversal; quality remains approximate.
     pub vector_high_recall: bool,
     pub document_checkpoint: DocumentCheckpointConfig,
+    /// Lexical analyzer of a new store, recorded in its `store.json`; `None` takes the store's
+    /// recorded one (the legacy analyzer for a new store). Reopening with another one fails.
+    pub analyzer: Option<super::documents::Analyzer>,
     /// Options of the local embedder `TextEncoder::LocalEmbedV1` loads (default options when
     /// absent). Ignored by the other encoders.
     #[cfg(feature = "local-embed")]
