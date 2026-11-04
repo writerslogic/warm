@@ -17,7 +17,7 @@ use super::index::{Edge, Index};
 use super::stamp::{user_metadata, Stamp};
 use super::types::*;
 use super::{Memory, MemoryError, RecencyContext};
-use crate::core::documents::{terms, DocumentResult, SearchOptions};
+use crate::core::documents::{terms_with, Analyzer, DocumentResult, SearchOptions};
 
 /// Searches tried before a recall settles for an index that may trail the searched revision.
 const SNAPSHOT_ATTEMPTS: usize = 4;
@@ -91,27 +91,35 @@ fn sorted_ids(edges: &[Edge]) -> Vec<String> {
     edges.into_iter().map(|edge| edge.by.clone()).collect()
 }
 
-/// The query's tokens, lowercased, each with its stem; computed once per query rather than
-/// once per explained result.
-fn query_terms(query: &str) -> Vec<(String, Option<String>)> {
-    query
-        .split(|c: char| !c.is_alphanumeric())
-        .filter(|token| !token.is_empty())
-        .map(|token| {
-            let lower = token.to_lowercase();
-            let stem = terms(&lower, true).into_keys().next();
-            (lower, stem)
-        })
-        .collect()
+/// The query's words through the store analyzer, each unstemmed and stemmed; computed once
+/// per query rather than once per explained result.
+pub(super) struct ExplainTerms {
+    analyzer: Analyzer,
+    words: Vec<(String, String)>,
 }
 
-fn matched_terms(query: &[(String, Option<String>)], text: &str) -> Vec<String> {
-    let stems = terms(text, true);
-    let raw = terms(text, false);
+fn query_terms(analyzer: Analyzer, query: &str) -> ExplainTerms {
+    let text = analyzer.prepare(query);
+    let mut lower = String::new();
+    let words = analyzer
+        .words(&text)
+        .into_iter()
+        .map(|word| {
+            let raw = analyzer.term(word, false, &mut lower).into_owned();
+            let stem = analyzer.term(word, true, &mut lower).into_owned();
+            (raw, stem)
+        })
+        .filter(|(raw, _)| !raw.is_empty())
+        .collect();
+    ExplainTerms { analyzer, words }
+}
+
+fn matched_terms(query: &ExplainTerms, text: &str) -> Vec<String> {
+    let stems = terms_with(query.analyzer, text, true);
+    let raw = terms_with(query.analyzer, text, false);
     let mut matched: Vec<String> = Vec::new();
-    for (lower, stem) in query {
-        let hit =
-            raw.contains_key(lower) || stem.as_ref().is_some_and(|stem| stems.contains_key(stem));
+    for (lower, stem) in &query.words {
+        let hit = raw.contains_key(lower) || stems.contains_key(stem);
         if hit && !matched.contains(lower) {
             matched.push(lower.clone());
         }
@@ -140,14 +148,16 @@ impl Memory {
             return Ok(Vec::new());
         };
         let index = self.index.read();
-        let explained_terms = options.explain.then(|| query_terms(query));
+        let explained_terms = options
+            .explain
+            .then(|| query_terms(self.core.analyzer(), query));
         let ranked = std::mem::take(&mut run.ranked);
         ranked
             .into_iter()
             .enumerate()
             .map(|(position, ranked)| {
                 let explanation = explained_terms
-                    .as_deref()
+                    .as_ref()
                     .map(|terms| {
                         self.explanation(&index, &run, terms, options, &ranked, Some(position + 1))
                     })
@@ -193,7 +203,7 @@ impl Memory {
                 return self.explanation(
                     &index,
                     run,
-                    &query_terms(query),
+                    &query_terms(self.core.analyzer(), query),
                     options,
                     ranked,
                     Some(position + 1),
@@ -215,7 +225,7 @@ impl Memory {
             matched_terms: document
                 .text
                 .as_deref()
-                .map(|text| matched_terms(&query_terms(query), text))
+                .map(|text| matched_terms(&query_terms(self.core.analyzer(), query), text))
                 .unwrap_or_default(),
             recency_factor: 1.0,
             historical_factor: 1.0,
@@ -621,7 +631,7 @@ impl Memory {
         &self,
         index: &Index,
         run: &Run,
-        query: &[(String, Option<String>)],
+        query: &ExplainTerms,
         options: &RecallOptions,
         ranked: &Ranked,
         rank: Option<usize>,
