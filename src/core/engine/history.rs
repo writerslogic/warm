@@ -7,8 +7,8 @@
 //! document map and vector map, then indexes the documents live at the position in one bulk
 //! insert into a private document store. Nothing here writes the live store: frames are read
 //! with `read_frame`, decoded and validated as replay does, and applied by this module's own
-//! small applier. The last few views built are kept and shared by later views at the same
-//! position, until a compaction publishes. Building and every read hold the compaction lock and check that the generation
+//! small applier. With an opt-in budget, the last few views built are kept and shared by later
+//! views at the same position, until a compaction publishes. Building and every read hold the compaction lock and check that the generation
 //! is still live, so a compaction (a purge included) can neither swap frames under a build
 //! nor let an earlier view keep serving what it removed.
 
@@ -30,10 +30,8 @@ use crate::{DocumentRecord, DocumentResult, SearchOptions};
 pub const DEFAULT_MAX_STATE_BYTES: usize = 1 << 30;
 /// Upper bound on `history_revisions`' `limit`.
 pub const MAX_REVISIONS: usize = 100_000;
-/// Built views kept for reuse; the least recently used is dropped first.
+/// Built views kept for reuse when a budget is set; the least recently used is dropped first.
 const CACHED_VIEWS: usize = 4;
-/// Bound on the estimated state bytes of the views kept for reuse.
-const CACHED_VIEW_BYTES: usize = 256 << 20;
 
 /// A frame boundary in one journal generation: the state after every frame that starts
 /// before `offset`.
@@ -246,6 +244,13 @@ impl WarmCore {
     /// Releases the views kept for reuse; views already returned are unaffected.
     pub fn clear_history_cache(&self) {
         self.history_cache.lock().clear();
+    }
+
+    /// Opts in to keeping up to 4 built views, within `bytes` of estimated document and vector
+    /// state (their indexes are not counted), for reuse by later views at the same position.
+    /// Off (`0`) by default; `0` also releases every kept view. See TIME-TRAVEL.md.
+    pub fn set_history_cache_budget(&self, bytes: usize) {
+        self.history_cache.lock().set_budget(bytes);
     }
 
     /// The position a wall-clock time (memory-API ingest milliseconds) maps to.
@@ -742,11 +747,26 @@ struct CachedView {
 #[derive(Default)]
 pub(super) struct ViewCache {
     entries: Vec<CachedView>,
+    /// Bound on the kept views' estimated state; `0`, the default, keeps none.
+    budget: usize,
 }
 
 impl ViewCache {
     pub(super) fn clear(&mut self) {
         self.entries.clear();
+    }
+
+    fn set_budget(&mut self, bytes: usize) {
+        self.budget = bytes;
+        self.evict();
+    }
+
+    fn evict(&mut self) {
+        while self.entries.len() > CACHED_VIEWS
+            || self.entries.iter().map(|entry| entry.bytes).sum::<usize>() > self.budget
+        {
+            self.entries.remove(0);
+        }
     }
 
     fn get(&mut self, generation: &str, offset: usize) -> Option<(Arc<ViewState>, usize)> {
@@ -761,17 +781,13 @@ impl ViewCache {
     }
 
     fn insert(&mut self, view: CachedView) {
-        if view.bytes > CACHED_VIEW_BYTES {
+        if view.bytes > self.budget {
             return;
         }
         self.entries
             .retain(|entry| entry.generation == view.generation && entry.offset != view.offset);
         self.entries.push(view);
-        while self.entries.len() > CACHED_VIEWS
-            || self.entries.iter().map(|entry| entry.bytes).sum::<usize>() > CACHED_VIEW_BYTES
-        {
-            self.entries.remove(0);
-        }
+        self.evict();
     }
 }
 
