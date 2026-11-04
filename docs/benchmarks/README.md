@@ -156,6 +156,85 @@ Full GloVe-100 and SIFT-1M do not fit a hosted runner. Two supported ways to run
   writes the results back with hardware class `modal-x86_64-8vcpu-32g`. The cap kills the run before
   the published rate would exceed it.
 
+## Multilingual lexical (MIRACL dev)
+
+`benchmarks/results/multilingual_bm25_miracl_dev.json` compares WARM BM25 builds with Lucene
+10.6.0 analyzers on MIRACL v1.0 dev (hi, fa, th, sw). Each language's corpus is every judged
+passage plus fixed-seed uniform distractors up to 100,000 passages, identical for every system,
+so absolute scores sit above full-corpus MIRACL figures. Quality only; nothing is timed. The
+Lucene comparator needs JDK 21 or newer.
+
+```sh
+PATH=/opt/homebrew/opt/openjdk@25/bin:$PATH uv run --no-project python -I \
+  benchmarks/competitive/warmbench/multilingual.py --raw DIR --langs hi fa th sw \
+  --warm before=BIN after=BIN --commits before=SHA after=SHA --lucene standard language \
+  --extra beir-scifact-train=CACHE/text-scifact-train --out benchmarks/results/multilingual_bm25_miracl_dev.json
+```
+
+`DIR` holds `topics-<l>.tsv` and `qrels-<l>.tsv` from `miracl/miracl` and
+`corpus-<l>-docs-<n>.jsonl.gz` from `miracl/miracl-corpus`; `BIN` is the `competitive_text`
+example built at `SHA`. nDCG@10:
+
+| | WARM `a090f971` | WARM joined `63d9d3d8` | WARM NFC `5e9e3b16` | Lucene Standard | Lucene language |
+|---|---|---|---|---|---|
+| hi | 0.4599 | 0.4474 | 0.4598 | 0.4470 | 0.5279 (Hindi) |
+| fa | 0.4851 | 0.4325 | 0.4851 | 0.4313 | 0.5196 (Persian) |
+| th | 0.3746 | 0.2678 | 0.3746 | 0.2694 | 0.5439 (Thai) |
+| sw | 0.4444 | 0.4445 | 0.4444 | 0.4473 | none |
+
+Keeping combining marks and ZWNJ inside words (the joined build, branch
+`lever/unicode-tokenizer-joined`) lands within 0.2 points of StandardAnalyzer and loses to
+the split WARM has always done: without a stemmer the word fragments act as subwords. It is
+not merged. The gap that remains is
+Lucene's per-language stemming, Persian normalization and Thai dictionary segmentation.
+The file also checks the English sets: on SciFact train, NFCorpus dev and LongMemEval dev, the
+NFC build's per-query nDCG@10 and recall@100 match `a090f971` exactly.
+
+### Store analyzers
+
+A store's lexical analyzer is chosen when it is created (`WarmConfig::analyzer`,
+`competitive_text --analyzer NAME`) and recorded in its `store.json` (`lexical_analyzer`);
+a store without the key, every store written before analyzers and every default store, keeps
+the legacy analysis. `benchmarks/results/multilingual_bm25_analyzers_miracl_dev.json` runs
+WARM `a090f971` (before), WARM `515765ce` with the default analyzer (new) and with the
+language's analyzer (`--analyzed lang`: hindi, persian, bigram for Thai, arabic, finnish,
+russian, spanish, french, german)
+against Lucene 10.6.0's language analyzers, same corpora as above. nDCG@10:
+
+| | WARM `a090f971` | WARM `515765ce` default | WARM `515765ce` language analyzer | Lucene language |
+|---|---|---|---|---|
+| hi | 0.4599 | 0.4599 | 0.5319 (hindi) | 0.5279 (Hindi) |
+| fa | 0.4851 | 0.4851 | 0.5026 (persian) | 0.5196 (Persian) |
+| th | 0.3746 | 0.3746 | 0.5564 (bigram) | 0.5439 (Thai) |
+| ar | 0.5556 | 0.5556 | 0.6109 (arabic) | 0.6074 (Arabic) |
+| fi | 0.5872 | 0.5872 | 0.6583 (finnish) | 0.6640 (Finnish) |
+| ru | 0.4134 | 0.4134 | 0.5090 (russian) | 0.5171 (Russian) |
+| es | 0.5980 | 0.5980 | 0.6295 (spanish) | 0.6246 (Spanish) |
+| fr | 0.4231 | 0.4231 | 0.4324 (french) | 0.4329 (French) |
+| de | 0.4278 | 0.4278 | 0.4532 (german) | 0.4732 (German) |
+
+The file's `summary` gives the share of the mean gap to Lucene's language analyzers that the
+WARM analyzers close over these nine languages: 0.955 (mean gap 0.0651 before, 0.0029 after).
+The mean nets languages where WARM is ahead (hi, th, ar, es) against those where it is still
+behind (de by 0.020, fa by 0.017, ru by 0.008, fi by 0.006, fr by 0.0005). The default analyzer's top 100 ids and scores match `a090f971` on
+every query of every set, including SciFact train, NFCorpus dev and LongMemEval dev. The
+`english` analyzer (NFC, Turkish I folding, ASCII digits) leaves those three sets' nDCG@10
+unchanged; its top 100 ids and scores are identical on 809 of 809 SciFact, 42 of 324 NFCorpus
+and 0 of 100 LongMemEval queries. WARM has no stop words; Lucene's analyzers remove them. The analyzers, their file-format marks and
+the binding follow-ups are in [file-format/LEXICAL.md](../file-format/LEXICAL.md#analyzers).
+
+```sh
+PATH=/opt/homebrew/opt/openjdk@25/bin:$PATH uv run --no-project python -I \
+  benchmarks/competitive/warmbench/multilingual.py --raw DIR --langs hi fa th ar fi ru es fr de \
+  --warm before=BIN_BEFORE new=BIN lang=BIN --analyzed lang --lucene language --reuse \
+  --extra beir-scifact-train=CACHE/text-scifact-train ... \
+  --out benchmarks/results/multilingual_bm25_analyzers_miracl_dev.json
+```
+
+`benchmarks/results/analyzer_query_latency_scifact.json` is a paired query-latency check of the
+default analyzer against `a090f971` on SciFact (`warmbench/analyzer_latency.py`, rounds
+alternate the binaries on a loaded host, so only the ratio is reported).
+
 ## Server mode
 
 Server systems are compared with `warm-server` (feature `server`), never with the embedded rows;

@@ -49,8 +49,10 @@ sidecar first). Keys, in this order:
 | `encrypted` | bool | frames are AES-256-GCM sealed |
 | `meaning_enabled` | bool | meaning memory configured |
 | `embedding_space` | object or null | `{model, revision, dimensions, normalization, metric}` |
+| `lexical_analyzer` | string, absent for the legacy analyzer | the store's lexical analyzer ([LEXICAL.md](LEXICAL.md#analyzers)) |
 
-On open the engine builds the same object from its configuration and requires equality. A
+On open the engine builds the same object from its configuration and requires equality, except
+`lexical_analyzer`: the recorded one is used, and a configured analyzer that differs is refused. A
 different value is refused ("incompatible store schema"); a `version` above 7 is refused as
 newer than supported; a store with `vectors_data.bin` but no `store.json` is refused as legacy.
 The stored version selects capabilities: normal open preserves it, and requesting

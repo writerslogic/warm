@@ -259,6 +259,7 @@ impl WarmCore {
                         None,
                         self.config.text_encoder,
                         options,
+                        self.analyzer,
                     )
                     .map(|document| Mutation::Document(Arc::new(document)))
                 },
@@ -290,10 +291,11 @@ impl WarmCore {
             });
         #[cfg(feature = "local-embed")]
         let options = embedded.as_ref().unwrap_or(options);
-        let prepared = documents::prepare_search(
+        let prepared = documents::prepare_search_with(
             text,
             options,
             self.config.embedding_space.as_ref().map(|s| s.dimensions),
+            self.analyzer,
         )?;
         Ok(self.run_searches(vec![prepared])?.pop().expect("one query"))
     }
@@ -351,7 +353,7 @@ impl WarmCore {
     pub fn count_documents(&self, text: &str) -> Result<usize> {
         self.hydrate_documents()?;
         let _transaction = self.mutation_gate.read();
-        documents::count_matches(&self.documents.read(), text)
+        documents::count_matches(&self.documents.read(), text, self.analyzer)
     }
 
     /// Executes an explicit Boolean/phrase query over one live document generation.
@@ -360,9 +362,10 @@ impl WarmCore {
         query: &documents::LexicalQuery,
         options: &documents::LexicalOptions,
     ) -> Result<documents::LexicalResults> {
+        let query = query.for_analyzer(self.analyzer)?;
         self.hydrate_documents()?;
         let _transaction = self.mutation_gate.read();
-        documents::execute_lexical(&self.documents.read(), query, options)
+        documents::execute_lexical(&self.documents.read(), &query, options)
     }
 
     /// Counts matching live parent documents without scoring.
@@ -1062,6 +1065,7 @@ impl WarmCore {
             keys,
             self.config.text_encoder,
             options,
+            self.analyzer,
         )
     }
 
@@ -1115,10 +1119,11 @@ impl WarmCore {
             if let Some(e) = &embeddings {
                 opts.embedding = Some(e[i].iter().copied().map(f64::from).collect());
             }
-            prepared.push(documents::prepare_search(
+            prepared.push(documents::prepare_search_with(
                 query,
                 &opts,
                 self.config.embedding_space.as_ref().map(|s| s.dimensions),
+                self.analyzer,
             )?);
         }
         let lists = variants

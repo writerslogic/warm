@@ -24,7 +24,7 @@ use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
 const USAGE: &str =
     "usage: competitive_text <build|serve|ops> --input FILE --store DIR --out FILE \
-    [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--encode eager|deferred|lexical (eager)] \
+    [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--encode eager|deferred|lexical (eager)] [--analyzer NAME] \
     [--batch N (0)]";
 
 /// Command line, parsed by hand: this binary is what the harness measures as WARM's install
@@ -42,6 +42,8 @@ struct Args {
     /// `build` only: eager (chunk hypervectors at ingest, the default) | deferred | lexical
     /// (BM25 index only, like-for-like with the lexical comparators).
     encode: String,
+    /// `build` only: the store's lexical analyzer (`Analyzer` name; the legacy one when absent).
+    analyzer: Option<writerslogic_warm::core::documents::Analyzer>,
     /// `build` only: documents per atomic batch (0 = as many per batch as the engine accepts).
     batch: usize,
 }
@@ -60,6 +62,7 @@ impl Args {
             ops: 100,
             t0_ns: 0,
             encode: "eager".into(),
+            analyzer: None,
             batch: 0,
         };
         while let Some(flag) = words.next() {
@@ -75,6 +78,7 @@ impl Args {
                 "--ops" => args.ops = value.parse().with_context(number)?,
                 "--t0-ns" => args.t0_ns = value.parse().with_context(number)?,
                 "--encode" => args.encode = value,
+                "--analyzer" => args.analyzer = Some(value.parse()?),
                 "--batch" => args.batch = value.parse().with_context(number)?,
                 _ => bail!("unknown argument {flag}; {USAGE}"),
             }
@@ -186,7 +190,11 @@ fn main() -> Result<()> {
             };
             let count = input.documents.len();
             let start = Instant::now();
-            let core = WarmCore::new(1024, Some(store), None)?;
+            let config = writerslogic_warm::core::WarmConfig {
+                analyzer: args.analyzer,
+                ..Default::default()
+            };
+            let core = WarmCore::new(1024, Some(store), Some(config))?;
             ingest(&core, &input.documents, &options, args.batch)?;
             json!({"documents": count, "ingest_s": start.elapsed().as_secs_f64(),
                 "encode": mode.name()})

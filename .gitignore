@@ -57,6 +57,7 @@ benchmarks/public/*.py.lock
 
 # Golden stores are committed test data.
 !tests/golden/**/vectors_data.bin/
+!tests/fixtures/**/vectors_data.bin/
 
 # Documentation build
 /.docs-gen/
