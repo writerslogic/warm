@@ -1090,8 +1090,18 @@ impl Sim {
             "{}",
             self.ctx()
         );
-        assert_eq!(bounds.oldest, core.journal_position(), "{}", self.ctx());
-        assert_eq!(bounds.latest, bounds.oldest, "{}", self.ctx());
+        // Tail writes that land after the publication extend the new generation's journal, so
+        // only a compaction without a tail leaves the history at its first position.
+        assert_eq!(bounds.latest, core.journal_position(), "{}", self.ctx());
+        assert_eq!(
+            bounds.oldest.generation,
+            bounds.latest.generation,
+            "{}",
+            self.ctx()
+        );
+        if !uncertain {
+            assert_eq!(bounds.latest, bounds.oldest, "{}", self.ctx());
+        }
         for (at, _, _) in self.epoch.recorded.iter().take(3) {
             assert!(
                 matches!(
