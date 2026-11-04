@@ -14,9 +14,9 @@ mod document_batch;
 #[cfg(feature = "local-embed")]
 mod embed_api;
 mod governance;
+mod history;
 mod image;
 mod index_cache;
-mod history;
 pub use history::{
     HistoryBounds, HistoryError, HistoryOptions, HistoryRevision, HistoryView, JournalPosition,
     RevisionKind, TimeResolution,
