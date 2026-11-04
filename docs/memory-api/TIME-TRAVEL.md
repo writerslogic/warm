@@ -152,7 +152,8 @@ queue, and it blocks a compaction only while it builds or reads.
 and opening a view at one of those positions shares it instead of building. Positions are
 immutable within a generation, so a shared view is the state a build would produce. Consequences:
 
-- Up to that much state stays resident after the caller drops its views, until a compaction
+- That state, plus each kept view's index (not counted in the estimate and not measured),
+  stays resident after the caller drops its views, until a compaction
   publishes (every compaction, a purge included, empties the cache before publishing) or the
   caller calls `clear_history_cache`.
 - Reopening a kept position does not read the journal again, so damage to the journal after
