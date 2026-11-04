@@ -287,3 +287,30 @@ proptest! {
         prop_assert_eq!(terms_with(Analyzer::English, &text, stem), legacy_terms(&text, stem));
     }
 }
+
+/// A store whose `store.json` lost its analyzer (or names another one) does not open: its
+/// chunks' marks disagree with the analyzer the store would use, so it fails closed instead
+/// of matching queries analyzed differently from its terms.
+#[test]
+fn chunk_marks_must_agree_with_the_store_analyzer() {
+    let dir = tempfile::tempdir().unwrap();
+    {
+        let core = open(dir.path(), Some(Analyzer::Spanish)).unwrap();
+        core.memorize_documents_with(vec![document("gatos", "los gatos")], &lexical())
+            .unwrap();
+    }
+    let path = dir.path().join("store.json");
+    let schema = std::fs::read_to_string(&path).unwrap();
+    let stripped: serde_json::Value = {
+        let mut value: serde_json::Value = serde_json::from_str(&schema).unwrap();
+        value.as_object_mut().unwrap().remove("lexical_analyzer");
+        value
+    };
+    std::fs::write(&path, serde_json::to_vec_pretty(&stripped).unwrap()).unwrap();
+    let _ = std::fs::remove_file(dir.path().join("store.json.crc32"));
+    let error = open(dir.path(), None).err().expect("mismatched store opened");
+    assert!(
+        format!("{error:#}").contains("lexical analyzer"),
+        "{error:#}"
+    );
+}
