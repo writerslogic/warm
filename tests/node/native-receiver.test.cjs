@@ -14,3 +14,15 @@ test('native methods reject unwrapped and prototype-spoofed receivers', async ()
     assert.throws(() => getter.call(receiver), /Illegal invocation|Failed to unwrap exclusive reference/)
   }
 })
+
+test('compaction job methods reject unwrapped and prototype-spoofed receivers', async () => {
+  const { CompactionJob } = require('../../index.js')
+  const receivers = [{}, Object.create(CompactionJob.prototype), new Date(), null]
+  const finished = Object.getOwnPropertyDescriptor(CompactionJob.prototype, 'finished').get
+  for (const receiver of receivers) {
+    assert.throws(() => CompactionJob.prototype.progress.call(receiver), TypeError)
+    assert.throws(() => CompactionJob.prototype.cancel.call(receiver), TypeError)
+    assert.throws(() => finished.call(receiver), /Illegal invocation|Failed to unwrap exclusive reference/)
+    await assert.rejects(async () => CompactionJob.prototype.wait.call(receiver), TypeError)
+  }
+})

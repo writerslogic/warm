@@ -753,6 +753,18 @@ impl WarmMemorySystem {
         run_async(move || core.compact()).await
     }
 
+    /// Starts a compaction on a worker thread and returns its job; reads and writes continue
+    /// meanwhile. Same lifecycle as Rust `WarmCore::start_compaction`.
+    #[napi(ts_args_type = "options?: CompactionOptions")]
+    pub fn start_compaction(
+        &self,
+        options: Option<super::CompactionOptionsJs>,
+    ) -> Result<super::CompactionJob> {
+        let options = options.unwrap_or_default().into_options()?;
+        let handle = self.core.start_compaction(options).map_err(napi_err)?;
+        Ok(super::CompactionJob::new(handle))
+    }
+
     /// Hexadecimal Ed25519 public key, or null when signing is disabled. Establish trust independently.
     #[napi]
     pub fn audit_verifying_key(&self) -> Option<String> {
