@@ -37,7 +37,7 @@ test('background compaction reports progress, reclaims space and keeps foregroun
     assert.equal(report.reclaimedBytes, Math.max(0, report.diskBytesBefore - report.diskBytesAfter))
     assert.equal(
       report.writeAmplification,
-      report.reclaimedBytes > 0 ? report.progress.bytesWritten / report.reclaimedBytes : null
+      report.reclaimedBytes > 0 ? report.progress.bytesWritten / report.reclaimedBytes : undefined
     )
     assert.deepEqual(await job.wait(), report)
     assert.equal(job.progress().stage, 'finished')
