@@ -1,5 +1,6 @@
 # Golden stores are byte-exact fixtures (checksums cover their text files): no EOL conversion.
 tests/golden/** -text
+tests/fixtures/** -text
 benchmarks/results/vibe_v1/**/*.npz filter=lfs diff=lfs merge=lfs -text
 benchmarks/results/vibe_v1/**/*.parquet filter=lfs diff=lfs merge=lfs -text
 benchmarks/results/vibe_v1/rotation/*.ids.u32 filter=lfs diff=lfs merge=lfs -text
