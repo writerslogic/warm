@@ -308,7 +308,9 @@ fn chunk_marks_must_agree_with_the_store_analyzer() {
     };
     std::fs::write(&path, serde_json::to_vec_pretty(&stripped).unwrap()).unwrap();
     let _ = std::fs::remove_file(dir.path().join("store.json.crc32"));
-    let error = open(dir.path(), None).err().expect("mismatched store opened");
+    let error = open(dir.path(), None)
+        .err()
+        .expect("mismatched store opened");
     assert!(
         format!("{error:#}").contains("lexical analyzer"),
         "{error:#}"
