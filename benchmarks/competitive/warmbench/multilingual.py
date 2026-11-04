@@ -109,6 +109,13 @@ def quality(rows, qrels):
             "per_query_ndcg_at_10": ndcg}
 
 
+def paired(base, other):
+    """Per-query nDCG@10 change from `base` to `other` (same query order)."""
+    deltas = [o - b for b, o in zip(base, other, strict=True)]
+    return {"mean_delta": sum(deltas) / len(deltas), "wins": sum(d > 1e-12 for d in deltas),
+            "losses": sum(d < -1e-12 for d in deltas), "ties": sum(abs(d) <= 1e-12 for d in deltas)}
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--raw", type=Path, required=True)
@@ -120,6 +127,7 @@ def main():
     p.add_argument("--lucene", nargs="*", default=["standard"], help="standard and/or language analyzers")
     p.add_argument("--extra", nargs="*", default=[], metavar="NAME=FOLDER",
                    help="also run an existing warm-bench text folder (input.json, qrels.json)")
+    p.add_argument("--commits", nargs="*", default=[], metavar="LABEL=SHA", help="source commit of each --warm binary")
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args()
     a.work.mkdir(parents=True, exist_ok=True)
@@ -148,6 +156,7 @@ def main():
             rows = rows_of(cmd, folder, a.work / "store-warm", a.work / f"{lang}-warm-{label}.json")
             q = quality(rows, qrels)
             q["binary_sha256"] = hashlib.sha256(Path(binary).read_bytes()).hexdigest()
+            q["commit"] = dict(c.split("=", 1) for c in a.commits).get(label)
             systems[f"warm-{label}"] = q
             rankings[label] = {r["id"]: [(h["documentId"], h["lexicalScore"]) for h in r["results"]] for r in rows}
         if len(rankings) > 1:
@@ -170,6 +179,11 @@ def main():
             q = quality(rows_of(cmd, folder, a.work / "store-lucene", a.work / f"{lang}-lucene-{analyzer}.json"), qrels)
             systems[f"lucene-{analyzer}"] = q
             log(f"{lang} lucene-{analyzer} {q['ndcg_at_10']:.4f}")
+        base = systems.get(f"warm-{a.warm[0].split('=', 1)[0]}") if a.warm else None
+        if base:
+            entry["paired_vs_" + a.warm[0].split("=", 1)[0]] = {
+                name: paired(base["per_query_ndcg_at_10"], q["per_query_ndcg_at_10"])
+                for name, q in systems.items() if q is not base}
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(results, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 

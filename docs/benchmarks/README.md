@@ -156,6 +156,40 @@ Full GloVe-100 and SIFT-1M do not fit a hosted runner. Two supported ways to run
   writes the results back with hardware class `modal-x86_64-8vcpu-32g`. The cap kills the run before
   the published rate would exceed it.
 
+## Multilingual lexical (MIRACL dev)
+
+`benchmarks/results/multilingual_bm25_miracl_dev.json` compares WARM BM25 builds with Lucene
+10.6.0 analyzers on MIRACL v1.0 dev (hi, fa, th, sw). Each language's corpus is every judged
+passage plus fixed-seed uniform distractors up to 100,000 passages, identical for every system,
+so absolute scores sit above full-corpus MIRACL figures. Quality only; nothing is timed. The
+Lucene comparator needs JDK 21 or newer.
+
+```sh
+PATH=/opt/homebrew/opt/openjdk@25/bin:$PATH uv run --no-project python -I \
+  benchmarks/competitive/warmbench/multilingual.py --raw DIR --langs hi fa th sw \
+  --warm before=BIN after=BIN --commits before=SHA after=SHA --lucene standard language \
+  --extra beir-scifact-train=CACHE/text-scifact-train --out benchmarks/results/multilingual_bm25_miracl_dev.json
+```
+
+`DIR` holds `topics-<l>.tsv` and `qrels-<l>.tsv` from `miracl/miracl` and
+`corpus-<l>-docs-<n>.jsonl.gz` from `miracl/miracl-corpus`; `BIN` is the `competitive_text`
+example built at `SHA`. nDCG@10:
+
+| | WARM `a090f971` | WARM joined `63d9d3d8` | WARM NFC `5e9e3b16` | Lucene Standard | Lucene language |
+|---|---|---|---|---|---|
+| hi | 0.4599 | 0.4474 | 0.4598 | 0.4470 | 0.5279 (Hindi) |
+| fa | 0.4851 | 0.4325 | 0.4851 | 0.4313 | 0.5196 (Persian) |
+| th | 0.3746 | 0.2678 | 0.3746 | 0.2694 | 0.5439 (Thai) |
+| sw | 0.4444 | 0.4445 | 0.4444 | 0.4473 | none |
+
+Keeping combining marks and ZWNJ inside words (the joined build, branch
+`lever/unicode-tokenizer-joined`) lands within 0.2 points of StandardAnalyzer and loses to
+the split WARM has always done: without a stemmer the word fragments act as subwords. It is
+not merged. The gap that remains is
+Lucene's per-language stemming, Persian normalization and Thai dictionary segmentation.
+The file also checks the English sets: on SciFact train, NFCorpus dev and LongMemEval dev, the
+NFC build's per-query nDCG@10 and recall@100 match `a090f971` exactly.
+
 ## Server mode
 
 Server systems are compared with `warm-server` (feature `server`), never with the embedded rows;
