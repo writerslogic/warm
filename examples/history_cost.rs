@@ -4,9 +4,9 @@
 //! Cost of a historical view against a current-state query on a seeded corpus
 //! (docs/memory-api/TIME-TRAVEL.md). Each repetition runs, in rotated order, a live
 //! `search_documents`, a search on one prebuilt view, and, at the latest and the middle
-//! positions, a view opened cold (the reuse cache cleared first, so it is built from the
-//! journal) and a view opened while the same position is reusable, each searched once.
-//! Prints JSON.
+//! positions, a view opened with the default settings (no reuse budget, so it is built from
+//! the journal) and a view opened with the reuse budget opted in while the same position is
+//! kept, each searched once. Prints JSON.
 //! `cargo run --release --example history_cost -- [documents...]` (default 1000 10000).
 
 use std::time::Instant;
@@ -15,6 +15,8 @@ use writerslogic_warm::{DocumentInput, JournalPosition, SearchOptions, WarmCore}
 
 const REPS: usize = 31;
 const BATCH: usize = 100;
+/// The reuse budget of the opt-in rows.
+const OPT_IN_BUDGET: usize = 256 << 20;
 
 fn percentile(sorted: &[f64], p: f64) -> f64 {
     sorted[((sorted.len() - 1) as f64 * p).round() as usize]
@@ -113,26 +115,24 @@ fn scale(documents: usize) -> anyhow::Result<serde_json::Value> {
             "view and live results differ for {query:?}"
         );
     }
-    // A cold build of each position (reuse cleared) answers as the live store does too.
-    core.clear_history_cache();
+    // With the reuse budget opted in, a kept view answers as the live store does too.
+    core.set_history_cache_budget(OPT_IN_BUDGET);
+    drop(core.history_view(&latest)?);
     let cold = core.history_view(&latest)?;
     for query in &queries {
         anyhow::ensure!(
             serde_json::to_string(&cold.search_documents(query, &options)?)?
                 == serde_json::to_string(&core.search_documents(query, &options)?)?,
-            "cold view and live results differ for {query:?}"
+            "reused view and live results differ for {query:?}"
         );
     }
     drop(cold);
     let mut live = Vec::new();
     let mut prebuilt_search = Vec::new();
-    // [latest, middle] x [reused, cold]: open alone, and open plus one search.
+    // [latest, middle] x [opt-in reused, default]: open alone, and open plus one search.
     let mut open = [[Vec::new(), Vec::new()], [Vec::new(), Vec::new()]];
     let mut open_search = [[Vec::new(), Vec::new()], [Vec::new(), Vec::new()]];
     let positions = [&latest, &middle];
-    // Both positions start reusable.
-    core.history_view(&middle)?;
-    core.history_view(&latest)?;
     for (rep, query) in queries.iter().enumerate() {
         for slot in 0..6 {
             match (slot + rep) % 6 {
@@ -149,7 +149,12 @@ fn scale(documents: usize) -> anyhow::Result<serde_json::Value> {
                 other => {
                     let (position, cold) = ((other - 2) % 2, (other - 2) / 2 == 1);
                     if cold {
-                        core.clear_history_cache();
+                        // The default: no budget, nothing kept.
+                        core.set_history_cache_budget(0);
+                    } else {
+                        // Untimed: opt in and make sure the position is kept.
+                        core.set_history_cache_budget(OPT_IN_BUDGET);
+                        drop(core.history_view(positions[position])?);
                     }
                     let t = Instant::now();
                     let view = core.history_view(positions[position])?;
@@ -158,10 +163,6 @@ fn scale(documents: usize) -> anyhow::Result<serde_json::Value> {
                     open_search[position][usize::from(cold)].push(t.elapsed().as_secs_f64() * 1e6);
                     open[position][usize::from(cold)].push(built);
                     drop(view);
-                    if cold {
-                        // Untimed: the other position is reusable again for the next slot.
-                        core.history_view(positions[1 - position])?;
-                    }
                 }
             }
         }
@@ -179,7 +180,7 @@ fn scale(documents: usize) -> anyhow::Result<serde_json::Value> {
         "paired_factor_prebuilt_search_over_live": ratio(&prebuilt_search, &live),
     });
     for (position, name) in [(0, "latest"), (1, "middle")] {
-        for (cold, kind) in [(1, "cold"), (0, "reused")] {
+        for (cold, kind) in [(1, "default"), (0, "opt_in_reused")] {
             let o = &open[position][cold];
             let os = &open_search[position][cold];
             out[format!("view_open_{kind}_{name}")] = summary(o.clone());
