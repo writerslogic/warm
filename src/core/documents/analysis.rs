@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! The lexical analyzer of a store: how text becomes the terms its BM25 index holds and its
-//! queries match. Every ingest and query path goes through [`Analyzer::words`] and
-//! [`Analyzer::term`], so index and query analysis cannot drift apart.
+//! queries match. Every ingest and query path goes through `Analyzer::words` and
+//! `Analyzer::term`, so index and query analysis cannot drift apart.
 //!
 //! The Persian and Hindi rules reimplement the algorithms of Apache Lucene 10.6
 //! (`PersianNormalizer`, `PersianStemmer`, `ArabicNormalizer`, `HindiNormalizer`,

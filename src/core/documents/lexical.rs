@@ -82,7 +82,7 @@ pub struct LexicalQuery {
 
 impl LexicalQuery {
     /// `text` parsed and analyzed as a [`super::Analyzer::Legacy`] store analyzes it; a store
-    /// with another analyzer analyzes it again ([`Self::for_analyzer`]).
+    /// with another analyzer analyzes it again (`Self::for_analyzer`).
     pub fn parse(text: &str) -> Result<Self> {
         Self::parse_with(text, super::Analyzer::Legacy)
     }
