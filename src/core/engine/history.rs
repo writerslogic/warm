@@ -261,9 +261,9 @@ impl WarmCore {
             let frame = self.history_frame(offset)?;
             let next = frame.next;
             let ended = |key: (RevisionKind, String),
-                             deleted: bool,
-                             live: &mut HashMap<_, (Option<String>, usize, bool)>,
-                             out: &mut Vec<HistoryRevision>|
+                         deleted: bool,
+                         live: &mut HashMap<_, (Option<String>, usize, bool)>,
+                         out: &mut Vec<HistoryRevision>|
              -> Result<()> {
                 if let Some((version, written, in_interval)) = live.remove(&key) {
                     if in_interval {
@@ -611,7 +611,8 @@ impl State {
         if self.pending.is_empty() {
             return Ok(());
         }
-        self.documents.insert_batch(std::mem::take(&mut self.pending))
+        self.documents
+            .insert_batch(std::mem::take(&mut self.pending))
     }
 
     fn apply(&mut self, mutation: &Mutation) -> Result<()> {
