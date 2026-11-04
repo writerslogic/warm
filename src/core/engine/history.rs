@@ -4,9 +4,11 @@
 //! Read-only historical views over the journal (docs/memory-api/TIME-TRAVEL.md).
 //!
 //! A view replays the live generation's frames from offset 0 into a private in-memory
-//! document store and vector map. Nothing here writes the live store: frames are read with
-//! `read_frame`, decoded and validated as replay does, and applied by this module's own small
-//! applier. Building and every read hold the compaction lock and check that the generation
+//! document map and vector map, then indexes the documents live at the position in one bulk
+//! insert into a private document store. Nothing here writes the live store: frames are read
+//! with `read_frame`, decoded and validated as replay does, and applied by this module's own
+//! small applier. The last few views built are kept and shared by later views at the same
+//! position, until a compaction publishes. Building and every read hold the compaction lock and check that the generation
 //! is still live, so a compaction (a purge included) can neither swap frames under a build
 //! nor let an earlier view keep serving what it removed.
 
@@ -28,6 +30,10 @@ use crate::{DocumentRecord, DocumentResult, SearchOptions};
 pub const DEFAULT_MAX_STATE_BYTES: usize = 1 << 30;
 /// Upper bound on `history_revisions`' `limit`.
 pub const MAX_REVISIONS: usize = 100_000;
+/// Built views kept for reuse; the least recently used is dropped first.
+const CACHED_VIEWS: usize = 4;
+/// Bound on the estimated state bytes of the views kept for reuse.
+const CACHED_VIEW_BYTES: usize = 256 << 20;
 
 /// A frame boundary in one journal generation: the state after every frame that starts
 /// before `offset`.
@@ -187,6 +193,21 @@ impl WarmCore {
     ) -> Result<HistoryView<'_>> {
         let pinned = self.pin_history()?;
         let target = pinned.check(at)?;
+        let cached = self.history_cache.lock().get(&pinned.generation, target);
+        if let Some((state, peak)) = cached {
+            // A build fails exactly when its running estimate ever exceeds the bound.
+            if peak > options.max_state_bytes {
+                return Err(HistoryError::StateTooLarge {
+                    limit: options.max_state_bytes,
+                }
+                .into());
+            }
+            return Ok(HistoryView {
+                core: self,
+                position: at.clone(),
+                state,
+            });
+        }
         let mut state = State::new(options.max_state_bytes);
         let mut offset = 0;
         while offset < target {
@@ -194,7 +215,6 @@ impl WarmCore {
             for mutation in &frame.mutations {
                 state.apply(mutation)?;
             }
-            state.flush()?;
             offset = frame.next;
         }
         if offset != target {
@@ -203,12 +223,29 @@ impl WarmCore {
             }
             .into());
         }
+        let mut documents = DocumentStore::default();
+        documents.insert_batch(state.documents.into_values().collect())?;
+        let built = Arc::new(ViewState {
+            documents,
+            vectors: state.vectors,
+        });
+        self.history_cache.lock().insert(CachedView {
+            generation: pinned.generation.clone(),
+            offset: target,
+            bytes: state.bytes,
+            peak: state.peak,
+            state: Arc::clone(&built),
+        });
         Ok(HistoryView {
             core: self,
             position: at.clone(),
-            documents: state.documents,
-            vectors: state.vectors,
+            state: built,
         })
+    }
+
+    /// Releases the views kept for reuse; views already returned are unaffected.
+    pub fn clear_history_cache(&self) {
+        self.history_cache.lock().clear();
     }
 
     /// The position a wall-clock time (memory-API ingest milliseconds) maps to.
@@ -524,18 +561,21 @@ impl Pinned<'_> {
     }
 }
 
-/// The document and raw-vector state being replayed.
+/// The document and raw-vector state being replayed. Documents are kept as the map of the
+/// revisions live so far and indexed once, at the position: the intermediate index states a
+/// one-frame-at-a-time replay builds are never observed by a view.
 struct State {
-    documents: DocumentStore,
-    /// Consecutive document writes installed together, as the engine's replay does: one
-    /// store write per run instead of one per document.
-    pending: Vec<Arc<StoredDocument>>,
-    pending_ids: std::collections::HashSet<String>,
+    documents: BTreeMap<String, Arc<StoredDocument>>,
     sizes: HashMap<String, usize>,
     vectors: BTreeMap<String, EntangledHVec>,
     derived: BTreeMap<String, Vec<String>>,
     bytes: usize,
+    /// The largest `bytes` reached.
+    peak: usize,
     limit: usize,
+    /// An empty store: view documents keep their text inline, so fingerprints read it the
+    /// way a store without a text segment does.
+    textless: DocumentStore,
 }
 
 fn document_bytes(document: &StoredDocument) -> usize {
@@ -557,25 +597,62 @@ fn vector_bytes(id: &str, vector: &EntangledHVec) -> usize {
     64 + id.len() + 4 * vector.indices.len()
 }
 
+/// Bounded state accounting shared by the view applier and the test oracle.
+fn grow(bytes: &mut usize, limit: usize, add: usize, remove: usize) -> Result<()> {
+    *bytes = bytes.saturating_sub(remove).saturating_add(add);
+    if *bytes > limit {
+        return Err(HistoryError::StateTooLarge { limit }.into());
+    }
+    Ok(())
+}
+
+/// The engine's rule for a deferred encoding (`install_deferred_encoding`): the revision
+/// with the vectors installed, when they were computed for `current` while it still has
+/// pending chunks; `None` when they do not apply.
+fn encoded_revision(
+    store: &DocumentStore,
+    current: &StoredDocument,
+    version: &str,
+    fingerprint: u64,
+    vectors: &[EntangledHVec],
+) -> Result<Option<StoredDocument>> {
+    let applicable = current.version == version
+        && current.chunks.len() == vectors.len()
+        && current
+            .chunks
+            .iter()
+            .any(|chunk| chunk.vector_state == VectorState::Pending)
+        && documents::document_fingerprint(store, current)? == Some(fingerprint);
+    if !applicable {
+        return Ok(None);
+    }
+    let mut encoded = current.clone();
+    for (chunk, vector) in encoded.chunks.iter_mut().zip(vectors) {
+        if chunk.vector_state == VectorState::Pending {
+            chunk.vector = vector.clone();
+            chunk.vector_state = VectorState::Encoded;
+        }
+    }
+    Ok(Some(encoded))
+}
+
 impl State {
     fn new(limit: usize) -> Self {
         Self {
-            documents: DocumentStore::default(),
-            pending: Vec::new(),
-            pending_ids: std::collections::HashSet::new(),
+            documents: BTreeMap::new(),
             sizes: HashMap::new(),
             vectors: BTreeMap::new(),
             derived: BTreeMap::new(),
             bytes: 0,
+            peak: 0,
             limit,
+            textless: DocumentStore::default(),
         }
     }
 
     fn grow(&mut self, add: usize, remove: usize) -> Result<()> {
-        self.bytes = self.bytes.saturating_sub(remove).saturating_add(add);
-        if self.bytes > self.limit {
-            return Err(HistoryError::StateTooLarge { limit: self.limit }.into());
-        }
+        grow(&mut self.bytes, self.limit, add, remove)?;
+        self.peak = self.peak.max(self.bytes);
         Ok(())
     }
 
@@ -597,28 +674,11 @@ impl State {
         let size = document_bytes(&document);
         let old = self.sizes.insert(document.id.clone(), size).unwrap_or(0);
         self.grow(size, old)?;
-        if !self.pending_ids.insert(document.id.clone()) {
-            // A repeated id diffs against the first copy, as one at a time would.
-            self.flush()?;
-            self.pending_ids.insert(document.id.clone());
-        }
-        self.pending.push(document);
+        self.documents.insert(document.id.clone(), document);
         Ok(())
     }
 
-    fn flush(&mut self) -> Result<()> {
-        self.pending_ids.clear();
-        if self.pending.is_empty() {
-            return Ok(());
-        }
-        self.documents
-            .insert_batch(std::mem::take(&mut self.pending))
-    }
-
     fn apply(&mut self, mutation: &Mutation) -> Result<()> {
-        if !matches!(mutation, Mutation::Document(_)) {
-            self.flush()?;
-        }
         match mutation {
             Mutation::Document(document) => self.put_document(Arc::clone(document))?,
             Mutation::DeleteDocument { id } => {
@@ -632,27 +692,12 @@ impl State {
                 fingerprint,
                 vectors,
             } => {
-                // The engine's rule (`install_deferred_encoding`): only the revision the
-                // vectors were computed for, while it still has pending chunks.
-                let Some(current) = self.documents.get(id).cloned() else {
+                let Some(current) = self.documents.get(id) else {
                     return Ok(());
                 };
-                let applicable = current.version == *version
-                    && current.chunks.len() == vectors.len()
-                    && current
-                        .chunks
-                        .iter()
-                        .any(|chunk| chunk.vector_state == VectorState::Pending)
-                    && documents::document_fingerprint(&self.documents, &current)?
-                        == Some(*fingerprint);
-                if applicable {
-                    let mut encoded = StoredDocument::clone(&current);
-                    for (chunk, vector) in encoded.chunks.iter_mut().zip(vectors) {
-                        if chunk.vector_state == VectorState::Pending {
-                            chunk.vector = vector.clone();
-                            chunk.vector_state = VectorState::Encoded;
-                        }
-                    }
+                if let Some(encoded) =
+                    encoded_revision(&self.textless, current, version, *fingerprint, vectors)?
+                {
                     self.put_document(Arc::new(encoded))?;
                 }
             }
@@ -676,13 +721,66 @@ impl State {
     }
 }
 
+/// A built view's indexed documents and raw vectors.
+struct ViewState {
+    documents: DocumentStore,
+    vectors: BTreeMap<String, EntangledHVec>,
+}
+
+struct CachedView {
+    generation: String,
+    offset: usize,
+    /// The estimate at the position, and the largest reached building it.
+    bytes: usize,
+    peak: usize,
+    state: Arc<ViewState>,
+}
+
+/// Views built in the live generation, least recently used first. Positions are immutable
+/// within a generation, so a view at the same `(generation, offset)` is the same state; the
+/// cache is emptied before any compaction publishes.
+#[derive(Default)]
+pub(super) struct ViewCache {
+    entries: Vec<CachedView>,
+}
+
+impl ViewCache {
+    pub(super) fn clear(&mut self) {
+        self.entries.clear();
+    }
+
+    fn get(&mut self, generation: &str, offset: usize) -> Option<(Arc<ViewState>, usize)> {
+        let index = self
+            .entries
+            .iter()
+            .position(|entry| entry.offset == offset && entry.generation == generation)?;
+        let entry = self.entries.remove(index);
+        let found = (Arc::clone(&entry.state), entry.peak);
+        self.entries.push(entry);
+        Some(found)
+    }
+
+    fn insert(&mut self, view: CachedView) {
+        if view.bytes > CACHED_VIEW_BYTES {
+            return;
+        }
+        self.entries
+            .retain(|entry| entry.generation == view.generation && entry.offset != view.offset);
+        self.entries.push(view);
+        while self.entries.len() > CACHED_VIEWS
+            || self.entries.iter().map(|entry| entry.bytes).sum::<usize>() > CACHED_VIEW_BYTES
+        {
+            self.entries.remove(0);
+        }
+    }
+}
+
 /// The document and raw-vector state at one journal position. Read-only; every read fails
 /// with [`HistoryError::Compacted`] once the store has compacted since the view was built.
 pub struct HistoryView<'a> {
     core: &'a WarmCore,
     position: JournalPosition,
-    documents: DocumentStore,
-    vectors: BTreeMap<String, EntangledHVec>,
+    state: Arc<ViewState>,
 }
 
 impl HistoryView<'_> {
@@ -701,7 +799,7 @@ impl HistoryView<'_> {
 
     pub fn get_document(&self, id: &str) -> Result<Option<DocumentRecord>> {
         let _live = self.live()?;
-        documents::get_record(&self.documents, id)?
+        documents::get_record(&self.state.documents, id)?
             .map(|record| record.read().1)
             .transpose()
     }
@@ -709,7 +807,7 @@ impl HistoryView<'_> {
     /// Up to `limit` documents with ids at or after `from`, in id order.
     pub fn list_documents(&self, from: Option<&str>, limit: usize) -> Result<Vec<DocumentRecord>> {
         let _live = self.live()?;
-        documents::list_records(&self.documents, from, limit)?
+        documents::list_records(&self.state.documents, from, limit)?
             .into_iter()
             .map(|record| record.read().1)
             .collect()
@@ -717,7 +815,7 @@ impl HistoryView<'_> {
 
     pub fn document_count(&self) -> Result<usize> {
         let _live = self.live()?;
-        Ok(documents::count(&self.documents))
+        Ok(documents::count(&self.state.documents))
     }
 
     /// Document search over the historical state: the built-in lexical and exact dense path.
@@ -736,18 +834,22 @@ impl HistoryView<'_> {
                 .as_ref()
                 .map(|s| s.dimensions),
         )?;
-        let captured = documents::capture_search(&self.documents, vec![prepared]);
+        let captured = documents::capture_search(&self.state.documents, vec![prepared]);
         documents::execute_search(&captured, 0)
     }
 
     pub fn get_vector(&self, id: &str) -> Result<Option<EntangledHVec>> {
         let _live = self.live()?;
-        Ok(self.vectors.get(id).cloned())
+        Ok(self.state.vectors.get(id).cloned())
     }
 
     /// Ids of the raw vectors, sorted.
     pub fn vector_ids(&self) -> Result<Vec<String>> {
         let _live = self.live()?;
-        Ok(self.vectors.keys().cloned().collect())
+        Ok(self.state.vectors.keys().cloned().collect())
     }
 }
+
+#[cfg(test)]
+#[path = "history_tests.rs"]
+mod tests;
