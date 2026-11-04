@@ -340,7 +340,7 @@ struct IndexLock(File);
 impl Drop for IndexLock {
     fn drop(&mut self) {
         // Explicit unlock also releases descriptors inherited by a concurrent fork.
-        if let Err(error) = self.0.unlock() {
+        if let Err(error) = crate::core::durable_file::unlock(&self.0) {
             tracing::warn!(%error, "failed to release vector index lock");
         }
     }
@@ -352,7 +352,7 @@ fn lock(dir: &Path) -> Result<IndexLock, UpdateError> {
         .read(true)
         .write(true)
         .open(dir.join(".lock"))?;
-    file.try_lock().map_err(|e| match e {
+    crate::core::durable_file::try_lock_exclusive(&file).map_err(|e| match e {
         TryLockError::WouldBlock => UpdateError::Locked,
         TryLockError::Error(e) => UpdateError::Io(e),
     })?;

@@ -15,10 +15,12 @@ profile="${PROFILE:-release}"
 flags=()
 if [ "$profile" = release ]; then flags=(--release); fi
 host="$(rustc -vV | sed -n 's/^host: //p')"
-# `strip = true` makes the macOS 27 linker's strip emit a dylib dyld refuses to load
-# (mis-aligned LINKEDIT), so the host library keeps its symbol table; it has its own target dir.
+# Even debuginfo stripping can misalign Mach-O dylibs: rust-lang/rust#157750.
+if [ "$(uname -s)" = Darwin ]; then
+  export CARGO_PROFILE_RELEASE_STRIP="${CARGO_PROFILE_RELEASE_STRIP:-none}"
+fi
 host_target="$target/jvm-host"
-(cd "$crate" && CARGO_PROFILE_RELEASE_STRIP=debuginfo cargo build ${flags[@]+"${flags[@]}"} --lib --target "$host" --target-dir "$host_target")
+(cd "$crate" && cargo build ${flags[@]+"${flags[@]}"} --lib --target "$host" --target-dir "$host_target")
 
 case "$(uname -s)-$(uname -m)" in
   Darwin-arm64) platform=darwin-aarch64; file=libwarm_mobile.dylib ;;

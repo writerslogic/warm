@@ -14,8 +14,10 @@
 //! Measured (D=16384, k=64, 20 seeds, member-vs-non-member AUC): the binary
 //! readout walls at AUC<0.95 by ~1000 items and is at chance by ~2000; the counting
 //! readout holds AUC>0.95 to ~4000 and degrades gracefully (0.84 at 8000). A ~4x
-//! usable-capacity gain at matched dimension. See `docs/PREREGISTRATION-binding-
-//! readout.md` §19 and `src/bin/bloom-wall.rs`.
+//! usable-capacity gain at matched dimension and fixed k = 64. A Bloom filter with
+//! tuned k at the same dimension matches it up to 4000 items, and at equal bits a
+//! plain Bloom filter is far ahead (erratum in `docs/PREREGISTRATION-binding-
+//! readout.md` §19). See also `src/bin/bloom-wall.rs`.
 //!
 //! Cost: one `u32` per index rather than one bit -- this trades a Bloom filter's
 //! bit-compactness for capacity. It remains a deterministic integer fold of its

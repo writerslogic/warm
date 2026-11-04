@@ -56,6 +56,11 @@ impl StagedArena {
         Ok(offset)
     }
 
+    /// The staged arena's allocated length after writing a `raw_len`-byte payload.
+    pub(crate) fn capacity_after_frame(&self, raw_len: usize) -> usize {
+        self.arena.capacity_after_frame(raw_len)
+    }
+
     pub(crate) fn finish(self) -> Result<PersistentArena> {
         self.arena.flush()?;
         Ok(self.arena)

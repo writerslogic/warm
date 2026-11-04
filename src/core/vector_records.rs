@@ -241,6 +241,7 @@ pub(crate) fn prepare(
             )),
             terms: Default::default(),
             word_count: 0,
+            analyzed: false,
             stemmed: false,
             vector_state: VectorState::Lexical,
         }],

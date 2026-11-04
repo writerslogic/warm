@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use super::{
     build_dense_index, capture_dense_index, capture_search, execute_search, prepare,
-    prepare_search, publish_dense_index, DocumentInput, DocumentResult, DocumentStore,
+    prepare_search_with, publish_dense_index, DocumentInput, DocumentResult, DocumentStore,
     SearchOptions, StoredDocument,
 };
 use crate::core::encoding::TextEncoder;
@@ -135,7 +135,12 @@ impl MemoryDocumentStore {
     }
 
     pub fn search(&self, text: &str, options: &SearchOptions) -> Result<Vec<DocumentResult>> {
-        let prepared = prepare_search(text, options, self.embedding_dimensions)?;
+        let prepared = prepare_search_with(
+            text,
+            options,
+            self.embedding_dimensions,
+            super::Analyzer::Legacy,
+        )?;
         let captured = capture_search(&self.store, vec![prepared]);
         execute_search(&captured, 0)
     }

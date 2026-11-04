@@ -1,0 +1,39 @@
+{
+ "folder": "text-scifact-train",
+ "method": "per round: each binary serves every query `passes` times; per-query minimum, summed; rounds alternate A then B",
+ "binaries": {
+  "before": "560df26ffd24cf868b63806576be7878125e61b14e913f5b1bec086538de4d4b",
+  "new": "aac8be6e5a2106eb04270a1da0b5b38be521374a985d44fa7b2d7ec0c1b0e6db"
+ },
+ "rounds": [
+  {
+   "before": 0.134566453,
+   "new": 0.14011421
+  },
+  {
+   "before": 0.146786461,
+   "new": 0.139003097
+  },
+  {
+   "before": 0.136623424,
+   "new": 0.143070993
+  },
+  {
+   "before": 0.14190939,
+   "new": 0.138324385
+  },
+  {
+   "before": 0.149865374,
+   "new": 0.137449366
+  },
+  {
+   "before": 0.145185226,
+   "new": 0.138427812
+  }
+ ],
+ "ratio_new_over_before": {
+  "median": 0.9640969830967623,
+  "min": 0.9171522569316112,
+  "max": 1.0471922662397921
+ }
+}

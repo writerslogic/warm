@@ -35,6 +35,7 @@ fn rebuilt_terms_preserve_complete_document_bytes_and_legacy_frequencies() {
                 terms: terms.into(),
                 word_count: 0,
                 stemmed: count % 2 == 0,
+                analyzed: count % 3 == 0,
                 vector_state: VectorState::Encoded,
             }],
         };
@@ -289,8 +290,13 @@ fn interned_positions_match_the_reference_analyzer() {
         let mut interner = super::Interner::default();
         for whole_document in [false, true] {
             for (text, title_weight) in texts {
-                let (terms, _) =
-                    interner.chunk_terms(text, title_weight, stem, Some(whole_document));
+                let (terms, _) = interner.chunk_terms(
+                    text,
+                    title_weight,
+                    stem,
+                    Some(whole_document),
+                    super::Analyzer::Legacy,
+                );
                 let reference =
                     super::positions::Positions::from_text(text, stem, &terms, whole_document);
                 assert_eq!(
@@ -298,7 +304,8 @@ fn interned_positions_match_the_reference_analyzer() {
                     serde_json::to_value(&reference).unwrap(),
                     "{text:?} stem {stem}"
                 );
-                let (plain, _) = interner.chunk_terms(text, title_weight, stem, None);
+                let (plain, _) =
+                    interner.chunk_terms(text, title_weight, stem, None, super::Analyzer::Legacy);
                 assert!(plain.positions.is_none());
             }
         }
