@@ -24,7 +24,6 @@ const CHUNK_STATE_SHIFT: u8 = 4;
 const CHUNK_POSITIONS: u8 = 1 << 6;
 /// Terms from a store analyzer other than the legacy one; releases before analyzers reject it.
 const CHUNK_ANALYZED: u8 = 1 << 7;
-const CHUNK_FLAGS: u8 = 0b1111_1111;
 
 pub(crate) fn put_varint(out: &mut Vec<u8>, mut value: u64) {
     while value >= 0x80 {
@@ -387,11 +386,8 @@ pub(crate) fn read_document(
     let count = reader.count(8)?;
     let mut chunks = Vec::with_capacity(count);
     for index in 0..count {
+        // Every bit of the chunk flags is assigned; bit 7 (`CHUNK_ANALYZED`) is the last.
         let flags = reader.byte()?;
-        ensure!(
-            flags & !CHUNK_FLAGS == 0,
-            "binary journal chunk flags {flags:#x} are invalid"
-        );
         let vector_state = match (flags >> CHUNK_STATE_SHIFT) & 3 {
             0 => VectorState::Encoded,
             1 => VectorState::Pending,

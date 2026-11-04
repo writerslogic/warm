@@ -1295,6 +1295,7 @@ fn check_mode(input: &DocumentInput, encoder: TextEncoder, mode: EncodeMode) -> 
 }
 
 /// [`prepare_with_options`] of an input whose chunk spans ([`chunk_spans`]) are known.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn prepare_spans(
     input: DocumentInput,
     chunks: Vec<(u32, u32)>,
