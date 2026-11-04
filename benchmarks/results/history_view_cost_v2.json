@@ -1,0 +1,232 @@
+{
+  "recorded": "2026-11-03",
+  "base_commit": "aca7158b",
+  "note": "Library code is base_commit; the harness change (cold and reused opens) is committed with this file. The measured binary was built from that code before `cargo fmt` and test-only edits, which changed formatting and tests only. Shared machine with other sessions running; nice -n 10; load averages (1/5/15 min) before and after shown. Factors are medians of per-repetition ratios. cold = clear_history_cache, then open (a build from the journal); reused = open while the same position is kept. Tested scales only: 1000 and 10000 ingested documents; nothing extrapolated beyond them.",
+  "machine": "Apple M4, 10 cores, macOS (Darwin arm64)",
+  "load_averages_before": "10.16 10.66 12.78",
+  "load_averages_after": "18.32 12.61 13.33",
+  "benchmark": "history_view_cost",
+  "dimensions": 4096,
+  "harness": "examples/history_cost.rs",
+  "ingest_batch": 100,
+  "pairing": "per repetition, the six measurements run in rotated order with the same query",
+  "repetitions": 31,
+  "scales": [
+    {
+      "deletes": 50,
+      "documents_ingested": 1000,
+      "journal_bytes": 172637,
+      "live_documents": 950,
+      "live_search": {
+        "n": 31,
+        "p10_us": 40.042,
+        "p50_us": 55.5,
+        "p90_us": 77.833
+      },
+      "middle_offset": 48961,
+      "paired_factor_open_and_search_cold_latest_over_live": 136.1115835365722,
+      "paired_factor_open_and_search_cold_middle_over_live": 78.41496877646063,
+      "paired_factor_open_and_search_reused_latest_over_live": 0.6007564469914041,
+      "paired_factor_open_and_search_reused_middle_over_live": 0.32123509598760297,
+      "paired_factor_open_cold_latest_over_live": 135.47039906761918,
+      "paired_factor_open_cold_middle_over_live": 78.11397914902625,
+      "paired_factor_open_reused_latest_over_live": 0.3527640097706738,
+      "paired_factor_open_reused_middle_over_live": 0.08833014274151067,
+      "paired_factor_prebuilt_search_over_live": 0.3588127367424243,
+      "prebuilt_view_search": {
+        "n": 31,
+        "p10_us": 13.291,
+        "p50_us": 23.625,
+        "p90_us": 40.542
+      },
+      "updates": 100,
+      "view_open_and_search_cold_latest": {
+        "n": 31,
+        "p10_us": 5478.417,
+        "p50_us": 8003.208,
+        "p90_us": 12028.375
+      },
+      "view_open_and_search_cold_middle": {
+        "n": 31,
+        "p10_us": 3508.959,
+        "p50_us": 4415.0,
+        "p90_us": 7551.917
+      },
+      "view_open_and_search_reused_latest": {
+        "n": 31,
+        "p10_us": 19.167,
+        "p50_us": 38.083,
+        "p90_us": 56.5
+      },
+      "view_open_and_search_reused_middle": {
+        "n": 31,
+        "p10_us": 11.5,
+        "p50_us": 21.958,
+        "p90_us": 39.583
+      },
+      "view_open_cold_latest": {
+        "n": 31,
+        "p10_us": 5453.917,
+        "p50_us": 7957.917,
+        "p90_us": 11974.708
+      },
+      "view_open_cold_middle": {
+        "n": 31,
+        "p10_us": 3471.334,
+        "p50_us": 4383.125,
+        "p90_us": 7515.0
+      },
+      "view_open_reused_latest": {
+        "n": 31,
+        "p10_us": 8.375,
+        "p50_us": 16.375,
+        "p90_us": 34.542
+      },
+      "view_open_reused_middle": {
+        "n": 31,
+        "p10_us": 2.375,
+        "p50_us": 6.417,
+        "p90_us": 20.583
+      }
+    },
+    {
+      "deletes": 500,
+      "documents_ingested": 10000,
+      "journal_bytes": 1739295,
+      "live_documents": 9500,
+      "live_search": {
+        "n": 31,
+        "p10_us": 77.458,
+        "p50_us": 126.87500000000001,
+        "p90_us": 158.916
+      },
+      "middle_offset": 490454,
+      "paired_factor_open_and_search_cold_latest_over_live": 689.9895923677363,
+      "paired_factor_open_and_search_cold_middle_over_live": 278.19860650696745,
+      "paired_factor_open_and_search_reused_latest_over_live": 0.6286179796818095,
+      "paired_factor_open_and_search_reused_middle_over_live": 0.3469380615186543,
+      "paired_factor_open_cold_latest_over_live": 689.3978074588032,
+      "paired_factor_open_cold_middle_over_live": 277.61516942415284,
+      "paired_factor_open_reused_latest_over_live": 0.18610873522380852,
+      "paired_factor_open_reused_middle_over_live": 0.05275754803293687,
+      "paired_factor_prebuilt_search_over_live": 0.5577052833090116,
+      "prebuilt_view_search": {
+        "n": 31,
+        "p10_us": 39.833000000000006,
+        "p50_us": 71.084,
+        "p90_us": 96.875
+      },
+      "updates": 1000,
+      "view_open_and_search_cold_latest": {
+        "n": 31,
+        "p10_us": 57674.042,
+        "p50_us": 83013.833,
+        "p90_us": 99666.583
+      },
+      "view_open_and_search_cold_middle": {
+        "n": 31,
+        "p10_us": 23378.209,
+        "p50_us": 35885.208,
+        "p90_us": 67949.875
+      },
+      "view_open_and_search_reused_latest": {
+        "n": 31,
+        "p10_us": 38.083,
+        "p50_us": 82.041,
+        "p90_us": 98.083
+      },
+      "view_open_and_search_reused_middle": {
+        "n": 31,
+        "p10_us": 24.125,
+        "p50_us": 46.291000000000004,
+        "p90_us": 58.959
+      },
+      "view_open_cold_latest": {
+        "n": 31,
+        "p10_us": 57591.25,
+        "p50_us": 82904.5,
+        "p90_us": 99563.875
+      },
+      "view_open_cold_middle": {
+        "n": 31,
+        "p10_us": 23276.042,
+        "p50_us": 35810.708,
+        "p90_us": 67873.125
+      },
+      "view_open_reused_latest": {
+        "n": 31,
+        "p10_us": 8.75,
+        "p50_us": 22.709,
+        "p90_us": 31.541
+      },
+      "view_open_reused_middle": {
+        "n": 31,
+        "p10_us": 2.583,
+        "p50_us": 6.8340000000000005,
+        "p90_us": 14.292
+      }
+    }
+  ],
+  "search": "default SearchOptions (lexical BM25, k = 10)",
+  "words_per_document": 60,
+  "versus_v1": {
+    "source": "benchmarks/results/history_view_cost.json",
+    "note": "v1 opened a view by replaying every frame into a document store, one frame at a time. Ratios are v1 / v2. Paired factors are each run against its own live search, so they absorb the load difference between runs; raw p50 ratios do not (live search p50 is in both files).",
+    "scales": [
+      {
+        "documents_ingested": 1000,
+        "v1_live_search_p50_us": 17.958,
+        "v2_live_search_p50_us": 55.5,
+        "latest": {
+          "v1_build_p50_us": 14218.458,
+          "v2_cold_open_p50_us": 7957.917,
+          "v2_reused_open_p50_us": 16.375,
+          "raw_p50_ratio_cold": 1.79,
+          "v1_paired_factor_build_and_search_over_live": 813.4907005234436,
+          "v2_paired_factor_cold_open_and_search_over_live": 136.1115835365722,
+          "v2_paired_factor_reused_open_and_search_over_live": 0.6007564469914041,
+          "paired_ratio_cold": 5.98,
+          "paired_ratio_reused": 1354.11
+        },
+        "middle": {
+          "v1_build_and_search_p50_us": 2779.75,
+          "v2_cold_open_and_search_p50_us": 4415.0,
+          "v2_reused_open_and_search_p50_us": 21.958,
+          "raw_p50_ratio_cold": 0.63,
+          "v1_paired_factor_build_and_search_over_live": 157.68738166833725,
+          "v2_paired_factor_cold_open_and_search_over_live": 78.41496877646063,
+          "v2_paired_factor_reused_open_and_search_over_live": 0.32123509598760297,
+          "paired_ratio_cold": 2.01,
+          "paired_ratio_reused": 490.88
+        }
+      },
+      {
+        "documents_ingested": 10000,
+        "v1_live_search_p50_us": 51.458,
+        "v2_live_search_p50_us": 126.87500000000001,
+        "latest": {
+          "v1_build_p50_us": 216643.66700000002,
+          "v2_cold_open_p50_us": 82904.5,
+          "v2_reused_open_p50_us": 22.709,
+          "raw_p50_ratio_cold": 2.61,
+          "v1_paired_factor_build_and_search_over_live": 4245.752890202265,
+          "v2_paired_factor_cold_open_and_search_over_live": 689.9895923677363,
+          "v2_paired_factor_reused_open_and_search_over_live": 0.6286179796818095,
+          "paired_ratio_cold": 6.15,
+          "paired_ratio_reused": 6754.11
+        },
+        "middle": {
+          "v1_build_and_search_p50_us": 40296.75,
+          "v2_cold_open_and_search_p50_us": 35885.208,
+          "v2_reused_open_and_search_p50_us": 46.291000000000004,
+          "raw_p50_ratio_cold": 1.12,
+          "v1_paired_factor_build_and_search_over_live": 790.0506061407153,
+          "v2_paired_factor_cold_open_and_search_over_live": 278.19860650696745,
+          "v2_paired_factor_reused_open_and_search_over_live": 0.3469380615186543,
+          "paired_ratio_cold": 2.84,
+          "paired_ratio_reused": 2277.21
+        }
+      }
+    ]
+  }
+}
