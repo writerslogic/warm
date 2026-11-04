@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use super::binary::{put_varint, Reader};
 use super::packed_terms::StoredTerms;
-use super::{stemmer, MAX_DOCUMENT_BYTES};
+use super::{lowercase_word, nfc, stemmer, words, MAX_DOCUMENT_BYTES};
 
 pub(super) const VERSION: u8 = 1;
 pub(super) const DOCUMENT_VERSION: u8 = 2;
@@ -76,10 +76,10 @@ impl<'de> Deserialize<'de> for Offsets {
 }
 
 pub(super) fn tokens(text: &str, stem: bool) -> Vec<String> {
-    text.split(|c: char| !c.is_alphanumeric())
-        .filter(|s| !s.is_empty())
+    words(&nfc(text))
         .map(|word| {
-            let lower = word.to_lowercase();
+            let mut lower = String::new();
+            lowercase_word(word, &mut lower);
             if stem {
                 stemmer().stem(&lower).into_owned()
             } else {
