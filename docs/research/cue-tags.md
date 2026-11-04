@@ -110,6 +110,20 @@ kill line and far from the +10 GO line. No library behaviour is changed. The ora
 reaches 52.9% (b + 29.2, interval +20.0 to +37.9), which clears b + 15 but, as pre-registered, is
 an upper bound that needs the dataset's own conflict pair and is not a GO.
 
+On the interval: the e-x - b interval [-13.3, +5.0] contains the +2.0 kill line, so this run does
+not settle the kill line by itself; it does exclude GO (+10) at 95%. The point estimate is below
+the line, and the DEV-to-TEST drop (23.3 to 19.2 while b rose from 20.0 to 23.8) gives no sign
+of a hidden lift.
+
+Disclosures on step 2. The labels are not blind: the labeler also wrote the cue list. The `weak`
+YES rule ("lately"/"recently" plus a current habit, "my new X") was settled while labeling and is
+not in the committed rubric; "lately" is itself a cue, so the rule leans labels toward the
+tagger. 13 of the 17 `weak` rows are flagged, which is the whole gap between precision 0.72
+(primary) and 0.51 (strict). Precision on the random strata is 0.54 from 13 flags. All three
+sit at the 0.50 line, so step 2 is a marginal pass. Sampling deviation from the task wording:
+`lme_rand` (69 rows) comes from all 100 dev haystacks, not only the 16 knowledge-update
+questions; only `ku_new` / `ku_old` (31 rows) are knowledge-update evidence.
+
 ## Step 1 and 2: labels, precision, recall, selectivity
 
 Base rate (YES on the random strata, n = 109): 11.0% (2.8% if `weak` labels count as NO).
