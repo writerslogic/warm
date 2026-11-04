@@ -22,7 +22,8 @@ const CHUNK_STEMMED: u8 = 1 << 2;
 const CHUNK_EMBEDDING: u8 = 1 << 3;
 const CHUNK_STATE_SHIFT: u8 = 4;
 const CHUNK_POSITIONS: u8 = 1 << 6;
-const CHUNK_FLAGS: u8 = 0b0111_1111;
+/// Terms from a store analyzer other than the legacy one; releases before analyzers reject it.
+const CHUNK_ANALYZED: u8 = 1 << 7;
 
 pub(crate) fn put_varint(out: &mut Vec<u8>, mut value: u64) {
     while value >= 0x80 {
@@ -309,7 +310,8 @@ pub(crate) fn write_document(
             | (u8::from(chunk.stemmed) * CHUNK_STEMMED)
             | (u8::from(chunk.embedding.is_some()) * CHUNK_EMBEDDING)
             | (state_bits(chunk.vector_state) << CHUNK_STATE_SHIFT)
-            | (u8::from(chunk.terms.positions.is_some()) * CHUNK_POSITIONS);
+            | (u8::from(chunk.terms.positions.is_some()) * CHUNK_POSITIONS)
+            | (u8::from(chunk.analyzed) * CHUNK_ANALYZED);
         out.push(flags);
         if explicit_id {
             put_bytes(out, chunk.id.as_bytes());
@@ -384,11 +386,8 @@ pub(crate) fn read_document(
     let count = reader.count(8)?;
     let mut chunks = Vec::with_capacity(count);
     for index in 0..count {
+        // Every bit of the chunk flags is assigned; bit 7 (`CHUNK_ANALYZED`) is the last.
         let flags = reader.byte()?;
-        ensure!(
-            flags & !CHUNK_FLAGS == 0,
-            "binary journal chunk flags {flags:#x} are invalid"
-        );
         let vector_state = match (flags >> CHUNK_STATE_SHIFT) & 3 {
             0 => VectorState::Encoded,
             1 => VectorState::Pending,
@@ -507,6 +506,7 @@ pub(crate) fn read_document(
             terms: table,
             word_count,
             stemmed: flags & CHUNK_STEMMED != 0,
+            analyzed: flags & CHUNK_ANALYZED != 0,
             vector_state,
         });
     }

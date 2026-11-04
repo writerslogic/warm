@@ -841,7 +841,7 @@ impl HistoryView<'_> {
         options: &SearchOptions,
     ) -> Result<Vec<DocumentResult>> {
         let _live = self.live()?;
-        let prepared = documents::prepare_search(
+        let prepared = documents::prepare_search_with(
             text,
             options,
             self.core
@@ -849,6 +849,7 @@ impl HistoryView<'_> {
                 .embedding_space
                 .as_ref()
                 .map(|s| s.dimensions),
+            self.core.analyzer,
         )?;
         let captured = documents::capture_search(&self.state.documents, vec![prepared]);
         documents::execute_search(&captured, 0)
