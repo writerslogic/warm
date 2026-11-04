@@ -198,6 +198,10 @@ public final class LuceneBm25 {
       case "finnish" -> new org.apache.lucene.analysis.fi.FinnishAnalyzer();
       case "indonesian" -> new org.apache.lucene.analysis.id.IndonesianAnalyzer();
       case "turkish" -> new org.apache.lucene.analysis.tr.TurkishAnalyzer();
+      case "russian" -> new org.apache.lucene.analysis.ru.RussianAnalyzer();
+      case "spanish" -> new org.apache.lucene.analysis.es.SpanishAnalyzer();
+      case "french" -> new org.apache.lucene.analysis.fr.FrenchAnalyzer();
+      case "german" -> new org.apache.lucene.analysis.de.GermanAnalyzer();
       default -> throw new IllegalArgumentException("unknown analyzer " + name);
     };
   }

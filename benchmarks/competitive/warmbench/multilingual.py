@@ -33,7 +33,8 @@ from warmbench.common import log, ndcg_at, recall_at  # noqa: E402
 
 # Lucene analyzers that match each language; `standard` (UAX#29 + lowercase) runs on all.
 LANGUAGE_ANALYZER = {"hi": "hindi", "fa": "persian", "th": "thai", "ar": "arabic", "fi": "finnish",
-                     "id": "indonesian", "tr": "turkish"}
+                     "id": "indonesian", "tr": "turkish", "ru": "russian", "es": "spanish",
+                     "fr": "french", "de": "german"}
 # WARM store analyzer (`--analyzer`) per language for the `--analyzed` labels; English sets
 # (the `--extra` folders) take `english`.
 WARM_ANALYZER = {"hi": "hindi", "fa": "persian", "th": "bigram", "ar": "arabic", "fi": "finnish",
