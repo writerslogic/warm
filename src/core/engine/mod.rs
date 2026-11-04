@@ -104,6 +104,8 @@ pub struct WarmCore {
     compaction: crate::core::sync::Mutex<()>,
     /// Generation and offset where retained history starts (see `history`).
     history_floor: RwLock<(String, usize)>,
+    /// Views built in this generation, shared by later views at the same position.
+    history_cache: crate::core::sync::Mutex<history::ViewCache>,
     /// The index metadata (`indices.json`) last written by this process: identical metadata
     /// means identical index files at the same checkpoint, so a repeated persist skips the
     /// writes.
@@ -114,6 +116,8 @@ pub struct WarmCore {
     journal: journal::JournalFormat,
     /// `store.json` schema version of the open store.
     schema: u32,
+    /// The store's lexical analyzer, recorded in `store.json` (see [`documents::Analyzer`]).
+    analyzer: crate::core::documents::Analyzer,
     pub(crate) arena: PersistentArena,
     pub(crate) dimensions: usize,
     pub(crate) storage_path: PathBuf,
@@ -196,7 +200,7 @@ impl WarmCore {
         }
 
         let store_lock = StoreLock::acquire(&base_path)?;
-        let schema = super::schema::validate_store(&base_path, dim, &config)?;
+        let (schema, analyzer) = super::schema::validate_store(&base_path, dim, &config)?;
 
         let arena = PersistentArena::new(base_path.join("vectors_data.bin"))?;
 
@@ -310,11 +314,13 @@ impl WarmCore {
             stem_memos: Default::default(),
             compaction: crate::core::sync::Mutex::new(()),
             history_floor: RwLock::new((String::new(), 0)),
+            history_cache: Default::default(),
             persisted_indices: crate::core::sync::Mutex::new(Vec::new()),
             revision: std::sync::atomic::AtomicU64::new(super::documents::opaque_counter_start()),
             vector_record_instance: rand::random(),
             journal: journal::JournalFormat::for_schema(schema),
             schema,
+            analyzer,
             arena,
             dimensions: dim,
             storage_path: base_path,

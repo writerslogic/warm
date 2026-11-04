@@ -16,8 +16,9 @@ use super::dense::DenseIndex;
 use super::image::ServingImage;
 use super::overlay::Overlaid;
 use super::{
-    matches_document_metadata, normalize_embedding, query_words, terms, top_ranked, Bm25,
-    DocumentResult, DocumentStore, SearchOptions, StoredChunk, StoredDocument, MAX_DOCUMENT_BYTES,
+    matches_document_metadata, normalize_embedding, query_words_with, terms_with, top_ranked,
+    Analyzer, Bm25, DocumentResult, DocumentStore, SearchOptions, StoredChunk, StoredDocument,
+    MAX_DOCUMENT_BYTES,
 };
 
 pub(crate) struct PreparedSearch {
@@ -142,13 +143,27 @@ struct CapturedQuery {
     lexical_scores: Option<Vec<f64>>,
 }
 
+#[cfg(test)]
 pub(crate) fn prepare_search(
     text: &str,
     options: &SearchOptions,
     embedding_dimensions: Option<usize>,
 ) -> Result<PreparedSearch> {
+    prepare_search_with(text, options, embedding_dimensions, Analyzer::Legacy)
+}
+
+/// The query, validated, with its terms as a store with `analyzer` stores them.
+pub(crate) fn prepare_search_with(
+    text: &str,
+    options: &SearchOptions,
+    embedding_dimensions: Option<usize>,
+    analyzer: Analyzer,
+) -> Result<PreparedSearch> {
     let mut prepared = validate_search(text, options, embedding_dimensions)?;
-    prepared.query_terms = [query_words(text, false), query_words(text, true)];
+    prepared.query_terms = [
+        query_words_with(analyzer, text, false),
+        query_words_with(analyzer, text, true),
+    ];
     Ok(prepared)
 }
 
@@ -239,9 +254,16 @@ pub(crate) fn validate_search(
 /// The number of documents with at least one chunk containing a term of `text` at a positive
 /// frequency, in either stored form: the documents an unfiltered lexical search scores above
 /// zero.
-pub(crate) fn count_matches(store: &DocumentStore, text: &str) -> Result<usize> {
+pub(crate) fn count_matches(
+    store: &DocumentStore,
+    text: &str,
+    analyzer: Analyzer,
+) -> Result<usize> {
     ensure!(text.len() <= MAX_DOCUMENT_BYTES, "query exceeds 8 MiB");
-    let terms = [terms(text, false), terms(text, true)];
+    let terms = [
+        terms_with(analyzer, text, false),
+        terms_with(analyzer, text, true),
+    ];
     Ok(super::lexical::execution::count_terms(
         store,
         std::array::from_fn(|form| terms[form].keys().map(String::as_str).collect()),
@@ -2034,7 +2056,8 @@ mod tests {
             super::super::prepare(input, 1024, Some(3), TextEncoder::default()).unwrap();
         for chunk in &mut document.chunks {
             if id.is_multiple_of(2) {
-                chunk.terms = terms(chunk.text.as_deref().unwrap(), false).into();
+                chunk.terms =
+                    crate::core::documents::terms(chunk.text.as_deref().unwrap(), false).into();
                 chunk.stemmed = false;
             }
             chunk.terms.insert("ghost".into(), 0);
@@ -2227,7 +2250,8 @@ mod tests {
             super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
         for chunk in &mut document.chunks {
             if id.is_multiple_of(3) {
-                chunk.terms = terms(chunk.text.as_deref().unwrap(), false).into();
+                chunk.terms =
+                    crate::core::documents::terms(chunk.text.as_deref().unwrap(), false).into();
                 chunk.stemmed = false;
             }
             if id % 4 == 1 {
@@ -2414,7 +2438,7 @@ mod tests {
                     let (ranked, exhaustive) = ranked_and_exhaustive(store, text, &options);
                     assert_eq!(ranked, exhaustive, "{text:?} limit {limit}");
                     let matched = matching_documents(store, text);
-                    assert_eq!(count_matches(store, text).unwrap(), matched, "{text:?}");
+                    assert_eq!(count_matches(store, text, Analyzer::Legacy).unwrap(), matched, "{text:?}");
                 }
             };
             check(&store);
@@ -2470,7 +2494,13 @@ mod tests {
             "ran shared ghost",
             "running runs alpha delta",
         ] {
-            for (form, terms) in [terms(text, false), terms(text, true)].iter().enumerate() {
+            for (form, terms) in [
+                crate::core::documents::terms(text, false),
+                crate::core::documents::terms(text, true),
+            ]
+            .iter()
+            .enumerate()
+            {
                 for word in terms.keys() {
                     if let Some(list) = rebuilt.postings[form].get(word) {
                         assert!(list.bounds_are_tight(&words), "{word} bounds");
@@ -2652,7 +2682,10 @@ mod tests {
     /// Documents with a chunk holding a term of `text` at a positive frequency, read from the
     /// chunks themselves.
     fn matching_documents(store: &DocumentStore, text: &str) -> usize {
-        let terms = [terms(text, false), terms(text, true)];
+        let terms = [
+            crate::core::documents::terms(text, false),
+            crate::core::documents::terms(text, true),
+        ];
         store
             .documents
             .values()

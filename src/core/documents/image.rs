@@ -81,6 +81,8 @@ const TEXT_INLINE: u8 = 2;
 /// terms are stemmed (its postings are in form 1).
 const OWN_ID: u8 = 1;
 const STEMMED: u8 = 2;
+/// Terms from a store analyzer other than the legacy one (see `StoredChunk::analyzed`).
+const ANALYZED: u8 = 4;
 
 fn word(bytes: &[u8], index: usize) -> u64 {
     let at = 8 + 8 * index;
@@ -279,7 +281,11 @@ fn encode_document(
     put_varint(out, document.chunks.len() as u64);
     for (index, chunk) in document.chunks.iter().enumerate() {
         let own_id = !super::is_chunk_id(&chunk.id, &document.id, index);
-        out.push(if own_id { OWN_ID } else { 0 } | if chunk.stemmed { STEMMED } else { 0 });
+        out.push(
+            if own_id { OWN_ID } else { 0 }
+                | if chunk.stemmed { STEMMED } else { 0 }
+                | if chunk.analyzed { ANALYZED } else { 0 },
+        );
         if own_id {
             put_bytes(out, chunk.id.as_bytes());
         }
@@ -340,6 +346,7 @@ pub(crate) struct ServingImage {
 struct RecordChunk<'a> {
     id: Option<&'a str>,
     stemmed: bool,
+    analyzed: bool,
     start_byte: u32,
     end_byte: u32,
     text: Option<&'a str>,
@@ -696,7 +703,7 @@ impl ServingImage {
         for _ in 0..count {
             let flags = reader.byte()?;
             ensure!(
-                flags & !(OWN_ID | STEMMED) == 0,
+                flags & !(OWN_ID | STEMMED | ANALYZED) == 0,
                 "checkpoint chunk flags {flags}"
             );
             let id = if flags & OWN_ID != 0 {
@@ -728,6 +735,7 @@ impl ServingImage {
             chunks.push(RecordChunk {
                 id,
                 stemmed: flags & STEMMED != 0,
+                analyzed: flags & ANALYZED != 0,
                 start_byte,
                 end_byte,
                 text,
@@ -765,6 +773,7 @@ impl ServingImage {
             terms,
             word_count,
             stemmed: chunk.stemmed,
+            analyzed: chunk.analyzed,
             vector_state: VectorState::Lexical,
         }
     }

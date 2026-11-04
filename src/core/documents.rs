@@ -16,14 +16,18 @@ mod compact_term_tests;
 mod packed_terms;
 use packed_terms::StoredTerms;
 
+pub mod analysis;
 #[cfg(test)]
 mod census;
 mod dense;
 mod image;
+pub use analysis::Analyzer;
 mod index;
 mod lexical;
 mod listing;
 mod memory;
+#[cfg(test)]
+mod multilingual_tests;
 mod overlay;
 mod positions;
 mod postings;
@@ -48,8 +52,10 @@ pub(crate) use listing::{
 pub use listing::{DocumentChunkRecord, DocumentInfo, DocumentReadChanged, DocumentRecord};
 pub use memory::{MemoryDocumentStore, MemoryStoreStats};
 pub(crate) use overlay::Base as CheckpointBase;
+#[cfg(test)]
+pub(crate) use search::prepare_search;
 pub(crate) use search::{
-    capture_search, count_matches, execute_search, prepare_search, rank_search, read_ranked,
+    capture_search, count_matches, execute_search, prepare_search_with, rank_search, read_ranked,
     validate_search, CapturedSearch, PreparedSearch,
 };
 pub(crate) use text::TextSegment;
@@ -397,6 +403,11 @@ pub(crate) struct StoredChunk {
     /// the unstemmed query terms.
     #[serde(default)]
     pub stemmed: bool,
+    /// Whether `terms` came from a store [`Analyzer`] other than [`Analyzer::Legacy`] (binary
+    /// chunk flag bit 7), so a release that predates analyzers refuses the chunk rather than
+    /// matching it with the legacy analysis.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub analyzed: bool,
     /// Whether `vector` is the chunk's encoding, awaits deferred encoding, or is deliberately
     /// absent; `Pending` and `Lexical` chunks carry an empty vector and are not in the vector
     /// index. Absent from the serialized form when `Encoded`.
@@ -752,14 +763,64 @@ fn stemmer() -> &'static rust_stemmers::Stemmer {
     STEMMER.get_or_init(|| rust_stemmers::Stemmer::create(rust_stemmers::Algorithm::English))
 }
 
-/// Lowercased alphanumeric tokens and their counts; with `stem`, each token is reduced by
-/// the English Snowball (Porter 2) stemmer, which is what the published BM25 baselines do.
-/// The distinct words of a query in one form.
-pub(crate) fn query_words(text: &str, stem: bool) -> std::collections::BTreeSet<String> {
-    terms(text, stem).into_keys().collect()
+/// `text` in Unicode NFC, borrowed when it already is, so precomposed and decomposed
+/// spellings split into the same words. Applied to the whole text before splitting: per word
+/// would be too late, since a decomposed accent ends a word.
+pub(crate) fn nfc(text: &str) -> std::borrow::Cow<'_, str> {
+    use unicode_normalization::{is_nfc_quick, IsNormalized, UnicodeNormalization};
+    if text.is_ascii() || is_nfc_quick(text.chars()) == IsNormalized::Yes {
+        std::borrow::Cow::Borrowed(text)
+    } else {
+        std::borrow::Cow::Owned(text.nfc().collect())
+    }
 }
 
+/// Writes `word` lowercased into `out`. ASCII is lowercased byte by byte. Other words take
+/// `str::to_lowercase` (it applies the final-sigma rule), lose the U+0307 it leaves after
+/// `i` for `İ`, and fold dotless `ı` to `i`: without a locale, uppercase Turkish `I` cannot be
+/// told from `İ`, so `IŞIK` and `ışık` must meet at one form.
+pub(crate) fn lowercase_word(word: &str, out: &mut String) {
+    out.clear();
+    if word.is_ascii() {
+        out.push_str(word);
+        out.make_ascii_lowercase();
+        return;
+    }
+    let mut previous = '\0';
+    out.extend(word.to_lowercase().chars().filter_map(|c| {
+        let c = if c == 'ı' { 'i' } else { c };
+        let keep = !(c == '\u{307}' && previous == 'i');
+        previous = c;
+        keep.then_some(c)
+    }));
+}
+
+/// Lowercased tokens ([`nfc`], [`words`], [`lowercase_word`]) and their counts; with `stem`, each
+/// token is reduced by the English Snowball (Porter 2) stemmer, which is what the published
+/// BM25 baselines do.
+/// The distinct words of a query in one form.
+#[cfg(test)]
+pub(crate) fn query_words(text: &str, stem: bool) -> std::collections::BTreeSet<String> {
+    query_words_with(Analyzer::Legacy, text, stem)
+}
+
+/// [`query_words`] through `analyzer`.
+pub(crate) fn query_words_with(
+    analyzer: Analyzer,
+    text: &str,
+    stem: bool,
+) -> std::collections::BTreeSet<String> {
+    terms_with(analyzer, text, stem).into_keys().collect()
+}
+
+/// [`terms_with`] through [`Analyzer::Legacy`].
+#[cfg(any(test, feature = "experimental"))]
 pub(crate) fn terms(text: &str, stem: bool) -> BTreeMap<String, u32> {
+    terms_with(Analyzer::Legacy, text, stem)
+}
+
+/// The terms of `text` in one form through `analyzer`, with their counts.
+pub(crate) fn terms_with(analyzer: Analyzer, text: &str, stem: bool) -> BTreeMap<String, u32> {
     // Counted in a hash map keyed by borrowed text (one allocation per distinct term, not per
     // occurrence), then sorted once into the ordered map the postings expect.
     // Seeded per process: the keys are caller text.
@@ -772,22 +833,11 @@ pub(crate) fn terms(text: &str, stem: bool) -> BTreeMap<String, u32> {
             counts.insert(key.to_owned(), 1);
         }
     };
-    for word in text
-        .split(|c: char| !c.is_alphanumeric())
-        .filter(|s| !s.is_empty())
-    {
-        lower.clear();
-        if word.is_ascii() {
-            lower.push_str(word);
-            lower.make_ascii_lowercase();
-        } else {
-            // `str::to_lowercase`, not per-char mapping: it applies the final-sigma rule.
-            lower.push_str(&word.to_lowercase());
-        }
-        if stem {
-            add(&stemmer().stem(&lower));
-        } else {
-            add(&lower);
+    let text = analyzer.prepare(text);
+    for word in analyzer.words(&text) {
+        let term = analyzer.term(word, stem, &mut lower);
+        if !term.is_empty() {
+            add(&term);
         }
     }
     // Keys are unique, so an unstable sort is exact; the map's own stable sort then sees one
@@ -800,6 +850,9 @@ pub(crate) fn terms(text: &str, stem: bool) -> BTreeMap<String, u32> {
 /// Words a batch interner maps before it starts over; bounds memory on corpora with
 /// unbounded vocabularies while keeping the common-word hit rate.
 const STEM_MEMO_CAPACITY: usize = 1 << 18;
+
+/// The term id of a word whose term normalizes to nothing; it is never counted.
+const EMPTY_TERM: u32 = u32::MAX;
 
 /// Hash map keyed by caller text, so seeded per process.
 type SeededMap<K, V> = std::collections::HashMap<K, V, foldhash::fast::RandomState>;
@@ -828,6 +881,7 @@ struct Interner {
     lower: String,
     /// Terms are the lowercased words themselves rather than their stems.
     unstemmed: bool,
+    analyzer: Analyzer,
 }
 
 /// Word -> term id. A word of at most 16 bytes (nearly every word) is keyed by its bytes
@@ -876,19 +930,22 @@ impl Interner {
         if let Some(id) = self.words.get(word) {
             return id;
         }
-        self.lower.clear();
-        if ascii {
+        let stem = if ascii && self.analyzer.is_legacy() {
+            self.lower.clear();
             self.lower.push_str(word);
             self.lower.make_ascii_lowercase();
+            if self.unstemmed {
+                std::borrow::Cow::Borrowed(self.lower.as_str())
+            } else {
+                stemmer().stem(&self.lower)
+            }
         } else {
-            // `str::to_lowercase`, not per-char mapping: it applies the final-sigma rule.
-            self.lower.push_str(&word.to_lowercase());
-        }
-        let stem = if self.unstemmed {
-            std::borrow::Cow::Borrowed(self.lower.as_str())
-        } else {
-            stemmer().stem(&self.lower)
+            self.analyzer.term(word, !self.unstemmed, &mut self.lower)
         };
+        if stem.is_empty() {
+            self.words.insert(word, EMPTY_TERM);
+            return EMPTY_TERM;
+        }
         let id = match self.ids.get(stem.as_ref()) {
             Some(&id) => id,
             None => {
@@ -908,9 +965,16 @@ impl Interner {
         id
     }
 
-    /// Counts the words of `text` `weight` times each, as `terms(text, true)` splits them
-    /// (maximal runs of alphanumeric characters); returns how many were counted, weighted.
+    /// Counts the words of `text` (already [`nfc`]) `weight` times each, as `terms(text, true)`
+    /// splits them ([`words`]); returns how many were counted, weighted.
     fn count(&mut self, text: &str, weight: u32) -> usize {
+        if !self.analyzer.splits_alphanumeric() {
+            let mut counted = 0;
+            for word in self.analyzer.words(text) {
+                counted += self.count_word(word, false, weight);
+            }
+            return counted;
+        }
         let bytes = text.as_bytes();
         let mut counted = 0;
         let mut at = 0;
@@ -945,18 +1009,28 @@ impl Interner {
                     at += c.len_utf8();
                 }
             }
-            let id = self.term_id(&text[start..at], ascii);
-            if self.record {
-                self.sequence.push(id);
-            }
-            let count = &mut self.counts[id as usize];
-            if *count == 0 {
-                self.counted.push(id);
-            }
-            *count += weight;
-            counted += weight as usize;
+            counted += self.count_word(&text[start..at], ascii, weight);
         }
         counted
+    }
+
+    /// Counts one word `weight` times; returns how many were counted (none for a word whose
+    /// term normalizes away).
+    #[inline]
+    fn count_word(&mut self, word: &str, ascii: bool, weight: u32) -> usize {
+        let id = self.term_id(word, ascii);
+        if id == EMPTY_TERM {
+            return 0;
+        }
+        if self.record {
+            self.sequence.push(id);
+        }
+        let count = &mut self.counts[id as usize];
+        if *count == 0 {
+            self.counted.push(id);
+        }
+        *count += weight;
+        weight as usize
     }
 
     /// The term table of `text` with its first line's terms counted `title_weight` times in
@@ -970,13 +1044,20 @@ impl Interner {
         title_weight: u32,
         stem: bool,
         positions: Option<bool>,
+        analyzer: Analyzer,
     ) -> (StoredTerms, usize) {
-        if self.words.len() >= STEM_MEMO_CAPACITY || self.unstemmed == stem {
+        if self.words.len() >= STEM_MEMO_CAPACITY
+            || self.unstemmed == stem
+            || self.analyzer != analyzer
+        {
             *self = Self {
                 unstemmed: !stem,
+                analyzer,
                 ..Self::default()
             };
         }
+        let text = analyzer.prepare(text);
+        let text = text.as_ref();
         self.sequence.clear();
         self.record = positions.is_some();
         let mut words = self.count(text, 1);
@@ -1141,7 +1222,7 @@ impl Drop for PooledStemMemo<'_> {
 /// one-off one.
 #[cfg(test)]
 fn chunk_terms(text: &str, title_weight: u32, stem: bool) -> (StoredTerms, usize) {
-    analyze_chunk(text, title_weight, stem, None)
+    analyze_chunk(text, title_weight, stem, None, Analyzer::Legacy)
 }
 
 /// A chunk's term table through the batch interner installed on this thread, or a one-off
@@ -1151,10 +1232,11 @@ fn analyze_chunk(
     title_weight: u32,
     stem: bool,
     positions: Option<bool>,
+    analyzer: Analyzer,
 ) -> (StoredTerms, usize) {
     ACTIVE_STEM_MEMO.with(|active| match active.borrow_mut().as_mut() {
-        Some(interner) => interner.chunk_terms(text, title_weight, stem, positions),
-        None => Interner::default().chunk_terms(text, title_weight, stem, positions),
+        Some(interner) => interner.chunk_terms(text, title_weight, stem, positions, analyzer),
+        None => Interner::default().chunk_terms(text, title_weight, stem, positions, analyzer),
     })
 }
 
@@ -1195,6 +1277,7 @@ pub(crate) fn prepare_with_options(
         keys,
         encoder,
         options,
+        Analyzer::Legacy,
     )
 }
 
@@ -1212,6 +1295,7 @@ fn check_mode(input: &DocumentInput, encoder: TextEncoder, mode: EncodeMode) -> 
 }
 
 /// [`prepare_with_options`] of an input whose chunk spans ([`chunk_spans`]) are known.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn prepare_spans(
     input: DocumentInput,
     chunks: Vec<(u32, u32)>,
@@ -1220,6 +1304,7 @@ pub(crate) fn prepare_spans(
     keys: Option<&[String]>,
     encoder: TextEncoder,
     options: &IngestOptions,
+    analyzer: Analyzer,
 ) -> Result<StoredDocument> {
     let mode = options.encode;
     check_mode(&input, encoder, mode)?;
@@ -1274,6 +1359,7 @@ pub(crate) fn prepare_spans(
             if i == 0 { title_weight } else { 1 },
             !options.unstemmed,
             options.positions.then_some(options.whole_document),
+            analyzer,
         );
         let embedding = input
             .embeddings
@@ -1316,6 +1402,7 @@ pub(crate) fn prepare_spans(
             terms,
             word_count,
             stemmed: !options.unstemmed,
+            analyzed: !analyzer.is_legacy(),
         });
     }
     let mut document = StoredDocument {
@@ -2164,16 +2251,25 @@ mod tests {
         }
         // Counts agree: a zero-frequency posting is no match, through the multichunk bitmap
         // and through the one-chunk-per-document shortcut.
-        assert_eq!(count_matches(&store, "ghost").unwrap(), 0);
-        assert_eq!(count_matches(&store, "ghost common").unwrap(), 1);
+        assert_eq!(count_matches(&store, "ghost", Analyzer::Legacy).unwrap(), 0);
+        assert_eq!(
+            count_matches(&store, "ghost common", Analyzer::Legacy).unwrap(),
+            1
+        );
         let mut single = DocumentStore::default();
         // `document` names the moved local here; the helper is reached by path.
         let mut document = self::document(1, 1);
         document.chunks.truncate(1);
         document.chunks[0].terms.insert("ghost".into(), 0);
         single.insert(document.id.clone(), document);
-        assert_eq!(count_matches(&single, "ghost").unwrap(), 0);
-        assert_eq!(count_matches(&single, "ghost common").unwrap(), 1);
+        assert_eq!(
+            count_matches(&single, "ghost", Analyzer::Legacy).unwrap(),
+            0
+        );
+        assert_eq!(
+            count_matches(&single, "ghost common", Analyzer::Legacy).unwrap(),
+            1
+        );
     }
 
     #[test]

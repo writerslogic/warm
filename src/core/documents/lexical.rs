@@ -7,7 +7,6 @@ use std::borrow::Cow;
 use std::collections::BTreeSet;
 
 use super::packed_terms::WordId;
-use super::positions::tokens;
 use super::{Bm25, DocumentStore, SearchOptions, StoredChunk, MAX_DOCUMENT_BYTES};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -77,10 +76,27 @@ struct Clause {
 #[derive(Clone, Debug)]
 pub struct LexicalQuery {
     clauses: Vec<Clause>,
+    text: String,
+    analyzer: super::Analyzer,
 }
 
 impl LexicalQuery {
+    /// `text` parsed and analyzed as a [`super::Analyzer::Legacy`] store analyzes it; a store
+    /// with another analyzer analyzes it again (`Self::for_analyzer`).
     pub fn parse(text: &str) -> Result<Self> {
+        Self::parse_with(text, super::Analyzer::Legacy)
+    }
+
+    /// The query as a store with `analyzer` matches it.
+    pub(crate) fn for_analyzer(&self, analyzer: super::Analyzer) -> Result<Cow<'_, Self>> {
+        if analyzer == self.analyzer {
+            Ok(Cow::Borrowed(self))
+        } else {
+            Self::parse_with(&self.text, analyzer).map(Cow::Owned)
+        }
+    }
+
+    fn parse_with(text: &str, analyzer: super::Analyzer) -> Result<Self> {
         ensure!(text.len() <= MAX_DOCUMENT_BYTES, "query exceeds 8 MiB");
         let mut rest = text.trim();
         let mut clauses = Vec::new();
@@ -125,7 +141,7 @@ impl LexicalQuery {
                     "unsupported lexical query syntax"
                 );
             }
-            let words = [tokens(value, false), tokens(value, true)];
+            let words = [analyzer.tokens(value, false), analyzer.tokens(value, true)];
             ensure!(!words[0].is_empty(), "lexical clause requires a token");
             ensure!(words[0].len() <= 1024, "lexical phrase exceeds 1024 tokens");
             clauses.push(Clause {
@@ -137,7 +153,11 @@ impl LexicalQuery {
         }
         clauses.sort_unstable();
         clauses.dedup();
-        Ok(Self { clauses })
+        Ok(Self {
+            clauses,
+            text: text.to_owned(),
+            analyzer,
+        })
     }
 
     fn has_positive(&self) -> bool {
@@ -222,6 +242,10 @@ fn positions_for_chunk<'a>(
     match chunk.terms.positions.as_deref() {
         Some(positions) => Ok(Cow::Borrowed(positions)),
         None => {
+            anyhow::ensure!(
+                !chunk.analyzed,
+                "unsupported index: a phrase over a chunk without stored positions needs the legacy analyzer"
+            );
             let text = store.try_chunk_text(chunk)?.context("unsupported index: a candidate phrase needs stored positions or retained chunk text")?;
             Ok(Cow::Owned(super::positions::Positions::from_text(
                 &text,
