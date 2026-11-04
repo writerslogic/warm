@@ -47,4 +47,5 @@ for n in NS:
     runs = [run(n, s) for s in range(SEEDS)]
     res[n] = {k: float(np.mean([r[k] for r in runs])) for k in runs[0]}
     print(n, {k: round(v, 4) if not k.endswith("_k") else int(v) for k, v in res[n].items()}, flush=True)
-json.dump({"D": D, "bits_counting_arm": BITS, "seeds": SEEDS, "auc_mean": res}, open(sys.argv[1], "w"), indent=1)
+with open(sys.argv[1], "w") as out:
+    json.dump({"D": D, "bits_counting_arm": BITS, "seeds": SEEDS, "auc_mean": res}, out, indent=1)
