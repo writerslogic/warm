@@ -194,8 +194,13 @@ fn memory_budget_boundary_stops_before_staging() -> Result<()> {
 
 #[test]
 fn temporary_disk_budget_boundary_stops_staging_and_cleans_up() -> Result<()> {
-    // The staging generation's first allocation is one growth step, enough for this store.
-    let step = crate::core::storage::GROWTH_STEP as u64;
+    // The staging generation's first allocation is enough for this store: one growth step
+    // where journals grow incrementally, the whole declared segment elsewhere (Windows).
+    let step = if cfg!(unix) {
+        crate::core::storage::GROWTH_STEP
+    } else {
+        crate::core::storage::LEGACY_SEGMENT_SIZE
+    } as u64;
     for (limit, completes) in [
         (1, false),
         (step - 1, false),

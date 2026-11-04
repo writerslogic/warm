@@ -461,6 +461,11 @@ fn interval_lists_each_revision_live_in_it() {
 fn files_containing(dir: &Path, needle: &[u8], out: &mut Vec<String>) {
     for entry in std::fs::read_dir(dir).unwrap().filter_map(Result::ok) {
         let path = entry.path();
+        // The open store holds an exclusive lock on its lock file, which Windows refuses to
+        // read; the file never holds store content.
+        if path.file_name().is_some_and(|name| name == ".hms.lock") {
+            continue;
+        }
         if path.is_dir() {
             files_containing(&path, needle, out);
         } else if std::fs::read(&path)
