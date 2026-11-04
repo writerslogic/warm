@@ -43,6 +43,13 @@ struct Args {
     out: PathBuf,
     #[arg(long, value_delimiter = ',', default_values_t = [7.0f64, 30.0, 90.0, 365.0])]
     half_life_days: Vec<f64>,
+    /// Also write every query's ranked ids and scores per config to this file.
+    #[arg(long)]
+    dump: Option<PathBuf>,
+    /// Overfetch factors for the filter-after-top-k reference arms (for example 1,2,4,8). When
+    /// given, the report gains an `overfetch` section; the other rows are unchanged.
+    #[arg(long, value_delimiter = ',')]
+    overfetch: Vec<usize>,
 }
 
 #[derive(Deserialize)]
@@ -100,6 +107,137 @@ struct Tally {
     hits: BTreeMap<String, [usize; 2]>,
 }
 
+/// Filter after top-k: the first `pool` hits of an unfiltered ranking, minus the facts that are not
+/// yet valid at `as_of`, cut to `k`.
+fn post_filter(full: &[(String, Option<i64>)], pool: usize, k: usize, as_of: i64) -> Vec<String> {
+    full.iter()
+        .take(pool)
+        .filter(|(_, from)| from.is_none_or(|t| t <= as_of))
+        .take(k)
+        .map(|(id, _)| id.clone())
+        .collect()
+}
+
+/// Exact two-sided sign test on `wins` and `losses` (ties dropped).
+fn sign_test_p(wins: usize, losses: usize) -> f64 {
+    let n = wins + losses;
+    if n == 0 {
+        return 1.0;
+    }
+    let tail = wins.min(losses);
+    let mut term = 0.5f64.powi(n as i32);
+    let mut cumulative = 0.0;
+    for i in 0..=tail {
+        cumulative += term;
+        term *= (n - i) as f64 / (i + 1) as f64;
+    }
+    (2.0 * cumulative).min(1.0)
+}
+
+/// Arm tables, paired sign tests, evidence validity and the gap decomposition of the
+/// filter-after-top-k reference arms.
+fn overfetch_section(
+    per: &[Per],
+    facts_with_valid_to: usize,
+    facts_with_supersedes: usize,
+) -> Value {
+    let types: BTreeSet<&str> = per.iter().map(|p| p.question_type.as_str()).collect();
+    let arms: Vec<&String> = per[0].hits.keys().collect();
+    let count = |kind: &str, arm: &str, slot: usize| {
+        per.iter()
+            .filter(|p| p.question_type == kind && p.hits[arm][slot])
+            .count()
+    };
+    let size = |kind: &str| per.iter().filter(|p| p.question_type == kind).count();
+    let mut rows = Vec::new();
+    let mut paired = Vec::new();
+    for kind in &types {
+        for arm in &arms {
+            rows.push(json!({
+                "question_type": kind, "arm": arm, "questions": size(kind),
+                "hits_at_5": count(kind, arm, 0), "hits_at_10": count(kind, arm, 1),
+            }));
+            for base in ["as_of", "no_as_of"] {
+                if arm.as_str() == base {
+                    continue;
+                }
+                for (slot, k) in [5usize, 10].into_iter().enumerate() {
+                    let (mut wins, mut losses) = (0usize, 0usize);
+                    for p in per.iter().filter(|p| p.question_type == *kind) {
+                        match (p.hits[arm.as_str()][slot], p.hits[base][slot]) {
+                            (true, false) => wins += 1,
+                            (false, true) => losses += 1,
+                            _ => {}
+                        }
+                    }
+                    paired.push(json!({
+                        "question_type": kind, "arm": arm, "against": base, "k": k,
+                        "wins": wins, "losses": losses,
+                        "ties": size(kind) - wins - losses,
+                        "sign_test_p": sign_test_p(wins, losses),
+                    }));
+                }
+            }
+        }
+    }
+    let gap: Vec<Value> = per
+        .iter()
+        .filter(|p| p.hits["no_as_of"][0] && !p.hits["as_of"][0])
+        .map(|p| {
+            json!({
+                "question_id": p.id, "question_type": p.question_type,
+                "evidence_ingested": p.evidence_ingested, "evidence_valid_at_question_date": p.evidence_valid,
+            })
+        })
+        .collect();
+    let unrecoverable = gap
+        .iter()
+        .filter(|g| g["evidence_valid_at_question_date"] == 0)
+        .count();
+    let evidence: Vec<Value> = types
+        .iter()
+        .map(|kind| {
+            let of_kind = || per.iter().filter(|p| p.question_type == *kind);
+            json!({
+                "question_type": kind,
+                "questions_with_no_valid_evidence": of_kind().filter(|p| p.evidence_valid == 0).count(),
+                "evidence_sessions": of_kind().map(|p| p.evidence_ingested).sum::<usize>(),
+                "evidence_sessions_valid_at_question_date": of_kind().map(|p| p.evidence_valid).sum::<usize>(),
+            })
+        })
+        .collect();
+    let per_question: Vec<Value> = per
+        .iter()
+        .map(|p| {
+            json!({
+                "question_id": p.id, "question_type": p.question_type,
+                "evidence_ingested": p.evidence_ingested, "evidence_valid_at_question_date": p.evidence_valid,
+                "hits_at_5_10": p.hits,
+            })
+        })
+        .collect();
+    json!({
+        "arms": arms, "rows": rows, "paired": paired,
+        "d1_evidence_validity": evidence,
+        "d2_gap_questions_no_as_of_hits_as_of_misses_at_5": {
+            "count": gap.len(), "with_zero_valid_evidence": unrecoverable, "questions": gap,
+        },
+        "d3_h2_data_facts": {
+            "facts_with_valid_to": facts_with_valid_to, "facts_with_supersedes": facts_with_supersedes,
+        },
+        "per_question": per_question,
+    })
+}
+
+/// One question's outcome per arm: recall_any at 5 and 10.
+struct Per {
+    id: String,
+    question_type: String,
+    evidence_ingested: usize,
+    evidence_valid: usize,
+    hits: BTreeMap<String, [bool; 2]>,
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
     let split: Split = serde_json::from_slice(&std::fs::read(&args.split)?)?;
@@ -132,6 +270,10 @@ fn main() -> Result<()> {
     );
     let mut tallies: BTreeMap<String, Tally> = BTreeMap::new();
     let mut identical_default = 0usize;
+    let mut dump: BTreeMap<String, BTreeMap<String, Vec<(String, f64)>>> = BTreeMap::new();
+    let mut per_question: Vec<Per> = Vec::new();
+    let mut facts_with_valid_to = 0usize;
+    let mut facts_with_supersedes = 0usize;
     let mut as_of_invariant_ok = 0usize;
     let mut as_of_exclusion_ok = 0usize;
     let mut as_of_exclusion_checked = 0usize;
@@ -185,9 +327,15 @@ fn main() -> Result<()> {
             by_config.insert(name.clone(), Memory::with_config(core.clone(), config)?);
         }
         by_config["memory_default"].remember_many(facts.clone())?;
-        let ranked = |name: &str, options: &RecallOptions| -> Result<Vec<String>> {
+        let scored = |name: &str, options: &RecallOptions| -> Result<Vec<(String, f64)>> {
             let found = by_config[name].recall(&q.question, options)?;
-            Ok(found.into_iter().map(|r| r.id).collect())
+            Ok(found.into_iter().map(|r| (r.id, r.score)).collect())
+        };
+        let ranked = |name: &str, options: &RecallOptions| -> Result<Vec<String>> {
+            Ok(scored(name, options)?
+                .into_iter()
+                .map(|(id, _)| id)
+                .collect())
         };
         let options = RecallOptions {
             k: Some(10),
@@ -232,6 +380,85 @@ fn main() -> Result<()> {
                 let entry = tally.hits.entry((*name).to_owned()).or_default();
                 entry[slot] += usize::from(recall_any(ids, &evidence, k));
             }
+        }
+        if !args.overfetch.is_empty() {
+            let depth = 10 * args.overfetch.iter().copied().max().unwrap_or(1);
+            let full: Vec<(String, Option<i64>)> = by_config["memory_default"]
+                .recall(
+                    &q.question,
+                    &RecallOptions {
+                        k: Some(depth as u32),
+                        ..Default::default()
+                    },
+                )?
+                .into_iter()
+                .map(|r| (r.id, r.valid_from))
+                .collect();
+            let mut hits: BTreeMap<String, [bool; 2]> = BTreeMap::new();
+            for (config, arm) in [("memory_default", "no_as_of"), ("memory_as_of", "as_of")] {
+                let ids = &results[config];
+                hits.insert(
+                    arm.to_owned(),
+                    [
+                        recall_any(ids, &evidence, 5),
+                        recall_any(ids, &evidence, 10),
+                    ],
+                );
+            }
+            for factor in &args.overfetch {
+                let mut cell = [false; 2];
+                for (slot, k) in [5usize, 10].into_iter().enumerate() {
+                    cell[slot] = recall_any(
+                        &post_filter(&full, factor * k, k, question_ms),
+                        &evidence,
+                        k,
+                    );
+                }
+                hits.insert(format!("post_x{factor}"), cell);
+            }
+            let ingested: Vec<&RememberInput> = facts
+                .iter()
+                .filter(|f| evidence.contains(f.id.as_deref().unwrap_or("")))
+                .collect();
+            facts_with_valid_to += facts.iter().filter(|f| f.valid_to.is_some()).count();
+            facts_with_supersedes += facts.iter().filter(|f| f.supersedes.is_some()).count();
+            per_question.push(Per {
+                id: q.question_id.clone(),
+                question_type: q.question_type.clone(),
+                evidence_ingested: ingested.len(),
+                evidence_valid: ingested
+                    .iter()
+                    .filter(|f| f.valid_from.is_none_or(|t| t <= question_ms))
+                    .count(),
+                hits,
+            });
+        }
+        if args.dump.is_some() {
+            let mut per_config: BTreeMap<String, Vec<(String, f64)>> = BTreeMap::new();
+            let raw_scored = core
+                .search_documents(
+                    &q.question,
+                    &SearchOptions {
+                        k: Some(10),
+                        ..Default::default()
+                    },
+                )?
+                .into_iter()
+                .map(|d| (d.document_id, d.score))
+                .collect();
+            per_config.insert("document_search".into(), raw_scored);
+            for (name, _) in configs.iter().skip(1) {
+                let used = if name == "memory_default" {
+                    RecallOptions {
+                        k: Some(10),
+                        ..Default::default()
+                    }
+                } else {
+                    options.clone()
+                };
+                per_config.insert(name.clone(), scored(name, &used)?);
+            }
+            dump.insert(q.question_id.clone(), per_config);
         }
         // As-of invariant: nothing returned began after the evaluation time, and evaluating
         // just before the newest evidence session's date removes it from a full-history recall.
@@ -287,8 +514,16 @@ fn main() -> Result<()> {
         "as_of_no_future_facts": format!("{as_of_invariant_ok}/{}", questions.len()),
         "as_of_before_newest_evidence_excludes_it": format!("{as_of_exclusion_ok}/{as_of_exclusion_checked}"),
         "rows": rows,
+        "overfetch": if per_question.is_empty() {
+            Value::Null
+        } else {
+            overfetch_section(&per_question, facts_with_valid_to, facts_with_supersedes)
+        },
         "note": "A sanity check on a small dev sample, not a benchmark claim. In this data some evidence sessions are dated after the question date, so evaluating as of the question date excludes them (see memory_as_of vs document_search on temporal-reasoning). Recency half-lives were tried on these same dev questions; they are not tuned values.",
     });
+    if let Some(path) = &args.dump {
+        std::fs::write(path, serde_json::to_string_pretty(&dump)?)?;
+    }
     std::fs::write(&args.out, serde_json::to_string_pretty(&report)?)?;
     println!("{}", serde_json::to_string_pretty(&report)?);
     Ok(())
