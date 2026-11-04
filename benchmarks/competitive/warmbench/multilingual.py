@@ -34,6 +34,10 @@ from warmbench.common import log, ndcg_at, recall_at  # noqa: E402
 # Lucene analyzers that match each language; `standard` (UAX#29 + lowercase) runs on all.
 LANGUAGE_ANALYZER = {"hi": "hindi", "fa": "persian", "th": "thai", "ar": "arabic", "fi": "finnish",
                      "id": "indonesian", "tr": "turkish"}
+# WARM store analyzer (`--analyzer`) per language for the `--analyzed` labels; English sets
+# (the `--extra` folders) take `english`.
+WARM_ANALYZER = {"hi": "hindi", "fa": "persian", "th": "bigram", "ar": "arabic", "fi": "finnish",
+                 "tr": "turkish", "ru": "russian", "es": "spanish", "fr": "french", "de": "german"}
 
 
 def build_input(raw, lang, corpus_size, seed, work):
@@ -92,7 +96,9 @@ def run(cmd):
         raise RuntimeError(f"{cmd[0]} failed ({done.returncode}): {done.stderr[-2000:]}")
 
 
-def rows_of(system_cmd, folder, store, out):
+def rows_of(system_cmd, folder, store, out, reuse=False):
+    if reuse and out.exists():
+        return json.loads(out.read_text())["rows"]
     shutil.rmtree(store, ignore_errors=True)
     t0 = str(time.time_ns())
     run(system_cmd("build", folder / "input.json", store, out, t0))
@@ -116,6 +122,35 @@ def paired(base, other):
             "losses": sum(d < -1e-12 for d in deltas), "ties": sum(abs(d) <= 1e-12 for d in deltas)}
 
 
+def summarize(results, a):
+    """Per language with a Lucene language analyzer: the nDCG@10 gap from Lucene's language
+    analyzer to the first --warm label (before) and to each --analyzed label, and the share of
+    the mean gap each closes: 1 - mean(lucene - analyzed) / mean(lucene - before)."""
+    if not a.warm:
+        return
+    before = "warm-" + a.warm[0].split("=", 1)[0]
+    rows, summary = {}, {"formula": "1 - mean(lucene_language - warm_analyzed) / mean(lucene_language - warm_before)",
+                         "before": before}
+    for lang, entry in results["languages"].items():
+        systems = entry.get("systems", {})
+        lucene = systems.get(f"lucene-{LANGUAGE_ANALYZER.get(lang)}")
+        if lucene is None or before not in systems:
+            continue
+        rows[lang] = {"lucene_language": lucene["ndcg_at_10"], "before": systems[before]["ndcg_at_10"]}
+        for label in a.analyzed:
+            if f"warm-{label}" in systems:
+                rows[lang][label] = systems[f"warm-{label}"]["ndcg_at_10"]
+    summary["languages"] = rows
+    for label in a.analyzed:
+        langs = [l for l, r in rows.items() if label in r]
+        if langs:
+            gap_before = sum(rows[l]["lucene_language"] - rows[l]["before"] for l in langs) / len(langs)
+            gap_new = sum(rows[l]["lucene_language"] - rows[l][label] for l in langs) / len(langs)
+            summary[f"gap_closed_{label}"] = {"languages": langs, "mean_gap_before": gap_before,
+                                              "mean_gap_after": gap_new, "share_closed": 1 - gap_new / gap_before}
+    results["summary"] = summary
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--raw", type=Path, required=True)
@@ -127,6 +162,10 @@ def main():
     p.add_argument("--lucene", nargs="*", default=["standard"], help="standard and/or language analyzers")
     p.add_argument("--extra", nargs="*", default=[], metavar="NAME=FOLDER",
                    help="also run an existing warm-bench text folder (input.json, qrels.json)")
+    p.add_argument("--analyzed", nargs="*", default=[], metavar="LABEL",
+                   help="--warm labels whose stores are built with the language's WARM analyzer")
+    p.add_argument("--reuse", action="store_true",
+                   help="reuse a system's existing output file in --work instead of running it")
     p.add_argument("--commits", nargs="*", default=[], metavar="LABEL=SHA", help="source commit of each --warm binary")
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args()
@@ -151,12 +190,19 @@ def main():
         rankings = {}
         for spec in a.warm:
             label, binary = spec.split("=", 1)
-            cmd = lambda phase, i, s, o, t0, b=binary: [b, phase, "--input", str(i), "--store", str(s), "--out", str(o),
-                                                        "--t0-ns", t0, "--encode", "lexical", "--passes", "1"]
-            rows = rows_of(cmd, folder, a.work / "store-warm", a.work / f"{lang}-warm-{label}.json")
+            analyzer = (WARM_ANALYZER.get(lang, "english") if given is None else "english") \
+                if label in a.analyzed else None
+            if label in a.analyzed and given is None and lang not in WARM_ANALYZER:
+                continue
+            extra = ["--analyzer", analyzer] if analyzer else []
+            cmd = lambda phase, i, s, o, t0, b=binary, x=extra: [
+                b, phase, "--input", str(i), "--store", str(s), "--out", str(o), "--t0-ns", t0, "--encode",
+                "lexical", "--passes", "1"] + (x if phase == "build" else [])
+            rows = rows_of(cmd, folder, a.work / "store-warm", a.work / f"{lang}-warm-{label}.json", a.reuse)
             q = quality(rows, qrels)
             q["binary_sha256"] = hashlib.sha256(Path(binary).read_bytes()).hexdigest()
             q["commit"] = dict(c.split("=", 1) for c in a.commits).get(label)
+            q["analyzer"] = analyzer or "legacy"
             systems[f"warm-{label}"] = q
             rankings[label] = {r["id"]: [(h["documentId"], h["lexicalScore"]) for h in r["results"]] for r in rows}
         if len(rankings) > 1:
@@ -176,7 +222,8 @@ def main():
                     continue
             cmd = lambda phase, i, s, o, t0, an=analyzer: ["java", "-cp", classpath, "LuceneBm25", phase, str(i), str(s),
                                                            str(o), t0, "1", "100", an]
-            q = quality(rows_of(cmd, folder, a.work / "store-lucene", a.work / f"{lang}-lucene-{analyzer}.json"), qrels)
+            q = quality(rows_of(cmd, folder, a.work / "store-lucene", a.work / f"{lang}-lucene-{analyzer}.json",
+                                a.reuse), qrels)
             systems[f"lucene-{analyzer}"] = q
             log(f"{lang} lucene-{analyzer} {q['ndcg_at_10']:.4f}")
         base = systems.get(f"warm-{a.warm[0].split('=', 1)[0]}") if a.warm else None
@@ -184,6 +231,7 @@ def main():
             entry["paired_vs_" + a.warm[0].split("=", 1)[0]] = {
                 name: paired(base["per_query_ndcg_at_10"], q["per_query_ndcg_at_10"])
                 for name, q in systems.items() if q is not base}
+        summarize(results, a)
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(results, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
