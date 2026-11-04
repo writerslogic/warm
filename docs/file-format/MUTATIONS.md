@@ -52,7 +52,9 @@ absent when the document was stored without text), `[start_byte, end_byte)` inde
 document text with `end - start <= 65536` and the document `<= 8 MiB`, `text.len() == end -
 start`, `embedding` is null or an array of the embedding-space length, `terms` is an object
 term to count (stemmed lowercase tokens when `stemmed` is true), `word_count` the chunk's word
-count. Documents have 1..=4096 chunks. A document `version` of the form `mem1:<json>` is a
+count. A chunk written by a non-legacy store analyzer also carries `"analyzed": true`; replay
+refuses a chunk whose mark disagrees with the store's `lexical_analyzer`. Documents have
+1..=4096 chunks. A document `version` of the form `mem1:<json>` is a
 memory-API stamp ([ANCILLARY.md](ANCILLARY.md)).
 
 A chunk memorized with deferred or lexical-only encoding (`IngestOptions.encode`) also carries
@@ -100,7 +102,8 @@ chunk     = flags [str(id)] [str(text)] varint(start_byte) varint(end_byte) vari
             varint(t) varint(term id gap){t} varint(frequency){t}
 flags     = bit0 explicit chunk id (else hms:chunk:<len(id)>:<id>:<index>), bit1 text,
             bit2 stemmed, bit3 embedding, bits4-5 vector state (0 encoded, 1 pending,
-            2 lexical); other bits zero
+            2 lexical), bit6 positions follow, bit7 analyzed (terms from a non-legacy
+            store analyzer, LEXICAL.md)
 ```
 
 Gaps: the first value is absolute, each next one the difference to the previous (vector

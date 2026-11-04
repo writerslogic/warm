@@ -102,7 +102,8 @@ Sections:
 4. document ids in id order: `documents + 1` `u32` offsets, then the UTF-8 bytes;
 5. per document, `documents + 1` `u32` offsets, then a record: version, source URI (flag and
    bytes), metadata JSON, chunk count, and per chunk a flags byte (bit 0: the chunk id follows,
-   otherwise it is the default id for its index; bit 1: its terms are stemmed), the byte span as
+   otherwise it is the default id for its index; bit 1: its terms are stemmed; bit 2: its terms
+   come from a non-legacy store analyzer), the byte span as
    two varints, and its text (`0` none, `2` inline bytes).
 
 ## Durability and crash safety

@@ -419,6 +419,14 @@ impl WarmCore {
                 );
                 for chunk in &document.chunks {
                     validate_id(&chunk.id)?;
+                    // A chunk's terms match only queries analyzed as they were.
+                    ensure!(
+                        chunk.analyzed != self.analyzer.is_legacy(),
+                        "document {:?} was analyzed {} the store's {} lexical analyzer; reopen it with the release and store.json it was written with",
+                        document.id,
+                        if chunk.analyzed { "by a non-legacy analyzer, not" } else { "by the legacy analyzer, not" },
+                        self.analyzer
+                    );
                     let chunk_limit = crate::core::format::scan::chunk_byte_limit(
                         chunk.terms.is_whole_document(),
                         document.chunks.len(),

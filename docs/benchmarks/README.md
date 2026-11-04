@@ -215,7 +215,8 @@ The mean nets languages where WARM is ahead (hi, th, ar) against those where it 
 every query of every set, including SciFact train, NFCorpus dev and LongMemEval dev. The
 `english` analyzer (NFC, Turkish I folding, ASCII digits) leaves those three sets' nDCG@10
 unchanged; its top 100 ids and scores are identical on 809 of 809 SciFact, 42 of 324 NFCorpus
-and 0 of 100 LongMemEval queries. WARM has no stop words; Lucene's analyzers remove them.
+and 0 of 100 LongMemEval queries. WARM has no stop words; Lucene's analyzers remove them. The analyzers, their file-format marks and
+the binding follow-ups are in [file-format/LEXICAL.md](../file-format/LEXICAL.md#analyzers).
 
 ```sh
 PATH=/opt/homebrew/opt/openjdk@25/bin:$PATH uv run --no-project python -I \

@@ -123,7 +123,7 @@ pub(crate) fn validate_store(
         if actual != expected {
             bail!("incompatible store schema: dimensions, encoder, embedding model, encryption, or meaning configuration changed; reopen with the original configuration or re-encode source documents into a new store");
         }
-        return Ok((expected.version, recorded));
+        Ok((expected.version, recorded))
     } else {
         if path.join("vectors_data.bin").exists() {
             bail!("legacy store has no embedding schema; preserve it and use warm-admin reencode with original source documents to create a new store");
