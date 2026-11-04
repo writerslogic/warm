@@ -349,6 +349,9 @@ fn config() -> WarmConfig {
     config
 }
 
+/// The budget the reuse tests opt in with.
+const OPT_IN_BUDGET: usize = 256 << 20;
+
 fn assert_matches_oracle(core: &WarmCore, at: &JournalPosition, when: &str) {
     let oracle = observe(&oracle_view(core, at).unwrap());
     core.clear_history_cache();
@@ -372,6 +375,7 @@ fn views_match_frame_at_a_time_replay_at_every_position() {
         let dir = tempfile::tempdir().unwrap();
         let core =
             WarmCore::new(256, Some(dir.path().display().to_string()), Some(config())).unwrap();
+        core.set_history_cache_budget(OPT_IN_BUDGET);
         let mut rng = Rng(seed);
         let mut revision = 0;
         let mut positions = vec![(core.journal_position(), "start")];
@@ -429,6 +433,7 @@ fn views_match_frame_at_a_time_replay_at_every_position() {
 fn the_state_bound_trips_where_replay_tripped() {
     let dir = tempfile::tempdir().unwrap();
     let core = WarmCore::new(256, Some(dir.path().display().to_string()), Some(config())).unwrap();
+    core.set_history_cache_budget(OPT_IN_BUDGET);
     let mut rng = Rng(3);
     let mut revision = 0;
     let mut positions = Vec::new();
@@ -478,4 +483,37 @@ fn the_state_bound_trips_where_replay_tripped() {
         }
     }
     assert_eq!(outcomes.len(), 2, "the limits both trip and pass");
+}
+
+/// By default no view outlives its caller: nothing is kept, a reopen builds a new state, and
+/// a budget set to 0 again releases what an opt-in kept.
+#[test]
+fn views_are_not_retained_by_default() {
+    let dir = tempfile::tempdir().unwrap();
+    let core = WarmCore::new(256, Some(dir.path().display().to_string()), Some(config())).unwrap();
+    let mut rng = Rng(11);
+    let mut revision = 0;
+    for _ in 0..10 {
+        step(&core, &mut rng, &mut revision).unwrap();
+    }
+    let at = core.journal_position();
+    let first = core.history_view(&at).unwrap();
+    let observed = observe(&first);
+    let state = Arc::downgrade(&first.state);
+    drop(first);
+    assert!(core.history_cache.lock().entries.is_empty());
+    assert!(
+        state.upgrade().is_none(),
+        "the dropped view's state is freed"
+    );
+    assert_eq!(observe(&core.history_view(&at).unwrap()), observed);
+    assert!(core.history_cache.lock().entries.is_empty());
+
+    core.set_history_cache_budget(OPT_IN_BUDGET);
+    drop(core.history_view(&at).unwrap());
+    assert_eq!(core.history_cache.lock().entries.len(), 1);
+    core.set_history_cache_budget(0);
+    assert!(core.history_cache.lock().entries.is_empty());
+    drop(core.history_view(&at).unwrap());
+    assert!(core.history_cache.lock().entries.is_empty());
 }
