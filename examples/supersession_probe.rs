@@ -9,7 +9,8 @@
 //!
 //! ```text
 //! cargo run --release --features local-embed --example supersession_probe -- \
-//!   --probe probe.jsonl --pack bge.hmsemb --out result.json [--limit N] [--scratch DIR]
+//!   --probe probe.jsonl --pack bge.hmsemb --out result.json [--limit N] [--scratch DIR] \
+//!   [--dump ranked.jsonl]
 //! ```
 
 use std::cell::RefCell;
@@ -329,6 +330,10 @@ struct InstResult {
     arms: HashMap<&'static str, [M; 3]>,
     d_sim: Vec<[M; 3]>,
     d_sim_mismatch_vs_real: Option<usize>,
+    /// Arm a's ranked lists (history = All, k = `RANK_K`) and the cosine link candidates, kept
+    /// for `--dump` so link rules can be simulated offline.
+    ranked: Vec<Vec<String>>,
+    cand: Vec<Vec<(usize, f32)>>,
 }
 
 fn candidate_links(p: &Prepared, ctx: &Ctx) -> Vec<Vec<(usize, f32)>> {
@@ -483,6 +488,8 @@ fn run_instance(p: &Prepared, ctx: &Ctx, tau_star: Option<f32>) -> Result<InstRe
         arms,
         d_sim,
         d_sim_mismatch_vs_real: mismatch,
+        ranked,
+        cand,
     })
 }
 
@@ -832,6 +839,23 @@ fn main() -> Result<()> {
         "elapsed_s": started.elapsed().as_secs_f64(),
     });
     fs::write(&out, serde_json::to_string_pretty(&result)?)?;
+    if let Some(dump) = arg(&args, "--dump") {
+        let mut lines = String::new();
+        for (p, r) in dev_items.iter().chain(test_items.iter()) {
+            let turns = &p.inst.turns;
+            let cand: Vec<Vec<(&str, f32)>> = r
+                .cand
+                .iter()
+                .map(|v| v.iter().map(|&(y, c)| (turns[y].id.as_str(), c)).collect())
+                .collect();
+            lines.push_str(&serde_json::to_string(&json!({
+                "uid": p.inst.uid, "split": p.inst.split, "type": p.inst.kind,
+                "ranked": r.ranked, "cand": cand,
+            }))?);
+            lines.push('\n');
+        }
+        fs::write(dump, lines)?;
+    }
     println!(
         "{decision}: a={a:.3} b={b:.3} c={c:.3} d={d:.3} tau*={tau_star} mismatches={mismatches}"
     );

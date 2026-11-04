@@ -3,8 +3,8 @@
 
 # Unary change-report cue tags on STALE: kill test
 
-Status: PROTOCOL. Written and committed before any statement was labeled and before any new arm
-was run. Results are appended below it after the run.
+Status: RUN COMPLETE, decision KILL. The protocol was committed (a428aa1b) before any statement
+was labeled and before any new arm was run. Results are appended below it after the run.
 
 ## Question
 
@@ -92,3 +92,149 @@ top-10 context is not stored in the rows, and the score cache it was built from
 the retrieved context is a proxy: the value appears in the reader's own extraction
 (`hypothesis`), and an earlier-dated session of the full haystack states it while a later one
 states the gold value. No API calls.
+
+# Results (appended after the run)
+
+Run 2026-11-03. Labels: `benchmarks/cue_tags/labels.csv` (200 rows: sample id, stratum, label,
+note; `weak` marks a borderline YES, `implicit` a NO where the change exists only relative to an
+older statement, `planned` a NO for a stated plan). The labels were written before the tagger was
+run on the sample. Measurements: `benchmarks/cue_tags/measure.py`, output
+`benchmarks/results/cue_tags_measure_20261103.json`.
+
+## Decision: KILL
+
+Step 2 survives (precision 0.72, recall 0.76, selectivity 18.6% / 12.5%). Step 3 kills: on TEST
+pooled CVA@1 the cue-gated extracted-slot arm e-x scores 19.2% against newest-wins b = 23.8%, a
+lift of -4.6 points (95% paired cluster bootstrap -13.3 to +5.0), below the pre-registered +2.0
+kill line and far from the +10 GO line. No library behaviour is changed. The oracle-slot arm e-o
+reaches 52.9% (b + 29.2, interval +20.0 to +37.9), which clears b + 15 but, as pre-registered, is
+an upper bound that needs the dataset's own conflict pair and is not a GO.
+
+## Step 1 and 2: labels, precision, recall, selectivity
+
+Base rate (YES on the random strata, n = 109): 11.0% (2.8% if `weak` labels count as NO).
+
+| set | n | YES | flagged | precision | recall |
+|---|---|---|---|---|---|
+| all 200 | 200 | 58 | 61 | 0.72 | 0.76 |
+| STALE (100) | 100 | 39 | 43 | 0.74 | 0.82 |
+| LME-S dev (100) | 100 | 19 | 18 | 0.67 | 0.63 |
+| all 200, `weak` as NO | 200 | 41 | 61 | 0.51 | 0.76 |
+| random strata only | 109 | 12 | 13 | 0.54 | 0.58 |
+
+Per stratum (primary labels): `stale_new` P 0.94 R 0.83 (n 40); `stale_old` 6 flags, 1 correct;
+`stale_rand` 6 flags, 2 correct; `ku_new` P 0.75 R 0.50 (n 15); `ku_old` 7 flags, 4 correct;
+`lme_rand` P 0.71 R 0.56 (n 69).
+
+Fire rate on the newer conflict statement whatever its label: STALE M_new 77.5% (T1 80%, T2 75%);
+LME-S knowledge-update newest evidence turn 26.7% (4 of 15).
+
+Selectivity (flag rate over all user turns, unlabeled): STALE executed scope 18.6% of 35,584
+turns (lex 9.8%, tense 10.3%); LME-S dev haystacks 12.5% of 24,390 turns.
+
+Kill rule: precision 0.72 >= 0.50, recall 0.76 >= 0.60, selectivity 18.6% <= 40%. **The tagger
+survives step 2.** Caveats, measured: precision falls to 0.51 when borderline YES labels are
+counted as NO, and on the random strata alone it is 0.54 from 13 flags (too few to separate from
+0.50); the 200-row precision is inflated by the positive-enriched `stale_new` stratum, as
+expected. Recall on LME knowledge-update statements is low (4 of 15 newest evidence turns fire):
+those updates are implicit counts ("I've tried four different ones so far", "20 dozen right now",
+"my 5th project") that carry no change cue, so a unary lexical tag misses most of what
+LongMemEval calls a knowledge update.
+
+Errors (exploratory, the frozen list was not changed): misses are onset events without a listed
+verb ("I just got the custody order back", "I finally signed the enrollment papers", "my new
+Weber grill"); false positives are causal "since" ("since I find myself...") and habitual
+"lately" on an unchanged state ("hovering around 150 pounds lately").
+
+## Step 3: STALE arms
+
+The example was rerun with `--dump` at the same flags (`--limit-dev 20 --limit-test 40`, probe
+slice sha256 `4647ad00...`, embedder pack sha256 `b54d9369...`, both equal to the probe's). The
+rerun's own result JSON equals the committed
+`benchmarks/results/supersession_probe_stale_20261103.json` on every table, the tau sweep, the
+bootstraps and the decision (real-vs-simulated mismatches 0). Simulation:
+`benchmarks/cue_tags/stale_arms.py`, output `benchmarks/results/cue_tags_stale_arms_20261103.json`
+(dump sha256 `c61addcb...`, 59.6 MB, kept outside git).
+
+Reproduction gate (TEST pooled CVA@1, simulation vs the probe): a 3.75 / 3.75, b 23.75 / 23.75,
+c 74.58 / 74.58, d at tau 0.75 9.58 / 9.58. Passed exactly.
+
+Slot keys: STALE has none. e-x and e-x1 use EXTRACTED keys (embedding cosine to earlier facts);
+e-o uses ORACLE keys (the dataset's M_old / M_new pair). The cue flags 72.5% of TEST M_new turns
+(58 of 80) and 77.5% on DEV (31 of 40), and about 55 of the ~297 user turns per instance (18.6%).
+
+DEV tau sweeps (pooled CVA@1; chosen tau in bold):
+
+| tau | 0.60 | 0.65 | 0.70 | 0.75 | 0.80 | 0.85 | 0.90 | 0.95 | 1.01 |
+|---|---|---|---|---|---|---|---|---|---|
+| d (ungated) | 0.0 | 0.0 | 4.2 | **11.7** | 9.2 | 4.2 | 4.2 | 4.2 | 4.2 |
+| e-x (gated, all >= tau) | 0.0 | 2.5 | 12.5 | **23.3** | 12.5 | 4.2 | 4.2 | 4.2 | 4.2 |
+| e-x1 (gated, top-1) | 17.5 | **17.5** | 15.0 | 15.0 | 8.3 | 4.2 | 4.2 | 4.2 | 4.2 |
+
+On DEV, e-x (23.3) was above b (20.0); on TEST it falls below b.
+
+**TEST, pooled** (240 queries, 80 instances)
+
+| arm | CVA@1 | Stale@1 | Stale@5 | new in top5 | CVA-session@1 | old-sibling@1 | CVA@1 T1 | CVA@1 T2 |
+|---|---|---|---|---|---|---|---|---|
+| (a) plain hybrid | 3.8 | 70.8 | 82.5 | 42.9 | 10.4 | 77.1 | 4.2 | 3.3 |
+| (b) newest-wins among top 5 | 23.8 | 3.8 | 82.5 | 42.9 | 56.2 | 4.2 | 30.8 | 16.7 |
+| (c) oracle links | 74.6 | 0.0 | 0.0 | 89.6 | 81.2 | 6.2 | 73.3 | 75.8 |
+| (d) cosine links, tau 0.75 | 9.6 | 34.2 | 39.6 | 50.8 | 32.1 | 37.5 | 9.2 | 10.0 |
+| (e-x) cue-gated cosine, tau 0.75 | 19.2 | 51.7 | 59.2 | 54.2 | 26.2 | 56.7 | 21.7 | 16.7 |
+| (e-x1) cue-gated top-1, tau 0.65 | 12.9 | 54.6 | 63.8 | 55.4 | 24.2 | 59.6 | 14.2 | 11.7 |
+| (e-o) cue-gated, oracle slot | 52.9 | 21.7 | 22.9 | 75.0 | 59.6 | 27.9 | 60.0 | 45.8 |
+
+Paired cluster bootstrap on TEST (points of CVA@1, 95% interval, 10,000 resamples):
+
+| x - y | points | interval |
+|---|---|---|
+| e-x - b | -4.6 | [-13.3, +5.0] |
+| e-x - d | +9.6 | [+2.5, +17.1] |
+| e-x - a | +15.4 | [+8.8, +22.9] |
+| e-x1 - b | -10.8 | [-18.3, -2.9] |
+| e-o - b | +29.2 | [+20.0, +37.9] |
+
+Reading. Measured: gating cosine links by the cue doubles arm d (+9.6 points, interval excludes
+0); it still loses to plain newest-wins over the top 5, and more than half of TEST queries still
+put the old fact first (Stale@1 51.7% vs 3.8% for b). Inferred, not separately measured: the cue
+removes many wrong links, but the flagged new turn usually does not reach the old one by cosine
+(Type II shares no words with it), so the old fact keeps no successor. Measured: with the true pair as slot key the same flags give 52.9%,
+close to the arithmetic a + 0.725 x (c - a) = 55.1. Inferred: the unary tag is not the
+bottleneck; the slot (which earlier fact the change is about) is, and embedding similarity does
+not recover it here. Conjecture: a slot extractor (subject/attribute keys from an LLM or a
+trained model) would be needed, which is the non-LLM constraint this lever was meant to avoid.
+
+## Step 4: LongMemEval-S dev wrong answers
+
+14 wrong of 100 (`longmemeval_official_overnight_s_dev_gpt4o_k10.json`; 1 of the 14 is a
+knowledge-update question; dev knowledge-update accuracy is 15 of 16). Read row by row against
+the gold answer and the evidence turns of the cleaned source (no API calls):
+
+- Wrong answer EQUAL to an older superseded value present in the reader's extraction: **0 of 14**.
+- Wrong answer DERIVED from a superseded value the reader quoted: 2 of 14. `2133c1b5` (KU,
+  "how long in Harajuku"): the reader quoted both "a month now" (April) and "3 months now"
+  (October), distrusted the newer one, and answered "7 months" from the old one plus elapsed time.
+  `7024f17c` ("jogging and yoga last week"): the reader used "I used to practice yoga three times
+  a week, each time for 2 hours" despite "I've been slacking off" and answered 2 to 4 hours (gold
+  0.5).
+- Over-supersession, the opposite failure: 1 (`46a3abf7`, tanks: the reader decided the 5-gallon
+  tank was replaced by the 20-gallon one and answered 2, gold 3).
+- The other 11: counting (4), temporal arithmetic or event choice (4), preference rubric (2),
+  missing assistant-side detail (1).
+
+Unverified: presence in the retrieved top-10 is inferred from the reader's own quotes, because the
+rows do not store the context and the score cache needed to rebuild it
+(`~/.cache/warm-bench/longmemeval_s/runs/s-dev-small-all2`) is not on this machine. Supersession
+bounds at most 2 to 3 of 14 dev errors (2 to 3 points of accuracy) on LongMemEval-S dev, and none
+of them is a stale value repeated verbatim.
+
+## Not tested
+
+Labels from one labeler with no second rater (no agreement figure); 200 statements, 13 flags on
+the random strata (population precision 0.54 is not separable from 0.50). Other cue lists (the
+error analysis above is exploratory only); non-English text. The 163 paraphrase-only STALE
+instances and the registered TEST instances beyond the executed 80. Slot extraction other than
+embedding cosine (no subject/attribute extractor exists in the harness). LLM readers or judges,
+STALE's own protocol. The LongMemEval retrieved context itself (proxy above). Any change to the
+library.
