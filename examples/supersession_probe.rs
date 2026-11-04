@@ -95,9 +95,9 @@ fn measure(inst: &Inst, list: &[String], session_of: &HashMap<&str, u32>) -> M {
     let first = top.first().map(String::as_str);
     M {
         cv1: first == Some(inst.new_id.as_str()),
-        new5: top.iter().any(|id| *id == inst.new_id),
+        new5: top.contains(&inst.new_id),
         stale1: first == Some(inst.old_id.as_str()),
-        stale5: top.iter().any(|id| *id == inst.old_id),
+        stale5: top.contains(&inst.old_id),
         sess1: first.and_then(|id| session_of.get(id)) == Some(&inst.new_session),
         oldsib1: first.and_then(|id| session_of.get(id)) == Some(&inst.old_session),
     }
@@ -205,14 +205,20 @@ impl Graph for SimGraph<'_> {
     }
 }
 
+/// Successors, whether the fact is current, and its effective time.
+type NodeInfo = (Vec<String>, bool, i64);
+
+/// A named metric over one query outcome.
+type Metric = (&'static str, fn(&M) -> bool);
+
 /// Links read back from a real store.
 struct WarmGraph<'a> {
     memory: &'a Memory,
-    cache: RefCell<HashMap<String, (Vec<String>, bool, i64)>>,
+    cache: RefCell<HashMap<String, NodeInfo>>,
 }
 
 impl WarmGraph<'_> {
-    fn load(&self, id: &str) -> (Vec<String>, bool, i64) {
+    fn load(&self, id: &str) -> NodeInfo {
         if let Some(v) = self.cache.borrow().get(id) {
             return v.clone();
         }
@@ -503,13 +509,11 @@ fn rate(
 
 fn summarize(items: &[(&Prepared, &InstResult)], arm: &str) -> Value {
     let mut out = serde_json::Map::new();
-    let scopes: [(&str, Box<dyn Fn(&Prepared) -> bool>); 3] = [
-        ("pooled", Box::new(|_| true)),
-        ("T1", Box::new(|p| p.inst.kind == "T1")),
-        ("T2", Box::new(|p| p.inst.kind == "T2")),
-    ];
-    for (name, filter) in &scopes {
-        let metrics: [(&str, fn(&M) -> bool); 6] = [
+    let scopes: [(&str, Option<&str>); 3] =
+        [("pooled", None), ("T1", Some("T1")), ("T2", Some("T2"))];
+    for (name, kind) in scopes {
+        let filter = |p: &Prepared| kind.is_none_or(|k| p.inst.kind == k);
+        let metrics: [Metric; 6] = [
             ("cva1", |m| m.cv1),
             ("new_in5", |m| m.new5),
             ("stale1", |m| m.stale1),
