@@ -755,7 +755,7 @@ impl WarmMemorySystem {
 
     /// Starts a compaction on a worker thread and returns its job; reads and writes continue
     /// meanwhile. Same lifecycle as Rust `WarmCore::start_compaction`.
-    #[napi]
+    #[napi(ts_args_type = "options?: CompactionOptions")]
     pub fn start_compaction(
         &self,
         options: Option<super::CompactionOptionsJs>,
