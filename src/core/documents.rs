@@ -24,6 +24,8 @@ mod index;
 mod lexical;
 mod listing;
 mod memory;
+#[cfg(test)]
+mod multilingual_tests;
 mod overlay;
 mod positions;
 mod postings;
@@ -752,8 +754,49 @@ fn stemmer() -> &'static rust_stemmers::Stemmer {
     STEMMER.get_or_init(|| rust_stemmers::Stemmer::create(rust_stemmers::Algorithm::English))
 }
 
-/// Lowercased alphanumeric tokens and their counts; with `stem`, each token is reduced by
-/// the English Snowball (Porter 2) stemmer, which is what the published BM25 baselines do.
+/// `text` in Unicode NFC, borrowed when it already is, so precomposed and decomposed
+/// spellings split into the same words. Applied to the whole text before splitting: per word
+/// would be too late, since a decomposed accent ends a word.
+pub(crate) fn nfc(text: &str) -> std::borrow::Cow<'_, str> {
+    use unicode_normalization::{is_nfc_quick, IsNormalized, UnicodeNormalization};
+    if text.is_ascii() || is_nfc_quick(text.chars()) == IsNormalized::Yes {
+        std::borrow::Cow::Borrowed(text)
+    } else {
+        std::borrow::Cow::Owned(text.nfc().collect())
+    }
+}
+
+/// The words of `text`: its maximal alphanumeric runs. Combining marks and ZWNJ end a word;
+/// joining them measured worse on MIRACL hi/fa/th without per-language stemming
+/// (`benchmarks/results/multilingual_bm25_miracl_dev.json`).
+pub(crate) fn words(text: &str) -> impl Iterator<Item = &str> + '_ {
+    text.split(|c: char| !c.is_alphanumeric())
+        .filter(|s| !s.is_empty())
+}
+
+/// Writes `word` lowercased into `out`. ASCII is lowercased byte by byte. Other words take
+/// `str::to_lowercase` (it applies the final-sigma rule), lose the U+0307 it leaves after
+/// `i` for `İ`, and fold dotless `ı` to `i`: without a locale, uppercase Turkish `I` cannot be
+/// told from `İ`, so `IŞIK` and `ışık` must meet at one form.
+pub(crate) fn lowercase_word(word: &str, out: &mut String) {
+    out.clear();
+    if word.is_ascii() {
+        out.push_str(word);
+        out.make_ascii_lowercase();
+        return;
+    }
+    let mut previous = '\0';
+    out.extend(word.to_lowercase().chars().filter_map(|c| {
+        let c = if c == 'ı' { 'i' } else { c };
+        let keep = !(c == '\u{307}' && previous == 'i');
+        previous = c;
+        keep.then_some(c)
+    }));
+}
+
+/// Lowercased tokens ([`nfc`], [`words`], [`lowercase_word`]) and their counts; with `stem`, each
+/// token is reduced by the English Snowball (Porter 2) stemmer, which is what the published
+/// BM25 baselines do.
 /// The distinct words of a query in one form.
 pub(crate) fn query_words(text: &str, stem: bool) -> std::collections::BTreeSet<String> {
     terms(text, stem).into_keys().collect()
@@ -772,18 +815,8 @@ pub(crate) fn terms(text: &str, stem: bool) -> BTreeMap<String, u32> {
             counts.insert(key.to_owned(), 1);
         }
     };
-    for word in text
-        .split(|c: char| !c.is_alphanumeric())
-        .filter(|s| !s.is_empty())
-    {
-        lower.clear();
-        if word.is_ascii() {
-            lower.push_str(word);
-            lower.make_ascii_lowercase();
-        } else {
-            // `str::to_lowercase`, not per-char mapping: it applies the final-sigma rule.
-            lower.push_str(&word.to_lowercase());
-        }
+    for word in words(&nfc(text)) {
+        lowercase_word(word, &mut lower);
         if stem {
             add(&stemmer().stem(&lower));
         } else {
@@ -876,13 +909,12 @@ impl Interner {
         if let Some(id) = self.words.get(word) {
             return id;
         }
-        self.lower.clear();
         if ascii {
+            self.lower.clear();
             self.lower.push_str(word);
             self.lower.make_ascii_lowercase();
         } else {
-            // `str::to_lowercase`, not per-char mapping: it applies the final-sigma rule.
-            self.lower.push_str(&word.to_lowercase());
+            lowercase_word(word, &mut self.lower);
         }
         let stem = if self.unstemmed {
             std::borrow::Cow::Borrowed(self.lower.as_str())
@@ -908,8 +940,8 @@ impl Interner {
         id
     }
 
-    /// Counts the words of `text` `weight` times each, as `terms(text, true)` splits them
-    /// (maximal runs of alphanumeric characters); returns how many were counted, weighted.
+    /// Counts the words of `text` (already [`nfc`]) `weight` times each, as `terms(text, true)`
+    /// splits them ([`words`]); returns how many were counted, weighted.
     fn count(&mut self, text: &str, weight: u32) -> usize {
         let bytes = text.as_bytes();
         let mut counted = 0;
@@ -977,6 +1009,8 @@ impl Interner {
                 ..Self::default()
             };
         }
+        let text = nfc(text);
+        let text = text.as_ref();
         self.sequence.clear();
         self.record = positions.is_some();
         let mut words = self.count(text, 1);

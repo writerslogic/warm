@@ -56,11 +56,9 @@ fn memoized_terms_match_the_reference_tokenizer() {
     fn reference(text: &str, stem: bool) -> std::collections::BTreeMap<String, u32> {
         let stemmer = rust_stemmers::Stemmer::create(rust_stemmers::Algorithm::English);
         let mut out = std::collections::BTreeMap::new();
-        for word in text
-            .split(|c: char| !c.is_alphanumeric())
-            .filter(|s| !s.is_empty())
-        {
-            let lower = word.to_lowercase();
+        for word in super::words(text) {
+            let mut lower = String::new();
+            super::lowercase_word(word, &mut lower);
             let key = if stem {
                 stemmer.stem(&lower).into_owned()
             } else {
