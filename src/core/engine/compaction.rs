@@ -297,6 +297,8 @@ impl WarmCore {
             Err(error) => tracing::warn!(%error, "live generation size unavailable"),
         }
         staging.disarm();
+        // Built views must not keep the state a purge removes resident.
+        self.history_cache.lock().clear();
         let replaced = self.arena.replace_with_compacted(prepared, scrub);
         if self.arena.checkpoint().0 == staged_name {
             job.published

@@ -104,6 +104,8 @@ pub struct WarmCore {
     compaction: crate::core::sync::Mutex<()>,
     /// Generation and offset where retained history starts (see `history`).
     history_floor: RwLock<(String, usize)>,
+    /// Views built in this generation, shared by later views at the same position.
+    history_cache: crate::core::sync::Mutex<history::ViewCache>,
     /// The index metadata (`indices.json`) last written by this process: identical metadata
     /// means identical index files at the same checkpoint, so a repeated persist skips the
     /// writes.
@@ -310,6 +312,7 @@ impl WarmCore {
             stem_memos: Default::default(),
             compaction: crate::core::sync::Mutex::new(()),
             history_floor: RwLock::new((String::new(), 0)),
+            history_cache: Default::default(),
             persisted_indices: crate::core::sync::Mutex::new(Vec::new()),
             revision: std::sync::atomic::AtomicU64::new(super::documents::opaque_counter_start()),
             vector_record_instance: rand::random(),
