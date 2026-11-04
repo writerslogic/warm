@@ -1,0 +1,100 @@
+{
+  "recorded": "2026-11-03",
+  "base_commit": "79a6bd24",
+  "note": "Library code is base_commit plus the uncommitted change that batches consecutive document installs (committed with this file). Shared machine with other sessions running; nice -n 15; load averages (1/5/15 min) before and after shown. Factors are medians of per-repetition ratios. Tested scales only: 1000 and 10000 ingested documents; nothing extrapolated beyond them.",
+  "machine": "Apple M4, 10 cores, macOS (Darwin arm64)",
+  "load_averages_before": "3.97 12.27 25.17",
+  "load_averages_after": "4.03 11.87 24.80",
+  "benchmark": "history_view_cost",
+  "dimensions": 4096,
+  "harness": "examples/history_cost.rs",
+  "ingest_batch": 100,
+  "pairing": "per repetition, the four measurements run in rotated order with the same query",
+  "repetitions": 31,
+  "scales": [
+    {
+      "deletes": 50,
+      "documents_ingested": 1000,
+      "journal_bytes": 172637,
+      "live_documents": 950,
+      "live_search": {
+        "n": 31,
+        "p10_us": 13.25,
+        "p50_us": 17.958,
+        "p90_us": 25.5
+      },
+      "middle_offset": 48961,
+      "paired_factor_build_and_search_latest_over_live": 813.4907005234436,
+      "paired_factor_build_and_search_middle_over_live": 157.68738166833725,
+      "paired_factor_prebuilt_search_over_live": 0.6484375,
+      "prebuilt_view_search": {
+        "n": 31,
+        "p10_us": 9.875,
+        "p50_us": 12.0,
+        "p90_us": 13.5
+      },
+      "updates": 100,
+      "view_build_and_search_latest": {
+        "n": 31,
+        "p10_us": 13991.292000000001,
+        "p50_us": 14233.916,
+        "p90_us": 14608.666
+      },
+      "view_build_and_search_middle": {
+        "n": 31,
+        "p10_us": 2641.458,
+        "p50_us": 2779.75,
+        "p90_us": 3049.833
+      },
+      "view_build_latest": {
+        "n": 31,
+        "p10_us": 13980.833999999999,
+        "p50_us": 14218.458,
+        "p90_us": 14594.625
+      }
+    },
+    {
+      "deletes": 500,
+      "documents_ingested": 10000,
+      "journal_bytes": 1739295,
+      "live_documents": 9500,
+      "live_search": {
+        "n": 31,
+        "p10_us": 43.834,
+        "p50_us": 51.458,
+        "p90_us": 61.333000000000006
+      },
+      "middle_offset": 490454,
+      "paired_factor_build_and_search_latest_over_live": 4245.752890202265,
+      "paired_factor_build_and_search_middle_over_live": 790.0506061407153,
+      "paired_factor_prebuilt_search_over_live": 0.8859335345017086,
+      "prebuilt_view_search": {
+        "n": 31,
+        "p10_us": 39.0,
+        "p50_us": 44.791,
+        "p90_us": 55.042
+      },
+      "updates": 1000,
+      "view_build_and_search_latest": {
+        "n": 31,
+        "p10_us": 204486.625,
+        "p50_us": 216691.209,
+        "p90_us": 248641.125
+      },
+      "view_build_and_search_middle": {
+        "n": 31,
+        "p10_us": 37024.458000000006,
+        "p50_us": 40296.75,
+        "p90_us": 46105.083
+      },
+      "view_build_latest": {
+        "n": 31,
+        "p10_us": 204433.5,
+        "p50_us": 216643.66700000002,
+        "p90_us": 248589.75
+      }
+    }
+  ],
+  "search": "default SearchOptions (lexical BM25, k = 10)",
+  "words_per_document": 60
+}

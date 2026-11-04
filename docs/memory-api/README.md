@@ -198,7 +198,9 @@ the store directory, before reopen, after an abort in a child process, and after
   replaced generation and any unreferenced generation left by an interrupted compaction are
   overwritten with zeros, synced and unlinked.
 - **Without `purge`:** the deleted frames stay in the append-only journal until a compaction.
-  This is the one bounded exception; use `purge` when the text must be gone.
+  This is the one bounded exception; use `purge` when the text must be gone. Opt-in
+  historical views ([TIME-TRAVEL.md](TIME-TRAVEL.md)) read those frames: at a position before
+  the delete they return the fact. After a purge no position returns it.
 - **Not controlled by any file API:** copies kept by SSD wear levelling or over-provisioning,
   copy-on-write or snapshotting filesystems, filesystem journals, OS swap or hibernation
   images, backups, and bytes the caller already returned from `recall`. Use full-disk

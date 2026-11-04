@@ -1,0 +1,1961 @@
+{
+  "as_of_before_newest_evidence_excludes_it": "40/40",
+  "as_of_no_future_facts": "40/40",
+  "dataset": "LongMemEval_S (longmemeval_s_cleaned.json), dev ids only",
+  "dev_ids_in_split": 100,
+  "heldout_ids_read": 0,
+  "memory_default_ranks_identically_to_document_search": "40/40",
+  "note": "A sanity check on a small dev sample, not a benchmark claim. In this data some evidence sessions are dated after the question date, so evaluating as of the question date excludes them (see memory_as_of vs document_search on temporal-reasoning). Recency half-lives were tried on these same dev questions; they are not tuned values.",
+  "overfetch": {
+    "arms": [
+      "as_of",
+      "no_as_of",
+      "post_x1",
+      "post_x2",
+      "post_x4",
+      "post_x8"
+    ],
+    "d1_evidence_validity": [
+      {
+        "evidence_sessions": 30,
+        "evidence_sessions_valid_at_question_date": 29,
+        "question_type": "knowledge-update",
+        "questions_with_no_valid_evidence": 0
+      },
+      {
+        "evidence_sessions": 53,
+        "evidence_sessions_valid_at_question_date": 41,
+        "question_type": "temporal-reasoning",
+        "questions_with_no_valid_evidence": 3
+      }
+    ],
+    "d2_gap_questions_no_as_of_hits_as_of_misses_at_5": {
+      "count": 3,
+      "questions": [
+        {
+          "evidence_ingested": 5,
+          "evidence_valid_at_question_date": 0,
+          "question_id": "gpt4_5dcc0aab",
+          "question_type": "temporal-reasoning"
+        },
+        {
+          "evidence_ingested": 2,
+          "evidence_valid_at_question_date": 0,
+          "question_id": "gpt4_4edbafa2",
+          "question_type": "temporal-reasoning"
+        },
+        {
+          "evidence_ingested": 2,
+          "evidence_valid_at_question_date": 0,
+          "question_id": "c9f37c46",
+          "question_type": "temporal-reasoning"
+        }
+      ],
+      "with_zero_valid_evidence": 3
+    },
+    "d3_h2_data_facts": {
+      "facts_with_supersedes": 0,
+      "facts_with_valid_to": 0
+    },
+    "paired": [
+      {
+        "against": "no_as_of",
+        "arm": "as_of",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "as_of",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "no_as_of",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "no_as_of",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x1",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x1",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x1",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x1",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x2",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x2",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x2",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x2",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x4",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x4",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x4",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x4",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x8",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x8",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x8",
+        "k": 5,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x8",
+        "k": 10,
+        "losses": 0,
+        "question_type": "knowledge-update",
+        "sign_test_p": 1.0,
+        "ties": 15,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "as_of",
+        "k": 5,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "as_of",
+        "k": 10,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "no_as_of",
+        "k": 5,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 3
+      },
+      {
+        "against": "as_of",
+        "arm": "no_as_of",
+        "k": 10,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 3
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x1",
+        "k": 5,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x1",
+        "k": 10,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x1",
+        "k": 5,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x1",
+        "k": 10,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x2",
+        "k": 5,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x2",
+        "k": 10,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x2",
+        "k": 5,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x2",
+        "k": 10,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x4",
+        "k": 5,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x4",
+        "k": 10,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x4",
+        "k": 5,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x4",
+        "k": 10,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x8",
+        "k": 5,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "as_of",
+        "arm": "post_x8",
+        "k": 10,
+        "losses": 0,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 1.0,
+        "ties": 25,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x8",
+        "k": 5,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      },
+      {
+        "against": "no_as_of",
+        "arm": "post_x8",
+        "k": 10,
+        "losses": 3,
+        "question_type": "temporal-reasoning",
+        "sign_test_p": 0.25,
+        "ties": 22,
+        "wins": 0
+      }
+    ],
+    "per_question": [
+      {
+        "evidence_ingested": 3,
+        "evidence_valid_at_question_date": 3,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "0bc8ad92",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "9a707b81",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_7a0daae1",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_61e13b3c",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 3,
+        "evidence_valid_at_question_date": 3,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_e061b84f",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_8e165409",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_98f46fc6",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "eac54adc",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 1,
+        "evidence_valid_at_question_date": 1,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_a2d1d1f6",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "2ebe6c92",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_59149c78",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 1,
+        "evidence_valid_at_question_date": 1,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_468eb064",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            false,
+            true
+          ],
+          "no_as_of": [
+            false,
+            true
+          ],
+          "post_x1": [
+            false,
+            true
+          ],
+          "post_x2": [
+            false,
+            true
+          ],
+          "post_x4": [
+            false,
+            true
+          ],
+          "post_x8": [
+            false,
+            true
+          ]
+        },
+        "question_id": "9a707b82",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            false,
+            true
+          ],
+          "no_as_of": [
+            false,
+            true
+          ],
+          "post_x1": [
+            false,
+            true
+          ],
+          "post_x2": [
+            false,
+            true
+          ],
+          "post_x4": [
+            false,
+            true
+          ],
+          "post_x8": [
+            false,
+            true
+          ]
+        },
+        "question_id": "eac54add",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 3,
+        "evidence_valid_at_question_date": 3,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "0bc8ad93",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 1,
+        "evidence_valid_at_question_date": 1,
+        "hits_at_5_10": {
+          "as_of": [
+            false,
+            false
+          ],
+          "no_as_of": [
+            false,
+            false
+          ],
+          "post_x1": [
+            false,
+            false
+          ],
+          "post_x2": [
+            false,
+            false
+          ],
+          "post_x4": [
+            false,
+            false
+          ],
+          "post_x8": [
+            false,
+            false
+          ]
+        },
+        "question_id": "gpt4_8279ba03",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "08f4fc43",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 5,
+        "evidence_valid_at_question_date": 0,
+        "hits_at_5_10": {
+          "as_of": [
+            false,
+            false
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            false,
+            false
+          ],
+          "post_x2": [
+            false,
+            false
+          ],
+          "post_x4": [
+            false,
+            false
+          ],
+          "post_x8": [
+            false,
+            false
+          ]
+        },
+        "question_id": "gpt4_5dcc0aab",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 0,
+        "hits_at_5_10": {
+          "as_of": [
+            false,
+            false
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            false,
+            false
+          ],
+          "post_x2": [
+            false,
+            false
+          ],
+          "post_x4": [
+            false,
+            false
+          ],
+          "post_x8": [
+            false,
+            false
+          ]
+        },
+        "question_id": "gpt4_4edbafa2",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 1,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "e4e14d04",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 0,
+        "hits_at_5_10": {
+          "as_of": [
+            false,
+            false
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            false,
+            false
+          ],
+          "post_x2": [
+            false,
+            false
+          ],
+          "post_x4": [
+            false,
+            false
+          ],
+          "post_x8": [
+            false,
+            false
+          ]
+        },
+        "question_id": "c9f37c46",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 1,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_8c8961ae",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 1,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "993da5e2",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_d31cdae3",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "gpt4_88806d6e",
+        "question_type": "temporal-reasoning"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "6aeb4375",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "d7c942c3",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "184da446",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "41698283",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "72e3ee87",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "6a27ffc2",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 1,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "2133c1b5",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "18bc8abd",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "ed4ddc30",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "8fb83627",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "affe2881",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "06db6396",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "3ba21379",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "9bbe84a2",
+        "question_type": "knowledge-update"
+      },
+      {
+        "evidence_ingested": 2,
+        "evidence_valid_at_question_date": 2,
+        "hits_at_5_10": {
+          "as_of": [
+            true,
+            true
+          ],
+          "no_as_of": [
+            true,
+            true
+          ],
+          "post_x1": [
+            true,
+            true
+          ],
+          "post_x2": [
+            true,
+            true
+          ],
+          "post_x4": [
+            true,
+            true
+          ],
+          "post_x8": [
+            true,
+            true
+          ]
+        },
+        "question_id": "c6853660",
+        "question_type": "knowledge-update"
+      }
+    ],
+    "rows": [
+      {
+        "arm": "as_of",
+        "hits_at_10": 15,
+        "hits_at_5": 15,
+        "question_type": "knowledge-update",
+        "questions": 15
+      },
+      {
+        "arm": "no_as_of",
+        "hits_at_10": 15,
+        "hits_at_5": 15,
+        "question_type": "knowledge-update",
+        "questions": 15
+      },
+      {
+        "arm": "post_x1",
+        "hits_at_10": 15,
+        "hits_at_5": 15,
+        "question_type": "knowledge-update",
+        "questions": 15
+      },
+      {
+        "arm": "post_x2",
+        "hits_at_10": 15,
+        "hits_at_5": 15,
+        "question_type": "knowledge-update",
+        "questions": 15
+      },
+      {
+        "arm": "post_x4",
+        "hits_at_10": 15,
+        "hits_at_5": 15,
+        "question_type": "knowledge-update",
+        "questions": 15
+      },
+      {
+        "arm": "post_x8",
+        "hits_at_10": 15,
+        "hits_at_5": 15,
+        "question_type": "knowledge-update",
+        "questions": 15
+      },
+      {
+        "arm": "as_of",
+        "hits_at_10": 21,
+        "hits_at_5": 19,
+        "question_type": "temporal-reasoning",
+        "questions": 25
+      },
+      {
+        "arm": "no_as_of",
+        "hits_at_10": 24,
+        "hits_at_5": 22,
+        "question_type": "temporal-reasoning",
+        "questions": 25
+      },
+      {
+        "arm": "post_x1",
+        "hits_at_10": 21,
+        "hits_at_5": 19,
+        "question_type": "temporal-reasoning",
+        "questions": 25
+      },
+      {
+        "arm": "post_x2",
+        "hits_at_10": 21,
+        "hits_at_5": 19,
+        "question_type": "temporal-reasoning",
+        "questions": 25
+      },
+      {
+        "arm": "post_x4",
+        "hits_at_10": 21,
+        "hits_at_5": 19,
+        "question_type": "temporal-reasoning",
+        "questions": 25
+      },
+      {
+        "arm": "post_x8",
+        "hits_at_10": 21,
+        "hits_at_5": 19,
+        "question_type": "temporal-reasoning",
+        "questions": 25
+      }
+    ]
+  },
+  "protocol": "retrieval only, lexical BM25 through document search; session-level facts of user turns; no LLM, no model; abstention questions excluded",
+  "questions_used": 40,
+  "rows": [
+    {
+      "config": "document_search",
+      "hits_at_10": 15,
+      "hits_at_5": 15,
+      "question_type": "knowledge-update",
+      "questions": 15,
+      "recall_any_at_10": 1.0,
+      "recall_any_at_5": 1.0
+    },
+    {
+      "config": "memory_as_of",
+      "hits_at_10": 15,
+      "hits_at_5": 15,
+      "question_type": "knowledge-update",
+      "questions": 15,
+      "recall_any_at_10": 1.0,
+      "recall_any_at_5": 1.0
+    },
+    {
+      "config": "memory_default",
+      "hits_at_10": 15,
+      "hits_at_5": 15,
+      "question_type": "knowledge-update",
+      "questions": 15,
+      "recall_any_at_10": 1.0,
+      "recall_any_at_5": 1.0
+    },
+    {
+      "config": "memory_recency_30d",
+      "hits_at_10": 14,
+      "hits_at_5": 14,
+      "question_type": "knowledge-update",
+      "questions": 15,
+      "recall_any_at_10": 0.9333333333333333,
+      "recall_any_at_5": 0.9333333333333333
+    },
+    {
+      "config": "memory_recency_365d",
+      "hits_at_10": 15,
+      "hits_at_5": 15,
+      "question_type": "knowledge-update",
+      "questions": 15,
+      "recall_any_at_10": 1.0,
+      "recall_any_at_5": 1.0
+    },
+    {
+      "config": "memory_recency_7d",
+      "hits_at_10": 14,
+      "hits_at_5": 13,
+      "question_type": "knowledge-update",
+      "questions": 15,
+      "recall_any_at_10": 0.9333333333333333,
+      "recall_any_at_5": 0.8666666666666667
+    },
+    {
+      "config": "memory_recency_90d",
+      "hits_at_10": 15,
+      "hits_at_5": 14,
+      "question_type": "knowledge-update",
+      "questions": 15,
+      "recall_any_at_10": 1.0,
+      "recall_any_at_5": 0.9333333333333333
+    },
+    {
+      "config": "document_search",
+      "hits_at_10": 24,
+      "hits_at_5": 22,
+      "question_type": "temporal-reasoning",
+      "questions": 25,
+      "recall_any_at_10": 0.96,
+      "recall_any_at_5": 0.88
+    },
+    {
+      "config": "memory_as_of",
+      "hits_at_10": 21,
+      "hits_at_5": 19,
+      "question_type": "temporal-reasoning",
+      "questions": 25,
+      "recall_any_at_10": 0.84,
+      "recall_any_at_5": 0.76
+    },
+    {
+      "config": "memory_default",
+      "hits_at_10": 24,
+      "hits_at_5": 22,
+      "question_type": "temporal-reasoning",
+      "questions": 25,
+      "recall_any_at_10": 0.96,
+      "recall_any_at_5": 0.88
+    },
+    {
+      "config": "memory_recency_30d",
+      "hits_at_10": 22,
+      "hits_at_5": 18,
+      "question_type": "temporal-reasoning",
+      "questions": 25,
+      "recall_any_at_10": 0.88,
+      "recall_any_at_5": 0.72
+    },
+    {
+      "config": "memory_recency_365d",
+      "hits_at_10": 21,
+      "hits_at_5": 19,
+      "question_type": "temporal-reasoning",
+      "questions": 25,
+      "recall_any_at_10": 0.84,
+      "recall_any_at_5": 0.76
+    },
+    {
+      "config": "memory_recency_7d",
+      "hits_at_10": 22,
+      "hits_at_5": 20,
+      "question_type": "temporal-reasoning",
+      "questions": 25,
+      "recall_any_at_10": 0.88,
+      "recall_any_at_5": 0.8
+    },
+    {
+      "config": "memory_recency_90d",
+      "hits_at_10": 21,
+      "hits_at_5": 18,
+      "question_type": "temporal-reasoning",
+      "questions": 25,
+      "recall_any_at_10": 0.84,
+      "recall_any_at_5": 0.72
+    }
+  ]
+}

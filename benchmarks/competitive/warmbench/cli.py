@@ -74,6 +74,7 @@ def main(argv=None):
                 print(runner.run_ann(dataset, n_train, n_test, spec, systems, only_builds=only_builds))
         if a.only in ("text", "both"):
             systems = [registry.WARM] + [s for s in registry.TEXT_SYSTEMS if wanted is None or s in wanted]
+            systems += [s for s in registry.TEXT_CONTROL_SYSTEMS if wanted is not None and s in wanted]
             for dataset in spec["text"]:
                 if a.datasets and dataset not in a.datasets:
                     continue

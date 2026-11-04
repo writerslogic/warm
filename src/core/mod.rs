@@ -105,6 +105,11 @@ pub use config::{VectorCandidateConfig, WarmConfig};
 pub use engine::WarmCore;
 #[cfg(not(target_arch = "wasm32"))]
 pub use engine::WarmCore as HmsCore;
+#[cfg(not(target_arch = "wasm32"))]
+pub use engine::{
+    HistoryBounds, HistoryError, HistoryOptions, HistoryRevision, HistoryView, JournalPosition,
+    RevisionKind, TimeResolution,
+};
 pub use phase_hvec::PhaseHVec;
 pub use phase_resonator::{
     phase_resonator_factorize, FactorResult, PhaseResonator, ResonatorConfig,
