@@ -1549,8 +1549,11 @@ fn run_seeds(seeds: impl Iterator<Item = u64>) {
         Sim::new(seed).run();
         return;
     }
+    // Journal syncs cost far more on Windows runners (25 seeds took over 20 minutes there), so
+    // each shard runs a few seeds; the sequences still exercise that platform's file semantics.
+    let limit = if cfg!(windows) { 3 } else { usize::MAX };
     let mut total: BTreeMap<String, usize> = BTreeMap::new();
-    for seed in seeds {
+    for seed in seeds.take(limit) {
         for (what, n) in Sim::new(seed).run() {
             *total.entry(what).or_default() += n;
         }
