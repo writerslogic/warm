@@ -6,13 +6,15 @@
 usage: measure.py SAMPLE_JSONL LABELS_CSV PROBE_JSONL LME_S_CLEANED_JSON SPLIT_JSON OUT_JSON
 """
 import csv, json, sys
+import io
+from pathlib import Path
 from collections import defaultdict
 
 from cue_tagger import flagged, hits
 
 sample_path, labels_path, probe, lme_path, split_path, out = sys.argv[1:7]
-sample = {r["id"]: r for r in map(json.loads, open(sample_path))}
-labels = list(csv.DictReader(open(labels_path)))
+sample = {r["id"]: r for r in map(json.loads, Path(sample_path).read_text().splitlines())}
+labels = list(csv.DictReader(io.StringIO(Path(labels_path).read_text())))
 assert len(labels) == len(sample) == 200
 
 
@@ -55,7 +57,7 @@ res["fire_on_stale_new_by_type"] = {t: sum(v) / len(v) for t, v in sorted(by_typ
 # Selectivity: executed scope of the probe (first 20 dev / 40 test per type, file order).
 kept, n, fired, group = defaultdict(int), 0, 0, defaultdict(int)
 flags_by_uid = {}
-for inst in map(json.loads, open(probe)):
+for inst in map(json.loads, Path(probe).read_text().splitlines()):
     key = (inst["split"], inst["type"])
     kept[key] += 1
     if kept[key] > (20 if inst["split"] == "dev" else 40):
@@ -73,10 +75,10 @@ for inst in map(json.loads, open(probe)):
 res["selectivity"]["stale_executed_scope"] = {"turns": n, "flagged": fired, "rate": fired / n,
                                               "lex_rate": group["lex"] / n, "tense_rate": group["tense"] / n,
                                               "instances": len(flags_by_uid)}
-dev_ids = set(json.load(open(split_path))["dev"])
+dev_ids = set(json.loads(Path(split_path).read_text())["dev"])
 n = fired = 0
 group = defaultdict(int)
-for e in json.load(open(lme_path)):
+for e in json.loads(Path(lme_path).read_text()):
     if e["question_id"] not in dev_ids:
         continue
     for sess in e["haystack_sessions"]:
@@ -95,7 +97,7 @@ p, r = res["labels"]["primary"]["all"]["precision"], res["labels"]["primary"]["a
 sel = max(v["rate"] for v in res["selectivity"].values())
 res["kill"] = {"precision_lt_0.50": p < 0.50, "recall_lt_0.60": r < 0.60, "selectivity_gt_0.40": sel > 0.40}
 res["survives"] = not any(res["kill"].values())
-json.dump(res, open(out, "w"), indent=1)
-json.dump(flags_by_uid, open(out.replace(".json", "_flags.json"), "w"))
+Path(out).write_text(json.dumps(res, indent=1))
+Path(out.replace(".json", "_flags.json")).write_text(json.dumps(flags_by_uid))
 print(json.dumps({k: res[k] for k in ("base_rate", "fire_on_newer_conflict_statement", "fire_on_stale_new_by_type", "selectivity", "kill", "survives")}, indent=1))
 print(json.dumps({m: {k: res["labels"][m][k] for k in ("all", "stale", "lme")} for m in res["labels"]}, indent=1))

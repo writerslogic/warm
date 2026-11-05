@@ -9,6 +9,7 @@ turns of all 50 sessions, stamped with the session timestamp (UTC milliseconds).
 Split is by instance, stratified by type, ordered by sha256(seed|uid).
 """
 import argparse, calendar, hashlib, json, sys, time
+from pathlib import Path
 
 ap = argparse.ArgumentParser()
 ap.add_argument("src"); ap.add_argument("out")
@@ -17,7 +18,7 @@ ap.add_argument("--test-per-type", type=int, required=True)
 ap.add_argument("--seed", default="20261103")
 a = ap.parse_args()
 
-data = json.load(open(a.src))
+data = json.loads(Path(a.src).read_text())
 elig = {"T1": [], "T2": []}
 total = {"T1": 0, "T2": 0}
 for inst in data:

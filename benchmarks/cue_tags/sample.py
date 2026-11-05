@@ -15,6 +15,7 @@ LME-S: dev questions only. ku_new / ku_old: the latest-dated and earlier user tu
 Text is cut to MAX_CHARS; labels and the tagger's P/R both use the cut text.
 """
 import json, random, sys
+from pathlib import Path
 
 MAX_CHARS = 800
 SEED = 20261103
@@ -23,7 +24,7 @@ probe, lme_path, split_path, out = sys.argv[1:5]
 rng = random.Random(SEED)
 rows = []
 
-insts = [json.loads(l) for l in open(probe)]
+insts = [json.loads(l) for l in Path(probe).read_text().splitlines()]
 kept, dev = {}, []
 for i in insts:
     if i["split"] != "dev":
@@ -41,8 +42,8 @@ pool = [(i, t) for i in dev for t in i["turns"] if t["id"] not in (i["old_id"], 
 for i, t in rng.sample(pool, 40):
     rows.append(("stale_rand", f'stale:{i["uid"]}:{t["id"]}', i["type"], t["text"]))
 
-dev_ids = set(json.load(open(split_path))["dev"])
-lme = [e for e in json.load(open(lme_path)) if e["question_id"] in dev_ids]
+dev_ids = set(json.loads(Path(split_path).read_text())["dev"])
+lme = [e for e in json.loads(Path(lme_path).read_text()) if e["question_id"] in dev_ids]
 assert len(lme) == 100
 n_lme = 0
 for e in lme:
