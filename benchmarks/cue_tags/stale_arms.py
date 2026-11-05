@@ -10,6 +10,7 @@ DUMP_JSONL comes from `examples/supersession_probe.rs --dump`: per instance, arm
 sorted by cos then index). FLAGS_JSON maps uid -> cue-flagged turn ids (measure.py).
 """
 import json, random, struct, sys
+from pathlib import Path
 
 SHOW = 5
 TAUS = [0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.01]
@@ -67,9 +68,9 @@ def succ_of(supersedes):
 
 
 probe_path, dump_path, flags_path, out_path = sys.argv[1:5]
-probe = {i["uid"]: i for i in map(json.loads, open(probe_path))}
-dump = [json.loads(l) for l in open(dump_path)]
-flags = {u: set(v) for u, v in json.load(open(flags_path)).items()}
+probe = {i["uid"]: i for i in map(json.loads, Path(probe_path).read_text().splitlines())}
+dump = [json.loads(l) for l in Path(dump_path).read_text().splitlines()]
+flags = {u: set(v) for u, v in json.loads(Path(flags_path).read_text()).items()}
 
 
 def links(d, tau, gate, top1=False):
@@ -154,7 +155,7 @@ res["decision"] = {"rule": "KILL if e_x - b < 2.0; GO if e_x - b >= 10; else NO-
                    "e_o_vs_b_plus_15": res["test"]["e_o"]["cv1"] - (b + 15),
                    "result": "NOT REPORTABLE" if not gate_ok else
                    ("KILL" if ex - b < 2.0 else "GO" if ex - b >= 10 else "NO-GO")}
-json.dump(res, open(out_path, "w"), indent=1)
+Path(out_path).write_text(json.dumps(res, indent=1))
 print(json.dumps({k: res[k] for k in ("reproduction_gate", "tau_e_x", "tau_e_x1", "tau_d", "decision")}, indent=1))
 for name, row in res["test"].items():
     print(f'{name:8s} ' + " ".join(f"{k}={v:.1f}" for k, v in row.items() if k != "n"), row["n"])

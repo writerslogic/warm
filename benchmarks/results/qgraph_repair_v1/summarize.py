@@ -4,6 +4,7 @@ measured QPS reaching each recall target (no interpolation). Usage: summarize.py
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import math
 import statistics
 import sys
@@ -12,7 +13,7 @@ TARGETS = (0.80, 0.90, 0.95, 0.98)
 
 
 def summarize(path: str) -> dict:
-    report = json.load(open(path))
+    report = json.loads(Path(path).read_text())
     arms = [a["arm"] for a in report["arms"]]
     points: dict[tuple[str, int], dict] = {}
     by_rep: dict[tuple[str, int, int], float] = {}

@@ -1,5 +1,6 @@
 import json,sys
-r=json.load(open(sys.argv[1]))
+from pathlib import Path
+r=json.loads(Path(sys.argv[1]).read_text())
 def pct(x): return "n/a" if x is None else f"{100*x:.1f}"
 def row(split,arm,scope,metrics):
     d=r[split][arm][scope]

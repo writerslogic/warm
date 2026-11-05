@@ -8,7 +8,7 @@ M_new is an exact substring of a user turn in relevant_session_index[1]. Facts a
 turns of all 50 sessions, stamped with the session timestamp (UTC milliseconds).
 Split is by instance, stratified by type, ordered by sha256(seed|uid).
 """
-import argparse, calendar, hashlib, json, sys, time
+import argparse, calendar, hashlib, json, time
 from pathlib import Path
 
 ap = argparse.ArgumentParser()
