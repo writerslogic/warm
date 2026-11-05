@@ -527,3 +527,8 @@ path = "src/bin/research/ridge-memory.rs"
 name = "kmer-eval"
 path = "src/bin/research/kmer-eval.rs"
 required-features = ["experimental"]
+
+[[bin]]
+name = "fpe-timestamps-eval"
+path = "src/bin/research/fpe-timestamps-eval.rs"
+required-features = ["experimental", "cli"]

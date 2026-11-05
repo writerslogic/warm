@@ -35,7 +35,7 @@ pub mod vector_records;
 #[cfg(feature = "experimental")]
 pub use experimental::{
     algebraic_codebook, block_codes, bloom_memory, bundle_subset, connection_graph,
-    counting_bloom_memory, kmer, operand_retriever, phase_graph,
+    counting_bloom_memory, fpe_time, kmer, operand_retriever, phase_graph,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub mod engine;
