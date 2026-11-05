@@ -201,8 +201,10 @@ fn read_f32(path: &Path) -> Result<Vec<f32>> {
     let bytes = std::fs::read(path).with_context(|| path.display().to_string())?;
     ensure!(bytes.len() % 4 == 0, "{} is not f32", path.display());
     Ok(bytes
-        .chunks_exact(4)
-        .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .map(|c| f32::from_le_bytes(*c))
         .collect())
 }
 
@@ -556,9 +558,8 @@ fn run_grid(qs: &[Q], cfgs: &[Cfg], dim: usize, seed: u64) -> Result<Vec<Vec<Per
                     ..
                 } => {
                     let key = (variant, sigma.to_bits(), exact, cfg.oracle);
-                    if !cache.contains_key(&key) {
-                        let g = g_vector(q, key, &encoders[&sigma.to_bits()])?;
-                        cache.insert(key, g);
+                    if let std::collections::hash_map::Entry::Vacant(slot) = cache.entry(key) {
+                        slot.insert(g_vector(q, key, &encoders[&sigma.to_bits()])?);
                     }
                     Some(cache[&key].as_slice())
                 }
@@ -660,9 +661,11 @@ fn recall_any(ranked: &[String], evidence: &BTreeSet<&str>, k: usize) -> bool {
         .any(|id| evidence.contains(id.as_str()))
 }
 
+type LexicalConfig = (String, Option<f64>, Option<(f64, f64)>);
+
 /// The memory API's BM25 recall over the temporal slice, with the FPE policy plugged in.
 fn lexical(all: &[RawQuestion], qs: &[Q], seed: u64, dim: usize) -> Result<Value> {
-    let mut configs: Vec<(String, Option<f64>, Option<(f64, f64)>)> = vec![
+    let mut configs: Vec<LexicalConfig> = vec![
         ("document_search".into(), None, None),
         ("memory_default".into(), None, None),
         ("memory_as_of".into(), None, None),
