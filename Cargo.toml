@@ -372,6 +372,11 @@ name = "qag-diagnose"
 path = "src/bin/research/qag-diagnose.rs"
 required-features = ["experimental", "cli"]
 
+[[bin]]
+name = "qgraph-repair-bench"
+path = "src/bin/research/qgraph-repair-bench.rs"
+required-features = ["cli"]
+
 [[example]]
 name = "sparse_composition"
 required-features = ["experimental"]
