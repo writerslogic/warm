@@ -1,0 +1,1330 @@
+{
+  "bootstrap_test_points_cva1": [
+    {
+      "T1": {
+        "hi95": 12.500000000000004,
+        "instances": 40,
+        "lo95": -0.8333333333333334,
+        "points": 5.0
+      },
+      "T2": {
+        "hi95": 15.0,
+        "instances": 40,
+        "lo95": 0.0,
+        "points": 6.666666666666668
+      },
+      "pooled": {
+        "hi95": 11.25,
+        "instances": 80,
+        "lo95": 1.25,
+        "points": 5.833333333333333
+      },
+      "x": "d",
+      "y": "a"
+    },
+    {
+      "T1": {
+        "hi95": 74.16666666666669,
+        "instances": 40,
+        "lo95": 64.1666666666667,
+        "points": 69.1666666666667
+      },
+      "T2": {
+        "hi95": 76.6666666666667,
+        "instances": 40,
+        "lo95": 69.1666666666667,
+        "points": 72.50000000000003
+      },
+      "pooled": {
+        "hi95": 74.1666666666666,
+        "instances": 80,
+        "lo95": 67.49999999999996,
+        "points": 70.83333333333327
+      },
+      "x": "c",
+      "y": "a"
+    },
+    {
+      "T1": {
+        "hi95": 36.66666666666668,
+        "instances": 40,
+        "lo95": 16.666666666666668,
+        "points": 26.66666666666667
+      },
+      "T2": {
+        "hi95": 19.166666666666664,
+        "instances": 40,
+        "lo95": 7.5,
+        "points": 13.33333333333333
+      },
+      "pooled": {
+        "hi95": 26.25,
+        "instances": 80,
+        "lo95": 14.166666666666666,
+        "points": 20.00000000000001
+      },
+      "x": "b",
+      "y": "a"
+    },
+    {
+      "T1": {
+        "hi95": -11.666666666666666,
+        "instances": 40,
+        "lo95": -31.66666666666667,
+        "points": -21.66666666666666
+      },
+      "T2": {
+        "hi95": 4.166666666666668,
+        "instances": 40,
+        "lo95": -16.666666666666664,
+        "points": -6.666666666666667
+      },
+      "pooled": {
+        "hi95": -6.666666666666663,
+        "instances": 80,
+        "lo95": -21.66666666666667,
+        "points": -14.166666666666671
+      },
+      "x": "d",
+      "y": "b"
+    }
+  ],
+  "config": {
+    "as_of": 1767225600000,
+    "candidate_limit": 100,
+    "limit_dev_per_type": 20,
+    "limit_test_per_type": 40,
+    "max_links": 256,
+    "rank_k": 50,
+    "show": 5
+  },
+  "d_real_vs_simulated_list_mismatches_test": 0,
+  "decision": {
+    "a": 0.0375,
+    "b": 0.2375,
+    "c": 0.7458333333333333,
+    "d": 0.09583333333333334,
+    "result": "NO-GO",
+    "rule": "INCONCLUSIVE if a>=0.90; GO if d-a>=15 points and c>=0.80; else NO-GO"
+  },
+  "dev": {
+    "a": {
+      "T1": {
+        "cva1": {
+          "n": 60,
+          "rate": 0.06666666666666667
+        },
+        "cva1_dim1": {
+          "n": 20,
+          "rate": 0.0
+        },
+        "cva1_dim2": {
+          "n": 20,
+          "rate": 0.0
+        },
+        "cva1_dim3": {
+          "n": 20,
+          "rate": 0.2
+        },
+        "cva_session1": {
+          "n": 60,
+          "rate": 0.13333333333333333
+        },
+        "new_in5": {
+          "n": 60,
+          "rate": 0.4666666666666667
+        },
+        "old_sibling1": {
+          "n": 60,
+          "rate": 0.7666666666666667
+        },
+        "stale1": {
+          "n": 60,
+          "rate": 0.6666666666666666
+        },
+        "stale5": {
+          "n": 60,
+          "rate": 0.85
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 60,
+          "rate": 0.016666666666666666
+        },
+        "cva1_dim1": {
+          "n": 20,
+          "rate": 0.0
+        },
+        "cva1_dim2": {
+          "n": 20,
+          "rate": 0.0
+        },
+        "cva1_dim3": {
+          "n": 20,
+          "rate": 0.05
+        },
+        "cva_session1": {
+          "n": 60,
+          "rate": 0.03333333333333333
+        },
+        "new_in5": {
+          "n": 60,
+          "rate": 0.26666666666666666
+        },
+        "old_sibling1": {
+          "n": 60,
+          "rate": 0.8333333333333334
+        },
+        "stale1": {
+          "n": 60,
+          "rate": 0.7333333333333333
+        },
+        "stale5": {
+          "n": 60,
+          "rate": 0.8333333333333334
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.041666666666666664
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.125
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.08333333333333333
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.36666666666666664
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.8
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.7
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.8416666666666667
+        }
+      }
+    },
+    "b": {
+      "T1": {
+        "cva1": {
+          "n": 60,
+          "rate": 0.25
+        },
+        "cva1_dim1": {
+          "n": 20,
+          "rate": 0.25
+        },
+        "cva1_dim2": {
+          "n": 20,
+          "rate": 0.3
+        },
+        "cva1_dim3": {
+          "n": 20,
+          "rate": 0.2
+        },
+        "cva_session1": {
+          "n": 60,
+          "rate": 0.5333333333333333
+        },
+        "new_in5": {
+          "n": 60,
+          "rate": 0.4666666666666667
+        },
+        "old_sibling1": {
+          "n": 60,
+          "rate": 0.08333333333333333
+        },
+        "stale1": {
+          "n": 60,
+          "rate": 0.06666666666666667
+        },
+        "stale5": {
+          "n": 60,
+          "rate": 0.85
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 60,
+          "rate": 0.15
+        },
+        "cva1_dim1": {
+          "n": 20,
+          "rate": 0.15
+        },
+        "cva1_dim2": {
+          "n": 20,
+          "rate": 0.2
+        },
+        "cva1_dim3": {
+          "n": 20,
+          "rate": 0.1
+        },
+        "cva_session1": {
+          "n": 60,
+          "rate": 0.4666666666666667
+        },
+        "new_in5": {
+          "n": 60,
+          "rate": 0.26666666666666666
+        },
+        "old_sibling1": {
+          "n": 60,
+          "rate": 0.1
+        },
+        "stale1": {
+          "n": 60,
+          "rate": 0.1
+        },
+        "stale5": {
+          "n": 60,
+          "rate": 0.8333333333333334
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.2
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.2
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.25
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.15
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.5
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.36666666666666664
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.09166666666666666
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.08333333333333333
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.8416666666666667
+        }
+      }
+    },
+    "c": {
+      "T1": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      }
+    },
+    "c_filter": {
+      "T1": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      }
+    },
+    "d": {
+      "T1": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim1": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim2": {
+          "n": 0,
+          "rate": null
+        },
+        "cva1_dim3": {
+          "n": 0,
+          "rate": null
+        },
+        "cva_session1": {
+          "n": 0,
+          "rate": null
+        },
+        "new_in5": {
+          "n": 0,
+          "rate": null
+        },
+        "old_sibling1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale1": {
+          "n": 0,
+          "rate": null
+        },
+        "stale5": {
+          "n": 0,
+          "rate": null
+        }
+      }
+    }
+  },
+  "elapsed_s": 1169.237712625,
+  "label": "retrieval-level proxy on public STALE data; not comparable to the paper's LLM-judged accuracy",
+  "protocol": "docs/research/supersession-probe.md",
+  "seed": 20261103,
+  "split": {
+    "dev_instances": 40,
+    "test_instances": 80
+  },
+  "tau_star": 0.75,
+  "tau_sweep_dev": [
+    {
+      "dev_pooled_cva1": 0.0,
+      "tau": 0.6000000238418579
+    },
+    {
+      "dev_pooled_cva1": 0.0,
+      "tau": 0.6499999761581421
+    },
+    {
+      "dev_pooled_cva1": 0.041666666666666664,
+      "tau": 0.699999988079071
+    },
+    {
+      "dev_pooled_cva1": 0.11666666666666667,
+      "tau": 0.75
+    },
+    {
+      "dev_pooled_cva1": 0.09166666666666666,
+      "tau": 0.800000011920929
+    },
+    {
+      "dev_pooled_cva1": 0.041666666666666664,
+      "tau": 0.8500000238418579
+    },
+    {
+      "dev_pooled_cva1": 0.041666666666666664,
+      "tau": 0.8999999761581421
+    },
+    {
+      "dev_pooled_cva1": 0.041666666666666664,
+      "tau": 0.949999988079071
+    },
+    {
+      "dev_pooled_cva1": 0.041666666666666664,
+      "tau": 1.0099999904632568
+    }
+  ],
+  "test": {
+    "a": {
+      "T1": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.041666666666666664
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.125
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.15
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.5583333333333333
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.7666666666666667
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.6916666666666667
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.825
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.03333333333333333
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.1
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.058333333333333334
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.3
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.775
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.725
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.825
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 240,
+          "rate": 0.0375
+        },
+        "cva1_dim1": {
+          "n": 80,
+          "rate": 0.0
+        },
+        "cva1_dim2": {
+          "n": 80,
+          "rate": 0.0
+        },
+        "cva1_dim3": {
+          "n": 80,
+          "rate": 0.1125
+        },
+        "cva_session1": {
+          "n": 240,
+          "rate": 0.10416666666666667
+        },
+        "new_in5": {
+          "n": 240,
+          "rate": 0.42916666666666664
+        },
+        "old_sibling1": {
+          "n": 240,
+          "rate": 0.7708333333333334
+        },
+        "stale1": {
+          "n": 240,
+          "rate": 0.7083333333333334
+        },
+        "stale5": {
+          "n": 240,
+          "rate": 0.825
+        }
+      }
+    },
+    "b": {
+      "T1": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.30833333333333335
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.325
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.4
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.2
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.625
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.5583333333333333
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.03333333333333333
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.025
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.825
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.16666666666666666
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.1
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.25
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.15
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.5
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.3
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.05
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.05
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.825
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 240,
+          "rate": 0.2375
+        },
+        "cva1_dim1": {
+          "n": 80,
+          "rate": 0.2125
+        },
+        "cva1_dim2": {
+          "n": 80,
+          "rate": 0.325
+        },
+        "cva1_dim3": {
+          "n": 80,
+          "rate": 0.175
+        },
+        "cva_session1": {
+          "n": 240,
+          "rate": 0.5625
+        },
+        "new_in5": {
+          "n": 240,
+          "rate": 0.42916666666666664
+        },
+        "old_sibling1": {
+          "n": 240,
+          "rate": 0.041666666666666664
+        },
+        "stale1": {
+          "n": 240,
+          "rate": 0.0375
+        },
+        "stale5": {
+          "n": 240,
+          "rate": 0.825
+        }
+      }
+    },
+    "c": {
+      "T1": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.7333333333333333
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.95
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.975
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.275
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.8416666666666667
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.9166666666666666
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.075
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.0
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.0
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.7583333333333333
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 1.0
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 1.0
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.275
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.7833333333333333
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.875
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.05
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.0
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.0
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 240,
+          "rate": 0.7458333333333333
+        },
+        "cva1_dim1": {
+          "n": 80,
+          "rate": 0.975
+        },
+        "cva1_dim2": {
+          "n": 80,
+          "rate": 0.9875
+        },
+        "cva1_dim3": {
+          "n": 80,
+          "rate": 0.275
+        },
+        "cva_session1": {
+          "n": 240,
+          "rate": 0.8125
+        },
+        "new_in5": {
+          "n": 240,
+          "rate": 0.8958333333333334
+        },
+        "old_sibling1": {
+          "n": 240,
+          "rate": 0.0625
+        },
+        "stale1": {
+          "n": 240,
+          "rate": 0.0
+        },
+        "stale5": {
+          "n": 240,
+          "rate": 0.0
+        }
+      }
+    },
+    "c_filter": {
+      "T1": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.11666666666666667
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.075
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.15
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.125
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.30833333333333335
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.5916666666666667
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.5333333333333333
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.0
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.0
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.03333333333333333
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.0
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.1
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.10833333333333334
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.36666666666666664
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.5833333333333334
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.0
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.0
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 240,
+          "rate": 0.075
+        },
+        "cva1_dim1": {
+          "n": 80,
+          "rate": 0.0375
+        },
+        "cva1_dim2": {
+          "n": 80,
+          "rate": 0.075
+        },
+        "cva1_dim3": {
+          "n": 80,
+          "rate": 0.1125
+        },
+        "cva_session1": {
+          "n": 240,
+          "rate": 0.20833333333333334
+        },
+        "new_in5": {
+          "n": 240,
+          "rate": 0.4791666666666667
+        },
+        "old_sibling1": {
+          "n": 240,
+          "rate": 0.5583333333333333
+        },
+        "stale1": {
+          "n": 240,
+          "rate": 0.0
+        },
+        "stale5": {
+          "n": 240,
+          "rate": 0.0
+        }
+      }
+    },
+    "d": {
+      "T1": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.09166666666666666
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.075
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.075
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.125
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.36666666666666664
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.575
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.30833333333333335
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.26666666666666666
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.31666666666666665
+        }
+      },
+      "T2": {
+        "cva1": {
+          "n": 120,
+          "rate": 0.1
+        },
+        "cva1_dim1": {
+          "n": 40,
+          "rate": 0.075
+        },
+        "cva1_dim2": {
+          "n": 40,
+          "rate": 0.075
+        },
+        "cva1_dim3": {
+          "n": 40,
+          "rate": 0.15
+        },
+        "cva_session1": {
+          "n": 120,
+          "rate": 0.275
+        },
+        "new_in5": {
+          "n": 120,
+          "rate": 0.44166666666666665
+        },
+        "old_sibling1": {
+          "n": 120,
+          "rate": 0.44166666666666665
+        },
+        "stale1": {
+          "n": 120,
+          "rate": 0.4166666666666667
+        },
+        "stale5": {
+          "n": 120,
+          "rate": 0.475
+        }
+      },
+      "pooled": {
+        "cva1": {
+          "n": 240,
+          "rate": 0.09583333333333334
+        },
+        "cva1_dim1": {
+          "n": 80,
+          "rate": 0.075
+        },
+        "cva1_dim2": {
+          "n": 80,
+          "rate": 0.075
+        },
+        "cva1_dim3": {
+          "n": 80,
+          "rate": 0.1375
+        },
+        "cva_session1": {
+          "n": 240,
+          "rate": 0.32083333333333336
+        },
+        "new_in5": {
+          "n": 240,
+          "rate": 0.5083333333333333
+        },
+        "old_sibling1": {
+          "n": 240,
+          "rate": 0.375
+        },
+        "stale1": {
+          "n": 240,
+          "rate": 0.3416666666666667
+        },
+        "stale5": {
+          "n": 240,
+          "rate": 0.3958333333333333
+        }
+      }
+    }
+  },
+  "versions": {
+    "crate": "0.6.5",
+    "embedder_model": "bge-small-en-v1.5",
+    "embedder_pack_sha256": "b54d9369e9fababc9878e3b804eebc4aa7e785d04ed79ac1038efc2d291e3ad1",
+    "embedder_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "probe_jsonl_sha256": "4647ad00ef3c069ccc4a8c3a1e50615a6741534501265d44163782f8dbaa7c99",
+    "stale_data_sha256": "5f3ec375179e20e2e94469e018189188f34e2e7e5f21cbecbd99fcfa648c1876",
+    "stale_hf_revision": "617c51dc200b5ab09970834144c7e51c77959af0"
+  }
+}
