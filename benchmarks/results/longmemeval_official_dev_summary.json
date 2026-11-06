@@ -14,6 +14,7 @@
    "reader": "gpt-4o-2024-08-06",
    "topk_context": 10,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_gpt4o_k10.json",
@@ -198,6 +199,7 @@
    "reader": "gpt-4o-2024-08-06",
    "topk_context": 15,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_gpt4o_k15.json",
@@ -271,6 +273,7 @@
    "reader": "gpt-4o-2024-08-06",
    "topk_context": 50,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_gpt4o_k50_base.json",
@@ -418,6 +421,7 @@
    "reader": "gpt-4o-mini-2024-07-18",
    "topk_context": 10,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_mini_k10.json",
@@ -491,6 +495,7 @@
    "reader": "gpt-4o-mini-2024-07-18",
    "topk_context": 10,
    "subquery_weight": 1.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_mini_k10_sub1.json",
@@ -564,6 +569,7 @@
    "reader": "gpt-4o-mini-2024-07-18",
    "topk_context": 15,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_mini_k15.json",
@@ -637,6 +643,7 @@
    "reader": "gpt-4o-mini-2024-07-18",
    "topk_context": 20,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_mini_k20.json",
@@ -710,6 +717,7 @@
    "reader": "gpt-4o-mini-2024-07-18",
    "topk_context": 50,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_mini_k50.json",
@@ -783,6 +791,7 @@
    "reader": "gpt-4o-mini-2024-07-18",
    "topk_context": 5,
    "subquery_weight": 0.0,
+   "layout": "official",
    "runs": [
     {
      "file": "longmemeval_official_dev_mini_k5.json",
@@ -854,10 +863,10 @@
   }
  },
  "spend_settled_from_call_cache": {
-  "calls": 2799,
-  "total_usd": 23.47671095,
+  "calls": 3011,
+  "total_usd": 24.4357997,
   "by_model_usd": {
-   "gpt-4o-2024-08-06": 22.519549999999978,
+   "gpt-4o-2024-08-06": 23.47863874999998,
    "gpt-4o-mini-2024-07-18": 0.9571609500000001
   }
  },

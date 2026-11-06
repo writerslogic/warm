@@ -8,6 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Write document checkpoints with block-packed postings (version 2) (#390)
 - Write document checkpoints with block-packed postings (version 2)
 - Land the supersession probes, k-mer, FPE timestamp and AVX2 popcount work (#388)
 - Land per-store language analyzers, cheaper history views and a simulation harness (#387)
@@ -54,6 +55,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the rescore-budget A/B and the pending consolidation measurements
 - Record the removed per-hit document rebuild in the QPS lever
 - Name nDCG in its glossary entry so site search finds it
 - Record the measured checkpoint serving costs in the QPS lever
@@ -220,6 +222,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Rescore only the rerank best live candidates on a base with deletes
 - Read checkpoint hit fields only for final results instead of rebuilding a document per hit
 - Decode two-byte checkpoint postings without leaving the loaded word
 - Make history view reuse opt-in
@@ -252,6 +255,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Pin AML runtime artifacts and document model dependency reachability
 
 ### Bench
+- Add base-with-deletes search and staged consolidation cgroup fixtures
+- Keep compact-layout LongMemEval runs in their own summary arm
+- Measure compact LongMemEval context and user-turn fill under a fixed reader-token budget
 - Pin the text comparison and speed up mapped-checkpoint posting decode (#389)
 - Rerun SIFT-1M against hnswlib at a pinned commit
 - Rerun the text comparison at pinned commits against the current comparator pins

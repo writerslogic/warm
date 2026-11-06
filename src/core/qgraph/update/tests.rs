@@ -1547,45 +1547,75 @@ fn consolidation_live_set_peak() {
                     println!("MEMORY {phase} {line}");
                 }
             }
+            if let Some(dir) = cgroup_dir() {
+                for name in ["memory.current", "memory.peak"] {
+                    if let Ok(value) = std::fs::read_to_string(dir.join(name)) {
+                        println!("MEMORY {phase} cgroup_{name}: {}", value.trim());
+                    }
+                }
+            }
         })
         .unwrap();
-    let n: usize = crate::compatibility::var("WARM_CONSOLIDATION_ROWS")
-        .map_or(Ok(100_000), |s| s.parse())
-        .unwrap();
-    assert!((1024..=3_000_000).contains(&n));
+    // WARM_CONSOLIDATION_STAGE=build creates the base, deletions and delta in
+    // WARM_CONSOLIDATION_INDEX and stops; =measure opens that directory and consolidates it.
+    let var = |name: &str| crate::compatibility::var(name).ok();
+    let n: usize = var("WARM_CONSOLIDATION_ROWS").map_or(100_000, |s| s.parse().unwrap());
+    let degree: usize = var("WARM_CONSOLIDATION_DEGREE").map_or(32, |s| s.parse().unwrap());
+    let stage = var("WARM_CONSOLIDATION_STAGE");
+    assert!((1024..=10_000_000).contains(&n));
     let dim = 100;
-    let rows = data(n + n / 5, dim);
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("index");
-    let index = UpdatableVGraph::create(&path, &rows[..n * dim], dim, &params()).unwrap();
-    let entry = index
-        .state
-        .read()
-        .base
-        .graph
-        .as_ref()
-        .unwrap()
-        .entry_vertex();
-    let doomed: Vec<u32> = (0..n as u32)
-        .filter(|&id| id % 7 == 0 && id != entry)
-        .collect();
-    let capacity = index.batch_capacity();
-    for ids in doomed.chunks(capacity) {
-        index.delete_batch(ids).unwrap();
-        index.commit().unwrap();
-    }
-    let fresh: Vec<u32> = (n as u32..(n + n / 5) as u32).collect();
-    for ids in fresh.chunks(capacity) {
-        let begin = ids[0] as usize * dim;
+    let params = BuildParams { degree, ..params() };
+    let temp = tempfile::tempdir().unwrap();
+    let path =
+        var("WARM_CONSOLIDATION_INDEX").map_or_else(|| temp.path().join("index"), Into::into);
+    let index = if stage.as_deref() == Some("measure") {
+        UpdatableVGraph::open(&path).unwrap()
+    } else {
+        let rows = data(n + n / 5, dim);
+        let index = UpdatableVGraph::create(&path, &rows[..n * dim], dim, &params).unwrap();
+        let entry = index
+            .state
+            .read()
+            .base
+            .graph
+            .as_ref()
+            .unwrap()
+            .entry_vertex();
+        let doomed: Vec<u32> = (0..n as u32)
+            .filter(|&id| id % 7 == 0 && id != entry)
+            .collect();
+        let capacity = index.batch_capacity();
+        for ids in doomed.chunks(capacity) {
+            index.delete_batch(ids).unwrap();
+            index.commit().unwrap();
+        }
+        let fresh: Vec<u32> = (n as u32..(n + n / 5) as u32).collect();
+        for ids in fresh.chunks(capacity) {
+            let begin = ids[0] as usize * dim;
+            index
+                .insert_batch(ids, &rows[begin..begin + ids.len() * dim])
+                .unwrap();
+            index.commit().unwrap();
+        }
+        drop(rows);
+        if stage.as_deref() == Some("build") {
+            return;
+        }
         index
-            .insert_batch(ids, &rows[begin..begin + ids.len() * dim])
-            .unwrap();
-        index.commit().unwrap();
-    }
-    drop(rows);
+    };
     if cfg!(target_os = "linux") {
         std::fs::write("/proc/self/clear_refs", b"5").unwrap();
     }
+    // A write to an open memory.peak restarts that descriptor's watermark.
+    let mut cgroup_peak = cgroup_dir().and_then(|dir| {
+        let mut file = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(dir.join("memory.peak"))
+            .ok()?;
+        file.write_all(b"reset").ok()?;
+        Some(file)
+    });
     let start = std::time::Instant::now();
     assert_eq!(
         index
@@ -1607,10 +1637,193 @@ fn consolidation_live_set_peak() {
             peak.split_whitespace().nth(1).unwrap()
         );
     }
+    if let Some(file) = cgroup_peak.as_mut() {
+        use std::io::Read;
+        file.seek(SeekFrom::Start(0)).unwrap();
+        let mut value = String::new();
+        file.read_to_string(&mut value).unwrap();
+        println!("consolidation_cgroup_peak_bytes={}", value.trim());
+    }
     let state = index.state.read();
     let bytes = std::fs::read(state.manifest.vertex_path(&path)).unwrap();
     println!(
         "consolidation_ns={elapsed} vertex_crc={}",
         crc32fast::hash(&bytes)
     );
+}
+
+#[test]
+#[ignore = "development base-search-with-deletes timing and recall measurement"]
+fn base_deleted_search_live_set() {
+    use rayon::prelude::*;
+    use std::hash::{Hash, Hasher};
+    use std::io::Read;
+
+    let var = |name: &str| crate::compatibility::var(name).ok();
+    let n: usize = var("WARM_BASE_ROWS").map_or(100_000, |s| s.parse().unwrap());
+    let nq: usize = var("WARM_BASE_QUERIES").map_or(256, |s| s.parse().unwrap());
+    assert!((1_000..=3_000_000).contains(&n));
+    let dim = 100;
+    let read_rows = |path: String, count: usize| {
+        let mut file = std::fs::File::open(path).unwrap();
+        let mut header = [0u8; 8];
+        file.read_exact(&mut header).unwrap();
+        assert!(u32::from_le_bytes(header[..4].try_into().unwrap()) as usize >= count);
+        assert_eq!(
+            u32::from_le_bytes(header[4..].try_into().unwrap()),
+            dim as u32
+        );
+        let mut bytes = vec![0; count * dim * 4];
+        file.read_exact(&mut bytes).unwrap();
+        bytes
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|b| f32::from_le_bytes(*b))
+            .collect::<Vec<_>>()
+    };
+    let (rows, queries) = if let Some(path) = var("WARM_DELTA_DATA") {
+        (
+            read_rows(path, n),
+            read_rows(var("WARM_DELTA_QUERIES").unwrap(), nq),
+        )
+    } else {
+        let mut rng = super::super::kernels::SplitMix(42);
+        let mut all: Vec<f32> = (0..(n + nq) * dim)
+            .map(|_| (rng.next_u64() >> 40) as f32 / (1u32 << 24) as f32)
+            .collect();
+        let queries = all.split_off(n * dim);
+        (all, queries)
+    };
+    // Whole 10,000-row blocks, three of every ten, are deleted: a 30% share in ranges.
+    let doomed = |id: usize| (id / 10_000) % 10 < 3;
+    let temp = tempfile::tempdir().unwrap();
+    let path = var("WARM_BASE_INDEX").map_or_else(|| temp.path().join("index"), Into::into);
+    let index = if path.exists() {
+        let index = UpdatableVGraph::open(&path).unwrap();
+        assert_eq!(index.len(), (0..n).filter(|&id| !doomed(id)).count());
+        index
+    } else {
+        let index = UpdatableVGraph::create(&path, &rows, dim, &params()).unwrap();
+        let ids: Vec<u32> = (0..n as u32).filter(|&id| doomed(id as usize)).collect();
+        for chunk in ids.chunks(index.batch_capacity()) {
+            index.delete_batch(chunk).unwrap();
+            index.commit().unwrap();
+        }
+        index
+    };
+    if var("WARM_BASE_STAGE").as_deref() == Some("build") {
+        return;
+    }
+    let truth: Vec<Vec<u32>> = queries
+        .par_chunks(dim)
+        .map(|q| {
+            let mut scored: Vec<(f32, u32)> = (0..n)
+                .filter(|&id| !doomed(id))
+                .map(|id| {
+                    (
+                        distance(q, &rows[id * dim..(id + 1) * dim], Metric::Euclidean),
+                        id as u32,
+                    )
+                })
+                .collect();
+            scored.select_nth_unstable_by(9, |a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+            scored.truncate(10);
+            scored.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+            scored.into_iter().map(|x| x.1).collect()
+        })
+        .collect();
+    drop(rows);
+    for threads in [1, 8] {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
+        for ef in [256usize, 512] {
+            for rerank in [ef, ef / 2, ef / 4] {
+                let p = VSearchParams {
+                    ef,
+                    rerank,
+                    ..Default::default()
+                };
+                let search = || {
+                    pool.install(|| {
+                        queries
+                            .par_chunks(dim)
+                            .map(|q| index.search(q, 10, p).unwrap())
+                            .collect::<Vec<_>>()
+                    })
+                };
+                std::hint::black_box(search());
+                for round in 0..5 {
+                    let start = std::time::Instant::now();
+                    let results = search();
+                    let elapsed = start.elapsed().as_nanos();
+                    let mut fingerprint = std::collections::hash_map::DefaultHasher::new();
+                    let mut hits = 0;
+                    for (found, truth) in results.iter().zip(&truth) {
+                        found.hash(&mut fingerprint);
+                        hits += found.iter().filter(|id| truth.contains(id)).count();
+                    }
+                    println!(
+                        "base_search rows={n} queries={nq} threads={threads} ef={ef} rerank={rerank} round={round} elapsed_ns={elapsed} recall10={:.5} fingerprint={}",
+                        hits as f64 / (10 * nq) as f64,
+                        fingerprint.finish()
+                    );
+                }
+            }
+        }
+    }
+}
+
+fn cgroup_dir() -> Option<PathBuf> {
+    let text = std::fs::read_to_string("/proc/self/cgroup").ok()?;
+    let relative = text.lines().find_map(|line| line.strip_prefix("0::"))?;
+    Some(Path::new("/sys/fs/cgroup").join(relative.trim_start_matches('/')))
+}
+
+#[test]
+fn deleted_base_search_rescores_only_the_rerank_budget() {
+    let dim = 8;
+    let n = 2048;
+    let rows = data(n, dim);
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("index");
+    let index = UpdatableVGraph::create(&path, &rows, dim, &params()).unwrap();
+    let doomed: Vec<u32> = (0..n as u32).filter(|id| id % 3 == 0).collect();
+    index.delete_batch(&doomed).unwrap();
+    index.commit().unwrap();
+    let live: BTreeMap<u32, Vec<f32>> = (0..n as u32)
+        .filter(|id| id % 3 != 0)
+        .map(|id| {
+            (
+                id,
+                rows[id as usize * dim..(id as usize + 1) * dim].to_vec(),
+            )
+        })
+        .collect();
+    let search = |query: &[f32], rerank: usize| {
+        let p = VSearchParams {
+            ef: 64,
+            rerank,
+            ..Default::default()
+        };
+        index.search(query, 10, p).unwrap()
+    };
+    for q in 0..16 {
+        let query = &rows[q * 97 * dim..(q * 97 + 1) * dim];
+        let all = search(query, 1 << 20);
+        // A budget at or above the live candidate count rescores them all, as before.
+        assert_eq!(search(query, 128), all);
+        let narrow = search(query, 10);
+        assert_eq!(narrow.len(), 10);
+        assert!(narrow.iter().all(|id| id % 3 != 0));
+        let d = |id: &u32| distance(query, &live[id], Metric::Euclidean);
+        assert!(narrow.windows(2).all(|w| d(&w[0]) <= d(&w[1])));
+        let overlap = narrow.iter().filter(|id| all.contains(id)).count();
+        assert!(
+            overlap >= 5,
+            "query {q}: {overlap} of 10 survive a budget of 10"
+        );
+    }
 }
