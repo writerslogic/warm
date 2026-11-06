@@ -103,8 +103,9 @@ Tenant
 ## Measurement
 
 nDCG@10
-:   Normalised discounted cumulative gain over the top 10 results: a rank-aware relevance score
-    from 0 to 1.
+:   Normalised discounted cumulative gain (nDCG) over the top 10 results: a rank-aware relevance
+    score from 0 to 1. nDCG discounts each relevant result by its rank and divides by the score
+    of the ideal ordering.
 
 Recall@k
 :   The share of the true top-k neighbours (or relevant documents) that appear in the first `k`

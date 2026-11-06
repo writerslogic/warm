@@ -38,7 +38,14 @@ VOL = modal.Volume.from_name("warm-bench-run", create_if_missing=True)
 app = modal.App("warm-bench-run")
 image = (
     modal.Image.debian_slim(python_version="3.13")
-    .apt_install("curl", "build-essential", "pkg-config", "time", "git", "openjdk-21-jdk-headless")
+    .apt_install("curl", "build-essential", "pkg-config", "time", "git")
+    # Lucene 10 needs Java 21 (class version 65); Debian bookworm packages only 17.
+    .run_commands(
+        "curl -fsSL -o /tmp/jdk.tgz 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.9%2B10/OpenJDK21U-jdk_x64_linux_hotspot_21.0.9_10.tar.gz'"
+        " && echo '810d3773df7e0d6c4394e4e244b264c8b30e0b05a0acf542d065fd78a6b65c2f  /tmp/jdk.tgz' | sha256sum -c -"
+        " && mkdir -p /opt/jdk21 && tar xzf /tmp/jdk.tgz -C /opt/jdk21 --strip-components=1 && rm /tmp/jdk.tgz"
+        " && ln -s /opt/jdk21/bin/java /usr/local/bin/java && ln -s /opt/jdk21/bin/javac /usr/local/bin/javac"
+    )
     .pip_install("uv==0.12.10")
     .run_commands("curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.96.0")
 )

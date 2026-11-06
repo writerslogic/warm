@@ -106,13 +106,13 @@ fn ranked_hits_are_not_read_after_a_replacement_scrubs_their_text() -> Result<()
             vec![prepared],
         ))
     };
-    let captured = capture()?;
+    let mut captured = capture()?;
     let ranked = documents::rank_search(&captured, 0);
-    let read = documents::read_ranked(&captured, 0, ranked)?.expect("nothing scrubbed");
+    let read = documents::read_ranked(&mut captured, 0, ranked)?.expect("nothing scrubbed");
     assert_eq!(read[0].text.as_deref(), Some("current revision1"));
     let ranked = documents::rank_search(&captured, 0);
     core.memorize_document(input("a", "2", "current revision2", "g")?)?;
-    assert!(documents::read_ranked(&captured, 0, ranked)?.is_none());
+    assert!(documents::read_ranked(&mut captured, 0, ranked)?.is_none());
     let found = core.search_documents("current", &SearchOptions::default())?;
     assert_eq!(found[0].version, "2");
     assert_eq!(found[0].text.as_deref(), Some("current revision2"));

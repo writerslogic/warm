@@ -51,21 +51,58 @@ pub(crate) struct CapturedSearch {
     queries: Vec<CapturedQuery>,
 }
 
+/// Where a captured chunk lives.
+#[derive(Clone)]
+enum ChunkOwner {
+    /// A live store's document, holding the chunk at the capture's `index`.
+    Live(Arc<StoredDocument>),
+    /// A checkpoint chunk, decoded at capture straight into the unscored result it reports,
+    /// so nothing reads the mapped checkpoint once the capture's locks are released (a purge
+    /// compaction zeroes the file of the generation it retires). Only lexical-only queries
+    /// without an embedding capture these ([`overlay_serves`]), and always with their lexical
+    /// scores, so nothing reads such a chunk's terms or embedding.
+    Image(Box<DocumentResult>),
+}
+
 #[derive(Clone)]
 struct CapturedChunk {
-    document: Arc<StoredDocument>,
+    owner: ChunkOwner,
     index: usize,
     word_count: u32,
     semantic_cache: Option<f64>,
 }
 
 impl CapturedChunk {
-    fn chunk(&self) -> &StoredChunk {
-        &self.document.chunks[self.index]
+    fn live(document: Arc<StoredDocument>, index: usize, word_count: u32) -> Self {
+        Self {
+            owner: ChunkOwner::Live(document),
+            index,
+            word_count,
+            semantic_cache: None,
+        }
+    }
+
+    /// The stored chunk, `None` for a checkpoint chunk.
+    fn stored(&self) -> Option<&StoredChunk> {
+        match &self.owner {
+            ChunkOwner::Live(document) => Some(&document.chunks[self.index]),
+            ChunkOwner::Image(..) => None,
+        }
     }
 
     fn order(&self) -> (&str, usize) {
-        (&self.document.id, self.index)
+        match &self.owner {
+            ChunkOwner::Live(document) => (&document.id, self.index),
+            ChunkOwner::Image(hit) => (&hit.document_id, self.index),
+        }
+    }
+
+    #[cfg(test)]
+    fn document(&self) -> &Arc<StoredDocument> {
+        match &self.owner {
+            ChunkOwner::Live(document) => document,
+            ChunkOwner::Image(..) => panic!("a checkpoint slot has no stored document"),
+        }
     }
 }
 
@@ -327,12 +364,11 @@ fn capture_postings(store: &DocumentStore, prepared: PreparedSearch) -> Captured
             {
                 positions.insert(slot, chunks.len() as u32);
                 words += chunk.word_count;
-                chunks.push(CapturedChunk {
-                    document: Arc::clone(document),
+                chunks.push(CapturedChunk::live(
+                    Arc::clone(document),
                     index,
-                    word_count: super::index::slot_words(chunk.word_count),
-                    semantic_cache: None,
-                });
+                    super::index::slot_words(chunk.word_count),
+                ));
             }
         }
         let posting_work: usize = prepared
@@ -369,12 +405,11 @@ fn capture_postings(store: &DocumentStore, prepared: PreparedSearch) -> Captured
                         None if prepared.lexical_only => {
                             let (document, index) = store.owned_chunk(slot);
                             let position = chunks.len() as u32;
-                            chunks.push(CapturedChunk {
+                            chunks.push(CapturedChunk::live(
                                 document,
                                 index,
-                                word_count: store.slot_word_count(slot),
-                                semantic_cache: None,
-                            });
+                                store.slot_word_count(slot),
+                            ));
                             positions.insert(slot, position);
                             position
                         }
@@ -421,12 +456,11 @@ fn capture_ranked_lexical(store: &DocumentStore, prepared: PreparedSearch) -> Ca
         for (score, slot) in ranked {
             let slot = slot as usize;
             let (document, index) = store.owned_chunk(slot);
-            chunks.push(CapturedChunk {
+            chunks.push(CapturedChunk::live(
                 document,
                 index,
-                word_count: store.slot_word_count(slot),
-                semantic_cache: None,
-            });
+                store.slot_word_count(slot),
+            ));
             scores.push(score);
         }
     }
@@ -532,10 +566,9 @@ fn capture_image(image: &ServingImage, prepared: PreparedSearch) -> anyhow::Resu
         scores.reserve_exact(ranked.len());
         for (score, slot) in ranked {
             let slot = slot as usize;
-            let (document, index) = image.chunk(slot)?;
             chunks.push(CapturedChunk {
-                document,
-                index,
+                owner: ChunkOwner::Image(Box::new(image.hit(slot)?)),
+                index: image.slot_order(slot).1,
                 word_count: image.slot_word_count(slot),
                 semantic_cache: None,
             });
@@ -591,15 +624,18 @@ fn capture_overlaid(
         scores.reserve_exact(ranked.len());
         for (score, slot) in ranked {
             let slot = slot as usize;
-            let (document, index) = match slot.checked_sub(split) {
-                None => base.image.chunk(slot)?,
-                Some(own) => store.owned_chunk(own),
-            };
-            chunks.push(CapturedChunk {
-                document,
-                index,
-                word_count: source.slot_word_count(slot),
-                semantic_cache: None,
+            let word_count = source.slot_word_count(slot);
+            chunks.push(match slot.checked_sub(split) {
+                None => CapturedChunk {
+                    owner: ChunkOwner::Image(Box::new(base.image.hit(slot)?)),
+                    index: base.image.slot_order(slot).1,
+                    word_count,
+                    semantic_cache: None,
+                },
+                Some(own) => {
+                    let (document, index) = store.owned_chunk(own);
+                    CapturedChunk::live(document, index, word_count)
+                }
             });
             scores.push(score);
         }
@@ -1183,18 +1219,16 @@ fn capture_planned_query(
         .into_iter()
         .map(|(_, slot)| {
             let (document, index) = store.owned_chunk(slot);
-            CapturedChunk {
-                document,
-                index,
-                word_count: store.slot_word_count(slot),
-                semantic_cache: None,
-            }
+            CapturedChunk::live(document, index, store.slot_word_count(slot))
         })
         .collect();
     if dense.is_some() && !store.dense_changes.is_empty() {
         let mut captured_slots: FastSet<_> = chunks
             .iter()
-            .map(|chunk| store.slots[&chunk.document.id][chunk.index])
+            .map(|chunk| {
+                let (id, index) = chunk.order();
+                store.slots[id][index]
+            })
             .collect();
         for id in store.dense_changes.keys() {
             let Some(document) = store
@@ -1207,12 +1241,11 @@ fn capture_planned_query(
             for (index, (&slot, chunk)) in store.slots[id].iter().zip(&document.chunks).enumerate()
             {
                 if chunk.embedding.is_some() && captured_slots.insert(slot) {
-                    chunks.push(CapturedChunk {
-                        document: Arc::clone(document),
+                    chunks.push(CapturedChunk::live(
+                        Arc::clone(document),
                         index,
-                        word_count: store.slot_word_count(slot),
-                        semantic_cache: None,
-                    });
+                        store.slot_word_count(slot),
+                    ));
                 }
             }
         }
@@ -1258,15 +1291,75 @@ impl CapturedSearch {
 
 /// A ranked result whose chunk text is not read yet (see [`read_ranked`]).
 pub(crate) struct RankedHit {
+    /// The scored result; a checkpoint hit's other fields stay in the capture until read.
     result: DocumentResult,
-    document: Arc<StoredDocument>,
-    chunk: usize,
+    source: HitSource,
+}
+
+enum HitSource {
+    /// A live chunk, its text read from its document.
+    Live(Arc<StoredDocument>, usize),
+    /// The capture's chunk at this position, a checkpoint chunk decoded at capture.
+    Image(usize),
 }
 
 impl RankedHit {
-    fn read(mut self, segment: Option<&super::text::TextSegment>) -> Result<DocumentResult> {
-        self.result.text = super::index::try_text_of(&self.document.chunks[self.chunk], segment)?;
-        Ok(self.result)
+    /// Whether the hit's text was scrubbed since the capture; a checkpoint hit's was read at
+    /// capture.
+    fn scrubbed(&self, segment: Option<&super::text::TextSegment>) -> bool {
+        match &self.source {
+            HitSource::Live(document, chunk) => {
+                super::index::text_scrubbed(&document.chunks[*chunk], segment)
+            }
+            HitSource::Image(_) => false,
+        }
+    }
+
+    /// The result, a checkpoint hit's fields from `image(position)`.
+    fn read(
+        self,
+        segment: Option<&super::text::TextSegment>,
+        image: impl FnOnce(usize) -> DocumentResult,
+    ) -> Result<DocumentResult> {
+        let mut result = self.result;
+        match self.source {
+            HitSource::Live(document, chunk) => {
+                result.text = super::index::try_text_of(&document.chunks[chunk], segment)?;
+            }
+            HitSource::Image(position) => {
+                result = DocumentResult {
+                    score: result.score,
+                    lexical_score: result.lexical_score,
+                    semantic_score: result.semantic_score,
+                    ..image(position)
+                };
+            }
+        }
+        Ok(result)
+    }
+}
+
+/// A result with no fields read yet.
+fn unread_result() -> DocumentResult {
+    DocumentResult {
+        id: String::new(),
+        document_id: String::new(),
+        source_uri: None,
+        version: String::new(),
+        metadata: Value::Null,
+        text: None,
+        start_byte: 0,
+        end_byte: 0,
+        score: 0.0,
+        lexical_score: 0.0,
+        semantic_score: None,
+    }
+}
+
+fn image_hit(chunks: &mut [CapturedChunk], position: usize) -> &mut DocumentResult {
+    match &mut chunks[position].owner {
+        ChunkOwner::Image(hit) => hit,
+        ChunkOwner::Live(_) => unreachable!("an image hit names a checkpoint chunk"),
     }
 }
 
@@ -1276,10 +1369,18 @@ pub(crate) fn execute_search(
     captured: &CapturedSearch,
     query: usize,
 ) -> Result<Vec<DocumentResult>> {
-    let segment = captured.queries[query].text.as_deref();
+    let captured_query = &captured.queries[query];
+    let segment = captured_query.text.as_deref();
     rank_search(captured, query)
         .into_iter()
-        .map(|hit| hit.read(segment))
+        .map(|hit| {
+            hit.read(segment, |position| {
+                match &captured_query.chunks[position].owner {
+                    ChunkOwner::Image(hit) => DocumentResult::clone(hit),
+                    ChunkOwner::Live(_) => unreachable!("an image hit names a checkpoint chunk"),
+                }
+            })
+        })
         .collect()
 }
 
@@ -1290,20 +1391,24 @@ pub(crate) fn rank_search(captured: &CapturedSearch, query: usize) -> Vec<Ranked
 
 /// The hits with their text, or `None` when the text of one was scrubbed since the capture
 /// (its document replaced or deleted). The caller holds the mutation gate's read side, which
-/// excludes the writes that scrub, so a read never overlaps one.
+/// excludes the writes that scrub, so a read never overlaps one. Checkpoint hits move out of
+/// the capture, which is not ranked again.
 pub(crate) fn read_ranked(
-    captured: &CapturedSearch,
+    captured: &mut CapturedSearch,
     query: usize,
     hits: Vec<RankedHit>,
 ) -> Result<Option<Vec<DocumentResult>>> {
-    let segment = captured.queries[query].text.as_deref();
+    let CapturedQuery { text, chunks, .. } = &mut captured.queries[query];
+    let segment = text.as_deref();
     hits.into_iter()
         .map(|hit| {
-            let scrubbed = super::index::text_scrubbed(&hit.document.chunks[hit.chunk], segment);
-            if scrubbed {
+            if hit.scrubbed(segment) {
                 Ok(None)
             } else {
-                hit.read(segment).map(Some)
+                hit.read(segment, |position| {
+                    std::mem::replace(image_hit(chunks, position), unread_result())
+                })
+                .map(Some)
             }
         })
         .collect()
@@ -1341,12 +1446,11 @@ fn execute_query(captured: &CapturedQuery) -> Vec<RankedHit> {
                     let mut chunks = Vec::with_capacity(captured.count);
                     for document in documents {
                         for (index, chunk) in document.chunks.iter().enumerate() {
-                            chunks.push(CapturedChunk {
-                                document: Arc::clone(document),
+                            chunks.push(CapturedChunk::live(
+                                Arc::clone(document),
                                 index,
-                                word_count: super::index::slot_words(chunk.word_count),
-                                semantic_cache: None,
-                            });
+                                super::index::slot_words(chunk.word_count),
+                            ));
                         }
                     }
                     return execute_chunks(captured, &chunks);
@@ -1376,10 +1480,12 @@ fn execute_query(captured: &CapturedQuery) -> Vec<RankedHit> {
             } else {
                 positions.insert(key, chunks.len());
                 chunks.push(CapturedChunk {
-                    document: Arc::clone(&hit.document),
-                    index: hit.chunk,
-                    word_count: super::index::slot_words(hit.document.chunks[hit.chunk].word_count),
                     semantic_cache: Some(hit.score),
+                    ..CapturedChunk::live(
+                        Arc::clone(&hit.document),
+                        hit.chunk,
+                        super::index::slot_words(hit.document.chunks[hit.chunk].word_count),
+                    )
                 });
             }
         }
@@ -1397,7 +1503,7 @@ fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<Ran
         captured_chunk.semantic_cache.or_else(|| {
             prepared.embedding.as_ref().and_then(|q| {
                 captured_chunk
-                    .chunk()
+                    .stored()?
                     .embedding
                     .as_ref()
                     .map(|values| values.cosine(q))
@@ -1486,28 +1592,45 @@ fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<Ran
     ranked
         .into_iter()
         .map(|(i, score)| {
-            let document = &chunks[i].document;
-            let chunk = chunks[i].chunk();
-            RankedHit {
-                result: DocumentResult {
-                    id: chunk.id.clone(),
-                    document_id: document.id.clone(),
-                    source_uri: document.source_uri.clone(),
-                    version: document.version.clone(),
-                    metadata: document.metadata.clone(),
-                    text: None,
-                    start_byte: chunk.start_byte,
-                    end_byte: chunk.end_byte,
-                    score,
-                    lexical_score: scores[i].0,
-                    semantic_score: scores[i].1,
+            let (lexical_score, semantic_score) = scores[i];
+            match &chunks[i].owner {
+                ChunkOwner::Live(document) => {
+                    let chunk = &document.chunks[chunks[i].index];
+                    RankedHit {
+                        result: DocumentResult {
+                            id: chunk.id.clone(),
+                            document_id: document.id.clone(),
+                            source_uri: document.source_uri.clone(),
+                            version: document.version.clone(),
+                            metadata: document.metadata.clone(),
+                            text: None,
+                            start_byte: chunk.start_byte,
+                            end_byte: chunk.end_byte,
+                            score,
+                            lexical_score,
+                            semantic_score,
+                        },
+                        source: HitSource::Live(Arc::clone(document), chunks[i].index),
+                    }
+                }
+                // Only the capture's own chunks are checkpoint chunks (the dense path, which
+                // extends them, never captures any), so `i` is a position in it.
+                ChunkOwner::Image(_) => RankedHit {
+                    result: DocumentResult {
+                        score,
+                        lexical_score,
+                        semantic_score,
+                        ..unread_result()
+                    },
+                    source: HitSource::Image(i),
                 },
-                document: Arc::clone(document),
-                chunk: chunks[i].index,
             }
         })
         .collect()
 }
+
+/// Captures without lexical scores hold only live chunks (see [`ChunkOwner::Image`]).
+const LIVE_ONLY: &str = "a capture scored here holds only live chunks";
 
 /// Lexical (BM25) and semantic scores of captured `chunks` whose lexical scores the capture
 /// did not compute.
@@ -1531,8 +1654,8 @@ fn score_chunks(
                     chunks
                         .iter()
                         .filter(|chunk| {
-                            chunk.chunk().stemmed == (form == 1)
-                                && chunk.chunk().terms.contains_key(word)
+                            chunk.stored().expect(LIVE_ONLY).stemmed == (form == 1)
+                                && chunk.stored().expect(LIVE_ONLY).terms.contains_key(word)
                         })
                         .count()
                 } as f64;
@@ -1555,7 +1678,7 @@ fn score_chunks(
                 norms.push(norm);
                 0.0
             } else {
-                let chunk = captured_chunk.chunk();
+                let chunk = captured_chunk.stored().expect(LIVE_ONLY);
                 idf[usize::from(chunk.stemmed)]
                     .iter()
                     .map(|(word, idf)| {
@@ -2027,9 +2150,9 @@ mod tests {
             vec![prepare_search("rare7 ghost", &options, Some(3)).unwrap()],
         );
         assert_eq!(captured.queries[0].chunks.len(), 1);
-        assert_eq!(captured.queries[0].chunks[0].document.id, "d007");
+        assert_eq!(captured.queries[0].chunks[0].document().id, "d007");
         assert!(Arc::ptr_eq(
-            &captured.queries[0].chunks[0].document,
+            captured.queries[0].chunks[0].document(),
             &store.documents["d007"]
         ));
         let expected = serde_json::to_value(
@@ -2147,15 +2270,16 @@ mod tests {
         let captured_document = captured.queries[0]
             .chunks
             .iter()
-            .find(|chunk| chunk.document.id == "d000")
+            .find(|chunk| chunk.document().id == "d000")
             .unwrap();
         assert!(Arc::ptr_eq(
-            &captured_document.document,
+            captured_document.document(),
             &store.documents["d000"]
         ));
         assert_eq!(
             captured_document
-                .chunk()
+                .stored()
+                .unwrap()
                 .embedding
                 .as_ref()
                 .unwrap()
@@ -2208,8 +2332,8 @@ mod tests {
             assert!(query.postings.iter().all(BTreeMap::is_empty));
             for chunk in &query.chunks {
                 assert!(Arc::ptr_eq(
-                    &chunk.document,
-                    &store.documents[&chunk.document.id]
+                    chunk.document(),
+                    &store.documents[&chunk.document().id]
                 ));
             }
             assert_eq!(
@@ -2720,7 +2844,7 @@ mod tests {
             }
             assert!(store.slot_count <= 1024);
             assert!(Arc::ptr_eq(
-                &captured.queries[0].chunks[0].document,
+                captured.queries[0].chunks[0].document(),
                 &store.documents[&format!("d{:03}", count - 1)]
             ));
             assert_eq!(
