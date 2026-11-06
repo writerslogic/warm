@@ -322,3 +322,97 @@ impl WarmCore {
         self.image.opened.store(true, Ordering::Release);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::documents::SearchOptions;
+    use crate::core::WarmConfig;
+
+    fn checkpoint_files(dir: &Path) -> Vec<std::path::PathBuf> {
+        let mut found = Vec::new();
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                found.extend(checkpoint_files(&path));
+            } else if path.file_name().is_some_and(|name| name == FILE) {
+                found.push(path);
+            }
+        }
+        found
+    }
+
+    /// A store whose checkpoint is version 1 (flat postings) opens from it, answers exactly
+    /// as it did from version 2, and its next compaction writes version 2.
+    #[test]
+    fn version_1_checkpoint_serves_unchanged_and_compacts_to_version_2() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().display().to_string();
+        let mut config = WarmConfig::default();
+        config.document_checkpoint.min_journal_bytes = 0;
+        let options = documents::IngestOptions {
+            encode: documents::EncodeMode::Lexical,
+            ..Default::default()
+        };
+        let words = ["alpha", "beta", "gamma", "delta", "evidence"];
+        let queries = ["evidence", "alpha beta", "gamma evidence delta"];
+        let answers = |core: &WarmCore| -> Result<Vec<String>> {
+            queries
+                .iter()
+                .map(|q| {
+                    let hits = core.search_documents(q, &SearchOptions::default())?;
+                    Ok(serde_json::to_string(&hits)?)
+                })
+                .collect()
+        };
+        let expected = {
+            let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+            let documents = (0..300)
+                .map(|i| {
+                    let text: Vec<&str> = (0..1 + i % 7).map(|j| words[(i * 3 + j) % 5]).collect();
+                    serde_json::from_value(serde_json::json!({
+                        "id": format!("d{i:03}"), "text": text.join(" ")
+                    }))
+                    .unwrap()
+                })
+                .collect();
+            core.memorize_documents_with(documents, &options)?;
+            core.compact()?;
+            drop(core);
+            let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+            assert!(core.serves_from_checkpoint());
+            answers(&core)?
+        };
+        let [file] = checkpoint_files(directory.path()).try_into().unwrap();
+        let bytes = std::fs::read(&file)?;
+        assert_eq!(&bytes[..8], b"HMSCKP\x00\x02");
+        let generation = file
+            .parent()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let dimensions = documents::checkpoint_binding(&bytes).1 as usize;
+        let store = ServingImage::new(Backing::Owned(bytes))?.hydrate(None)?;
+        let flat = documents::encode_checkpoint_v1(
+            &store,
+            WarmCore::generation_crc(generation),
+            dimensions,
+        )?
+        .expect("lexical-only store");
+        std::fs::write(&file, flat)?;
+
+        let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+        assert!(core.serves_from_checkpoint());
+        assert_eq!(answers(&core)?, expected);
+        core.compact()?;
+        drop(core);
+        let [file] = checkpoint_files(directory.path()).try_into().unwrap();
+        assert_eq!(&std::fs::read(&file)?[..8], b"HMSCKP\x00\x02");
+        let core = WarmCore::new(256, Some(path), Some(config))?;
+        assert!(core.serves_from_checkpoint());
+        assert_eq!(answers(&core)?, expected);
+        Ok(())
+    }
+}
