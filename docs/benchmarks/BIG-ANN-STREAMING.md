@@ -152,7 +152,28 @@ and the replay's own `numpy.memmap` of the source, which the official adapter do
 R32 L64 peaks at 4.55 GiB VmRSS (2.0 GiB anonymous, 2.5 GiB mapped) at step 73 with 5.2M live
 rows; R64 L64 at 6.04 GiB (2.0 anonymous, 4.1 mapped) at step 68 with 4.8M live rows.
 
-## Final runbook (msturing-30M-clustered): loss
+## Final runbook (msturing-30M-clustered): pinned run (af8d4017, Modal 8 vCPU, 16 GiB, 2026-11-06)
+
+The submission image (`neurips23/streaming/warm`, PR harsha-simhadri/big-ann-benchmarks#357, harness
+5d6225a, `ARG WARM_COMMIT=af8d4017`) run as `run.py --nodocker --neurips23track streaming
+--algorithm warm --dataset msturing-30M-clustered --runbook_path neurips23/runbooks/final_runbook.yaml`
+on a Modal function with `cpu=(8,8) memory=(16384,16384)` (AMD EPYC Zen 4, Genoa, AVX-512; gVisor). `warm(R32_L64, {'ef': 256, 'rerank': 256})`: mean recall@10 over the search
+checkpoints **0.8768**; `run.py` 6175 s (1.72 h) for the 1,280 steps, exit 0,
+no timeout; peak RSS 7.51 GiB summed over processes, cgroup peak
+5.28 GiB. Results: `benchmarks/results/bigann_streaming_final_runbook_v1.json`
+The same image under an 8 GiB cap (`memory=(8192,8192)`, AMD EPYC Zen 2 without AVX-512) gave the identical
+recall 0.8768 in 10959 s (3.04 h), exit 0, no OOM, peak RSS
+7.57 GiB summed and cgroup peak 5.28 GiB, so the index fits the
+official 8 GiB docker limit; the 1.8x run time mixes the slower CPU with the cap.
+
+The upstream `ongoing_leaderboard` CSV (fetched 2026-11-06) lists scann 0.9924, zilliz 0.9219, pinecone 0.9123,
+pyanns 0.8702, hwtl 0.7690, DiskANN 0.7218, cufe 0.6484; it differs from the older CSV below, so which ground truth and
+metric the live board uses must be confirmed with the organisers before placing WARM. Older board CSV by best recall (fork copy at that harness commit): puck 0.9855 (16 GB docker mem_limit), hwtl_sdu_anns_stream 0.9675 (not open-sourced), pyanns 0.9597, diskann 0.8833, cufe 0.8189. By recall alone
+WARM would be 5th of 6, just under the DiskANN baseline. The board also requires the runbook to
+finish within 1 hour on Azure D8lds_v5; this run took 1.72 h on different hardware, so that
+condition is not shown to hold and the maintainers' run decides.
+
+## Final runbook (msturing-30M-clustered): earlier loss
 
 One run at the same setting (R32 L64 alpha 1.0, ef 512, 082766e, Modal cpu 8.0, 8 GiB) did not
 finish: the runner stopped `run.py` at its 3,600 s limit after 541 of 1,280 steps (4.3M live
