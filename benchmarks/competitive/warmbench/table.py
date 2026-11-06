@@ -56,12 +56,13 @@ HEADLINE = {
 # Candidate levers per metric. These are hypotheses for the coordinator, not measurements, except
 # where a results file is named.
 LEVERS = {
-    "text:build_seconds": "unprofiled hypothesis: per-document text encoding in documents::prepare (src/core/encoding.rs) dominates ingest; profile it, then a lexical-only ingest path or a cheaper encoder is the lever",
-    "text:build_peak_rss_mib": "unprofiled hypothesis: the arena and index are built in memory before commit; streaming commits per batch",
+    "text:build_seconds": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
+    "text:build_peak_rss_mib": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
     "text:cold_start_s": "the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever",
     "text:serving_rss_mib": "the whole store is resident after open; memory-mapped postings and file-backed text (ledger 2A/2B) are the open levers",
     "text:p99_latency": "tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate",
-    "text:p50_latency": "none identified; the median is within noise of the leader",
+    "text:qps": "measured (M4, same process, identical results, 2026-11-05): ranking from the mapped checkpoint is 1.5x to 1.9x slower than from the live store on all four corpora. On FiQA the flat varint postings cost most of it: 56% of postings carry a frequency above 1 and missed the one-byte fast path; the two-byte window decoder recovers 1.09x, and the rest needs a block-packed checkpoint posting encoding (a checkpoint format change). On the small corpora, rebuilding a StoredDocument per hit was about 45% of a query; checkpoint hits now decode straight into their results (paired M4, identical results: NFCorpus 1.17x, SciFact 1.11x, memory and FiQA unchanged); the record's JSON metadata parse, 13% of that profile, is still paid per hit. Block-max MaxScore was slower than the exhaustive pass at k=100, and a larger hot-list budget doubles serving RSS",
+    "text:p50_latency": "same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding",
     "text:disk_mib": "compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack",
     "text:recall@100": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
     "text:replace_ms_per_op": "batching commits (memorize_batch) or a group commit; the per-op figure is one durable commit",
@@ -449,8 +450,9 @@ def gaps_markdown(gaps):
 
 def readme_block(summary):
     lines = [START, "", "_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). " +
-             "W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead._", "",
-             "| Dataset | Metric | WARM | Best other | Advantage | |", "|---|---|---|---|---|---|"]
+             "W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead, - = no verdict " +
+             "(unpinned source revision, no interval, or not comparable). Rows are compared only within one machine._", "",
+             "| Dataset | Machine | Metric | WARM | Best other | Advantage | |", "|---|---|---|---|---|---|---|"]
     for sec, counts, tally in summary:
         if sec["data"]["suite"] == "smoke":
             continue
@@ -467,7 +469,7 @@ def readme_block(summary):
             adv = advantage(key, mine, other) if other else None
             mark = {"WIN": "W", "TIE": "T", "LOSS": "L", "n/m": "-", "n/v": "-"}["n/v" if key in analyze.NO_VERDICT else verdict(adv) if other else "n/m"]
             best_text = "n/m" if other is None else f"{display(name, sec['data'])} {fmt(other['value'], dec)}"
-            lines.append(f"| {short} | {label}{' (' + unit + ')' if unit else ''} | {fmt(mine['value'], dec)} | {best_text} | " +
+            lines.append(f"| {short} | `{sec['hw']['class']}` | {label}{' (' + unit + ')' if unit else ''} | {fmt(mine['value'], dec)} | {best_text} | " +
                          f"{'n/m' if adv is None else fx(adv['factor'])} | {mark} |")
     lines += ["", END]
     return "\n".join(lines) + "\n"
