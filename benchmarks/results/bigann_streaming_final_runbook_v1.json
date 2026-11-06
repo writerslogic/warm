@@ -14,7 +14,7 @@
    "tag": "mem16g-r2",
    "host": {
     "platform": "Modal function cpu=(8,8) memory=(16384,16384), gVisor",
-    "cpu": "Intel x86_64 with AVX-512 (model not exposed), 8 logical CPUs",
+    "cpu": "AMD EPYC Zen 4 (Genoa; family 25 model 17), 8 logical CPUs, AVX-512",
     "memory_limit_gib": 16
    },
    "started_utc": "2026-11-06T18:43:07.406959+00:00",
@@ -37,7 +37,7 @@
    "tag": "mem8g",
    "host": {
     "platform": "Modal function cpu=(8,8) memory=(8192,8192), gVisor",
-    "cpu": "AMD EPYC Zen 3 (family 25 model 1), 8 logical CPUs, no AVX-512",
+    "cpu": "AMD EPYC Zen 2 (Rome; family 23 model 49), 8 logical CPUs, no AVX-512",
     "memory_limit_gib": 8
    },
    "started_utc": "2026-11-06T17:52:44.092268+00:00",
@@ -56,7 +56,7 @@
     "cgroup_usage": 5406.9
    },
    "within_one_hour": false,
-   "note": "identical recall to the 16 GiB run (the runbook is deterministic); 1.8x the run time, on a slower CPU (no AVX-512) as well as under the 8 GiB cap, so the two effects are not separated"
+   "note": "identical recall to the 16 GiB run (the runbook is deterministic); 1.8x the run time on an older CPU (Zen 2, no AVX-512) as well as under the 8 GiB cap, so the two effects are not separated"
   }
  ],
  "pending": [],
@@ -87,6 +87,20 @@
    }
   ],
   "placement_by_recall_if_comparable": "5 of 6",
-  "caveat": "recall rank only; this run took 1.72 h on Modal hardware that is not the reference VM, so the 1-hour condition is not shown to hold"
+  "caveat": "recall rank only; this run took 1.72 h on Modal hardware that is not the reference VM, so the 1-hour condition is not shown to hold",
+  "live_ongoing_leaderboard_csv": {
+   "source": "neurips23/ongoing_leaderboard/streaming/res_final_runbook_AzureD8lds_v5.csv on upstream main, fetched 2026-11-06",
+   "best_recall_by_algorithm": {
+    "scann": 0.99237,
+    "zilliz": 0.92189,
+    "pinecone": 0.91228,
+    "pyanns": 0.87019,
+    "hwtl_sdu_anns_stream": 0.76895,
+    "diskann": 0.72178,
+    "cufe": 0.64841,
+    "puck": 0.09498
+   },
+   "note": "this file differs from the older neurips23/streaming CSV (pyanns 0.9597, diskann 0.8833); whether WARM's 0.8768 is computed with the same ground truth/metric as this file must be confirmed with the organisers before any placement is stated"
+  }
  }
 }
