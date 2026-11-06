@@ -376,6 +376,7 @@ fn validate_vector(row: &[f32], dim: usize, metric: Metric) -> Result<(), Update
     }
     Ok(())
 }
+#[cfg(test)]
 fn distance(q: &[f32], row: &[f32], metric: Metric) -> f32 {
     match metric {
         Metric::Angular => -dot(q, row),
@@ -393,6 +394,9 @@ fn neighbour_id_bytes(configured: u8, rows: usize) -> u8 {
         other => other,
     }
 }
+
+/// Base rows fetched ahead of the one being rescored on the tombstone path.
+const RESCORE_AHEAD: usize = 4;
 
 fn widened_width(requested: usize, allocated: usize, live: usize) -> usize {
     ((requested.min(allocated) as u128 * allocated as u128).div_ceil(live as u128))
@@ -822,13 +826,17 @@ impl UpdatableVGraph {
         let metric = s.manifest.build.metric;
         let mut candidates =
             Vec::with_capacity(out.len() + s.delta.live.len().min(params.ef.max(k)));
-        for &slot in out.iter() {
+        let rows = &s.base.rows;
+        for &slot in out.iter().take(RESCORE_AHEAD) {
+            rows.prefetch(slot as usize);
+        }
+        for (at, &slot) in out.iter().enumerate() {
+            if let Some(&ahead) = out.get(at + RESCORE_AHEAD) {
+                rows.prefetch(ahead as usize);
+            }
             let slot = slot as usize;
             if !s.dead(slot) {
-                candidates.push((
-                    distance(query, s.base.rows.row(slot)?, metric),
-                    s.base.rows.ids[slot],
-                ));
+                candidates.push((rows.distance(slot, query, metric)?, rows.ids[slot]));
             }
         }
         if !s.delta.live.is_empty() {

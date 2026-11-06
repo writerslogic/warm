@@ -10,6 +10,7 @@ use super::{
     MAX_PAYLOAD,
 };
 use crate::core::durable_file::{atomic_write, sync_mapped_file};
+use crate::core::qgraph::kernels::{dot, prefetch_bytes};
 
 const ORDER: u64 = 0x0102_0304_0506_0708;
 use crate::core::format::{
@@ -295,6 +296,13 @@ impl BaseRows {
         })
     }
     pub(super) fn row(&self, slot: usize) -> Result<&[f32], UpdateError> {
+        let row = self.checked_row(slot)?;
+        validate_vector(row, self.dim, self.metric)?;
+        Ok(row)
+    }
+    /// The row's coordinates after the bounds, checksum and alignment checks, before the
+    /// coordinate checks of [`validate_vector`].
+    fn checked_row(&self, slot: usize) -> Result<&[f32], UpdateError> {
         let len = self.dim * 4;
         let at = self.row_at + slot * (len + 4);
         let (Some(bytes), Some(crc)) = (
@@ -307,10 +315,39 @@ impl BaseRows {
             return Err(bad(format!("row {slot} checksum")));
         }
         // Row starts align to f32 within the mapping, and check() rejects big-endian targets.
-        let row: &[f32] = bytemuck::try_cast_slice(bytes)
-            .map_err(|_| bad(format!("row {slot} is not f32 aligned")))?;
-        validate_vector(row, self.dim, self.metric)?;
-        Ok(row)
+        bytemuck::try_cast_slice(bytes).map_err(|_| bad(format!("row {slot} is not f32 aligned")))
+    }
+    /// Hints that [`Self::distance`] will read `slot` soon. A slot outside the file is ignored.
+    pub(super) fn prefetch(&self, slot: usize) {
+        let len = self.dim * 4 + 4;
+        if let Some(bytes) = slot
+            .checked_mul(len)
+            .and_then(|v| v.checked_add(self.row_at))
+            .and_then(|at| self.map.get(at..at.checked_add(len)?))
+        {
+            prefetch_bytes(bytemuck::cast_slice(bytes));
+        }
+    }
+    /// `distance(query, self.row(slot)?, metric)`, bit for bit, with one pass over the row
+    /// instead of three: the squared norm that validation computes also serves the Euclidean
+    /// term, and a finite norm already proves every coordinate finite.
+    pub(super) fn distance(
+        &self,
+        slot: usize,
+        query: &[f32],
+        metric: Metric,
+    ) -> Result<f32, UpdateError> {
+        let row = self.checked_row(slot)?;
+        let norm = dot(row, row);
+        // Squares are non-negative, so a NaN or infinite coordinate makes the norm non-finite,
+        // and a positive norm needs a nonzero coordinate. Anything else takes the full check.
+        if !norm.is_finite() || norm == 0.0 {
+            validate_vector(row, self.dim, self.metric)?;
+        }
+        Ok(match metric {
+            Metric::Angular => -dot(query, row),
+            Metric::Euclidean => norm * 0.5 - dot(query, row),
+        })
     }
 }
 
@@ -599,6 +636,46 @@ mod tests {
                 (Err(UpdateError::CorruptBase(_)), None) => {}
                 (got, _) => panic!("slot {slot}: {got:?}"),
             }
+        }
+    }
+
+    #[test]
+    fn fused_distance_matches_checked_row_distance_bit_for_bit() {
+        let dir = tempfile::tempdir().unwrap();
+        let q = [0.25f32, -1.5, 3.0, 0.125];
+        let flat: Vec<f32> = [
+            [1.0, 2.0, 3.0, 4.0],
+            [0.0, 0.0, 0.0, 1e-30],
+            [1e-30, -1e-30, 0.0, 0.0],
+            [1e18, -1e18, 1e18, 0.5],
+            [0.1, 0.2, 0.3, 0.7],
+        ]
+        .concat();
+        let ids = [0u32, 1, 2, 3, 4];
+        for metric in [Metric::Angular, Metric::Euclidean] {
+            let build = BuildParams {
+                metric,
+                ..BuildParams::default()
+            };
+            let manifest = Manifest {
+                identity: [7; 16],
+                dim: 4,
+                sequence: 1,
+                build,
+                encoding: Encoding::default(),
+            };
+            let path = dir.path().join(format!("rows-{}.bin", metric.code()));
+            BaseRows::write(&path, &manifest, &ids, &flat).unwrap();
+            let rows = BaseRows::open(&path, &manifest).unwrap();
+            for slot in 0..ids.len() {
+                rows.prefetch(slot);
+                let want = super::super::distance(&q, rows.row(slot).unwrap(), metric);
+                let got = rows.distance(slot, &q, metric).unwrap();
+                assert_eq!(got.to_bits(), want.to_bits(), "{metric:?} slot {slot}");
+            }
+            rows.prefetch(ids.len() + 1);
+            rows.prefetch(usize::MAX);
+            assert!(rows.distance(ids.len(), &q, metric).is_err());
         }
     }
 }
