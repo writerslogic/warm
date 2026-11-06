@@ -99,14 +99,14 @@ Results: `benchmarks/results/bigann_filter_yfcc10m_pinned_v1.json`.
 
 | brute_max:target | recall@10 | QPS |
 |---|---|---|
-| 5000:2500 | 0.9044 | 33,623 |
+| **5000:2500** | **0.9044** | **33,623** |
 | 10000:3000 | 0.9208 | 32,724 |
 | 5000:4000 | 0.9397 | 31,276 |
 | 10000:2500 | 0.9067 | 30,875 |
 | 5000:3000 | 0.9194 | 23,410 |
 | 20000:2500 | 0.9106 | 19,639 |
 
-Against the board (last evaluated 2024-03-01) 33,623 QPS at 0.9045 would sit 4th of 13 and 2nd
+Against the board (last evaluated 2024-03-01) 33,623 QPS at 0.9044 would sit 4th of 13 and 2nd
 among open-source entries, behind parlayivf (37,902) and ahead of puck (19,193); at half the
 Modal throughput it would be 5th. The CPU model, AVX-512 and the core/thread mapping differ from
 the evaluation VM, so only the maintainers' run places the entry.
