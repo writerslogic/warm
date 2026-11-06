@@ -32,11 +32,34 @@
     "cgroup_usage": 5405.7
    },
    "within_one_hour": false
+  },
+  {
+   "tag": "mem8g",
+   "host": {
+    "platform": "Modal function cpu=(8,8) memory=(8192,8192), gVisor",
+    "cpu": "AMD EPYC Zen 3 (family 25 model 1), 8 logical CPUs, no AVX-512",
+    "memory_limit_gib": 8
+   },
+   "started_utc": "2026-11-06T17:52:44.092268+00:00",
+   "finished_utc": "2026-11-06T21:05:43.366284+00:00",
+   "recall_at_10_mean": 0.87684,
+   "index_footprint_mb_reported": 6616.0,
+   "run_py_seconds": 10959.2,
+   "run_py_exit": 0,
+   "timed_out": false,
+   "oom_suspected": false,
+   "function_wall_seconds": 11579.3,
+   "data_load_seconds": 327.7,
+   "export_seconds": 260.6,
+   "peak_memory_mib": {
+    "rss_sum_all_processes": 7749.2,
+    "cgroup_usage": 5406.9
+   },
+   "within_one_hour": false,
+   "note": "identical recall to the 16 GiB run (the runbook is deterministic); 1.8x the run time, on a slower CPU (no AVX-512) as well as under the 8 GiB cap, so the two effects are not separated"
   }
  ],
- "pending": [
-  "mem8g: the same run under an 8 GiB cap, in progress at the time of this file"
- ],
+ "pending": [],
  "board_snapshot_2026_11_06": {
   "source": "neurips23/streaming/res_final_runbook_AzureD8lds_v5.csv (fork copy at harness commit 5d6225a0)",
   "best_recall_by_algorithm": [
