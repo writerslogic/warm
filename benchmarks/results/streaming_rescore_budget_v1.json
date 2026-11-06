@@ -1,0 +1,548 @@
+{
+ "classification": "paired development measurement on macOS; not a leaderboard standing and not the Linux 8-core reference host",
+ "parent_commit": "18273ef4",
+ "measured_candidate_commit": "79ef35b5",
+ "parent_arm": "origin/main 18273ef4 plus only the base_deleted_search_live_set fixture",
+ "machine": "Apple M4 (MacBook Pro, Mac16,3), 10 logical CPUs, 32 GiB, macOS (Darwin 27.0.0), shared with other sessions",
+ "rustc": "1.96.0 (ac68faa20 2026-05-25)",
+ "build_profile": "release, default features, repository profile",
+ "cpu_affinity": "none (macOS); thread pools of 1 and 8",
+ "timing_lock": "none on this host; sequential runs only, other sessions were active",
+ "metric": "Euclidean",
+ "dimensions": 100,
+ "degree": 32,
+ "build_ef": 64,
+ "alpha": 1.0,
+ "rows": 1000000,
+ "queries": 1000,
+ "deleted_share": 0.3,
+ "deletion_pattern": "rows whose (id / 10000) % 10 < 3: whole 10,000-row blocks, 30% of the base, tombstoned and never consolidated",
+ "fixtures": {
+  "base": "first 1M rows of msturing-30M-clustered (byte range 0-400000007 of 30M-clustered64.fbin), sha256 73e2995afd48c300f025b7fb489bae34986820a74be30b85e4489581a4263fdc",
+  "queries": "first 1000 rows of official testQuery10K.fbin, sha256 4785fe3c90c94c5f004f9cd84dca4cc398fc83280517a8d3acb6bc693d6ccd29",
+  "ground_truth": "exact top-10 over the 700,000 live rows, computed in the fixture with the index's own f32 distance"
+ },
+ "pairs": 3,
+ "order": [
+  [
+   "parent",
+   "candidate"
+  ],
+  [
+   "candidate",
+   "parent"
+  ],
+  [
+   "parent",
+   "candidate"
+  ]
+ ],
+ "warmup_batches_per_configuration": 1,
+ "timed_batches_per_arm_configuration": 5,
+ "summary_method": "Per pair, each arm's median of five timed batches of 1000 queries; the verdict uses the median of the three candidate/parent ratios. Both arms open the same index directory built once by the parent binary.",
+ "rerank_note": "The track adapter passes rerank = ef. The parent ignores rerank on a base with deletes, so its recall and fingerprints are identical across the rerank values; the candidate honours it.",
+ "kill_bar": "recall@10 drop above 0.0025 at equal ef, or query-time improvement below 10%",
+ "development_command": "WARM_BASE_ROWS=1000000 WARM_BASE_QUERIES=1000 WARM_DELTA_DATA=<prefix.fbin> WARM_DELTA_QUERIES=<testQuery10K.fbin> WARM_BASE_INDEX=<dir> <test-executable> base_deleted_search_live_set --ignored --nocapture --test-threads=1",
+ "build_command": "cargo test --release --lib --no-run",
+ "limits": [
+  "macOS M4 under load average 3.4-14.8 (see loads); the Linux writerslogic-02 paired run under the timing lock was not possible (host offline)",
+  "1000 queries, one dataset prefix, one deletion pattern; per-pair ratios spread widely, so the medians are indicative",
+  "no full-runbook recall and no 30M run"
+ ],
+ "results": [
+  {
+   "threads": 1,
+   "ef": 256,
+   "rerank": 64,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 287869083,
+     "candidate_ns": 241410250,
+     "candidate_over_parent": 0.8386112446816666,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 286372750,
+     "candidate_ns": 237196750,
+     "candidate_over_parent": 0.8282797507793601,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 279486459,
+     "candidate_ns": 248693000,
+     "candidate_over_parent": 0.8898212846869981,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    }
+   ],
+   "median_candidate_over_parent": 0.8386112446816666,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 1,
+   "ef": 256,
+   "rerank": 128,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 277119167,
+     "candidate_ns": 252439292,
+     "candidate_over_parent": 0.9109412919099891,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 284510959,
+     "candidate_ns": 251280583,
+     "candidate_over_parent": 0.883201771500127,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 282419416,
+     "candidate_ns": 281073417,
+     "candidate_over_parent": 0.995234042265706,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    }
+   ],
+   "median_candidate_over_parent": 0.9109412919099891,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 1,
+   "ef": 256,
+   "rerank": 256,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 278714916.5,
+     "candidate_ns": 286463208.5,
+     "candidate_over_parent": 1.0278000621470147,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 280735625.0,
+     "candidate_ns": 278324458.0,
+     "candidate_over_parent": 0.9914112539154943,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 278344958.0,
+     "candidate_ns": 307557833.5,
+     "candidate_over_parent": 1.1049520555712742,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    }
+   ],
+   "median_candidate_over_parent": 1.0278000621470147,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 1,
+   "ef": 512,
+   "rerank": 128,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 593765542,
+     "candidate_ns": 481807250,
+     "candidate_over_parent": 0.8114436017575436,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 564145500,
+     "candidate_ns": 494463917,
+     "candidate_over_parent": 0.8764829587402541,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 583957458,
+     "candidate_ns": 495902209,
+     "candidate_over_parent": 0.8492094795713697,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    }
+   ],
+   "median_candidate_over_parent": 0.8492094795713697,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 1,
+   "ef": 512,
+   "rerank": 256,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 596956000,
+     "candidate_ns": 508985000,
+     "candidate_over_parent": 0.8526340299787589,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 561375875,
+     "candidate_ns": 519939916,
+     "candidate_over_parent": 0.9261885648363496,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 575599125,
+     "candidate_ns": 517843708,
+     "candidate_over_parent": 0.8996603460785316,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    }
+   ],
+   "median_candidate_over_parent": 0.8996603460785316,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 1,
+   "ef": 512,
+   "rerank": 512,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 592394500,
+     "candidate_ns": 567532500,
+     "candidate_over_parent": 0.9580313456657683,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 570831125,
+     "candidate_ns": 580613916,
+     "candidate_over_parent": 1.0171378023579216,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 564032667,
+     "candidate_ns": 567095708,
+     "candidate_over_parent": 1.005430609216824,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    }
+   ],
+   "median_candidate_over_parent": 1.005430609216824,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 8,
+   "ef": 256,
+   "rerank": 64,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 61021917,
+     "candidate_ns": 43386292,
+     "candidate_over_parent": 0.7109952314346336,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 51762667,
+     "candidate_ns": 46164625,
+     "candidate_over_parent": 0.8918517471288718,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 51377750,
+     "candidate_ns": 44945708,
+     "candidate_over_parent": 0.8748088034217146,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    }
+   ],
+   "median_candidate_over_parent": 0.8748088034217146,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 8,
+   "ef": 256,
+   "rerank": 128,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 61534250,
+     "candidate_ns": 45574833,
+     "candidate_over_parent": 0.7406417239179807,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 51505208,
+     "candidate_ns": 47519209,
+     "candidate_over_parent": 0.9226097873442235,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 56440333,
+     "candidate_ns": 47659333,
+     "candidate_over_parent": 0.844419769812485,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    }
+   ],
+   "median_candidate_over_parent": 0.844419769812485,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 8,
+   "ef": 256,
+   "rerank": 256,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 73154583,
+     "candidate_ns": 49470792,
+     "candidate_over_parent": 0.6762500717145773,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 49546458,
+     "candidate_ns": 52987875,
+     "candidate_over_parent": 1.0694583859052043,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 53535958,
+     "candidate_ns": 51263084,
+     "candidate_over_parent": 0.9575449084146398,
+     "parent_recall10": 0.859,
+     "candidate_recall10": 0.859,
+     "parent_fingerprint": "11900402040348182571",
+     "candidate_fingerprint": "11900402040348182571"
+    }
+   ],
+   "median_candidate_over_parent": 0.9575449084146398,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 8,
+   "ef": 512,
+   "rerank": 128,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 126468667,
+     "candidate_ns": 84733291,
+     "candidate_over_parent": 0.6699943393884273,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 106615416,
+     "candidate_ns": 90277917,
+     "candidate_over_parent": 0.8467623200007023,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 110488208,
+     "candidate_ns": 91286042,
+     "candidate_over_parent": 0.8262061956874167,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    }
+   ],
+   "median_candidate_over_parent": 0.8262061956874167,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 8,
+   "ef": 512,
+   "rerank": 256,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 129231292,
+     "candidate_ns": 93181417,
+     "candidate_over_parent": 0.7210437623729707,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 108230000,
+     "candidate_ns": 97001708,
+     "candidate_over_parent": 0.8962552711817425,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 113942667,
+     "candidate_ns": 96230167,
+     "candidate_over_parent": 0.844549013408647,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    }
+   ],
+   "median_candidate_over_parent": 0.844549013408647,
+   "median_recall_delta": 0.0
+  },
+  {
+   "threads": 8,
+   "ef": 512,
+   "rerank": 512,
+   "pairs": [
+    {
+     "pair": 1,
+     "parent_ns": 126378417,
+     "candidate_ns": 101148500,
+     "candidate_over_parent": 0.8003621377849669,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 2,
+     "parent_ns": 104467500,
+     "candidate_ns": 106586250,
+     "candidate_over_parent": 1.0202814272381362,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    },
+    {
+     "pair": 3,
+     "parent_ns": 107629042,
+     "candidate_ns": 105558958,
+     "candidate_over_parent": 0.9807664923747997,
+     "parent_recall10": 0.923,
+     "candidate_recall10": 0.923,
+     "parent_fingerprint": "2238186766981480351",
+     "candidate_fingerprint": "2238186766981480351"
+    }
+   ],
+   "median_candidate_over_parent": 0.9807664923747997,
+   "median_recall_delta": 0.0
+  }
+ ],
+ "loads": {
+  "p1-cand": [
+   "{ 6.42 5.72 6.48 }",
+   "{ 6.48 5.86 6.50 }"
+  ],
+  "p1-parent": [
+   "{ 14.80 8.13 7.46 }",
+   "{ 6.42 5.72 6.48 }"
+  ],
+  "p2-cand": [
+   "{ 6.28 5.83 6.49 }",
+   "{ 5.03 5.55 6.36 }"
+  ],
+  "p2-parent": [
+   "{ 3.37 5.07 6.15 }",
+   "{ 3.51 4.93 6.06 }"
+  ],
+  "p3-cand": [
+   "{ 5.62 5.33 6.17 }",
+   "{ 5.47 5.31 6.14 }"
+  ],
+  "p3-parent": [
+   "{ 3.51 4.93 6.06 }",
+   "{ 5.62 5.33 6.17 }"
+  ]
+ }
+}
