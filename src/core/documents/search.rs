@@ -13,7 +13,7 @@ use anyhow::{ensure, Result};
 use serde_json::Value;
 
 use super::dense::DenseIndex;
-use super::image::ServingImage;
+use super::image::{MetadataCache, ServingImage};
 use super::overlay::Overlaid;
 use super::{
     matches_document_metadata, normalize_embedding, query_words_with, terms_with, top_ranked,
@@ -564,10 +564,11 @@ fn capture_image(image: &ServingImage, prepared: PreparedSearch) -> anyhow::Resu
             LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(image, &prepared, true));
         chunks.reserve_exact(ranked.len());
         scores.reserve_exact(ranked.len());
+        let mut metadata = MetadataCache::default();
         for (score, slot) in ranked {
             let slot = slot as usize;
             chunks.push(CapturedChunk {
-                owner: ChunkOwner::Image(Box::new(image.hit(slot)?)),
+                owner: ChunkOwner::Image(Box::new(image.hit(slot, &mut metadata)?)),
                 index: image.slot_order(slot).1,
                 word_count: image.slot_word_count(slot),
                 semantic_cache: None,
@@ -622,12 +623,13 @@ fn capture_overlaid(
             LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(&source, &prepared, false));
         chunks.reserve_exact(ranked.len());
         scores.reserve_exact(ranked.len());
+        let mut metadata = MetadataCache::default();
         for (score, slot) in ranked {
             let slot = slot as usize;
             let word_count = source.slot_word_count(slot);
             chunks.push(match slot.checked_sub(split) {
                 None => CapturedChunk {
-                    owner: ChunkOwner::Image(Box::new(base.image.hit(slot)?)),
+                    owner: ChunkOwner::Image(Box::new(base.image.hit(slot, &mut metadata)?)),
                     index: base.image.slot_order(slot).1,
                     word_count,
                     semantic_cache: None,
