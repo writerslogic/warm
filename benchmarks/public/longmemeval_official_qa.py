@@ -444,8 +444,12 @@ def write_summary() -> dict:
         run = json.loads(path.read_text())
         key = (f'{run["reader"]["model"]}|k{run["retrieval"]["topk_context"]}|sub{run["retrieval"]["subquery_weight"]}'
                f'|round{run["retrieval"].get("round_key_weight", 0.0)}')
+        layout = run["reader"].get("layout", "official")
+        if layout != "official":
+            key += f"|{layout}"
         arm = arms.setdefault(key, {"reader": run["reader"]["model"], "topk_context": run["retrieval"]["topk_context"],
-                                    "subquery_weight": run["retrieval"]["subquery_weight"], "runs": []})
+                                    "subquery_weight": run["retrieval"]["subquery_weight"], "layout": layout,
+                                    "runs": []})
         arm["runs"].append({"file": path.name, "repeat": run.get("repeat", 0), **run["summary"]})
     for arm in arms.values():
         correct = [r["correct"] for r in arm["runs"]]
@@ -594,7 +598,9 @@ def main() -> None:
     summary = summarize(rows)
     report = {"schema_version": 1, "split": "dev", "heldout_evaluated": 0, "tag": args.tag,
               "reader": {"model": args.reader, "snapshots_observed": sorted({r["reader_model"] for r in rows}),
-                         "protocol": "official run_generation.py flat-turn, json history, cot (con), temperature 0, "
+                         "protocol": ("official run_generation.py flat-turn, json history" if args.layout == "official"
+                                      else "official run_generation.py rounds and template, compact session history")
+                                     + ", cot (con), temperature 0, "
                                      f"max_tokens {GEN_LENGTH}, topk_context {args.topk}",
                          "layout": args.layout},
               "judge": {"model": JUDGE_MODEL, "snapshots_observed": sorted({r["judge_model"] for r in rows}),
