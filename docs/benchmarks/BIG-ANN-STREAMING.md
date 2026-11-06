@@ -162,7 +162,10 @@ exposed; gVisor). `warm(R32_L64, {'ef': 256, 'rerank': 256})`: mean recall@10 ov
 checkpoints **0.8768**; `run.py` 6175 s (1.72 h) for the 1,280 steps, exit 0,
 no timeout; peak RSS 7.51 GiB summed over processes, cgroup peak
 5.28 GiB. Results: `benchmarks/results/bigann_streaming_final_runbook_v1.json`
-(the same run under an 8 GiB cap is recorded there when it finishes).
+The same image under an 8 GiB cap (`memory=(8192,8192)`, AMD EPYC Zen 3 without AVX-512) gave the identical
+recall 0.8768 in 10959 s (3.04 h), exit 0, no OOM, peak RSS
+7.57 GiB summed and cgroup peak 5.28 GiB, so the index fits the
+official 8 GiB docker limit; the 1.8x run time mixes the slower CPU with the cap.
 
 Board by best recall (fork CSV at that harness commit): puck 0.9855 (16 GB docker mem_limit), hwtl_sdu_anns_stream 0.9675 (not open-sourced), pyanns 0.9597, diskann 0.8833, cufe 0.8189. By recall alone
 WARM would be 5th of 6, just under the DiskANN baseline. The board also requires the runbook to
