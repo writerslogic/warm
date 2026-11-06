@@ -2186,6 +2186,10 @@ impl PostingLists {
         if parallel {
             // Runs hold distinct terms and each live term has one list, so ids are distinct.
             targets.sort_unstable_by_key(|&(id, _)| id);
+            debug_assert!(
+                targets.windows(2).all(|pair| pair[0].0 < pair[1].0),
+                "duplicate list id in install targets"
+            );
             append_disjoint(&mut self.lists, 0, &targets, runs, &words);
         } else {
             for &(id, index) in &targets {
@@ -2601,6 +2605,26 @@ mod tests {
                 });
             }
             assert!(runs.len() >= PARALLEL_LOOKUPS);
+            if batch > 0 {
+                // Empty some lists so this batch's new terms reuse freed ids out of run order.
+                for name in names.iter().step_by(7).take(150) {
+                    let Some(id) = serial.dictionary.get(name) else {
+                        continue;
+                    };
+                    let mut slots = Vec::new();
+                    let mut cursor = serial.lists[id as usize].iter();
+                    while let Some((slot, _)) = cursor.peek() {
+                        slots.push(slot);
+                        cursor.next();
+                    }
+                    for slot in slots {
+                        serial.remove(name, slot, &word_counts);
+                        parallel.remove(name, slot, &word_counts);
+                    }
+                }
+                assert!(!serial.free.is_empty());
+                assert_eq!(serial.free, parallel.free);
+            }
             serial.install_runs(&runs, &word_counts, false);
             parallel.install_runs(&runs, &word_counts, true);
             parallel.assert_valid();
