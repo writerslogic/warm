@@ -1,0 +1,159 @@
+{
+ "benchmark": "big-ann-benchmarks NeurIPS'23 filter track, yfcc-10M, public queries, recall@10 >= 0.90 ranked by QPS",
+ "status": "pinned-commit run on Modal; not the organisers' Azure D8lds_v5 measurement, so not a standing",
+ "warm_commit": "af8d4017c6157688359dc2e31cc461fb3f28fa8e",
+ "warm_wheel": "warm-python 0.6.5 (maturin, built in the harness image)",
+ "harness": {
+  "fork": "github.com/writerslogic/big-ann-benchmarks branch filter/warm (PR harsha-simhadri/big-ann-benchmarks#356)",
+  "commit": "68b8ba5d26156dcc62f03655ddd367ab92662da7",
+  "config_sha256": "75a859994e32471d07c8e316008af6da291b097327573d3e7e1709539d92e4be",
+  "command": "python3 run.py --nodocker --neurips23track filter --algorithm warm --dataset yfcc-10M (then data_export.py)"
+ },
+ "host": {
+  "platform": "Modal function cpu=(8,8) memory=(16384,16384), gVisor kernel 4.19.0-gvisor",
+  "cpu": "AMD EPYC Zen 3 (family 25 model 1), 8 logical CPUs, no AVX-512",
+  "memory_gib": 16,
+  "reference": "Azure D8lds_v5 (Xeon Platinum 8370C, 4 cores x 2 threads, AVX-512, 16 GiB); the Modal vCPU count and core/thread mapping are not comparable"
+ },
+ "tag": "yfcc10m-r1",
+ "started_utc": "2026-11-06T17:18:02.073509Z",
+ "finished_utc": "2026-11-06T17:24:52.925586Z",
+ "run_py_wall_s": 257.1,
+ "function_wall_s": 411.7,
+ "build": {
+  "ivf_min": 5000,
+  "cluster_size": 1000,
+  "max_lists": 2048,
+  "bitset_min": 20000,
+  "copy_min": 50000,
+  "threads": 8,
+  "build_s": 136.02,
+  "indexsize_kb": 9806792.0
+ },
+ "runs": [
+  {
+   "brute_max": 5000,
+   "target": 2500,
+   "qps": 33622.83,
+   "recall_at_10": 0.90445,
+   "build_s": 136.02,
+   "indexsize_kb": 9806792.0
+  },
+  {
+   "brute_max": 10000,
+   "target": 3000,
+   "qps": 32723.83,
+   "recall_at_10": 0.92081,
+   "build_s": 136.02,
+   "indexsize_kb": 9806792.0
+  },
+  {
+   "brute_max": 5000,
+   "target": 4000,
+   "qps": 31276.36,
+   "recall_at_10": 0.93969,
+   "build_s": 136.02,
+   "indexsize_kb": 9806792.0
+  },
+  {
+   "brute_max": 10000,
+   "target": 2500,
+   "qps": 30874.66,
+   "recall_at_10": 0.90673,
+   "build_s": 136.02,
+   "indexsize_kb": 9806792.0
+  },
+  {
+   "brute_max": 5000,
+   "target": 3000,
+   "qps": 23409.98,
+   "recall_at_10": 0.91941,
+   "build_s": 136.02,
+   "indexsize_kb": 9806792.0
+  },
+  {
+   "brute_max": 20000,
+   "target": 2500,
+   "qps": 19638.84,
+   "recall_at_10": 0.91056,
+   "build_s": 136.02,
+   "indexsize_kb": 9806792.0
+  }
+ ],
+ "best_at_recall_0_90": {
+  "brute_max": 5000,
+  "target": 2500,
+  "qps": 33622.83,
+  "recall_at_10": 0.90445,
+  "build_s": 136.02,
+  "indexsize_kb": 9806792.0
+ },
+ "board_snapshot_2026_11_06": {
+  "source": "neurips23/ongoing_leaderboard/filter/operating_points_public_queries_AzureD8lds_v5.txt (last evaluation 2024-03-01)",
+  "entries_qps": [
+   {
+    "name": "pinecone",
+    "qps": 85491.54,
+    "kind": "closed"
+   },
+   {
+    "name": "zilliz",
+    "qps": 84596.42,
+    "kind": "closed"
+   },
+   {
+    "name": "parlayivf",
+    "qps": 37902.11,
+    "kind": "open"
+   },
+   {
+    "name": "puck",
+    "qps": 19193.29,
+    "kind": "open"
+   },
+   {
+    "name": "hwtl_sdu_anns_filter",
+    "qps": 15059.12,
+    "kind": "closed"
+   },
+   {
+    "name": "wm_filter",
+    "qps": 14467.96,
+    "kind": "open"
+   },
+   {
+    "name": "dhq",
+    "qps": 13670.86,
+    "kind": "open"
+   },
+   {
+    "name": "fdufilterdiskann",
+    "qps": 5679.75,
+    "kind": "open"
+   },
+   {
+    "name": "pyanns",
+    "qps": 5184.84,
+    "kind": "open"
+   },
+   {
+    "name": "faissplus",
+    "qps": 3776.54,
+    "kind": "open"
+   },
+   {
+    "name": "faiss",
+    "qps": 3032.53,
+    "kind": "baseline"
+   },
+   {
+    "name": "cufe",
+    "qps": 2917.13,
+    "kind": "open"
+   }
+  ],
+  "placement_if_comparable": "4 of 13 (2nd open-source, behind parlayivf)",
+  "placement_if_modal_is_2x_faster_than_the_vm": "5 of 13",
+  "caveat": "hardware differs (CPU model, AVX-512, core/thread mapping); only an organisers' run on D8lds_v5 places an entry"
+ }
+}

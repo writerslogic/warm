@@ -1,0 +1,69 @@
+{
+ "benchmark": "big-ann-benchmarks NeurIPS'23 streaming track, msturing-30M-clustered, final_runbook.yaml (1,280 steps), mean recall@10 over search checkpoints; the board requires completion within 1 hour on Azure D8lds_v5",
+ "status": "pinned-commit runs on Modal; not the organisers' measurement, so not a standing",
+ "warm_commit": "af8d4017c6157688359dc2e31cc461fb3f28fa8e",
+ "warm_wheel": "warm-python 0.6.5 (maturin, built in the harness image)",
+ "harness": {
+  "fork": "github.com/writerslogic/big-ann-benchmarks branch streaming/warm (PR harsha-simhadri/big-ann-benchmarks#357)",
+  "commit": "5d6225a00c763cb2eb67b46585009f353f7c9651",
+  "command": "/usr/bin/python3 -u run.py --nodocker --neurips23track streaming --algorithm warm --dataset msturing-30M-clustered --runbook_path neurips23/runbooks/final_runbook.yaml"
+ },
+ "algorithm_parameters": "warm(R32_L64, {'ef': 256, 'rerank': 256})",
+ "runs": [
+  {
+   "tag": "mem16g-r2",
+   "host": {
+    "platform": "Modal function cpu=(8,8) memory=(16384,16384), gVisor",
+    "cpu": "Intel x86_64 with AVX-512 (model not exposed), 8 logical CPUs",
+    "memory_limit_gib": 16
+   },
+   "started_utc": "2026-11-06T18:43:07.406959+00:00",
+   "finished_utc": "2026-11-06T20:33:37.655934+00:00",
+   "recall_at_10_mean": 0.87684,
+   "index_footprint_mb_reported": 3016.0,
+   "run_py_seconds": 6175.1,
+   "run_py_exit": 0,
+   "timed_out": false,
+   "function_wall_seconds": 6630.2,
+   "data_load_seconds": 278.7,
+   "export_seconds": 153.3,
+   "peak_memory_mib": {
+    "rss_sum_all_processes": 7691.3,
+    "cgroup_usage": 5405.7
+   },
+   "within_one_hour": false
+  }
+ ],
+ "pending": [
+  "mem8g: the same run under an 8 GiB cap, in progress at the time of this file"
+ ],
+ "board_snapshot_2026_11_06": {
+  "source": "neurips23/streaming/res_final_runbook_AzureD8lds_v5.csv (fork copy at harness commit 5d6225a0)",
+  "best_recall_by_algorithm": [
+   {
+    "name": "puck",
+    "recall_at_10": 0.98555,
+    "note": "16 GB docker mem_limit"
+   },
+   {
+    "name": "hwtl_sdu_anns_stream",
+    "recall_at_10": 0.96746,
+    "note": "not open-sourced"
+   },
+   {
+    "name": "pyanns",
+    "recall_at_10": 0.95974
+   },
+   {
+    "name": "diskann",
+    "recall_at_10": 0.8833
+   },
+   {
+    "name": "cufe",
+    "recall_at_10": 0.81892
+   }
+  ],
+  "placement_by_recall_if_comparable": "5 of 6",
+  "caveat": "recall rank only; this run took 1.72 h on Modal hardware that is not the reference VM, so the 1-hour condition is not shown to hold"
+ }
+}
