@@ -317,7 +317,7 @@ impl WarmCore {
             })
         });
         let captured = match from_checkpoint {
-            Some(captured) => captured?,
+            Some(captured) => captured,
             None => {
                 self.hydrate_documents()?;
                 let _transaction = self.mutation_gate.read();
