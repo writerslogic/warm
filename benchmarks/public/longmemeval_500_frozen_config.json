@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "warm-longmemeval-s-500-v1",
   "status": "FROZEN for one held-out run; any edit after the first retrieval or API call voids the run",
-  "pinned_warm_revision": "e7987b3ec17b5f1fae0373653d432e611fa866f1",
+  "pinned_warm_revision": "bcad29946262cb19dca5ec74fa419d932ca4ad03",
   "benchmark": {
     "dataset": "LongMemEval_S cleaned",
     "file": "longmemeval_s_cleaned.json",
@@ -41,7 +41,7 @@
     ],
     "pipeline": {
       "driver": "benchmarks/public/longmemeval_modal.py",
-      "entrypoint_flags": "--dataset s --part all --models small --engine python --cap 12 --tag lme500 --heldout-final benchmarks/public/longmemeval_500_frozen_config.json --frozen-sha256 <sha256 of this file>",
+      "entrypoint_flags": "--dataset s --part all --models small --engine python --cap 30 --tag lme500 --heldout-final benchmarks/public/longmemeval_500_frozen_config.json --frozen-sha256 <sha256 of this file>",
       "config_file": "benchmarks/public/longmemeval_config.json",
       "config_sha256": "d8ba2af9e4a83edd1d07f2bcc231aa8fbc73de70e2cad6994cbc84558a40c129",
       "model_pins": {
@@ -103,9 +103,10 @@
   "repeats": "single pass; temperature 0 is not deterministic (about 6 of 100 dev questions flipped between repeated k=10 runs), so the figure is one sample, not a bound",
   "spend": {
     "cap_usd": 30.0,
-    "modal_gpu_cap_usd": 12.0,
+    "modal_gpu_cap_usd": 30.0,
     "api": "reader and judges via OpenRouter with the provider pinned to OpenAI (allow_fallbacks=false) through the local proxy /Volumes/A/.hms-lb/longmemeval/openrouter/proxy.py; responses from any other provider are rejected; models gpt-4o-2024-08-06 and gpt-4o-mini-2024-07-18; no other provider",
-    "authorization": "none granted by this file; the maintainer runs it"
+    "authorization": "none granted by this file; the maintainer runs it",
+    "modal_gpu_cap_history": "12.0 at e7987b3e. Raised to 30.0 on 2026-11-06 after the first launch stopped itself at $0.57 spent: the 32-item probe wave counted the vLLM model load as per-item time and projected the next facts wave at $12.16 (fix: bcad2994). No ranking, reader call or judge call had been made; only 32 of 18361 fact extractions were cached. The cap bounds Modal GPU spend only; it is not a retrieval or reader parameter."
   },
   "forbidden": [
     "tuning any value in this file after the first held-out API call",
