@@ -1563,8 +1563,13 @@ fn build_structure(
     for i in (1..n).rev() {
         order.swap(i, (rng.next_u64() % (i as u64 + 1)) as usize);
     }
-    let mut graph = Adjacency::new(n, r);
     prof::report("setup", tsetup);
+    // The upper layers depend on the rows and `order` alone; built before the adjacency
+    // exists, their gathered rows do not add to its footprint.
+    let tup = prof::start();
+    let layers = upper_layers(&rows, &order, params);
+    prof::report("upper", tup);
+    let mut graph = Adjacency::new(n, r);
     let first_ef = params.build_ef.min(FIRST_PASS_EF);
     for (l, alpha) in [(first_ef, 1.0), (params.build_ef, params.alpha)] {
         let t = prof::start();
@@ -1574,10 +1579,6 @@ fn build_structure(
     let t = prof::start();
     rows.fill(&mut graph, r);
     prof::report("fill", t);
-    let tup = prof::start();
-
-    let layers = upper_layers(&rows, &order, params);
-    prof::report("upper", tup);
     prof::graph_hash((&graph, &layers, entry));
     let upper_ids = order[..n / LAYER_RATIO].to_vec();
     Ok(GraphStructure {

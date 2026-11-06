@@ -41,7 +41,7 @@ pub(super) fn merge_structure(
     norms: &[f32],
     dim: usize,
     params: &BuildParams,
-    plan: &MergePlan<'_>,
+    plan: MergePlan<'_>,
 ) -> Result<GraphStructure, WarmError> {
     let n = vectors.len() / dim;
     let r = params.degree;
@@ -59,6 +59,16 @@ pub(super) fn merge_structure(
         codes: codes.as_ref(),
         quantized: params.quantized_search,
     };
+    // The entry and the upper layers depend on the rows alone; computed before the adjacency
+    // exists, the gathered rows of the first layer do not add to its footprint.
+    let t = prof::start();
+    let entry = medoid(&rows, n, params.metric);
+    let mut upper_order: Vec<u32> = (0..n as u32).collect();
+    shuffle(&mut upper_order, params.seed ^ 0xA5A5_A5A5 ^ n as u64);
+    let layers = upper_layers(&rows, &upper_order, params);
+    upper_order.truncate(n / LAYER_RATIO);
+    upper_order.shrink_to_fit();
+    prof::report("upper", t);
     let t = prof::start();
     let mut adj = Adjacency::new(n, r);
     let again: Vec<_> = (0..n).map(|_| AtomicBool::new(false)).collect();
@@ -125,6 +135,8 @@ pub(super) fn merge_structure(
             .collect();
         replacement_entry(&rows, &live, params.metric)?
     };
+    // Nothing below maps slots between generations.
+    drop(plan);
     let mut order = inserted;
     shuffle(&mut order, params.seed ^ n as u64);
     let t = prof::start();
@@ -157,17 +169,10 @@ pub(super) fn merge_structure(
     let t = prof::start();
     rows.fill(&mut adj, r);
     prof::report("fill", t);
-    let t = prof::start();
-    let entry = medoid(&rows, n, params.metric);
-    let mut order: Vec<u32> = (0..n as u32).collect();
-    shuffle(&mut order, params.seed ^ 0xA5A5_A5A5 ^ n as u64);
-    let layers = upper_layers(&rows, &order, params);
-    order.truncate(n / LAYER_RATIO);
-    prof::report("upper", t);
     Ok(GraphStructure {
         adj,
         entry,
-        upper_ids: order,
+        upper_ids: upper_order,
         layers,
     })
 }
