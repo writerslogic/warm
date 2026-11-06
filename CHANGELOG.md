@@ -55,6 +55,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Correct the RSS range and the measured binary commit in the consolidation heap peak record
+- Record the consolidation heap peak measurement
 - Record the landed checkpoint hit decode in the FiQA QPS gap lever
 - Record the removed per-hit document rebuild in the QPS lever
 - Name nDCG in its glossary entry so site search finds it
@@ -222,6 +224,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Build the upper layers before the adjacency and free the slot maps early
+- Decode checkpoint hits without a chunk vector and fuse the streaming rescoring pass (#392)
 - Prefetch and fuse the base rescoring pass on the tombstone path
 - Decode a checkpoint hit's record without a chunk vector and share repeated metadata
 - Read checkpoint hit fields only for final results instead of rebuilding a document per hit
