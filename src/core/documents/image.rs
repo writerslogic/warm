@@ -1348,4 +1348,83 @@ mod tests {
         }
         assert!(unique.entries.len() <= MetadataCache::GIVE_UP);
     }
+
+    /// `record` and `slots` are the image's one document and its slot table as
+    /// `(word_count, chunk index)` pairs, all owned by that document.
+    fn image_with_record_and_slots(record: &[u8], slots: &[(u32, u32)]) -> ServingImage {
+        let mut lens = [0; SECTIONS];
+        lens[Section::IdOffsets as usize] = 8;
+        lens[Section::Ids as usize] = 3;
+        lens[Section::DocOffsets as usize] = 8;
+        lens[Section::Docs as usize] = record.len();
+        lens[Section::Slots as usize] = slots.len() * SLOT_BYTES;
+        let words = [
+            (H_DOCS, 1),
+            (H_SLOTS, slots.len() as u64),
+            (H_CHUNKS, slots.len() as u64),
+        ];
+        let mut bytes = checkpoint(&words, lens).to_vec();
+        let table: Vec<u8> = slots
+            .iter()
+            .flat_map(|&(words, chunk)| {
+                [words.to_le_bytes(), 0u32.to_le_bytes(), chunk.to_le_bytes()].concat()
+            })
+            .collect();
+        for (section, data) in [
+            (
+                Section::IdOffsets,
+                [0u32.to_le_bytes(), 3u32.to_le_bytes()].concat(),
+            ),
+            (Section::Ids, b"doc".to_vec()),
+            (
+                Section::DocOffsets,
+                [0u32.to_le_bytes(), (record.len() as u32).to_le_bytes()].concat(),
+            ),
+            (Section::Docs, record.to_vec()),
+            (Section::Slots, table),
+        ] {
+            let at = word(&bytes, H_SECTIONS + 2 * section as usize) as usize;
+            bytes[at..at + data.len()].copy_from_slice(&data);
+        }
+        ServingImage::new(Backing::Owned(bytes)).unwrap()
+    }
+
+    #[test]
+    fn hit_reports_the_same_chunk_the_full_record_decodes() {
+        // Three chunks: a bare one, one with its own id, inline text and both analyzer
+        // flags, and a bare third; a fourth slot names a chunk the record does not have.
+        let mut bytes = record_prefix(2, 3, 12, 3);
+        bytes.extend_from_slice(&[0, 0, 1, TEXT_NONE]);
+        bytes.push(OWN_ID | STEMMED | ANALYZED);
+        put_bytes(&mut bytes, b"own-id");
+        bytes.extend_from_slice(&[1, 3, TEXT_INLINE]);
+        put_bytes(&mut bytes, b"xy");
+        bytes.extend_from_slice(&[0, 3, 4, TEXT_NONE]);
+        let image = image_with_record_and_slots(&bytes, &[(5, 0), (7, 1), (9, 2), (1, 7)]);
+        let record = image.record(0).unwrap();
+        assert_eq!(record.chunks.len(), 3);
+        let mut cache = MetadataCache::default();
+        for (slot, chunk) in record.chunks.iter().enumerate() {
+            let hit = image.hit(slot, &mut cache).unwrap();
+            let want_id = chunk
+                .id
+                .map_or_else(|| super::super::chunk_id("doc", slot), str::to_owned);
+            assert_eq!(hit.id, want_id, "slot {slot}");
+            assert_eq!(hit.document_id, "doc");
+            assert_eq!(hit.version, record.version);
+            assert_eq!(hit.source_uri.as_deref(), record.source_uri);
+            assert_eq!(hit.metadata, record.metadata);
+            assert_eq!(hit.text.as_deref(), chunk.text, "slot {slot}");
+            assert_eq!(
+                (hit.start_byte, hit.end_byte),
+                (chunk.start_byte, chunk.end_byte)
+            );
+            assert_eq!(image.slot_word_count(slot), [5, 7, 9][slot]);
+        }
+        assert_eq!(record.chunks[1].id, Some("own-id"));
+        assert!(record.chunks[1].stemmed && record.chunks[1].analyzed);
+        assert_eq!(record.chunks[1].text, Some("xy"));
+        let error = image.hit(3, &mut cache).unwrap_err().to_string();
+        assert!(error.contains("chunk index"), "{error}");
+    }
 }
