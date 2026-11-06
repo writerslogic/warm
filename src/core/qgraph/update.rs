@@ -826,6 +826,15 @@ impl UpdatableVGraph {
         let metric = s.manifest.build.metric;
         let mut candidates =
             Vec::with_capacity(out.len() + s.delta.live.len().min(params.ef.max(k)));
+        // `out` is in estimate order. As on a clean base, only the `rerank` best live
+        // candidates (never fewer than `k`) are rescored exactly; deleted slots cost no row
+        // read and do not use the budget. 0 rescores every candidate: base and delta
+        // candidates are merged by exact distance, so they cannot be left unscored.
+        let budget = if params.rerank == 0 {
+            usize::MAX
+        } else {
+            params.rerank.max(k)
+        };
         let rows = &s.base.rows;
         for &slot in out.iter().take(RESCORE_AHEAD) {
             rows.prefetch(slot as usize);
@@ -836,6 +845,9 @@ impl UpdatableVGraph {
             }
             let slot = slot as usize;
             if !s.dead(slot) {
+                if candidates.len() == budget {
+                    break;
+                }
                 candidates.push((rows.distance(slot, query, metric)?, rows.ids[slot]));
             }
         }
