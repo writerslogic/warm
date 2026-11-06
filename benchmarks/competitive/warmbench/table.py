@@ -449,8 +449,9 @@ def gaps_markdown(gaps):
 
 def readme_block(summary):
     lines = [START, "", "_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). " +
-             "W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead._", "",
-             "| Dataset | Metric | WARM | Best other | Advantage | |", "|---|---|---|---|---|---|"]
+             "W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead, - = no verdict " +
+             "(unpinned source revision, no interval, or not comparable). Rows are compared only within one machine._", "",
+             "| Dataset | Machine | Metric | WARM | Best other | Advantage | |", "|---|---|---|---|---|---|---|"]
     for sec, counts, tally in summary:
         if sec["data"]["suite"] == "smoke":
             continue
@@ -467,7 +468,7 @@ def readme_block(summary):
             adv = advantage(key, mine, other) if other else None
             mark = {"WIN": "W", "TIE": "T", "LOSS": "L", "n/m": "-", "n/v": "-"}["n/v" if key in analyze.NO_VERDICT else verdict(adv) if other else "n/m"]
             best_text = "n/m" if other is None else f"{display(name, sec['data'])} {fmt(other['value'], dec)}"
-            lines.append(f"| {short} | {label}{' (' + unit + ')' if unit else ''} | {fmt(mine['value'], dec)} | {best_text} | " +
+            lines.append(f"| {short} | `{sec['hw']['class']}` | {label}{' (' + unit + ')' if unit else ''} | {fmt(mine['value'], dec)} | {best_text} | " +
                          f"{'n/m' if adv is None else fx(adv['factor'])} | {mark} |")
     lines += ["", END]
     return "\n".join(lines) + "\n"
