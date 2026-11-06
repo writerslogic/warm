@@ -64,6 +64,7 @@ gpu_image = (
     modal.Image.debian_slim(python_version="3.12")
     .uv_pip_install("vllm==0.11.0", "sentence-transformers==5.1.1", "numpy<2.3")
     .env(HF)
+    .env({"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
     .add_local_python_source("longmemeval_pipeline")
 )
 cpu_image = (
@@ -145,9 +146,20 @@ def _embed(model: str, rev: str, gpu: str, texts: list[str], is_query: bool) -> 
         # Texts arrive sorted by length, so the batch's last text bounds its padded length.
         while n > 1 and min(m.max_seq_length, len(texts[min(i + n, len(texts)) - 1]) // 3 + 32) * n > budget:
             n //= 2
-        out.append(m.encode(texts[i:i + n], prompt=prompt, batch_size=n, normalize_embeddings=True,
-                            convert_to_numpy=True))
-        i += n
+        chunk = texts[i:i + n]
+        while True:
+            try:
+                out.append(m.encode(chunk, prompt=prompt, batch_size=len(chunk), normalize_embeddings=True,
+                                    convert_to_numpy=True))
+                break
+            except torch.cuda.OutOfMemoryError:
+                # The chars/3 token estimate undercounts dense text; halve the batch and retry rather
+                # than lose the shard (the embedding of a text does not depend on its batch mates).
+                torch.cuda.empty_cache()
+                if len(chunk) == 1:
+                    raise
+                chunk = chunk[:len(chunk) // 2]
+        i += len(chunk)
     e = np.concatenate(out)
     return np.asarray(e, dtype=np.float16).tobytes(), time.time() - t
 
@@ -202,8 +214,16 @@ def _rerank(model: str, rev: str, gpu: str, pairs: list[tuple[str, str]]) -> tup
             j = i + 1
             while j < len(order) and len(ids[order[j]]) * (j + 1 - i) <= budget:
                 j += 1
-            batch = tok.pad({"input_ids": [ids[k] for k in order[i:j]]}, padding=True, return_tensors="pt")
-            logits = net(**{k: v.cuda() for k, v in batch.items()}).logits[:, -1, :]
+            while True:
+                batch = tok.pad({"input_ids": [ids[k] for k in order[i:j]]}, padding=True, return_tensors="pt")
+                try:
+                    logits = net(**{k: v.cuda() for k, v in batch.items()}).logits[:, -1, :]
+                    break
+                except torch.cuda.OutOfMemoryError:
+                    torch.cuda.empty_cache()
+                    if j - i == 1:
+                        raise
+                    j = i + (j - i) // 2  # same per-pair scores; only the batch shape changes
             pair = torch.stack([logits[:, no], logits[:, yes]], dim=1).float()
             p = torch.nn.functional.log_softmax(pair, dim=1)[:, 1].exp().tolist()
             for k, s in zip(order[i:j], p):
