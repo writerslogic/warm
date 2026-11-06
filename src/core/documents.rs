@@ -37,10 +37,9 @@ mod text;
 mod vector_index;
 pub(crate) use dense::{build_dense_index, capture_dense_index, publish_dense_index};
 pub(crate) use image::{
-    binding as checkpoint_binding, recorded_crc as checkpoint_crc,
-    representable as checkpoint_representable, Backing, ServingImage,
-    CRC_START as CHECKPOINT_CRC_START, HEADER_LEN as CHECKPOINT_HEADER_LEN,
-    known_magic as checkpoint_magic_known,
+    binding as checkpoint_binding, known_magic as checkpoint_magic_known,
+    recorded_crc as checkpoint_crc, representable as checkpoint_representable, Backing,
+    ServingImage, CRC_START as CHECKPOINT_CRC_START, HEADER_LEN as CHECKPOINT_HEADER_LEN,
 };
 pub(crate) use index::DocumentWithText;
 pub(crate) use index::{canonical_staging_path, opaque_counter_start, DocumentStore};
@@ -1453,6 +1452,9 @@ pub(crate) fn overlay_serves(store: &DocumentStore, prepared: &[PreparedSearch])
 
 /// [`capture_search`] over the checkpoint under `store` and the store's own documents, for
 /// queries [`overlay_serves`] accepts.
+#[cfg(test)]
+pub(crate) use image::encode_v1 as encode_checkpoint_v1;
+
 pub(crate) fn capture_overlaid_search(
     store: &DocumentStore,
     prepared: Vec<PreparedSearch>,
