@@ -5,6 +5,294 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [Unreleased]
+
+### Added
+- Land the supersession probes, k-mer, FPE timestamp and AVX2 popcount work (#388)
+- Land per-store language analyzers, cheaper history views and a simulation harness (#387)
+- Refuse replaying chunks whose analyzer mark disagrees with the store
+- Run WARM store analyzers and summarize the closed gap in the MIRACL harness
+- Add a persisted per-store lexical analyzer with language stemmers and Persian and Hindi normalization
+- Add a MIRACL multilingual lexical comparator with Lucene analyzers
+- Add the supersession probe harness for STALE
+- Add bounded background compaction with progress and cancellation
+- Add k-mer encoder retrieval evaluation harness
+- Add the FPE timestamp retrieval harness
+- Add read-only historical views over the journal
+- Add fractional power encoding of timestamps behind experimental
+- Add K-mer sparse encoder for DNA and RNA sequences
+- Add default-off query-reinforced edge repair for the vector graph
+- Add AVX2 and AVX-512 screen popcount candidates with paired microbenchmark
+- Add qgraph navigation diagnostics with serving-search replay
+- Add work-bounded filtered dense search
+- Integrate Vectra filtering and validated retrieval work
+- Improve vector retrieval and expand comparisons
+- Add native vector migration and retire bincode (#378)
+- Add experimental prefix retrieval and rename the Node SDK (#376)
+- Integrate qualified Vectra migration adapter
+- Integrate native vector records and schema upgrade support
+- Add lossless native vector records with atomic revisions
+- Add an owned Vectra migration adapter
+- Rename the Node SDK package to warm-sdk
+- Add an explicit document retrieval embedding task
+- Add opt-in Matryoshka graph candidates
+- Add opt-in Matryoshka graph candidates
+- Add an explicit document retrieval embedding task
+- Expose verifiable audit records through public interfaces (#356)
+- Expose verifiable audit records through public interfaces
+- Recover committed audit effects after restart (#353)
+- Recover committed audit effects after restart
+- Name the Rust distribution warm-rust
+- Use concise Python package names and distinct publishers
+- Rename the product and integrations to WARM
+- Verify scoped remote authorization and SCITT inclusion receipts (#340)
+- Add organizational knowledge integration examples
+
+### Changed
+- Remove obsolete Python compatibility aliases
+- Rename the benchmark package to warmbench
+
+### Documentation
+- State the pinned text wins and the FiQA QPS loss with profiled levers
+- Label each README benchmark row with the machine it was measured on
+- Drop intra-doc links to private analyzer items
+- Record MIRACL ru, es, fr and de results for the store analyzers
+- Record MIRACL results for the store analyzers
+- Note that kept history views also hold their index
+- Correct the counting-Bloom capacity claim with an equal-bits comparison
+- Update the time-travel cost section for bulk indexing and reuse
+- Disclose the label caveats and the interval in the cue-tag result
+- Record MIRACL multilingual BM25 results for the tokenizer variants
+- Record the cue-tag supersession kill test on STALE (KILL)
+- Pre-register the cue-tag supersession kill test
+- Record the supersession probe result on STALE (NO-GO)
+- Record the executed scope of the supersession probe before the run
+- Pre-register the supersession probe protocol on STALE
+- Correct the short as_of list count
+- Register the as_of overfetch protocol before running it
+- Cite edge repair and entry point prior art
+- Record measured time-travel view cost
+- Record edge repair results on GloVe and SIFT and park it
+- Correct the as_of filter cost range in the FPE write-up
+- Record the FPE timestamp kill test result and decision
+- Add k-mer encoder evaluation write-up
+- Add k-mer encoder evaluation result and user guide
+- Record the screen popcount kill test and its x86 results
+- Fix the FPE timestamp protocol and decision rule before the run
+- Define time-travel semantics over the journal
+- Design bounded background compaction
+- Record 2026-11-02 milestone qualification evidence
+- Point historical AGPL release at the v0.6.1 tag
+- Fix broken server documentation link (#384)
+- Investigate dynamic switching combinations
+- Record repaired comparison resource failures
+- Preregister a possible repaired comparison
+- Record offline library compile check
+- Qualify default graph recall
+- Preserve user-requested study stop
+- Bind completed 100k graph result
+- Preserve 100k graph quality failure
+- Preserve initial graph quality failure
+- Record comparison preparation admission
+- Record verified comparison input freeze
+- Clarify comparison execution admission
+- Preserve WARM progress at the requested stopping point
+- Preserve merged SDK and prefix retrieval qualification
+- Ground memory selection and Vectra evaluation in prior evidence
+- Clarify comparison persistence and reader boundaries
+- Plan bounded Vectra quality and scale comparisons
+- Ground memory selection evaluation in prior work
+- Specify schema 7 vector records
+- Keep prefix retrieval experimental after fresh quality checks
+- Record the completed recovery followup merge
+- Track temporal workflow and fresh Matryoshka qualification
+- Explain full-vector reranking and candidate limits
+- Record completed recovery and query qualification
+- Clarify the remaining graph delta scan
+- Store hosted vector evidence as its exact compressed export
+- Record proposed quality-preserving memory reduction experiment
+- Record hosted qualification and queued migration preparation
+- Align readiness and configuration with durable retries
+- Preserve canonical cleanup regression evidence
+- Record recovery gates and unresolved performance qualification
+- Record query memory allocation evidence and timing limits
+- Clarify serial validation evidence
+- Record verified retrieval gains and audit validation limits
+- Preserve audit benchmark validation and measurement limits
+- Record repository cleanup and quality findings
+- Record completed WARM migration and release verification
+- Record verified MCP publication and legacy retirement
+- Remove the former name explanation from README
+- Install the verified WARM registry releases
+- Record WARM publication and bound external link checks
+- Record verified audit repairs and validation evidence
+- Record managed analysis deferral
+- Record ToIP collaboration introduction
+
+### Fixed
+- Install a pinned Temurin 21 in the Modal bench image for Lucene 10
+- Drop the chunk flags check now that every bit is assigned
+- Normalize lexical text to NFC and fold Turkish dotted and dotless I
+- Regenerate Node declarations for background compaction
+- Label Lucene in published tables with the version the result recorded
+- Report the finished stage and compare vector counts in compaction tests
+- Look up renamed evidence sessions in the cached embeddings
+- Distinguish unset mem0 arguments and correct integration test boundaries
+- Account warmbench server memory across detached descendants
+- Skip tenants already holding unknown receipts when invalidating durable limits
+- Route exclusive file locks through flock on Android
+- Skip embeddings for lexical search
+- Embed fact-expanded document keys
+- Validate direct staged search embedder identity
+- Return large vector results through typed bindings
+- Use local embeddings with model stages
+- Honor ingest spans in model pipelines
+- Bound stale graph delta capture
+- Improve vector recall and harden storage boundaries
+- Bind comparison provenance to host and runtime
+- Qualify combined comparison accounting
+- Gate comparison results on complete timed quality
+- Integrate bincode removal with native vector records
+- Remove bincode while preserving durable event compatibility
+- Reject nonportable Vectra metadata filenames
+- Exclude research results from crate archives
+- Allow reusable npm workflow attestations
+- Complete durable retry and query-efficiency followups (#375)
+- Close retry receipt readers before replacement
+- Resolve durable retry modules in the fuzz target
+- Preserve scrub retries during canonical compaction
+- Preserve HTTP retry protection across restarts
+- Prepare retained text before commit and retry cleanup
+- Complete recovery, retrieval and native binding readiness (#374)
+- Preserve checkpoints during vector maintenance (#373)
+- Propagate checked Memory API reads (#372)
+- Bound MCP exports and select text reads (#371)
+- Propagate checkpoint metadata read failures (#370)
+- Propagate checked document read failures (#369)
+- Delete aged CrewAI memories across all pages (#368)
+- Secure maintained integration dependency profiles (#367)
+- Propagate query failures and bound snapshot archives (#366)
+- Retire legacy SDK integrations and refresh dependencies (#365)
+- Preserve retained text integrity and report cache failures (#364)
+- Tighten document summaries and Haystack contracts (#363)
+- Enforce Python framework adapter contracts (#362)
+- Harden archive restores and dependency exposure (#360)
+- Harden SDK transport and migration durability (#361)
+- Correct HTTP errors and expand Windows service coverage (#359)
+- Reject ambiguous authentication and retry headers (#358)
+- Reject ambiguous authentication and retry headers
+- Make conditional HTTP validators reflect response contents (#357)
+- Derive cache validators from observed response bytes
+- Honor weak HTTP entity-tag comparison semantics
+- Upgrade Candle to remove vulnerable ZIP dependencies (#355)
+- Upgrade Candle to remove vulnerable ZIP dependencies
+- Require audit history after store initialization
+- Preserve retry safety under failures and cache pressure (#352)
+- Preserve retry safety under failures and cache pressure
+- Preserve audit alignment and reject malformed records (#351)
+- Complete WARM cleanup and validate the combined changes (#350)
+- Integrate scoped recall and Windows spill review repairs (#347)
+- Upgrade mem0 integration and preserve locked test environments
+- Resolve quality gates and harden documentation redirects
+- Allow legacy npm deprecation without deletion retries
+- Release corrected MCP metadata in version 0.6.5
+- Preserve the MCP reserved metadata contract in release schemas
+- Complete example renaming and record registry retirement
+- Use the accepted warm-python distribution name
+- Repair renamed examples and benchmark provenance
+- Repair the five verified October 30 audit defects (#343)
+- Support audit repairs in docs and Windows test fixtures
+- Validate and bound Python phase operations
+- Make shared framework history clearing recoverable
+- Fail closed when provenance evidence is incomplete
+- Preserve and verify complete framework source text
+- Enforce framework embedding identity before opening stores
+- Validate campaign integration and restore quality gates (#342)
+- Preserve durable identities and bound security lifecycle failures (#341)
+- Share memory validation and preserve adapter ownership (#339)
+- Resolve temporal eligibility before memory ranking (#338)
+- Resolve additional bounded audit concerns (#335)
+- Resolve audited integrity and retrieval defects (#334)
+
+### Performance
+- Decode two-byte checkpoint postings without leaving the loaded word
+- Make history view reuse opt-in
+- Index a history view once and reuse built views
+- Land AVX2 screen popcount, background compaction and historical views (#386)
+- Add the postings block-size sweep driver and build script
+- Make the posting block length a build-time parameter
+- Batch document installs in historical views and record their cost
+- Land working tree, journal segment sizing and query hot lists (#385)
+- Dispatch the AVX2 screen popcount from four words on x86
+- Keep decoded weighted postings of long checkpoint lists per thread
+- Count single-chunk ASCII documents without collecting word spans
+- Start the active journal segment at 1 MiB
+- Start the active journal segment at 1 MiB
+- Add native Vectra filters and preserve development evidence
+- Avoid copying encoded vectors during reads
+- Reduce vector query overhead
+- Track vector snapshot changes by document
+- Isolate stale vector ranking from the fresh path
+- Release the store lock before stale exact scoring
+- Reuse query capture storage for sorted owner addresses
+- Reduce retrieval capture allocations and validate audit write cost (#354)
+- Reduce document retrieval capture allocations
+- Remove the docs hero image fetch from the critical path
+- Prune inactive documentation navigation
+- Preload the documentation landing image
+- Reuse filtered eligibility and bounded dense mutation deltas (#337)
+
+### Security
+- Pin AML runtime artifacts and document model dependency reachability
+
+### Bench
+- Rerun the text comparison at pinned commits against the current comparator pins
+- Measure default and opt-in history view opens
+- Measure cold and reused history view opens
+- Record local paired old-vs-new comparator run for nfcorpus and memory
+- Re-pin text comparators to tantivy 0.27.0, Lucene 10.6.0 and SQLite 3.53.1 with previous-pin version controls
+
+### Merge
+- Lever/repin-comparators
+- Lever/as-of-overfetch
+- Issue/163-time-travel
+- Issue/42-background-compaction
+- Issue/1-hamming-simd
+- Integrate the documentation loading improvement
+
+### Release
+- Publish the MCP Python launcher as warm-mcp
+
+### Research
+- Commit the regression check evidence and the pre-filter check
+- Record the as_of overfetch test and its no-go
+- Add per-query dump and filter-after-top-k arms to the memory API LME harness
+- Add mutation, source and temporal trace studies
+- Add filtered dense and certified association studies
+- Add vector topology information and navigation studies
+- Land the frozen Matryoshka prefix study
+- Add navigation trace mode to vector topology diagnostics
+- Preserve fresh native Matryoshka evidence and source history
+- Record fresh native Matryoshka quality limits
+- Bind native retrieval to fresh SciFact vectors
+- Tighten preflight accounting before measurements
+- Freeze native Matryoshka retrieval harness
+- Freeze fresh native Matryoshka generation
+- Record the frozen Matryoshka prefix results
+- Freeze the Matryoshka prefix retrieval study
+
+### Style
+- Close files with pathlib in the remaining probe scripts and drop an unused import
+- Close files with pathlib reads and writes in the cue-tag and probe scripts
+- Satisfy clippy 1.99 and rustfmt in the merged FPE timestamps evaluation
+- Close the result file in the equal-bits script
+- Format the multilingual analyzer tests
+- Format the merged history and engine modules
+- Satisfy clippy in the supersession probe example
+- Name the revision tuple in the time-travel test
+- Format edge repair sources
+- Format the FPE timestamp module
+- Format the storage import in admin
 ## [0.6.4] - 2026-10-28
 
 ### Added
@@ -53,8 +341,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Add VIBE diagnostics and rotation controls (#183)
 - Euclidean and inner-product metrics in the Python VectorIndex (#186)
 - Clustered private ranking of dense codes at n = 1280 (#177)
-- Server-mode comparators and an warm-server row in the harness (#157)
-- Raise WarmError with the server's error code and message (#145)
+- Server-mode comparators and an hms-server row in the harness (#157)
+- Raise HolographicError with the server's error code and message (#145)
 - Add NGT, ScaNN, PyNNDescent, Voyager and DiskANN to the ANN harness (#156)
 - Euclidean metric for the vertex index and SIFT in the harness (#150)
 - Expose the vector index to Python and add ann-benchmarks and VIBE wrappers (#149)
@@ -64,16 +352,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Local embeddings (pure-Rust engine, pinned model packs, LocalEmbedV1) (#132)
 - Evidence manifest, fetch script and worktree audit record (#117)
 - Format verifier, golden stores for every format, drift gate, crash-window fixes (#126)
-- WebAssembly build of the document store (@writerslogic/warm-wasm) (#129)
-- Production warm-server (scoped auth, observability, TLS, snapshots, deploy artifacts) (#127)
+- WebAssembly build of the document store (@holographic-memory/wasm) (#129)
+- Production hms-server (scoped auth, observability, TLS, snapshots, deploy artifacts) (#127)
 - UniFFI mobile bindings (Swift, Kotlin/Android) (#121)
-- Warm-mcp MCP server, launchers, memory-tool backends and editor integrations (#110)
+- Hms-mcp MCP server, launchers, memory-tool backends and editor integrations (#110)
 - Memory API with temporal validity, supersession, explain and opt-in policies (#114)
-- Warm-import, one-command migration into WARM (#108)
+- Hms-import, one-command migration into HMS (#108)
 - Platform kernels (AVX512-VNNI, NEON fallback) with kill-test results (#107)
 - Integrate the parallel sessions' document store, compaction and server work (#81)
 - Document store with compact postings and file-backed text, staged compaction, multi-tenant server and the evidence client
-- Learned-sparse impact index served by WARM, measured against Anserini
+- Learned-sparse impact index served by HMS, measured against Anserini
 - One series per patience value in the ANN comparison tables
 - Stemmed BM25 and min-max score blend in the document API
 - Patience stop rule, opt-in 1-bit screen and error-returning builds for the vertex graph index
@@ -85,7 +373,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Add held-out tuning mode to public-bench ann-qgraph
 - Add on-device Qwen3 model stages behind local-models
 - Add quantized graph ANN index and its public benchmark mode
-- Add warm-server HTTP service for the Python SDK
+- Add hms-server HTTP service for the Python SDK
 - Subset-union bundle experiment and capacity sweep
 - Add experimental query-private similarity scoring behind private-search
 
@@ -110,7 +398,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Drop host names and local install notes, fix the open-test citation (#221)
 - Replace private paths and hosts, route large result JSON to LFS (#217)
 - Rewrite README with sourced benchmark badges and current architecture (#215)
-- Serve the documentation at docs.writerslogic-warm.com (#189)
+- Serve the documentation at docs.holographic-memory.com (#189)
 - List every Cargo feature and correct the server and MCP rows (#173)
 - Build the rustdoc with warnings denied in CI (#148)
 - Remove internal scoreboards, session records and process notes (#140)
@@ -134,7 +422,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record the holographic prototype outcome
 - Record continuation state for the next session
 - Plan the holographic fact memory and its tests
-- Plan local model stages inside WARM
+- Plan local model stages inside HMS
 - Define the single-run protocol for LongMemEval_M
 - Set the speed and accuracy targets and record the compute limits
 - Plan the LongMemEval_M run with larger models
@@ -197,7 +485,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Satisfy clippy 1.99 lints in the qgraph kernels and graph cache
 - Keep greedy decoding at batch 1 unless a batch is set
 - Reserve Modal wave cost before launch so preemption cannot bypass the cap
-- Run WARM model stages on L4 on Modal
+- Run HMS model stages on L4 on Modal
 - Decode benchmark data with as_chunks for the current clippy
 - Serve SDK queries by exact cosine through the document API
 - Resolve leftover merge markers in .bestpractices.json
@@ -241,7 +529,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rebuild a checkpoint without the postings of its dead documents (#249)
 - Single-thread vertex search (prefetch terms, SIMD re-rank, 8-bit codes in the harness) (#226)
 - Open text stores from a durable document checkpoint (#235)
-- Persist the warm-server vector graph and open it at start (#228)
+- Persist the hms-server vector graph and open it at start (#228)
 - Qgraph review fixes (#220)
 - Full-text engine and storage review fixes (#218)
 - Eliminate redundant graph construction and query work (#209)
@@ -250,7 +538,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rank unfiltered lexical queries in the slot table at any store size (#197)
 - Store construction adjacency in one fixed-slot array (#182)
 - Faster single-threaded text ingest (#178)
-- Lean BM25 search endpoint and in-place fact replacement in warm-server (#176)
+- Lean BM25 search endpoint and in-place fact replacement in hms-server (#176)
 - Build the vertex graph faster (#174)
 - Serve the vertex index from a memory-mapped file (#172)
 - Binary journal frames, in-place posting deletes and an ingest word interner (#155)
@@ -288,7 +576,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record the neighbour-major block kill test against the per-row path (#292)
 - Build the VIBE image for x86-64-v3 and pre-register the OOD grid (#287)
 - Attribute the streaming runs to the measured commit (#231)
-- Add an WARM backend for Mem0's memory-benchmarks harness (#262)
+- Add an HMS backend for Mem0's memory-benchmarks harness (#262)
 - Measure memory API write costs and record host-layer findings (#245)
 - VIBE wrapper with 8-bit codes, query-aware OOD builds and huge pages (#255)
 - Add a LoCoMo captions variant measured against the matched protocol (#261)
@@ -317,9 +605,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record timed held-out glove run of i8 vertex-code qgraph
 - Correct reference eval counts in memory-first results
 - Record held-out recall screening of qgraph memory layouts
-- Record the s-dev-warm cost overrun and stop
+- Record the s-dev-hms cost overrun and stop
 - Record held-out qgraph tuning on nytimes
-- Measure WARM fact extraction against the Python stage on S dev
+- Measure HMS fact extraction against the Python stage on S dev
 - Add seeds and an equal-bytes index control to the holographic prototype
 - Record quantized graph results against HNSW
 - Prototype the holographic fact memory and measure it on LongMemEval_S dev
@@ -375,7 +663,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 
 ### Added
 - Introduce IdentityRegistry enforcing W3C DIDs, Verifiable Credentials, and POSME Receipts for queries
-- Add AsyncWarmClient, batch uploading, and metadata filtering
+- Add AsyncHolographicClient, batch uploading, and metadata filtering
 - Add Pydantic AI and SmolAgents tool wrappers
 - Add Phidata integration and fix broken Rust examples
 - Add Semantic Kernel and DSPy integrations to Holographic SDK
@@ -406,30 +694,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Add agency layer (GoalStore, Planner, QuestionGenerator, SelfModifier)
 - Add cognition layer, distributional refiner, CI coverage
 - N-API bindings, persistence, load_from_log, compact for meaning memory (G6)
-- Integrate meaning memory into WarmCore, wire write/delete paths (G5)
+- Integrate meaning memory into HmsCore, wire write/delete paths (G5)
 - Fuzzy_structural_query + multi_hop_query pipelines (G4)
 - AtomMemory, CompositeMemory, TripleStore, RuleStore, Decomposer (G3)
 - Shared utilities + IndexedMemory with Hopfield attractor (G1-G2)
-- Rename to writerslogic-warm, fix npm logo, update all URLs
+- Rename to holographic-memory, fix npm logo, update all URLs
 - Graph engine with multi-hop traversal, inference, temporal, federated queries
 - Complete security integration, DP wiring, docs, LF readiness
 - Add security features behind feature flag for LF Decentralized Trust readiness
 - Migrate to writerslogic org, add npm publish pipeline
 - Eliminate remaining gaps, expose train_nsg/train_ivf via N-API
-- Expose diffusion config through WarmConfig and N-API
+- Expose diffusion config through HmsConfig and N-API
 - Configurable thresholds, N-API config constructor, status getters
 - Add query_sequence, elevate test coverage for weak features
 - Add multi-shard support with auto-sharding
-- Initial release of WritersLogic Adaptive Retention & Memory (WARM)
+- Initial release of Holographic Memory System (HMS)
 
 ### Changed
 - Centralize SDK HTTP client and add CrewAI + Embedchain platforms
-- Consolidate LangChain, LlamaIndex, and Haystack adapters into unified warm-sdk
+- Consolidate LangChain, LlamaIndex, and Haystack adapters into unified holographic-sdk
 - Extract shared wire codec (write/read_lp_str, write/read_deltas)
 - Remove dead self-inverse resonator; move ResonatorConfig to phase_resonator
 - Extract meaning_ctx() helper shared by structural_query and multi_hop
 - Gate experimental VSA modules behind experimental feature
-- Migrate WARM agent identity from did.cose to CAWG ICA
+- Migrate HMS agent identity from did.cose to CAWG ICA
 - Deduplicate RNG pruning, unify patterns, add doc comments
 - Eliminate dead code, add delete/compact with persistence
 - Remove redb dependency, use in-memory FxHashMap with arena log persistence
@@ -543,7 +831,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Land 10 Dependabot major bumps with API fixes (#26)
 
 ### Example
-- Story_memory -- WARM reasoning memory serving a writer (scrivener-mcp)
+- Story_memory -- HMS reasoning memory serving a writer (scrivener-mcp)
 
 ### Research
 - Fractional-power encoding gives the phasor memory continuous 'near'
