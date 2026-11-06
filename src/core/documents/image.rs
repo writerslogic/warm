@@ -387,6 +387,54 @@ struct RecordChunk<'a> {
     text: Option<&'a str>,
 }
 
+fn parse_metadata(bytes: &[u8]) -> Result<serde_json::Value> {
+    let mut metadata: serde_json::Value =
+        serde_json::from_slice(bytes).context("checkpoint metadata")?;
+    ensure!(
+        metadata.is_object(),
+        "checkpoint metadata must be an object"
+    );
+    super::compact_metadata(&mut metadata);
+    Ok(metadata)
+}
+
+/// Metadata values a query's hits share, keyed by their stored bytes, so a hit whose metadata
+/// repeats one already parsed clones it instead of parsing it again. It lives for one capture
+/// and gives up after [`Self::GIVE_UP`] distinct blobs with no repeat, so unique metadata pays
+/// for a handful of comparisons at most.
+#[derive(Default)]
+pub(crate) struct MetadataCache {
+    entries: Vec<(Box<[u8]>, serde_json::Value)>,
+    repeated: bool,
+    next: usize,
+}
+
+impl MetadataCache {
+    const CAPACITY: usize = 16;
+    const GIVE_UP: usize = 8;
+    /// The longest stored blob worth keeping.
+    const LONGEST: usize = 256;
+
+    fn metadata(&mut self, bytes: &[u8]) -> Result<serde_json::Value> {
+        if bytes.len() > Self::LONGEST || (!self.repeated && self.entries.len() >= Self::GIVE_UP) {
+            return parse_metadata(bytes);
+        }
+        if let Some((_, value)) = self.entries.iter().find(|(stored, _)| &**stored == bytes) {
+            self.repeated = true;
+            return Ok(value.clone());
+        }
+        let value = parse_metadata(bytes)?;
+        let entry = (bytes.into(), value.clone());
+        if self.entries.len() < Self::CAPACITY {
+            self.entries.push(entry);
+        } else {
+            self.entries[self.next] = entry;
+            self.next = (self.next + 1) % Self::CAPACITY;
+        }
+        Ok(value)
+    }
+}
+
 /// One decoded checkpoint record.
 struct Record<'a> {
     version: &'a str,
@@ -705,6 +753,33 @@ impl ServingImage {
 
     /// Decodes document `ordinal`'s record.
     fn record(&self, ordinal: usize) -> Result<Record<'_>> {
+        let mut chunks = Vec::new();
+        let (version, source_uri, metadata) = self.decode_record(
+            ordinal,
+            parse_metadata,
+            |count, chunk| {
+                if chunks.capacity() == 0 {
+                    chunks.reserve_exact(count);
+                }
+                chunks.push(chunk);
+            },
+        )?;
+        Ok(Record {
+            version,
+            source_uri,
+            metadata,
+            chunks,
+        })
+    }
+
+    /// Walks document `ordinal`'s record, validating every field. `metadata` builds the value
+    /// from the record's metadata bytes; `chunk` receives each chunk with the record's count.
+    fn decode_record<'a>(
+        &'a self,
+        ordinal: usize,
+        metadata: impl FnOnce(&'a [u8]) -> Result<serde_json::Value>,
+        mut chunk: impl FnMut(usize, RecordChunk<'a>),
+    ) -> Result<(&'a str, Option<&'a str>, serde_json::Value)> {
         let (start, end) = self.span(Section::DocOffsets, ordinal);
         let mut reader = Reader::new(&self.section(Section::Docs)[start..end]);
         let version = reader.str()?;
@@ -726,19 +801,12 @@ impl ServingImage {
             metadata_bytes.len() <= 64 * 1024,
             "checkpoint metadata exceeds 64 KiB"
         );
-        let mut metadata: serde_json::Value =
-            serde_json::from_slice(metadata_bytes).context("checkpoint metadata")?;
-        ensure!(
-            metadata.is_object(),
-            "checkpoint metadata must be an object"
-        );
-        super::compact_metadata(&mut metadata);
+        let metadata = metadata(metadata_bytes)?;
         let count = reader.count(4)?;
         ensure!(
             (1..=4096).contains(&count),
             "checkpoint document chunk count"
         );
-        let mut chunks = Vec::with_capacity(count);
         for _ in 0..count {
             let flags = reader.byte()?;
             ensure!(
@@ -771,22 +839,20 @@ impl ServingImage {
                 text.is_none_or(|text| text.len() == (end_byte - start_byte) as usize),
                 "checkpoint chunk text length"
             );
-            chunks.push(RecordChunk {
-                id,
-                stemmed: flags & STEMMED != 0,
-                analyzed: flags & ANALYZED != 0,
-                start_byte,
-                end_byte,
-                text,
-            });
+            chunk(
+                count,
+                RecordChunk {
+                    id,
+                    stemmed: flags & STEMMED != 0,
+                    analyzed: flags & ANALYZED != 0,
+                    start_byte,
+                    end_byte,
+                    text,
+                },
+            );
         }
         ensure!(reader.is_empty(), "checkpoint record has trailing bytes");
-        Ok(Record {
-            version,
-            source_uri,
-            metadata,
-            chunks,
-        })
+        Ok((version, source_uri, metadata))
     }
 
     /// A stored chunk as the live store holds a lexical-only one; text inline.
@@ -819,21 +885,35 @@ impl ServingImage {
 
     /// What a result reports of the chunk in `slot`, unscored: the chunk's id, span and inline
     /// text, and its document's id, source, version and metadata.
-    pub(crate) fn hit(&self, slot: usize) -> Result<super::DocumentResult> {
+    pub(crate) fn hit(
+        &self,
+        slot: usize,
+        cache: &mut MetadataCache,
+    ) -> Result<super::DocumentResult> {
         let (_, ordinal, index) = self.slot(slot);
         ensure!(ordinal != FREE, "checkpoint slot is free");
         let (ordinal, index) = (ordinal as usize, index as usize);
         let id = self.id(ordinal);
-        let record = self.record(ordinal)?;
-        let chunk = record.chunks.get(index).context("checkpoint chunk index")?;
+        let (mut found, mut seen) = (None, 0usize);
+        let (version, source_uri, metadata) = self.decode_record(
+            ordinal,
+            |bytes| cache.metadata(bytes),
+            |_, chunk| {
+                if seen == index {
+                    found = Some(chunk);
+                }
+                seen += 1;
+            },
+        )?;
+        let chunk = found.context("checkpoint chunk index")?;
         Ok(super::DocumentResult {
             id: chunk
                 .id
                 .map_or_else(|| super::chunk_id(id, index), str::to_owned),
             document_id: id.to_owned(),
-            source_uri: record.source_uri.map(str::to_owned),
-            version: record.version.to_owned(),
-            metadata: record.metadata,
+            source_uri: source_uri.map(str::to_owned),
+            version: version.to_owned(),
+            metadata,
             text: chunk.text.map(str::to_owned),
             start_byte: chunk.start_byte,
             end_byte: chunk.end_byte,
