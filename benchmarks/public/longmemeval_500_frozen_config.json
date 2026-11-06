@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "name": "warm-longmemeval-s-500-v1",
+  "status": "FROZEN for one held-out run; any edit after the first retrieval or API call voids the run",
+  "pinned_warm_revision": "e7987b3ec17b5f1fae0373653d432e611fa866f1",
+  "benchmark": {
+    "dataset": "LongMemEval_S cleaned",
+    "file": "longmemeval_s_cleaned.json",
+    "cache_path": "~/.cache/warm-bench/downloads/longmemeval_s_cleaned.json",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "release_revision": "98d7416c24c778c2fee6e6f3006e7a073259d48f",
+    "n_questions": 500,
+    "split_file": "benchmarks/public/longmemeval_split.json",
+    "split_sha256": "ef9c00e7bc8d029a4f4cf2c177098c35e3ee347893680e1fe26ee98ed9d16ba7",
+    "split": {
+      "dev": 100,
+      "heldout": 400,
+      "seed": 20261005
+    },
+    "reporting": "report overall n=500 AND dev100 / heldout400 separately; dev100 was used for tuning, so the 500 figure mixes tuned and untouched questions"
+  },
+  "official_code": {
+    "repo": "xiaowu0162/LongMemEval",
+    "commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+    "evaluate_qa_py": "src/evaluation/evaluate_qa.py, used unchanged (cached copy longmemeval_evaluate_qa_9e0b455f4ef0.py)",
+    "evaluate_qa_sha256": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251",
+    "eval_utils_py": "src/retrieval/eval_utils.py (retrieval metrics only)"
+  },
+  "retrieval": {
+    "granularity": "flat user turn; each retrieved turn expands to its round (that turn plus the next turn)",
+    "k": 10,
+    "ranked_input": "one JSON {question_id: [turn ids '<session_id>_<n>' best first]} with all 500 ids and the top 50 turns each; no label-bearing tie-breaks: ranking runs on ids replaced by sha256 of the turn id without its leading answer_/noans_ marker, ordered by that hash, so ties resolve by sha256 of the turn id",
+    "producer": "benchmarks/public/longmemeval_pipeline.py driven by benchmarks/public/longmemeval_modal.py --heldout-final on Modal: the pinned small Qwen3 models and the tuned benchmarks/public/longmemeval_config.json at pinned_warm_revision; rankings from retrieval scores only (pipeline.blinded_rankings), written as <tag>.rankings.json",
+    "labels_forbidden": [
+      "question_type",
+      "answer",
+      "answer_session_ids",
+      "has_answer",
+      "'_abs' in question_id",
+      "ids containing answer_/noans_"
+    ],
+    "pipeline": {
+      "driver": "benchmarks/public/longmemeval_modal.py",
+      "entrypoint_flags": "--dataset s --part all --models small --engine python --cap 12 --tag lme500 --heldout-final benchmarks/public/longmemeval_500_frozen_config.json --frozen-sha256 <sha256 of this file>",
+      "config_file": "benchmarks/public/longmemeval_config.json",
+      "config_sha256": "d8ba2af9e4a83edd1d07f2bcc231aa8fbc73de70e2cad6994cbc84558a40c129",
+      "model_pins": {
+        "embed": {
+          "id": "Qwen/Qwen3-Embedding-0.6B",
+          "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3"
+        },
+        "rerank": {
+          "id": "Qwen/Qwen3-Reranker-0.6B",
+          "revision": "e61197ed45024b0ed8a2d74b80b4d909f1255473"
+        },
+        "llm": {
+          "id": "Qwen/Qwen3-4B-Instruct-2507",
+          "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+        }
+      },
+      "engine": "python",
+      "tag": "lme500",
+      "export_depth": 50,
+      "note": "dev100 tuned this config; the held-out 400 are first scored by this run"
+    }
+  },
+  "reader": {
+    "model": "gpt-4o-2024-08-06",
+    "protocol": "official run_generation.py flat-turn, json history, chain-of-note (con) template, history chats sorted by session date, has_answer stripped",
+    "temperature": 0,
+    "max_tokens": 800,
+    "retrieval_token_cap": 126200,
+    "tokenizer": "o200k_base",
+    "template": "I will give you several history chats between you and a user. Please answer the question based on the relevant chat history. Answer the question step by step: first extract all the relevant information, and then reason over the information to get the answer.\n\n\nHistory Chats:\n\n{history}\n\nCurrent Date: {question_date}\nQuestion: {question}\nAnswer (step by step):",
+    "history_chunk_format": "\\n### Session {i}:\\nSession Date: {date}\\nSession Content:\\n\\n{json.dumps(round)}\\n",
+    "system_prompt": "none (single user message)",
+    "api_mode": "sync; the OpenRouter proxy serves neither streaming nor the Batch API, so --batch is not used"
+  },
+  "abstention": {
+    "rule": "No reader-side abstention rule, threshold or label. The reader abstains only by saying so in its own answer.",
+    "judge_side": "the official judge switches to the unanswerable prompt iff '_abs' in question_id; this is judge-only and never reaches retrieval or the reader"
+  },
+  "judges": [
+    {
+      "id": "primary",
+      "model_short": "gpt-4o",
+      "model": "gpt-4o-2024-08-06",
+      "how": "python evaluate_qa.py gpt-4o <hypotheses.jsonl> longmemeval_s_cleaned.json (official, unchanged)",
+      "temperature": 0,
+      "max_tokens": 10,
+      "label_rule": "'yes' in reply.lower()"
+    },
+    {
+      "id": "engram_board",
+      "model_short": "gpt-4o-mini",
+      "model": "gpt-4o-mini-2024-07-18",
+      "how": "python evaluate_qa.py gpt-4o-mini <hypotheses.jsonl> longmemeval_s_cleaned.json (official, unchanged); required by the Engram board; reported separately, never averaged with the primary",
+      "temperature": 0,
+      "max_tokens": 10,
+      "label_rule": "'yes' in reply.lower()"
+    }
+  ],
+  "repeats": "single pass; temperature 0 is not deterministic (about 6 of 100 dev questions flipped between repeated k=10 runs), so the figure is one sample, not a bound",
+  "spend": {
+    "cap_usd": 30.0,
+    "modal_gpu_cap_usd": 12.0,
+    "api": "reader and judges via OpenRouter with the provider pinned to OpenAI (allow_fallbacks=false) through the local proxy /Volumes/A/.hms-lb/longmemeval/openrouter/proxy.py; responses from any other provider are rejected; models gpt-4o-2024-08-06 and gpt-4o-mini-2024-07-18; no other provider",
+    "authorization": "none granted by this file; the maintainer runs it"
+  },
+  "forbidden": [
+    "tuning any value in this file after the first held-out API call",
+    "selecting k, prompts or reader after seeing 500-question results",
+    "dropping failed or empty questions from the denominator",
+    "editing any tracked file after pinned_warm_revision other than this config, or running from a dirty tree"
+  ]
+}
