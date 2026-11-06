@@ -316,7 +316,7 @@ impl WarmCore {
                 documents::capture_overlaid_search(store, prepared.take().expect("taken once"))
             })
         });
-        let captured = match from_checkpoint {
+        let mut captured = match from_checkpoint {
             Some(captured) => captured?,
             None => {
                 self.hydrate_documents()?;
@@ -333,7 +333,7 @@ impl WarmCore {
             let read: Option<Vec<_>> = ranked
                 .into_iter()
                 .enumerate()
-                .map(|(i, hits)| documents::read_ranked(&captured, i, hits))
+                .map(|(i, hits)| documents::read_ranked(&mut captured, i, hits))
                 .collect::<Result<_>>()?;
             if let Some(results) = read {
                 return Ok(results);

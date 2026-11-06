@@ -66,7 +66,8 @@ protocols, not a substitute for testing your own data.
 | LongMemEval dev 89.75 of 100 correct (mean of 4 runs, range 87 to 93) | Official generation and judge prompts, `gpt-4o-2024-08-06` as reader and judge, top 10 context. Retrieval is the reference turn ranking over cached Qwen3 scores, not native conversation-memory recall. k was chosen on dev; there is no held-out result. | [`longmemeval_official_dev_summary.json`](benchmarks/results/longmemeval_official_dev_summary.json) |
 | VIBE llama-128-ip strict recall@100 up to 0.99687 at 1,457 QPS | Official test queries, one thread, query-aware graph (ef=512). Neither frozen RoarGraph configuration reached 0.99. Behind at 0.95 and 0.99 QPS (see below). | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
 | VIBE yi-128-ip at recall 0.95: 3,214 QPS against 1,953 (MLANN RF80) | Same protocol; compared only with the frozen RoarGraph and MLANN configurations measured there. Recall 0.99 was not reached. | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
-| SIFT-1M QPS at recall@10 0.95: 17,481 against hnswlib 7,630 (2.29x, interval 1.95 to 2.39) | Historical observation with unpinned source revision (comparative verdict unverified). Core Ultra 9 185H, queries issued one at a time from one client thread, process not pinned to a core, index built with 8 threads. Timed through the Rust API, hnswlib through its Python binding. | [`heavy-ann-sift-...-185h-22c-27g.json`](benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
+| SIFT-1M at recall@10 0.95: 23,918 QPS against hnswlib 8,125 (2.94x, interval 2.75 to 3.01); 3.09x at 0.99, 1.40x faster build, 1.83x less serving RSS, 3.74x faster cold start | Core Ultra 9 185H at `4b7a849f`, 10,000 queries issued one at a time from one client thread, index built with 8 threads; WARM through the Rust API, hnswlib through its Python binding; Bonferroni-adjusted bootstrap intervals | [`heavy-ann-sift-...-185h-22c-27g.json`](benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
+| BM25 search on SciFact, NFCorpus and the memory corpus: 1.66x to 2.00x the single-thread QPS of the fastest of tantivy 0.27, Lucene 10.6 and SQLite FTS5, with 1.69x to 2.91x less serving memory and 3.1x to 5.7x faster cold start, at tied nDCG@10 | Two machines (Core Ultra 9 185H at `4b7a849f`, Modal 8 vCPU at `7ba2d4fe`, same engine source), 5 and 3 interleaved serve rounds, Bonferroni-adjusted bootstrap intervals exclude parity for every win. Lexical only, one chunk per document | [COMPARISON.md](docs/benchmarks/COMPARISON.md), [`standard-text-beir-scifact-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
 | SciFact nDCG@10 hybrid 0.729, above its own BM25 (0.688) and dense (0.645) | 5,183 documents, 300 queries, MiniLM embeddings supplied by the harness. NFCorpus: 0.355 against 0.323 and 0.317. | [`public_scifact.json`](benchmarks/results/public_scifact.json), [`public_nfcorpus.json`](benchmarks/results/public_nfcorpus.json) |
 
 ### Where it's behind
@@ -75,8 +76,9 @@ protocols, not a substitute for testing your own data.
 |--------|------------|-------------|
 | ann-benchmarks at recall 0.95: sift 2,819 QPS against faiss-ivfpqfs 3,788 (0.74x); glove 1,019 against ScaNN 1,535 (0.66x) | Official ann-benchmarks runner, each run pinned to one CPU, AVX2 host | [`ann_benchmarks_harness_wl02_v1.json`](benchmarks/results/ann_benchmarks_harness_wl02_v1.json) |
 | VIBE llama-128-ip QPS: 24.6% behind RoarGraph at recall 0.95, 54.8% behind MLANN RF80 at 0.99 | One thread, official test queries | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
-| SIFT-1M build time 0.58x and serving RSS 0.46x of hnswlib | Same run as the QPS row above | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
-| Text search ingest time, serving RSS and cold start behind SQLite FTS5 and tantivy on most corpora | BEIR and memory corpora, two hosts | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
+| SIFT-1M index file 1,389 MiB against hnswlib's 752 (0.54x, no interval); peak build RSS 0.94x of hnswlib's | Same run as the SIFT-1M row above | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
+| BEIR FiQA (57,600 documents) single-thread BM25 QPS: 1,269 against Lucene 10.6's 1,625 (0.78x); p50 and p99 latency also behind | Core Ultra 9 185H at `4b7a849f`, 5 interleaved serve rounds; serving memory (1.26x less than SQLite FTS5) and cold start (2.37x faster than tantivy) still win | [`standard-text-beir-fiqa-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
+| Text ingest: peak build memory 1.1x to 2.1x SQLite FTS5's on every corpus; ingest time behind SQLite FTS5 on SciFact, NFCorpus and memory (0.46x to 0.97x), tied on FiQA | Same runs, both machines | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
 | glove-100-angular with the sparse vector path: recall@10 0.252 at 33.7 QPS against FAISS HNSW 0.832 at 4,111 QPS | One thread, Apple M4; the sparse path is experimental | [`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json) |
 
 Method, intervals and every loss: [docs/benchmarks](docs/benchmarks/README.md) and the
@@ -84,57 +86,57 @@ Method, intervals and every loss: [docs/benchmarks](docs/benchmarks/README.md) a
 
 <!-- BENCH:START -->
 
-_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead._
+_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead, - = no verdict (unpinned source revision, no interval, or not comparable). Rows are compared only within one machine._
 
-| Dataset | Metric | WARM | Best other | Advantage | |
-|---|---|---|---|---|---|
-| sift-128-euclidean | QPS @ recall@10 >= 0.95 (QPS) | 17,481 | hnswlib 7,630 | n/v | - |
-| sift-128-euclidean | p99 latency @ 0.95 (us) | 105 | hnswlib 220 | n/v | - |
-| sift-128-euclidean | Build time (s) | 312.60 | hnswlib 182.49 | n/v | - |
-| sift-128-euclidean | RSS, serving (MiB) | 2,204 | hnswlib 1,019 | n/v | - |
-| sift-128-euclidean | Index size (MiB) | 446.3 | hnswlib 873.8 | n/v | - |
-| beir:fiqa | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | n/v | - |
-| beir:fiqa | QPS (single thread) (QPS) | 3,612 | tantivy 1,617 | n/v | - |
-| beir:fiqa | p99 latency (us) | 509 | tantivy 1,269 | n/v | - |
-| beir:fiqa | Ingest/build time (s) | 2.16 | SQLite FTS5 1.18 | n/v | - |
-| beir:fiqa | Peak RSS, serving (MiB) | n/m | n/m | n/m | - |
-| beir:fiqa | On-disk size (MiB) | 20.6 | Apache Lucene 9.12.3 (JVM) 12.2 | n/v | - |
-| memory | nDCG@10 | 0.4561 | Apache Lucene 9.12.3 (JVM) 0.4627 | 0.99x | T |
-| memory | QPS (single thread) (QPS) | 2,289 | tantivy 2,504 | 0.91x | T |
-| memory | p99 latency (us) | 775 | tantivy 720 | 0.93x | T |
-| memory | Ingest/build time (s) | 2.52 | SQLite FTS5 2.06 | 0.82x | L |
-| memory | Peak RSS, serving (MiB) | 66 | SQLite FTS5 26 | 0.39x | L |
-| memory | On-disk size (MiB) | 9.8 | Apache Lucene 9.12.3 (JVM) 10.3 | 1.05x | W |
-| memory | nDCG@10 | 0.4561 | Apache Lucene 9.12.3 (JVM) 0.4627 | n/v | - |
-| memory | QPS (single thread) (QPS) | 12,629 | tantivy 4,850 | n/v | - |
-| memory | p99 latency (us) | 145 | tantivy 396 | n/v | - |
-| memory | Ingest/build time (s) | 1.21 | SQLite FTS5 0.88 | n/v | - |
-| memory | Peak RSS, serving (MiB) | n/m | n/m | n/m | - |
-| memory | On-disk size (MiB) | 9.8 | Apache Lucene 9.12.3 (JVM) 10.3 | n/v | - |
-| beir:nfcorpus | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | n/v | - |
-| beir:nfcorpus | QPS (single thread) (QPS) | 40,784 | tantivy 15,413 | n/v | - |
-| beir:nfcorpus | p99 latency (us) | 57 | tantivy 150 | n/v | - |
-| beir:nfcorpus | Ingest/build time (s) | 0.23 | SQLite FTS5 0.14 | n/v | - |
-| beir:nfcorpus | Peak RSS, serving (MiB) | n/m | n/m | n/m | - |
-| beir:nfcorpus | On-disk size (MiB) | 2.1 | Apache Lucene 9.12.3 (JVM) 1.5 | n/v | - |
-| beir:nfcorpus | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x | T |
-| beir:nfcorpus | QPS (single thread) (QPS) | 10,572 | tantivy 7,151 | 1.48x | W |
-| beir:nfcorpus | p99 latency (us) | 279 | tantivy 294 | 1.05x | T |
-| beir:nfcorpus | Ingest/build time (s) | 0.59 | SQLite FTS5 0.29 | 0.48x | L |
-| beir:nfcorpus | Peak RSS, serving (MiB) | 57 | SQLite FTS5 30 | 0.53x | L |
-| beir:nfcorpus | On-disk size (MiB) | 2.1 | Apache Lucene 9.12.3 (JVM) 1.5 | 0.72x | L |
-| beir:scifact | nDCG@10 | 0.7027 | Apache Lucene 9.12.3 (JVM) 0.7022 | n/v | - |
-| beir:scifact | QPS (single thread) (QPS) | 17,782 | tantivy 6,450 | n/v | - |
-| beir:scifact | p99 latency (us) | 95 | tantivy 287 | n/v | - |
-| beir:scifact | Ingest/build time (s) | 0.31 | SQLite FTS5 0.20 | n/v | - |
-| beir:scifact | Peak RSS, serving (MiB) | 196 | tantivy 174 | n/v | - |
-| beir:scifact | On-disk size (MiB) | 2.9 | Apache Lucene 9.12.3 (JVM) 2.0 | n/v | - |
-| beir:scifact | nDCG@10 | 0.7027 | Apache Lucene 9.12.3 (JVM) 0.7022 | 1.00x | T |
-| beir:scifact | QPS (single thread) (QPS) | 2,733 | tantivy 2,965 | 0.92x | L |
-| beir:scifact | p99 latency (us) | 518 | tantivy 508 | 0.98x | T |
-| beir:scifact | Ingest/build time (s) | 1.42 | SQLite FTS5 0.43 | 0.30x | L |
-| beir:scifact | Peak RSS, serving (MiB) | 160 | SQLite FTS5 54 | 0.34x | L |
-| beir:scifact | On-disk size (MiB) | 2.9 | Apache Lucene 9.12.3 (JVM) 2.0 | 0.68x | L |
+| Dataset | Machine | Metric | WARM | Best other | Advantage | |
+|---|---|---|---|---|---|---|
+| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS @ recall@10 >= 0.95 (QPS) | 23,918 | hnswlib 8,125 | 2.94x | W |
+| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency @ 0.95 (us) | 97 | hnswlib 251 | 2.60x | W |
+| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Build time (s) | 121.44 | hnswlib 170.02 | 1.40x | W |
+| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | RSS, serving (MiB) | 490 | hnswlib 898 | 1.83x | W |
+| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Index size (MiB) | 1,389.1 | hnswlib 751.8 | 0.54x | - |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x | T |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 1,269 | Apache Lucene 10.6.0 (JVM) 1,625 | 0.78x | L |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 1,828 | Apache Lucene 10.6.0 (JVM) 1,486 | 0.81x | L |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 1.55 | SQLite FTS5 1.44 | 0.93x | T |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 31 | SQLite FTS5 39 | 1.26x | W |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 9.7 | Apache Lucene 10.6.0 (JVM) 12.1 | 1.25x | W |
+| memory | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x | T |
+| memory | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 4,138 | tantivy 2,185 | 1.89x | W |
+| memory | `modal-x86_64-8vcpu-32g` | p99 latency (us) | 533 | tantivy 798 | 1.50x | W |
+| memory | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 1.91 | SQLite FTS5 1.75 | 0.92x | L |
+| memory | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 17 | SQLite FTS5 41 | 2.42x | W |
+| memory | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 3.5 | Apache Lucene 10.6.0 (JVM) 10.3 | 2.92x | W |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x | T |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 8,417 | tantivy 4,962 | 1.70x | W |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 284 | tantivy 482 | 1.70x | W |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.87 | SQLite FTS5 0.84 | 0.97x | L |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 14 | SQLite FTS5 24 | 1.69x | W |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 3.5 | Apache Lucene 10.6.0 (JVM) 10.3 | 2.92x | W |
+| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x | T |
+| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 12,373 | tantivy 7,333 | 1.69x | W |
+| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | p99 latency (us) | 164 | tantivy 280 | 1.71x | W |
+| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 0.44 | SQLite FTS5 0.20 | 0.46x | L |
+| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 15 | SQLite FTS5 45 | 2.91x | W |
+| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 1.0 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.55x | W |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x | T |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 23,585 | tantivy 14,207 | 1.66x | W |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 153 | tantivy 245 | 1.60x | W |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.15 | SQLite FTS5 0.14 | 0.94x | L |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 13 | SQLite FTS5 28 | 2.22x | W |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 1.0 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.55x | W |
+| beir:scifact | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
+| beir:scifact | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 5,534 | tantivy 3,106 | 1.78x | W |
+| beir:scifact | `modal-x86_64-8vcpu-32g` | p99 latency (us) | 236 | tantivy 474 | 2.01x | W |
+| beir:scifact | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 0.58 | SQLite FTS5 0.30 | 0.52x | L |
+| beir:scifact | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 31 | SQLite FTS5 70 | 2.23x | W |
+| beir:scifact | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.53x | W |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 12,254 | tantivy 6,133 | 2.00x | W |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 220 | tantivy 402 | 1.83x | W |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.22 | SQLite FTS5 0.20 | 0.91x | L |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 29 | SQLite FTS5 53 | 1.84x | W |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.53x | W |
 
 <!-- BENCH:END -->
 
