@@ -406,3 +406,72 @@ def load_scores(path: Path) -> dict:
 
 def now() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+# ------------------------------------------------------------------ label-blind ranking export
+# Used only by the sealed held-out run (longmemeval_modal.py --heldout-final). `rank_question` and `_ranks`
+# break ties by the target id string, and turn ids carry the evaluation labels (`answer_`/`noans_` come from
+# the dataset's evidence session ids and from has_answer). Ranking therefore runs on a blinded copy of each
+# question whose ids are sha256 of the id without that marker, ordered by that hash, so every tie resolves by
+# the hash and no id, flag or question field reaches the ranking.
+
+_LABEL_MARKER = re.compile(r"^(?:answer|noans)_")
+EXPORT_DEPTH = 50  # turn ids exported per question; the official reader uses the first 10
+
+
+def canonical_id(i: str) -> str:
+    """The dataset's own turn/session id (what the official QA script resolves), undoing the noans rewrite."""
+    return i.replace("noans_", "answer_")
+
+
+def neutral_id(i: str) -> str:
+    return hashlib.sha256(_LABEL_MARKER.sub("", canonical_id(i)).encode()).hexdigest()
+
+
+def blind_question(q: Question) -> tuple[Question, dict[str, str], dict[str, str]]:
+    """(blinded copy, loaded id -> neutral id, neutral id -> loaded id). Texts are dropped; ranking never reads them."""
+    fwd: dict[str, str] = {}
+    sessions = []
+    for s in q.sessions:
+        turns = []
+        for tid, _, _ in s.turns:
+            fwd[tid] = neutral_id(tid)
+            turns.append((fwd[tid], "", ""))
+        fwd[s.sid] = neutral_id(s.sid)
+        sessions.append(Session(fwd[s.sid], s.date, s.date_text, sorted(turns)))
+    back = {n: o for o, n in fwd.items()}
+    if len(back) != len(fwd):
+        raise ValueError(f"neutral id collision in {q.qid}")
+    sessions.sort(key=lambda s: s.sid)
+    return Question(q.qid, "", q.text, q.date_text, q.date, sessions), fwd, back
+
+
+def blinded_rankings(questions, scores: dict, targets: dict, cfg_turn: dict, cfg_sess: dict,
+                     queries=None, llm="", rerank=None) -> dict:
+    """`run`'s rankings from retrieval scores only; lists hold the loaded ids so `evaluate` can score them."""
+    out = {"session": {}, "turn": {}}
+    for q in questions:
+        bq, fwd, back = blind_question(q)
+        bt = {kid: tuple(None if x is None else fwd[x] for x in pair) for kid, pair in targets[q.qid].items()}
+        br = {lv: {fwd[t]: v for t, v in (rerank or {}).get(lv, {}).get(q.qid, {}).items()}
+              for lv in ("session", "turn")}
+        tr = time_range(bq, queries, llm)
+        rs = rank_question(bq, scores[q.qid], bt, cfg_sess, "session", tr, br["session"], None)
+        rt = rank_question(bq, scores[q.qid], bt, cfg_turn, "turn", tr, br["turn"], rs)
+        out["session"][q.qid] = [back[t] for t in rs]
+        out["turn"][q.qid] = [back[t] for t in rt]
+    return out
+
+
+def export_rankings(turn_rankings: dict[str, list[str]], depth: int = EXPORT_DEPTH) -> dict[str, list[str]]:
+    # The fused turn list can name a turn twice (once per contributing list); the official QA loader
+    # rejects duplicates, so keep each turn at its first (best) position before cutting to depth.
+    out = {}
+    for qid, r in sorted(turn_rankings.items()):
+        ids = list(dict.fromkeys(canonical_id(t) for t in r))
+        out[qid] = ids[:depth]
+    return out
+
+
+def rankings_bytes(exported: dict) -> bytes:
+    return (json.dumps(exported, sort_keys=True, separators=(",", ":")) + "\n").encode()
