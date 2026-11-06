@@ -26,6 +26,39 @@ Tune only on the frozen 100 dev questions in
 abstention rule, and scoring procedure are frozen for the single final M run.
 That run cannot be used to select another variant or tune the pipeline.
 
+### LongMemEval_S 500-question held-out run (final, spent)
+
+The single sealed held-out run has now been made on LongMemEval_S, under
+[the frozen config](../benchmarks/public/longmemeval_500_frozen_config.json)
+(pinned revision `02468f57`, engine code identical to main `12611a9f`; the
+branch adds benchmark files only). Retrieval ran on Modal with the pinned small
+Qwen3 models (Qwen3-4B-Instruct-2507 facts and query rewrites on an L4,
+Qwen3-Embedding-0.6B and Qwen3-Reranker-0.6B on a T4) and WARM's document API
+BM25 + exact-cosine scores (`public-bench lme-scores`), fused by
+`longmemeval_pipeline.py`; rankings were exported label-blind (top 50 turns per
+question). The reader is `gpt-4o-2024-08-06` on the official prompt with k=10
+retrieved rounds, one sample at temperature 0; every reader and judge call went
+through OpenRouter with the provider pinned to OpenAI (2,500 calls, all served
+by OpenAI with the pinned snapshots). The headline judge is the unchanged
+official `evaluate_qa.py` (commit `9e0b455f`).
+Result file: [`longmemeval_500_official_v1.json`](../benchmarks/results/longmemeval_500_official_v1.json).
+
+| Judge (official `evaluate_qa.py`) | n=500 | dev100 | heldout400 |
+|---|---|---|---|
+| gpt-4o-mini-2024-07-18 | **84.4%** (422/500) | 88/100 | 334/400 (83.5%) |
+| gpt-4o-2024-08-06 | 85.0% (425/500) | 89/100 | 336/400 (84.0%) |
+
+Per type (gpt-4o-mini judge): single-session-user 68/70, single-session-assistant
+52/56, knowledge-update 68/78, temporal-reasoning 113/133, single-session-preference
+24/30, multi-session 97/133; abstention 27/30. Retrieval alone (official
+`eval_utils.py`, 419 scorable questions): session recall@10 0.988, turn
+recall@10 0.919. dev100 was used for tuning, so the n=500 figure mixes tuned and
+untouched questions; the heldout400 column is the generalization figure. Spend:
+$4.02 Modal GPU (four launches under one tag, cached stages reused) and $9.13
+OpenRouter for the reader and both judges, each under a $30 cap. The 400
+held-out questions are now spent for this pipeline; a later variant cannot be
+evaluated on them.
+
 The [checked v3 dev result](../benchmarks/results/longmemeval_dev_answers_v3_summary.json)
 is 88/100 for the matched reader's operand arm (Wilson 95% interval
 80.19–93.00%), against 83/100 for first-five and 82/100 for knapsack.
@@ -197,7 +230,8 @@ the official LongMemEval judge prompt executed by pinned GPT-5.4-2026-03-05; the
 has a $14 cap and no held-out run. **[Production dev evaluation stopped before QA](../benchmarks/results/longmemeval_production_closeout_v1.json);
 no production QA score is claimed.** These tests
 and smoke checks do not establish QA accuracy or generalization. The earlier harness's
-93/100 remains separate evidence, and all 400 held-out questions remain unevaluated.
+93/100 remains separate evidence; the only held-out evaluation is the
+[500-question run](#longmemeval_s-500-question-held-out-run-final-spent) above.
 
 External headline scores also require matching metrics. OpenExp's reported
 98.6% measures session Recall@10 without generated answers, while OMEGA's
@@ -332,7 +366,8 @@ to exact current source IDs, and rebuild affected segments after deletion. It
 cannot establish absence, exact counts or erasure.
 
 No paid development calls or new live benchmark runs are authorized by this
-work. Preserve the sealed held-out split. A later explicitly authorized
+work. The held-out split is spent by the single run above; no further
+held-out evaluation of a tuned variant is valid. A later explicitly authorized
 live comparison must use the native pipeline, freeze extraction/retrieval/reader
 policies and budgets, count every model stage, retain regressions, and separate
 retrieval coverage from end-to-end QA and forgetting metrics. These directions
