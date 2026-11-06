@@ -53,6 +53,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the measured checkpoint serving costs in the QPS lever
 - State the pinned text wins and the FiQA QPS loss with profiled levers
 - Label each README benchmark row with the machine it was measured on
 - Drop intra-doc links to private analyzer items
@@ -215,6 +216,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Read checkpoint hit fields only for final results instead of rebuilding a document per hit
 - Decode two-byte checkpoint postings without leaving the loaded word
 - Make history view reuse opt-in
 - Index a history view once and reuse built views
@@ -246,6 +248,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Pin AML runtime artifacts and document model dependency reachability
 
 ### Bench
+- Rerun SIFT-1M against hnswlib at a pinned commit
 - Rerun the text comparison at pinned commits against the current comparator pins
 - Measure default and opt-in history view opens
 - Measure cold and reused history view opens
