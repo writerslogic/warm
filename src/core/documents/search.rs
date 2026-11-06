@@ -2716,7 +2716,9 @@ mod tests {
             let image = ServingImage::new(super::super::Backing::Owned(bytes)).unwrap();
             let rebuilt = image.hydrate(None).unwrap();
             assert_eq!(
-                super::super::image::encode(&rebuilt, 1, 1024).unwrap().unwrap(),
+                super::super::image::encode(&rebuilt, 1, 1024)
+                    .unwrap()
+                    .unwrap(),
                 written
             );
             for round in 0..3 {
