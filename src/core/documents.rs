@@ -1456,7 +1456,7 @@ pub(crate) fn overlay_serves(store: &DocumentStore, prepared: &[PreparedSearch])
 pub(crate) fn capture_overlaid_search(
     store: &DocumentStore,
     prepared: Vec<PreparedSearch>,
-) -> Result<CapturedSearch> {
+) -> CapturedSearch {
     search::capture_overlaid_search(store, prepared)
 }
 

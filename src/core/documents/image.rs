@@ -778,38 +778,26 @@ impl ServingImage {
         }
     }
 
-    /// The document and chunk index in `slot`, decoded for a result: the fields a result
-    /// reports, with only that chunk's text.
-    pub(crate) fn chunk(&self, slot: usize) -> Result<(Arc<StoredDocument>, usize)> {
-        let (word_count, ordinal, index) = self.slot(slot);
+    /// Reads into `result` what it reports of the chunk in `slot`: the chunk's id, span and
+    /// inline text, and its document's id, source, version and metadata.
+    pub(crate) fn read_hit(&self, slot: usize, result: &mut super::DocumentResult) -> Result<()> {
+        let (_, ordinal, index) = self.slot(slot);
         ensure!(ordinal != FREE, "checkpoint slot is free");
         let (ordinal, index) = (ordinal as usize, index as usize);
         let id = self.id(ordinal);
         let record = self.record(ordinal)?;
-        ensure!(index < record.chunks.len(), "checkpoint chunk index");
-        let chunks = record
-            .chunks
-            .iter()
-            .enumerate()
-            .map(|(i, chunk)| {
-                let text = (i == index)
-                    .then(|| chunk.text.map(str::to_owned))
-                    .flatten();
-                let words = if i == index { word_count as usize } else { 0 };
-                self.stored_chunk(id, i, chunk, text, StoredTerms::default(), words)
-            })
-            .collect();
-        Ok((
-            Arc::new(StoredDocument {
-                vector_record: false,
-                id: id.to_owned(),
-                source_uri: record.source_uri.map(str::to_owned),
-                version: record.version.to_owned(),
-                metadata: record.metadata,
-                chunks,
-            }),
-            index,
-        ))
+        let chunk = record.chunks.get(index).context("checkpoint chunk index")?;
+        result.id = chunk
+            .id
+            .map_or_else(|| super::chunk_id(id, index), str::to_owned);
+        result.document_id = id.to_owned();
+        result.source_uri = record.source_uri.map(str::to_owned);
+        result.version = record.version.to_owned();
+        result.start_byte = chunk.start_byte;
+        result.end_byte = chunk.end_byte;
+        result.text = chunk.text.map(str::to_owned);
+        result.metadata = record.metadata;
+        Ok(())
     }
 
     /// The live store this checkpoint holds, chunk text moved to `text` when given: the same
