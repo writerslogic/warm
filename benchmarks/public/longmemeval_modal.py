@@ -542,7 +542,7 @@ def _rerank_doc(q, target: str, level: str) -> str:
 @app.function(image=cpu_image, volumes={"/vol": VOL}, timeout=24 * 3600, cpu=8, memory=65536)  # M's 2.7 GB JSON
 def driver(dataset: str, part: str, models: str, cap: float, config: dict, tag: str,
            all_kinds: bool = False, rerank_pool: tuple[int, int] = (30, 50), cache_ns: str = "",
-           engine: str = "python") -> dict:
+           engine: str = "python", heldout_final: dict | None = None) -> dict:
     global CACHE, ENGINE
     ENGINE = engine
     import longmemeval_pipeline as P
@@ -610,7 +610,10 @@ def driver(dataset: str, part: str, models: str, cap: float, config: dict, tag: 
     ev, ev_sha = _eval_utils()
     rerank = None
     if cfg_t["rerank_w"] > 0 or cfg_s["rerank_w"] > 0 or all_kinds:
-        rankings, _ = P.run(qs, scores, targets, cfg_t, cfg_s, ev, queries, llm)
+        if heldout_final:  # candidate pools come from the label-blind ranking too
+            rankings = P.blinded_rankings(qs, scores, targets, cfg_t, cfg_s, queries, llm)
+        else:
+            rankings, _ = P.run(qs, scores, targets, cfg_t, cfg_s, ev, queries, llm)
         model, rev, _ = MODELS[models]["rerank"]
         d = _cache_dir("rerank", model, rev)
         d.mkdir(parents=True, exist_ok=True)
@@ -648,9 +651,19 @@ def driver(dataset: str, part: str, models: str, cap: float, config: dict, tag: 
         "all": qs,
     }
     metrics = {}
-    for name, sub in parts.items():
-        _, m = P.run(sub, scores, targets, cfg_t, cfg_s, ev, queries, llm, rerank)
-        metrics[name if part == "all" else part] = m
+    exported = None
+    if heldout_final:  # metrics score the exported (blinded) ranking, so the QA run and the report agree
+        final = P.blinded_rankings(qs, scores, targets, cfg_t, cfg_s, queries, llm, rerank)
+        exported = P.export_rankings(final["turn"])
+        if set(exported) != set(split["dev"]) | set(split["heldout"]) or any(len(r) < 10 for r in exported.values()):
+            raise RuntimeError("rankings export does not cover all 500 questions with at least 10 turns each")
+        for name, sub in parts.items():
+            metrics[name] = {lvl: P.evaluate(sub, {q.qid: final[lvl][q.qid] for q in sub}, lvl, ev)
+                             for lvl in ("session", "turn")}
+    else:
+        for name, sub in parts.items():
+            _, m = P.run(sub, scores, targets, cfg_t, cfg_s, ev, queries, llm, rerank)
+            metrics[name if part == "all" else part] = m
     result = {
         "dataset": {"name": f"longmemeval_{dataset}", "release_revision": LME_REVISION, "sha256": DATA_SHA256[dataset],
                     "part": part, "n_questions": len(qs), "n_scored": sum(q.scored for q in qs)},
@@ -664,25 +677,97 @@ def driver(dataset: str, part: str, models: str, cap: float, config: dict, tag: 
         "metrics": metrics,
         "finished": P.now(),
     }
+    if exported is not None:
+        raw = P.rankings_bytes(exported)
+        (run_dir / "rankings.json").write_bytes(raw)
+        result["heldout_final"] = {**(heldout_final or {}), "tag": tag, "cap_usd": cap, "engine": engine,
+                                   "rankings_sha256": hashlib.sha256(raw).hexdigest(),
+                                   "rankings_depth": P.EXPORT_DEPTH}
     (run_dir / "result.json").write_text(json.dumps(result, indent=1))
     VOL.commit()
-    return result
+    return {**result, "rankings_json": raw.decode()} if exported is not None else result
+
+
+FROZEN_CONFIG_REL = "benchmarks/public/longmemeval_500_frozen_config.json"
+
+
+def _git(*args: str) -> str:
+    return subprocess.run(["git", "-C", str(REPO), *args], capture_output=True, text=True, check=True).stdout.strip()
+
+
+def _verify_heldout_final(frozen: str, frozen_sha256: str, config: str, models: str, engine: str, tag: str,
+                          cap: float, all_kinds: bool, cache_ns: str) -> dict:
+    """Fail closed unless the sealed held-out run matches the committed frozen protocol exactly; returns the manifest."""
+    def refuse(why: str):
+        sys.exit(f"--heldout-final refused: {why}")
+
+    if models != "small" or engine != "python" or all_kinds or cache_ns:
+        refuse("the frozen run is --models small --engine python with default --all-kinds and --cache-ns")
+    path = Path(frozen).resolve()
+    if path != (REPO / FROZEN_CONFIG_REL).resolve():
+        refuse(f"the frozen config must be the committed {FROZEN_CONFIG_REL}")
+    raw = path.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != frozen_sha256.lower():
+        refuse("frozen config sha256 differs from --frozen-sha256")
+    fc = json.loads(raw)
+    if fc["benchmark"]["sha256"] != DATA_SHA256["s"] or fc["benchmark"]["n_questions"] != 500:
+        refuse("frozen config dataset sha256 or size differs from the dataset the driver checks")
+    split_sha = hashlib.sha256((HERE / "longmemeval_split.json").read_bytes()).hexdigest()
+    if fc["benchmark"]["split_sha256"] != split_sha:
+        refuse("split file sha256 differs from the frozen config")
+    pipe = fc["retrieval"]["pipeline"]
+    config_sha = hashlib.sha256(Path(config).read_bytes()).hexdigest()
+    if pipe["config_sha256"] != config_sha:
+        refuse("--config sha256 differs from the frozen config")
+    pins = {k: {"id": v[0], "revision": v[1]} for k, v in MODELS["small"].items()}
+    if pipe["model_pins"] != pins:
+        refuse("model pins differ from the frozen config")
+    if pipe["tag"] != tag or pipe["engine"] != engine:
+        refuse(f"--tag must be {pipe['tag']} and --engine {pipe['engine']}")
+    if cap > fc["spend"]["modal_gpu_cap_usd"]:
+        refuse(f"--cap exceeds the frozen Modal GPU cap {fc['spend']['modal_gpu_cap_usd']}")
+    try:
+        head = _git("rev-parse", "HEAD")
+        pinned = _git("rev-parse", "--verify", fc["pinned_warm_revision"] + "^{commit}")
+        dirty = _git("status", "--porcelain")
+        changed = set(_git("diff", "--name-only", pinned, head).splitlines())
+        subprocess.run(["git", "-C", str(REPO), "merge-base", "--is-ancestor", pinned, head], check=True)
+    except (subprocess.CalledProcessError, OSError):
+        refuse("pinned_warm_revision is not an ancestor of the current git HEAD")
+    # The config records the commit it was written for, so it can only enter the tree one commit later.
+    if changed - {FROZEN_CONFIG_REL}:
+        refuse("HEAD differs from pinned_warm_revision by more than the frozen config")
+    if dirty:
+        refuse("working tree is not clean (the image copies it)")
+    return {"frozen_config_sha256": frozen_sha256.lower(), "split_sha256": split_sha, "model_pins": pins,
+            "config_sha256": config_sha, "pinned_warm_revision": pinned, "head_commit": head,
+            "dataset_sha256": DATA_SHA256["s"], "status": fc["status"]}
 
 
 @app.local_entrypoint()
 def main(dataset: str = "s", part: str = "dev", models: str = "small", cap: float = 5.0,
          config: str = str(HERE / "longmemeval_config.json"), tag: str = "", all_kinds: bool = False,
-         out: str = "", cache_ns: str = "", engine: str = "python"):
+         out: str = "", cache_ns: str = "", engine: str = "python", heldout_final: str = "", frozen_sha256: str = ""):
     if dataset not in ("s", "m") or part not in ("dev", "heldout", "all") or models not in MODELS:
         sys.exit("bad --dataset / --part / --models")
     if engine not in ("python", "warm") or (engine == "warm" and models != "small"):
         sys.exit("--engine is python or warm; the WARM stages are wired for the small models")
-    if dataset == "s" and part != "dev":
+    manifest = None
+    if heldout_final or frozen_sha256:
+        if not (heldout_final and frozen_sha256):
+            sys.exit("--heldout-final and --frozen-sha256 are given together")
+        if dataset != "s" or part != "all" or not out or not tag:
+            sys.exit("--heldout-final runs --dataset s --part all with --tag and --out")
+        manifest = _verify_heldout_final(heldout_final, frozen_sha256, config, models, engine, tag, cap,
+                                         all_kinds, cache_ns)
+    elif dataset == "s" and part != "dev":
         sys.exit("on S only dev is run; held-out questions are scored only in the final M run")
     cfg = json.loads(Path(config).read_text())
     cfg["_split"] = (HERE / "longmemeval_split.json").read_text()
     tag = tag or f"{dataset}-{part}-{models}-{int(time.time())}"
-    result = driver.remote(dataset, part, models, cap, cfg, tag, all_kinds, cache_ns=cache_ns, engine=engine)
+    result = driver.remote(dataset, part, models, cap, cfg, tag, all_kinds, cache_ns=cache_ns, engine=engine,
+                           heldout_final=manifest)
+    rankings_json = result.pop("rankings_json", None)
     o = result["metrics"]
     for name, m in o.items():
         for lvl in ("session", "turn"):
@@ -692,3 +777,10 @@ def main(dataset: str = "s", part: str = "dev", models: str = "small", cap: floa
     print(f"estimated cost ${result['cost']['estimated_usd']:.3f}; run tag {tag}")
     if out:
         Path(out).write_text(json.dumps(result, indent=1) + "\n")
+    if rankings_json is not None:
+        raw = rankings_json.encode()
+        if hashlib.sha256(raw).hexdigest() != result["heldout_final"]["rankings_sha256"]:
+            sys.exit("rankings differ from the driver's recorded sha256")
+        dest = Path(out).with_name(f"{tag}.rankings.json")
+        dest.write_bytes(raw)
+        print(f"rankings {dest} sha256 {result['heldout_final']['rankings_sha256']}")
