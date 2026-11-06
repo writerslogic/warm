@@ -320,3 +320,79 @@ vertices. Per-arm timings, fingerprints and commands are in
 [`streaming_frontier_v1.json`](../../benchmarks/results/streaming_frontier_v1.json).
 This measures live delta queries; total streaming throughput and the final-runbook
 recall still require the post-freeze command above.
+
+## Rescore budget on a base with deletes (2026-11-06, macOS development measurement)
+
+A search on a base with tombstones widened its candidate pool to `ef / (1 - deleted share)`
+and rescored every live candidate exactly from the mapped f32 rows, whatever `rerank` said.
+It now rescores the `rerank` best live candidates in estimate order (never fewer than `k`);
+`rerank = 0` still rescores all of them, and a `rerank` at or above the live candidate count
+returns what it returned before. The adapter passes `rerank = ef`, so the pool holds about
+`ef` live candidates and the change does nothing at that setting.
+
+Three alternating pairs on an Apple M4 (shared, one-minute load averages 3.4-14.8, no timing
+lock, no pinning) compared origin/main `18273ef4` plus only the new fixture with the change,
+on the first 1M official clustered rows with 30% of them tombstoned in 10,000-row blocks and
+1,000 official queries, R32 L64 alpha 1.0. recall@10 against the exact top 10 over the live
+rows was identical in both arms at every setting (0.8590 at ef 256, 0.9230 at ef 512), and
+`rerank = ef` returned identical result fingerprints. Median candidate/parent query-time
+ratios (the three per-pair ratios ranged 0.67-1.11):
+
+| ef | rerank | 1 thread | 8 threads |
+|---|---|---|---|
+| 256 | 256 | 1.028 | 0.958 |
+| 256 | 128 | 0.911 | 0.844 |
+| 256 | 64 | 0.839 | 0.875 |
+| 512 | 512 | 1.005 | 0.981 |
+| 512 | 256 | 0.900 | 0.845 |
+| 512 | 128 | 0.849 | 0.826 |
+
+Against the kill bar (recall@10 drop above 0.0025 at equal ef, or under 10% faster): no recall
+change was measured; the speedup is under 10% at the adapter's `rerank = ef`, so the change
+does not pay at that setting, and reaches 9-17% at `rerank = ef / 2` and `ef / 4`. The
+Linux paired run under the timing lock on writerslogic-02 was not made (host offline), and the
+M4 spread between pairs is wide. Raw values, loads and commands are in
+[`streaming_rescore_budget_v1.json`](../../benchmarks/results/streaming_rescore_budget_v1.json).
+
+### Consolidation memory peak (not measured)
+
+`consolidation_live_set_peak` now takes `WARM_CONSOLIDATION_DEGREE`, rows up to 10M, and a
+two-stage mode (`WARM_CONSOLIDATION_STAGE=build` writes the base, deletions and delta to
+`WARM_CONSOLIDATION_INDEX`; `=measure` opens a copy and consolidates it), and prints cgroup
+`memory.current` and `memory.peak` at every phase, resetting `memory.peak` before the
+consolidation. No R32 or R64 peak at about 8.4M live rows was recorded: writerslogic-02 went
+offline during the index builds. No consolidation code was changed. The commands to run
+when it is back, per degree D in 32 and 64 (build on cores 8-21, no lock needed):
+
+```sh
+WARM_CONSOLIDATION_STAGE=build WARM_CONSOLIDATION_ROWS=8000000 WARM_CONSOLIDATION_DEGREE=$D \
+  WARM_CONSOLIDATION_INDEX=~/idx-r$D RAYON_NUM_THREADS=12 taskset -c 8-21 \
+  <test-executable> consolidation_live_set_peak --ignored --nocapture --test-threads=1
+```
+
+then, per measured run, copy the directory, evict its pages from the page cache, and hold the
+lock:
+
+```sh
+cp -r ~/idx-r$D ~/idx-run && python3 -I -c 'import os,sys; [os.posix_fadvise(os.open(os.path.join(d,f),os.O_RDONLY),0,0,os.POSIX_FADV_DONTNEED) for d,_,fs in os.walk(sys.argv[1]) for f in fs]' ~/idx-run
+flock ~/hms-timing.lock systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 \
+  env WARM_CONSOLIDATION_STAGE=measure WARM_CONSOLIDATION_ROWS=8000000 WARM_CONSOLIDATION_DEGREE=$D \
+  WARM_CONSOLIDATION_INDEX=~/idx-run RAYON_NUM_THREADS=8 taskset -c 0-7 /usr/bin/time -v \
+  <test-executable> consolidation_live_set_peak --ignored --nocapture --test-threads=1
+```
+
+The result lines are `consolidation_cgroup_peak_bytes`, `consolidation_peak_rss_kib`,
+`consolidation_ns` and `vertex_crc`.
+
+### Still unmeasured (host offline)
+
+* The Linux paired run of the rescore change: build `base_deleted_search_live_set` for the
+  parent plus fixture and the candidate, create the 1M index once
+  (`WARM_BASE_STAGE=build`), then run parent/candidate, candidate/parent, parent/candidate under
+  `flock ~/hms-timing.lock taskset -c 0-7` with the environment of the JSON's
+  `development_command`.
+* Degree 64 against the 7 GiB bar and the ef that reaches recall@10 0.935 on the 1M and 10M
+  prefix replays: the consolidation commands above for D=32 and D=64, then
+  `~/bigann/replay2.py 64 64 1.0 <efs> <tag> <maxsteps> 8` and the 10M replay with this
+  revision's wheel. The 10M R64 L64 replay at 082766e already scored 0.9353 at ef 256 (table
+  above); nothing at this revision has been replayed.
