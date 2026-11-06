@@ -8,6 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Write document checkpoints with block-packed postings (version 2)
 - Land the supersession probes, k-mer, FPE timestamp and AVX2 popcount work (#388)
 - Land per-store language analyzers, cheaper history views and a simulation harness (#387)
 - Refuse replaying chunks whose analyzer mark disagrees with the store
@@ -251,6 +252,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Pin AML runtime artifacts and document model dependency reachability
 
 ### Bench
+- Pin the text comparison and speed up mapped-checkpoint posting decode (#389)
 - Rerun SIFT-1M against hnswlib at a pinned commit
 - Rerun the text comparison at pinned commits against the current comparator pins
 - Measure default and opt-in history view opens
