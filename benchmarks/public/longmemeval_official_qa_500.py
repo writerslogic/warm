@@ -189,13 +189,18 @@ def cache_key(request: dict, repeat: int = 0) -> str:
     return sha_bytes(json.dumps({**request, **({"repeat": repeat} if repeat else {})}, sort_keys=True).encode())
 
 
+def _write_ledger(ledger: dict) -> None:
+    STATE.mkdir(parents=True, exist_ok=True)
+    LEDGER.write_text(json.dumps(ledger, indent=1, sort_keys=True) + "\n")
+
+
 def _reserve(usd: float) -> None:
     with LOCK:
         ledger = _ledger()
         if ledger["total_usd"] + usd > SPEND_CAP_USD:
             raise RuntimeError("spend cap reached")
         ledger["total_usd"] += usd
-        LEDGER.write_text(json.dumps(ledger, indent=1, sort_keys=True) + "\n")
+        _write_ledger(ledger)
 
 
 def _settle(run: str, model: str, reserve: float, cost: float, calls: int, batch: dict | None = None) -> None:
@@ -207,7 +212,7 @@ def _settle(run: str, model: str, reserve: float, cost: float, calls: int, batch
         ledger["by_run_usd"][run] = ledger["by_run_usd"].get(run, 0.0) + cost
         if batch is not None:
             ledger.setdefault("batches", []).append(batch)
-        LEDGER.write_text(json.dumps(ledger, indent=1, sort_keys=True) + "\n")
+        _write_ledger(ledger)
 
 
 def _worst_case(prices: dict, model: str, prompt: str, max_tokens: int) -> float:
