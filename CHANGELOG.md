@@ -53,6 +53,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the removed per-hit document rebuild in the QPS lever
+- Name nDCG in its glossary entry so site search finds it
 - Record the measured checkpoint serving costs in the QPS lever
 - State the pinned text wins and the FiQA QPS loss with profiled levers
 - Label each README benchmark row with the machine it was measured on
@@ -131,6 +133,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record ToIP collaboration introduction
 
 ### Fixed
+- Decode checkpoint hits at capture so nothing reads the mapping after its locks
 - Install a pinned Temurin 21 in the Modal bench image for Lucene 10
 - Drop the chunk flags check now that every bit is assigned
 - Normalize lexical text to NFC and fold Turkish dotted and dotless I
