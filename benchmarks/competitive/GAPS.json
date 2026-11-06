@@ -17,7 +17,7 @@
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "",
+  "hypothesis": "profiled (samply, M4, FiQA, 2026-11-05): serving ranks term-at-a-time over every posting of every query term from the mapped checkpoint; the cost is the volume of postings of common terms, not their encoding (flat checkpoint varints decode at 0.5 to 1.6 ns per posting, within 0.5x to 1.9x of the live store's bit-packed blocks; the BM25 weight arithmetic is about 7%). Dynamic pruning that skips low-impact common terms is the open lever; block-max MaxScore over the live store (search_lexical) was slower than the exhaustive pass at k=100 on FiQA",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -38,7 +38,7 @@
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "none identified; the median is within noise of the leader",
+  "hypothesis": "same as QPS: the exhaustive pass over common-term postings dominates each query",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
