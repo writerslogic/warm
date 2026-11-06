@@ -1095,7 +1095,7 @@ impl UpdatableVGraph {
                     };
                     let (dim, build) = (manifest.dim, &manifest.build);
                     prepared.build_with(build, |rows, norms| {
-                        merge::merge_structure(rows, norms, dim, build, &plan)
+                        merge::merge_structure(rows, norms, dim, build, plan)
                     })?
                 }
                 _ => prepared.build(&manifest.build)?,
