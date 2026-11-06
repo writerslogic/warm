@@ -1,6 +1,27 @@
 [
  {
   "status": "LOSS",
+  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "heavy",
+  "metric": "build_peak_rss_mib",
+  "label": "Peak RSS, build",
+  "comparator": "hnswlib",
+  "warm": 1492.703125,
+  "comparator_value": 1399.013671875,
+  "unit": "MiB",
+  "advantage_factor": 0.9372350392011137,
+  "advantage_ci": [
+   0.9370626808806829,
+   0.9374074209774251
+  ],
+  "level": 0.9944444444444445,
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "stream the build instead of holding the f32 matrix plus graph (ledger 1A target: peak build RSS <= 2x final index bytes)",
+  "code_path": "src/core/qgraph/vertex.rs (VGraph search/refine), src/bin/research/public-bench.rs (ann-qgraph)"
+ },
+ {
+  "status": "LOSS",
   "dataset": "beir:fiqa (57,600 documents, 500 queries)",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",

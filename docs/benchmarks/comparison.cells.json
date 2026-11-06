@@ -4,36 +4,36 @@
   "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps@recall0.90",
-  "system": "hnswlib",
-  "value": 9480.442447565747,
+  "system": "warm",
+  "value": 31382.10483361914,
   "ci": [
-   9417.422568871087,
-   9697.221801401593
+   30549.382216840953,
+   32326.95808742883
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.serve_rounds[*].configs[2]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1]",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "9,480"
+  "text": "31,382"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
   "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps@recall0.90",
-  "system": "hms",
-  "value": 23293.629504996767,
+  "system": "hnswlib",
+  "value": 12533.531385155426,
   "ci": [
-   22814.748394915856,
-   23733.858833120175
+   12505.469335074507,
+   12863.612413855124
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[*].configs[11]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m16.serve_rounds[*].configs[3]",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "23,294"
+  "text": "12,534"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -41,13 +41,34 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps@recall0.90",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 2.5038517772243947,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   2.374868056809366,
+   2.585025577309628
+  ],
+  "verdict": "WIN",
+  "text": "2.50x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "qps@recall0.95",
+  "system": "warm",
+  "value": 23918.31811183737,
+  "ci": [
+   22394.1829117436,
+   24347.92979777755
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[2]",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "23,918"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -55,35 +76,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps@recall0.95",
   "system": "hnswlib",
-  "value": 7630.414893330864,
+  "value": 8125.355874816575,
   "ci": [
-   7474.952830643235,
-   7814.989707482342
+   8090.153506865985,
+   8151.249108250126
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.serve_rounds[*].configs[3]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500.serve_rounds[*].configs[3]",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "7,630"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "qps@recall0.95",
-  "system": "hms",
-  "value": 17480.964142532004,
-  "ci": [
-   15253.129845587078,
-   17833.849020964924
-  ],
-  "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[*].configs[2]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "sampled",
-  "text": "17,481"
+  "text": "8,125"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -91,13 +94,34 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps@recall0.95",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 2.9436640659603492,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   2.7473314352615934,
+   3.009575748731325
+  ],
+  "verdict": "WIN",
+  "text": "2.94x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "qps@recall0.99",
+  "system": "warm",
+  "value": 11781.905422318148,
+  "ci": [
+   11292.686984251712,
+   11945.54000024443
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[5]",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "11,782"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -105,35 +129,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps@recall0.99",
   "system": "hnswlib",
-  "value": 3192.520978113118,
+  "value": 3810.0195233490895,
   "ci": [
-   3080.7832588347464,
-   3298.7230563365106
+   3757.9012425318133,
+   3927.9708225968616
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.serve_rounds[*].configs[6]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32.serve_rounds[*].configs[6]",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "3,193"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "qps@recall0.99",
-  "system": "hms",
-  "value": 8794.271294386524,
-  "ci": [
-   8591.235496775094,
-   9082.365742451297
-  ],
-  "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[*].configs[5]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "sampled",
-  "text": "8,794"
+  "text": "3,810"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -141,13 +147,34 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps@recall0.99",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 3.092347781977138,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   2.874941666900134,
+   3.17877965100444
+  ],
+  "verdict": "WIN",
+  "text": "3.09x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "p50_latency@recall0.95",
+  "system": "warm",
+  "value": 40.6755,
+  "ci": [
+   39.756,
+   42.431
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[2]",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "41"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -155,35 +182,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency@recall0.95",
   "system": "hnswlib",
-  "value": 133.32475,
+  "value": 119.62675,
   "ci": [
-   128.75775,
-   136.15449999999998
+   119.31075,
+   120.297
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.serve_rounds[*].configs[3]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500.serve_rounds[*].configs[3]",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "133"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "p50_latency@recall0.95",
-  "system": "hms",
-  "value": 62.091,
-  "ci": [
-   55.067,
-   62.514
-  ],
-  "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[*].configs[2]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "sampled",
-  "text": "62"
+  "text": "120"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -191,13 +200,34 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency@recall0.95",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 2.9410025691140858,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   2.8118769296033563,
+   3.025882885602173
+  ],
+  "verdict": "WIN",
+  "text": "2.94x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "p99_latency@recall0.95",
+  "system": "warm",
+  "value": 96.64750000000001,
+  "ci": [
+   76.464,
+   100.84100000000001
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[2]",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "97"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -205,35 +235,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency@recall0.95",
   "system": "hnswlib",
-  "value": 219.73541500000005,
+  "value": 250.8030900000001,
   "ci": [
-   216.20628,
-   228.29286000000002
+   246.78292500000006,
+   253.7064200000001
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.serve_rounds[*].configs[3]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500.serve_rounds[*].configs[3]",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "220"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "p99_latency@recall0.95",
-  "system": "hms",
-  "value": 104.57,
-  "ci": [
-   84.128,
-   110.87700000000001
-  ],
-  "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[*].configs[2]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "sampled",
-  "text": "105"
+  "text": "251"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -241,13 +253,34 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency@recall0.95",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 2.59502925580072,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   2.447247895201357,
+   3.3179851956476263
+  ],
+  "verdict": "WIN",
+  "text": "2.60x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "build_seconds",
+  "system": "warm",
+  "value": 121.43982647600001,
+  "ci": [
+   121.045479488,
+   121.834173464
+  ],
+  "n": 2,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.build_runs",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "121.44"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -255,35 +288,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "hnswlib",
-  "value": 182.4948315215006,
+  "value": 170.0221077289898,
   "ci": [
-   182.2122630720005,
-   182.7773999710007
+   169.93764854199253,
+   170.10656691598706
   ],
   "n": 2,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.build_runs",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500.build_runs",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "182.49"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "build_seconds",
-  "system": "hms",
-  "value": 312.6031632165,
-  "ci": [
-   310.021226209,
-   315.185100224
-  ],
-  "n": 2,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[graph_built]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "sampled",
-  "text": "312.60"
+  "text": "170.02"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -291,13 +306,34 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 1.4000522947271423,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   1.394827442172506,
+   1.4053111907648794
+  ],
+  "verdict": "WIN",
+  "text": "1.40x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "build_peak_rss_mib",
+  "system": "warm",
+  "value": 1492.703125,
+  "ci": [
+   1492.6015625,
+   1492.8046875
+  ],
+  "n": 2,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.build_runs",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "1,493"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -305,35 +341,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "hnswlib",
-  "value": 1524.958984375,
+  "value": 1399.013671875,
   "ci": [
-   1520.74609375,
-   1529.171875
+   1398.8515625,
+   1399.17578125
   ],
   "n": 2,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.build_runs",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500.build_runs",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,525"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "build_peak_rss_mib",
-  "system": "hms",
-  "value": 2967.65234375,
-  "ci": [
-   2957.69140625,
-   2977.61328125
-  ],
-  "n": 2,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[graph_built]",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "sampled",
-  "text": "2,968"
+  "text": "1,399"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -341,49 +359,52 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 0.9372350392011137,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   0.9370626808806829,
+   0.9374074209774251
+  ],
+  "verdict": "LOSS",
+  "text": "0.94x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
   "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
-  "system": "hnswlib",
-  "value": 1019.3671875,
+  "system": "warm",
+  "value": 489.6875,
   "ci": [
-   1018.99609375,
-   1019.375
+   489.51953125,
+   491.640625
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.serve_rounds[*].rss_steady",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,019"
+  "text": "490"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
   "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
-  "system": "hms",
-  "value": 2203.828125,
+  "system": "hnswlib",
+  "value": 897.5,
   "ci": [
-   1261.109375,
-   2223.64453125
+   897.34765625,
+   897.578125
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[*].rss_steady",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500.serve_rounds[*].rss_steady",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2,204"
+  "text": "898"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -391,49 +412,52 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 1.8328015315890236,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/v"
+  "ci": [
+   1.8252105514063244,
+   1.8335900157201337
+  ],
+  "verdict": "WIN",
+  "text": "1.83x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
   "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "index_bytes_mib",
-  "system": "hnswlib",
-  "value": 873.813777923584,
+  "system": "warm",
+  "value": 1389.0606937408447,
   "ci": [
-   873.813777923584,
-   873.813777923584
+   1389.0606937408447,
+   1389.0606937408447
   ],
   "n": 1,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "873.8"
+  "text": "1,389.1"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
   "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "index_bytes_mib",
-  "system": "hms",
-  "value": 446.3023262023926,
+  "system": "hnswlib",
+  "value": 751.8053779602051,
   "ci": [
-   446.3023262023926,
-   446.3023262023926
+   751.8053779602051,
+   751.8053779602051
   ],
   "n": 1,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "446.3"
+  "text": "751.8"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -441,13 +465,31 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "index_bytes_mib",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 0.5412329218930937,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "n/v"
+  "text": "0.54x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "cold_start_s",
+  "system": "warm",
+  "value": 0.179751727,
+  "ci": [
+   0.16865464,
+   0.184875661
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "0.18"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -455,32 +497,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "hnswlib",
-  "value": 0.748887823,
+  "value": 0.672942677,
   "ci": [
-   0.536470403,
-   0.77115552
+   0.604459778,
+   0.719615963
   ],
   "n": 3,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m48e500.serve_rounds[*].cold_start_s",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.builds.m32e500.serve_rounds[*].cold_start_s",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.75"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "cold_start_s",
-  "system": "hms",
-  "value": null,
-  "ci": null,
-  "n": 0,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.builds.vertex-d32.serve_rounds[*].cold_start_s",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "unreplicated",
-  "text": "n/m"
+  "text": "0.67"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -488,13 +515,34 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 3.7437341394778363,
   "factor_infinite": false,
-  "ci": null,
-  "verdict": "n/v",
-  "text": "n/m"
+  "ci": [
+   3.2695476231454825,
+   4.266802045885011
+  ],
+  "verdict": "WIN",
+  "text": "3.74x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "replace_ms_per_op",
+  "system": "warm",
+  "value": 3.341502179100644,
+  "ci": [
+   3.341502179100644,
+   3.341502179100644
+  ],
+  "n": 1,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.replace",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "unreplicated",
+  "text": "3.342"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -502,32 +550,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "hnswlib",
-  "value": 6.010148169989407,
+  "value": 434.66163837874774,
   "ci": [
-   6.010148169989407,
-   6.010148169989407
+   434.66163837874774,
+   434.66163837874774
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.ops.replace",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "6.010"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "replace_ms_per_op",
-  "system": "hms",
-  "value": null,
-  "ci": null,
-  "n": 0,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.ops",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "unreplicated",
-  "text": "n/m"
+  "text": "434.662"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -535,13 +568,31 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 130.07971118418834,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "n/m"
+  "text": "130.08x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "delete_ms_per_op",
+  "system": "warm",
+  "value": 3.2112624688306823,
+  "ci": [
+   3.2112624688306823,
+   3.2112624688306823
+  ],
+  "n": 1,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.delete",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "unreplicated",
+  "text": "3.211"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -549,32 +600,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "hnswlib",
-  "value": 3.3136410399856686,
+  "value": 271.17117055808194,
   "ci": [
-   3.3136410399856686,
-   3.3136410399856686
+   271.17117055808194,
+   271.17117055808194
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.ops.delete",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "3.314"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "delete_ms_per_op",
-  "system": "hms",
-  "value": null,
-  "ci": null,
-  "n": 0,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.ops",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "unreplicated",
-  "text": "n/m"
+  "text": "271.171"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -582,13 +618,31 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 84.44378906742666,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "n/m"
+  "text": "84.44x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "install_mib",
+  "system": "warm",
+  "value": 4.8809356689453125,
+  "ci": [
+   4.8809356689453125,
+   4.8809356689453125
+  ],
+  "n": 1,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.install",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "unreplicated",
+  "text": "4.9"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -596,35 +650,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "hnswlib",
-  "value": 61.750614166259766,
+  "value": 61.73693084716797,
   "ci": [
-   61.750614166259766,
-   61.750614166259766
+   61.73693084716797,
+   61.73693084716797
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.install",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "deterministic",
-  "text": "61.8"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "install_mib",
-  "system": "hms",
-  "value": 3.378631591796875,
-  "ci": [
-   3.378631591796875,
-   3.378631591796875
-  ],
-  "n": 1,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.install",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "unreplicated",
-  "text": "3.4"
+  "text": "61.7"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -632,13 +668,31 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
-  "factor": null,
+  "factor": 12.648585237450645,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "n/v"
+  "text": "12.65x"
+ },
+ {
+  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "install_distributions",
+  "system": "warm",
+  "value": 0,
+  "ci": [
+   0,
+   0
+  ],
+  "n": 1,
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.install._crate_dependencies",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "unreplicated",
+  "text": "0"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -653,8 +707,8 @@
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hnswlib.install",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
+  "validity": "valid",
+  "validity_reason": "",
   "uncertainty": "unreplicated",
   "text": "2"
  },
@@ -663,32 +717,14 @@
   "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_distributions",
-  "system": "hms",
-  "value": 92,
-  "ci": [
-   92,
-   92
-  ],
-  "n": 1,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.hms.install._crate_dependencies",
-  "validity": "unverified",
-  "validity_reason": "source revision is not pinned",
-  "uncertainty": "unreplicated",
-  "text": "92"
- },
- {
-  "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "install_distributions",
   "derived": true,
-  "warm": "hms",
+  "warm": "warm",
   "other": "hnswlib",
   "factor": null,
-  "factor_infinite": false,
+  "factor_infinite": true,
   "ci": null,
   "verdict": "n/v",
-  "text": "n/v"
+  "text": "inf"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",

@@ -8,7 +8,7 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |
 |---|---|---|---|---|---|---|---|
-| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 0 | 0 | 0 | 0 | 14 |
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 8 | 0 | 1 | 0 | 5 |
 | beir:fiqa (57,600 documents, 500 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 3 | 3 | 4 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `modal-x86_64-8vcpu-32g` | heavy | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
@@ -21,6 +21,7 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Metric | Best other | WARM disadvantage | Candidate lever (hypothesis unless a file is cited) |
 |---|---|---|---|---|
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | hnswlib | 1.07x worse | stream the build instead of holding the f32 matrix plus graph (ledger 1A target: peak build RSS <= 2x final index bytes) |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | QPS (single thread) | Apache Lucene 10.6.0 (JVM) | 1.28x worse | profiled (samply, M4, FiQA, 2026-11-05): serving ranks term-at-a-time over every posting of every query term from the mapped checkpoint; the cost is the volume of postings of common terms, not their encoding (flat checkpoint varints decode at 0.5 to 1.6 ns per posting, within 0.5x to 1.9x of the live store's bit-packed blocks; the BM25 weight arithmetic is about 7%). Dynamic pruning that skips low-impact common terms is the open lever; block-max MaxScore over the live store (search_lexical) was slower than the exhaustive pass at k=100 on FiQA |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | p50 latency | Apache Lucene 10.6.0 (JVM) | 1.27x worse | same as QPS: the exhaustive pass over common-term postings dominates each query |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | p99 latency | Apache Lucene 10.6.0 (JVM) | 1.23x worse | tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate |
@@ -42,51 +43,49 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 ### sift-128-euclidean (1,000,000 vectors, 10,000 queries)
 
-Suite `heavy`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `unknown`, 2026-10-21. Raw results: [heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 95.00% bootstrap (Bonferroni family of 0 verdict metrics).
+Suite `heavy`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `4b7a849ff8`, 2026-11-05. Raw results: [heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.44% bootstrap (Bonferroni family of 9 verdict metrics).
 
-Timing boundary (where each query is timed): hnswlib: CPython binding call per query; WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop.
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; hnswlib: CPython binding call per query.
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
-| QPS @ recall@10 >= 0.90 (QPS) | 23,294† | hnswlib 9,480† | n/v (no CI) | **n/v** |
-| QPS @ recall@10 >= 0.95 (QPS) | 17,481† | hnswlib 7,630† | n/v (no CI) | **n/v** |
-| QPS @ recall@10 >= 0.99 (QPS) | 8,794† | hnswlib 3,193† | n/v (no CI) | **n/v** |
-| p50 latency @ 0.95 (us) | 62† | hnswlib 133† | n/v (no CI) | **n/v** |
-| p99 latency @ 0.95 (us) | 105† | hnswlib 220† | n/v (no CI) | **n/v** |
-| Build time (s) | 312.60† | hnswlib 182.49† | n/v (no CI) | **n/v** |
-| Peak RSS, build (MiB) | 2,968† | hnswlib 1,525† | n/v (no CI) | **n/v** |
-| RSS, serving (MiB) | 2,204† | hnswlib 1,019† | n/v (no CI) | **n/v** |
-| Index size (MiB) | 446.3† | hnswlib 873.8† | n/v (no CI) | **n/v** |
-| Cold start to first answer (s) | n/m† (not measured) | hnswlib 0.75† | n/m | **n/v** |
-| Replace one vector (durable) (ms) | n/m† (VGraph is a static graph index built once; the document store handles updates with an exact scan, not an ANN index) | hnswlib 6.010† | n/m | **n/v** |
-| Delete one vector (durable) (ms) | n/m† (VGraph is a static graph index built once; the document store handles updates with an exact scan, not an ANN index) | hnswlib 3.314† | n/m | **n/v** |
-| Install size (MiB) | 3.4† | hnswlib 61.8† | n/v (no CI) | **n/v** |
-| Install distributions (count) | 92† | hnswlib 2† | n/v (no CI) | **n/v** |
+| QPS @ recall@10 >= 0.90 (QPS) | 31,382 | hnswlib 12,534 | 2.50x [2.37, 2.59] | **WIN** |
+| QPS @ recall@10 >= 0.95 (QPS) | 23,918 | hnswlib 8,125 | 2.94x [2.75, 3.01] | **WIN** |
+| QPS @ recall@10 >= 0.99 (QPS) | 11,782 | hnswlib 3,810 | 3.09x [2.87, 3.18] | **WIN** |
+| p50 latency @ 0.95 (us) | 41 | hnswlib 120 | 2.94x [2.81, 3.03] | **WIN** |
+| p99 latency @ 0.95 (us) | 97 | hnswlib 251 | 2.60x [2.45, 3.32] | **WIN** |
+| Build time (s) | 121.44 | hnswlib 170.02 | 1.40x [1.39, 1.41] | **WIN** |
+| Peak RSS, build (MiB) | 1,493 | hnswlib 1,399 | 0.94x [0.94, 0.94] | **LOSS** |
+| RSS, serving (MiB) | 490 | hnswlib 898 | 1.83x [1.83, 1.83] | **WIN** |
+| Index size (MiB) | 1,389.1 | hnswlib 751.8 | 0.54x (no CI) | **n/v** |
+| Cold start to first answer (s) | 0.18 | hnswlib 0.67 | 3.74x [3.27, 4.27] | **WIN** |
+| Replace one vector (durable) (ms) | 3.342 | hnswlib 434.662 | 130.08x (no CI) | **n/v** |
+| Delete one vector (durable) (ms) | 3.211 | hnswlib 271.171 | 84.44x (no CI) | **n/v** |
+| Install size (MiB) | 4.9 | hnswlib 61.7 | 12.65x (no CI) | **n/v** |
+| Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | hnswlib | WARM |
+| Metric | WARM | hnswlib |
 |---|---|---|
-| QPS @ recall@10 >= 0.90 (QPS) | 9,480† | 23,294 |
-| QPS @ recall@10 >= 0.95 (QPS) | 7,630† | 17,481 |
-| QPS @ recall@10 >= 0.99 (QPS) | 3,193† | 8,794 |
-| p50 latency @ 0.95 (us) | 133† | 62 |
-| p99 latency @ 0.95 (us) | 220† | 105 |
-| Build time (s) | 182.49† | 312.60 |
-| Peak RSS, build (MiB) | 1,525† | 2,968 |
-| RSS, serving (MiB) | 1,019† | 2,204 |
-| Index size (MiB) | 873.8† | 446.3 |
-| Cold start to first answer (s) | 0.75† | n/m (not measured) |
-| Replace one vector (durable) (ms) | 6.010† | n/m (VGraph is a static graph index built once; the document store handles updates with an exact scan, not an ANN index) |
-| Delete one vector (durable) (ms) | 3.314† | n/m (VGraph is a static graph index built once; the document store handles updates with an exact scan, not an ANN index) |
-| Install size (MiB) | 61.8† | 3.4 |
-| Install distributions (count) | 2† | 92 |
+| QPS @ recall@10 >= 0.90 (QPS) | **31,382** | 12,534 |
+| QPS @ recall@10 >= 0.95 (QPS) | **23,918** | 8,125 |
+| QPS @ recall@10 >= 0.99 (QPS) | **11,782** | 3,810 |
+| p50 latency @ 0.95 (us) | **41** | 120 |
+| p99 latency @ 0.95 (us) | **97** | 251 |
+| Build time (s) | **121.44** | 170.02 |
+| Peak RSS, build (MiB) | 1,493 | **1,399** |
+| RSS, serving (MiB) | **490** | 898 |
+| Index size (MiB) | 1,389.1 | **751.8** |
+| Cold start to first answer (s) | **0.18** | 0.67 |
+| Replace one vector (durable) (ms) | **3.342** | 434.662 |
+| Delete one vector (durable) (ms) | **3.211** | 271.171 |
+| Install size (MiB) | **4.9** | 61.7 |
+| Install distributions (count) | **0** | 2 |
 
-Bold marks the best value in the row. Operating points for the QPS rows: hnswlib: m48e500 {'ef': 32} recall 0.961; WARM: vertex-d32 {'ef': 24, 'patience': 0, 'rerank': 32, 'screen': False, 'screen_sigmas': 1.0} recall 0.957.
+Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 24, 'rerank': 32} recall 0.956; hnswlib: m32e500 {'ef': 32} recall 0.952.
 
 </details>
-
-† WARM vs hnswlib: source revision is not pinned; no verdict.
 
 ### beir:fiqa (57,600 documents, 500 queries)
 
@@ -414,9 +413,8 @@ Bold marks the best value in the row.
 
 | System | Service needed | Encrypted at rest | Basis |
 |---|---|---|---|
+| WARM | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | hnswlib | no | no | documentation (not exercised) |
-| WARM | no | yes | measured: benchmarks/results/security_matrix_v2.json |
-| WARM | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | SQLite FTS5 | no | no (SQLCipher is a separate build) | documentation (not exercised) |
 | Apache Lucene (JVM) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
 | tantivy | no | no | documentation (not exercised) |
@@ -428,9 +426,8 @@ Bold marks the best value in the row.
 
 | System | Pinned version(s) |
 |---|---|
-| hnswlib | hnswlib 0.8.0 |
-| WARM | holographic-memory 0.6.1, commit unknown |
 | WARM | writerslogic-warm 0.6.5, commit 4b7a849ff83bc01d21e66e2089b1438619434fc4; writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
+| hnswlib | hnswlib 0.8.0, python 3.13.15 |
 | SQLite FTS5 | python-sqlite3 3.53.1 |
 | Apache Lucene (JVM) | lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22; lucene 10.6.0, jvm openjdk version "21.0.9" 2025-10-21 LTS |
 | tantivy | tantivy 0.27.0, python 3.13.15 |
@@ -440,7 +437,6 @@ Bold marks the best value in the row.
 
 ## Not run
 
-- `pgvector`: needs a PostgreSQL server with the extension; not installable from pip/cargo/npm (service required)
 - `mem0`: agent-memory systems belong to the next harness stage (plug in through the same adapter interface)
 - `zep`: agent-memory systems belong to the next harness stage
 - `letta`: agent-memory systems belong to the next harness stage
