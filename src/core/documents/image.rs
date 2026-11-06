@@ -1323,4 +1323,32 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn metadata_cache_returns_what_parsing_returns() {
+        // Repeats, more distinct blobs than the cache holds or gives up after, a blob past the
+        // longest kept, and blobs that are not objects: every call equals a fresh parse.
+        let long = format!("{{\"k\":\"{}\"}}", "x".repeat(MetadataCache::LONGEST));
+        let mut blobs: Vec<String> = (0..3 * MetadataCache::CAPACITY)
+            .map(|i| format!("{{\"bucket\":{}}}", i % 5))
+            .collect();
+        blobs.extend((0..40).map(|i| format!("{{\"id\":{i},\"tags\":[\"a\",\"b\"]}}")));
+        blobs.push(long);
+        blobs.extend((0..4).map(|i| format!("{{\"bucket\":{i}}}")));
+        let mut cache = MetadataCache::default();
+        for blob in &blobs {
+            let cached = cache.metadata(blob.as_bytes()).unwrap();
+            assert_eq!(cached, parse_metadata(blob.as_bytes()).unwrap(), "{blob}");
+        }
+        for bad in ["[]", "3", "{", ""] {
+            assert!(cache.metadata(bad.as_bytes()).is_err(), "{bad:?}");
+        }
+        let mut unique = MetadataCache::default();
+        for i in 0..100 {
+            unique
+                .metadata(format!("{{\"id\":{i}}}").as_bytes())
+                .unwrap();
+        }
+        assert!(unique.entries.len() <= MetadataCache::GIVE_UP);
+    }
 }
