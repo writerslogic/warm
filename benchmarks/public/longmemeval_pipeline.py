@@ -464,7 +464,13 @@ def blinded_rankings(questions, scores: dict, targets: dict, cfg_turn: dict, cfg
 
 
 def export_rankings(turn_rankings: dict[str, list[str]], depth: int = EXPORT_DEPTH) -> dict[str, list[str]]:
-    return {qid: [canonical_id(t) for t in r[:depth]] for qid, r in sorted(turn_rankings.items())}
+    # The fused turn list can name a turn twice (once per contributing list); the official QA loader
+    # rejects duplicates, so keep each turn at its first (best) position before cutting to depth.
+    out = {}
+    for qid, r in sorted(turn_rankings.items()):
+        ids = list(dict.fromkeys(canonical_id(t) for t in r))
+        out[qid] = ids[:depth]
+    return out
 
 
 def rankings_bytes(exported: dict) -> bytes:
