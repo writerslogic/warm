@@ -198,7 +198,7 @@ impl WarmCore {
             bail!("sealed checkpoint needs the security feature");
         } else {
             ensure!(
-                &outer[..8] == documents::CHECKPOINT_MAGIC,
+                documents::checkpoint_magic_known(&outer[..8]),
                 "not a document checkpoint of this version"
             );
             ensure!(

@@ -78,7 +78,7 @@ records with a store that never checkpointed, through writes and reopens.
 All integers little endian; varints are LEB128.
 
 ```
-0    8  magic "HMSCKP\0\x01"
+0    8  magic "HMSCKP\0\x02" (version 2; version 1, "HMSCKP\0\x01", is still read)
 8    8  u64: CRC32 of bytes 16.. (low 32 bits)
 16   8  u64: CRC32 of the generation directory's name (low 32 bits)
 24   8  u64: vector dimensions of the store
@@ -94,9 +94,14 @@ Sections:
 1. per posting form, a dictionary of the sorted terms in blocks of 32 front-coded entries
    (prefix length, suffix bytes, posting count, posting byte length) and a block table of `u32`
    pairs (the block's dictionary offset, the posting offset of its first term);
-2. the posting lists of every term, form 0 then form 1 in dictionary order: per posting one
-   varint `slot delta << 1 | (frequency != 1)`, followed by the frequency as a varint only when
-   it is not 1 (the first delta is the slot itself);
+2. the posting lists of every term, form 0 then form 1 in dictionary order. Version 2: blocks
+   of 128 postings, the last one shorter; per block a varint of its first slot minus the
+   previous block's last slot (the first block's is the slot itself), a byte of slot-gap bits,
+   a byte of frequency bits, then the block's slot gaps (the first one zero) and its
+   frequencies, each a little-endian bit string at its width (a list is at least three bytes per
+   block). Version 1: per posting one varint `slot delta << 1 | (frequency != 1)`, followed by
+   the frequency as a varint only when it is not 1 (the first delta is the slot itself; a list
+   is at least one byte per posting);
 3. per slot, `u32` word count, `u32` document ordinal (`u32::MAX` for a free slot) and `u32`
    chunk index;
 4. document ids in id order: `documents + 1` `u32` offsets, then the UTF-8 bytes;
@@ -105,6 +110,9 @@ Sections:
    otherwise it is the default id for its index; bit 1: its terms are stemmed; bit 2: its terms
    come from a non-legacy store analyzer), the byte span as
    two varints, and its text (`0` none, `2` inline bytes).
+
+Every compaction writes version 2, so a version 1 checkpoint is replaced at the store's next
+compaction; until then it opens, serves and rebuilds the live store exactly as version 2 does.
 
 ## Durability and crash safety
 
