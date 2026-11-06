@@ -59,7 +59,7 @@
       "degree": 32,
       "mode": "merge",
       "arm": "v1",
-      "binary_commit": "93a42d72",
+      "binary_commit": "e0e7701b",
       "live_before": 855414,
       "heap_base_mib": 147.5,
       "heap_peak_mib": 186.9,
@@ -99,7 +99,7 @@
       "degree": 32,
       "mode": "rebuild",
       "arm": "v1",
-      "binary_commit": "93a42d72",
+      "binary_commit": "e0e7701b",
       "live_before": 855414,
       "heap_base_mib": 147.5,
       "heap_peak_mib": 184.5,
@@ -139,7 +139,7 @@
       "degree": 64,
       "mode": "merge",
       "arm": "v1",
-      "binary_commit": "93a42d72",
+      "binary_commit": "e0e7701b",
       "live_before": 855414,
       "heap_base_mib": 179.5,
       "heap_peak_mib": 326.7,
@@ -179,7 +179,7 @@
       "degree": 64,
       "mode": "rebuild",
       "arm": "v1",
-      "binary_commit": "93a42d72",
+      "binary_commit": "e0e7701b",
       "live_before": 855414,
       "heap_base_mib": 179.5,
       "heap_peak_mib": 323.7,
@@ -291,5 +291,8 @@
     "resident set size (unchanged within noise: dominated by file-backed mapped pages)",
     "recall or search quality (fingerprints identical, no new recall measurement)",
     "leaderboard standing"
+  ],
+  "notes": [
+    "v1 runs used a binary built at e0e7701b; the landed commit 93a42d72 is the same patch (git patch-id --stable d7a31424...) rebased onto 12611a9f."
   ]
 }
