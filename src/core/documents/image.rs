@@ -39,7 +39,15 @@ use super::text::TextSegment;
 use super::{StoredChunk, StoredDocument, VectorState};
 use crate::core::entangled::EntangledHVec;
 
-pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x01";
+/// The magic of the version written: block-encoded postings.
+pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x02";
+/// Version 1, still read: flat varint postings.
+const MAGIC_V1: &[u8; 8] = b"HMSCKP\x00\x01";
+
+/// Whether `magic` opens a plaintext checkpoint of a version this build reads.
+pub(crate) fn known_magic(magic: &[u8]) -> bool {
+    magic == MAGIC || magic == MAGIC_V1
+}
 const HEADER_WORDS: usize = 40;
 pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;
 /// Dictionary entries per block: one binary search over blocks, then at most this many
@@ -132,6 +140,26 @@ pub(crate) fn encode(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, true)
+}
+
+/// [`encode`] in version 1, for tests of reading it.
+#[cfg(test)]
+pub(crate) fn encode_v1(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, false)
+}
+
+/// [`encode`] with block-encoded postings (version 2) or flat ones (version 1).
+fn encode_as(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+    blocked: bool,
+) -> Result<Option<Vec<u8>>> {
     if !representable(store) {
         return Ok(None);
     }
@@ -167,7 +195,12 @@ pub(crate) fn encode(
             put_varint(&mut dict, prefix as u64);
             put_bytes(&mut dict, &term[prefix..]);
             let start = postings.len();
-            super::postings::pack_checkpoint(list, &mut postings);
+            if blocked {
+                super::postings::pack_checkpoint(list, &mut postings);
+            } else {
+                #[cfg(test)]
+                super::postings::pack_checkpoint_flat(list, &mut postings);
+            }
             put_varint(&mut dict, list.len() as u64);
             put_varint(&mut dict, (postings.len() - start) as u64);
             count += 1;
@@ -238,7 +271,7 @@ pub(crate) fn encode(
         at += section.len() as u64;
     }
     let mut out = Vec::with_capacity(at as usize);
-    out.extend_from_slice(MAGIC);
+    out.extend_from_slice(if blocked { MAGIC } else { MAGIC_V1 });
     for value in words {
         out.extend_from_slice(&value.to_le_bytes());
     }
@@ -340,6 +373,8 @@ pub(crate) struct ServingImage {
     dimensions: usize,
     dictionaries: [Dictionary; 2],
     sections: [(usize, usize); SECTIONS],
+    /// Version 2: postings in the block encoding (see `postings::Postings`).
+    blocked: bool,
 }
 
 /// One decoded chunk of a checkpoint record.
@@ -363,9 +398,10 @@ struct Record<'a> {
 impl ServingImage {
     pub(crate) fn new(bytes: Backing) -> Result<Self> {
         ensure!(
-            bytes.len() >= HEADER_LEN && &bytes[..8] == MAGIC,
+            bytes.len() >= HEADER_LEN && known_magic(&bytes[..8]),
             "not a document checkpoint of this version"
         );
+        let blocked = &bytes[..8] == MAGIC;
         let count = |index: usize| usize::try_from(word(&bytes, index)).ok();
         let mut sections = [(0usize, 0usize); SECTIONS];
         let mut end = HEADER_LEN;
@@ -401,6 +437,7 @@ impl ServingImage {
             dimensions,
             dictionaries: [Dictionary::default(); 2],
             sections,
+            blocked,
         };
         image.check_documents()?;
         image.check_slots()?;
@@ -535,7 +572,9 @@ impl ServingImage {
             let count = reader.varint()?;
             let len = usize::try_from(reader.varint()?)?;
             ensure!(
-                count > 0 && count <= len as u64 && count <= u64::from(u32::MAX),
+                count > 0
+                    && super::postings::checkpoint_min_len(count, self.blocked) <= len as u64
+                    && count <= u64::from(u32::MAX),
                 "checkpoint posting count"
             );
             let at = posting_at.expect("set at the first entry");
@@ -899,7 +938,12 @@ impl ServingImage {
                 // The term's position among the lists kept: a list of dead documents only is
                 // left out, and no live slot refers to it.
                 let position = out.len() as u32;
-                Postings { bytes, count }.try_for_each(|slot, frequency| {
+                Postings {
+                    bytes,
+                    count,
+                    blocked: self.blocked,
+                }
+                .try_for_each(|slot, frequency| {
                     let fits = slot < self.slots
                         && form_of[slot] == form as u8
                         && (seen == 0 || slot > last);
@@ -1045,6 +1089,7 @@ impl LexicalSource for ServingImage {
                     return Some(Postings {
                         bytes: &postings[at..at + len],
                         count,
+                        blocked: self.blocked,
                     })
                 }
                 std::cmp::Ordering::Greater => return None,

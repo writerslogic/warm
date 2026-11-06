@@ -2701,12 +2701,24 @@ mod tests {
                 ..Default::default()
             },
         ];
-        for (first, every) in [(0, 1), (1, 2)] {
+        // Version 1 (flat postings) is still read: it serves, and rebuilds the store, as the
+        // version written does.
+        let versions = [super::super::image::encode, super::super::image::encode_v1];
+        for ((first, every), encode) in [(0, 1), (1, 2)]
+            .into_iter()
+            .flat_map(|layout| versions.map(|encode| (layout, encode)))
+        {
             let store = prose_store(first, every);
-            let bytes = super::super::image::encode(&store, 1, 1024)
+            let written = super::super::image::encode(&store, 1, 1024)
                 .unwrap()
                 .unwrap();
+            let bytes = encode(&store, 1, 1024).unwrap().unwrap();
             let image = ServingImage::new(super::super::Backing::Owned(bytes)).unwrap();
+            let rebuilt = image.hydrate(None).unwrap();
+            assert_eq!(
+                super::super::image::encode(&rebuilt, 1, 1024).unwrap().unwrap(),
+                written
+            );
             for round in 0..3 {
                 for options in &options {
                     for text in &queries {

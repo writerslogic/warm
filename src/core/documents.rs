@@ -40,7 +40,7 @@ pub(crate) use image::{
     binding as checkpoint_binding, recorded_crc as checkpoint_crc,
     representable as checkpoint_representable, Backing, ServingImage,
     CRC_START as CHECKPOINT_CRC_START, HEADER_LEN as CHECKPOINT_HEADER_LEN,
-    MAGIC as CHECKPOINT_MAGIC,
+    known_magic as checkpoint_magic_known,
 };
 pub(crate) use index::DocumentWithText;
 pub(crate) use index::{canonical_staging_path, opaque_counter_start, DocumentStore};
