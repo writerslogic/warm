@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "warm-longmemeval-s-500-v1",
   "status": "FROZEN for one held-out run; any edit after the first retrieval or API call voids the run",
-  "pinned_warm_revision": "c41cf1d8541d4a40424538e889a8b940dcd263de",
+  "pinned_warm_revision": "02468f573c34679d1eb044e859192f211b0234ac",
   "benchmark": {
     "dataset": "LongMemEval_S cleaned",
     "file": "longmemeval_s_cleaned.json",
@@ -106,7 +106,7 @@
     "modal_gpu_cap_usd": 30.0,
     "api": "reader and judges via OpenRouter with the provider pinned to OpenAI (allow_fallbacks=false) through the local proxy /Volumes/A/.hms-lb/longmemeval/openrouter/proxy.py; responses from any other provider are rejected; models gpt-4o-2024-08-06 and gpt-4o-mini-2024-07-18; no other provider",
     "authorization": "none granted by this file; the maintainer runs it",
-    "modal_gpu_cap_history": "12.0 at e7987b3e. Raised to 30.0 on 2026-11-06 after the first launch stopped itself at $0.57 spent: the 32-item probe wave counted the vLLM model load as per-item time and projected the next facts wave at $12.16 (fix: bcad2994). No ranking, reader call or judge call had been made; only 32 of 18361 fact extractions were cached. The cap bounds Modal GPU spend only; it is not a retrieval or reader parameter. Attempt 2 (2026-11-06) died in the embed-key stage with CUDA out of memory on a T4 (chars/3 token estimate undercounted dense keys); fix c41cf1d8: the batch is halved and retried, outputs unchanged. Still no ranking, reader call or judge call; facts (18361) and the first 192,032 key embeddings are cached."
+    "modal_gpu_cap_history": "12.0 at e7987b3e. Raised to 30.0 on 2026-11-06 after the first launch stopped itself at $0.57 spent: the 32-item probe wave counted the vLLM model load as per-item time and projected the next facts wave at $12.16 (fix: bcad2994). No ranking, reader call or judge call had been made; only 32 of 18361 fact extractions were cached. The cap bounds Modal GPU spend only; it is not a retrieval or reader parameter. Attempt 2 (2026-11-06) died in the embed-key stage with CUDA out of memory on a T4 (chars/3 token estimate undercounted dense keys); fix c41cf1d8: the batch is halved and retried, outputs unchanged. Still no ranking, reader call or judge call; facts (18361) and the first 192,032 key embeddings are cached. Attempt 3 (2026-11-06) completed retrieval ($4.01 total) but 3 of 500 exported lists repeated a turn at position >= 22, which the official QA loader rejects; fix 02468f57 keeps each turn once at its first position (top-10 lists unchanged). The ranking stage is rerun from cached scores; still no reader or judge call."
   },
   "forbidden": [
     "tuning any value in this file after the first held-out API call",
