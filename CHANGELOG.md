@@ -290,6 +290,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Freeze the Matryoshka prefix retrieval study
 
 ### Style
+- Format the checkpoint block codec and its tests
 - Close files with pathlib in the remaining probe scripts and drop an unused import
 - Close files with pathlib reads and writes in the cue-tag and probe scripts
 - Satisfy clippy 1.99 and rustfmt in the merged FPE timestamps evaluation
