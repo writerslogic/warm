@@ -376,6 +376,7 @@ fn validate_vector(row: &[f32], dim: usize, metric: Metric) -> Result<(), Update
     }
     Ok(())
 }
+#[cfg(test)]
 fn distance(q: &[f32], row: &[f32], metric: Metric) -> f32 {
     match metric {
         Metric::Angular => -dot(q, row),
