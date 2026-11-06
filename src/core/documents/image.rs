@@ -754,16 +754,13 @@ impl ServingImage {
     /// Decodes document `ordinal`'s record.
     fn record(&self, ordinal: usize) -> Result<Record<'_>> {
         let mut chunks = Vec::new();
-        let (version, source_uri, metadata) = self.decode_record(
-            ordinal,
-            parse_metadata,
-            |count, chunk| {
+        let (version, source_uri, metadata) =
+            self.decode_record(ordinal, parse_metadata, |count, chunk| {
                 if chunks.capacity() == 0 {
                     chunks.reserve_exact(count);
                 }
                 chunks.push(chunk);
-            },
-        )?;
+            })?;
         Ok(Record {
             version,
             source_uri,
