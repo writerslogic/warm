@@ -399,7 +399,11 @@ def _waves(stage, kind, models, items, shard, budget, call, store):
         VOL.commit()
         budget.release(reserve)
         budget.add(stage, gpu, secs, n)
-        per_item = secs / n
+        # The stage functions time the whole call, so a container's start and model load (the
+        # fixed 120 s the reserve formula adds back per container) is taken out before the
+        # per-item rate is derived; otherwise a small probe wave projects the next wave at the
+        # load time per item and trips the cap on a run that would have cost a fraction of it.
+        per_item = max(secs - 120.0 * len(wave), 0.0) / n
 
 
 def _parse_json(text: str) -> dict | None:
