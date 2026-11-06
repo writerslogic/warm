@@ -8,6 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Write document checkpoints with block-packed postings (version 2) (#390)
 - Write document checkpoints with block-packed postings (version 2)
 - Land the supersession probes, k-mer, FPE timestamp and AVX2 popcount work (#388)
 - Land per-store language analyzers, cheaper history views and a simulation harness (#387)
@@ -54,6 +55,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the landed checkpoint hit decode in the FiQA QPS gap lever
 - Record the removed per-hit document rebuild in the QPS lever
 - Name nDCG in its glossary entry so site search finds it
 - Record the measured checkpoint serving costs in the QPS lever
@@ -220,6 +222,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Prefetch and fuse the base rescoring pass on the tombstone path
+- Decode a checkpoint hit's record without a chunk vector and share repeated metadata
 - Read checkpoint hit fields only for final results instead of rebuilding a document per hit
 - Decode two-byte checkpoint postings without leaving the loaded word
 - Make history view reuse opt-in
@@ -290,6 +294,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Freeze the Matryoshka prefix retrieval study
 
 ### Style
+- Format the record walker
 - Format the checkpoint block codec and its tests
 - Close files with pathlib in the remaining probe scripts and drop an unused import
 - Close files with pathlib reads and writes in the cue-tag and probe scripts
