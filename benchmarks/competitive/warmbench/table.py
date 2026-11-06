@@ -56,8 +56,8 @@ HEADLINE = {
 # Candidate levers per metric. These are hypotheses for the coordinator, not measurements, except
 # where a results file is named.
 LEVERS = {
-    "text:build_seconds": "unprofiled hypothesis: per-document text encoding in documents::prepare (src/core/encoding.rs) dominates ingest; profile it, then a lexical-only ingest path or a cheaper encoder is the lever",
-    "text:build_peak_rss_mib": "unprofiled hypothesis: the arena and index are built in memory before commit; streaming commits per batch",
+    "text:build_seconds": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
+    "text:build_peak_rss_mib": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
     "text:cold_start_s": "the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever",
     "text:serving_rss_mib": "the whole store is resident after open; memory-mapped postings and file-backed text (ledger 2A/2B) are the open levers",
     "text:p99_latency": "tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate",
