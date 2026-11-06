@@ -385,35 +385,64 @@ impl Postings<'_> {
     }
 
     /// Calls `f(slot, frequency)` for every posting in slot order; the loop form keeps the
-    /// decoder state in registers where the iterator cannot. Eight postings whose words are
-    /// one byte each with frequency 1 (gaps below 64, the common case in long lists) decode
-    /// from one 64-bit load.
+    /// decoder state in registers where the iterator cannot. Postings decode from 64-bit
+    /// loads: eight one-byte postings of frequency 1 (gaps below 64) at once, and otherwise
+    /// every posting whose word and frequency are one or two bytes each (gaps below 8,192,
+    /// frequencies below 16,384) without leaving the loaded word. Longer varints and the last
+    /// bytes of the list take the byte-wise path.
     pub(super) fn for_each(&self, mut f: impl FnMut(usize, u32)) {
         let bytes = self.bytes;
         let mut at = 0usize;
         let mut slot = 0u64;
         let mut left = self.count as usize;
         while left > 0 {
-            if left >= 8 {
-                if let Some(word) = bytes.get(at..at + 8) {
-                    let word = u64::from_le_bytes(word.try_into().expect("eight bytes"));
-                    // Bytes before the first with a continuation or frequency flag are
-                    // whole postings of frequency 1; the slow path takes the rest.
-                    let flags = word & 0x8181_8181_8181_8181;
-                    let clean = if flags == 0 {
-                        8
-                    } else {
-                        flags.trailing_zeros() as usize / 8
-                    };
-                    for byte in 0..clean {
-                        slot += (word >> (8 * byte + 1)) & 0x7f;
+            if let Some(window) = bytes.get(at..at + 8) {
+                let window = u64::from_le_bytes(window.try_into().expect("eight bytes"));
+                if left >= 8 && window & 0x8181_8181_8181_8181 == 0 {
+                    for byte in 0..8 {
+                        slot += (window >> (8 * byte + 1)) & 0x7f;
                         f(slot as usize, 1);
                     }
-                    at += clean;
-                    left -= clean;
-                    if clean == 8 {
-                        continue;
+                    at += 8;
+                    left -= 8;
+                    continue;
+                }
+                // A varint of one or two bytes starting `used` bytes into the window, and its
+                // length; None when it is longer or runs past the window.
+                let short = |used: usize| -> Option<(u64, usize)> {
+                    let first = (window >> (8 * used)) & 0xff;
+                    if first < 0x80 {
+                        return Some((first, 1));
                     }
+                    if used >= 7 {
+                        return None;
+                    }
+                    let second = (window >> (8 * (used + 1))) & 0xff;
+                    (second < 0x80).then_some(((first & 0x7f) | second << 7, 2))
+                };
+                let mut used = 0usize;
+                while left > 0 && used < 8 {
+                    let Some((word, word_len)) = short(used) else {
+                        break;
+                    };
+                    let (frequency, frequency_len) = if word & 1 == 0 {
+                        (1, 0)
+                    } else if used + word_len < 8 {
+                        match short(used + word_len) {
+                            Some(decoded) => decoded,
+                            None => break,
+                        }
+                    } else {
+                        break;
+                    };
+                    slot += word >> 1;
+                    f(slot as usize, frequency as u32);
+                    used += word_len + frequency_len;
+                    left -= 1;
+                }
+                at += used;
+                if used > 0 {
+                    continue;
                 }
             }
             let word = get_varint(bytes, &mut at);
@@ -2168,6 +2197,59 @@ mod tests {
                 .unwrap();
             assert_eq!(fast, postings, "pattern {pattern}");
             assert_eq!(checked, postings, "pattern {pattern}");
+        }
+    }
+
+    #[test]
+    fn checkpoint_decoding_matches_at_every_varint_length_and_window_offset() {
+        // Word varints change length at gaps 64 and 8,192; frequency varints at 128 and 16,384.
+        let gaps = [1usize, 63, 64, 65, 8_191, 8_192, 8_193, 1 << 20];
+        let frequencies = [1u32, 2, 127, 128, 129, 16_383, 16_384, 16_385, u32::MAX];
+        let mut state = 0x9E37_79B9_7F4A_7C15u64;
+        for length in [1usize, 7, 8, 9, 15, 16, 17, 64, 1_000] {
+            for _ in 0..40 {
+                let mut slot = 0usize;
+                let postings: Vec<Posting> = (0..length)
+                    .map(|i| {
+                        state ^= state << 13;
+                        state ^= state >> 7;
+                        state ^= state << 17;
+                        // Mostly short postings, so runs of them straddle each window offset.
+                        let short = !state.is_multiple_of(4);
+                        let gap = if short {
+                            1 + (state >> 8) as usize % 60
+                        } else {
+                            gaps[(state >> 8) as usize % gaps.len()]
+                        };
+                        let frequency = if short && state & 0x30 != 0 {
+                            1
+                        } else {
+                            frequencies[(state >> 24) as usize % frequencies.len()]
+                        };
+                        slot += if i == 0 { gap - 1 } else { gap };
+                        (slot, frequency)
+                    })
+                    .collect();
+                let mut list = PostingList::default();
+                list.append_run(&postings);
+                let mut bytes = Vec::new();
+                pack_checkpoint(&list, &mut bytes);
+                let packed = Postings {
+                    bytes: &bytes,
+                    count: postings.len() as u32,
+                };
+                let mut fast = Vec::new();
+                packed.for_each(|slot, frequency| fast.push((slot, frequency)));
+                let mut checked = Vec::new();
+                packed
+                    .try_for_each(|slot, frequency| {
+                        checked.push((slot, frequency));
+                        true
+                    })
+                    .unwrap();
+                assert_eq!(checked, postings);
+                assert_eq!(fast, postings);
+            }
         }
     }
 
