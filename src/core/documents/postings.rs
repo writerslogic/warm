@@ -314,17 +314,71 @@ struct Block {
     frontier: Option<Box<[(u32, u32)]>>,
 }
 
-/// One term's postings in the checkpoint encoding, read from a mapped checkpoint: per posting
-/// one varint `gap << 1 | (frequency != 1)`, followed by the frequency as a varint only when
-/// it is not 1 (the first gap is the slot itself).
+/// Postings per block in the checkpoint's block encoding. The checkpoint format fixes it,
+/// independent of the build-time [`BLOCK_LEN`] of the live lists.
+pub(super) const CHECKPOINT_BLOCK: usize = 128;
+
+/// One term's postings read from a mapped checkpoint, in one of its two encodings.
+///
+/// Blocked (checkpoint version 2): blocks of [`CHECKPOINT_BLOCK`] postings, the last one
+/// shorter. Per block, a varint of its first slot minus the previous block's last slot (the
+/// first block's is the slot itself), a byte of gap bits and a byte of frequency bits, then the
+/// block's slot gaps (the first one zero) and its frequencies, each packed as a little-endian
+/// bit string at its width.
+///
+/// Flat (version 1): per posting one varint `gap << 1 | (frequency != 1)`, followed by the
+/// frequency as a varint only when it is not 1 (the first gap is the slot itself).
 #[derive(Clone, Copy)]
 pub(super) struct Postings<'a> {
     pub(super) bytes: &'a [u8],
     pub(super) count: u32,
+    pub(super) blocked: bool,
 }
 
-/// Appends `list`'s postings to `out` in the checkpoint encoding.
+/// Appends `list`'s postings to `out` in the checkpoint's block encoding.
 pub(super) fn pack_checkpoint(list: &PostingList, out: &mut Vec<u8>) {
+    let mut block: Vec<Posting> = Vec::with_capacity(CHECKPOINT_BLOCK);
+    let mut last = 0usize;
+    let mut flush = |block: &mut Vec<Posting>, out: &mut Vec<u8>| {
+        let first = block[0].0;
+        put_varint(out, (first - last) as u64);
+        let gap = block
+            .windows(2)
+            .map(|pair| (pair[1].0 - pair[0].0) as u64)
+            .max()
+            .unwrap_or(0);
+        let frequency = block.iter().map(|p| p.1).max().expect("nonempty block");
+        let gap_bits = (64 - gap.leading_zeros()) as u8;
+        let frequency_bits = (32 - frequency.leading_zeros()) as u8;
+        out.extend_from_slice(&[gap_bits, frequency_bits]);
+        let mut previous = first;
+        pack(
+            out,
+            block.iter().map(|p| {
+                let gap = p.0 - previous;
+                previous = p.0;
+                gap as u64
+            }),
+            gap_bits,
+        );
+        pack(out, block.iter().map(|p| u64::from(p.1)), frequency_bits);
+        last = previous;
+        block.clear();
+    };
+    list.for_each(|slot, frequency| {
+        block.push((slot, frequency));
+        if block.len() == CHECKPOINT_BLOCK {
+            flush(&mut block, out);
+        }
+    });
+    if !block.is_empty() {
+        flush(&mut block, out);
+    }
+}
+
+/// Appends `list`'s postings to `out` in the version 1 flat encoding, for tests of reading it.
+#[cfg(test)]
+pub(super) fn pack_checkpoint_flat(list: &PostingList, out: &mut Vec<u8>) {
     let mut previous = 0usize;
     let mut first = true;
     list.for_each(|slot, frequency| {
@@ -336,6 +390,15 @@ pub(super) fn pack_checkpoint(list: &PostingList, out: &mut Vec<u8>) {
             put_varint(out, u64::from(frequency));
         }
     });
+}
+
+/// The smallest byte length of a blocked list of `count` postings: three bytes per block.
+pub(super) fn checkpoint_min_len(count: u64, blocked: bool) -> u64 {
+    if blocked {
+        3 * count.div_ceil(CHECKPOINT_BLOCK as u64)
+    } else {
+        count
+    }
 }
 
 /// [`get_varint`] for bytes read from a file: fails instead of panicking on a malformed varint.
@@ -359,9 +422,71 @@ impl Postings<'_> {
         self.count as usize
     }
 
-    /// Calls `f(slot, frequency)` for every posting in slot order, checking every varint and
+    /// Calls `f(slot, frequency)` for every posting in slot order, checking every field and
     /// that the list ends exactly after `count` postings; `f` returning false stops early.
-    pub(super) fn try_for_each(&self, mut f: impl FnMut(usize, u32) -> bool) -> anyhow::Result<()> {
+    pub(super) fn try_for_each(&self, f: impl FnMut(usize, u32) -> bool) -> anyhow::Result<()> {
+        if self.blocked {
+            self.try_for_each_blocked(f)
+        } else {
+            self.try_for_each_flat(f)
+        }
+    }
+
+    fn try_for_each_blocked(&self, mut f: impl FnMut(usize, u32) -> bool) -> anyhow::Result<()> {
+        let bytes = self.bytes;
+        let (mut at, mut last, mut left) = (0usize, 0u64, self.count as usize);
+        let (mut gaps, mut frequencies) = ([0u64; CHECKPOINT_BLOCK], [0u64; CHECKPOINT_BLOCK]);
+        while left > 0 {
+            let count = left.min(CHECKPOINT_BLOCK);
+            let delta = checked_varint(bytes, &mut at)?;
+            let header = bytes
+                .get(at..at + 2)
+                .ok_or_else(|| anyhow::anyhow!("posting block header past the list"))?;
+            let (gap_bits, frequency_bits) = (header[0], header[1]);
+            anyhow::ensure!(
+                gap_bits <= 64 && frequency_bits <= 32,
+                "posting block bit widths"
+            );
+            at += 2;
+            let gap_len = (count * usize::from(gap_bits)).div_ceil(8);
+            let frequency_len = (count * usize::from(frequency_bits)).div_ceil(8);
+            let end = at + gap_len + frequency_len;
+            anyhow::ensure!(end <= bytes.len(), "posting block past the list");
+            unpack_values(&bytes[at..at + gap_len], count, gap_bits, &mut gaps);
+            unpack_values(
+                &bytes[at + gap_len..end],
+                count,
+                frequency_bits,
+                &mut frequencies,
+            );
+            at = end;
+            anyhow::ensure!(gaps[0] == 0, "posting block first gap");
+            let mut slot = last
+                .checked_add(delta)
+                .ok_or_else(|| anyhow::anyhow!("posting slot overflow"))?;
+            anyhow::ensure!(
+                left == self.count as usize || delta > 0,
+                "posting blocks out of order"
+            );
+            for (index, (&gap, &frequency)) in
+                gaps[..count].iter().zip(&frequencies[..count]).enumerate()
+            {
+                anyhow::ensure!(index == 0 || gap > 0, "posting gap");
+                slot = slot
+                    .checked_add(gap)
+                    .ok_or_else(|| anyhow::anyhow!("posting slot overflow"))?;
+                if !f(usize::try_from(slot)?, u32::try_from(frequency)?) {
+                    return Ok(());
+                }
+            }
+            last = slot;
+            left -= count;
+        }
+        anyhow::ensure!(at == bytes.len(), "posting list has trailing bytes");
+        Ok(())
+    }
+
+    fn try_for_each_flat(&self, mut f: impl FnMut(usize, u32) -> bool) -> anyhow::Result<()> {
         let (mut at, mut slot) = (0usize, 0u64);
         for _ in 0..self.count {
             let word = checked_varint(self.bytes, &mut at)?;
@@ -384,13 +509,54 @@ impl Postings<'_> {
         Ok(())
     }
 
-    /// Calls `f(slot, frequency)` for every posting in slot order; the loop form keeps the
+    /// Calls `f(slot, frequency)` for every posting in slot order.
+    pub(super) fn for_each(&self, f: impl FnMut(usize, u32)) {
+        if self.blocked {
+            self.for_each_blocked(f);
+        } else {
+            self.for_each_flat(f);
+        }
+    }
+
+    /// [`Self::for_each`] over the block encoding: each block's gaps and frequencies unpack
+    /// with the live lists' constant-width (and SIMD) decoders.
+    fn for_each_blocked(&self, mut f: impl FnMut(usize, u32)) {
+        let bytes = self.bytes;
+        let (mut at, mut last, mut left) = (0usize, 0u64, self.count as usize);
+        let (mut gaps, mut frequencies) = ([0u64; CHECKPOINT_BLOCK], [0u64; CHECKPOINT_BLOCK]);
+        while left > 0 {
+            let count = left.min(CHECKPOINT_BLOCK);
+            let delta = get_varint(bytes, &mut at);
+            let (gap_bits, frequency_bits) = (bytes[at], bytes[at + 1]);
+            at += 2;
+            let gap_len = (count * usize::from(gap_bits)).div_ceil(8);
+            // The decoders read whole 8-byte windows while they stay inside the slice they
+            // are given, so each gets the rest of the list and uses only its own values.
+            unpack_values(&bytes[at..], count, gap_bits, &mut gaps);
+            unpack_values(
+                &bytes[at + gap_len..],
+                count,
+                frequency_bits,
+                &mut frequencies,
+            );
+            at += gap_len + (count * usize::from(frequency_bits)).div_ceil(8);
+            let mut slot = last + delta;
+            for (&gap, &frequency) in gaps[..count].iter().zip(&frequencies[..count]) {
+                slot += gap;
+                f(slot as usize, frequency as u32);
+            }
+            last = slot;
+            left -= count;
+        }
+    }
+
+    /// [`Self::for_each`] over the flat encoding; the loop form keeps the
     /// decoder state in registers where the iterator cannot. Postings decode from 64-bit
     /// loads: eight one-byte postings of frequency 1 (gaps below 64) at once, and otherwise
     /// every posting whose word and frequency are one or two bytes each (gaps below 8,192,
     /// frequencies below 16,384) without leaving the loaded word. Longer varints and the last
     /// bytes of the list take the byte-wise path.
-    pub(super) fn for_each(&self, mut f: impl FnMut(usize, u32)) {
+    fn for_each_flat(&self, mut f: impl FnMut(usize, u32)) {
         let bytes = self.bytes;
         let mut at = 0usize;
         let mut slot = 0u64;
@@ -590,7 +756,7 @@ fn unpack_into(bytes: &[u8], count: usize, bits: u8, mut emit: impl FnMut(usize,
 /// constant, the loop is straight-line loads, shifts and masks; values whose 8-byte window
 /// would pass the end of `bytes` read it zero-padded.
 #[inline(always)]
-fn unpack_fixed<const BITS: usize>(bytes: &[u8], count: usize, out: &mut [u64; BLOCK_LEN]) {
+fn unpack_fixed<const BITS: usize>(bytes: &[u8], count: usize, out: &mut [u64]) {
     let out = &mut out[..count];
     #[cfg(not(any(
         target_arch = "x86_64",
@@ -717,7 +883,7 @@ unsafe fn unpack_avx2<const BITS: usize>(bytes: &[u8], out: &mut [u64]) -> usize
 
 /// `count` values of `bits` bits from the start of `bytes` into `out`: a constant-width
 /// loop for widths up to 32, the general window loop above that.
-fn unpack_values(bytes: &[u8], count: usize, bits: u8, out: &mut [u64; BLOCK_LEN]) {
+fn unpack_values(bytes: &[u8], count: usize, bits: u8, out: &mut [u64]) {
     match bits {
         0 => out[..count].fill(0),
         1 => unpack_fixed::<1>(bytes, count, out),
@@ -2161,6 +2327,48 @@ mod tests {
         }
     }
 
+    /// `list` packed in the block (`blocked`) or flat checkpoint encoding, decoded by the fast
+    /// and the checked decoder, which must agree.
+    fn decode_both(list: &PostingList, blocked: bool) -> Vec<Posting> {
+        let mut bytes = Vec::new();
+        if blocked {
+            pack_checkpoint(list, &mut bytes);
+        } else {
+            pack_checkpoint_flat(list, &mut bytes);
+        }
+        let packed = Postings {
+            bytes: &bytes,
+            count: list.len() as u32,
+            blocked,
+        };
+        assert!(checkpoint_min_len(list.len() as u64, blocked) <= bytes.len() as u64);
+        let mut fast = Vec::new();
+        packed.for_each(|slot, frequency| fast.push((slot, frequency)));
+        let mut checked = Vec::new();
+        packed
+            .try_for_each(|slot, frequency| {
+                checked.push((slot, frequency));
+                true
+            })
+            .unwrap();
+        assert_eq!(fast, checked, "blocked {blocked}");
+        // A list cut short or extended by a byte fails the checked decoder.
+        for broken in [
+            &bytes[..bytes.len() - 1],
+            &[bytes.as_slice(), &[0]].concat()[..],
+        ] {
+            let broken = Postings {
+                bytes: broken,
+                ..packed
+            };
+            assert!(
+                broken.try_for_each(|_, _| true).is_err(),
+                "blocked {blocked}"
+            );
+        }
+        checked
+    }
+
     /// The packed checkpoint decoder agrees with the checked one for every mix of one-byte
     /// postings, wide gaps and frequencies at every position in the eight-byte window.
     #[test]
@@ -2180,23 +2388,9 @@ mod tests {
             }
             let mut list = PostingList::default();
             list.append_run(&postings);
-            let mut bytes = Vec::new();
-            pack_checkpoint(&list, &mut bytes);
-            let packed = Postings {
-                bytes: &bytes,
-                count: postings.len() as u32,
-            };
-            let mut fast = Vec::new();
-            packed.for_each(|slot, frequency| fast.push((slot, frequency)));
-            let mut checked = Vec::new();
-            packed
-                .try_for_each(|slot, frequency| {
-                    checked.push((slot, frequency));
-                    true
-                })
-                .unwrap();
-            assert_eq!(fast, postings, "pattern {pattern}");
-            assert_eq!(checked, postings, "pattern {pattern}");
+            for blocked in [false, true] {
+                assert_eq!(decode_both(&list, blocked), postings, "pattern {pattern}");
+            }
         }
     }
 
@@ -2206,7 +2400,9 @@ mod tests {
         let gaps = [1usize, 63, 64, 65, 8_191, 8_192, 8_193, 1 << 20];
         let frequencies = [1u32, 2, 127, 128, 129, 16_383, 16_384, 16_385, u32::MAX];
         let mut state = 0x9E37_79B9_7F4A_7C15u64;
-        for length in [1usize, 7, 8, 9, 15, 16, 17, 64, 1_000] {
+        for length in [
+            1usize, 7, 8, 9, 15, 16, 17, 64, 127, 128, 129, 256, 257, 1_000,
+        ] {
             for _ in 0..40 {
                 let mut slot = 0usize;
                 let postings: Vec<Posting> = (0..length)
@@ -2232,23 +2428,9 @@ mod tests {
                     .collect();
                 let mut list = PostingList::default();
                 list.append_run(&postings);
-                let mut bytes = Vec::new();
-                pack_checkpoint(&list, &mut bytes);
-                let packed = Postings {
-                    bytes: &bytes,
-                    count: postings.len() as u32,
-                };
-                let mut fast = Vec::new();
-                packed.for_each(|slot, frequency| fast.push((slot, frequency)));
-                let mut checked = Vec::new();
-                packed
-                    .try_for_each(|slot, frequency| {
-                        checked.push((slot, frequency));
-                        true
-                    })
-                    .unwrap();
-                assert_eq!(checked, postings);
-                assert_eq!(fast, postings);
+                for blocked in [false, true] {
+                    assert_eq!(decode_both(&list, blocked), postings, "{length} {blocked}");
+                }
             }
         }
     }
