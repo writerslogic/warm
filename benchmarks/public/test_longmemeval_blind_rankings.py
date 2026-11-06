@@ -117,3 +117,9 @@ class BlindRankings(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_export_rankings_drops_repeated_turns_keeping_first_position():
+    from longmemeval_pipeline import export_rankings
+    out = export_rankings({"q": ["noans_a_1_3", "b_2_1", "answer_a_1_3", "b_2_1", "c_1_1"]}, depth=3)
+    assert out == {"q": ["answer_a_1_3", "b_2_1", "c_1_1"]}
