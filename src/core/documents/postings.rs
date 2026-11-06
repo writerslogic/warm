@@ -453,7 +453,12 @@ impl Postings<'_> {
             let end = at + gap_len + frequency_len;
             anyhow::ensure!(end <= bytes.len(), "posting block past the list");
             unpack_values(&bytes[at..at + gap_len], count, gap_bits, &mut gaps);
-            unpack_values(&bytes[at + gap_len..end], count, frequency_bits, &mut frequencies);
+            unpack_values(
+                &bytes[at + gap_len..end],
+                count,
+                frequency_bits,
+                &mut frequencies,
+            );
             at = end;
             anyhow::ensure!(gaps[0] == 0, "posting block first gap");
             let mut slot = last
@@ -463,7 +468,9 @@ impl Postings<'_> {
                 left == self.count as usize || delta > 0,
                 "posting blocks out of order"
             );
-            for (index, (&gap, &frequency)) in gaps[..count].iter().zip(&frequencies[..count]).enumerate() {
+            for (index, (&gap, &frequency)) in
+                gaps[..count].iter().zip(&frequencies[..count]).enumerate()
+            {
                 anyhow::ensure!(index == 0 || gap > 0, "posting gap");
                 slot = slot
                     .checked_add(gap)
@@ -526,7 +533,12 @@ impl Postings<'_> {
             // The decoders read whole 8-byte windows while they stay inside the slice they
             // are given, so each gets the rest of the list and uses only its own values.
             unpack_values(&bytes[at..], count, gap_bits, &mut gaps);
-            unpack_values(&bytes[at + gap_len..], count, frequency_bits, &mut frequencies);
+            unpack_values(
+                &bytes[at + gap_len..],
+                count,
+                frequency_bits,
+                &mut frequencies,
+            );
             at += gap_len + (count * usize::from(frequency_bits)).div_ceil(8);
             let mut slot = last + delta;
             for (&gap, &frequency) in gaps[..count].iter().zip(&frequencies[..count]) {
@@ -2341,9 +2353,18 @@ mod tests {
             .unwrap();
         assert_eq!(fast, checked, "blocked {blocked}");
         // A list cut short or extended by a byte fails the checked decoder.
-        for broken in [&bytes[..bytes.len() - 1], &[bytes.as_slice(), &[0]].concat()[..]] {
-            let broken = Postings { bytes: broken, ..packed };
-            assert!(broken.try_for_each(|_, _| true).is_err(), "blocked {blocked}");
+        for broken in [
+            &bytes[..bytes.len() - 1],
+            &[bytes.as_slice(), &[0]].concat()[..],
+        ] {
+            let broken = Postings {
+                bytes: broken,
+                ..packed
+            };
+            assert!(
+                broken.try_for_each(|_, _| true).is_err(),
+                "blocked {blocked}"
+            );
         }
         checked
     }
@@ -2379,7 +2400,9 @@ mod tests {
         let gaps = [1usize, 63, 64, 65, 8_191, 8_192, 8_193, 1 << 20];
         let frequencies = [1u32, 2, 127, 128, 129, 16_383, 16_384, 16_385, u32::MAX];
         let mut state = 0x9E37_79B9_7F4A_7C15u64;
-        for length in [1usize, 7, 8, 9, 15, 16, 17, 64, 127, 128, 129, 256, 257, 1_000] {
+        for length in [
+            1usize, 7, 8, 9, 15, 16, 17, 64, 127, 128, 129, 256, 257, 1_000,
+        ] {
             for _ in 0..40 {
                 let mut slot = 0usize;
                 let postings: Vec<Posting> = (0..length)
