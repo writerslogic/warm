@@ -1,0 +1,295 @@
+{
+  "classification": "development consolidation heap measurement, not a leaderboard standing",
+  "fixture": {
+    "dataset": "glove-100-angular (train rows)",
+    "dim": 100,
+    "metric": "angular",
+    "base_rows": 900000,
+    "deleted_fraction": 0.3,
+    "inserted_rows": 225000,
+    "live_before": 855414,
+    "build_ef": 64,
+    "alpha": 1.0,
+    "degrees": [
+      32,
+      64
+    ],
+    "fixtures": {
+      "m900": "R32",
+      "m900_64": "R64"
+    },
+    "modes": [
+      "merge",
+      "rebuild"
+    ],
+    "arms": {
+      "base": "main 81765c7a",
+      "v1": "93a42d72 (same diff as the e0e7701b binary measured)"
+    }
+  },
+  "method": {
+    "heap": "Counting global allocator in a local driver (not committed); PHASE lines give current and peak-since-last-phase live heap bytes in MiB; heap_peak_mib is the maximum over phases; heap_base_mib is the peak of the rows phase (resident index plus prepared rows, before any adjacency exists); heap_peak_over_base_mib is heap_peak_mib minus heap_base_mib.",
+    "rss": "/usr/bin/time -l maximum resident set size, one run per cell",
+    "fingerprints": "file_fnv: FNV of the consolidated base file; search_fnv: FNV of search results over the test queries; compared base vs v1 per fixture and mode",
+    "repetitions": "one run per cell; heap peaks are deterministic allocation counts, secs is a single noisy sample"
+  },
+  "runs": [
+    {
+      "fixture": "m900",
+      "degree": 32,
+      "mode": "merge",
+      "arm": "base",
+      "binary_commit": "81765c7a",
+      "live_before": 855414,
+      "heap_base_mib": 147.5,
+      "heap_peak_mib": 213.3,
+      "heap_peak_over_base_mib": 65.8,
+      "max_rss_bytes": 1310294016,
+      "secs": 34.84,
+      "file_fnv": "6f22c8d5a6964ccc",
+      "search_fnv": "3e0a4436cab6c71b",
+      "dominant_phase": "upper",
+      "dominant_phase_peak_mib": 213.3,
+      "upper_phase_cur_mib": 184.6,
+      "upper_phase_peak_mib": 213.3,
+      "upper_transient_mib": 28.7
+    },
+    {
+      "fixture": "m900",
+      "degree": 32,
+      "mode": "merge",
+      "arm": "v1",
+      "binary_commit": "93a42d72",
+      "live_before": 855414,
+      "heap_base_mib": 147.5,
+      "heap_peak_mib": 186.9,
+      "heap_peak_over_base_mib": 39.4,
+      "max_rss_bytes": 1298595840,
+      "secs": 39.62,
+      "file_fnv": "6f22c8d5a6964ccc",
+      "search_fnv": "3e0a4436cab6c71b",
+      "dominant_phase": "merge-relink",
+      "dominant_phase_peak_mib": 186.9,
+      "upper_phase_cur_mib": 67.4,
+      "upper_phase_peak_mib": 99.2,
+      "upper_transient_mib": 31.8
+    },
+    {
+      "fixture": "m900",
+      "degree": 32,
+      "mode": "rebuild",
+      "arm": "base",
+      "binary_commit": "81765c7a",
+      "live_before": 855414,
+      "heap_base_mib": 147.5,
+      "heap_peak_mib": 201.5,
+      "heap_peak_over_base_mib": 53.9,
+      "max_rss_bytes": 1275510784,
+      "secs": 37.65,
+      "file_fnv": "96c20d2ef42f5344",
+      "search_fnv": "80a868602c5fc2c1",
+      "dominant_phase": "upper",
+      "dominant_phase_peak_mib": 201.5,
+      "upper_phase_cur_mib": 172.7,
+      "upper_phase_peak_mib": 201.5,
+      "upper_transient_mib": 28.8
+    },
+    {
+      "fixture": "m900",
+      "degree": 32,
+      "mode": "rebuild",
+      "arm": "v1",
+      "binary_commit": "93a42d72",
+      "live_before": 855414,
+      "heap_base_mib": 147.5,
+      "heap_peak_mib": 184.5,
+      "heap_peak_over_base_mib": 36.9,
+      "max_rss_bytes": 1302872064,
+      "secs": 23.48,
+      "file_fnv": "96c20d2ef42f5344",
+      "search_fnv": "80a868602c5fc2c1",
+      "dominant_phase": "pass",
+      "dominant_phase_peak_mib": 184.5,
+      "upper_phase_cur_mib": 63.7,
+      "upper_phase_peak_mib": 92.5,
+      "upper_transient_mib": 28.8
+    },
+    {
+      "fixture": "m900_64",
+      "degree": 64,
+      "mode": "merge",
+      "arm": "base",
+      "binary_commit": "81765c7a",
+      "live_before": 855414,
+      "heap_base_mib": 179.5,
+      "heap_peak_mib": 350.3,
+      "heap_peak_over_base_mib": 170.7,
+      "max_rss_bytes": 1543061504,
+      "secs": 35.49,
+      "file_fnv": "d18c9fb7729257bc",
+      "search_fnv": "5a45fdb159a52446",
+      "dominant_phase": "upper",
+      "dominant_phase_peak_mib": 350.3,
+      "upper_phase_cur_mib": 321.5,
+      "upper_phase_peak_mib": 350.3,
+      "upper_transient_mib": 28.8
+    },
+    {
+      "fixture": "m900_64",
+      "degree": 64,
+      "mode": "merge",
+      "arm": "v1",
+      "binary_commit": "93a42d72",
+      "live_before": 855414,
+      "heap_base_mib": 179.5,
+      "heap_peak_mib": 326.7,
+      "heap_peak_over_base_mib": 147.2,
+      "max_rss_bytes": 1565491200,
+      "secs": 30.54,
+      "file_fnv": "d18c9fb7729257bc",
+      "search_fnv": "5a45fdb159a52446",
+      "dominant_phase": "merge-relink",
+      "dominant_phase_peak_mib": 326.7,
+      "upper_phase_cur_mib": 99.4,
+      "upper_phase_peak_mib": 131.2,
+      "upper_transient_mib": 31.8
+    },
+    {
+      "fixture": "m900_64",
+      "degree": 64,
+      "mode": "rebuild",
+      "arm": "base",
+      "binary_commit": "81765c7a",
+      "live_before": 855414,
+      "heap_base_mib": 179.5,
+      "heap_peak_mib": 338.2,
+      "heap_peak_over_base_mib": 158.6,
+      "max_rss_bytes": 1531150336,
+      "secs": 28.59,
+      "file_fnv": "c44d10a9d389c72b",
+      "search_fnv": "55d58a0c7c0dc6c7",
+      "dominant_phase": "upper",
+      "dominant_phase_peak_mib": 338.2,
+      "upper_phase_cur_mib": 309.4,
+      "upper_phase_peak_mib": 338.2,
+      "upper_transient_mib": 28.8
+    },
+    {
+      "fixture": "m900_64",
+      "degree": 64,
+      "mode": "rebuild",
+      "arm": "v1",
+      "binary_commit": "93a42d72",
+      "live_before": 855414,
+      "heap_base_mib": 179.5,
+      "heap_peak_mib": 323.7,
+      "heap_peak_over_base_mib": 144.2,
+      "max_rss_bytes": 1556119552,
+      "secs": 28.95,
+      "file_fnv": "c44d10a9d389c72b",
+      "search_fnv": "55d58a0c7c0dc6c7",
+      "dominant_phase": "pass",
+      "dominant_phase_peak_mib": 323.7,
+      "upper_phase_cur_mib": 95.7,
+      "upper_phase_peak_mib": 124.5,
+      "upper_transient_mib": 28.8
+    }
+  ],
+  "deltas": [
+    {
+      "fixture": "m900",
+      "degree": 32,
+      "mode": "merge",
+      "heap_peak_base_mib": 213.3,
+      "heap_peak_v1_mib": 186.9,
+      "reduction_mib": 26.4,
+      "reduction_percent": 12.4,
+      "file_fnv_identical": true,
+      "search_fnv_identical": true,
+      "max_rss_base_bytes": 1310294016,
+      "max_rss_v1_bytes": 1298595840
+    },
+    {
+      "fixture": "m900",
+      "degree": 32,
+      "mode": "rebuild",
+      "heap_peak_base_mib": 201.5,
+      "heap_peak_v1_mib": 184.5,
+      "reduction_mib": 17.0,
+      "reduction_percent": 8.4,
+      "file_fnv_identical": true,
+      "search_fnv_identical": true,
+      "max_rss_base_bytes": 1275510784,
+      "max_rss_v1_bytes": 1302872064
+    },
+    {
+      "fixture": "m900_64",
+      "degree": 64,
+      "mode": "merge",
+      "heap_peak_base_mib": 350.3,
+      "heap_peak_v1_mib": 326.7,
+      "reduction_mib": 23.6,
+      "reduction_percent": 6.7,
+      "file_fnv_identical": true,
+      "search_fnv_identical": true,
+      "max_rss_base_bytes": 1543061504,
+      "max_rss_v1_bytes": 1565491200
+    },
+    {
+      "fixture": "m900_64",
+      "degree": 64,
+      "mode": "rebuild",
+      "heap_peak_base_mib": 338.2,
+      "heap_peak_v1_mib": 323.7,
+      "reduction_mib": 14.5,
+      "reduction_percent": 4.3,
+      "file_fnv_identical": true,
+      "search_fnv_identical": true,
+      "max_rss_base_bytes": 1531150336,
+      "max_rss_v1_bytes": 1556119552
+    }
+  ],
+  "attribution": {
+    "R32": {
+      "adjacency_bytes_per_row": 132,
+      "adjacency_mib_at_live_before": 107.7,
+      "adjacency_share_of_v1_merge_heap_peak_percent": 57.6,
+      "moved_upper_transient_mib": 31.8
+    },
+    "R64": {
+      "adjacency_bytes_per_row": 260,
+      "adjacency_mib_at_live_before": 212.1,
+      "adjacency_share_of_v1_merge_heap_peak_percent": 64.9,
+      "moved_upper_transient_mib": 31.8
+    }
+  },
+  "extrapolation": {
+    "label": "EXTRAPOLATION, not measured: linear scaling of the measured heap peaks from live_before=855414 to 30,000,000 live rows",
+    "live_rows": 30000000,
+    "values": {
+      "R32_merge": {
+        "heap_peak_v1_gib": 6.4,
+        "heap_peak_base_gib": 7.31,
+        "saving_gib": 0.9,
+        "adjacency_gib": 3.69
+      },
+      "R64_merge": {
+        "heap_peak_v1_gib": 11.19,
+        "heap_peak_base_gib": 12.0,
+        "saving_gib": 0.81,
+        "adjacency_gib": 7.26
+      }
+    },
+    "caveats": [
+      "heap only; resident set size adds file-backed mapped pages (an earlier 30M R32 ef256 run reached 8.6 GB RSS under an 8 GiB cgroup)",
+      "assumes the per-row terms (adjacency, index, rows) dominate and scale linearly with live rows",
+      "30M live rows is the dataset size, not the live count at any particular runbook step"
+    ]
+  },
+  "not_claimed": [
+    "wall time (single noisy samples)",
+    "resident set size (unchanged within noise: dominated by file-backed mapped pages)",
+    "recall or search quality (fingerprints identical, no new recall measurement)",
+    "leaderboard standing"
+  ]
+}
