@@ -337,4 +337,186 @@ mod tests {
             std::fs::write(path, format!("{report}\n")).unwrap();
         }
     }
+
+    /// L22 kill test (research/STREAMING-L22-DESIGN.md section 6, STATE.md 21:15Z): one search
+    /// step of the partition tier, list-major, on 8 threads. Per (query, list): the LUT is the
+    /// sum of a shared per-query table and a per-list table (the IVFPQ precomputed split),
+    /// quantized to u8 per block with one scale; the scan admits a code only when its u16 sum
+    /// beats the query's running reorder threshold converted into that list's units; admitted
+    /// codes go to a per-thread bounded heap per query, merged at the end. Random codes and
+    /// tables (the scan cost does not depend on the values). Kill rule: codes/s including the
+    /// LUT build and admission >= 6e9 on 8 threads.
+    /// `cargo test --release partition_step_microbenchmark -- --ignored --nocapture`; knobs
+    /// `WARM_L22_{LISTS,LIST_LEN,QUERIES,NPROBE,M,REORDER,THREADS}`, JSON to `WARM_L22_BENCH_OUT`.
+    #[test]
+    #[ignore = "microbenchmark: run in release with --ignored --nocapture"]
+    fn partition_step_microbenchmark() {
+        use std::time::Instant;
+        let knob = |name: &str, default: usize| -> usize {
+            crate::compatibility::var(&format!("WARM_L22_{name}"))
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(default)
+        };
+        let lists = knob("LISTS", 5000);
+        let list_len = knob("LIST_LEN", 2000);
+        let nq = knob("QUERIES", 10_000);
+        let nprobe = knob("NPROBE", 700);
+        let m = knob("M", 50);
+        let reorder = knob("REORDER", 317);
+        let threads = knob("THREADS", 8);
+        let e = 16 * m;
+        let blocks = list_len.div_ceil(BLOCK);
+        let mut rng = SplitMix(11);
+        let codes: Vec<u8> = (0..lists * blocks * e)
+            .map(|_| (rng.next_u64() & 255) as u8)
+            .collect();
+        let unit = |r: &mut SplitMix| (r.next_u64() >> 40) as f32 / (1u64 << 24) as f32;
+        let qtab: Vec<f32> = (0..nq * e).map(|_| unit(&mut rng)).collect();
+        let ltab: Vec<f32> = (0..lists * e).map(|_| unit(&mut rng)).collect();
+        // Each list is probed by each query with probability nprobe / lists.
+        let probes: Vec<Vec<u32>> = (0..lists)
+            .map(|l| {
+                let mut r = SplitMix(1000 + l as u64);
+                (0..nq as u32)
+                    .filter(|_| (r.next_u64() % lists as u64) < (nprobe as u64))
+                    .collect()
+            })
+            .collect();
+        let pairs: usize = probes.iter().map(Vec::len).sum();
+        let scanned = pairs as f64 * list_len as f64;
+
+        // mode 0: full step; mode 1: scan + admission with the LUT build skipped (one table
+        // per list reused); mode 2: LUT build only.
+        let run = |mode: u8| -> (f64, u64) {
+            // Threads own disjoint query sets (q % threads) and walk every list in order, so
+            // each query has one candidate buffer and no merge; the list's codes are shared
+            // through the cache. Candidates below the running threshold go to a buffer of
+            // 2 * reorder; a full buffer is cut to the best `reorder` and the threshold
+            // tightens to the worst kept (selection instead of a heap).
+            let t = Instant::now();
+            let states: Vec<u64> = std::thread::scope(|s| {
+                let workers: Vec<_> = (0..threads)
+                    .map(|w| {
+                        let (codes, qtab, ltab, probes) = (&codes, &qtab, &ltab, &probes);
+                        s.spawn(move || {
+                            let mine: Vec<usize> = (w..nq).step_by(threads).collect();
+                            let mut bufs: Vec<Vec<(u32, u32)>> = mine
+                                .iter()
+                                .map(|_| Vec::with_capacity(2 * reorder))
+                                .collect();
+                            let mut thr = vec![f32::INFINITY; mine.len()];
+                            let mut ent = vec![0f32; e];
+                            let mut lut = vec![0u8; e];
+                            let mut mins = vec![0f32; m];
+                            let mut out = [0u32; BLOCK];
+                            let mut check = 0u64;
+                            for l in 0..lists {
+                                let lc = &codes[l * blocks * e..(l + 1) * blocks * e];
+                                let lt = &ltab[l * e..(l + 1) * e];
+                                let mut first = true;
+                                for &q in &probes[l] {
+                                    let q = q as usize;
+                                    if q % threads != w {
+                                        continue;
+                                    }
+                                    let k = q / threads;
+                                    let (mut base, mut scale) = (0f32, 1f32);
+                                    if mode != 1 || first {
+                                        first = false;
+                                        let qt = &qtab[q * e..(q + 1) * e];
+                                        let mut span = 0f32;
+                                        for b in 0..m {
+                                            let (mut lo, mut hi) = (f32::INFINITY, 0f32);
+                                            for v in 16 * b..16 * b + 16 {
+                                                let x = qt[v] + lt[v];
+                                                ent[v] = x;
+                                                lo = lo.min(x);
+                                                hi = hi.max(x);
+                                            }
+                                            mins[b] = lo;
+                                            span = span.max(hi - lo);
+                                            base += lo;
+                                        }
+                                        scale = span.max(1e-12) / 255.0;
+                                        let inv = 1.0 / scale;
+                                        for b in 0..m {
+                                            for v in 16 * b..16 * b + 16 {
+                                                lut[v] = ((ent[v] - mins[b]) * inv + 0.5) as u8;
+                                            }
+                                        }
+                                    }
+                                    if mode == 2 {
+                                        check = check.wrapping_add(u64::from(lut[q % e]));
+                                        continue;
+                                    }
+                                    let t_q = thr[k];
+                                    if t_q <= base {
+                                        continue;
+                                    }
+                                    let lim = ((t_q - base) / scale).min(65535.0) as u32;
+                                    let buf = &mut bufs[k];
+                                    for blk in 0..blocks {
+                                        scan32(&lc[blk * e..(blk + 1) * e], &lut, m, &mut out);
+                                        for (c, &v) in out.iter().enumerate() {
+                                            if v < lim {
+                                                let d = base + v as f32 * scale;
+                                                let id = (l * list_len + blk * BLOCK + c) as u32;
+                                                buf.push((d.to_bits(), id));
+                                            }
+                                        }
+                                        if buf.len() >= 2 * reorder {
+                                            buf.select_nth_unstable(reorder - 1);
+                                            buf.truncate(reorder);
+                                            let worst = buf.iter().map(|x| x.0).max().unwrap();
+                                            thr[k] = f32::from_bits(worst);
+                                            if thr[k] <= base {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            for buf in &mut bufs {
+                                if buf.len() > reorder {
+                                    buf.select_nth_unstable(reorder - 1);
+                                    buf.truncate(reorder);
+                                }
+                                check = check
+                                    .wrapping_add(buf.iter().map(|x| u64::from(x.1)).sum::<u64>());
+                            }
+                            check
+                        })
+                    })
+                    .collect();
+                workers.into_iter().map(|w| w.join().unwrap()).collect()
+            });
+            let check: u64 = states.iter().sum();
+            (t.elapsed().as_secs_f64(), check)
+        };
+        let best = |mode: u8| {
+            (0..3)
+                .map(|_| run(mode))
+                .min_by(|a, b| a.0.total_cmp(&b.0))
+                .unwrap()
+        };
+        let (full, c0) = best(0);
+        let (scan_only, c1) = best(1);
+        let (lut_only, c2) = best(2);
+        let rate = scanned / full;
+        let report = format!(
+            "{{\"lists\": {lists}, \"list_len\": {list_len}, \"queries\": {nq}, \"nprobe\": {nprobe}, \
+             \"m\": {m}, \"reorder\": {reorder}, \"threads\": {threads}, \"pairs\": {pairs}, \
+             \"codes_scanned\": {scanned:.0}, \"step_s\": {full:.4}, \"scan_admit_s\": {scan_only:.4}, \
+             \"lut_build_s\": {lut_only:.4}, \"codes_per_s\": {rate:.4e}, \
+             \"ns_per_lut\": {:.1}, \"kill_rule\": \"codes_per_s >= 6e9 on 8 threads\", \
+             \"pass\": {}, \"checksums\": [{c0}, {c1}, {c2}]}}",
+            lut_only * 1e9 * threads as f64 / pairs as f64,
+            rate >= 6e9
+        );
+        println!("{report}");
+        if let Ok(path) = crate::compatibility::var("WARM_L22_BENCH_OUT") {
+            std::fs::write(path, format!("{report}\n")).unwrap();
+        }
+    }
 }
