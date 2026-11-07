@@ -81,6 +81,40 @@ fn add_group(codes: &[u8], lut: &[u8], out: &mut [u16; BLOCK]) {
     }
 }
 
+/// Builds the u8 table of one (query, list) pair from a shared per-query table and a per-list
+/// table (`16 * m` entries each, summed): each group is shifted by its minimum and all groups
+/// share one scale so the largest group span maps to 255. Returns `(base, scale)`: a code's
+/// float score is `base + scale * sum`, where `base` is the sum of the group minimums.
+pub(crate) fn build_lut(qt: &[f32], lt: &[f32], ent: &mut [f32], lut: &mut [u8]) -> (f32, f32) {
+    let e = qt.len();
+    assert!(e % 16 == 0 && lt.len() == e && ent.len() >= e && lut.len() >= e);
+    let (mut base, mut span) = (0f32, 0f32);
+    for ((q, l), x) in qt
+        .chunks_exact(16)
+        .zip(lt.chunks_exact(16))
+        .zip(ent[..e].chunks_exact_mut(16))
+    {
+        let (mut lo, mut hi) = (f32::INFINITY, f32::NEG_INFINITY);
+        for i in 0..16 {
+            x[i] = q[i] + l[i];
+            lo = lo.min(x[i]);
+            hi = hi.max(x[i]);
+        }
+        for v in x.iter_mut() {
+            *v -= lo;
+        }
+        base += lo;
+        span = span.max(hi - lo);
+    }
+    let scale = span.max(1e-12) / 255.0;
+    let inv = 1.0 / scale;
+    for (d, &x) in lut[..e].iter_mut().zip(&ent[..e]) {
+        // x is in [0, span], so x * inv + 0.5 lies in [0, 255.5]: the cast cannot saturate.
+        *d = (x * inv + 0.5) as i32 as u8;
+    }
+    (base, scale)
+}
+
 /// Packs 32 codes of `m` nibbles each (`nibbles[c * m + j]`, values below 16) into the block
 /// layout `scan32` reads; `block` holds `16 * m` bytes.
 pub(crate) fn pack32(nibbles: &[u8], m: usize, block: &mut [u8]) {
@@ -173,9 +207,12 @@ mod avx2 {
     pub(super) unsafe fn scan32(codes: &[u8], lut: &[u8], m: usize, out: &mut [u16; BLOCK]) {
         let mask = _mm256_set1_epi8(0x0f);
         let zero = _mm256_setzero_si256();
-        // 16-bit accumulators: codes 0..8 | 8..16 (low halves), 16..24 | 24..32 (high halves),
-        // each for the even group (lane 0..16) and the odd group (lane 16..32).
-        let (mut a0, mut a1, mut a2, mut a3) = (zero, zero, zero, zero);
+        // The shuffled bytes are added as 16-bit words: word i holds byte 2i plus 256 times
+        // byte 2i + 1. A second accumulator sums the odd bytes alone (word >> 8), so the even
+        // bytes are `all - (odd << 8)` at the end. Two adds and a shift per shuffle replace
+        // four widening conversions; sums stay below 2^16 for m <= 256 (each lane adds at
+        // most m / 2 groups of 255).
+        let (mut lo_all, mut lo_odd, mut hi_all, mut hi_odd) = (zero, zero, zero, zero);
         let (cp, lp) = (codes.as_ptr(), lut.as_ptr());
         let mut j = 0;
         while j + 2 <= m {
@@ -183,22 +220,30 @@ mod avx2 {
             let t = _mm256_loadu_si256(lp.add(16 * j).cast());
             let rlo = _mm256_shuffle_epi8(t, _mm256_and_si256(c, mask));
             let rhi = _mm256_shuffle_epi8(t, _mm256_and_si256(_mm256_srli_epi16::<4>(c), mask));
-            let lo0 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(rlo));
-            let lo1 = _mm256_cvtepu8_epi16(_mm256_extracti128_si256::<1>(rlo));
-            let hi0 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(rhi));
-            let hi1 = _mm256_cvtepu8_epi16(_mm256_extracti128_si256::<1>(rhi));
-            a0 = _mm256_add_epi16(a0, lo0);
-            a1 = _mm256_add_epi16(a1, lo1);
-            a2 = _mm256_add_epi16(a2, hi0);
-            a3 = _mm256_add_epi16(a3, hi1);
+            lo_all = _mm256_add_epi16(lo_all, rlo);
+            lo_odd = _mm256_add_epi16(lo_odd, _mm256_srli_epi16::<8>(rlo));
+            hi_all = _mm256_add_epi16(hi_all, rhi);
+            hi_odd = _mm256_add_epi16(hi_odd, _mm256_srli_epi16::<8>(rhi));
             j += 2;
         }
-        // a0: codes 0..16 of even groups; a1: codes 0..16 of odd groups; a2/a3 codes 16..32.
-        let lo = _mm256_add_epi16(a0, a1);
-        let hi = _mm256_add_epi16(a2, a3);
+        // Lane halves 0..16 and 16..32 hold the even and odd groups: add them, then
+        // interleave even and odd codes back into code order.
+        let finish = |all: __m256i, odd: __m256i, dst: *mut u16| {
+            let even = _mm256_sub_epi16(all, _mm256_slli_epi16::<8>(odd));
+            let e = _mm_add_epi16(
+                _mm256_castsi256_si128(even),
+                _mm256_extracti128_si256::<1>(even),
+            );
+            let o = _mm_add_epi16(
+                _mm256_castsi256_si128(odd),
+                _mm256_extracti128_si256::<1>(odd),
+            );
+            _mm_storeu_si128(dst.cast(), _mm_unpacklo_epi16(e, o));
+            _mm_storeu_si128(dst.add(8).cast(), _mm_unpackhi_epi16(e, o));
+        };
         let o = out.as_mut_ptr();
-        _mm256_storeu_si256(o.cast(), lo);
-        _mm256_storeu_si256(o.add(16).cast(), hi);
+        finish(lo_all, lo_odd, o);
+        finish(hi_all, hi_odd, o.add(16));
         if j < m {
             add_group(&codes[16 * j..16 * j + 16], &lut[16 * j..16 * j + 16], out);
         }
@@ -219,6 +264,35 @@ mod tests {
         let mut block = vec![0u8; 16 * m];
         pack32(&nibbles, m, &mut block);
         (nibbles, lut, block)
+    }
+
+    #[test]
+    fn lut_reconstructs_scores_within_half_a_step() {
+        let mut rng = SplitMix(3);
+        for &m in &[1usize, 2, 25, 50, 100] {
+            let e = 16 * m;
+            let unit = |r: &mut SplitMix| (r.next_u64() >> 40) as f32 / (1u64 << 24) as f32 - 0.5;
+            let qt: Vec<f32> = (0..e).map(|_| unit(&mut rng) * 4.0).collect();
+            let lt: Vec<f32> = (0..e).map(|_| unit(&mut rng)).collect();
+            let (mut ent, mut lut) = (vec![0f32; e], vec![0u8; e]);
+            let (base, scale) = build_lut(&qt, &lt, &mut ent, &mut lut);
+            let (nibbles, _, block) = random_block(m, m as u64 + 9);
+            let mut out = [0u32; BLOCK];
+            scan32(&block, &lut, m, &mut out);
+            for c in 0..BLOCK {
+                let exact: f32 = (0..m)
+                    .map(|j| {
+                        qt[16 * j + nibbles[c * m + j] as usize]
+                            + lt[16 * j + nibbles[c * m + j] as usize]
+                    })
+                    .sum();
+                let approx = base + scale * out[c] as f32;
+                assert!(
+                    (approx - exact).abs() <= 0.5 * scale * m as f32 + 1e-4,
+                    "m {m} code {c}: {approx} vs {exact}"
+                );
+            }
+        }
     }
 
     #[test]
@@ -408,7 +482,6 @@ mod tests {
                             let mut thr = vec![f32::INFINITY; mine.len()];
                             let mut ent = vec![0f32; e];
                             let mut lut = vec![0u8; e];
-                            let mut mins = vec![0f32; m];
                             let mut out = [0u32; BLOCK];
                             let mut check = 0u64;
                             for l in 0..lists {
@@ -426,28 +499,8 @@ mod tests {
                                     let k = q / threads;
                                     if mode != 1 || first {
                                         first = false;
-                                        base = 0.0;
                                         let qt = &qtab[q * e..(q + 1) * e];
-                                        let mut span = 0f32;
-                                        for b in 0..m {
-                                            let (mut lo, mut hi) = (f32::INFINITY, 0f32);
-                                            for v in 16 * b..16 * b + 16 {
-                                                let x = qt[v] + lt[v];
-                                                ent[v] = x;
-                                                lo = lo.min(x);
-                                                hi = hi.max(x);
-                                            }
-                                            mins[b] = lo;
-                                            span = span.max(hi - lo);
-                                            base += lo;
-                                        }
-                                        scale = span.max(1e-12) / 255.0;
-                                        let inv = 1.0 / scale;
-                                        for b in 0..m {
-                                            for v in 16 * b..16 * b + 16 {
-                                                lut[v] = ((ent[v] - mins[b]) * inv + 0.5) as u8;
-                                            }
-                                        }
+                                        (base, scale) = build_lut(qt, lt, &mut ent, &mut lut);
                                     }
                                     if mode == 2 {
                                         check = check.wrapping_add(u64::from(lut[q % e]));
