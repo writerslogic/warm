@@ -85,32 +85,35 @@ fn add_group(codes: &[u8], lut: &[u8], out: &mut [u16; BLOCK]) {
 /// table (`16 * m` entries each, summed): each group is shifted by its minimum and all groups
 /// share one scale so the largest group span maps to 255. Returns `(base, scale)`: a code's
 /// float score is `base + scale * sum`, where `base` is the sum of the group minimums.
-pub(crate) fn build_lut(qt: &[f32], lt: &[f32], ent: &mut [f32], lut: &mut [u8]) -> (f32, f32) {
+pub(crate) fn build_lut(
+    qt: &[f32],
+    lt: &[f32],
+    ent: &mut [f32],
+    mins: &mut [f32],
+    lut: &mut [u8],
+) -> (f32, f32) {
     let e = qt.len();
-    assert!(e % 16 == 0 && lt.len() == e && ent.len() >= e && lut.len() >= e);
+    let m = e / 16;
+    assert!(e % 16 == 0 && lt.len() == e && ent.len() >= e && mins.len() >= m && lut.len() >= e);
     let (mut base, mut span) = (0f32, 0f32);
-    for ((q, l), x) in qt
-        .chunks_exact(16)
-        .zip(lt.chunks_exact(16))
-        .zip(ent[..e].chunks_exact_mut(16))
-    {
+    for b in 0..m {
         let (mut lo, mut hi) = (f32::INFINITY, f32::NEG_INFINITY);
-        for i in 0..16 {
-            x[i] = q[i] + l[i];
-            lo = lo.min(x[i]);
-            hi = hi.max(x[i]);
+        for v in 16 * b..16 * b + 16 {
+            let x = qt[v] + lt[v];
+            ent[v] = x;
+            lo = lo.min(x);
+            hi = hi.max(x);
         }
-        for v in x.iter_mut() {
-            *v -= lo;
-        }
-        base += lo;
+        mins[b] = lo;
         span = span.max(hi - lo);
+        base += lo;
     }
     let scale = span.max(1e-12) / 255.0;
     let inv = 1.0 / scale;
-    for (d, &x) in lut[..e].iter_mut().zip(&ent[..e]) {
-        // x is in [0, span], so x * inv + 0.5 lies in [0, 255.5]: the cast cannot saturate.
-        *d = (x * inv + 0.5) as i32 as u8;
+    for b in 0..m {
+        for v in 16 * b..16 * b + 16 {
+            lut[v] = ((ent[v] - mins[b]) * inv + 0.5) as u8;
+        }
     }
     (base, scale)
 }
@@ -274,8 +277,8 @@ mod tests {
             let unit = |r: &mut SplitMix| (r.next_u64() >> 40) as f32 / (1u64 << 24) as f32 - 0.5;
             let qt: Vec<f32> = (0..e).map(|_| unit(&mut rng) * 4.0).collect();
             let lt: Vec<f32> = (0..e).map(|_| unit(&mut rng)).collect();
-            let (mut ent, mut lut) = (vec![0f32; e], vec![0u8; e]);
-            let (base, scale) = build_lut(&qt, &lt, &mut ent, &mut lut);
+            let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
+            let (base, scale) = build_lut(&qt, &lt, &mut ent, &mut mins, &mut lut);
             let (nibbles, _, block) = random_block(m, m as u64 + 9);
             let mut out = [0u32; BLOCK];
             scan32(&block, &lut, m, &mut out);
@@ -482,6 +485,7 @@ mod tests {
                             let mut thr = vec![f32::INFINITY; mine.len()];
                             let mut ent = vec![0f32; e];
                             let mut lut = vec![0u8; e];
+                            let mut mins = vec![0f32; m];
                             let mut out = [0u32; BLOCK];
                             let mut check = 0u64;
                             for l in 0..lists {
@@ -500,7 +504,8 @@ mod tests {
                                     if mode != 1 || first {
                                         first = false;
                                         let qt = &qtab[q * e..(q + 1) * e];
-                                        (base, scale) = build_lut(qt, lt, &mut ent, &mut lut);
+                                        (base, scale) =
+                                            build_lut(qt, lt, &mut ent, &mut mins, &mut lut);
                                     }
                                     if mode == 2 {
                                         check = check.wrapping_add(u64::from(lut[q % e]));
