@@ -366,9 +366,14 @@ impl MutableBase {
             codes: self.codes.as_ref(),
             quantized: false,
         };
+        // The construction pass links each of its internal batches only to the graph before it,
+        // so rows that arrive cluster by cluster must be spread out first, as the build and
+        // merge paths do; slot assignment above stays in caller order so replay is unchanged.
+        let mut order = slots.clone();
+        super::merge::shuffle(&mut order, self.params.seed ^ need as u64 ^ 1);
         rows.insert_pass(
             &mut self.adj,
-            &slots,
+            &order,
             self.entry,
             self.params.build_ef,
             self.params.alpha,
@@ -377,8 +382,8 @@ impl MutableBase {
         // A parent that was in the graph before this slot keeps the tree acyclic and rooted at
         // the entry; inside the batch only an earlier slot qualifies.
         let position: HashMap<u32, usize> =
-            slots.iter().enumerate().map(|(i, &s)| (s, i)).collect();
-        for (j, &slot) in slots.iter().enumerate() {
+            order.iter().enumerate().map(|(i, &s)| (s, i)).collect();
+        for (j, &slot) in order.iter().enumerate() {
             if slot == self.entry {
                 continue;
             }

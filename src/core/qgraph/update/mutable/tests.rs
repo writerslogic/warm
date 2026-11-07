@@ -399,3 +399,30 @@ fn bad_input_is_refused_without_changing_the_index() {
     m.check(false);
     assert_eq!(m.index.len(), 3);
 }
+
+/// Rows arriving cluster by cluster (the natural order of a clustered file) must build as good
+/// a graph as a random order: `insert_batch` links each construction batch only to the graph
+/// before it, so an unshuffled batch holding a whole cluster would leave that cluster without
+/// intra-cluster edges and unreachable from its own neighbourhood.
+#[test]
+fn cluster_ordered_batch_keeps_recall() {
+    let (dim, per_cluster) = (16, 500);
+    let mut m = Model::new(Metric::Euclidean, dim, 100_000, 7, None);
+    let mut ids = Vec::new();
+    let mut flat = Vec::new();
+    for c in 0..m.centers.len() {
+        for _ in 0..per_cluster {
+            let raw: Vec<f32> = (0..dim)
+                .map(|i| m.centers[c][i] + (m.rng.next_f32() - 0.5) * 0.5)
+                .collect();
+            m.next_id += 1;
+            m.shadow.insert(m.next_id, m.prepared(&raw));
+            ids.push(m.next_id);
+            flat.extend(raw);
+        }
+    }
+    m.index.insert_batch(&ids, &flat).unwrap();
+    m.check(false);
+    let recall = m.recall(200, 10, 64);
+    assert!(recall >= 0.9, "recall@10 at ef 64 on cluster-ordered input: {recall}");
+}
