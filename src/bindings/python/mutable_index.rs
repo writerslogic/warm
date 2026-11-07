@@ -208,8 +208,13 @@ impl PyMutableIndex {
         let queries = self.rows(&x, nq)?;
         let dim = self.base.dim();
         let euclidean = self.base.metric() == Metric::Euclidean;
-        let mut ids = vec![-1i64; nq * k];
-        let mut dists = vec![f32::INFINITY; nq * k];
+        // Bound the result buffers before allocating: k is caller-controlled.
+        let total = nq
+            .checked_mul(k)
+            .filter(|&t| t <= 1usize << 31)
+            .ok_or_else(|| PyValueError::new_err("k too large for this query batch"))?;
+        let mut ids = vec![-1i64; total];
+        let mut dists = vec![f32::INFINITY; total];
         py.detach(|| {
             self.run(|| {
                 ids.par_chunks_mut(k)
