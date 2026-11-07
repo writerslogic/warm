@@ -242,6 +242,14 @@ impl MutableBase {
         })
     }
 
+    pub fn dim(&self) -> usize {
+        self.dim
+    }
+
+    pub fn metric(&self) -> Metric {
+        self.params.metric
+    }
+
     /// Live points.
     pub fn len(&self) -> usize {
         self.live
