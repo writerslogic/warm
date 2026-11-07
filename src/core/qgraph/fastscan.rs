@@ -424,7 +424,7 @@ mod tests {
     /// tables (the scan cost does not depend on the values). Kill rule: codes/s including the
     /// LUT build and admission >= 6e9 on 8 threads.
     /// `cargo test --release partition_step_microbenchmark -- --ignored --nocapture`; knobs
-    /// `WARM_L22_{LISTS,LIST_LEN,QUERIES,NPROBE,M,REORDER,THREADS}`, JSON to `WARM_L22_BENCH_OUT`.
+    /// `WARM_L22_{LISTS,LIST_LEN,QUERIES,NPROBE,M,REORDER,THREADS,REPS}`, JSON to `WARM_L22_BENCH_OUT`.
     #[test]
     #[ignore = "microbenchmark: run in release with --ignored --nocapture"]
     fn partition_step_microbenchmark() {
@@ -555,15 +555,36 @@ mod tests {
             let check: u64 = states.iter().sum();
             (t.elapsed().as_secs_f64(), check)
         };
-        let best = |mode: u8| {
-            (0..3)
-                .map(|_| run(mode))
-                .min_by(|a, b| a.0.total_cmp(&b.0))
-                .unwrap()
+        // Modes interleave per repetition so a sustained run (WARM_L22_REPS) shows each mode's
+        // trajectory over the whole run; the min is reported as before, plus mean/median/p90.
+        let reps = knob("REPS", 3).max(1);
+        let mut times: [Vec<f64>; 3] = [Vec::new(), Vec::new(), Vec::new()];
+        let mut checks = [0u64; 3];
+        for _ in 0..reps {
+            for mode in 0..3u8 {
+                let (secs, c) = run(mode);
+                times[mode as usize].push(secs);
+                checks[mode as usize] = c;
+            }
+        }
+        let stats = |v: &[f64]| {
+            let mut s = v.to_vec();
+            s.sort_by(f64::total_cmp);
+            let mean = s.iter().sum::<f64>() / s.len() as f64;
+            let p90 = s[((s.len() as f64 * 0.9).ceil() as usize).clamp(1, s.len()) - 1];
+            let all: Vec<String> = v.iter().map(|x| format!("{x:.4}")).collect();
+            (
+                s[0],
+                format!(
+                    "{{\"mean\": {mean:.4}, \"median\": {:.4}, \"p90\": {p90:.4}, \"all\": [{}]}}",
+                    s[s.len() / 2],
+                    all.join(", ")
+                ),
+            )
         };
-        let (full, c0) = best(0);
-        let (scan_only, c1) = best(1);
-        let (lut_only, c2) = best(2);
+        let ((full, full_stats), (scan_only, scan_stats), (lut_only, lut_stats)) =
+            (stats(&times[0]), stats(&times[1]), stats(&times[2]));
+        let [c0, c1, c2] = checks;
         let rate = scanned / full;
         let report = format!(
             "{{\"lists\": {lists}, \"list_len\": {list_len}, \"queries\": {nq}, \"nprobe\": {nprobe}, \
@@ -571,7 +592,8 @@ mod tests {
              \"codes_scanned\": {scanned:.0}, \"step_s\": {full:.4}, \"scan_admit_s\": {scan_only:.4}, \
              \"lut_build_s\": {lut_only:.4}, \"codes_per_s\": {rate:.4e}, \
              \"ns_per_lut\": {:.1}, \"kill_rule\": \"codes_per_s >= 6e9 on 8 threads\", \
-             \"pass\": {}, \"checksums\": [{c0}, {c1}, {c2}]}}",
+             \"pass\": {}, \"checksums\": [{c0}, {c1}, {c2}], \"reps\": {reps}, \
+             \"step_stats\": {full_stats}, \"scan_admit_stats\": {scan_stats}, \"lut_build_stats\": {lut_stats}}}",
             lut_only * 1e9 * threads as f64 / pairs as f64,
             rate >= 6e9
         );
