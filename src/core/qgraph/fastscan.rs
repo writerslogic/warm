@@ -415,15 +415,18 @@ mod tests {
                                 let lc = &codes[l * blocks * e..(l + 1) * blocks * e];
                                 let lt = &ltab[l * e..(l + 1) * e];
                                 let mut first = true;
+                                // Mode 1 reuses the list's first table, so its base and scale
+                                // carry over to the later queries of the list.
+                                let (mut base, mut scale) = (0f32, 1f32);
                                 for &q in &probes[l] {
                                     let q = q as usize;
                                     if q % threads != w {
                                         continue;
                                     }
                                     let k = q / threads;
-                                    let (mut base, mut scale) = (0f32, 1f32);
                                     if mode != 1 || first {
                                         first = false;
+                                        base = 0.0;
                                         let qt = &qtab[q * e..(q + 1) * e];
                                         let mut span = 0f32;
                                         for b in 0..m {
