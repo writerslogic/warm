@@ -97,6 +97,9 @@ pub struct SearchProfile {
     pub total_s: f64,
 }
 
+/// One search thread's (query, ids) results with its scan and reorder seconds.
+type ThreadPart = (Vec<(u32, Vec<u32>)>, f64, f64);
+
 /// Streaming partition tier over external `u32` ids.
 pub struct PartitionTier {
     dim: usize,
@@ -767,7 +770,7 @@ impl PartitionTier {
             .collect();
         let route_s = t0.elapsed().as_secs_f64() - centres_s;
         let threads = rayon::current_num_threads().max(1);
-        let parts: Vec<(Vec<(u32, Vec<u32>)>, f64, f64)> = (0..threads)
+        let parts: Vec<ThreadPart> = (0..threads)
             .into_par_iter()
             .map(|th| {
                 let mine: Vec<u32> = (0..nq as u32)
@@ -1043,8 +1046,10 @@ mod tests {
         use std::time::Instant;
         let var = |k: &str| crate::compatibility::var(&format!("WARM_L22_ACC_{k}")).unwrap();
         let f32s = |b: Vec<u8>| -> Vec<f32> {
-            b.chunks_exact(4)
-                .map(|c| f32::from_le_bytes(c.try_into().unwrap()))
+            b.as_chunks::<4>()
+                .0
+                .iter()
+                .map(|c| f32::from_le_bytes(*c))
                 .collect()
         };
         let dim = 100;
@@ -1060,10 +1065,14 @@ mod tests {
         let q = f32s(std::fs::read(var("QUERIES")).unwrap());
         let gt: Vec<Vec<u32>> = std::fs::read(var("GT"))
             .unwrap()
-            .chunks_exact(40)
+            .as_chunks::<40>()
+            .0
+            .iter()
             .map(|r| {
-                r.chunks_exact(4)
-                    .map(|c| i32::from_le_bytes(c.try_into().unwrap()) as u32)
+                r.as_chunks::<4>()
+                    .0
+                    .iter()
+                    .map(|c| i32::from_le_bytes(*c) as u32)
                     .collect()
             })
             .collect();
