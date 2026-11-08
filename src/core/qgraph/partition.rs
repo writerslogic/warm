@@ -21,6 +21,20 @@ use super::fastscan::{build_lut, scan32, BLOCK};
 use super::invalid;
 use crate::core::error::WarmError;
 
+/// How many lists a query probes, decided at routing time from its sorted centre distances.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum ProbeRule {
+    /// The `nprobe` nearest lists.
+    #[default]
+    Fixed,
+    /// List `i` while `d_i^2 <= d_1^2 (1 + eps)`.
+    Ratio { eps: f32 },
+    /// List `i` while `max(0, d_i - scale * r_i) <= (1 + eps) d_1`, with `r_i` the list's member
+    /// radius (mean + 2 sd of member-to-centre distance). Not monotone in `i`: a far list with a
+    /// large radius is kept past a near list with a small one.
+    Radius { eps: f32, scale: f32 },
+}
+
 /// Tier parameters. Defaults are the stage-1 operating point.
 #[derive(Clone, Debug)]
 pub struct PartitionParams {
@@ -36,7 +50,11 @@ pub struct PartitionParams {
     /// Candidate centres for the spill choice (nearest `spill_k` by L2).
     pub spill_k: usize,
     pub soar_lambda: f32,
+    /// Lists probed by `ProbeRule::Fixed`; the cap for the adaptive rules.
     pub nprobe: usize,
+    /// Floor on the lists an adaptive rule probes.
+    pub nprobe_min: usize,
+    pub probe_rule: ProbeRule,
     pub reorder: usize,
     pub seed: u64,
 }
@@ -54,6 +72,8 @@ impl Default for PartitionParams {
             spill_k: 32,
             soar_lambda: 1.0,
             nprobe: 350,
+            nprobe_min: 1,
+            probe_rule: ProbeRule::Fixed,
             reorder: 317,
             seed: 7,
         }
@@ -65,11 +85,15 @@ const ROWS: usize = 1024;
 const BF_QUERIES: usize = 256;
 const BF_ROWS: usize = 8192;
 
+#[derive(Default)]
 struct List {
     /// `blocks * 16 * m` bytes in the LUT16 block layout.
     codes: Vec<u8>,
     /// Slot of each code, in position order.
     slots: Vec<u32>,
+    /// Sum and sum of squares of member-to-centre distance over `slots` (spilled members included).
+    dist_sum: f64,
+    dist_sq: f64,
 }
 
 struct Trained {
@@ -98,6 +122,8 @@ pub struct SearchProfile {
     pub scan_mean_s: f64,
     /// Mean over threads of the time spent building per-(query, list) tables.
     pub lut_mean_s: f64,
+    /// Lists probed, summed over queries.
+    pub probes: u64,
     /// 32-code blocks scanned, summed over threads.
     pub blocks: u64,
     /// Candidates admitted below the running threshold, summed over threads.
@@ -120,6 +146,36 @@ pub struct PartitionTier {
     free: Vec<u32>,
     trained: Option<Trained>,
     profile: std::sync::Mutex<SearchProfile>,
+}
+
+/// Lists to probe for one query under an adaptive rule. `d2` is the query's squared distance to
+/// every centre and `radii` the per-list radii (read only by `Radius`). Candidates are the `nmax`
+/// nearest lists; the `nmin` nearest are always kept.
+fn select_probes(d2: &[f32], radii: &[f32], rule: ProbeRule, nmin: usize, nmax: usize) -> Vec<u32> {
+    let nmax = nmax.clamp(1, d2.len());
+    let nmin = nmin.clamp(1, nmax);
+    let mut idx: Vec<u32> = (0..d2.len() as u32).collect();
+    idx.select_nth_unstable_by(nmax - 1, |a, b| d2[*a as usize].total_cmp(&d2[*b as usize]));
+    idx.truncate(nmax);
+    idx.sort_unstable_by(|a, b| d2[*a as usize].total_cmp(&d2[*b as usize]));
+    let d1sq = d2[idx[0] as usize];
+    match rule {
+        ProbeRule::Fixed => {}
+        ProbeRule::Ratio { eps } => {
+            let cut = d1sq * (1.0 + eps);
+            let keep = idx.partition_point(|&i| d2[i as usize] <= cut);
+            idx.truncate(keep.max(nmin));
+        }
+        ProbeRule::Radius { eps, scale } => {
+            let cut = (1.0 + eps) * d1sq.sqrt();
+            let mut pos = 0;
+            idx.retain(|&i| {
+                pos += 1;
+                pos <= nmin || (d2[i as usize].sqrt() - scale * radii[i as usize]).max(0.0) <= cut
+            });
+        }
+    }
+    idx
 }
 
 /// Per-(query, list) table build cost in scanned-code equivalents (measured on wl-03: ~2.7 us
@@ -323,6 +379,24 @@ fn set_nibble(block: &mut [u8], i: usize, j: usize, v: u8) {
 }
 
 impl List {
+    /// Member radius: mean + 2 sd of member-to-centre distance (about its 97.7th percentile).
+    fn radius(&self) -> f32 {
+        let n = self.slots.len();
+        if n == 0 {
+            return 0.0;
+        }
+        let mean = self.dist_sum / n as f64;
+        let var = (self.dist_sq / n as f64 - mean * mean).max(0.0);
+        (mean + 2.0 * var.sqrt()) as f32
+    }
+
+    /// Adds (`sign` = 1) or removes (`sign` = -1) one member's distance to the radius statistics.
+    fn track(&mut self, dist: f32, sign: f64) {
+        let d = f64::from(dist);
+        self.dist_sum += sign * d;
+        self.dist_sq += sign * d * d;
+    }
+
     fn append(&mut self, m: usize, code: &[u8], slot: u32) -> u32 {
         let pos = self.slots.len();
         if pos.is_multiple_of(BLOCK) {
@@ -497,6 +571,12 @@ impl PartitionTier {
         self.params.nprobe = nprobe.max(1);
     }
 
+    /// Sets the adaptive rule and its floor (the cap is `nprobe`, see `set_nprobe`).
+    pub fn set_probe_rule(&mut self, rule: ProbeRule, nprobe_min: usize) {
+        self.params.probe_rule = rule;
+        self.params.nprobe_min = nprobe_min.max(1);
+    }
+
     pub fn is_trained(&self) -> bool {
         self.trained.is_some()
     }
@@ -562,15 +642,20 @@ impl PartitionTier {
             t.loc.resize(self.slot_id.len(), [(u32::MAX, u32::MAX); 2]);
         }
         for (i, (&slot, &(a1, a2))) in slots.iter().zip(&asg).enumerate() {
+            let x = &vectors[i * dim..(i + 1) * dim];
             let p1 = t.lists[a1 as usize].append(m, &codes[2 * i * m..(2 * i + 1) * m], slot);
             let p2 = t.lists[a2 as usize].append(m, &codes[(2 * i + 1) * m..(2 * i + 2) * m], slot);
+            for a in [a1 as usize, a2 as usize] {
+                let d = sq(x, &t.centres[a * dim..(a + 1) * dim]).sqrt();
+                t.lists[a].track(d, 1.0);
+            }
             t.loc[slot as usize] = [(a1, p1), (a2, p2)];
         }
     }
 
     /// Deletes ids; unknown ids are ignored. Returns how many were removed.
     pub fn delete(&mut self, ids: &[u32]) -> usize {
-        let m = self.params.pq_m;
+        let (m, dim) = (self.params.pq_m, self.dim);
         let mut removed = 0;
         for id in ids {
             let Some(slot) = self.id_slot.remove(id) else {
@@ -583,6 +668,10 @@ impl PartitionTier {
                     if list == u32::MAX {
                         continue;
                     }
+                    let c = list as usize;
+                    let x = &self.rows[slot as usize * dim..(slot as usize + 1) * dim];
+                    let d = sq(x, &t.centres[c * dim..(c + 1) * dim]).sqrt();
+                    t.lists[c].track(d, -1.0);
                     if let Some(moved) = t.lists[list as usize].remove(m, pos as usize) {
                         // The moved code came from this list's old last position, which is
                         // the list's new length; a slot is in a list at most once.
@@ -681,12 +770,7 @@ impl PartitionTier {
             gram,
             codebook,
             list_tab,
-            lists: (0..l)
-                .map(|_| List {
-                    codes: Vec::new(),
-                    slots: Vec::new(),
-                })
-                .collect(),
+            lists: (0..l).map(|_| List::default()).collect(),
             loc: vec![[(u32::MAX, u32::MAX); 2]; self.slot_id.len()],
         });
         self.place(&live, &vectors);
@@ -770,6 +854,11 @@ impl PartitionTier {
         let (l, e, sub) = (t.lists_len(), 16 * m, dim / m);
         let nq = queries.len() / dim;
         let nprobe = self.params.nprobe.min(l);
+        let (rule, nmin) = (self.params.probe_rule, self.params.nprobe_min);
+        let radii: Vec<f32> = match rule {
+            ProbeRule::Radius { .. } => t.lists.iter().map(List::radius).collect(),
+            _ => Vec::new(),
+        };
         let reorder = self.params.reorder.max(k);
         let t0 = std::time::Instant::now();
         // Centre distances |q - c|^2 and the probed lists per query.
@@ -785,6 +874,9 @@ impl PartitionTier {
                 for (v, &cc) in row.iter_mut().zip(&t.c2) {
                     *v = (q2 - 2.0 * *v + cc).max(0.0);
                 }
+                if rule != ProbeRule::Fixed {
+                    return select_probes(row, &radii, rule, nmin, nprobe);
+                }
                 let mut idx: Vec<u32> = (0..l as u32).collect();
                 idx.select_nth_unstable_by(nprobe - 1, |a, b| {
                     row[*a as usize].total_cmp(&row[*b as usize])
@@ -793,6 +885,7 @@ impl PartitionTier {
                 idx
             })
             .collect();
+        let probes: u64 = probe.iter().map(|p| p.len() as u64).sum();
         let centres_s = t0.elapsed().as_secs_f64();
         let mut by_list: Vec<Vec<u32>> = vec![Vec::new(); l];
         for (q, ls) in probe.iter().enumerate() {
@@ -935,6 +1028,7 @@ impl PartitionTier {
             scan_s,
             scan_mean_s: scan_sum / nparts,
             lut_mean_s: lut_sum / nparts,
+            probes,
             blocks,
             admitted,
             reorder_s,
@@ -990,12 +1084,116 @@ mod tests {
                 assert_eq!(tr.lists[list as usize].slots[pos as usize], slot);
             }
         }
-        for l in &tr.lists {
+        for (li, l) in tr.lists.iter().enumerate() {
             assert_eq!(
                 l.codes.len(),
                 l.slots.len().div_ceil(BLOCK) * 16 * t.params.pq_m
             );
+            let c = &tr.centres[li * t.dim..(li + 1) * t.dim];
+            let (mut s1, mut s2) = (0f64, 0f64);
+            for &slot in &l.slots {
+                let d = f64::from(sq(t.row(slot), c).sqrt());
+                (s1, s2) = (s1 + d, s2 + d * d);
+            }
+            assert!(
+                (l.dist_sum - s1).abs() <= 1e-6 * (1.0 + s1),
+                "list {li} dist_sum"
+            );
+            assert!(
+                (l.dist_sq - s2).abs() <= 1e-6 * (1.0 + s2),
+                "list {li} dist_sq"
+            );
         }
+    }
+
+    /// Distances 1.0, 1.2, 1.5, 2.0 (squared 1, 1.44, 2.25, 4), lists in that order.
+    fn ladder() -> Vec<f32> {
+        vec![4.0, 1.0, 2.25, 1.44]
+    }
+
+    #[test]
+    fn select_probes_rules_respect_bounds_and_cutoffs() {
+        let d2 = ladder();
+        let sel = |rule, nmin, nmax| select_probes(&d2, &[0.0; 4], rule, nmin, nmax);
+        // Ratio: d_i^2 <= d_1^2 (1+eps) keeps 1 and 1.44 at eps 0.5.
+        assert_eq!(sel(ProbeRule::Ratio { eps: 0.5 }, 1, 4), [1, 3]);
+        assert_eq!(sel(ProbeRule::Ratio { eps: 0.0 }, 1, 4), [1]);
+        // Floor and cap.
+        assert_eq!(sel(ProbeRule::Ratio { eps: 0.0 }, 3, 4), [1, 3, 2]);
+        assert_eq!(sel(ProbeRule::Ratio { eps: 9.0 }, 1, 2), [1, 3]);
+        // Monotone in eps.
+        let mut prev = 0;
+        for e in 0..40 {
+            let n = sel(
+                ProbeRule::Ratio {
+                    eps: e as f32 * 0.1,
+                },
+                1,
+                4,
+            )
+            .len();
+            assert!(n >= prev);
+            prev = n;
+        }
+        // Radius: with zero radii the cut is d_i <= (1+eps) d_1 = 1.3, keeping 1.0 and 1.2.
+        assert_eq!(
+            sel(
+                ProbeRule::Radius {
+                    eps: 0.3,
+                    scale: 1.0
+                },
+                1,
+                4
+            ),
+            [1, 3]
+        );
+        // A large radius on the farthest list (d = 2) keeps it past the nearer, small-radius list
+        // with d = 1.5; scale 0 ignores radii.
+        let radii = [1.0, 0.0, 0.0, 0.0];
+        let r = |scale| select_probes(&d2, &radii, ProbeRule::Radius { eps: 0.3, scale }, 1, 4);
+        assert_eq!(r(1.0), [1, 3, 0]);
+        assert_eq!(r(0.0), [1, 3]);
+    }
+
+    /// With a cutoff that never bites, an adaptive rule probes the same lists as `Fixed` and so
+    /// returns identical results; `Fixed` ignores the rule fields.
+    #[test]
+    fn adaptive_rules_without_a_cut_match_fixed() {
+        let (n, dim, k) = (3000, 16, 10);
+        let x = data(n, dim, 25, 1);
+        let q = data(40, dim, 25, 2);
+        let ids: Vec<u32> = (0..n as u32).collect();
+        let mut t = PartitionTier::new(
+            dim,
+            PartitionParams {
+                nprobe: 7,
+                reorder: 40,
+                ..params(20)
+            },
+        )
+        .unwrap();
+        t.insert(&ids, &x).unwrap();
+        let fixed = t.search(&q, k).unwrap();
+        let pf = t.last_search_profile();
+        assert_eq!(pf.probes, 40 * 7);
+        t.set_probe_rule(ProbeRule::Fixed, 5);
+        assert_eq!(t.search(&q, k).unwrap(), fixed);
+        for rule in [
+            ProbeRule::Ratio { eps: 1e30 },
+            ProbeRule::Radius {
+                eps: 1e30,
+                scale: 1.0,
+            },
+        ] {
+            t.set_probe_rule(rule, 1);
+            assert_eq!(t.search(&q, k).unwrap(), fixed, "{rule:?}");
+            assert_eq!(t.last_search_profile().probes, pf.probes);
+        }
+        // A tight cut probes fewer lists, never fewer than the floor.
+        t.set_probe_rule(ProbeRule::Ratio { eps: 0.0 }, 2);
+        t.search(&q, k).unwrap();
+        let tight = t.last_search_profile().probes;
+        assert!((40 * 2..40 * 7).contains(&(tight as usize)), "{tight}");
     }
 
     fn params(lists: usize) -> PartitionParams {
@@ -1101,6 +1299,11 @@ mod tests {
         }
     }
 
+    /// The `i`-th token of a `;`-separated rule list as a JSON-key-safe label.
+    fn tokens(rules: &str, i: usize) -> String {
+        rules.split(';').nth(i).unwrap().replace(':', "_")
+    }
+
     /// A2 prefix acceptance (STATE.md 02:15Z): WARM_L22_ACC_{BASE,N,QUERIES,GT,CENTRES,OUT}.
     /// Base is the msturing fbin (first N rows), queries `nq x 100` f32, GT `nq x 10` i32,
     /// centres `5000 x 100` f32 (A2's, reproduced by seed). Prints recall at nprobe 350 and 700.
@@ -1162,18 +1365,60 @@ mod tests {
         t.train(Some(centres)).unwrap();
         let train_s = t0.elapsed().as_secs_f64();
         let mut rep = format!("{{\"n\": {n}, \"nq\": {}, \"insert_rows_s\": {insert_s:.3}, \"train_place_s\": {train_s:.3}", gt.len());
-        let nprobes: Vec<usize> = crate::compatibility::var("WARM_L22_ACC_NPROBES")
-            .map(|v| v.split(',').map(|x| x.trim().parse().unwrap()).collect())
-            .unwrap_or_else(|_| vec![350, 700]);
-        for np in nprobes {
-            t.set_nprobe(np);
+        // WARM_L22_ACC_RULES: `;`-separated `fixed:NP`, `ratio:EPS:MIN:MAX`, `radius:EPS:SCALE:MIN:MAX`.
+        // Each is searched in order after one discarded warm-up search; keys are `<idx>_<rule>`.
+        let rules: Vec<(String, ProbeRule, usize, usize)> =
+            crate::compatibility::var("WARM_L22_ACC_RULES")
+                .map(|v| {
+                    v.split(';')
+                        .map(|tok| {
+                            let f: Vec<&str> = tok.split(':').collect();
+                            let num = |i: usize| f[i].trim().parse::<f32>().unwrap();
+                            match f[0] {
+                                "fixed" => (ProbeRule::Fixed, 1, num(1) as usize),
+                                "ratio" => (
+                                    ProbeRule::Ratio { eps: num(1) },
+                                    num(2) as usize,
+                                    num(3) as usize,
+                                ),
+                                "radius" => (
+                                    ProbeRule::Radius {
+                                        eps: num(1),
+                                        scale: num(2),
+                                    },
+                                    num(3) as usize,
+                                    num(4) as usize,
+                                ),
+                                other => panic!("rule {other}"),
+                            }
+                        })
+                        .enumerate()
+                        .map(|(i, (r, lo, hi))| (format!("{i}_{}", tokens(&v, i)), r, lo, hi))
+                        .collect()
+                })
+                .unwrap_or_else(|_| {
+                    crate::compatibility::var("WARM_L22_ACC_NPROBES")
+                        .map(|v| v.split(',').map(|x| x.trim().parse().unwrap()).collect())
+                        .unwrap_or_else(|_| vec![350usize, 700])
+                        .into_iter()
+                        .map(|np| (format!("np{np}"), ProbeRule::Fixed, 1, np))
+                        .collect()
+                });
+        if crate::compatibility::var("WARM_L22_ACC_RULES").is_ok() {
+            t.set_nprobe(rules[0].3);
+            let _ = t.search(&q, 10).unwrap();
+        }
+        let nsearch = (q.len() / dim) as f64;
+        for (label, rule, lo, hi) in rules {
+            t.set_nprobe(hi);
+            t.set_probe_rule(rule, lo);
             let t0 = Instant::now();
             let got = t.search(&q, 10).unwrap();
             let s = t0.elapsed().as_secs_f64();
             let pf = t.last_search_profile();
             rep += &format!(
-                ", \"recall_np{np}\": {:.4}, \"search_np{np}_s\": {s:.3}, \"profile_np{np}\": \
-                 {{\"centres\": {:.3}, \"route\": {:.3}, \"scan\": {:.3}, \"scan_mean\": {:.3}, \"lut_mean\": {:.3}, \"blocks\": {}, \"admitted\": {}, \
+                ", \"recall_{label}\": {:.4}, \"search_{label}_s\": {s:.3}, \"profile_{label}\": \
+                 {{\"centres\": {:.3}, \"route\": {:.3}, \"scan\": {:.3}, \"scan_mean\": {:.3}, \"lut_mean\": {:.3}, \"probes_mean\": {:.1}, \"blocks\": {}, \"admitted\": {}, \
                  \"reorder\": {:.3}, \"total\": {:.3}}}",
                 recall(&got, &gt),
                 pf.centres_s,
@@ -1181,6 +1426,7 @@ mod tests {
                 pf.scan_s,
                 pf.scan_mean_s,
                 pf.lut_mean_s,
+                pf.probes as f64 / nsearch,
                 pf.blocks,
                 pf.admitted,
                 pf.reorder_s,
