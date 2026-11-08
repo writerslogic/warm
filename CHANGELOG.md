@@ -8,6 +8,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Validate the query width in PartitionIndex and record the L22 test B run
+- Expose the experimental partition tier to Python as PartitionIndex
 - Report the partition scan split and take acceptance nprobes from the environment
 - Add the experimental partition tier (IVF, SOAR spill, LUT16 residual codes) (#396)
 - Record per-phase timings of the last partition search
@@ -59,6 +61,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the L22 partition-tier research, search profile and nprobe selection (#397)
 - Record the L22 search profile, live sweep and nprobe selection
 - Record the L22 partition-tier kill tests, kernels and acceptance with their scripts and results
 - Avoid an intra-doc link to the private fastscan module
@@ -231,6 +234,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Balance partition search threads by estimated scan work
 - Restore the fused table-build loop
 - Accumulate the AVX2 block scan in 16-bit words and vectorise the table build
 - Build the upper layers before the adjacency during consolidation (#393)
