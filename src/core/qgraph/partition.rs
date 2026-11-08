@@ -3,7 +3,7 @@
 //! Experimental partition tier for streaming L2 search (the L22 design): an IVF of `lists`
 //! k-means centres trained once, every row in its nearest list plus one SOAR spill list
 //! (Sun et al., 2023), residual PQ codes with 16 centroids per sub-space stored in the
-//! 32-code LUT16 blocks of [`super::fastscan`], an INT8 table per (query, list), and an exact
+//! 32-code LUT16 blocks of the `fastscan` kernel, an INT8 table per (query, list), and an exact
 //! reorder of the best candidates from the resident f32 rows.
 //!
 //! Before training the tier answers by exact brute force. Training happens at the first search
