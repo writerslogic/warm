@@ -17,6 +17,7 @@ use pyo3::prelude::*;
 use rayon::prelude::*;
 
 use crate::core::error::WarmError;
+use crate::core::qgraph::connectivity::ConnectivityStats;
 use crate::core::qgraph::{
     BuildParams, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph, Metric, Residency,
     UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
@@ -131,6 +132,8 @@ struct PyVectorIndex {
     patience: usize,
     dim: usize,
     built: Option<Built>,
+    /// Bottom-layer connectivity measured during the last `fit` that was asked for it.
+    connectivity: Option<ConnectivityStats>,
     query_buf: Vec<f32>,
 }
 
@@ -295,6 +298,7 @@ impl PyVectorIndex {
             patience: 0,
             dim: 0,
             built: None,
+            connectivity: None,
             query_buf: Vec::new(),
         })
     }
@@ -307,7 +311,12 @@ impl PyVectorIndex {
     /// `training_limit * n`); a positive `training_ef` instead searches an index encoded from
     /// the untrained graph at that effort, which scales to millions of queries. Each row gains
     /// up to `projected_degree` forward and as many reverse edges.
-    #[pyo3(signature = (x, training_queries=None, training_limit=32768, training_neighbors=100, projected_degree=32, training_ef=0))]
+    ///
+    /// `escape_edges` gives every small sink component of the finished graph one edge to the
+    /// nearest row of the largest component, and `reach_edges` gives every vertex the entry
+    /// cannot reach an in-edge from the nearest reachable one (data only, no queries). `report` measures the
+    /// bottom layer's connectivity after construction; `connectivity()` returns it.
+    #[pyo3(signature = (x, training_queries=None, training_limit=32768, training_neighbors=100, projected_degree=32, training_ef=0, escape_edges=false, report=false, reach_edges=false))]
     #[allow(clippy::too_many_arguments)]
     fn fit(
         &mut self,
@@ -318,6 +327,9 @@ impl PyVectorIndex {
         training_neighbors: usize,
         projected_degree: usize,
         training_ef: usize,
+        escape_edges: bool,
+        report: bool,
+        reach_edges: bool,
     ) -> PyResult<()> {
         let (n, dim) = (x.shape()[0], x.shape()[1]);
         if n == 0 || dim == 0 {
@@ -445,18 +457,60 @@ impl PyVectorIndex {
                             }
                         }
                     }
+                    let mut stats = None;
+                    if escape_edges {
+                        stats = Some(g.add_escape_edges()?);
+                    }
+                    if reach_edges {
+                        let escaped = stats.map(|s: ConnectivityStats| s.escape_edges);
+                        let mut repaired = g.add_reach_edges()?;
+                        if let Some(count) = escaped {
+                            repaired.escape_edges = count;
+                        }
+                        stats = Some(repaired);
+                    }
+                    if stats.is_none() && report {
+                        stats = Some(g.connectivity());
+                    }
                     // The graph's float rows are dropped with `g` once the codes are encoded.
                     let mut index = encode(&g)?;
                     if compact_adjacency {
                         index.compact_adjacency()?;
                     }
-                    Ok(index)
+                    Ok((index, stats))
                 })
             })
             .map_err(err)?;
+        let (graph, stats) = graph;
+        self.connectivity = stats;
         self.dim = dim;
         self.built = Some(Built::new(graph));
         Ok(())
+    }
+
+    /// Bottom-layer connectivity measured by the last `fit(..., escape_edges=True)` or
+    /// `fit(..., report=True)`, or None. With `escape_edges` it describes the repaired graph.
+    fn connectivity<'py>(
+        &self,
+        py: Python<'py>,
+    ) -> PyResult<Option<Bound<'py, pyo3::types::PyDict>>> {
+        let Some(stats) = &self.connectivity else {
+            return Ok(None);
+        };
+        let d = pyo3::types::PyDict::new(py);
+        d.set_item("vertices", stats.vertices)?;
+        d.set_item("components", stats.components)?;
+        d.set_item("largest_component", stats.largest_component)?;
+        d.set_item("sink_components", stats.sink_components)?;
+        d.set_item("sink_vertices", stats.sink_vertices)?;
+        d.set_item("unreachable_from_entry", stats.unreachable_from_entry)?;
+        d.set_item("zero_in_degree", stats.zero_in_degree)?;
+        d.set_item("escape_edges", stats.escape_edges)?;
+        d.set_item("skipped_sinks", stats.skipped_sinks)?;
+        d.set_item("reach_edges", stats.reach_edges)?;
+        d.set_item("reach_swaps", stats.reach_swaps)?;
+        d.set_item("unreachable_sample", stats.unreachable_sample.clone())?;
+        Ok(Some(d))
     }
 
     /// Search effort: `ef` is the candidate pool size, `rerank` how many of the best pool
