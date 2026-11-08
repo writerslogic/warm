@@ -60,6 +60,28 @@ pub struct PartitionParams {
     pub probe_rule: ProbeRule,
     pub reorder: usize,
     pub seed: u64,
+    /// Ascending live-row counts. After the first training, the first search that finds at
+    /// least this many live rows retrains the centres and codebook and re-places every row;
+    /// each count fires once. Counts at or below the live size of the previous training are
+    /// skipped.
+    pub retrain_at: Vec<usize>,
+    /// Retrain at a search when the list imbalance (`lists * sum(len^2) / sum(len)^2`) exceeds
+    /// this (0 disables) and at least `retrain_min_inserts` rows were inserted since the last
+    /// training.
+    pub retrain_imb: f32,
+    pub retrain_min_inserts: usize,
+    /// Lloyd iterations of a retrain warm-started from the current centres on a sample of
+    /// `retrain_sample` live rows (0 = a cold k-means as at the first training).
+    pub retrain_warm_iters: usize,
+    pub retrain_sample: usize,
+    /// `(live rows, factor)` points, ascending in rows, scaling `nprobe` by the live size at
+    /// each search (piecewise linear, flat outside the points). Empty = a constant `nprobe`.
+    /// Lists shrink with the live set, so a small set can afford more probes per query.
+    pub nprobe_by_live: Vec<(usize, f32)>,
+    /// A row also joins its SOAR spill list only when that list's centre is within
+    /// `(1 + spill_eps)` times the squared distance to the primary centre; infinity spills
+    /// every row.
+    pub spill_eps: f32,
 }
 
 impl Default for PartitionParams {
@@ -79,6 +101,13 @@ impl Default for PartitionParams {
             probe_rule: ProbeRule::Fixed,
             reorder: 317,
             seed: 7,
+            retrain_at: Vec::new(),
+            retrain_imb: 0.0,
+            retrain_min_inserts: 1_000_000,
+            retrain_warm_iters: 0,
+            retrain_sample: 262_144,
+            nprobe_by_live: Vec::new(),
+            spill_eps: f32::INFINITY,
         }
     }
 }
@@ -87,6 +116,8 @@ impl Default for PartitionParams {
 const ROWS: usize = 1024;
 const BF_QUERIES: usize = 256;
 const BF_ROWS: usize = 8192;
+/// Rows placed per step when a whole tier is (re)placed.
+const PLACE_CHUNK: usize = 1 << 18;
 
 #[derive(Default)]
 struct List {
@@ -150,6 +181,10 @@ pub struct PartitionTier {
     trained: Option<Trained>,
     shape: Shape,
     profile: std::sync::Mutex<SearchProfile>,
+    /// Live rows at the last training, and the next unfired `retrain_at` entry.
+    trained_live: usize,
+    retrain_next: usize,
+    inserts_since_train: usize,
 }
 
 /// Lists to probe for one query under an adaptive rule. `d2` is the query's squared distance to
@@ -406,6 +441,19 @@ fn kmeans(rows: &[f32], dim: usize, k: usize, iters: usize, rng: &mut SplitMix) 
     for &i in &sample_indices(n, k, rng) {
         c.extend_from_slice(&rows[i * dim..(i + 1) * dim]);
     }
+    kmeans_from(rows, dim, c, iters, rng)
+}
+
+/// Lloyd iterations from the given `k` centres.
+fn kmeans_from(
+    rows: &[f32],
+    dim: usize,
+    mut c: Vec<f32>,
+    iters: usize,
+    rng: &mut SplitMix,
+) -> Vec<f32> {
+    let n = rows.len() / dim;
+    let k = c.len() / dim;
     for _ in 0..iters {
         let c2: Vec<f32> = c.chunks(dim).map(|r| dot(r, r)).collect();
         let a = nearest_all(rows, dim, &c, &c2);
@@ -588,7 +636,7 @@ impl Trained {
     }
 
     /// Nearest list and SOAR spill list for each row of `x` (`b` rows).
-    fn assign(&self, x: &[f32], dim: usize, k: usize, lambda: f32) -> Vec<(u32, u32)> {
+    fn assign(&self, x: &[f32], dim: usize, k: usize, lambda: f32, eps: f32) -> Vec<(u32, u32)> {
         let l = self.lists_len();
         let mut out = vec![(0u32, 0u32); x.len() / dim];
         out.par_chunks_mut(ROWS)
@@ -626,6 +674,7 @@ impl Trained {
                     let x2: f64 = xi.iter().map(|a| f64::from(*a).powi(2)).sum();
                     let g = &self.gram[c1 * l..(c1 + 1) * l];
                     let mut best = (f64::INFINITY, c1 as u32);
+                    let mut best_dist = 0f64;
                     for &(_, c) in &cand {
                         let c = c as usize;
                         if c == c1 {
@@ -638,9 +687,11 @@ impl Trained {
                         let loss = dist + f64::from(lambda) * proj * proj / rr;
                         if loss < best.0 {
                             best = (loss, c as u32);
+                            best_dist = dist;
                         }
                     }
-                    *oi = (c1 as u32, best.1);
+                    let spill = best.1 != c1 as u32 && best_dist <= (1.0 + f64::from(eps)) * rr;
+                    *oi = (c1 as u32, if spill { best.1 } else { u32::MAX });
                 }
             });
         out
@@ -692,6 +743,9 @@ impl PartitionTier {
             trained: None,
             shape,
             profile: std::sync::Mutex::new(SearchProfile::default()),
+            trained_live: 0,
+            retrain_next: 0,
+            inserts_since_train: 0,
         })
     }
 
@@ -770,6 +824,7 @@ impl PartitionTier {
             slots.push(slot);
         }
         if self.trained.is_some() {
+            self.inserts_since_train += ids.len();
             self.place(&slots, vectors);
         }
         Ok(())
@@ -779,7 +834,13 @@ impl PartitionTier {
     fn place(&mut self, slots: &[u32], vectors: &[f32]) {
         let (dim, m, sh) = (self.dim, self.params.pq_m, self.shape);
         let t = self.trained.as_mut().expect("trained");
-        let asg = t.assign(vectors, dim, self.params.spill_k, self.params.soar_lambda);
+        let asg = t.assign(
+            vectors,
+            dim,
+            self.params.spill_k,
+            self.params.soar_lambda,
+            self.params.spill_eps,
+        );
         let codes: Vec<u8> = {
             let t = &*t;
             asg.par_iter()
@@ -788,7 +849,9 @@ impl PartitionTier {
                     let x = &vectors[i * dim..(i + 1) * dim];
                     let mut c = vec![0u8; 2 * m];
                     t.encode(x, a1 as usize, dim, m, &mut c[..m]);
-                    t.encode(x, a2 as usize, dim, m, &mut c[m..]);
+                    if a2 != u32::MAX {
+                        t.encode(x, a2 as usize, dim, m, &mut c[m..]);
+                    }
                     c
                 })
                 .collect()
@@ -799,9 +862,13 @@ impl PartitionTier {
         for (i, (&slot, &(a1, a2))) in slots.iter().zip(&asg).enumerate() {
             let x = &vectors[i * dim..(i + 1) * dim];
             let p1 = t.lists[a1 as usize].append(sh, &codes[2 * i * m..(2 * i + 1) * m], slot);
-            let p2 =
-                t.lists[a2 as usize].append(sh, &codes[(2 * i + 1) * m..(2 * i + 2) * m], slot);
-            for a in [a1 as usize, a2 as usize] {
+            let mut p2 = u32::MAX;
+            if a2 != u32::MAX {
+                p2 =
+                    t.lists[a2 as usize].append(sh, &codes[(2 * i + 1) * m..(2 * i + 2) * m], slot);
+            }
+            for a in [a1, a2].into_iter().filter(|&a| a != u32::MAX) {
+                let a = a as usize;
                 let d = sq(x, &t.centres[a * dim..(a + 1) * dim]).sqrt();
                 t.lists[a].track(d, 1.0);
             }
@@ -871,10 +938,24 @@ impl PartitionTier {
                     "partition tier: centres must be lists x dim".into(),
                 ))
             }
-            None => {
-                let sample = gather(&sample_indices(live.len(), p.train_sample, &mut rng));
-                kmeans(&sample, dim, p.lists, p.kmeans_iters, &mut rng)
-            }
+            None => match self.trained.as_ref() {
+                // A retrain continues from the current centres: a few iterations restore
+                // balance at a fraction of a cold k-means.
+                Some(old) if p.retrain_warm_iters > 0 && old.centres.len() == p.lists * dim => {
+                    let sample = gather(&sample_indices(live.len(), p.retrain_sample, &mut rng));
+                    kmeans_from(
+                        &sample,
+                        dim,
+                        old.centres.clone(),
+                        p.retrain_warm_iters,
+                        &mut rng,
+                    )
+                }
+                _ => {
+                    let sample = gather(&sample_indices(live.len(), p.train_sample, &mut rng));
+                    kmeans(&sample, dim, p.lists, p.kmeans_iters, &mut rng)
+                }
+            },
         };
         let l = p.lists;
         let c2: Vec<f32> = centres.chunks(dim).map(|r| dot(r, r)).collect();
@@ -916,10 +997,6 @@ impl PartitionTier {
                     }
                 }
             });
-        let vectors = {
-            let idx: Vec<usize> = (0..live.len()).collect();
-            gather(&idx)
-        };
         self.trained = Some(Trained {
             centres,
             c2,
@@ -929,8 +1006,54 @@ impl PartitionTier {
             lists: (0..l).map(|_| List::default()).collect(),
             loc: vec![[(u32::MAX, u32::MAX); 2]; self.slot_id.len()],
         });
-        self.place(&live, &vectors);
+        self.trained_live = live.len();
+        self.inserts_since_train = 0;
+        // Placed in chunks so a retrain at 10M rows does not hold a second copy of the rows.
+        for chunk in live.chunks(PLACE_CHUNK) {
+            let mut vectors = Vec::with_capacity(chunk.len() * dim);
+            for &slot in chunk {
+                vectors.extend_from_slice(self.row(slot));
+            }
+            self.place(chunk, &vectors);
+        }
         Ok(())
+    }
+
+    /// `nprobe` scaled by `nprobe_by_live` at the current live size.
+    fn effective_nprobe(&self) -> usize {
+        let pts = &self.params.nprobe_by_live;
+        let (n, base) = (self.len(), self.params.nprobe);
+        let (Some(first), Some(last)) = (pts.first(), pts.last()) else {
+            return base;
+        };
+        let f = if n <= first.0 {
+            first.1
+        } else if n >= last.0 {
+            last.1
+        } else {
+            let i = pts.partition_point(|p| p.0 <= n) - 1;
+            let ((x0, f0), (x1, f1)) = (pts[i], pts[i + 1]);
+            f0 + (f1 - f0) * (n - x0) as f32 / (x1 - x0) as f32
+        };
+        ((base as f32 * f).round() as usize).clamp(1, self.params.lists)
+    }
+
+    /// `lists * sum(len^2) / sum(len)^2` over the list lengths (1 = perfectly even).
+    fn list_imbalance(&self) -> f64 {
+        let Some(t) = self.trained.as_ref() else {
+            return 1.0;
+        };
+        let (mut sum, mut sq) = (0f64, 0f64);
+        for l in &t.lists {
+            let n = l.slots.len() as f64;
+            sum += n;
+            sq += n * n;
+        }
+        if sum == 0.0 {
+            1.0
+        } else {
+            sq * t.lists.len() as f64 / (sum * sum)
+        }
     }
 
     /// Top-`k` ids per query (`queries` = `nq x dim`), nearest first.
@@ -942,9 +1065,36 @@ impl PartitionTier {
         }
         if self.trained.is_none() && self.len() >= self.params.train_at.max(self.params.lists) {
             self.train(None)?;
+        } else if self.trained.is_some() {
+            while self
+                .params
+                .retrain_at
+                .get(self.retrain_next)
+                .is_some_and(|&at| at <= self.trained_live)
+            {
+                self.retrain_next += 1;
+            }
+            if self
+                .params
+                .retrain_at
+                .get(self.retrain_next)
+                .is_some_and(|&at| self.len() >= at)
+            {
+                self.retrain_next += 1;
+                self.train(None)?;
+            } else if self.params.retrain_imb > 0.0
+                && self.inserts_since_train >= self.params.retrain_min_inserts
+                && self.list_imbalance() > f64::from(self.params.retrain_imb)
+            {
+                self.train(None)?;
+            }
         }
         Ok(if self.trained.is_some() {
-            self.search_partition(queries, k)
+            let base = self.params.nprobe;
+            self.params.nprobe = self.effective_nprobe();
+            let out = self.search_partition(queries, k);
+            self.params.nprobe = base;
+            out
         } else {
             self.search_exact(queries, k)
         })
@@ -1388,13 +1538,19 @@ mod tests {
     fn check_lists(t: &PartitionTier) {
         let tr = t.trained.as_ref().unwrap();
         let total: usize = tr.lists.iter().map(|l| l.slots.len()).sum();
-        assert_eq!(total, 2 * t.len());
+        let mut memberships = 0;
         for &slot in t.id_slot.values() {
             let e = tr.loc[slot as usize];
+            assert_ne!(e[0].0, u32::MAX, "no primary list");
             assert_ne!(e[0].0, e[1].0, "spill list equals primary");
-            for (list, pos) in e {
+            for (list, pos) in e.into_iter().filter(|x| x.0 != u32::MAX) {
+                memberships += 1;
                 assert_eq!(tr.lists[list as usize].slots[pos as usize], slot);
             }
+        }
+        assert_eq!(total, memberships);
+        if t.params.spill_eps.is_infinite() {
+            assert_eq!(total, 2 * t.len());
         }
         for (li, l) in tr.lists.iter().enumerate() {
             assert_eq!(
@@ -1570,6 +1726,86 @@ mod tests {
         assert_eq!(recall(&t.search_exact(&q, k), &want), 1.0);
     }
 
+    #[test]
+    fn nprobe_scales_piecewise_linearly_with_live_size() {
+        let dim = 4;
+        let mut t = PartitionTier::new(
+            dim,
+            PartitionParams {
+                lists: 100,
+                nprobe: 40,
+                pq_m: 2,
+                nprobe_by_live: vec![(100, 2.0), (300, 1.0), (500, 0.5)],
+                ..PartitionParams::default()
+            },
+        )
+        .unwrap();
+        let x = vec![0.5f32; 600 * dim];
+        let ids: Vec<u32> = (0..600).collect();
+        let mut seen = Vec::new();
+        for upto in [50usize, 100, 200, 300, 400, 500, 600] {
+            let have = t.len();
+            t.insert(&ids[have..upto], &x[have * dim..upto * dim])
+                .unwrap();
+            seen.push(t.effective_nprobe());
+        }
+        // 40 * (2.0, 2.0, 1.5, 1.0, 0.75, 0.5, 0.5), capped by the list count.
+        assert_eq!(seen, vec![80, 80, 60, 40, 30, 20, 20]);
+    }
+
+    /// Retraining (scheduled by live size, by imbalance, cold or warm) re-places every live row:
+    /// the list invariants hold and a full probe still equals exact search after deletes.
+    #[test]
+    fn retrain_keeps_every_live_row_searchable() {
+        let (n, dim, k) = (4000, 16, 10);
+        let x = data(n, dim, 25, 3);
+        let q = data(30, dim, 25, 4);
+        let ids: Vec<u32> = (0..n as u32).collect();
+        let want_for = |live: &[usize]| -> Vec<Vec<u32>> {
+            let rows: Vec<(u32, &[f32])> = live
+                .iter()
+                .map(|&i| (ids[i], &x[i * dim..(i + 1) * dim]))
+                .collect();
+            q.chunks(dim).map(|qq| naive(&rows, qq, k)).collect()
+        };
+        for (warm, imb) in [(0, 0.0f32), (2, 0.0), (2, 1.0001)] {
+            let mut t = PartitionTier::new(
+                dim,
+                PartitionParams {
+                    retrain_at: vec![2000, 3000],
+                    retrain_imb: imb,
+                    retrain_min_inserts: 500,
+                    retrain_warm_iters: warm,
+                    retrain_sample: 1500,
+                    spill_eps: if imb > 0.0 { 0.25 } else { f32::INFINITY },
+                    ..params(20)
+                },
+            )
+            .unwrap();
+            t.insert(&ids[..1200], &x[..1200 * dim]).unwrap();
+            t.search(&q, k).unwrap();
+            assert_eq!((t.trained_live, t.retrain_next), (1200, 0));
+            t.insert(&ids[1200..2500], &x[1200 * dim..2500 * dim])
+                .unwrap();
+            let got = t.search(&q, k).unwrap();
+            // The 2000 threshold fired once; the imbalance rule may add retrains.
+            assert!(
+                t.trained_live >= 2500 && t.retrain_next >= 1,
+                "warm {warm} imb {imb}"
+            );
+            check_lists(&t);
+            assert_eq!(recall(&got, &want_for(&(0..2500).collect::<Vec<_>>())), 1.0);
+            let del: Vec<u32> = ids[..2500].iter().copied().step_by(4).collect();
+            t.delete(&del);
+            t.insert(&ids[2500..], &x[2500 * dim..]).unwrap();
+            let got = t.search(&q, k).unwrap();
+            check_lists(&t);
+            let live: Vec<usize> = (0..n).filter(|&i| i >= 2500 || i % 4 != 0).collect();
+            assert_eq!(live.len(), t.len());
+            assert_eq!(recall(&got, &want_for(&live)), 1.0);
+        }
+    }
+
     /// The quad layout (AVX-512 VBMI/VNNI) and the LUT16 layout give the same results, blocks
     /// and admissions through deletes and reinserts, with a reorder small enough that the
     /// running threshold prunes and an `m` that pads the last quad.
@@ -1654,7 +1890,7 @@ mod tests {
         t.insert(&(0..n as u32).collect::<Vec<_>>(), &x).unwrap();
         t.train(None).unwrap();
         let tr = t.trained.as_ref().unwrap();
-        let asg = tr.assign(&x, dim, lists, 1.0);
+        let asg = tr.assign(&x, dim, lists, 1.0, f32::INFINITY);
         for (i, &(a1, a2)) in asg.iter().enumerate() {
             let xi: Vec<f64> = x[i * dim..(i + 1) * dim]
                 .iter()
@@ -1729,14 +1965,75 @@ mod tests {
                     .collect()
             })
             .collect();
-        let centres = f32s(std::fs::read(var("CENTRES")).unwrap());
+        let envn = |k: &str| -> Option<usize> {
+            crate::compatibility::var(&format!("WARM_L22_ACC_{k}"))
+                .ok()
+                .map(|v| v.trim().parse().unwrap())
+        };
+        let defaults = PartitionParams::default();
+        let lists = envn("LISTS").unwrap_or(defaults.lists);
+        // Centres: a file (control), or k-means on the first TRAIN_N rows of TRAIN_BASE
+        // (replay of a retrain at that state), or None = train at the evaluated state.
+        let t0 = Instant::now();
+        let centres: Option<Vec<f32>> =
+            if let Ok(p) = crate::compatibility::var("WARM_L22_ACC_CENTRES") {
+                Some(f32s(std::fs::read(p).unwrap()))
+            } else if let Ok(tb) = crate::compatibility::var("WARM_L22_ACC_TRAIN_BASE") {
+                use std::io::{Read, Seek, SeekFrom};
+                let tn = envn("TRAIN_N").unwrap();
+                let mut f = std::fs::File::open(tb).unwrap();
+                f.seek(SeekFrom::Start(8)).unwrap();
+                let mut b = vec![0u8; tn * dim * 4];
+                f.read_exact(&mut b).unwrap();
+                let rows = f32s(b);
+                let mut rng = SplitMix(envn("SEED").map_or(defaults.seed, |v| v as u64));
+                let idx = sample_indices(
+                    tn,
+                    envn("TRAIN_SAMPLE").unwrap_or(defaults.train_sample),
+                    &mut rng,
+                );
+                let mut sample = Vec::with_capacity(idx.len() * dim);
+                for &i in &idx {
+                    sample.extend_from_slice(&rows[i * dim..(i + 1) * dim]);
+                }
+                let stale = kmeans(
+                    &sample,
+                    dim,
+                    lists,
+                    envn("KM_ITERS").unwrap_or(defaults.kmeans_iters),
+                    &mut rng,
+                );
+                if let Some(wi) = envn("WARM_ITERS") {
+                    // Retrain warm-started from the stale centres on a sample of the evaluated state.
+                    let idx = sample_indices(
+                        n,
+                        envn("WARM_SAMPLE").unwrap_or(defaults.train_sample),
+                        &mut rng,
+                    );
+                    let mut ws = Vec::with_capacity(idx.len() * dim);
+                    for &i in &idx {
+                        ws.extend_from_slice(&base[i * dim..(i + 1) * dim]);
+                    }
+                    Some(kmeans_from(&ws, dim, stale, wi, &mut rng))
+                } else {
+                    Some(stale)
+                }
+            } else {
+                None
+            };
+        let kmeans_s = t0.elapsed().as_secs_f64();
         let mut t = PartitionTier::new(
             dim,
             PartitionParams {
                 train_at: usize::MAX,
-                lists: crate::compatibility::var("WARM_L22_ACC_LISTS")
-                    .map(|v| v.trim().parse().unwrap())
-                    .unwrap_or(PartitionParams::default().lists),
+                lists,
+                train_sample: envn("TRAIN_SAMPLE").unwrap_or(defaults.train_sample),
+                kmeans_iters: envn("KM_ITERS").unwrap_or(defaults.kmeans_iters),
+                spill_k: envn("SPILLK").unwrap_or(defaults.spill_k),
+                spill_eps: crate::compatibility::var("WARM_L22_ACC_SPILLEPS")
+                    .map_or(f32::INFINITY, |v| v.trim().parse().unwrap()),
+                soar_lambda: crate::compatibility::var("WARM_L22_ACC_LAMBDA")
+                    .map_or(defaults.soar_lambda, |v| v.trim().parse().unwrap()),
                 reorder: crate::compatibility::var("WARM_L22_ACC_REORDER")
                     .map(|v| v.trim().parse().unwrap())
                     .unwrap_or(PartitionParams::default().reorder),
@@ -1751,9 +2048,30 @@ mod tests {
         t.insert(&(0..n as u32).collect::<Vec<_>>(), &base).unwrap();
         let insert_s = t0.elapsed().as_secs_f64();
         let t0 = Instant::now();
-        t.train(Some(centres)).unwrap();
+        t.train(centres).unwrap();
         let train_s = t0.elapsed().as_secs_f64();
-        let mut rep = format!("{{\"n\": {n}, \"nq\": {}, \"insert_rows_s\": {insert_s:.3}, \"train_place_s\": {train_s:.3}", gt.len());
+        let ls = {
+            let mut v: Vec<usize> = t
+                .trained
+                .as_ref()
+                .unwrap()
+                .lists
+                .iter()
+                .map(|l| l.slots.len())
+                .collect();
+            v.sort_unstable();
+            let tot: usize = v.iter().sum();
+            let sq: f64 = v.iter().map(|&x| (x as f64).powi(2)).sum();
+            format!(
+                "{{\"entries\": {tot}, \"max\": {}, \"p99\": {}, \"p50\": {}, \"empty\": {}, \"imb\": {:.3}}}",
+                v[v.len() - 1],
+                v[v.len() * 99 / 100],
+                v[v.len() / 2],
+                v.iter().filter(|&&x| x == 0).count(),
+                sq * v.len() as f64 / (tot as f64).powi(2)
+            )
+        };
+        let mut rep = format!("{{\"n\": {n}, \"nq\": {}, \"insert_rows_s\": {insert_s:.3}, \"kmeans_s\": {kmeans_s:.3}, \"train_place_s\": {train_s:.3}, \"lists\": {ls}", gt.len());
         // WARM_L22_ACC_RULES: `;`-separated `fixed:NP`, `ratio:EPS:MIN:MAX`, `radius:EPS:SCALE:MIN:MAX`.
         // Each is searched in order after one discarded warm-up search; keys are `<idx>_<rule>`.
         let rules: Vec<(String, ProbeRule, usize, usize)> =
@@ -1811,6 +2129,53 @@ mod tests {
                 .fold(0xcbf2_9ce4_8422_2325u64, |h, &id| {
                     (h ^ u64::from(id)).wrapping_mul(0x0000_0100_0000_01b3)
                 });
+            let miss = {
+                let tr = t.trained.as_ref().unwrap();
+                let l = tr.lists_len();
+                let mut per_q: Vec<usize> = Vec::new();
+                let (mut ranks, mut sizes) = (Vec::new(), Vec::new());
+                for (qi, (g, want)) in got.iter().zip(&gt).enumerate() {
+                    let miss: Vec<u32> = want.iter().copied().filter(|w| !g.contains(w)).collect();
+                    per_q.push(miss.len());
+                    if miss.is_empty() {
+                        continue;
+                    }
+                    let qv = &q[qi * dim..(qi + 1) * dim];
+                    let d: Vec<f32> = (0..l)
+                        .map(|c| sq(qv, &tr.centres[c * dim..(c + 1) * dim]))
+                        .collect();
+                    for w in miss {
+                        let e = tr.loc[w as usize];
+                        let best = e
+                            .iter()
+                            .filter(|x| x.0 != u32::MAX)
+                            .map(|x| x.0 as usize)
+                            .min_by(|&a, &b| d[a].total_cmp(&d[b]))
+                            .unwrap();
+                        ranks.push(d.iter().filter(|&&x| x < d[best]).count());
+                        sizes.push(tr.lists[best].slots.len());
+                    }
+                }
+                let total: usize = per_q.iter().sum();
+                let mut sorted = per_q.clone();
+                sorted.sort_unstable_by(|a, b| b.cmp(a));
+                let top10: usize = sorted.iter().take(10).sum();
+                ranks.sort_unstable();
+                sizes.sort_unstable();
+                let pick = |v: &Vec<usize>, f: usize| {
+                    v.get((v.len().saturating_sub(1)) * f / 100)
+                        .copied()
+                        .unwrap_or(0)
+                };
+                format!(
+                    "{{\"missed\": {total}, \"queries_missing\": {}, \"top10_queries\": {top10}, \"worst_q\": {}, \"rank_p50\": {}, \"rank_p90\": {}, \"rank_max\": {}, \"size_p50\": {}, \"size_p90\": {}}}",
+                    per_q.iter().filter(|&&x| x > 0).count(),
+                    sorted[0],
+                    pick(&ranks, 50), pick(&ranks, 90), pick(&ranks, 100),
+                    pick(&sizes, 50), pick(&sizes, 90)
+                )
+            };
+            rep += &format!(", \"miss_{label}\": {miss}");
             rep += &format!(
                 ", \"digest_{label}\": \"{digest:016x}\", \"recall_{label}\": {:.4}, \"search_{label}_s\": {s:.3}, \"profile_{label}\": \
                  {{\"centres\": {:.3}, \"route\": {:.3}, \"scan\": {:.3}, \"scan_mean\": {:.3}, \"lut_mean\": {:.3}, \"probes_mean\": {:.1}, \"blocks\": {}, \"admitted\": {}, \
