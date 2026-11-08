@@ -25,6 +25,9 @@ from ..base.module import BaseANN
 # Sample of the learn split that routes the query-aware build: numpy default_rng(LEARN_SEED)
 # permutation, first LEARN_QUERIES rows. The native build also caps training queries at 32768.
 LEARN_QUERIES = 32768
+# Exact neighbours of the learn queries cost queries x rows x dimensions multiply-adds on one thread;
+# a request for more than LEARN_QUERIES learn rows is cut to what fits this budget (never below LEARN_QUERIES).
+LEARN_BUDGET = 2e13
 LEARN_SEED = 24301
 
 METRICS = {"cosine": "angular", "normalized": "angular", "euclidean": "euclidean", "ip": "ip"}
@@ -32,7 +35,8 @@ METRICS = {"cosine": "angular", "normalized": "angular", "euclidean": "euclidean
 
 class WARM(BaseANN):
     def __init__(self, metric, degree, build_ef, code_bits=8, query_aware=True, escape_edges=False,
-                 reach_edges=False, projected_degree=32, training_neighbors=100, training_ef=0):
+                 reach_edges=False, projected_degree=32, training_neighbors=100, training_ef=0,
+                 learn_queries=LEARN_QUERIES):
         if metric not in METRICS:
             raise NotImplementedError(f"warm does not support the {metric} distance")
         self.metric = metric
@@ -47,6 +51,7 @@ class WARM(BaseANN):
         self.projected_degree = projected_degree
         self.training_neighbors = training_neighbors
         self.training_ef = training_ef
+        self.learn_query_limit = int(learn_queries)
         self.connectivity = None
         self.trained = False
         self.learn_queries = 0
@@ -70,7 +75,8 @@ class WARM(BaseANN):
             self.learn_queries = 0
             self._fit(X, None)
             return
-        order = np.random.default_rng(LEARN_SEED).permutation(len(X_learn))[:LEARN_QUERIES]
+        affordable = max(LEARN_QUERIES, int(LEARN_BUDGET // (len(X) * len(X[0]))))
+        order = np.random.default_rng(LEARN_SEED).permutation(len(X_learn))[:min(self.learn_query_limit, affordable)]
         self.learn_queries = len(order)
         self._fit(X, X_learn[order])
 
@@ -86,9 +92,19 @@ class WARM(BaseANN):
             options["reach_edges"] = True
         if queries is not None:
             options.update(projected_degree=self.projected_degree, training_neighbors=self.training_neighbors,
-                           training_ef=self.training_ef)
+                           training_ef=self.training_ef, training_limit=max(self.learn_query_limit, len(queries)))
         self.index.fit(np.ascontiguousarray(X, dtype=np.float32), training_queries=learning, **options)
         self.connectivity = self.index.connectivity() if options.keys() & {"escape_edges", "reach_edges"} else None
+
+    def save_index(self, path):
+        self.index.save(str(path))
+
+    def load_index(self, path):
+        # The graph file carries the build; the constructor arguments only fix the search settings.
+        self.trained = self.query_aware
+        self.index = VectorIndex(METRICS[self.metric], degree=self.degree, build_ef=self.build_ef,
+                                 threads=1, code_bits=self.code_bits, direct_ip=self.metric == "ip")
+        self.index.load(str(path))
 
     def set_query_arguments(self, ef, rerank=None, patience=0, reservoir=0):
         if rerank is None:
@@ -114,8 +130,8 @@ class WARM(BaseANN):
         precision = "" if self.code_bits == 4 else f", code_bits={self.code_bits}"
         training = f", learn_queries={self.learn_queries}" if self.trained else ""
         escape = (", escape_edges=True" if self.escape_edges else "") + (", reach_edges=True" if self.reach_edges else "")
-        if self.trained and (self.projected_degree, self.training_neighbors, self.training_ef) != (32, 100, 0):
-            escape += f", projected_degree={self.projected_degree}, training_neighbors={self.training_neighbors}, training_ef={self.training_ef}"
+        if self.trained and (self.projected_degree, self.training_neighbors, self.training_ef, self.learn_query_limit) != (32, 100, 0, LEARN_QUERIES):
+            escape += f", projected_degree={self.projected_degree}, training_neighbors={self.training_neighbors}, training_ef={self.training_ef}, learn_queries={self.learn_query_limit}"
         early_stop = (f", patience={self.patience}" if self.patience > 0 else "") + (
             f", reservoir={self.reservoir}" if self.reservoir > 0 else "")
         return f"WARM(metric={self.metric}, degree={self.degree}, build_ef={self.build_ef}, ef={self.ef}, rerank={self.rerank}{precision}{training}{escape}{early_stop})"
