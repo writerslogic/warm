@@ -1,0 +1,8 @@
+valid True steps 1280 run_exit=0 searches 640 warm_line True
+wall(sum of steps) 2601 s; process elapsed 43:22.14; per op {'insert': 314, 'search': 2250, 'delete': 37}
+mean recall 0.993062 (pin 0.876839); trained at search 16 live 1239816; min post-train 0.9836; pre-train mean 1.0000
+recall by 80-search bins [0.9931, 0.991, 0.9948, 0.9936, 0.9932, 0.9939, 0.9926, 0.9922]
+peak RSS 6.53 GiB (6 GB projection, 8 GiB scope)
+WARM_MODE terms {'live': '2367854', 'trained': 'True', 'trained_at_search': '16', 'trained_at_live': '1239816', 'train_search_s': '27.203', 'searches': '640', 'insert_s': '270.712', 'delete_s': '36.776', 'search_s': '2247.615', 'centres_s': '70.515', 'route_s': '43.371', 'scan_s': '1905.598', 'scan_mean_s': '1880.666', 'lut_mean_s': '222.953', 'blocks': '377759211980', 'admitted': '76120776331', 'reorder_s': '151.480', 'partition_search_s': '2165.762', 'adapter_wall_s': '2601.1'}
+GATES {'mean>=0.90': True, 'post-train min>=0.80': True, 'wall<3000': True, 'rss<8GiB': True}
+TEST B: PASS

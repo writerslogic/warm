@@ -1,0 +1,7 @@
+    PID %CPU CMD
+      1  0.4 /sbin/init
+     22  0.1 [migration/1]
+     28  0.1 [migration/2]
+     34  0.1 [migration/3]
+     40  0.1 [migration/4]
+load=0.43 0.64 0.31 1/245 4153
