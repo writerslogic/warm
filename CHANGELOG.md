@@ -57,6 +57,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Avoid an intra-doc link to the private fastscan module
 - Correct the RSS range and the measured binary commit in the consolidation heap peak record
 - Record the consolidation heap peak measurement
 - Record the landed checkpoint hit decode in the FiQA QPS gap lever
