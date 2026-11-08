@@ -96,7 +96,7 @@ impl PyPartitionIndex {
             reorder,
             pq_m,
             seed,
-            place_by_list: place,
+            place_by_list: place || std::env::var("WARM_PLACE").is_ok_and(|v| v == "1"),
             ..PartitionParams::default()
         };
         Ok(Self {
