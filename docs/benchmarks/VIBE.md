@@ -301,8 +301,27 @@ recall (no interpolation); the control is the four previously submitted builds o
 | Elite / control | 1.04x | 1.34x | 1.57x | 2.30x | |
 
 The held-out predictions for 0.99 and 0.995 (1.30 to 1.36x, 1.48 to 1.54x) held on the test queries. Recall 1.00 is not reached (0.99994).
-The new grid on the four base builds is lower at 0.99 to 0.998 than the old one because it omits ef 500 and 800 and rerank 100 and 400 at some ef; the
+The 55-point grid on the four base builds alone was lower at 0.99 to 0.998 than the old one (4,347 / 2,984 / 2,012) because it omitted ef 500 and 800 and rerank 400 at some ef; the
 gain at 0.99 and above comes from the two learn-heavy builds. Files: `t1-llama-test.json`, `t1-llama-test-oldgrid.json`, `benchmarks/vibe/t1_report.py`.
+
+#### Grid fix re-measure (52 points), llama-128-ip full test, same harness, wheel, cached builds, three interleaved repeats
+
+Grid: ef {125, 150, 175, 200, 250, 300, 400, 500, 650, 800, 1000, 1500, 2000} x rerank {125, 150, 200, 400}. Best QPS over arms at the first
+configuration reaching each recall (no interpolation), with the interpolated value (log-linear along each arm's frontier) in brackets.
+
+| | 0.95 | 0.99 | 0.995 | 0.998 | max recall |
+|---|---:|---:|---:|---:|---:|
+| Control: 4 base builds, old grid | 10,445 (10,744) | 5,102 (5,165) | 3,546 (3,665) | 2,198 (2,272) | 0.99984 |
+| 4 base builds, 55-point grid | 10,866 | 4,347 | 2,984 | 2,012 | 0.99984 |
+| 4 base builds, 52-point grid | 10,846 (10,846) | 4,688 (5,092) | 3,663 (3,676) | 2,214 (2,288) | 0.99984 |
+| Elite: 6 builds, 52-point grid | 10,846 | 6,788 (6,811) | 5,592 (5,768) | 5,038 (5,058) | 0.99994 |
+| Elite / control | 1.04x | 1.33x (1.32x) | 1.58x (1.57x) | 2.29x (2.23x) | |
+
+Check 1 (four base builds alone at least the control's 5,102 at 0.99): **not met** on the first-configuration metric, 4,688 (-8.1%); on the interpolated metric 5,092
+against 5,165 (-1.4%, inside the 2.3% repeat noise of the control). Restoring ef 500 and 800 recovered 0.995 and 0.998 (3,663 against 3,546; 2,214 against 2,198)
+but not 0.99: the control's best point at 0.99 is d32 at ef 320 / rerank 200 (recall 0.99034, 5,102), a value that is not on the 52-point grid; the nearest points
+are ef 300 (recall 0.9892, below 0.99) and ef 400 / rerank 150 (0.9925, 4,403). The shortfall is grid granularity at the 0.99 threshold, not a build change.
+Check 2 (elite at least 1.30x the control at 0.99) is met: 1.33x. File: `t2-llama-test-52.json`.
 
 ### Profile, llama 100k d32, ef 256 / rerank 200 (macOS `sample`, arm64, 45 s, 6,828 QPS)
 
@@ -314,9 +333,9 @@ at ef 256 and more above it. A batch pool variant exists (`experimental-batch-po
 
 Six builds per metric: the four previous ones unchanged, plus `learn_mid` (d24, projected degree 64) and `learn_tail` (d32, projected
 degree 128), both requesting 253,921 learn queries (the adapter cuts the request to 2e13 / (rows x dimensions), never below 32,768, so
-the 1M-row sets use fewer). Query grid: ef {125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000} x rerank {125, 150, 200, 400, 1000},
-55 combinations, chosen by backward elimination on the 92-point dense grid (no loss in best QPS at recall 0.95 to 0.998 for rerank up to
-200; 400 and 1000 and ef 1500 and 2000 keep the 1.00 tail reachable). The default build is bit-identical to the pinned wheel: glove-200 100k,
+the 1M-row sets use fewer). Query grid: ef {125, 150, 175, 200, 250, 300, 400, 500, 650, 800, 1000, 1500, 2000} x rerank {125, 150, 200, 400},
+52 combinations (the earlier 55-point grid dropped ef 500 and 800 and regressed the base builds; see the re-measure above; ef 1500 and 2000 and
+rerank 400 keep the 1.00 tail reachable). The default build is bit-identical to the pinned wheel: glove-200 100k,
 300 queries at two settings, identical result lists.
 
 ## Measurement protocol
