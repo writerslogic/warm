@@ -1,0 +1,7 @@
+    PID %CPU CMD
+   2622  2.5 bash in/chain_d.sh
+      1  0.4 /sbin/init
+     22  0.1 [migration/1]
+     28  0.1 [migration/2]
+     34  0.1 [migration/3]
+load=0.29 0.50 0.25 1/245 3997

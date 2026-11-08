@@ -193,3 +193,17 @@ s2b, the board configuration on the public pin (`results/s2b_board_config`) [M]:
 - **Against expectation.** The run10 step fit put nprobe 300 at about 2,800 s with non-search at 485 s. The measured 2,550 s is under that, as in test B.
 - **Scope.** One run on wl-03, not the evaluation VM. The PR 357 description (`pr357-body.md`) carries the same numbers and that caveat.
 
+
+Ice Lake, the evaluation VM's class (GCP n2-custom-8, Xeon 2.6 GHz; `results/il_s2*`) [M]:
+- **The pin fails on time.** The pinned `e29b62fc` config takes 5,618 s, 2.2x the Core Ultra time and over the hour. Block and admitted counts are identical to the Core Ultra run.
+- **Profile.** The scalar threshold-compare loop took 41% of search, more than the LUT16 kernel's 36%. This also explains why PQ-25 cut the scan by only 12% in run14.
+- **Fused scan, `5bba104f` (merged in #403).** The fix has three parts:
+  - in-register admission on the u16 sums;
+  - an AVX-512 table build;
+  - a VBMI+VNNI quad layout, where four queries share each block's unpack.
+  Recall is identical and Ice Lake search drops 2.96x, to 2,187 s total. On wl-03 (AVX2, no quad layout) the same commit is 1.18-1.44x faster at identical recall, blocks and admitted counts (run15).
+- **The headroom went to recall:** nprobe 350 / reorder 1000 gives 0.9808 in 2,466 s, and nprobe 400 / reorder 1000 gives 0.9848 in 2,666 s. The latter is submitted, pinned at `459a5403`.
+- **Killed on the way:**
+  - E1 adaptive probing: neither the distance-ratio rule nor the radius-aware rule beats the fixed-nprobe curve.
+  - PQ-25/20 with a larger reorder: worse recall at equal time.
+  - AVX-512 LUT16 alone: -13%, below its gate. It is subsumed by the fused scan.
