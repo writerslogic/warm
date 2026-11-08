@@ -62,12 +62,6 @@ mod filter_index;
 mod partition_index;
 mod sparse_index;
 mod vector_index;
-#[cfg(warm_wheel_alloc)]
-mod warm_alloc;
-
-#[cfg(warm_wheel_alloc)]
-#[global_allocator]
-static GLOBAL: warm_alloc::WarmAlloc = warm_alloc::WarmAlloc;
 
 /// A quantized-phase hypervector: `dim` phases in `Z_N`. Binding is phase-add mod N
 /// (not self-inverse), bundling is a deterministic integer fold, similarity is the

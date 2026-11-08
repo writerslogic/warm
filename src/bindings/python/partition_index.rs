@@ -74,7 +74,7 @@ impl PyPartitionIndex {
     #[staticmethod]
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (dim, lists=5000, train_at=1_000_000, nprobe=250, reorder=317, pq_m=50,
-        threads=0, seed=7, place=false))]
+        threads=0, seed=7))]
     fn create(
         dim: usize,
         lists: usize,
@@ -84,7 +84,6 @@ impl PyPartitionIndex {
         pq_m: usize,
         threads: usize,
         seed: u64,
-        place: bool,
     ) -> PyResult<Self> {
         if nprobe == 0 || reorder == 0 {
             return Err(PyValueError::new_err("nprobe and reorder must be positive"));
@@ -96,7 +95,6 @@ impl PyPartitionIndex {
             reorder,
             pq_m,
             seed,
-            place_by_list: place || std::env::var("WARM_PLACE").is_ok_and(|v| v == "1"),
             ..PartitionParams::default()
         };
         Ok(Self {
