@@ -34,7 +34,13 @@ An earlier run of the same tier at nprobe 250 scored 0.9651 mean recall in 2,276
 
 For reference, the `neurips23/README.md` baselines table quotes DiskANN at 0.883 on this runbook. This hardware is not the Azure D8lds_v5 VM, so wall time on that VM is unmeasured. Wall time and memory on that VM decide whether this entry qualifies.
 
+## CI
+
+Fork CI on this head (https://github.com/dcondrey/big-ann-benchmarks/actions/runs/42456893463):
+- The `neurips23-streaming-warm` image builds, and `Warm` instantiates.
+- The random-xs step then fails with `FileNotFoundError: 'neurips23/streaming/simple_runbook.yaml'`, raised by the harness's default runbook path in `benchmark/runner.py`.
+- Every streaming entry in that run fails the same way (diskann, puck, pyanns, cufe, hwtl_sdu_anns_stream), so this is not specific to WARM.
+
 ## Not checked
 
-- A Docker build of this exact commit on Linux x86. The fork CI smoke test ran on the previous head.
 - Any run on the evaluation VM.
