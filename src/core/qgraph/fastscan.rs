@@ -53,6 +53,11 @@ fn scan32_u16(codes: &[u8], lut: &[u8], m: usize, out: &mut [u16; BLOCK]) {
     }
     #[cfg(target_arch = "x86_64")]
     {
+        if use_avx512() {
+            // SAFETY: AVX-512F/BW and AVX2 detected; lengths as above.
+            unsafe { avx512::scan32(codes, lut, m, out) };
+            return;
+        }
         if is_x86_feature_detected!("avx2") {
             // SAFETY: AVX2 detected; lengths as above.
             unsafe { avx2::scan32(codes, lut, m, out) };
@@ -62,6 +67,23 @@ fn scan32_u16(codes: &[u8], lut: &[u8], m: usize, out: &mut [u16; BLOCK]) {
     }
     #[cfg(not(any(target_arch = "aarch64", target_arch = "x86_64")))]
     scan32_scalar(codes, lut, m, out);
+}
+
+/// True when the AVX-512BW scan runs. `WARM_FASTSCAN_NO_AVX512` (any value) forces the AVX2
+/// path, for A/B timing; it is read once.
+#[cfg(target_arch = "x86_64")]
+fn use_avx512() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| {
+        avx512_available() && crate::compatibility::var_os("WARM_FASTSCAN_NO_AVX512").is_none()
+    })
+}
+
+#[cfg(target_arch = "x86_64")]
+fn avx512_available() -> bool {
+    is_x86_feature_detected!("avx512f")
+        && is_x86_feature_detected!("avx512bw")
+        && is_x86_feature_detected!("avx2")
 }
 
 #[cfg_attr(target_arch = "aarch64", allow(dead_code))]
@@ -261,6 +283,74 @@ mod avx2 {
     }
 }
 
+#[cfg(target_arch = "x86_64")]
+mod avx512 {
+    use std::arch::x86_64::*;
+
+    use super::BLOCK;
+
+    /// Sums the four 128-bit lanes of `v` (u16 words).
+    ///
+    /// # Safety
+    /// The CPU supports AVX-512F and AVX2.
+    #[inline]
+    #[target_feature(enable = "avx512f,avx512bw,avx2")]
+    unsafe fn fold_lanes(v: __m512i) -> __m128i {
+        let h = _mm256_add_epi16(_mm512_castsi512_si256(v), _mm512_extracti64x4_epi64::<1>(v));
+        _mm_add_epi16(_mm256_castsi256_si128(h), _mm256_extracti128_si256::<1>(h))
+    }
+
+    /// The AVX2 scheme at 512 bits: four 16-byte groups per register, each 128-bit lane
+    /// scored against its own table lane (`vpshufb` never crosses lanes). A tail of one to
+    /// three groups uses zero-masked loads, so the missing lanes look up a zero table.
+    ///
+    /// # Safety
+    /// The CPU supports AVX-512F, AVX-512BW and AVX2; `codes` and `lut` hold at least
+    /// `16 * m` bytes.
+    #[target_feature(enable = "avx512f,avx512bw,avx2")]
+    pub(super) unsafe fn scan32(codes: &[u8], lut: &[u8], m: usize, out: &mut [u16; BLOCK]) {
+        let mask = _mm512_set1_epi8(0x0f);
+        let zero = _mm512_setzero_si512();
+        // Same word trick as the AVX2 path: `*_all` adds whole words (even byte plus 256 times
+        // odd byte), `*_odd` adds the odd bytes alone. A word sums at most ceil(m / 4) <= 64
+        // groups of 255 per lane before the lanes fold, and the folded sums are below 2^16 for
+        // m <= 256.
+        let (mut lo_all, mut lo_odd, mut hi_all, mut hi_odd) = (zero, zero, zero, zero);
+        let (cp, lp) = (codes.as_ptr(), lut.as_ptr());
+        let mut j = 0;
+        while j + 4 <= m {
+            let c = _mm512_loadu_si512(cp.add(16 * j).cast());
+            let t = _mm512_loadu_si512(lp.add(16 * j).cast());
+            let rlo = _mm512_shuffle_epi8(t, _mm512_and_si512(c, mask));
+            let rhi = _mm512_shuffle_epi8(t, _mm512_and_si512(_mm512_srli_epi16::<4>(c), mask));
+            lo_all = _mm512_add_epi16(lo_all, rlo);
+            lo_odd = _mm512_add_epi16(lo_odd, _mm512_srli_epi16::<8>(rlo));
+            hi_all = _mm512_add_epi16(hi_all, rhi);
+            hi_odd = _mm512_add_epi16(hi_odd, _mm512_srli_epi16::<8>(rhi));
+            j += 4;
+        }
+        if j < m {
+            let k: __mmask64 = (1u64 << (16 * (m - j))) - 1;
+            let c = _mm512_maskz_loadu_epi8(k, cp.add(16 * j).cast());
+            let t = _mm512_maskz_loadu_epi8(k, lp.add(16 * j).cast());
+            let rlo = _mm512_shuffle_epi8(t, _mm512_and_si512(c, mask));
+            let rhi = _mm512_shuffle_epi8(t, _mm512_and_si512(_mm512_srli_epi16::<4>(c), mask));
+            lo_all = _mm512_add_epi16(lo_all, rlo);
+            lo_odd = _mm512_add_epi16(lo_odd, _mm512_srli_epi16::<8>(rlo));
+            hi_all = _mm512_add_epi16(hi_all, rhi);
+            hi_odd = _mm512_add_epi16(hi_odd, _mm512_srli_epi16::<8>(rhi));
+        }
+        let o = out.as_mut_ptr();
+        for (all, odd, dst) in [(lo_all, lo_odd, o), (hi_all, hi_odd, o.add(16))] {
+            let even = _mm512_sub_epi16(all, _mm512_slli_epi16::<8>(odd));
+            let e = fold_lanes(even);
+            let od = fold_lanes(odd);
+            _mm_storeu_si128(dst.cast(), _mm_unpacklo_epi16(e, od));
+            _mm_storeu_si128(dst.add(8).cast(), _mm_unpackhi_epi16(e, od));
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::kernels::SplitMix;
@@ -323,6 +413,42 @@ mod tests {
                 scan32_scalar(&block, &lut, m, &mut scalar);
                 for c in 0..BLOCK {
                     assert_eq!(u32::from(scalar[c]), out[c]);
+                }
+            }
+        }
+    }
+
+    /// Every x86 kernel the CPU supports must equal the scalar sum bit for bit, at widths
+    /// that exercise the 2-group (AVX2) and 4-group (AVX-512) tails.
+    #[cfg(target_arch = "x86_64")]
+    #[test]
+    fn x86_kernels_match_scalar() {
+        let (has2, has512) = (is_x86_feature_detected!("avx2"), avx512_available());
+        if !has2 && !has512 {
+            eprintln!("skipped: no AVX2/AVX-512");
+            return;
+        }
+        let widths = (1usize..=70).chain([100, 127, 128, 129, 200, 254, 255, 256]);
+        for m in widths {
+            for seed in 0..4u64 {
+                let (_, lut, block) = random_block(m, 1000 * m as u64 + seed);
+                // All-255 table: the largest possible sums at the limit width.
+                let full = vec![255u8; 16 * m];
+                for table in [&lut, &full] {
+                    let mut want = [0u16; BLOCK];
+                    scan32_scalar(&block, table, m, &mut want);
+                    if has2 {
+                        let mut got = [0u16; BLOCK];
+                        // SAFETY: AVX2 detected; `block` and `table` hold `16 * m` bytes.
+                        unsafe { avx2::scan32(&block, table, m, &mut got) };
+                        assert_eq!(got, want, "avx2 m {m}");
+                    }
+                    if has512 {
+                        let mut got = [0u16; BLOCK];
+                        // SAFETY: AVX-512F/BW and AVX2 detected; lengths as above.
+                        unsafe { avx512::scan32(&block, table, m, &mut got) };
+                        assert_eq!(got, want, "avx512 m {m}");
+                    }
                 }
             }
         }
