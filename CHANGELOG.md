@@ -62,6 +62,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record that the streaming entry takes 5,618 s on Ice Lake, over the hour
+- Mark the VIBE 4-bit risk table as superseded for the submission grid
+- Record the board-config streaming run (#399)
+- Document the experimental PartitionIndex Python class
+- Record the fork CI outcome in the PR 357 body copy
+- Record the board-config streaming run (recall 0.9726, 2,550 s) in the README and benchmark docs
 - Record the L22 partition-tier research, search profile and nprobe selection (#397)
 - Record the L22 search profile, live sweep and nprobe selection
 - Record the L22 partition-tier kill tests, kernels and acceptance with their scripts and results
@@ -149,6 +155,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record ToIP collaboration introduction
 
 ### Fixed
+- Bump oauthlib to 4.0.1 in the chroma benchmark requirements (#400)
 - Bump oauthlib to 4.0.1 in the chroma benchmark requirements
 - Decode checkpoint hits at capture so nothing reads the mapping after its locks
 - Install a pinned Temurin 21 in the Modal bench image for Lucene 10
@@ -276,6 +283,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Pin AML runtime artifacts and document model dependency reachability
 
 ### Bench
+- VIBE OOD check, and the streaming entry's Ice Lake timing (#401)
+- Record that the VIBE submission grid reaches 0.95 and 0.99 on OOD sets
 - Report every repetition of the partition step with mean, median and p90
 - Carry the reused table's base and scale in the scan-only mode
 - Time one partition-tier search step over the LUT16 block scan
