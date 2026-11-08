@@ -117,3 +117,10 @@ THP is a host setting (`/sys/kernel/mm/transparent_hugepage/enabled`), shared by
 ## Reproduce
 
 `scripts/lowlevel/replay.py` (proxy, audit, read-ahead arm), `scripts/lowlevel/summ.py` (tables), `scripts/lowlevel/audit.py` (miss classes), results under `benchmarks/results/lowlevel/`.
+
+The killed arms' code is not on main. Build commit `46740d6a` to rerun them. It contains:
+- the `WARM_THP` and mimalloc allocator wrapper (`cfg(warm_wheel_alloc)`, `src/bindings/python/warm_alloc.rs`);
+- the `place` / `WARM_PLACE` list-order placement;
+- the replay driver's `--place` flag.
+
+The read-only `PartitionIndex.centres()` and `lists_of()` diagnostics stay, because `audit.py` needs them. The read-ahead arm is a patch to the big-ann fork's `streaming_io.py` (`scripts/lowlevel/fork-streaming-io-readahead.patch`). It is not applied, because its full-run gain (-0.5%, n=1) cannot move the submitted nprobe.

@@ -60,9 +60,6 @@ pub struct PartitionParams {
     pub probe_rule: ProbeRule,
     pub reorder: usize,
     pub seed: u64,
-    /// After training, renumber the slots in list order so a list's full-precision rows are
-    /// contiguous (shortens the reorder gathers). Off by default.
-    pub place_by_list: bool,
 }
 
 impl Default for PartitionParams {
@@ -82,7 +79,6 @@ impl Default for PartitionParams {
             probe_rule: ProbeRule::Fixed,
             reorder: 317,
             seed: 7,
-            place_by_list: false,
         }
     }
 }
@@ -934,48 +930,7 @@ impl PartitionTier {
             loc: vec![[(u32::MAX, u32::MAX); 2]; self.slot_id.len()],
         });
         self.place(&live, &vectors);
-        if p.place_by_list {
-            self.relayout();
-        }
         Ok(())
-    }
-
-    /// Renumbers the live slots in list order (a slot takes the first list that holds it), so the
-    /// rows of one list are contiguous. Ids, lists and results are unchanged.
-    fn relayout(&mut self) {
-        let dim = self.dim;
-        let Some(t) = self.trained.as_mut() else {
-            return;
-        };
-        let mut map = vec![u32::MAX; self.slot_id.len()];
-        let mut order: Vec<u32> = Vec::with_capacity(self.id_slot.len());
-        for list in &t.lists {
-            for &s in &list.slots {
-                if map[s as usize] == u32::MAX {
-                    map[s as usize] = order.len() as u32;
-                    order.push(s);
-                }
-            }
-        }
-        let mut rows = Vec::with_capacity(order.len() * dim);
-        let mut slot_id = Vec::with_capacity(order.len());
-        let mut loc = Vec::with_capacity(order.len());
-        for (new, &old) in order.iter().enumerate() {
-            rows.extend_from_slice(&self.rows[old as usize * dim..(old as usize + 1) * dim]);
-            let id = self.slot_id[old as usize];
-            slot_id.push(id);
-            self.id_slot.insert(id, new as u32);
-            loc.push(t.loc[old as usize]);
-        }
-        for list in &mut t.lists {
-            for s in &mut list.slots {
-                *s = map[*s as usize];
-            }
-        }
-        t.loc = loc;
-        self.rows = rows;
-        self.slot_id = slot_id;
-        self.free.clear();
     }
 
     /// Top-`k` ids per query (`queries` = `nq x dim`), nearest first.
@@ -1613,43 +1568,6 @@ mod tests {
         let want: Vec<Vec<u32>> = q.chunks(dim).map(|qq| naive(&live, qq, k)).collect();
         assert_eq!(recall(&t.search(&q, k).unwrap(), &want), 1.0);
         assert_eq!(recall(&t.search_exact(&q, k), &want), 1.0);
-    }
-
-    /// Renumbering the slots in list order keeps the results, the list invariants and the
-    /// delete / reinsert paths intact.
-    #[test]
-    fn list_order_placement_keeps_results_and_invariants() {
-        let (n, dim, k) = (3000, 16, 10);
-        let x = data(n, dim, 25, 11);
-        let q = data(40, dim, 25, 12);
-        let ids: Vec<u32> = (0..n as u32).map(|i| i * 5 + 1).collect();
-        let build = |place: bool| {
-            let mut t = PartitionTier::new(
-                dim,
-                PartitionParams {
-                    place_by_list: place,
-                    ..params(20)
-                },
-            )
-            .unwrap();
-            t.insert(&ids, &x).unwrap();
-            t.search(&q[..dim], 1).unwrap();
-            assert!(t.is_trained());
-            t
-        };
-        let (mut a, mut b) = (build(false), build(true));
-        check_lists(&b);
-        assert_eq!(a.search(&q, k).unwrap(), b.search(&q, k).unwrap());
-        let del: Vec<u32> = ids.iter().copied().step_by(4).collect();
-        assert_eq!(a.delete(&del), b.delete(&del));
-        let back = &ids[..300];
-        a.insert(&del[..100], &x[..100 * dim]).unwrap();
-        b.insert(&del[..100], &x[..100 * dim]).unwrap();
-        a.delete(back);
-        b.delete(back);
-        check_lists(&b);
-        assert_eq!(a.len(), b.len());
-        assert_eq!(a.search(&q, k).unwrap(), b.search(&q, k).unwrap());
     }
 
     /// The quad layout (AVX-512 VBMI/VNNI) and the LUT16 layout give the same results, blocks

@@ -116,7 +116,6 @@ def main():
     a.add_argument("--heldout", default="", help="f32 nq x dim query file audited at the dump steps against exact GT over the live rows")
     a.add_argument("--lists", type=int, default=5000)
     a.add_argument("--train-at", type=int, default=1_000_000)
-    a.add_argument("--place", action="store_true", help="renumber slots in list order after training")
     a.add_argument("--prefetch", type=int, default=0, help="read-ahead depth in insert ranges (0 = off)")
     args = a.parse_args()
     from writerslogic_warm import PartitionIndex
@@ -127,7 +126,7 @@ def main():
     ops = parse_runbook(args.runbook)[: args.steps]
     dump = {int(x) for x in args.dump.split(",") if x}
     idx = PartitionIndex.create(dim, lists=args.lists, train_at=args.train_at, nprobe=args.np,
-                                reorder=args.ro, threads=args.threads, place=args.place)
+                                reorder=args.ro, threads=args.threads)
     pre = None
     if args.prefetch:
         import threading
