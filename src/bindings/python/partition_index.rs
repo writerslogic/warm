@@ -78,6 +78,31 @@ const DEFAULT_NPROBE_BY_LIVE: [(usize, f32); 6] = [
     (10_000_000, 0.6),
 ];
 
+/// Experiment overrides from `WARM_PARTITION_KNOBS=key=value,...` (unset = none), for runs where
+/// the harness cannot pass keyword arguments: `retrain_route`, `retrain_imb`,
+/// `retrain_min_inserts`, `retrain_warm_iters`, `retrain_sample`, `train_sample`, `kmeans_iters`.
+fn apply_knobs(p: &mut PartitionParams) -> PyResult<()> {
+    let Ok(spec) = std::env::var("WARM_PARTITION_KNOBS") else {
+        return Ok(());
+    };
+    let bad = |kv: &str| PyValueError::new_err(format!("WARM_PARTITION_KNOBS: bad entry {kv:?}"));
+    for kv in spec.split(',').filter(|s| !s.is_empty()) {
+        let (k, v) = kv.split_once('=').ok_or_else(|| bad(kv))?;
+        let n = || v.trim().parse::<usize>().map_err(|_| bad(kv));
+        match k.trim() {
+            "retrain_route" => p.retrain_route = n()?,
+            "retrain_min_inserts" => p.retrain_min_inserts = n()?,
+            "retrain_warm_iters" => p.retrain_warm_iters = n()?,
+            "retrain_sample" => p.retrain_sample = n()?,
+            "train_sample" => p.train_sample = n()?,
+            "kmeans_iters" => p.kmeans_iters = n()?,
+            "retrain_imb" => p.retrain_imb = v.trim().parse().map_err(|_| bad(kv))?,
+            _ => return Err(bad(kv)),
+        }
+    }
+    Ok(())
+}
+
 #[pymethods]
 impl PyPartitionIndex {
     /// Creates an empty tier of `dim` dimensions (`pq_m` must divide it). `threads` bounds
@@ -87,7 +112,7 @@ impl PyPartitionIndex {
     #[pyo3(signature = (dim, lists=5000, train_at=1_000_000, nprobe=250, reorder=317, pq_m=50,
         threads=0, seed=7, retrain_at=None, retrain_imb=1.7, retrain_min_inserts=4_000_000,
         soar_lambda=1.0, train_sample=1_000_000, kmeans_iters=10, retrain_warm_iters=3,
-        retrain_sample=1_000_000, kmeans_rebalance=true, nprobe_by_live=None))]
+        retrain_sample=1_000_000, kmeans_rebalance=true, nprobe_by_live=None, retrain_route=0))]
     fn create(
         dim: usize,
         lists: usize,
@@ -107,11 +132,12 @@ impl PyPartitionIndex {
         retrain_sample: usize,
         kmeans_rebalance: bool,
         nprobe_by_live: Option<Vec<(usize, f32)>>,
+        retrain_route: usize,
     ) -> PyResult<Self> {
         if nprobe == 0 || reorder == 0 {
             return Err(PyValueError::new_err("nprobe and reorder must be positive"));
         }
-        let params = PartitionParams {
+        let mut params = PartitionParams {
             lists,
             train_at,
             nprobe,
@@ -127,9 +153,11 @@ impl PyPartitionIndex {
             retrain_warm_iters,
             retrain_sample,
             kmeans_rebalance,
+            retrain_route,
             nprobe_by_live: nprobe_by_live.unwrap_or_else(|| DEFAULT_NPROBE_BY_LIVE.to_vec()),
             ..PartitionParams::default()
         };
+        apply_knobs(&mut params)?;
         Ok(Self {
             tier: PartitionTier::new(dim, params).map_err(warm_err)?,
             dim,
