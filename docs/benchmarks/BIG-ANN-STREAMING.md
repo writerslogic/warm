@@ -168,7 +168,7 @@ the hour.
 The graph entry above could not finish this runbook within the hour. The entry now serves it from `PartitionIndex` (`src/bindings/python/partition_index.rs` over `core::qgraph::partition`):
 - Brute force runs until 1M rows are live.
 - After that, the index uses an IVF with 5,000 lists, SOAR spill, PQ-50 residual codes scanned by a 4-bit LUT, and an exact f32 reorder.
-- The scan fuses the threshold test into the LUT kernel. On AVX-512 VBMI+VNNI CPUs, four queries share each code block.
+- The scan fuses the threshold test into the LUT kernel. On AVX-512 VBMI+VNNI CPUs, eight queries share each code block, and the exact reorder runs in batches.
 
 Design, kill tests and the measurements behind each parameter are in [`docs/research/STREAMING-L22.md`](../research/STREAMING-L22.md).
 
@@ -180,10 +180,12 @@ All runs below use `run.py --nodocker` with the final runbook, all 1,280 steps, 
 | Ice Lake VM | `e29b62fc` | 300 / 317 | 0.9726 | 0.9543 | 5,618 s, **over the hour** | 6.41 GiB | `il_s2b_icelake` |
 | Ice Lake VM | `5bba104f` (fused scan) | 300 / 317 | 0.9726, identical | 0.9543 | 2,187 s | 6.47 GiB | `il_s2c_scan` |
 | Ice Lake VM | `5bba104f` | 350 / 1000 | 0.9808 | 0.9627 | 2,466 s | 6.58 GiB | `il_s2d_np350_ro1000` |
-| Ice Lake VM | `5bba104f` | **400 / 1000** | **0.9848** | **0.9686** | **2,666 s** | 6.56 GiB | `il_s2d_np400_ro1000` |
+| Ice Lake VM | `5bba104f` | 400 / 1000 | 0.9848 | 0.9686 | 2,666 s | 6.56 GiB | `il_s2d_np400_ro1000` |
+| Ice Lake VM | `c5cd1c61` (8-query scan, batched reorder) | 600 / 1000 | 0.9931 | 0.9836 | 2,601 s | 6.53 GiB | `il_s2e_np600_ro1000` |
+| Ice Lake VM | `c5cd1c61` | **650 / 1000** | **0.9942** | **0.9859** | **2,722 s** | 6.53 GiB | `il_s2e_np650_ro1000` |
 
-- The submitted configuration is the last row, pinned at `459a5403`: `5bba104f` merged, with the same scan code.
-- The scan change cut Ice Lake search from 5,293 s to 1,790 s at identical recall. Blocks and admitted counts are identical. The extra time went into higher nprobe and a larger reorder.
+- The submitted configuration is the last row, pinned at `f21de886`: `c5cd1c61` merged, with an identical source tree. It is the highest recall with a step-time total at or below 2,800 s, which leaves 878 s under the hour.
+- The scan change cut Ice Lake search from 5,293 s to 1,790 s at identical recall. Blocks and admitted counts are identical. The extra time went into higher nprobe and a larger reorder. The second scan round (`c5cd1c61`) bought another 250 lists of nprobe at about the same time.
 - The `neurips23/README.md` baselines table quotes DiskANN at 0.883 on this runbook.
 - Wall time on the Azure evaluation VM is unmeasured. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
 

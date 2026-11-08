@@ -202,7 +202,8 @@ Ice Lake, the evaluation VM's class (GCP n2-custom-8, Xeon 2.6 GHz; `results/il_
   - an AVX-512 table build;
   - a VBMI+VNNI quad layout, where four queries share each block's unpack.
   Recall is identical and Ice Lake search drops 2.96x, to 2,187 s total. On wl-03 (AVX2, no quad layout) the same commit is 1.18-1.44x faster at identical recall, blocks and admitted counts (run15).
-- **The headroom went to recall:** nprobe 350 / reorder 1000 gives 0.9808 in 2,466 s, and nprobe 400 / reorder 1000 gives 0.9848 in 2,666 s. The latter is submitted, pinned at `459a5403`.
+- **The headroom went to recall:** nprobe 350 / reorder 1000 gives 0.9808 in 2,466 s, and nprobe 400 / reorder 1000 gives 0.9848 in 2,666 s. That config was submitted first, pinned at `459a5403`.
+- **Second scan round, `c5cd1c61` (merged in #406).** Eight queries share each block. The live set is recomputed only when a threshold changes. The next chunk's tables are prefetched, and the exact reorder is batched. On Ice Lake, nprobe 600 / reorder 1000 gives 0.9931 in 2,601 s, and nprobe 650 / reorder 1000 gives 0.9942 in 2,722 s (min after training 0.9859). The np650 config is submitted, pinned at `f21de886`. It is the highest recall at or below the 2,800 s pick line.
 - **Killed on the way:**
   - E1 adaptive probing: neither the distance-ratio rule nor the radius-aware rule beats the fixed-nprobe curve.
   - PQ-25/20 with a larger reorder: worse recall at equal time.
