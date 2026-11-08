@@ -208,3 +208,67 @@ Ice Lake, the evaluation VM's class (GCP n2-custom-8, Xeon 2.6 GHz; `results/il_
   - E1 adaptive probing: neither the distance-ratio rule nor the radius-aware rule beats the fixed-nprobe curve.
   - PQ-25/20 with a larger reorder: worse recall at equal time.
   - AVX-512 LUT16 alone: -13%, below its gate. It is subsumed by the fused scan.
+
+## 10. Balanced centres, retrain and probe schedule (2026-11-08, STATE.md agent S)
+
+Goal: push the big-ann streaming entry (msturing-30M-clustered, final runbook, pq50 / reorder 1000) from mean recall@10 0.9931 toward 0.999 inside 2,800 s of summed step time on Ice Lake. All parameter choices below use held-out queries only (2,000 queries from MSTuring query100K that are not in `queries10k`, exact GT at the run10 states 3M / 6M / 10M, `~/bigann/l22bench/heldout/`); the board queries are used once, for the final confirmation. Held-out minus board recall was +0.0005..+0.0025 at np 400 / 600 (run18), so the held-out set is not harder than the board.
+
+### 10.1 Where the recall loss is [M, held-out, np 600, reorder 1000, 3 states]
+- Reorder is not the lever: reorder 5000 adds at most 0.0004 (run17).
+- 66 of 2,000 queries miss anything, the worst query misses 2 of 10: no concentration on a few queries.
+- A missed neighbour's best list sits at centre rank p50 755 / p90 1,173 for a probe depth of 600 (it is beyond the probe depth), in a list 2.7x the median size. The lists are very uneven: with the op32 centres, the 10M state has imbalance `lists * sum(len^2) / sum(len)^2` = 2.93, a largest list of 150,556 rows and a median of 2,244.
+- The centres are trained once at 1.24M live rows (sample 262,144, 10 iterations) and the clustered insert order then moves the live distribution; the 3M-trained centres applied to 6M / 10M (K3) lose the whole balance gain.
+
+### 10.2 Single-candidate kill tests (mean recall of the three states at equal scanned blocks, i.e. at the control's np 600 block count)
+| candidate | recall | verdict |
+|---|---|---|
+| control (op32 centres) | .9943 | |
+| k-means at the state, 10 it, 262k sample (K1) | equal recall per np, 37% fewer blocks | balance is the effect |
+| 25 it, 262k sample (A1) | .9974 | |
+| 10 it, 1M sample (A2) | .9979 | sample size matters, not iterations |
+| 25 it, 1M sample (K2g) | .9980 | |
+| 8,000 lists, 1M sample (B8k) | .9987 | place cost 2.4x, ~8-10% search gain: not adopted |
+| SOAR lambda 0 / 0.5 / 2 | .9899 / equal / equal at np 600 | lambda 1 stays |
+| selective spill (spill only within 1+eps of the primary distance), eps 0.5 | .9962 | killed: entries barely drop, recall falls |
+| reorder 5000 | +0.0004 at most | killed (run17) |
+
+### 10.3 Retrain (2x2 factorial, recall at equal blocks; stale = cold k-means at the 3M state applied at 6M / 10M)
+| | 6M | 10M |
+|---|---|---|
+| control (op32 centres) | .9937 | .9966 |
+| 262k sample, stale | .9953 | .9976 |
+| 262k sample, 3 warm iterations | .9969 | .9989 |
+| 1M sample, stale | .9960 | .9983 |
+| 1M sample, 3 warm iterations | .9981 | .9991 |
+Sample size adds +.0007 / +.0007, the warm retrain +.0016 / +.0013; the interaction (actual minus additive) is +.0005 / -.0005, i.e. additive within noise.
+
+### 10.4 Rebalanced warm retrain, seed noise, and the first full run
+
+Held-out static states (run10 op200/op1172/op648, 1M-sample k-means, reorder 1000), mean recall@10 over the three states:
+
+| arm | np800 | np1000 | np1300 |
+|---|---|---|---|
+| balanced warm retrain (R1000) | 0.9973 | 0.9985 | 0.9994 |
+| same, seed 8 | 0.9971 | 0.9983 | 0.9993 |
+| same, seed 9 | 0.9967 | 0.9981 | 0.9991 |
+
+Seed-to-seed spread is about 0.0003 at np800 and 0.0002 at np1000; differences below that are noise. Reorder 500/700/1500 stay within 0.0004 of reorder 1000. The k-means rebalance step (reseeding centres that own less than a quarter of the mean list onto members of oversized lists) gives the same recall as the plain warm retrain at equal nprobe (op1172 np1000: 0.9988 versus 0.9983; op648: 0.9996 versus 0.9994, both inside noise); its purpose is a lower post-retrain imbalance, not recall at fixed nprobe.
+
+First full Ice Lake run (n2-custom-8-16384 clone, commit a19f4804, np1000, reorder 1000, 6 imbalance-triggered retrains): board mean recall 0.998617, post-train minimum 0.9978, peak RSS 6.5 GiB, but summed step time 3,750 s (insert 342, search 3,366, delete 42). Retrains cost 394 s in total (30.6, 73.5, 61.4, 100.5, 72.1, 56.1 s). The wall gate (2,800 s) fails by 950 s. Recall is 0.9986 at np1000, so the 0.999 target is within about 0.0004 of reachable by probing alone, but the time to do so is not available: the search term scales roughly linearly with nprobe (about 3.0 s per unit nprobe plus retrains).
+
+### 10.5 Full-runbook result with the rebalanced retrain (E2a)
+
+Ice Lake clone (n2-custom-8-16384), commit b15ec08e, np650, reorder 1000, six imbalance-triggered retrains with k-means rebalance:
+
+| run | board recall | summed step s | insert / search / delete s | post-train min | RSS GiB |
+|---|---|---|---|---|---|
+| submitted control c5cd1c61, np650 | 0.994244 | 2,722 | | 0.9859 | |
+| submitted control c5cd1c61, np600 | 0.993062 | 2,601 | | | |
+| R1 (a19f4804), np1000 | 0.998617 | 3,750 | 342 / 3,366 / 42 | 0.9978 | 6.50 |
+| E2a (b15ec08e), np650 | 0.996571 | 3,194 | 332 / 2,821 / 42 | 0.9943 | 6.51 |
+
+Retrains in E2a: imbalance 5.0 to 1.74, 2.8 to 1.92, 3.8 to 1.98, 2.2 to 1.80, 2.3 to 1.85, 3.0 to 1.95, costing 31.7, 72.1, 60.7, 99.6, 70.5 and 55.7 s (390 s). The rebalance holds the imbalance after each retrain near 1.7 to 2.0 (R1 without it: 1.7 to 2.8).
+
+Reading: at equal nprobe (650) the balanced configuration gains 0.0023 recall over the control, but the 390 s of retraining plus the extra per-step cost leave it 472 s above the control. The control's measured slope is about 2.4 s per nprobe unit; the balanced scan's is about 1.6 s per unit (R1 versus E2a). To fit 2,800 s the balanced configuration must give up roughly 390 s of search, which on that slope is about 250 nprobe units (np about 400), where static held-out recall (about 0.991 at np400) is below the control's 0.9942. Under the 2,800 s budget the control therefore stays the best measured point; the balanced configuration is better only if the retrain cost falls below roughly 100 s in total, or the budget exceeds about 3,200 s. 0.999 needs about np1000 plus retrains (3,750 s measured, recall 0.9986 even then), so it is not reachable in 2,800 s with these levers.
+
+Miss audit (agent Y, LOWLEVEL-SYSTEMS.md): 93 to 95 percent of misses are IVF probe misses, so recall per scanned block, not the scan or reorder, is the quantity to move. The 50 busiest lists carry 18 to 25 percent of missed neighbours, consistent with the imbalance finding above.
