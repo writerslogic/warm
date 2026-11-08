@@ -61,7 +61,8 @@ rayon = "1.8"
 parking_lot = { version = "0.12", features = ["arc_lock"], optional = true }
 memmap2 = "0.9"
 bytemuck = "1"
-mimalloc = { version = "0.1", default-features = false, optional = true }
+# local_dynamic_tls: the default initial-exec TLS makes a dlopen-ed Python extension fail to load.
+mimalloc = { version = "0.1", default-features = false, features = ["local_dynamic_tls"], optional = true }
 anyhow = "1.0"
 thiserror = "2.0"
 tracing = "0.1"
@@ -392,7 +393,7 @@ required-features = ["experimental", "cli"]
 
 # cargo-fuzz compiles with --cfg fuzzing (see src/bin/warm-server.rs and fuzz/).
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)"] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)", "cfg(warm_wheel_alloc)"] }
 
 [[bench]]
 name = "vector_updates"

@@ -60,7 +60,7 @@ def tie_recall(gt_i, gt_d, res, k=10):
     return out
 
 
-def exact_topk(mm, live, Qh, k=10, blk=500_000):
+def exact_topk(mm, live, Qh, k=10, blk=40_000):
     """Exact top-k source-row ids of every query over the live rows (float32 GEMM, blockwise)."""
     ids = np.flatnonzero(live)
     best_d = np.full((len(Qh), k), np.inf, dtype=np.float32)

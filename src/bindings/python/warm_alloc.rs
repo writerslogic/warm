@@ -4,8 +4,13 @@
 //! The index keeps multi-GB row and code arrays that the scan and reorder phases touch at random,
 //! where 4 KiB pages cost a TLB miss per access.
 //!
+//! Compiled only with `RUSTFLAGS="--cfg warm_wheel_alloc"` (a cfg, not a feature, so
+//! `--all-features` builds keep the benches' and tests' own counting allocators).
+//!
 //! The mode is read once from the environment with `getenv` (no allocation) on first use.
-use std::alloc::{GlobalAlloc, Layout, System};
+#[cfg(not(feature = "mimalloc"))]
+use std::alloc::System;
+use std::alloc::{GlobalAlloc, Layout};
 #[cfg(target_os = "linux")]
 use std::sync::atomic::{AtomicU8, Ordering};
 
