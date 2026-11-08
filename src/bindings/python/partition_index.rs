@@ -74,7 +74,9 @@ impl PyPartitionIndex {
     #[staticmethod]
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (dim, lists=5000, train_at=1_000_000, nprobe=250, reorder=317, pq_m=50,
-        threads=0, seed=7))]
+        threads=0, seed=7, retrain_at=None, retrain_imb=0.0, retrain_min_inserts=1_000_000,
+        soar_lambda=1.0, train_sample=262_144, kmeans_iters=10, retrain_warm_iters=0,
+        retrain_sample=262_144, nprobe_by_live=None))]
     fn create(
         dim: usize,
         lists: usize,
@@ -84,6 +86,15 @@ impl PyPartitionIndex {
         pq_m: usize,
         threads: usize,
         seed: u64,
+        retrain_at: Option<Vec<usize>>,
+        retrain_imb: f32,
+        retrain_min_inserts: usize,
+        soar_lambda: f32,
+        train_sample: usize,
+        kmeans_iters: usize,
+        retrain_warm_iters: usize,
+        retrain_sample: usize,
+        nprobe_by_live: Option<Vec<(usize, f32)>>,
     ) -> PyResult<Self> {
         if nprobe == 0 || reorder == 0 {
             return Err(PyValueError::new_err("nprobe and reorder must be positive"));
@@ -95,6 +106,15 @@ impl PyPartitionIndex {
             reorder,
             pq_m,
             seed,
+            retrain_at: retrain_at.unwrap_or_default(),
+            retrain_imb,
+            retrain_min_inserts,
+            soar_lambda,
+            train_sample,
+            kmeans_iters,
+            retrain_warm_iters,
+            retrain_sample,
+            nprobe_by_live: nprobe_by_live.unwrap_or_default(),
             ..PartitionParams::default()
         };
         Ok(Self {
