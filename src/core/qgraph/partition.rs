@@ -86,6 +86,17 @@ struct Trained {
     loc: Vec<[(u32, u32); 2]>,
 }
 
+/// Wall seconds of the phases of the last partition search (max over threads for the
+/// per-thread phases).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct SearchProfile {
+    pub centres_s: f64,
+    pub route_s: f64,
+    pub scan_s: f64,
+    pub reorder_s: f64,
+    pub total_s: f64,
+}
+
 /// Streaming partition tier over external `u32` ids.
 pub struct PartitionTier {
     dim: usize,
@@ -95,6 +106,7 @@ pub struct PartitionTier {
     id_slot: HashMap<u32, u32, foldhash::fast::RandomState>,
     free: Vec<u32>,
     trained: Option<Trained>,
+    profile: std::sync::Mutex<SearchProfile>,
 }
 
 /// `c[m x n] = a[m x k] . b[n x k]^T`, single-threaded.
@@ -417,6 +429,7 @@ impl PartitionTier {
             id_slot: HashMap::default(),
             free: Vec::new(),
             trained: None,
+            profile: std::sync::Mutex::new(SearchProfile::default()),
         })
     }
 
@@ -426,6 +439,11 @@ impl PartitionTier {
 
     pub fn is_empty(&self) -> bool {
         self.id_slot.is_empty()
+    }
+
+    /// Phase timings of the last partition (post-training) search.
+    pub fn last_search_profile(&self) -> SearchProfile {
+        *self.profile.lock().unwrap()
     }
 
     /// Changes the number of probed lists for later searches.
@@ -707,6 +725,7 @@ impl PartitionTier {
         let nq = queries.len() / dim;
         let nprobe = self.params.nprobe.min(l);
         let reorder = self.params.reorder.max(k);
+        let t0 = std::time::Instant::now();
         // Centre distances |q - c|^2 and the probed lists per query.
         let mut qc = vec![0f32; nq * l];
         qc.par_chunks_mut(ROWS * l)
@@ -728,6 +747,7 @@ impl PartitionTier {
                 idx
             })
             .collect();
+        let centres_s = t0.elapsed().as_secs_f64();
         let mut by_list: Vec<Vec<u32>> = vec![Vec::new(); l];
         for (q, ls) in probe.iter().enumerate() {
             for &li in ls {
@@ -745,8 +765,9 @@ impl PartitionTier {
                 })
             })
             .collect();
+        let route_s = t0.elapsed().as_secs_f64() - centres_s;
         let threads = rayon::current_num_threads().max(1);
-        let parts: Vec<Vec<(u32, Vec<u32>)>> = (0..threads)
+        let parts: Vec<(Vec<(u32, Vec<u32>)>, f64, f64)> = (0..threads)
             .into_par_iter()
             .map(|th| {
                 let mine: Vec<u32> = (0..nq as u32)
@@ -758,6 +779,7 @@ impl PartitionTier {
                 let mut thr = vec![f32::INFINITY; mine.len()];
                 let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
                 let mut out = [0u32; BLOCK];
+                let ts = std::time::Instant::now();
                 for (li, qs) in by_list.iter().enumerate() {
                     let list = &t.lists[li];
                     let n = list.slots.len();
@@ -804,7 +826,9 @@ impl PartitionTier {
                         }
                     }
                 }
-                mine.iter()
+                let scan_s = ts.elapsed().as_secs_f64();
+                let res: Vec<(u32, Vec<u32>)> = mine
+                    .iter()
                     .zip(bufs)
                     .map(|(&q, mut buf)| {
                         buf.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
@@ -829,13 +853,26 @@ impl PartitionTier {
                                 .collect(),
                         )
                     })
-                    .collect()
+                    .collect();
+                (res, scan_s, ts.elapsed().as_secs_f64() - scan_s)
             })
             .collect();
         let mut res = vec![Vec::new(); nq];
-        for (q, ids) in parts.into_iter().flatten() {
-            res[q as usize] = ids;
+        let (mut scan_s, mut reorder_s) = (0f64, 0f64);
+        for (part, sc, ro) in parts {
+            scan_s = scan_s.max(sc);
+            reorder_s = reorder_s.max(ro);
+            for (q, ids) in part {
+                res[q as usize] = ids;
+            }
         }
+        *self.profile.lock().unwrap() = SearchProfile {
+            centres_s,
+            route_s,
+            scan_s,
+            reorder_s,
+            total_s: t0.elapsed().as_secs_f64(),
+        };
         res
     }
 }
@@ -1051,9 +1088,16 @@ mod tests {
             let t0 = Instant::now();
             let got = t.search(&q, 10).unwrap();
             let s = t0.elapsed().as_secs_f64();
+            let pf = t.last_search_profile();
             rep += &format!(
-                ", \"recall_np{np}\": {:.4}, \"search_np{np}_s\": {s:.3}",
-                recall(&got, &gt)
+                ", \"recall_np{np}\": {:.4}, \"search_np{np}_s\": {s:.3}, \"profile_np{np}\": \
+                 {{\"centres\": {:.3}, \"route\": {:.3}, \"scan\": {:.3}, \"reorder\": {:.3}, \"total\": {:.3}}}",
+                recall(&got, &gt),
+                pf.centres_s,
+                pf.route_s,
+                pf.scan_s,
+                pf.reorder_s,
+                pf.total_s
             );
         }
         rep += "}";
