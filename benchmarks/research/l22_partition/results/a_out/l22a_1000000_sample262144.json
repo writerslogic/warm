@@ -1,0 +1,24 @@
+{
+ "tag": "1000000_sample262144",
+ "n": 1000000,
+ "lists": 5000,
+ "nq": 1000,
+ "nq_quant": 500,
+ "reorder": 317,
+ "list_size": {
+  "min": 2,
+  "median": 180,
+  "max": 954,
+  "empty": 0
+ },
+ "ceiling_nprobe350": 0.8377,
+ "ceiling_nprobe700": 0.9115,
+ "ceiling_nprobe1400": 0.965,
+ "t_ceiling_s": 7.3,
+ "t_encode_s": 22.9,
+ "t_quant_scan_s": 29.6,
+ "pq50_float_nprobe700_reorder317": 0.9126000000000001,
+ "pq50_int8_nprobe700_reorder317": 0.4714,
+ "grid100_int8_nprobe700_reorder317": 0.42660000000000003,
+ "t_total_s": 59.9
+}

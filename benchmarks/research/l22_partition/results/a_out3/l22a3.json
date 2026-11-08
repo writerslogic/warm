@@ -1,0 +1,317 @@
+{
+ "args": {
+  "train_op": 32,
+  "eval_ops": [
+   32,
+   100,
+   200,
+   400,
+   640,
+   900,
+   1120,
+   1280
+  ],
+  "retrain": true,
+  "lists": 5000,
+  "train_sample": 262144,
+  "lam": 1.0,
+  "tiers": [
+   350,
+   500,
+   700
+  ],
+  "sample": 500000,
+  "seed": 7,
+  "out": "out3"
+ },
+ "steps": [
+  {
+   "op": 32,
+   "live": 1239816,
+   "fixed": {
+    "350": {
+     "recall": 0.9657,
+     "codes_scanned": 170552.70922271998
+    },
+    "500": {
+     "recall": 0.9783,
+     "codes_scanned": 244596.30855739195
+    },
+    "700": {
+     "recall": 0.9875,
+     "codes_scanned": 344573.44911806396
+    },
+    "max_list_share": 0.000788,
+    "lists_over_4x_mean": 0
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.9657,
+     "codes_scanned": 170552.70922271998
+    },
+    "500": {
+     "recall": 0.9783,
+     "codes_scanned": 244596.30855739195
+    },
+    "700": {
+     "recall": 0.9875,
+     "codes_scanned": 344573.44911806396
+    },
+    "max_list_share": 0.000788,
+    "lists_over_4x_mean": 0
+   }
+  },
+  {
+   "op": 100,
+   "live": 4134502,
+   "fixed": {
+    "350": {
+     "recall": 0.9817,
+     "codes_scanned": 876172.2112694602
+    },
+    "500": {
+     "recall": 0.9905,
+     "codes_scanned": 1217484.8524550563
+    },
+    "700": {
+     "recall": 0.995,
+     "codes_scanned": 1658172.5066487445
+    },
+    "max_list_share": 0.015045,
+    "lists_over_4x_mean": 81
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.9785,
+     "codes_scanned": 553436.9873473961
+    },
+    "500": {
+     "recall": 0.9872,
+     "codes_scanned": 792230.2523328641
+    },
+    "700": {
+     "recall": 0.9936,
+     "codes_scanned": 1113266.559769104
+    },
+    "max_list_share": 0.001189,
+    "lists_over_4x_mean": 7
+   }
+  },
+  {
+   "op": 200,
+   "live": 2999384,
+   "fixed": {
+    "350": {
+     "recall": 0.9756,
+     "codes_scanned": 669761.4993946559
+    },
+    "500": {
+     "recall": 0.9885,
+     "codes_scanned": 926105.946524688
+    },
+    "700": {
+     "recall": 0.9944,
+     "codes_scanned": 1254062.0723701278
+    },
+    "max_list_share": 0.009042999999999999,
+    "lists_over_4x_mean": 168
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.9747,
+     "codes_scanned": 398801.341973488
+    },
+    "500": {
+     "recall": 0.9857,
+     "codes_scanned": 571083.8713622241
+    },
+    "700": {
+     "recall": 0.9938,
+     "codes_scanned": 803187.22501904
+    },
+    "max_list_share": 0.000997,
+    "lists_over_4x_mean": 5
+   }
+  },
+  {
+   "op": 400,
+   "live": 7818430,
+   "fixed": {
+    "350": {
+     "recall": 0.9877,
+     "codes_scanned": 1833750.7719869602
+    },
+    "500": {
+     "recall": 0.9945,
+     "codes_scanned": 2522215.1820355407
+    },
+    "700": {
+     "recall": 0.998,
+     "codes_scanned": 3399744.77252296
+    },
+    "max_list_share": 0.011847,
+    "lists_over_4x_mean": 145
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.9876,
+     "codes_scanned": 1071558.26993804
+    },
+    "500": {
+     "recall": 0.9927,
+     "codes_scanned": 1536194.5080599403
+    },
+    "700": {
+     "recall": 0.9969,
+     "codes_scanned": 2162471.4542625803
+    },
+    "max_list_share": 0.002555,
+    "lists_over_4x_mean": 11
+   }
+  },
+  {
+   "op": 640,
+   "live": 10292043,
+   "fixed": {
+    "350": {
+     "recall": 0.9878,
+     "codes_scanned": 2361362.8311621957
+    },
+    "500": {
+     "recall": 0.9939,
+     "codes_scanned": 3248982.6243922673
+    },
+    "700": {
+     "recall": 0.9975,
+     "codes_scanned": 4381673.1285800645
+    },
+    "max_list_share": 0.007173000000000001,
+    "lists_over_4x_mean": 145
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.991,
+     "codes_scanned": 1442816.49850551
+    },
+    "500": {
+     "recall": 0.9944,
+     "codes_scanned": 2066072.2198904878
+    },
+    "700": {
+     "recall": 0.9976,
+     "codes_scanned": 2900689.206131634
+    },
+    "max_list_share": 0.002068,
+    "lists_over_4x_mean": 7
+   }
+  },
+  {
+   "op": 900,
+   "live": 8250527,
+   "fixed": {
+    "350": {
+     "recall": 0.9826,
+     "codes_scanned": 1856308.940190844
+    },
+    "500": {
+     "recall": 0.9912,
+     "codes_scanned": 2569761.513765396
+    },
+    "700": {
+     "recall": 0.9968,
+     "codes_scanned": 3483988.4177416037
+    },
+    "max_list_share": 0.003531,
+    "lists_over_4x_mean": 161
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.9888,
+     "codes_scanned": 1140269.1168564698
+    },
+    "500": {
+     "recall": 0.9943,
+     "codes_scanned": 1632949.5016720095
+    },
+    "700": {
+     "recall": 0.9961,
+     "codes_scanned": 2294412.8809519755
+    },
+    "max_list_share": 0.00159,
+    "lists_over_4x_mean": 6
+   }
+  },
+  {
+   "op": 1120,
+   "live": 7134442,
+   "fixed": {
+    "350": {
+     "recall": 0.9794,
+     "codes_scanned": 1627721.2443028039
+    },
+    "500": {
+     "recall": 0.9885,
+     "codes_scanned": 2241813.516570012
+    },
+    "700": {
+     "recall": 0.9946,
+     "codes_scanned": 3024776.7753154286
+    },
+    "max_list_share": 0.004701,
+    "lists_over_4x_mean": 196
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.9861,
+     "codes_scanned": 996312.4684464558
+    },
+    "500": {
+     "recall": 0.9924,
+     "codes_scanned": 1426255.8746411637
+    },
+    "700": {
+     "recall": 0.9962,
+     "codes_scanned": 2001888.9670232602
+    },
+    "max_list_share": 0.0012000000000000001,
+    "lists_over_4x_mean": 3
+   }
+  },
+  {
+   "op": 1280,
+   "live": 2367854,
+   "fixed": {
+    "350": {
+     "recall": 0.9688,
+     "codes_scanned": 538358.8845780799
+    },
+    "500": {
+     "recall": 0.9835,
+     "codes_scanned": 741525.460336124
+    },
+    "700": {
+     "recall": 0.9918,
+     "codes_scanned": 1000393.8266539321
+    },
+    "max_list_share": 0.004764,
+    "lists_over_4x_mean": 207
+   },
+   "retrained": {
+    "350": {
+     "recall": 0.9739,
+     "codes_scanned": 323751.37342704
+    },
+    "500": {
+     "recall": 0.9839,
+     "codes_scanned": 464068.67766932806
+    },
+    "700": {
+     "recall": 0.9912,
+     "codes_scanned": 652391.4655795601
+    },
+    "max_list_share": 0.0008539999999999999,
+    "lists_over_4x_mean": 1
+   }
+  }
+ ]
+}

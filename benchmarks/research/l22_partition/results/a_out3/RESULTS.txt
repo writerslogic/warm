@@ -1,0 +1,16 @@
+RESULT op=32 live=1239816 arm=fixed np350=0.9657/0.138 np500=0.9783/0.197 np700=0.9875/0.278 max_list_share=0.00079 lists_over_4x=0
+RESULT op=32 live=1239816 arm=retrained np350=0.9657/0.138 np500=0.9783/0.197 np700=0.9875/0.278 max_list_share=0.00079 lists_over_4x=0
+RESULT op=100 live=4134502 arm=fixed np350=0.9817/0.212 np500=0.9905/0.294 np700=0.9950/0.401 max_list_share=0.01504 lists_over_4x=81
+RESULT op=100 live=4134502 arm=retrained np350=0.9785/0.134 np500=0.9872/0.192 np700=0.9936/0.269 max_list_share=0.00119 lists_over_4x=7
+RESULT op=200 live=2999384 arm=fixed np350=0.9756/0.223 np500=0.9885/0.309 np700=0.9944/0.418 max_list_share=0.00904 lists_over_4x=168
+RESULT op=200 live=2999384 arm=retrained np350=0.9747/0.133 np500=0.9857/0.190 np700=0.9938/0.268 max_list_share=0.00100 lists_over_4x=5
+RESULT op=400 live=7818430 arm=fixed np350=0.9877/0.235 np500=0.9945/0.323 np700=0.9980/0.435 max_list_share=0.01185 lists_over_4x=145
+RESULT op=400 live=7818430 arm=retrained np350=0.9876/0.137 np500=0.9927/0.196 np700=0.9969/0.277 max_list_share=0.00255 lists_over_4x=11
+RESULT op=640 live=10292043 arm=fixed np350=0.9878/0.229 np500=0.9939/0.316 np700=0.9975/0.426 max_list_share=0.00717 lists_over_4x=145
+RESULT op=640 live=10292043 arm=retrained np350=0.9910/0.140 np500=0.9944/0.201 np700=0.9976/0.282 max_list_share=0.00207 lists_over_4x=7
+RESULT op=900 live=8250527 arm=fixed np350=0.9826/0.225 np500=0.9912/0.311 np700=0.9968/0.422 max_list_share=0.00353 lists_over_4x=161
+RESULT op=900 live=8250527 arm=retrained np350=0.9888/0.138 np500=0.9943/0.198 np700=0.9961/0.278 max_list_share=0.00159 lists_over_4x=6
+RESULT op=1120 live=7134442 arm=fixed np350=0.9794/0.228 np500=0.9885/0.314 np700=0.9946/0.424 max_list_share=0.00470 lists_over_4x=196
+RESULT op=1120 live=7134442 arm=retrained np350=0.9861/0.140 np500=0.9924/0.200 np700=0.9962/0.281 max_list_share=0.00120 lists_over_4x=3
+RESULT op=1280 live=2367854 arm=fixed np350=0.9688/0.227 np500=0.9835/0.313 np700=0.9918/0.422 max_list_share=0.00476 lists_over_4x=207
+RESULT op=1280 live=2367854 arm=retrained np350=0.9739/0.137 np500=0.9839/0.196 np700=0.9912/0.276 max_list_share=0.00085 lists_over_4x=1

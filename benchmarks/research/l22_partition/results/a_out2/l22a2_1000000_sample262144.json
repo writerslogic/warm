@@ -1,0 +1,221 @@
+{
+ "tag": "1000000_sample262144",
+ "n": 1000000,
+ "lists": 5000,
+ "ceiling_nospill_q1000_nprobe175": {
+  "recall": 0.7494,
+  "codes_scanned": 33926.307
+ },
+ "ceiling_nospill_q1000_nprobe350": {
+  "recall": 0.8377,
+  "codes_scanned": 68226.05
+ },
+ "ceiling_nospill_q1000_nprobe500": {
+  "recall": 0.8802,
+  "codes_scanned": 97879.003
+ },
+ "ceiling_nospill_q1000_nprobe700": {
+  "recall": 0.9115,
+  "codes_scanned": 137748.647
+ },
+ "ceiling_nospill_q1000_nprobe1000": {
+  "recall": 0.9406,
+  "codes_scanned": 197853.291
+ },
+ "ceiling_nospill_q1000_nprobe1400": {
+  "recall": 0.965,
+  "codes_scanned": 278411.703
+ },
+ "ceiling_nospill_q500_nprobe175": {
+  "recall": 0.7596,
+  "codes_scanned": 33976.43
+ },
+ "ceiling_nospill_q500_nprobe350": {
+  "recall": 0.8416,
+  "codes_scanned": 68272.65
+ },
+ "ceiling_nospill_q500_nprobe500": {
+  "recall": 0.8824,
+  "codes_scanned": 97851.926
+ },
+ "ceiling_nospill_q500_nprobe700": {
+  "recall": 0.9132,
+  "codes_scanned": 137768.546
+ },
+ "ceiling_nospill_q500_nprobe1000": {
+  "recall": 0.9414,
+  "codes_scanned": 197854.008
+ },
+ "ceiling_nospill_q500_nprobe1400": {
+  "recall": 0.9658,
+  "codes_scanned": 278519.624
+ },
+ "ceiling_spill_lam0.0_q1000_nprobe175": {
+  "recall": 0.8723,
+  "codes_scanned": 77882.068
+ },
+ "ceiling_spill_lam0.0_q1000_nprobe350": {
+  "recall": 0.932,
+  "codes_scanned": 155385.896
+ },
+ "ceiling_spill_lam0.0_q1000_nprobe500": {
+  "recall": 0.9558,
+  "codes_scanned": 221431.075
+ },
+ "ceiling_spill_lam0.0_q1000_nprobe700": {
+  "recall": 0.9698,
+  "codes_scanned": 308927.178
+ },
+ "ceiling_spill_lam0.0_q1000_nprobe1000": {
+  "recall": 0.9822,
+  "codes_scanned": 438472.9
+ },
+ "ceiling_spill_lam0.0_q1000_nprobe1400": {
+  "recall": 0.9905,
+  "codes_scanned": 608347.406
+ },
+ "ceiling_spill_lam0.0_q500_nprobe175": {
+  "recall": 0.8776,
+  "codes_scanned": 78022.606
+ },
+ "ceiling_spill_lam0.0_q500_nprobe350": {
+  "recall": 0.933,
+  "codes_scanned": 155545.718
+ },
+ "ceiling_spill_lam0.0_q500_nprobe500": {
+  "recall": 0.9554,
+  "codes_scanned": 221404.946
+ },
+ "ceiling_spill_lam0.0_q500_nprobe700": {
+  "recall": 0.97,
+  "codes_scanned": 308969.332
+ },
+ "ceiling_spill_lam0.0_q500_nprobe1000": {
+  "recall": 0.9836,
+  "codes_scanned": 438474.03
+ },
+ "ceiling_spill_lam0.0_q500_nprobe1400": {
+  "recall": 0.991,
+  "codes_scanned": 608598.886
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe175": {
+  "recall": 0.9025,
+  "codes_scanned": 68727.77
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe350": {
+  "recall": 0.952,
+  "codes_scanned": 138663.012
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe500": {
+  "recall": 0.9705,
+  "codes_scanned": 199305.098
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe700": {
+  "recall": 0.9835,
+  "codes_scanned": 280913.968
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe1000": {
+  "recall": 0.9921,
+  "codes_scanned": 404118.51
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe1400": {
+  "recall": 0.9963,
+  "codes_scanned": 568850.166
+ },
+ "ceiling_spill_lam1.0_q500_nprobe175": {
+  "recall": 0.9044,
+  "codes_scanned": 68779.988
+ },
+ "ceiling_spill_lam1.0_q500_nprobe350": {
+  "recall": 0.9514,
+  "codes_scanned": 138702.638
+ },
+ "ceiling_spill_lam1.0_q500_nprobe500": {
+  "recall": 0.969,
+  "codes_scanned": 199164.63
+ },
+ "ceiling_spill_lam1.0_q500_nprobe700": {
+  "recall": 0.9816,
+  "codes_scanned": 280852.528
+ },
+ "ceiling_spill_lam1.0_q500_nprobe1000": {
+  "recall": 0.9906,
+  "codes_scanned": 404058.936
+ },
+ "ceiling_spill_lam1.0_q500_nprobe1400": {
+  "recall": 0.9968,
+  "codes_scanned": 568961.566
+ },
+ "ceiling_spill_lam1.5_q1000_nprobe175": {
+  "recall": 0.9009,
+  "codes_scanned": 66032.29
+ },
+ "ceiling_spill_lam1.5_q1000_nprobe350": {
+  "recall": 0.9524,
+  "codes_scanned": 133550.911
+ },
+ "ceiling_spill_lam1.5_q1000_nprobe500": {
+  "recall": 0.971,
+  "codes_scanned": 192341.651
+ },
+ "ceiling_spill_lam1.5_q1000_nprobe700": {
+  "recall": 0.9837,
+  "codes_scanned": 271783.926
+ },
+ "ceiling_spill_lam1.5_q1000_nprobe1000": {
+  "recall": 0.9925,
+  "codes_scanned": 392366.984
+ },
+ "ceiling_spill_lam1.5_q1000_nprobe1400": {
+  "recall": 0.9965,
+  "codes_scanned": 554625.565
+ },
+ "ceiling_spill_lam1.5_q500_nprobe175": {
+  "recall": 0.9022,
+  "codes_scanned": 66086.492
+ },
+ "ceiling_spill_lam1.5_q500_nprobe350": {
+  "recall": 0.9524,
+  "codes_scanned": 133589.456
+ },
+ "ceiling_spill_lam1.5_q500_nprobe500": {
+  "recall": 0.9692,
+  "codes_scanned": 192205.332
+ },
+ "ceiling_spill_lam1.5_q500_nprobe700": {
+  "recall": 0.982,
+  "codes_scanned": 271721.056
+ },
+ "ceiling_spill_lam1.5_q500_nprobe1000": {
+  "recall": 0.9912,
+  "codes_scanned": 392315.05
+ },
+ "ceiling_spill_lam1.5_q500_nprobe1400": {
+  "recall": 0.9968,
+  "codes_scanned": 554732.164
+ },
+ "pq50_float_nospill_nprobe700": {
+  "recall": 0.9116000000000001,
+  "codes_scanned": 137768.546
+ },
+ "pq50_int8_nospill_nprobe700": {
+  "recall": 0.9117999999999999,
+  "codes_scanned": 137768.546
+ },
+ "pq50_float_nospill_nprobe1400": {
+  "recall": 0.9632000000000001,
+  "codes_scanned": 278519.624
+ },
+ "pq50_int8_nospill_nprobe1400": {
+  "recall": 0.9636,
+  "codes_scanned": 278519.624
+ },
+ "pq50_float_spill_lam1.0_nprobe700": {
+  "recall": 0.9794,
+  "codes_scanned": 280852.528
+ },
+ "pq50_int8_spill_lam1.0_nprobe700": {
+  "recall": 0.9796,
+  "codes_scanned": 280852.528
+ }
+}

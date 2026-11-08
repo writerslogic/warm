@@ -1,0 +1,77 @@
+{
+ "tag": "1000000_sample262144_raw",
+ "n": 1000000,
+ "lists": 5000,
+ "ceiling_nospill_q1000_nprobe350": {
+  "recall": 0.8377,
+  "codes_scanned": 68226.05
+ },
+ "ceiling_nospill_q1000_nprobe500": {
+  "recall": 0.8802,
+  "codes_scanned": 97879.003
+ },
+ "ceiling_nospill_q1000_nprobe700": {
+  "recall": 0.9115,
+  "codes_scanned": 137748.647
+ },
+ "ceiling_nospill_q500_nprobe350": {
+  "recall": 0.8416,
+  "codes_scanned": 68272.65
+ },
+ "ceiling_nospill_q500_nprobe500": {
+  "recall": 0.8824,
+  "codes_scanned": 97851.926
+ },
+ "ceiling_nospill_q500_nprobe700": {
+  "recall": 0.9132,
+  "codes_scanned": 137768.546
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe350": {
+  "recall": 0.952,
+  "codes_scanned": 138663.012
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe500": {
+  "recall": 0.9705,
+  "codes_scanned": 199305.098
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe700": {
+  "recall": 0.9835,
+  "codes_scanned": 280913.968
+ },
+ "ceiling_spill_lam1.0_q500_nprobe350": {
+  "recall": 0.9514,
+  "codes_scanned": 138702.638
+ },
+ "ceiling_spill_lam1.0_q500_nprobe500": {
+  "recall": 0.969,
+  "codes_scanned": 199164.63
+ },
+ "ceiling_spill_lam1.0_q500_nprobe700": {
+  "recall": 0.9816,
+  "codes_scanned": 280852.528
+ },
+ "pq50_float_spill_lam1.0_nprobe350": {
+  "recall": 0.945,
+  "codes_scanned": 138702.638
+ },
+ "pq50_int8_spill_lam1.0_nprobe350": {
+  "recall": 0.9446,
+  "codes_scanned": 138702.638
+ },
+ "pq50_float_spill_lam1.0_nprobe500": {
+  "recall": 0.9606,
+  "codes_scanned": 199164.63
+ },
+ "pq50_int8_spill_lam1.0_nprobe500": {
+  "recall": 0.9606,
+  "codes_scanned": 199164.63
+ },
+ "pq50_float_spill_lam1.0_nprobe700": {
+  "recall": 0.972,
+  "codes_scanned": 280852.528
+ },
+ "pq50_int8_spill_lam1.0_nprobe700": {
+  "recall": 0.9724,
+  "codes_scanned": 280852.528
+ }
+}
