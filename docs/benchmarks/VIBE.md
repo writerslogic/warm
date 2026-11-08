@@ -62,6 +62,8 @@ replace the default circle.
 
 ## Measured risk
 
+> **Superseded for the submission (2026-11-08).** This section measures the older 4-bit plain-graph diagnostic. The submitted grid (8-bit traversal, query-aware build on OOD sets) reaches 0.95 and 0.99 on laion and imagenet-align. See [Submission configuration check](#submission-configuration-check-2026-11-08).
+
 The [checked diagnostic](../../benchmarks/results/vibe_v1/summary.json) confirms
 a dataset-dependent loss with the current 4-bit configuration. These results
 use 100,000 indexed rows and 256 original queries, not the full datasets.
