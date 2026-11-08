@@ -74,6 +74,9 @@ pub struct PartitionParams {
     /// `retrain_sample` live rows (0 = a cold k-means as at the first training).
     pub retrain_warm_iters: usize,
     pub retrain_sample: usize,
+    /// Reseed near-empty centres onto the largest clusters between Lloyd iterations (in the
+    /// first training and in retrains), which restores balance after the data has moved.
+    pub kmeans_rebalance: bool,
     /// `(live rows, factor)` points, ascending in rows, scaling `nprobe` by the live size at
     /// each search (piecewise linear, flat outside the points). Empty = a constant `nprobe`.
     /// Lists shrink with the live set, so a small set can afford more probes per query.
@@ -106,6 +109,7 @@ impl Default for PartitionParams {
             retrain_min_inserts: 1_000_000,
             retrain_warm_iters: 0,
             retrain_sample: 262_144,
+            kmeans_rebalance: false,
             nprobe_by_live: Vec::new(),
             spill_eps: f32::INFINITY,
         }
@@ -436,12 +440,24 @@ fn nearest_all(rows: &[f32], dim: usize, centres: &[f32], c2: &[f32]) -> Vec<u32
 
 /// Lloyd k-means (`iters` iterations, random-row init, empty clusters reseeded from rows).
 fn kmeans(rows: &[f32], dim: usize, k: usize, iters: usize, rng: &mut SplitMix) -> Vec<f32> {
+    kmeans_with(rows, dim, k, iters, false, rng)
+}
+
+/// [`kmeans`] with optional rebalancing between iterations (see [`kmeans_from`]).
+fn kmeans_with(
+    rows: &[f32],
+    dim: usize,
+    k: usize,
+    iters: usize,
+    rebalance: bool,
+    rng: &mut SplitMix,
+) -> Vec<f32> {
     let n = rows.len() / dim;
     let mut c: Vec<f32> = Vec::with_capacity(k * dim);
     for &i in &sample_indices(n, k, rng) {
         c.extend_from_slice(&rows[i * dim..(i + 1) * dim]);
     }
-    kmeans_from(rows, dim, c, iters, rng)
+    kmeans_from(rows, dim, c, iters, rebalance, rng)
 }
 
 /// Lloyd iterations from the given `k` centres.
@@ -450,11 +466,12 @@ fn kmeans_from(
     dim: usize,
     mut c: Vec<f32>,
     iters: usize,
+    rebalance: bool,
     rng: &mut SplitMix,
 ) -> Vec<f32> {
     let n = rows.len() / dim;
     let k = c.len() / dim;
-    for _ in 0..iters {
+    for it in 0..iters {
         let c2: Vec<f32> = c.chunks(dim).map(|r| dot(r, r)).collect();
         let a = nearest_all(rows, dim, &c, &c2);
         let mut sums = vec![0f64; k * dim];
@@ -478,8 +495,61 @@ fn kmeans_from(
                 c[j * dim..(j + 1) * dim].copy_from_slice(&rows[r * dim..(r + 1) * dim]);
             }
         }
+        if rebalance && it + 1 < iters {
+            reseed_light(rows, dim, &a, &counts, &mut c, rng);
+        }
     }
     c
+}
+
+/// Moves centres that own under a quarter of the mean cluster size onto random members of the
+/// clusters above twice the mean, so the next Lloyd step splits the heavy clusters. Centres that
+/// drifted away from the data (a stale set after the live distribution moved) keep no capacity
+/// otherwise: Lloyd steps only move a centre to the mean of what it already owns.
+fn reseed_light(
+    rows: &[f32],
+    dim: usize,
+    a: &[u32],
+    counts: &[usize],
+    c: &mut [f32],
+    rng: &mut SplitMix,
+) {
+    let n = a.len();
+    let k = counts.len();
+    let mean = n as f64 / k as f64;
+    let light: Vec<usize> = (0..k)
+        .filter(|&j| (counts[j] as f64) < mean / 4.0)
+        .collect();
+    let mut heavy: Vec<usize> = (0..k).filter(|&j| counts[j] as f64 > 2.0 * mean).collect();
+    if light.is_empty() || heavy.is_empty() {
+        return;
+    }
+    heavy.sort_unstable_by_key(|&j| std::cmp::Reverse(counts[j]));
+    let mut slot = vec![u32::MAX; k];
+    for (hi, &j) in heavy.iter().enumerate() {
+        slot[j] = hi as u32;
+    }
+    let mut members: Vec<Vec<u32>> = vec![Vec::new(); heavy.len()];
+    for (i, &ai) in a.iter().enumerate() {
+        let s = slot[ai as usize];
+        if s != u32::MAX {
+            members[s as usize].push(i as u32);
+        }
+    }
+    // Heavy clusters receive reseeded centres in proportion to their excess over the mean.
+    let excess: Vec<f64> = heavy.iter().map(|&j| counts[j] as f64 - mean).collect();
+    let total: f64 = excess.iter().sum();
+    for (li, &j) in light.iter().enumerate() {
+        let mut t = (li as f64 + 0.5) / light.len() as f64 * total;
+        let mut hi = 0;
+        while hi + 1 < heavy.len() && t > excess[hi] {
+            t -= excess[hi];
+            hi += 1;
+        }
+        let m = &members[hi];
+        let r = m[(rng.next() % m.len() as u64) as usize] as usize;
+        c[j * dim..(j + 1) * dim].copy_from_slice(&rows[r * dim..(r + 1) * dim]);
+    }
 }
 
 /// `k` distinct indices below `n` (partial Fisher-Yates).
@@ -948,12 +1018,20 @@ impl PartitionTier {
                         dim,
                         old.centres.clone(),
                         p.retrain_warm_iters,
+                        p.kmeans_rebalance,
                         &mut rng,
                     )
                 }
                 _ => {
                     let sample = gather(&sample_indices(live.len(), p.train_sample, &mut rng));
-                    kmeans(&sample, dim, p.lists, p.kmeans_iters, &mut rng)
+                    kmeans_with(
+                        &sample,
+                        dim,
+                        p.lists,
+                        p.kmeans_iters,
+                        p.kmeans_rebalance,
+                        &mut rng,
+                    )
                 }
             },
         };
@@ -1740,6 +1818,37 @@ mod tests {
         assert_eq!(recall(&t.search_exact(&q, k), &want), 1.0);
     }
 
+    /// Starting from centres that sit on a small part of the data (a stale set), a few Lloyd
+    /// iterations with rebalancing give clusters that are more even than without it.
+    #[test]
+    fn rebalancing_kmeans_evens_out_stale_centres() {
+        let (n, dim, k) = (6000, 8, 40);
+        let x = data(n, dim, 8, 5);
+        let mut order: Vec<usize> = (0..n).collect();
+        order.sort_by(|&i, &j| x[i * dim].total_cmp(&x[j * dim]));
+        let stale: Vec<f32> = order[..k]
+            .iter()
+            .flat_map(|&i| x[i * dim..(i + 1) * dim].to_vec())
+            .collect();
+        let spread = |c: &[f32]| -> f64 {
+            let c2: Vec<f32> = c.chunks(dim).map(|r| dot(r, r)).collect();
+            let a = nearest_all(&x, dim, c, &c2);
+            let mut counts = vec![0f64; k];
+            for &ai in &a {
+                counts[ai as usize] += 1.0;
+            }
+            counts.iter().map(|v| v * v).sum::<f64>() * k as f64 / (n as f64 * n as f64)
+        };
+        let plain = kmeans_from(&x, dim, stale.clone(), 3, false, &mut SplitMix(1));
+        let even = kmeans_from(&x, dim, stale, 3, true, &mut SplitMix(1));
+        assert!(
+            spread(&even) < spread(&plain),
+            "{} vs {}",
+            spread(&even),
+            spread(&plain)
+        );
+    }
+
     #[test]
     fn nprobe_scales_piecewise_linearly_with_live_size() {
         let dim = 4;
@@ -2010,11 +2119,13 @@ mod tests {
                 for &i in &idx {
                     sample.extend_from_slice(&rows[i * dim..(i + 1) * dim]);
                 }
-                let stale = kmeans(
+                let rebal = envn("REBAL") == Some(1);
+                let stale = kmeans_with(
                     &sample,
                     dim,
                     lists,
                     envn("KM_ITERS").unwrap_or(defaults.kmeans_iters),
+                    rebal,
                     &mut rng,
                 );
                 if let Some(wi) = envn("WARM_ITERS") {
@@ -2028,7 +2139,7 @@ mod tests {
                     for &i in &idx {
                         ws.extend_from_slice(&base[i * dim..(i + 1) * dim]);
                     }
-                    Some(kmeans_from(&ws, dim, stale, wi, &mut rng))
+                    Some(kmeans_from(&ws, dim, stale, wi, rebal, &mut rng))
                 } else {
                     Some(stale)
                 }
@@ -2044,6 +2155,8 @@ mod tests {
                 train_sample: envn("TRAIN_SAMPLE").unwrap_or(defaults.train_sample),
                 kmeans_iters: envn("KM_ITERS").unwrap_or(defaults.kmeans_iters),
                 spill_k: envn("SPILLK").unwrap_or(defaults.spill_k),
+                seed: envn("SEED").map_or(defaults.seed, |v| v as u64),
+                kmeans_rebalance: envn("REBAL") == Some(1),
                 spill_eps: crate::compatibility::var("WARM_L22_ACC_SPILLEPS")
                     .map_or(f32::INFINITY, |v| v.trim().parse().unwrap()),
                 soar_lambda: crate::compatibility::var("WARM_L22_ACC_LAMBDA")
