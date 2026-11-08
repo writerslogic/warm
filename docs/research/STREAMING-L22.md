@@ -164,3 +164,21 @@ PartitionTier search profile and live sweep (`bench_run8` to `bench_run11`, 10k 
   - Searches below 3M live may have lower recall.
   - The stream has not been run end to end; test B does that at nprobe 250.
   - Dynamic thread scheduling (imbalance 0.1-0.4 s per step) and multi-query blocking (the scan rate) are held in reserve.
+
+Test B, the full stream through the harness (`results/testb_run1`, `testb/`) [M]:
+- **Setup.** The `PartitionIndex` binding (features `python,experimental`) was driven by the PR 357 adapter with `testb/partition-mode.patch`, selected by `WARM_MODE=partition`.
+  - Parameters: nprobe 250, reorder 317, 5,000 lists, train_at 1M.
+  - It ran the stage-0 command (`run.py --nodocker`, streaming track, msturing-30M-clustered, final_runbook) on wl-03 cpus 0-7 in an 8 GiB scope with no swap.
+- **Run.** Valid: 1,280 steps, exit 0, 640 searches.
+  - The tier trained at search 16 with 1,239,816 rows live, as specified.
+  - The 15 searches before it ran brute force at recall 1.0.
+- **Recall@10.** The mean over 640 searches is 0.9651, against 0.8768 for the pinned graph entry on the same host and harness. The lowest post-train search is 0.944.
+  - Means over 80-search bins run 0.958-0.972, with no downward trend, so the fixed op-32 centres did not drift into a recall loss.
+- **Time and memory.** Wall time, as the sum of step seconds, is 2,276 s: search 2,105, insert 141, delete 30. Peak RSS is 6.45 GiB. Every registered gate passed.
+- **Against the 2,573 s projection.**
+  - Post-train partition search took 1,865 s, against 2,088 s projected.
+  - Non-search work took 205 s, against 485 s.
+  - Harness overhead, not projected, was about 206 s.
+- **Scope.** This is one run on wl-03 (Core Ultra 9 185H, 8 threads on 4 P-cores). It is not the board's evaluation VM.
+  - The board configuration selects partition mode from a `config.yaml` key (`testb/partition-mode-config.patch`). It needs its own run on a public commit before any submission claim.
+

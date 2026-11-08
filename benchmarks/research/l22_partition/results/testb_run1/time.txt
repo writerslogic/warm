@@ -1,0 +1,23 @@
+	Command being timed: "/home/davidcondrey/bigann/s2/venv/bin/python -u run.py --nodocker --neurips23track streaming --algorithm warm --dataset msturing-30M-clustered --runbook_path neurips23/runbooks/final_runbook.yaml"
+	User time (seconds): 16646.44
+	System time (seconds): 77.39
+	Percent of CPU this job got: 734%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 37:57.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6764224
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 391
+	Minor (reclaiming a frame) page faults: 35900211
+	Voluntary context switches: 184146
+	Involuntary context switches: 36677
+	Swaps: 0
+	File system inputs: 30907560
+	File system outputs: 507760
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
