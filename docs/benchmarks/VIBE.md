@@ -183,6 +183,57 @@ default-circle coverage remains unmeasured.
 All tested graphs use pruning alpha=1.0; this does not establish the optimum
 construction setting or a general connectivity repair for production.
 
+## Submission configuration check, 2026-11-08
+
+The "Measured risk" 4-bit ceiling is not the configuration submitted to VIBE. The adapter grid in
+[`config.yml`](../../benchmarks/vibe/warm/config.yml) already uses 8-bit traversal codes, `build_ef` 500,
+degrees 32/48/64/96 and, on out-of-distribution sets, the query-aware build. Recommendation: **keep it
+unchanged.** No rotation, sink-edge or grid change was found to be needed for the 0.95 and 0.99 targets.
+
+Full scale, 1,000,000 rows, 1,000 queries, submission grid, pin `af8d4017` on Modal. Recall is
+recomputed from the runner's result files with VIBE's own rule by
+[`score_modal_results.py`](../../benchmarks/vibe/score_modal_results.py). Only builds that completed
+before the pin run was stopped exist (laion d32/d48/d64, imagenet-align d64/d96):
+
+| Dataset | Max recall | QPS at 0.95 | QPS at 0.99 | 1.00 |
+|---|---|---:|---:|---|
+| laion-clip-512 | 0.99768 (d64) | 2,224 | 916 | not reached |
+| imagenet-align-640 | 0.99903 (d96) | 2,678 | 1,476 | not reached |
+| yandex-200 | | 4,696 | 2,169 | not recorded |
+| yi-128-ip | | 5,672 | 1,982 | not recorded |
+| llama-128-ip | | 5,087 | 2,499 | not recorded |
+
+QPS is the Modal runner's best of five on contended Zen 3/4 hosts, not comparable with published
+numbers. Raw scores: [`vibe_ood_local_v1`](../../benchmarks/results/vibe_ood_local_v1/).
+
+The 100,000-row laion diagnostic (256 queries) was repeated with the same wheel family through the
+real adapter ([`ood_local.py`](../../benchmarks/vibe/ood_local.py), arms interleaved, three repeats).
+Every arm reaches 0.95 and 0.99, so the earlier 0.9317 ceiling does not reproduce on the current
+engine, including 4-bit plain at degree 64 (0.9541 at ef 200 / rerank 400). The cause of the difference
+was not bisected. Best median QPS at the first configuration reaching each target on the registered grid:
+
+| laion 100k arm (degree 64 unless noted) | 0.95 | 0.99 |
+|---|---:|---:|
+| 4-bit, plain graph | 1,062 | 662 |
+| 4-bit, query-aware | 866 | 625 |
+| 8-bit, plain graph | 1,786 | 757 |
+| 8-bit, query-aware (submitted) | 2,084 | 1,197 |
+| 8-bit, query-aware, degree 32 / 96 | 1,746 / 1,844 | 955 / 1,197 |
+
+A wheel rebuilt from main `e29b62fc` reproduces all 272 recalls (four arms, 68 configurations) bit for bit; on a
+quieter host the submitted arm is 1.41x the 4-bit plain arm at 0.95 (5,262 vs 3,740 QPS) and 1.87x at 0.99
+(3,582 vs 1,912). The table above is the first run; its host was shared (load average 40 to 130), so only ratios are meaningful, and identical work varied
+by up to 1.25x; the 1.8x to 2.0x gap between the submitted arm and the 4-bit plain arm exceeds that, the
+differences among 8-bit arms do not. In-distribution control (glove-200, plain graph, 100k rows): 8-bit
+and 4-bit traversal differ by at most 1.2x with mixed sign at degrees 64 and 96, and degree 32 never
+reaches 0.99, so none of the four degrees should be dropped. glove-200 at 1,000,000 rows does not
+reach 0.99 on the same grid (best 0.9540 at 0.95), so 100k results do not transfer for that set.
+
+Unmeasured: the 1.00 target (the best arm leaves one of 25,600 results unmatched at 100k, even at ef 2000 /
+rerank 1000, which points to graph reachability rather than traversal precision; sink-escape edges are
+the only measured fix and are not exposed by the Python binding), laion d96 and hotpotqa-harrier,
+cqadupstack-lemur/muvera at scale, and all x86 timings on a quiet host.
+
 ## Measurement protocol
 
 The first diagnostic uses pinned VIBE files at dataset revision
