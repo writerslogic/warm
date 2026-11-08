@@ -1,0 +1,108 @@
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=175 recall=0.7494 codes_scanned=33926
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=350 recall=0.8377 codes_scanned=68226
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=500 recall=0.8802 codes_scanned=97879
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=700 recall=0.9115 codes_scanned=137749
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=1000 recall=0.9406 codes_scanned=197853
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=1400 recall=0.9650 codes_scanned=278412
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=175 recall=0.7596 codes_scanned=33976
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=350 recall=0.8416 codes_scanned=68273
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=500 recall=0.8824 codes_scanned=97852
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=700 recall=0.9132 codes_scanned=137769
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=1000 recall=0.9414 codes_scanned=197854
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=1400 recall=0.9658 codes_scanned=278520
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=175 recall=0.8723 codes_scanned=77882
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=350 recall=0.9320 codes_scanned=155386
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=500 recall=0.9558 codes_scanned=221431
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=700 recall=0.9698 codes_scanned=308927
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=1000 recall=0.9822 codes_scanned=438473
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=1400 recall=0.9905 codes_scanned=608347
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=175 recall=0.8776 codes_scanned=78023
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=350 recall=0.9330 codes_scanned=155546
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=500 recall=0.9554 codes_scanned=221405
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=700 recall=0.9700 codes_scanned=308969
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=1000 recall=0.9836 codes_scanned=438474
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=1400 recall=0.9910 codes_scanned=608599
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=175 recall=0.9025 codes_scanned=68728
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=350 recall=0.9520 codes_scanned=138663
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=500 recall=0.9705 codes_scanned=199305
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=700 recall=0.9835 codes_scanned=280914
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=1000 recall=0.9921 codes_scanned=404119
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=1400 recall=0.9963 codes_scanned=568850
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=175 recall=0.9044 codes_scanned=68780
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=350 recall=0.9514 codes_scanned=138703
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=500 recall=0.9690 codes_scanned=199165
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=700 recall=0.9816 codes_scanned=280853
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=1000 recall=0.9906 codes_scanned=404059
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=1400 recall=0.9968 codes_scanned=568962
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=175 recall=0.9009 codes_scanned=66032
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=350 recall=0.9524 codes_scanned=133551
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=500 recall=0.9710 codes_scanned=192342
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=700 recall=0.9837 codes_scanned=271784
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=1000 recall=0.9925 codes_scanned=392367
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=1400 recall=0.9965 codes_scanned=554626
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=175 recall=0.9022 codes_scanned=66086
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=350 recall=0.9524 codes_scanned=133589
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=500 recall=0.9692 codes_scanned=192205
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=700 recall=0.9820 codes_scanned=271721
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=1000 recall=0.9912 codes_scanned=392315
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=1400 recall=0.9968 codes_scanned=554732
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_nospill nq=q500 nprobe=700 reorder=317 recall=0.9116 codes_scanned=137769
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_nospill nq=q500 nprobe=700 reorder=317 recall=0.9118 codes_scanned=137769
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9632 codes_scanned=278520
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9636 codes_scanned=278520
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9794 codes_scanned=280853
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9796 codes_scanned=280853
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=175 recall=0.8006 codes_scanned=103351
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=350 recall=0.8736 codes_scanned=207848
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=500 recall=0.9078 codes_scanned=298122
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=700 recall=0.9333 codes_scanned=419117
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=1000 recall=0.9583 codes_scanned=601529
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=1400 recall=0.9767 codes_scanned=844187
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=175 recall=0.8024 codes_scanned=103429
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=350 recall=0.8734 codes_scanned=208342
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=500 recall=0.9050 codes_scanned=298597
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=700 recall=0.9298 codes_scanned=419645
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=1000 recall=0.9542 codes_scanned=601832
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=1400 recall=0.9736 codes_scanned=844211
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=175 recall=0.9083 codes_scanned=235398
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=350 recall=0.9528 codes_scanned=469103
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=500 recall=0.9708 codes_scanned=667808
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=700 recall=0.9828 codes_scanned=930680
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=1000 recall=0.9899 codes_scanned=1321503
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q1000 nprobe=1400 recall=0.9949 codes_scanned=1832457
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=175 recall=0.9082 codes_scanned=235628
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=350 recall=0.9528 codes_scanned=470037
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=500 recall=0.9694 codes_scanned=668512
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=700 recall=0.9798 codes_scanned=931253
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=1000 recall=0.9882 codes_scanned=1321020
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam0.0 nq=q500 nprobe=1400 recall=0.9934 codes_scanned=1830976
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=175 recall=0.9311 codes_scanned=204097
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=350 recall=0.9719 codes_scanned=412361
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=500 recall=0.9838 codes_scanned=592934
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=700 recall=0.9917 codes_scanned=835821
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=1000 recall=0.9961 codes_scanned=1202961
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=1400 recall=0.9980 codes_scanned=1692141
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=175 recall=0.9308 codes_scanned=204142
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=350 recall=0.9700 codes_scanned=413269
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=500 recall=0.9820 codes_scanned=593988
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=700 recall=0.9902 codes_scanned=837174
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=1000 recall=0.9946 codes_scanned=1203803
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=1400 recall=0.9970 codes_scanned=1692179
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=175 recall=0.9304 codes_scanned=195108
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=350 recall=0.9722 codes_scanned=395399
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=500 recall=0.9846 codes_scanned=569853
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=700 recall=0.9919 codes_scanned=805566
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=1000 recall=0.9965 codes_scanned=1163632
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q1000 nprobe=1400 recall=0.9983 codes_scanned=1643569
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=175 recall=0.9290 codes_scanned=195166
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=350 recall=0.9694 codes_scanned=396374
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=500 recall=0.9822 codes_scanned=571112
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=700 recall=0.9902 codes_scanned=807264
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=1000 recall=0.9948 codes_scanned=1164992
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.5 nq=q500 nprobe=1400 recall=0.9974 codes_scanned=1644198
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_nospill nq=q500 nprobe=700 reorder=317 recall=0.9284 codes_scanned=419645
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_nospill nq=q500 nprobe=700 reorder=317 recall=0.9284 codes_scanned=419645
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9714 codes_scanned=844211
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9714 codes_scanned=844211
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9894 codes_scanned=837174
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9894 codes_scanned=837174

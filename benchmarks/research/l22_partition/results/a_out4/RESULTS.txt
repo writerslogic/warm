@@ -1,0 +1,80 @@
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=350 recall=0.8377 codes_scanned=68226
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=500 recall=0.8802 codes_scanned=97879
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q1000 nprobe=700 recall=0.9115 codes_scanned=137749
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=350 recall=0.8416 codes_scanned=68273
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=500 recall=0.8824 codes_scanned=97852
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_nospill nq=q500 nprobe=700 recall=0.9132 codes_scanned=137769
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=350 recall=0.9520 codes_scanned=138663
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=500 recall=0.9705 codes_scanned=199305
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=700 recall=0.9835 codes_scanned=280914
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=350 recall=0.9514 codes_scanned=138703
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=500 recall=0.9690 codes_scanned=199165
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=700 recall=0.9816 codes_scanned=280853
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_nospill nq=q500 nprobe=700 reorder=317 recall=0.9116 codes_scanned=137769
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_nospill nq=q500 nprobe=700 reorder=317 recall=0.9118 codes_scanned=137769
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9632 codes_scanned=278520
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9636 codes_scanned=278520
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9494 codes_scanned=138703
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9494 codes_scanned=138703
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9668 codes_scanned=199165
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9668 codes_scanned=199165
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9794 codes_scanned=280853
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9796 codes_scanned=280853
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_nospill nq=q1000 nprobe=350 recall=0.8377 codes_scanned=68226
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_nospill nq=q1000 nprobe=500 recall=0.8802 codes_scanned=97879
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_nospill nq=q1000 nprobe=700 recall=0.9115 codes_scanned=137749
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_nospill nq=q500 nprobe=350 recall=0.8416 codes_scanned=68273
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_nospill nq=q500 nprobe=500 recall=0.8824 codes_scanned=97852
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_nospill nq=q500 nprobe=700 recall=0.9132 codes_scanned=137769
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=350 recall=0.9520 codes_scanned=138663
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=500 recall=0.9705 codes_scanned=199305
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=700 recall=0.9835 codes_scanned=280914
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=350 recall=0.9514 codes_scanned=138703
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=500 recall=0.9690 codes_scanned=199165
+RESULT tag=1000000_sample262144_raw n=1000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=700 recall=0.9816 codes_scanned=280853
+RESULT tag=1000000_sample262144_raw n=1000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9450 codes_scanned=138703
+RESULT tag=1000000_sample262144_raw n=1000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9446 codes_scanned=138703
+RESULT tag=1000000_sample262144_raw n=1000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9606 codes_scanned=199165
+RESULT tag=1000000_sample262144_raw n=1000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9606 codes_scanned=199165
+RESULT tag=1000000_sample262144_raw n=1000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9720 codes_scanned=280853
+RESULT tag=1000000_sample262144_raw n=1000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9724 codes_scanned=280853
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=350 recall=0.8736 codes_scanned=207848
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=500 recall=0.9078 codes_scanned=298122
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q1000 nprobe=700 recall=0.9333 codes_scanned=419117
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=350 recall=0.8734 codes_scanned=208342
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=500 recall=0.9050 codes_scanned=298597
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_nospill nq=q500 nprobe=700 recall=0.9298 codes_scanned=419645
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=350 recall=0.9719 codes_scanned=412361
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=500 recall=0.9838 codes_scanned=592934
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=700 recall=0.9917 codes_scanned=835821
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=350 recall=0.9700 codes_scanned=413269
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=500 recall=0.9820 codes_scanned=593988
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=700 recall=0.9902 codes_scanned=837174
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_nospill nq=q500 nprobe=700 reorder=317 recall=0.9284 codes_scanned=419645
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_nospill nq=q500 nprobe=700 reorder=317 recall=0.9284 codes_scanned=419645
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9714 codes_scanned=844211
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_nospill nq=q500 nprobe=1400 reorder=317 recall=0.9714 codes_scanned=844211
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9694 codes_scanned=413269
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9696 codes_scanned=413269
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9812 codes_scanned=593988
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9812 codes_scanned=593988
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9894 codes_scanned=837174
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9894 codes_scanned=837174
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_nospill nq=q1000 nprobe=350 recall=0.8736 codes_scanned=207848
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_nospill nq=q1000 nprobe=500 recall=0.9078 codes_scanned=298122
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_nospill nq=q1000 nprobe=700 recall=0.9333 codes_scanned=419117
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_nospill nq=q500 nprobe=350 recall=0.8734 codes_scanned=208342
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_nospill nq=q500 nprobe=500 recall=0.9050 codes_scanned=298597
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_nospill nq=q500 nprobe=700 recall=0.9298 codes_scanned=419645
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=350 recall=0.9719 codes_scanned=412361
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=500 recall=0.9838 codes_scanned=592934
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_spill_lam1.0 nq=q1000 nprobe=700 recall=0.9917 codes_scanned=835821
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=350 recall=0.9700 codes_scanned=413269
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=500 recall=0.9820 codes_scanned=593988
+RESULT tag=3000000_sample262144_raw n=3000000 arm=ceiling_spill_lam1.0 nq=q500 nprobe=700 recall=0.9902 codes_scanned=837174
+RESULT tag=3000000_sample262144_raw n=3000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9616 codes_scanned=413269
+RESULT tag=3000000_sample262144_raw n=3000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=350 reorder=317 recall=0.9616 codes_scanned=413269
+RESULT tag=3000000_sample262144_raw n=3000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9730 codes_scanned=593988
+RESULT tag=3000000_sample262144_raw n=3000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=500 reorder=317 recall=0.9724 codes_scanned=593988
+RESULT tag=3000000_sample262144_raw n=3000000 arm=pq50_float_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9804 codes_scanned=837174
+RESULT tag=3000000_sample262144_raw n=3000000 arm=pq50_int8_spill_lam1.0 nq=q500 nprobe=700 reorder=317 recall=0.9800 codes_scanned=837174

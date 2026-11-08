@@ -1,0 +1,18 @@
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling nprobe=350 recall=0.8377
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling nprobe=700 recall=0.9115
+RESULT tag=1000000_sample262144 n=1000000 arm=ceiling nprobe=1400 recall=0.9650
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_float nprobe=700 reorder=317 nq=500 recall=0.9126
+RESULT tag=1000000_sample262144 n=1000000 arm=pq50_int8 nprobe=700 reorder=317 nq=500 recall=0.4714
+RESULT tag=1000000_sample262144 n=1000000 arm=grid100_int8 nprobe=700 reorder=317 nq=500 recall=0.4266
+RESULT tag=3000000_prefix1000000 n=3000000 arm=ceiling nprobe=350 recall=0.8574
+RESULT tag=3000000_prefix1000000 n=3000000 arm=ceiling nprobe=700 recall=0.9225
+RESULT tag=3000000_prefix1000000 n=3000000 arm=ceiling nprobe=1400 recall=0.9708
+RESULT tag=3000000_prefix1000000 n=3000000 arm=pq50_float nprobe=700 reorder=317 nq=500 recall=0.9128
+RESULT tag=3000000_prefix1000000 n=3000000 arm=pq50_int8 nprobe=700 reorder=317 nq=500 recall=0.5198
+RESULT tag=3000000_prefix1000000 n=3000000 arm=grid100_int8 nprobe=700 reorder=317 nq=500 recall=0.5434
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling nprobe=350 recall=0.8736
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling nprobe=700 recall=0.9333
+RESULT tag=3000000_sample262144 n=3000000 arm=ceiling nprobe=1400 recall=0.9767
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_float nprobe=700 reorder=317 nq=500 recall=0.9280
+RESULT tag=3000000_sample262144 n=3000000 arm=pq50_int8 nprobe=700 reorder=317 nq=500 recall=0.4698
+RESULT tag=3000000_sample262144 n=3000000 arm=grid100_int8 nprobe=700 reorder=317 nq=500 recall=0.4998

@@ -1,0 +1,1 @@
+{"n": 3000000, "nq": 500, "insert_rows_s": 0.580, "train_place_s": 14.095, "recall_np350": 0.9676, "search_np350_s": 0.144, "recall_np700": 0.9880, "search_np700_s": 0.246}

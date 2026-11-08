@@ -1,0 +1,93 @@
+{
+ "tag": "3000000_sample262144",
+ "n": 3000000,
+ "lists": 5000,
+ "ceiling_nospill_q1000_nprobe350": {
+  "recall": 0.8736,
+  "codes_scanned": 207847.765
+ },
+ "ceiling_nospill_q1000_nprobe500": {
+  "recall": 0.9078,
+  "codes_scanned": 298122.146
+ },
+ "ceiling_nospill_q1000_nprobe700": {
+  "recall": 0.9333,
+  "codes_scanned": 419116.804
+ },
+ "ceiling_nospill_q500_nprobe350": {
+  "recall": 0.8734,
+  "codes_scanned": 208342.068
+ },
+ "ceiling_nospill_q500_nprobe500": {
+  "recall": 0.905,
+  "codes_scanned": 298597.422
+ },
+ "ceiling_nospill_q500_nprobe700": {
+  "recall": 0.9298,
+  "codes_scanned": 419644.95
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe350": {
+  "recall": 0.9719,
+  "codes_scanned": 412361.128
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe500": {
+  "recall": 0.9838,
+  "codes_scanned": 592934.207
+ },
+ "ceiling_spill_lam1.0_q1000_nprobe700": {
+  "recall": 0.9917,
+  "codes_scanned": 835821.259
+ },
+ "ceiling_spill_lam1.0_q500_nprobe350": {
+  "recall": 0.97,
+  "codes_scanned": 413268.864
+ },
+ "ceiling_spill_lam1.0_q500_nprobe500": {
+  "recall": 0.982,
+  "codes_scanned": 593987.65
+ },
+ "ceiling_spill_lam1.0_q500_nprobe700": {
+  "recall": 0.9902,
+  "codes_scanned": 837174.168
+ },
+ "pq50_float_nospill_nprobe700": {
+  "recall": 0.9284000000000001,
+  "codes_scanned": 419644.95
+ },
+ "pq50_int8_nospill_nprobe700": {
+  "recall": 0.9284000000000001,
+  "codes_scanned": 419644.95
+ },
+ "pq50_float_nospill_nprobe1400": {
+  "recall": 0.9714,
+  "codes_scanned": 844211.176
+ },
+ "pq50_int8_nospill_nprobe1400": {
+  "recall": 0.9714,
+  "codes_scanned": 844211.176
+ },
+ "pq50_float_spill_lam1.0_nprobe350": {
+  "recall": 0.9694,
+  "codes_scanned": 413268.864
+ },
+ "pq50_int8_spill_lam1.0_nprobe350": {
+  "recall": 0.9696,
+  "codes_scanned": 413268.864
+ },
+ "pq50_float_spill_lam1.0_nprobe500": {
+  "recall": 0.9812000000000001,
+  "codes_scanned": 593987.65
+ },
+ "pq50_int8_spill_lam1.0_nprobe500": {
+  "recall": 0.9812000000000001,
+  "codes_scanned": 593987.65
+ },
+ "pq50_float_spill_lam1.0_nprobe700": {
+  "recall": 0.9894000000000001,
+  "codes_scanned": 837174.168
+ },
+ "pq50_int8_spill_lam1.0_nprobe700": {
+  "recall": 0.9894000000000001,
+  "codes_scanned": 837174.168
+ }
+}

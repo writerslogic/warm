@@ -1,0 +1,1 @@
+{"n": 3000000, "nq": 500, "insert_rows_s": 0.503, "train_place_s": 13.767, "recall_np350": 0.9676, "search_np350_s": 2.262, "profile_np350": {"centres": 0.051, "route": 0.022, "scan": 2.078, "reorder": 0.170, "total": 2.257}, "recall_np700": 0.9880, "search_np700_s": 4.101, "profile_np700": {"centres": 0.050, "route": 0.035, "scan": 3.898, "reorder": 0.144, "total": 4.096}}

@@ -1,0 +1,11 @@
+{
+ "train_kmeans_s": 38.11588668823242,
+ "train_assign_live_s": 55.20195174217224,
+ "insert_nearest_1M_s": 12.609551906585693,
+ "insert_spill_1M_s": 34.97907066345215,
+ "insert_run_s_projected": 1427.6031887672186,
+ "bruteforce_step_at_op32_s": 141.24747514724731,
+ "bruteforce_pretrain_s_projected": 539.2474874068344,
+ "deletes_s_assumed": 30.0,
+ "nonsearch_total_s": 2090.1685146044574
+}
