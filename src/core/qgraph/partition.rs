@@ -74,9 +74,11 @@ pub struct PartitionParams {
     /// `retrain_sample` live rows (0 = a cold k-means as at the first training).
     pub retrain_warm_iters: usize,
     pub retrain_sample: usize,
-    /// A warm retrain re-places each row among the `retrain_route` new centres nearest its old
-    /// primary centre instead of among all of them (0 = all, exact).
-    pub retrain_route: usize,
+    /// Coarse routing of row placement: a row is scored against the `route_cands` centres
+    /// nearest its nearest of `route_lists` super-centres instead of against all of them
+    /// (0 = all, exact). Applies to inserts and to the re-placement in a retrain.
+    pub route_cands: usize,
+    pub route_lists: usize,
     /// Reseed near-empty centres onto the largest clusters between Lloyd iterations (in the
     /// first training and in retrains), which restores balance after the data has moved.
     pub kmeans_rebalance: bool,
@@ -112,7 +114,8 @@ impl Default for PartitionParams {
             retrain_min_inserts: 1_000_000,
             retrain_warm_iters: 0,
             retrain_sample: 262_144,
-            retrain_route: 0,
+            route_cands: 0,
+            route_lists: 64,
             kmeans_rebalance: false,
             nprobe_by_live: Vec::new(),
             spill_eps: f32::INFINITY,
@@ -150,6 +153,15 @@ struct Trained {
     lists: Vec<List>,
     /// Per slot: (list, position) of the primary and spill memberships; `u32::MAX` = none.
     loc: Vec<[(u32, u32); 2]>,
+    coarse: Option<Coarse>,
+}
+
+/// Super-centres over the list centres and, for each, the nearest list centres.
+struct Coarse {
+    supers: Vec<f32>,
+    s2: Vec<f32>,
+    cands: Vec<u32>,
+    r: usize,
 }
 
 /// Wall seconds of the phases of the last partition search (max over threads for the
@@ -713,6 +725,9 @@ impl Trained {
 
     /// Nearest list and SOAR spill list for each row of `x` (`b` rows).
     fn assign(&self, x: &[f32], dim: usize, k: usize, lambda: f32, eps: f32) -> Vec<(u32, u32)> {
+        if let Some(c) = &self.coarse {
+            return self.assign_coarse(c, x, dim, k, lambda, eps);
+        }
         let l = self.lists_len();
         let mut out = vec![(0u32, 0u32); x.len() / dim];
         out.par_chunks_mut(ROWS)
@@ -743,46 +758,100 @@ impl Trained {
         out
     }
 
-    /// `assign` restricted to candidate centres: rows `units[u].1..units[u].2` of `x` are scored
-    /// against the `r` centres `cands[units[u].0 * r..][..r]` only.
+    /// `assign` restricted to the candidate centres of each row's nearest super-centre.
     #[allow(clippy::too_many_arguments)]
-    fn assign_routed(
+    fn assign_coarse(
         &self,
+        c: &Coarse,
         x: &[f32],
         dim: usize,
         k: usize,
         lambda: f32,
         eps: f32,
-        units: &[(usize, usize, usize)],
-        cands: &[u32],
-        r: usize,
     ) -> Vec<(u32, u32)> {
+        let (n, ns, r) = (x.len() / dim, c.s2.len(), c.r);
+        let mut sup = vec![0u32; n];
+        sup.par_chunks_mut(ROWS)
+            .zip(x.par_chunks(ROWS * dim))
+            .for_each(|(so, xb)| {
+                let b = so.len();
+                let mut xc = vec![0f32; b * ns];
+                gemm_nt(xb, b, &c.supers, ns, dim, &mut xc);
+                for (i, o) in so.iter_mut().enumerate() {
+                    let best = xc[i * ns..(i + 1) * ns]
+                        .iter()
+                        .zip(&c.s2)
+                        .map(|(&v, &s)| s - 2.0 * v)
+                        .enumerate()
+                        .min_by(|a, b| a.1.total_cmp(&b.1))
+                        .map_or(0, |x| x.0);
+                    *o = best as u32;
+                }
+            });
+        // Rows grouped by super-centre (stable), in units of at most ROWS rows.
+        let mut start = vec![0usize; ns + 1];
+        for &s in &sup {
+            start[s as usize + 1] += 1;
+        }
+        for i in 0..ns {
+            start[i + 1] += start[i];
+        }
+        let mut fill = start.clone();
+        let mut perm = vec![0u32; n];
+        for (i, &s) in sup.iter().enumerate() {
+            perm[fill[s as usize]] = i as u32;
+            fill[s as usize] += 1;
+        }
+        let mut units: Vec<(usize, usize, usize)> = Vec::new();
+        for s in 0..ns {
+            for a in (start[s]..start[s + 1]).step_by(ROWS) {
+                units.push((s, a, (a + ROWS).min(start[s + 1])));
+            }
+        }
         let parts: Vec<Vec<(u32, u32)>> = units
             .par_iter()
-            .map(|&(o, s, e)| {
-                let ids = &cands[o * r..(o + 1) * r];
+            .map(|&(s, a, e)| {
+                let ids = &c.cands[s * r..(s + 1) * r];
                 let mut cm = Vec::with_capacity(r * dim);
-                for &c in ids {
-                    cm.extend_from_slice(&self.centres[c as usize * dim..(c as usize + 1) * dim]);
+                for &id in ids {
+                    cm.extend_from_slice(&self.centres[id as usize * dim..(id as usize + 1) * dim]);
                 }
-                let b = e - s;
+                let b = e - a;
+                let mut xs = Vec::with_capacity(b * dim);
+                for &row in &perm[a..e] {
+                    xs.extend_from_slice(&x[row as usize * dim..(row as usize + 1) * dim]);
+                }
                 let mut xc = vec![0f32; b * r];
-                gemm_nt(&x[s * dim..e * dim], b, &cm, r, dim, &mut xc);
+                gemm_nt(&xs, b, &cm, r, dim, &mut xc);
                 let mut d = vec![0f32; r];
                 let mut cand = Vec::with_capacity(k);
                 (0..b)
                     .map(|i| {
                         let row = &xc[i * r..(i + 1) * r];
-                        for ((dv, &v), &c) in d.iter_mut().zip(row).zip(ids) {
-                            *dv = self.c2[c as usize] - 2.0 * v;
+                        for ((dv, &v), &id) in d.iter_mut().zip(row).zip(ids) {
+                            *dv = self.c2[id as usize] - 2.0 * v;
                         }
-                        let xi = &x[(s + i) * dim..(s + i + 1) * dim];
-                        self.pick(xi, row, Some(ids), &d, k, lambda, eps, &mut cand)
+                        self.pick(
+                            &xs[i * dim..(i + 1) * dim],
+                            row,
+                            Some(ids),
+                            &d,
+                            k,
+                            lambda,
+                            eps,
+                            &mut cand,
+                        )
                     })
                     .collect()
             })
             .collect();
-        parts.concat()
+        let mut out = vec![(0u32, 0u32); n];
+        for (&(_, a, _), part) in units.iter().zip(&parts) {
+            for (j, &v) in part.iter().enumerate() {
+                out[perm[a + j] as usize] = v;
+            }
+        }
+        out
     }
 
     /// Primary list and SOAR spill of one row. `row[j]` is `<x, c_j>` and `d[j]` the ranking
@@ -1080,7 +1149,6 @@ impl PartitionTier {
         }
         let mut rng = SplitMix(p.seed);
         let t_start = std::time::Instant::now();
-        let mut warm = false;
         let gather = |idx: &[usize]| -> Vec<f32> {
             let mut s = Vec::with_capacity(idx.len() * dim);
             for &i in idx {
@@ -1099,7 +1167,6 @@ impl PartitionTier {
                 // A retrain continues from the current centres: a few iterations restore
                 // balance at a fraction of a cold k-means.
                 Some(old) if p.retrain_warm_iters > 0 && old.centres.len() == p.lists * dim => {
-                    warm = true;
                     let sample = gather(&sample_indices(live.len(), p.retrain_sample, &mut rng));
                     kmeans_from(
                         &sample,
@@ -1165,12 +1232,26 @@ impl PartitionTier {
                 }
             });
         let t_tables = t_start.elapsed().as_secs_f64();
-        // Rows grouped by old primary list, with the new centres nearest each old centre.
-        let route = if warm && p.retrain_route > 0 {
-            self.old_routes(&centres, &c2, &live, p.retrain_route.min(l))
-        } else {
-            None
-        };
+        let coarse = (p.route_cands > 0).then(|| {
+            let (ns, r) = (p.route_lists.clamp(1, l), p.route_cands.min(l));
+            let supers = kmeans(&centres, dim, ns, 5, &mut SplitMix(p.seed ^ 0xC0A2_5E));
+            let s2: Vec<f32> = supers.chunks(dim).map(|v| dot(v, v)).collect();
+            let mut cands = Vec::with_capacity(ns * r);
+            let (mut d, mut near) = (vec![0f32; l], Vec::with_capacity(r));
+            for sv in supers.chunks(dim) {
+                for ((dv, cv), &cc) in d.iter_mut().zip(centres.chunks(dim)).zip(&c2) {
+                    *dv = cc - 2.0 * dot(sv, cv);
+                }
+                smallest_k(&d, r, &mut near);
+                cands.extend(near.iter().map(|x| x.1));
+            }
+            Coarse {
+                supers,
+                s2,
+                cands,
+                r,
+            }
+        });
         self.trained = Some(Trained {
             centres,
             c2,
@@ -1179,103 +1260,21 @@ impl PartitionTier {
             list_tab,
             lists: (0..l).map(|_| List::default()).collect(),
             loc: vec![[(u32::MAX, u32::MAX); 2]; self.slot_id.len()],
+            coarse,
         });
         self.trained_live = live.len();
         self.inserts_since_train = 0;
         // Placed in chunks so a retrain at 10M rows does not hold a second copy of the rows.
-        if let Some((cands, r, groups)) = route {
-            let mut slots: Vec<u32> = Vec::new();
-            let mut units: Vec<(usize, usize, usize)> = Vec::new();
-            let flush =
-                |this: &mut Self, slots: &mut Vec<u32>, units: &mut Vec<(usize, usize, usize)>| {
-                    if slots.is_empty() {
-                        return;
-                    }
-                    let mut vectors = Vec::with_capacity(slots.len() * dim);
-                    for &slot in slots.iter() {
-                        vectors.extend_from_slice(this.row(slot));
-                    }
-                    let t = this.trained.as_ref().expect("trained");
-                    let asg = t.assign_routed(
-                        &vectors,
-                        dim,
-                        p.spill_k,
-                        p.soar_lambda,
-                        p.spill_eps,
-                        units,
-                        &cands,
-                        r,
-                    );
-                    this.place_asg(slots, &vectors, &asg);
-                    slots.clear();
-                    units.clear();
-                };
-            for (o, g) in groups.iter().enumerate() {
-                for part in g.chunks(ROWS) {
-                    let s0 = slots.len();
-                    slots.extend_from_slice(part);
-                    units.push((o, s0, slots.len()));
-                }
-                if slots.len() >= PLACE_CHUNK {
-                    flush(self, &mut slots, &mut units);
-                }
+        for chunk in live.chunks(PLACE_CHUNK) {
+            let mut vectors = Vec::with_capacity(chunk.len() * dim);
+            for &slot in chunk {
+                vectors.extend_from_slice(self.row(slot));
             }
-            flush(self, &mut slots, &mut units);
-        } else {
-            for chunk in live.chunks(PLACE_CHUNK) {
-                let mut vectors = Vec::with_capacity(chunk.len() * dim);
-                for &slot in chunk {
-                    vectors.extend_from_slice(self.row(slot));
-                }
-                self.place(chunk, &vectors);
-            }
+            self.place(chunk, &vectors);
         }
         let t_end = t_start.elapsed().as_secs_f64();
         self.train_phases = [t_centres, t_tables - t_centres, t_end - t_tables];
         Ok(())
-    }
-
-    /// For a warm retrain: the `r` new centres nearest each old centre, and the live slots
-    /// grouped by old primary list. None when rows lack an old placement.
-    #[allow(clippy::type_complexity)]
-    fn old_routes(
-        &self,
-        new_centres: &[f32],
-        new_c2: &[f32],
-        live: &[u32],
-        r: usize,
-    ) -> Option<(Vec<u32>, usize, Vec<Vec<u32>>)> {
-        let old = self.trained.as_ref()?;
-        let (dim, l) = (self.dim, old.lists_len());
-        let mut groups: Vec<Vec<u32>> = vec![Vec::new(); l];
-        for &slot in live {
-            let a = old.loc.get(slot as usize)?[0].0;
-            if a == u32::MAX {
-                return None;
-            }
-            groups[a as usize].push(slot);
-        }
-        let mut cands = vec![0u32; l * r];
-        cands
-            .par_chunks_mut(ROWS * r)
-            .zip(old.centres.par_chunks(ROWS * dim))
-            .for_each(|(out, ob)| {
-                let b = ob.len() / dim;
-                let mut xc = vec![0f32; b * l];
-                gemm_nt(ob, b, new_centres, l, dim, &mut xc);
-                let mut d = vec![0f32; l];
-                let mut near = Vec::with_capacity(r);
-                for i in 0..b {
-                    for ((dv, &v), &cc) in d.iter_mut().zip(&xc[i * l..(i + 1) * l]).zip(new_c2) {
-                        *dv = cc - 2.0 * v;
-                    }
-                    smallest_k(&d, r, &mut near);
-                    for (o, &(_, c)) in out[i * r..(i + 1) * r].iter_mut().zip(&near) {
-                        *o = c;
-                    }
-                }
-            });
-        Some((cands, r, groups))
     }
 
     /// Retrains in place; `WARM_LOG_RETRAIN` prints one line per retrain to stderr.
@@ -2091,7 +2090,7 @@ mod tests {
                     retrain_min_inserts: 500,
                     retrain_warm_iters: warm,
                     retrain_sample: 1500,
-                    retrain_route: route,
+                    route_cands: route,
                     spill_eps: if imb > 0.0 { 0.25 } else { f32::INFINITY },
                     ..params(20)
                 },
@@ -2237,17 +2236,26 @@ mod tests {
     }
 
     #[test]
-    fn routed_assignment_equals_full_when_all_centres_are_candidates() {
+    fn coarse_assignment_equals_full_when_all_centres_are_candidates() {
         let (n, dim, lists) = (1500, 16, 12);
         let x = data(n, dim, 20, 5);
-        let mut t = PartitionTier::new(dim, params(lists)).unwrap();
+        let mut t = PartitionTier::new(
+            dim,
+            PartitionParams {
+                route_cands: lists,
+                route_lists: 3,
+                ..params(lists)
+            },
+        )
+        .unwrap();
         t.insert(&(0..n as u32).collect::<Vec<_>>(), &x).unwrap();
         t.train(None).unwrap();
-        let tr = t.trained.as_ref().unwrap();
+        let tr = t.trained.as_mut().unwrap();
+        assert!(tr.coarse.is_some());
+        let routed = tr.assign(&x, dim, 8, 1.0, f32::INFINITY);
+        let coarse = tr.coarse.take();
         let full = tr.assign(&x, dim, 8, 1.0, f32::INFINITY);
-        let cands: Vec<u32> = (0..lists).flat_map(|_| (0..lists as u32).rev()).collect();
-        let units = [(3usize, 0usize, 700usize), (5, 700, n)];
-        let routed = tr.assign_routed(&x, dim, 8, 1.0, f32::INFINITY, &units, &cands, lists);
+        tr.coarse = coarse;
         assert_eq!(routed, full);
     }
 
@@ -2390,7 +2398,8 @@ mod tests {
         if envn("RETRAIN") == Some(1) {
             t.params.retrain_warm_iters = envn("RT_ITERS").unwrap_or(3);
             t.params.retrain_sample = envn("RT_SAMPLE").unwrap_or(1_000_000);
-            t.params.retrain_route = envn("ROUTE").unwrap_or(0);
+            t.params.route_cands = envn("ROUTE").unwrap_or(0);
+            t.params.route_lists = envn("ROUTES").unwrap_or(64);
             let t0 = Instant::now();
             t.train(None).unwrap();
             let ph = t.train_phases;
