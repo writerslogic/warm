@@ -42,6 +42,7 @@ struct Totals {
 #[pyclass(name = "PartitionIndex")]
 struct PyPartitionIndex {
     tier: PartitionTier,
+    dim: usize,
     pool: Option<rayon::ThreadPool>,
     totals: Totals,
 }
@@ -51,8 +52,8 @@ impl PyPartitionIndex {
         &self,
         x: &'a PyArrayLike2<'_, f32, AllowTypeChange>,
         n: usize,
-        dim: usize,
     ) -> PyResult<std::borrow::Cow<'a, [f32]>> {
+        let dim = self.dim;
         let (rows, d) = (x.shape()[0], x.shape()[1]);
         if rows != n || d != dim {
             return Err(PyValueError::new_err(format!(
@@ -98,6 +99,7 @@ impl PyPartitionIndex {
         };
         Ok(Self {
             tier: PartitionTier::new(dim, params).map_err(warm_err)?,
+            dim,
             pool: thread_pool(threads)?,
             totals: Totals::default(),
         })
@@ -120,8 +122,7 @@ impl PyPartitionIndex {
         x: PyArrayLike2<'_, f32, AllowTypeChange>,
     ) -> PyResult<()> {
         let ids = u32_ids(&ids)?;
-        let dim = x.shape()[1];
-        let rows = self.rows(&x, ids.len(), dim)?;
+        let rows = self.rows(&x, ids.len())?;
         let (tier, pool) = (&mut self.tier, &self.pool);
         let t0 = std::time::Instant::now();
         let res = py.detach(|| match pool {
@@ -153,8 +154,7 @@ impl PyPartitionIndex {
             return Err(PyValueError::new_err(format!("k must be in 1..={MAX_K}")));
         }
         let nq = x.shape()[0];
-        let dim = x.shape()[1];
-        let queries = self.rows(&x, nq, dim)?;
+        let queries = self.rows(&x, nq)?;
         let was_trained = self.tier.is_trained();
         let (tier, pool) = (&mut self.tier, &self.pool);
         let t0 = std::time::Instant::now();
