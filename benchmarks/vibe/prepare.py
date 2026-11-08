@@ -25,7 +25,12 @@ DATASETS = {
     "laion-clip-512-normalized": (512, "normalized", True),
     "imagenet-align-640-normalized": (640, "normalized", True),
     "agnews-mxbai-1024-euclidean": (1024, "euclidean", False),
+    "yi-128-ip": (128, "ip", True),
+    "llama-128-ip": (128, "ip", True),
+    "yandex-200-cosine": (200, "cosine", True),
+    "glove-200-cosine": (200, "cosine", False),
 }
+LEARN_SEED = 24301
 
 
 def sha(path):
@@ -73,7 +78,16 @@ def prepare(args):
             train = handle["train"][:args.rows].astype(np.float32)
             test = handle["test"][:args.queries].astype(np.float32)
             original_rows = int(handle["train"].shape[0])
-            learn = handle["learn"][:128].astype(np.float32) if ood else None
+            learn = None
+            if ood and args.learn_sample:
+                # The adapter's own draw: numpy default_rng(24301) permutation of the whole split.
+                total = handle["learn"].shape[0]
+                keep = np.sort(np.random.default_rng(LEARN_SEED).permutation(total)[:args.learn_sample])
+                learn = np.concatenate([handle["learn"][a:b][keep[(keep >= a) & (keep < b)] - a]
+                                        for a, b in ((i, min(i + 50000, total)) for i in range(0, total, 50000))]
+                                       ).astype(np.float32)
+            elif ood:
+                learn = handle["learn"][:128].astype(np.float32)
     for rows in (train, test, learn):
         if rows is not None and (rows.shape[1] != dim or not np.isfinite(rows).all()):
             raise ValueError("invalid source vectors")
@@ -91,15 +105,17 @@ def prepare(args):
         for name, rows in (("train", train), ("test", test), ("neighbors", ids), ("distances", distances)):
             handle.create_dataset(name, data=rows)
         if learn is not None:
-            learn_ids, _ = exact_truth(train, learn, metric)
             handle.create_dataset("learn", data=learn)
-            handle.create_dataset("learn_neighbors", data=learn_ids)
+            if not args.learn_sample:
+                # The WARM adapter never reads learn neighbors; a sampled learn split skips them.
+                learn_ids, _ = exact_truth(train, learn, metric)
+                handle.create_dataset("learn_neighbors", data=learn_ids)
     partial.rename(out)
     manifest = {
         "schema_version": 1, "source": url, "source_revision": REVISION,
         "dataset": args.dataset, "original_rows": original_rows, "rows": args.rows,
         "queries": args.queries, "dimension": dim, "metric": metric, "ood": ood,
-        "corpus_selection": "prefix", "query_selection": "original test prefix",
+        "corpus_selection": "prefix", "query_selection": "original test prefix", "learn_rows": 0 if learn is None else int(len(learn)),
         "truth": "recomputed exact float32 FAISS flat; no inherited full-corpus neighbor IDs",
         "official_scale": args.rows == original_rows, "sha256": sha(out),
         "prepare_sha256": sha(Path(__file__)),
@@ -114,5 +130,7 @@ if __name__ == "__main__":
     parser.add_argument("--rows", type=int, default=100000)
     parser.add_argument("--queries", type=int, default=256)
     parser.add_argument("--source", type=Path)
+    parser.add_argument("--learn-sample", type=int, default=0,
+                        help="keep this many learn rows drawn as the adapter draws them (default: first 128)")
     parser.add_argument("--out", type=Path, required=True)
     prepare(parser.parse_args())
