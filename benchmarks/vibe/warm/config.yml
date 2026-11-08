@@ -4,8 +4,11 @@
 # `ood: true` makes VIBE call fit_ood with the dataset's official learn split where the HDF5 file
 # has one (the build samples 32768 learn rows, numpy seed 24301; see module.py); sets without a
 # learn split call fit and build the plain graph from the same grid.
-# VIBE limits: 4 build combinations and 45 query combinations per metric, each below
-# the 20 / 60 guidance.
+# VIBE limits: 6 build combinations and 55 query combinations per metric, each below
+# the 20 / 60 guidance. The learn_mid and learn_tail groups are learn-heavy builds (projected_degree and learn_queries,
+# see docs/benchmarks/VIBE.md "Held-out search"); the base group is the previously submitted builds, so the
+# per-recall best over both groups can only match or exceed them. Query arguments: ef x rerank where a rerank
+# above ef behaves as rerank = ef, and ef below 100 (k) behaves as 100, so neither is listed.
 float:
   cosine:
   - name: warm
@@ -23,8 +26,38 @@ float:
           code_bits: [8]
           query_aware: [true]
         query_args:
-          ef: [40, 50, 64, 80, 100, 128, 160, 200, 256, 320, 400, 512, 640, 800, 1000]
-          rerank: [100, 200, 400]
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_mid:
+        args:
+          degree: [24]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [64]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_tail:
+        args:
+          degree: [32]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [128]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
   normalized:
   - name: warm
     module: vibe.algorithms.warm
@@ -41,8 +74,38 @@ float:
           code_bits: [8]
           query_aware: [true]
         query_args:
-          ef: [40, 50, 64, 80, 100, 128, 160, 200, 256, 320, 400, 512, 640, 800, 1000]
-          rerank: [100, 200, 400]
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_mid:
+        args:
+          degree: [24]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [64]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_tail:
+        args:
+          degree: [32]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [128]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
   euclidean:
   - name: warm
     module: vibe.algorithms.warm
@@ -59,8 +122,38 @@ float:
           code_bits: [8]
           query_aware: [true]
         query_args:
-          ef: [40, 50, 64, 80, 100, 128, 160, 200, 256, 320, 400, 512, 640, 800, 1000]
-          rerank: [100, 200, 400]
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_mid:
+        args:
+          degree: [24]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [64]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_tail:
+        args:
+          degree: [32]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [128]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
   ip:
   - name: warm
     module: vibe.algorithms.warm
@@ -77,5 +170,35 @@ float:
           code_bits: [8]
           query_aware: [true]
         query_args:
-          ef: [64, 80, 100, 128, 160, 200, 256, 320, 400, 512, 640, 800, 1000, 1500, 2000]
-          rerank: [200, 400, 1000]
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_mid:
+        args:
+          degree: [24]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [64]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]
+      learn_tail:
+        args:
+          degree: [32]
+          build_ef: [500]
+          code_bits: [8]
+          query_aware: [true]
+          escape_edges: [false]
+          reach_edges: [false]
+          projected_degree: [128]
+          training_neighbors: [100]
+          training_ef: [0]
+          learn_queries: [253921]
+        query_args:
+          ef: [125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000]
+          rerank: [125, 150, 200, 400, 1000]

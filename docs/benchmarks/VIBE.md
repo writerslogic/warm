@@ -236,6 +236,73 @@ rerank 1000, which points to graph reachability rather than traversal precision;
 the only measured fix and are not exposed by the Python binding), laion d96 and hotpotqa-harrier,
 cqadupstack-lemur/muvera at scale, and all x86 timings on a quiet host.
 
+## Held-out search for the recall tail and the QPS at 0.99, 2026-11-08
+
+Selection used only data the build never sees. `make_heldout.py` takes learn rows that the adapter's draw leaves out
+(2,000 queries, exact truth over the same corpus; for laion 100k the learn sample was 36,768 rows with 32,768 drawn).
+The official test queries were used for confirmation after the choice was frozen. Timing: Apple M4, one thread, load 3 to 10,
+arms interleaved, two repeats, median QPS. QPS at a recall target is interpolated log-linearly along each arm's Pareto
+frontier of (recall, QPS) because the first-config-reaching metric jumps with the grid step. The identical control measured in two
+sessions agrees within 2.3% (7442/5164/3680 against 7567/5114/3620 at 0.95/0.99/0.995), so ratios of 5% or more are resolved on this
+host. Files: [`vibe_apex_20261108`](../../benchmarks/results/vibe_apex_20261108/). All numbers are Mac, 100k or llama full
+(256,921 rows), not Modal timings.
+
+### Candidate 1: sink-escape edges, killed; reachability edges, null
+
+`Graph::add_escape_edges` and `Graph::add_reach_edges` (`src/core/qgraph/connectivity.rs`, exposed as
+`VectorIndex.fit(escape_edges=, reach_edges=, report=)` and `.connectivity()`) were implemented and measured.
+The graph the adapter actually builds on laion 100k (arm 64:500:8:1, 32,768 learn rows) has **no sink component**: 24 strong components,
+largest 99,977, 0 sinks, 20 vertices unreachable from the entry (23 with zero in-degree). Escape edges therefore change nothing.
+Reach edges connect all 20 (components 24 to 4, unreachable 0) and leave the recall unchanged: 3 missing of 25,600 results at
+ef 1000/rerank 400 and 1 at ef 2000/rerank 1000 either way. The misses are two queries (q134, q188). q134's true neighbours at rank
+19, 28, 83 and 96 are missing; none of the four is an unreachable vertex, and its nearest true distance (0.725) is the farthest of the
+set from every image, so the shortfall is concentrated in a hard query, not in graph reachability. On llama full, reach edges leave QPS
+and recall equal (5539/4652/3365 against 5583/4635/3365 at 0.95/0.99/0.995). The earlier 0.9317 laion ceiling is a different graph
+state (see the superseded section above), not a property of the current build.
+
+### What moved the numbers (llama-128-ip full, held-out, QPS at recall 0.95 / 0.99 / 0.995)
+
+| Arm (degree, build ef 500, 8-bit) | 0.95 | 0.99 | 0.995 | max recall |
+|---|---:|---:|---:|---:|
+| d32, submitted build (control) | 10,857 | 5,141 | 3,597 | 0.99957 |
+| d32, projected degree 48 | 9,956 | 6,107 (1.19x) | 4,183 (1.16x) | 0.99967 |
+| d32, 253,921 learn queries | 9,871 | 5,579 (1.09x) | 4,238 (1.18x) | 0.99981 |
+| d32, pd 64, 253,921 learn queries | 8,120 | 6,701 (1.30x) | 5,339 (1.48x) | 0.99987 |
+| d32, pd 128, 253,921 learn queries | 6,401 | 6,343 (1.23x) | 5,810 (1.62x) | 0.99991 |
+| d24, pd 64, 253,921 learn queries | 8,775 | 7,005 (1.36x) | 5,551 (1.54x) | 0.99979 |
+| d64 / d96, pd 64, 253,921 learn queries | 6,584 / 5,631 | 5,656 / 4,824 | 4,645 / 4,177 | 0.9999 |
+
+QPS at the first configuration reaching recall 0.998: control 2,045, pd 64 3,555, pd 96 4,381, pd 128 5,061 (2.5x). Projected
+degree and the number of learn queries (the adapter sampled 32,768 of 255,921 available) each lift the tail and each cost build time
+(277 s to 762 s at 253,921 queries, single build of five in parallel) and 7 to 41% of the QPS at 0.95, so the 0.95 region stays with
+the plain arms: the submission takes the best QPS per recall level over all arms. The two completed generations beat their
+parents by more than the pre-registered 5% (twice the control's repeat noise); a further generation (degree 24 with pd 96 or 128) was
+not run because of the tool-call cap.
+
+Killed or null: `reach_edges`, `training_neighbors` 200 (0.77x at 0.99), `build_ef` 300 and 1000 (equal), `training_ef` 128 (0.9x),
+early stop with `patience` (a smaller `ef` is on or above every patience point), independent `reservoir` retention (same recall at
+0.70x QPS), degree 64 or 96 for the tail (0.94 to 1.10x).
+
+Largest single lever, a measurement fix: recall depends on `rerank` far more than on `ef` (llama d32: ef 200/rerank 100 gives 0.929, ef
+200/rerank 200 gives 0.980), and the submitted grid had no rerank between 100 and 200. Adding 125 and 150 moved the control's QPS at 0.95
+from 7,442 to 10,756 without any build change. The engine clamps `ef` to at least k = 100 and `rerank` to at most the pool, so a
+rerank above ef equals rerank = ef; `ef` 40 to 80 were all ef 100.
+
+### Profile, llama 100k d32, ef 256 / rerank 200 (macOS `sample`, arm64, 45 s, 6,828 QPS)
+
+Of about 5,100 active samples: neighbour-expansion closure 55%, `memmove` 17%, `Pool::insert` 15% (the sorted candidate array),
+`VGraph::est` 12%, `fine` 4%, `score_fresh` 2.5%, prefetch under 1.5%. Prefetching is not the limit; the sorted-array pool costs about a third
+at ef 256 and more above it. A batch pool variant exists (`experimental-batch-pool`); no kernel, prefetch or quantisation change was made.
+
+### Submitted grid and builds (`benchmarks/vibe/warm/config.yml`)
+
+Six builds per metric: the four previous ones unchanged, plus `learn_mid` (d24, projected degree 64) and `learn_tail` (d32, projected
+degree 128), both requesting 253,921 learn queries (the adapter cuts the request to 2e13 / (rows x dimensions), never below 32,768, so
+the 1M-row sets use fewer). Query grid: ef {125, 150, 175, 200, 250, 300, 400, 650, 1000, 1500, 2000} x rerank {125, 150, 200, 400, 1000},
+55 combinations, chosen by backward elimination on the 92-point dense grid (no loss in best QPS at recall 0.95 to 0.998 for rerank up to
+200; 400 and 1000 and ef 1500 and 2000 keep the 1.00 tail reachable). The default build is bit-identical to the pinned wheel: glove-200 100k,
+300 queries at two settings, identical result lists.
+
 ## Measurement protocol
 
 The first diagnostic uses pinned VIBE files at dataset revision
