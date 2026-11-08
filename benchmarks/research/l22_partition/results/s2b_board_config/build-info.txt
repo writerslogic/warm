@@ -1,0 +1,4 @@
+commit=e29b62fc53c1e5f652520e6f63288bc53796324f (writerslogic/warm main, #398 merge; public)
+wheel=/home/davidcondrey/bigann/s2b/wheels/warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl
+f74af04b2ef368067475afb7c37ac7777da60ab9e0812c8acc1cfd16b43ae7cc  /home/davidcondrey/bigann/s2b/wheels/warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl
+rustc 1.99.0 (b940084d7 2026-09-28)

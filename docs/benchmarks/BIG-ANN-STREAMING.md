@@ -163,6 +163,26 @@ the parent, so memory was not the limit. Projection, not measured: the 640 searc
 about 2,480 s at ef 512, so this runbook needs a lower ef and fewer or cheaper rebuilds to fit
 the hour.
 
+## Final runbook (msturing-30M-clustered): partition tier
+
+The graph entry above could not finish this runbook within the hour. The entry now serves it from `PartitionIndex` (`src/bindings/python/partition_index.rs` over `core::qgraph::partition`):
+- Brute force runs until 1M rows are live.
+- After that, the index uses an IVF with 5,000 lists, SOAR spill, PQ-50 residual codes scanned by a 4-bit LUT, and an exact reorder of 317 candidates.
+
+Design, kill tests and the measurements behind each parameter are in [`docs/research/STREAMING-L22.md`](../research/STREAMING-L22.md).
+
+The run was `run.py --nodocker` with the final runbook, on 8 threads of a Core Ultra 9 185H (WSL2) in an 8 GiB scope, with WARM at `e29b62fc` and the board `config.yaml` (nprobe 300). Evidence is in `benchmarks/research/l22_partition/results/s2b_board_config/` [M]:
+
+| quantity | value |
+|---|---|
+| steps | 1,280 of 1,280, exit 0 |
+| mean recall@10 over 640 searches | **0.9726** (graph entry on the same host: 0.8768; `neurips23/README.md` DiskANN baseline: 0.883) |
+| lowest post-train recall@10 | 0.9543 |
+| wall time (sum of step seconds) | 2,550 s (search 2,353, insert 160, delete 36) |
+| peak RSS | 6.45 GiB |
+
+An earlier run at nprobe 250 (`results/testb_run1`) measured 0.9651 in 2,276 s. This hardware is not the Azure evaluation VM, so neither run is a board result. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
+
 ## Merged consolidation (development measurements)
 
 `UpdatableIndex.consolidate(merge=True)` keeps the previous base graph instead of rebuilding
