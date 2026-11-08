@@ -81,6 +81,51 @@ fn add_group(codes: &[u8], lut: &[u8], out: &mut [u16; BLOCK]) {
     }
 }
 
+/// Builds the u8 table of one (query, list) pair from a shared per-query table and a per-list
+/// table (`16 * m` entries each, summed): each group is shifted by its minimum and all groups
+/// share one scale so the largest group span maps to 255. Returns `(base, scale)`: a code's
+/// float score is `base + scale * sum`, where `base` is the sum of the group minimums.
+// The only library caller is the experimental partition tier.
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
+pub(crate) fn build_lut(
+    qt: &[f32],
+    lt: &[f32],
+    ent: &mut [f32],
+    mins: &mut [f32],
+    lut: &mut [u8],
+) -> (f32, f32) {
+    let e = qt.len();
+    let m = e / 16;
+    assert!(
+        e.is_multiple_of(16)
+            && lt.len() == e
+            && ent.len() >= e
+            && mins.len() >= m
+            && lut.len() >= e
+    );
+    let (mut base, mut span) = (0f32, 0f32);
+    for (b, mn) in mins[..m].iter_mut().enumerate() {
+        let (mut lo, mut hi) = (f32::INFINITY, f32::NEG_INFINITY);
+        for v in 16 * b..16 * b + 16 {
+            let x = qt[v] + lt[v];
+            ent[v] = x;
+            lo = lo.min(x);
+            hi = hi.max(x);
+        }
+        *mn = lo;
+        span = span.max(hi - lo);
+        base += lo;
+    }
+    let scale = span.max(1e-12) / 255.0;
+    let inv = 1.0 / scale;
+    for (b, &mn) in mins[..m].iter().enumerate() {
+        for v in 16 * b..16 * b + 16 {
+            lut[v] = ((ent[v] - mn) * inv + 0.5) as u8;
+        }
+    }
+    (base, scale)
+}
+
 /// Packs 32 codes of `m` nibbles each (`nibbles[c * m + j]`, values below 16) into the block
 /// layout `scan32` reads; `block` holds `16 * m` bytes.
 pub(crate) fn pack32(nibbles: &[u8], m: usize, block: &mut [u8]) {
@@ -173,9 +218,12 @@ mod avx2 {
     pub(super) unsafe fn scan32(codes: &[u8], lut: &[u8], m: usize, out: &mut [u16; BLOCK]) {
         let mask = _mm256_set1_epi8(0x0f);
         let zero = _mm256_setzero_si256();
-        // 16-bit accumulators: codes 0..8 | 8..16 (low halves), 16..24 | 24..32 (high halves),
-        // each for the even group (lane 0..16) and the odd group (lane 16..32).
-        let (mut a0, mut a1, mut a2, mut a3) = (zero, zero, zero, zero);
+        // The shuffled bytes are added as 16-bit words: word i holds byte 2i plus 256 times
+        // byte 2i + 1. A second accumulator sums the odd bytes alone (word >> 8), so the even
+        // bytes are `all - (odd << 8)` at the end. Two adds and a shift per shuffle replace
+        // four widening conversions; sums stay below 2^16 for m <= 256 (each lane adds at
+        // most m / 2 groups of 255).
+        let (mut lo_all, mut lo_odd, mut hi_all, mut hi_odd) = (zero, zero, zero, zero);
         let (cp, lp) = (codes.as_ptr(), lut.as_ptr());
         let mut j = 0;
         while j + 2 <= m {
@@ -183,22 +231,30 @@ mod avx2 {
             let t = _mm256_loadu_si256(lp.add(16 * j).cast());
             let rlo = _mm256_shuffle_epi8(t, _mm256_and_si256(c, mask));
             let rhi = _mm256_shuffle_epi8(t, _mm256_and_si256(_mm256_srli_epi16::<4>(c), mask));
-            let lo0 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(rlo));
-            let lo1 = _mm256_cvtepu8_epi16(_mm256_extracti128_si256::<1>(rlo));
-            let hi0 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(rhi));
-            let hi1 = _mm256_cvtepu8_epi16(_mm256_extracti128_si256::<1>(rhi));
-            a0 = _mm256_add_epi16(a0, lo0);
-            a1 = _mm256_add_epi16(a1, lo1);
-            a2 = _mm256_add_epi16(a2, hi0);
-            a3 = _mm256_add_epi16(a3, hi1);
+            lo_all = _mm256_add_epi16(lo_all, rlo);
+            lo_odd = _mm256_add_epi16(lo_odd, _mm256_srli_epi16::<8>(rlo));
+            hi_all = _mm256_add_epi16(hi_all, rhi);
+            hi_odd = _mm256_add_epi16(hi_odd, _mm256_srli_epi16::<8>(rhi));
             j += 2;
         }
-        // a0: codes 0..16 of even groups; a1: codes 0..16 of odd groups; a2/a3 codes 16..32.
-        let lo = _mm256_add_epi16(a0, a1);
-        let hi = _mm256_add_epi16(a2, a3);
+        // Lane halves 0..16 and 16..32 hold the even and odd groups: add them, then
+        // interleave even and odd codes back into code order.
+        let finish = |all: __m256i, odd: __m256i, dst: *mut u16| {
+            let even = _mm256_sub_epi16(all, _mm256_slli_epi16::<8>(odd));
+            let e = _mm_add_epi16(
+                _mm256_castsi256_si128(even),
+                _mm256_extracti128_si256::<1>(even),
+            );
+            let o = _mm_add_epi16(
+                _mm256_castsi256_si128(odd),
+                _mm256_extracti128_si256::<1>(odd),
+            );
+            _mm_storeu_si128(dst.cast(), _mm_unpacklo_epi16(e, o));
+            _mm_storeu_si128(dst.add(8).cast(), _mm_unpackhi_epi16(e, o));
+        };
         let o = out.as_mut_ptr();
-        _mm256_storeu_si256(o.cast(), lo);
-        _mm256_storeu_si256(o.add(16).cast(), hi);
+        finish(lo_all, lo_odd, o);
+        finish(hi_all, hi_odd, o.add(16));
         if j < m {
             add_group(&codes[16 * j..16 * j + 16], &lut[16 * j..16 * j + 16], out);
         }
@@ -219,6 +275,35 @@ mod tests {
         let mut block = vec![0u8; 16 * m];
         pack32(&nibbles, m, &mut block);
         (nibbles, lut, block)
+    }
+
+    #[test]
+    fn lut_reconstructs_scores_within_half_a_step() {
+        let mut rng = SplitMix(3);
+        for &m in &[1usize, 2, 25, 50, 100] {
+            let e = 16 * m;
+            let unit = |r: &mut SplitMix| (r.next_u64() >> 40) as f32 / (1u64 << 24) as f32 - 0.5;
+            let qt: Vec<f32> = (0..e).map(|_| unit(&mut rng) * 4.0).collect();
+            let lt: Vec<f32> = (0..e).map(|_| unit(&mut rng)).collect();
+            let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
+            let (base, scale) = build_lut(&qt, &lt, &mut ent, &mut mins, &mut lut);
+            let (nibbles, _, block) = random_block(m, m as u64 + 9);
+            let mut out = [0u32; BLOCK];
+            scan32(&block, &lut, m, &mut out);
+            for c in 0..BLOCK {
+                let exact: f32 = (0..m)
+                    .map(|j| {
+                        qt[16 * j + nibbles[c * m + j] as usize]
+                            + lt[16 * j + nibbles[c * m + j] as usize]
+                    })
+                    .sum();
+                let approx = base + scale * out[c] as f32;
+                assert!(
+                    (approx - exact).abs() <= 0.5 * scale * m as f32 + 1e-4,
+                    "m {m} code {c}: {approx} vs {exact}"
+                );
+            }
+        }
     }
 
     #[test]
@@ -334,6 +419,194 @@ mod tests {
         report.push_str("]}");
         println!("{report}");
         if let Ok(path) = crate::compatibility::var("WARM_BLOCK_BENCH_OUT") {
+            std::fs::write(path, format!("{report}\n")).unwrap();
+        }
+    }
+
+    /// L22 kill test (research/STREAMING-L22-DESIGN.md section 6, STATE.md 21:15Z): one search
+    /// step of the partition tier, list-major, on 8 threads. Per (query, list): the LUT is the
+    /// sum of a shared per-query table and a per-list table (the IVFPQ precomputed split),
+    /// quantized to u8 per block with one scale; the scan admits a code only when its u16 sum
+    /// beats the query's running reorder threshold converted into that list's units; admitted
+    /// codes go to a per-thread bounded heap per query, merged at the end. Random codes and
+    /// tables (the scan cost does not depend on the values). Kill rule: codes/s including the
+    /// LUT build and admission >= 6e9 on 8 threads.
+    /// `cargo test --release partition_step_microbenchmark -- --ignored --nocapture`; knobs
+    /// `WARM_L22_{LISTS,LIST_LEN,QUERIES,NPROBE,M,REORDER,THREADS,REPS}`, JSON to `WARM_L22_BENCH_OUT`.
+    #[test]
+    #[ignore = "microbenchmark: run in release with --ignored --nocapture"]
+    fn partition_step_microbenchmark() {
+        use std::time::Instant;
+        let knob = |name: &str, default: usize| -> usize {
+            crate::compatibility::var(&format!("WARM_L22_{name}"))
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(default)
+        };
+        let lists = knob("LISTS", 5000);
+        let list_len = knob("LIST_LEN", 2000);
+        let nq = knob("QUERIES", 10_000);
+        let nprobe = knob("NPROBE", 700);
+        let m = knob("M", 50);
+        let reorder = knob("REORDER", 317);
+        let threads = knob("THREADS", 8);
+        let e = 16 * m;
+        let blocks = list_len.div_ceil(BLOCK);
+        let mut rng = SplitMix(11);
+        let codes: Vec<u8> = (0..lists * blocks * e)
+            .map(|_| (rng.next_u64() & 255) as u8)
+            .collect();
+        let unit = |r: &mut SplitMix| (r.next_u64() >> 40) as f32 / (1u64 << 24) as f32;
+        let qtab: Vec<f32> = (0..nq * e).map(|_| unit(&mut rng)).collect();
+        let ltab: Vec<f32> = (0..lists * e).map(|_| unit(&mut rng)).collect();
+        // Each list is probed by each query with probability nprobe / lists.
+        let probes: Vec<Vec<u32>> = (0..lists)
+            .map(|l| {
+                let mut r = SplitMix(1000 + l as u64);
+                (0..nq as u32)
+                    .filter(|_| (r.next_u64() % lists as u64) < (nprobe as u64))
+                    .collect()
+            })
+            .collect();
+        let pairs: usize = probes.iter().map(Vec::len).sum();
+        let scanned = pairs as f64 * list_len as f64;
+
+        // mode 0: full step; mode 1: scan + admission with the LUT build skipped (one table
+        // per list reused); mode 2: LUT build only.
+        let run = |mode: u8| -> (f64, u64) {
+            // Threads own disjoint query sets (q % threads) and walk every list in order, so
+            // each query has one candidate buffer and no merge; the list's codes are shared
+            // through the cache. Candidates below the running threshold go to a buffer of
+            // 2 * reorder; a full buffer is cut to the best `reorder` and the threshold
+            // tightens to the worst kept (selection instead of a heap).
+            let t = Instant::now();
+            let states: Vec<u64> = std::thread::scope(|s| {
+                let workers: Vec<_> = (0..threads)
+                    .map(|w| {
+                        let (codes, qtab, ltab, probes) = (&codes, &qtab, &ltab, &probes);
+                        s.spawn(move || {
+                            let mine: Vec<usize> = (w..nq).step_by(threads).collect();
+                            let mut bufs: Vec<Vec<(u32, u32)>> = mine
+                                .iter()
+                                .map(|_| Vec::with_capacity(2 * reorder))
+                                .collect();
+                            let mut thr = vec![f32::INFINITY; mine.len()];
+                            let mut ent = vec![0f32; e];
+                            let mut lut = vec![0u8; e];
+                            let mut mins = vec![0f32; m];
+                            let mut out = [0u32; BLOCK];
+                            let mut check = 0u64;
+                            for l in 0..lists {
+                                let lc = &codes[l * blocks * e..(l + 1) * blocks * e];
+                                let lt = &ltab[l * e..(l + 1) * e];
+                                let mut first = true;
+                                // Mode 1 reuses the list's first table, so its base and scale
+                                // carry over to the later queries of the list.
+                                let (mut base, mut scale) = (0f32, 1f32);
+                                for &q in &probes[l] {
+                                    let q = q as usize;
+                                    if q % threads != w {
+                                        continue;
+                                    }
+                                    let k = q / threads;
+                                    if mode != 1 || first {
+                                        first = false;
+                                        let qt = &qtab[q * e..(q + 1) * e];
+                                        (base, scale) =
+                                            build_lut(qt, lt, &mut ent, &mut mins, &mut lut);
+                                    }
+                                    if mode == 2 {
+                                        check = check.wrapping_add(u64::from(lut[q % e]));
+                                        continue;
+                                    }
+                                    let t_q = thr[k];
+                                    if t_q <= base {
+                                        continue;
+                                    }
+                                    let lim = ((t_q - base) / scale).min(65535.0) as u32;
+                                    let buf = &mut bufs[k];
+                                    for blk in 0..blocks {
+                                        scan32(&lc[blk * e..(blk + 1) * e], &lut, m, &mut out);
+                                        for (c, &v) in out.iter().enumerate() {
+                                            if v < lim {
+                                                let d = base + v as f32 * scale;
+                                                let id = (l * list_len + blk * BLOCK + c) as u32;
+                                                buf.push((d.to_bits(), id));
+                                            }
+                                        }
+                                        if buf.len() >= 2 * reorder {
+                                            buf.select_nth_unstable(reorder - 1);
+                                            buf.truncate(reorder);
+                                            let worst = buf.iter().map(|x| x.0).max().unwrap();
+                                            thr[k] = f32::from_bits(worst);
+                                            if thr[k] <= base {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            for buf in &mut bufs {
+                                if buf.len() > reorder {
+                                    buf.select_nth_unstable(reorder - 1);
+                                    buf.truncate(reorder);
+                                }
+                                check = check
+                                    .wrapping_add(buf.iter().map(|x| u64::from(x.1)).sum::<u64>());
+                            }
+                            check
+                        })
+                    })
+                    .collect();
+                workers.into_iter().map(|w| w.join().unwrap()).collect()
+            });
+            let check: u64 = states.iter().sum();
+            (t.elapsed().as_secs_f64(), check)
+        };
+        // Modes interleave per repetition so a sustained run (WARM_L22_REPS) shows each mode's
+        // trajectory over the whole run; the min is reported as before, plus mean/median/p90.
+        let reps = knob("REPS", 3).max(1);
+        let mut times: [Vec<f64>; 3] = [Vec::new(), Vec::new(), Vec::new()];
+        let mut checks = [0u64; 3];
+        for _ in 0..reps {
+            for mode in 0..3u8 {
+                let (secs, c) = run(mode);
+                times[mode as usize].push(secs);
+                checks[mode as usize] = c;
+            }
+        }
+        let stats = |v: &[f64]| {
+            let mut s = v.to_vec();
+            s.sort_by(f64::total_cmp);
+            let mean = s.iter().sum::<f64>() / s.len() as f64;
+            let p90 = s[((s.len() as f64 * 0.9).ceil() as usize).clamp(1, s.len()) - 1];
+            let all: Vec<String> = v.iter().map(|x| format!("{x:.4}")).collect();
+            (
+                s[0],
+                format!(
+                    "{{\"mean\": {mean:.4}, \"median\": {:.4}, \"p90\": {p90:.4}, \"all\": [{}]}}",
+                    s[s.len() / 2],
+                    all.join(", ")
+                ),
+            )
+        };
+        let ((full, full_stats), (scan_only, scan_stats), (lut_only, lut_stats)) =
+            (stats(&times[0]), stats(&times[1]), stats(&times[2]));
+        let [c0, c1, c2] = checks;
+        let rate = scanned / full;
+        let report = format!(
+            "{{\"lists\": {lists}, \"list_len\": {list_len}, \"queries\": {nq}, \"nprobe\": {nprobe}, \
+             \"m\": {m}, \"reorder\": {reorder}, \"threads\": {threads}, \"pairs\": {pairs}, \
+             \"codes_scanned\": {scanned:.0}, \"step_s\": {full:.4}, \"scan_admit_s\": {scan_only:.4}, \
+             \"lut_build_s\": {lut_only:.4}, \"codes_per_s\": {rate:.4e}, \
+             \"ns_per_lut\": {:.1}, \"kill_rule\": \"codes_per_s >= 6e9 on 8 threads\", \
+             \"pass\": {}, \"checksums\": [{c0}, {c1}, {c2}], \"reps\": {reps}, \
+             \"step_stats\": {full_stats}, \"scan_admit_stats\": {scan_stats}, \"lut_build_stats\": {lut_stats}}}",
+            lut_only * 1e9 * threads as f64 / pairs as f64,
+            rate >= 6e9
+        );
+        println!("{report}");
+        if let Ok(path) = crate::compatibility::var("WARM_L22_BENCH_OUT") {
             std::fs::write(path, format!("{report}\n")).unwrap();
         }
     }

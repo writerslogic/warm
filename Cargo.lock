@@ -3947,6 +3947,7 @@ dependencies = [
  "libc",
  "libm",
  "lz4_flex",
+ "matrixmultiply",
  "memmap2",
  "mimalloc",
  "multibase",
