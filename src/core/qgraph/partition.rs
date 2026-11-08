@@ -1019,6 +1019,20 @@ impl PartitionTier {
         Ok(())
     }
 
+    /// Retrains in place; `WARM_LOG_RETRAIN` prints one line per retrain to stderr.
+    fn retrain(&mut self, why: &str) -> Result<(), WarmError> {
+        let (t0, imb, live) = (std::time::Instant::now(), self.list_imbalance(), self.len());
+        self.train(None)?;
+        if crate::compatibility::var("WARM_LOG_RETRAIN").is_ok() {
+            eprintln!(
+                "[warm] retrain ({why}) live={live} imbalance {imb:.3} -> {:.3} in {:.1}s",
+                self.list_imbalance(),
+                t0.elapsed().as_secs_f64()
+            );
+        }
+        Ok(())
+    }
+
     /// `nprobe` scaled by `nprobe_by_live` at the current live size.
     fn effective_nprobe(&self) -> usize {
         let pts = &self.params.nprobe_by_live;
@@ -1081,12 +1095,12 @@ impl PartitionTier {
                 .is_some_and(|&at| self.len() >= at)
             {
                 self.retrain_next += 1;
-                self.train(None)?;
+                self.retrain("schedule")?;
             } else if self.params.retrain_imb > 0.0
                 && self.inserts_since_train >= self.params.retrain_min_inserts
                 && self.list_imbalance() > f64::from(self.params.retrain_imb)
             {
-                self.train(None)?;
+                self.retrain("imbalance")?;
             }
         }
         Ok(if self.trained.is_some() {
