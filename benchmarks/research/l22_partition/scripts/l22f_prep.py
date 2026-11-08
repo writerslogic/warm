@@ -55,4 +55,5 @@ for o in ops:
                 np.asarray(mm[ids[s:s + 1_000_000]], dtype="<f4").tofile(f)
         meta.append({"op": i, "live": int(len(ids))})
         print("op", i, "live", len(ids), flush=True)
-json.dump({"targets": targets, "picked": meta}, open(f"{out}/sweep_meta.json", "w"))
+with open(f"{out}/sweep_meta.json", "w") as f:
+    json.dump({"targets": targets, "picked": meta}, f)

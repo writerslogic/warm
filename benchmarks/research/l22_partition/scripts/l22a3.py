@@ -26,7 +26,9 @@ def log(*a):
 
 def parse_runbook(path):
     ops, cur = [], None
-    for line in open(path):
+    with open(path) as fh:
+        lines = fh.read().splitlines()
+    for line in lines:
         s = line.strip()
         m = re.match(r"^(\d+):$", s)
         if m:

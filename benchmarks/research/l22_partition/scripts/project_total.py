@@ -16,7 +16,9 @@ LIMIT = 3000
 
 def parse(path):
     ops, cur = [], None
-    for line in open(path):
+    with open(path) as fh:
+        lines = fh.read().splitlines()
+    for line in lines:
         s = line.strip()
         m = re.match(r"^(\d+):$", s)
         if m:

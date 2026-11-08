@@ -76,4 +76,5 @@ res["nonsearch_total_s"] = (res["train_kmeans_s"] + res["train_assign_live_s"] +
                             + res["bruteforce_pretrain_s_projected"] + res["deletes_s_assumed"])
 print(f"RESULT nonsearch_total={res['nonsearch_total_s']:.0f}s", flush=True)
 os.makedirs(OUT, exist_ok=True)
-json.dump(res, open(os.path.join(OUT, "nonsearch.json"), "w"), indent=1)
+with open(os.path.join(OUT, "nonsearch.json"), "w") as f:
+    json.dump(res, f, indent=1)

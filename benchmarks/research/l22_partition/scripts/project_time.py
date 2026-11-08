@@ -17,7 +17,9 @@ F_BAL = {350: 0.14, 500: 0.20, 700: 0.28}
 
 def live_after_train(path):
     ops, cur = [], None
-    for line in open(path):
+    with open(path) as fh:
+        lines = fh.read().splitlines()
+    for line in lines:
         s = line.strip()
         m = re.match(r"^(\d+):$", s)
         if m:
@@ -43,7 +45,8 @@ def main(runbook, paths):
     live = live_after_train(runbook)
     best = {}
     for p in paths:
-        b = json.load(open(p))
+        with open(p) as f:
+            b = json.load(f)
         k = b["nprobe"]
         if k not in best or b["step_s"] < best[k]["step_s"]:
             best[k] = b

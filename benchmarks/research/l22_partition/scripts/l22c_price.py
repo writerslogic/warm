@@ -15,12 +15,14 @@ TRAIN_OP, Q, CENTRE_S = 32, 10_000, 31.0
 
 
 def main(runbook, cj, benches):
-    d = json.load(open(cj))
+    with open(cj) as f:
+        d = json.load(f)
     rows = d["eval"]
     tiers = d["args"]["tiers"]
     pts = {}
     for p in benches:
-        b = json.load(open(p))
+        with open(p) as f:
+            b = json.load(f)
         if "scan_admit_stats" in b:
             pts[b["nprobe"]] = (b["lut_build_stats"]["mean"], b["codes_scanned"] / b["scan_admit_stats"]["mean"])
     ks = sorted(pts)
