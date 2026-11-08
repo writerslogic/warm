@@ -13,7 +13,9 @@ FNV0, FNVP = 0xCBF29CE484222325, 0x100000001B3
 
 def parse_runbook(path):
     ops, cur = [], None
-    for line in open(path):
+    with open(path) as fh:
+        lines = fh.readlines()
+    for line in lines:
         if re.match(r"\s+\d+:\s*$", line):
             cur = {}
             ops.append(cur)
@@ -89,12 +91,13 @@ def fnv(h, a):
 def smaps():
     d = {}
     try:
-        for l in open("/proc/self/smaps_rollup"):
-            p = l.split()
-            if p[0] in ("AnonHugePages:", "Rss:"):
-                d[p[0][:-1]] = int(p[1])
+        with open("/proc/self/smaps_rollup") as fh:
+            for l in fh:
+                p = l.split()
+                if p[0] in ("AnonHugePages:", "Rss:"):
+                    d[p[0][:-1]] = int(p[1])
     except OSError:
-        pass
+        pass  # not Linux: the report carries no smaps figures
     return d
 
 
@@ -121,7 +124,8 @@ def main():
     from writerslogic_warm import PartitionIndex
 
     base = os.path.join(args.data, "30M-clustered64.fbin")
-    rows, dim = struct.unpack("<II", open(base, "rb").read(8))
+    with open(base, "rb") as fh:
+        rows, dim = struct.unpack("<II", fh.read(8))
     Q = np.ascontiguousarray(read_queries(os.path.join(args.data, "testQuery10K.fbin")), dtype=np.float32)
     ops = parse_runbook(args.runbook)[: args.steps]
     dump = {int(x) for x in args.dump.split(",") if x}
@@ -136,6 +140,12 @@ def main():
         cond = threading.Condition()
 
         def worker():
+            try:
+                _prefetch()
+            finally:
+                os.close(fd)
+
+        def _prefetch():
             while True:
                 with cond:
                     while state["pos"] >= len(ranges) or state["pos"] - state["done"] >= args.prefetch:
@@ -211,13 +221,14 @@ def main():
                             sh, rh = audit(idx, QH[lo:hi], resh[lo:hi], gth[lo:hi], mm, args.np)
                             sh["step"], sh["set"] = n, g
                             audits.append(sh)
-                            json.dump(rh, open(os.path.join(args.dump_dir, f"audit_step{n}_{g}.json"), "w"))
+                            with open(os.path.join(args.dump_dir, f"audit_step{n}_{g}.json"), "w") as fh:
+                                json.dump(rh, fh)
                     summ["step"] = n
                     summ["set"] = "board10k"
                     summ["live"] = len(idx)
                     audits.append(summ)
-                    json.dump({"summary": summ, "misses": recs},
-                              open(os.path.join(args.dump_dir, f"audit_step{n}.json"), "w"))
+                    with open(os.path.join(args.dump_dir, f"audit_step{n}.json"), "w") as fh:
+                        json.dump({"summary": summ, "misses": recs}, fh)
     wall = time.perf_counter() - t_all
     st = idx.stats()
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024
@@ -231,7 +242,8 @@ def main():
     line = json.dumps(rep)
     print(line)
     if args.out:
-        open(args.out, "a").write(line + "\n")
+        with open(args.out, "a") as fh:
+            fh.write(line + "\n")
 
 
 main()

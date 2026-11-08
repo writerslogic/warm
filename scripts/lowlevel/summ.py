@@ -2,7 +2,8 @@
 digest/recall agreement. Labels are `arm:rN`."""
 import collections, json, statistics as st, sys
 
-rows = [json.loads(l) for l in open(sys.argv[1]) if l.strip().startswith("{")]
+with open(sys.argv[1]) as fh:
+    rows = [json.loads(l) for l in fh if l.strip().startswith("{")]
 ctrl = sys.argv[2] if len(sys.argv) > 2 else rows[0]["label"].split(":")[0]
 arms = collections.OrderedDict()
 for r in rows:

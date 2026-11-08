@@ -1,7 +1,8 @@
 """audit_table.py summary.jsonl: markdown miss-audit table from replay.py --audit --heldout output."""
 import json, sys
 
-rep = json.loads(open(sys.argv[1]).read().strip().splitlines()[-1])
+with open(sys.argv[1]) as fh:
+    rep = json.loads(fh.read().strip().splitlines()[-1])
 print("| step | live | queries | set | misses | recall (tie-aware) | probe miss | scan loss | near tie | duplicate | harness-credited ties | queries with a miss | top 1% queries | top 10% queries | top 1% lists | top 10% lists |")
 print("|" + "---|" * 16)
 for a in sorted(rep["audits"], key=lambda x: (x["step"], x["set"])):
