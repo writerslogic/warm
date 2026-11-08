@@ -288,6 +288,22 @@ Largest single lever, a measurement fix: recall depends on `rerank` far more tha
 from 7,442 to 10,756 without any build change. The engine clamps `ef` to at least k = 100 and `rerank` to at most the pool, so a
 rerank above ef equals rerank = ef; `ef` 40 to 80 were all ef 100.
 
+### Test-set confirmation (frozen selection), llama-128-ip full scale
+
+Official 1,000 test queries, 256,921 rows, three interleaved repeats, same Mac. Best QPS over arms at the first configuration reaching each
+recall (no interpolation); the control is the four previously submitted builds on the previous grid.
+
+| | 0.95 | 0.99 | 0.995 | 0.998 | max recall |
+|---|---:|---:|---:|---:|---:|
+| Control: 4 base builds, old grid | 10,445 | 5,102 | 3,546 | 2,198 | 0.99984 |
+| 4 base builds, new grid | 10,866 | 4,347 | 2,984 | 2,012 | 0.99984 |
+| Elite: 6 builds, new grid | 10,866 | 6,837 | 5,582 | 5,061 | 0.99994 |
+| Elite / control | 1.04x | 1.34x | 1.57x | 2.30x | |
+
+The held-out predictions for 0.99 and 0.995 (1.30 to 1.36x, 1.48 to 1.54x) held on the test queries. Recall 1.00 is not reached (0.99994).
+The new grid on the four base builds is lower at 0.99 to 0.998 than the old one because it omits ef 500 and 800 and rerank 100 and 400 at some ef; the
+gain at 0.99 and above comes from the two learn-heavy builds. Files: `t1-llama-test.json`, `t1-llama-test-oldgrid.json`, `benchmarks/vibe/t1_report.py`.
+
 ### Profile, llama 100k d32, ef 256 / rerank 200 (macOS `sample`, arm64, 45 s, 6,828 QPS)
 
 Of about 5,100 active samples: neighbour-expansion closure 55%, `memmove` 17%, `Pool::insert` 15% (the sorted candidate array),
