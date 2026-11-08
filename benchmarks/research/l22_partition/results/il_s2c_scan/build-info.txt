@@ -1,0 +1,39 @@
+harness=56fc6e6b4ee74f5ae4601982b6cafab0ee8899eb
+warm=5bba104faed65cb90a24d067925b992f641fe1ca (branch perf/l22-scan)
+wheel=/home/davidcondrey/il/wheels/warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl
+55c101415df330f247d5b1c89ce82cfb10e443408fe80d21b1cb664cba28f0e7  /home/davidcondrey/il/wheels/warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl
+rustc 1.99.0 (b940084d7 2026-09-28)
+ansicolors==1.1.8
+certifi==2026.10.23
+charset-normalizer==3.5.2
+cloudpickle==3.1.2
+contourpy==1.3.2
+cycler==0.12.1
+docker==7.1.0
+fonttools==4.65.0
+h5py==3.10.0
+idna==3.20
+jinja2==3.1.2
+joblib==1.6.0
+kiwisolver==1.5.1
+markupsafe==3.0.4
+matplotlib==3.10.9
+maturin==1.16.0
+numpy==1.24.2
+packaging==26.3
+pandas==2.0.0
+pillow==12.3.0
+psutil==5.9.4
+pyparsing==3.3.3
+python-dateutil==3.0.0
+pytz==2026.6
+pyyaml==6.0
+requests==2.34.2
+scikit-learn==1.7.2
+scipy==1.10.1
+six==1.17.0
+threadpoolctl==3.8.0
+tomli==2.5.0
+tzdata==2026.6
+urllib3==2.8.0
+warm-python @ file:///home/davidcondrey/il/wheels/warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl

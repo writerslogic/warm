@@ -1,51 +1,49 @@
-**Draft, not ready.** On an Ice Lake VM of the evaluation VM's class, this configuration takes 5,618 s, over the one-hour limit. I am working on a faster configuration. The numbers below are measurements, not board results.
+**Draft.** The results below were measured on an Ice Lake GCP VM of the evaluation VM's class, not on the Azure evaluation VM, so they are not board results.
 
-Adds `neurips23/streaming/warm` (algorithm key `warm`). Source: https://github.com/writerslogic/warm, pinned to commit `e29b62fc53c1e5f652520e6f63288bc53796324f` (Apache-2.0) by the single `ARG WARM_COMMIT` in `neurips23/streaming/warm/Dockerfile`, built with `--features python,experimental` on a pinned Rust 1.99.0 toolchain.
+Adds `neurips23/streaming/warm` (algorithm key `warm`). Source: https://github.com/writerslogic/warm, pinned to commit `459a54031a7293be86227c62755d6b82de81dd2f` (Apache-2.0) by the single `ARG WARM_COMMIT` in `neurips23/streaming/warm/Dockerfile`. It is built with `--features python,experimental` on a pinned Rust 1.99.0 toolchain.
 
 Files: `Dockerfile`, `config.yaml`, `warm.py` (`Warm(BaseStreamingANN)`), `streaming_io.py`, and the CI entry (`warm` on `random-xs`).
 
 ## Index
 
-For msturing-30M-clustered, `config.yaml` selects `"mode": "partition"` (`writerslogic_warm.PartitionIndex`):
+For msturing-30M-clustered, `config.yaml` selects `"mode": "partition"`, which uses `writerslogic_warm.PartitionIndex`:
 - Until 1,000,000 vectors are live, search is exact brute force.
-- At the first search past that point, the index trains an IVF with 5,000 lists, SOAR spill and PQ-50 residual codes. The centres are then fixed; inserts are assigned and deletes are tombstoned.
-- Search probes 300 lists with a 4-bit LUT scan, then reorders 317 candidates exactly in f32.
+- At the first search past that point, the index trains an IVF with 5,000 lists, SOAR spill and PQ-50 residual codes. The centres then stay fixed.
+- Search probes **400** lists with a 4-bit LUT scan. On AVX-512 VBMI+VNNI CPUs, four queries share each code block. The threshold test is fused into the scan. Search then reorders **1,000** candidates exactly in f32.
 
 The graph mode (`R`/`L`/`alpha`, `UpdatableIndex`) stays available for the other datasets.
 
-Dataset override: importing `warm.py` replaces the harness's `msturing-10M-clustered` and `msturing-30M-clustered` dataset classes with subclasses whose `get_data_in_range` reads only the requested rows from the `.fbin` file (after strict header and size checks) instead of memory-mapping it. Result paths are unchanged. The organisers may drop `streaming_io.py` and the `DATASETS.update` call without affecting the index.
+Dataset override: importing `warm.py` replaces the harness's `msturing-10M-clustered` and `msturing-30M-clustered` dataset classes with subclasses whose `get_data_in_range` reads only the requested rows of the `.fbin` (after strict header and size checks). The organisers may drop `streaming_io.py` and the `DATASETS.update` call without affecting the index.
 
 ## Measured (not the evaluation VM)
 
-The run was `python run.py --nodocker --neurips23track streaming --algorithm warm --dataset msturing-30M-clustered --runbook_path neurips23/runbooks/streaming/msturing-30M-clustered_final_runbook.yaml`. Conditions:
-- harness at this branch's parent (5d6225a);
-- 8 CPUs (Intel, WSL2), under a systemd scope with an 8 GiB memory limit;
-- the wheel built from a `git archive` of the pinned commit.
+Command: `python run.py --nodocker --neurips23track streaming --algorithm warm --dataset msturing-30M-clustered --runbook_path neurips23/runbooks/final_runbook.yaml`, on a GCP n2-custom-8-16384:
+- Intel Xeon @ 2.60 GHz, Ice Lake, 4 cores / 8 threads, 16 GiB, AVX-512 VBMI/VNNI;
+- an 8 GiB systemd scope with no swap.
 
-| quantity | value |
-|---|---|
-| steps | 1,280 of 1,280 completed, exit 0, 640 searches |
-| mean recall@10 | **0.9726** |
-| minimum recall@10 after training | 0.9543 (training happened at search 16, with 1,239,816 vectors live) |
-| total of the step times | 2,550 s (insert 160 s, delete 36 s, search 2,353 s); process elapsed 42:31 |
-| peak RSS | 6.45 GiB |
+The harness was at this branch with `config.yaml` set as listed; each run is one measurement.
 
-Same harness, commit and config on a GCP n2-custom-8-16384 (Intel Xeon @ 2.60 GHz, Ice Lake, 4 cores / 8 threads, 16 GiB), the closest class to D8lds_v5 available to me:
-- Recall is identical: 0.972619 mean, 0.9543 minimum.
-- Peak RSS is 6.41 GiB.
-- The total of the step times is **5,618 s** (search 5,293 s, insert 300 s, delete 26 s), and the process took 1:33:40. **This exceeds the one-hour limit.**
+| WARM build | nprobe / reorder | mean recall@10 | min after training | total of step times | elapsed | peak RSS |
+|---|---|---|---|---|---|---|
+| `e29b62fc` (before the scan change) | 300 / 317 | 0.9726 | 0.9543 | 5,618 s | 1:33:40 | 6.41 GiB |
+| `5bba104f` (scan change) | 300 / 317 | 0.9726 (identical) | 0.9543 | 2,187 s | 36:28 | 6.47 GiB |
+| `5bba104f` | 350 / 1000 | 0.9808 | 0.9627 | 2,466 s | 41:08 | 6.58 GiB |
+| **`5bba104f`, this config** | **400 / 1000** | **0.9848** | **0.9686** | **2,666 s** (search 2,318, insert 311, delete 37) | **44:27** | **6.56 GiB** |
 
-An earlier run of the same tier at nprobe 250 scored 0.9651 mean recall in 2,276 s.
-
-For reference, the `neurips23/README.md` baselines table quotes DiskANN at 0.883 on this runbook. This hardware is not the Azure D8lds_v5 VM, so wall time on that VM is unmeasured. Wall time and memory on that VM decide whether this entry qualifies.
+Notes:
+- All 1,280 steps completed, with exit 0, in every run.
+- `459a5403` is `5bba104f` merged to main. It adds only dead-code lint attributes, and the scan code is the same.
+- For reference, `neurips23/README.md` quotes DiskANN at 0.883 on this runbook.
+- Wall time on D8lds_v5 (Xeon 8370C, 2.8 GHz) is unmeasured.
 
 ## CI
 
-Fork CI on this head (https://github.com/dcondrey/big-ann-benchmarks/actions/runs/42456893463):
-- The `neurips23-streaming-warm` image builds, and `Warm` instantiates.
-- The random-xs step then fails with `FileNotFoundError: 'neurips23/streaming/simple_runbook.yaml'`, raised by the harness's default runbook path in `benchmark/runner.py`.
-- Every streaming entry in that run fails the same way (diskann, puck, pyanns, cufe, hwtl_sdu_anns_stream), so this is not specific to WARM.
+Fork CI on the previous head (https://github.com/dcondrey/big-ann-benchmarks/actions/runs/42456893463):
+- The `neurips23-streaming-warm` image builds and `Warm` instantiates.
+- The random-xs step then fails with `FileNotFoundError: 'neurips23/streaming/simple_runbook.yaml'`, the harness's default runbook path in `benchmark/runner.py`.
+- Every streaming entry in that run fails the same way (diskann, puck, pyanns, cufe, hwtl_sdu_anns_stream).
 
 ## Not checked
 
-- Any run on the evaluation VM.
+- Any run on the Azure evaluation VM.
+- A Docker build of this head.

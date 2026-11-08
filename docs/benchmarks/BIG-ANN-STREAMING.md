@@ -167,27 +167,25 @@ the hour.
 
 The graph entry above could not finish this runbook within the hour. The entry now serves it from `PartitionIndex` (`src/bindings/python/partition_index.rs` over `core::qgraph::partition`):
 - Brute force runs until 1M rows are live.
-- After that, the index uses an IVF with 5,000 lists, SOAR spill, PQ-50 residual codes scanned by a 4-bit LUT, and an exact reorder of 317 candidates.
+- After that, the index uses an IVF with 5,000 lists, SOAR spill, PQ-50 residual codes scanned by a 4-bit LUT, and an exact f32 reorder.
+- The scan fuses the threshold test into the LUT kernel. On AVX-512 VBMI+VNNI CPUs, four queries share each code block.
 
 Design, kill tests and the measurements behind each parameter are in [`docs/research/STREAMING-L22.md`](../research/STREAMING-L22.md).
 
-The run was `run.py --nodocker` with the final runbook, on 8 threads of a Core Ultra 9 185H (WSL2) in an 8 GiB scope, with WARM at `e29b62fc` and the board `config.yaml` (nprobe 300). Evidence is in `benchmarks/research/l22_partition/results/s2b_board_config/` [M]:
+All runs below use `run.py --nodocker` with the final runbook, all 1,280 steps, exit 0, in an 8 GiB scope without swap. The Ice Lake VM is a GCP n2-custom-8-16384 (Xeon @ 2.60 GHz, 4 cores / 8 threads, AVX-512 VBMI/VNNI). It is the evaluation VM's class (D8lds_v5), not that VM. Each row is one run [M]. Evidence is under `benchmarks/research/l22_partition/results/`.
 
-| quantity | value |
-|---|---|
-| steps | 1,280 of 1,280, exit 0 |
-| mean recall@10 over 640 searches | **0.9726** (graph entry on the same host: 0.8768; `neurips23/README.md` DiskANN baseline: 0.883) |
-| lowest post-train recall@10 | 0.9543 |
-| wall time (sum of step seconds) | 2,550 s (search 2,353, insert 160, delete 36) |
-| peak RSS | 6.45 GiB |
+| host | WARM | nprobe / reorder | mean recall@10 | min after training | step-time total | peak RSS | evidence |
+|---|---|---|---|---|---|---|---|
+| Core Ultra 9 185H | `e29b62fc` | 300 / 317 | 0.9726 | 0.9543 | 2,550 s | 6.45 GiB | `s2b_board_config` |
+| Ice Lake VM | `e29b62fc` | 300 / 317 | 0.9726 | 0.9543 | 5,618 s, **over the hour** | 6.41 GiB | `il_s2b_icelake` |
+| Ice Lake VM | `5bba104f` (fused scan) | 300 / 317 | 0.9726, identical | 0.9543 | 2,187 s | 6.47 GiB | `il_s2c_scan` |
+| Ice Lake VM | `5bba104f` | 350 / 1000 | 0.9808 | 0.9627 | 2,466 s | 6.58 GiB | `il_s2d_np350_ro1000` |
+| Ice Lake VM | `5bba104f` | **400 / 1000** | **0.9848** | **0.9686** | **2,666 s** | 6.56 GiB | `il_s2d_np400_ro1000` |
 
-The same harness, commit and config ran on a GCP n2-custom-8-16384 (Xeon @ 2.60 GHz, Ice Lake, 4 cores / 8 threads), the class of the evaluation VM (`results/il_s2b_icelake`) [M]:
-- Recall and peak RSS match: 0.972619 and 6.41 GiB.
-- The step times total **5,618 s**: search 5,293, insert 300, delete 26.
-- That is 2.2x the Core Ultra time and **over the one-hour limit**. The scanned blocks and admitted counts are identical, so the extra time is per-operation cost on the slower cores.
-- The entry does not qualify until the scan is about 2x cheaper on Ice Lake or the operating point drops.
-
-An earlier run at nprobe 250 (`results/testb_run1`) measured 0.9651 in 2,276 s. This hardware is not the Azure evaluation VM, so neither run is a board result. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
+- The submitted configuration is the last row, pinned at `459a5403`: `5bba104f` merged, with the same scan code.
+- The scan change cut Ice Lake search from 5,293 s to 1,790 s at identical recall. Blocks and admitted counts are identical. The extra time went into higher nprobe and a larger reorder.
+- The `neurips23/README.md` baselines table quotes DiskANN at 0.883 on this runbook.
+- Wall time on the Azure evaluation VM is unmeasured. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
 
 ## Merged consolidation (development measurements)
 
