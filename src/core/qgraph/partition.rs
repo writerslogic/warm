@@ -719,6 +719,19 @@ impl PartitionTier {
         self.params.nprobe_min = nprobe_min.max(1);
     }
 
+    /// Trained centres, `lists x dim` row-major (None before training).
+    pub fn centres(&self) -> Option<&[f32]> {
+        self.trained.as_ref().map(|t| t.centres.as_slice())
+    }
+
+    /// Primary and spill list of a live id (`u32::MAX` = none); None for an unknown id or before
+    /// training. Read-only diagnostic for the miss audit.
+    pub fn lists_of(&self, id: u32) -> Option<[u32; 2]> {
+        let slot = *self.id_slot.get(&id)?;
+        let e = self.trained.as_ref()?.loc.get(slot as usize)?;
+        Some([e[0].0, e[1].0])
+    }
+
     pub fn is_trained(&self) -> bool {
         self.trained.is_some()
     }

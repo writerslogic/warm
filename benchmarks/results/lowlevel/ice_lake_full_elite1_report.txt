@@ -1,0 +1,13 @@
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+valid True steps 1280 run_exit=0 searches 640 warm_line True
+wall(sum of steps) 2587 s; process elapsed 43:09.02; per op {'insert': 278, 'search': 2272, 'delete': 38}
+mean recall 0.993062 (pin 0.876839); trained at search 16 live 1239816; min post-train 0.9836; pre-train mean 1.0000
+recall by 80-search bins [0.9931, 0.991, 0.9948, 0.9936, 0.9932, 0.9939, 0.9926, 0.9922]
+peak RSS 6.60 GiB (6 GB projection, 8 GiB scope)
+WARM_MODE terms {'live': '2367854', 'trained': 'True', 'trained_at_search': '16', 'trained_at_live': '1239816', 'train_search_s': '27.410', 'searches': '640', 'insert_s': '272.441', 'delete_s': '37.501', 'search_s': '2269.840', 'centres_s': '71.088', 'route_s': '44.710', 'scan_s': '1926.567', 'scan_mean_s': '1903.128', 'lut_mean_s': '231.386', 'blocks': '377759211980', 'admitted': '76120776331', 'reorder_s': '153.984', 'partition_search_s': '2191.223', 'adapter_wall_s': '2587.6'}
+GATES {'mean>=0.90': True, 'post-train min>=0.80': True, 'wall<3000': True, 'rss<8GiB': True}
+TEST B: PASS
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 43:09.02
+	Maximum resident set size (kbytes): 6918984
+WARM_MODE partition live=2367854 trained=True trained_at_search=16 trained_at_live=1239816 train_search_s=27.410 searches=640 insert_s=272.441 delete_s=37.501 search_s=2269.840 centres_s=71.088 route_s=44.710 scan_s=1926.567 scan_mean_s=1903.128 lut_mean_s=231.386 blocks=377759211980 admitted=76120776331 reorder_s=153.984 partition_search_s=2191.223 adapter_wall_s=2587.6

@@ -1,0 +1,5 @@
+To increase the performance of the tunnel, consider installing NumPy. For instructions,
+please see https://cloud.google.com/iap/docs/using-tcp-forwarding#increasing_the_tcp_upload_bandwidth
+cat: /home/davidcondrey/y/out-y/elite2/report.txt: No such file or directory
+grep: /home/davidcondrey/y/out-y/elite2/time.txt: No such file or directory
+grep: /home/davidcondrey/y/out-y/elite2/harness-stdout.log: No such file or directory
