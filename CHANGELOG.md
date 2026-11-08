@@ -8,6 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Add adaptive per-query probe rules to the partition tier
 - Expose the partition tier to Python and record the L22 full-stream run (#398)
 - Validate the query width in PartitionIndex and record the L22 test B run
 - Expose the experimental partition tier to Python as PartitionIndex
@@ -62,6 +63,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the Ice Lake streaming runs (recall 0.9848 in 2,666 s) (#404)
+- Record the Ice Lake streaming runs (recall 0.9848 in 2,666 s)
 - Record that the streaming entry takes 5,618 s on Ice Lake, over the hour
 - Mark the VIBE 4-bit risk table as superseded for the submission grid
 - Record the board-config streaming run (#399)
@@ -155,6 +158,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record ToIP collaboration introduction
 
 ### Fixed
+- Allow the partition-only scan helpers to go unused without experimental
 - Bump oauthlib to 4.0.1 in the chroma benchmark requirements (#400)
 - Bump oauthlib to 4.0.1 in the chroma benchmark requirements
 - Decode checkpoint hits at capture so nothing reads the mapping after its locks
@@ -243,6 +247,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Fuse admission into the LUT16 scan and add AVX-512 and VNNI quad paths (#403)
+- Fuse admission into the LUT16 scan and add a VNNI quad layout
+- Add an AVX-512BW path to the LUT16 block scan
 - Balance partition search threads by estimated scan work
 - Restore the fused table-build loop
 - Accumulate the AVX2 block scan in 16-bit words and vectorise the table build
