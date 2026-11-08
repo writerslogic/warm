@@ -49,7 +49,7 @@ print("gt", f"{time.time() - t0:.0f}s", flush=True)
 
 sample = np.asarray(mm[np.sort(rng.choice(n, min(262144, n), replace=False))])
 cent = sample[rng.choice(len(sample), K, replace=False)].copy()
-for it in range(10):
+for _ in range(10):
     cn = (cent * cent).sum(1)
     assign = np.empty(len(sample), np.int32)
     for s in range(0, len(sample), 8192):

@@ -45,6 +45,7 @@ pub(crate) fn scan32(codes: &[u8], lut: &[u8], m: usize, out: &mut [u32; BLOCK])
 /// below `cut`. `out` holds the sums when the mask is non-zero and is unspecified otherwise, so
 /// a caller that admits almost nothing never widens or stores them.
 #[inline]
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 pub(crate) fn scan32_lt(
     codes: &[u8],
     lut: &[u8],
@@ -144,6 +145,7 @@ fn add_group(codes: &[u8], lut: &[u8], out: &mut [u16; BLOCK]) {
 }
 
 /// Bytes per block of 32 codes in the quad layout used by [`scan32q_lt`].
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 pub(crate) fn quad_stride(m: usize) -> usize {
     64 * m.div_ceil(4)
 }
@@ -153,12 +155,14 @@ pub(crate) fn quad_stride(m: usize) -> usize {
 /// byte `4 * (i % 16) + g` of a quad holds group `g` of codes `i % 16` and `i % 16 + 16`, so a
 /// dword gathers one code's four lookups.
 #[inline]
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 pub(crate) fn quad_pos(i: usize, j: usize) -> usize {
     64 * (j / 4) + 4 * (i & 15) + (j & 3)
 }
 
 /// True when the quad kernel runs: AVX-512 VBMI and VNNI on top of the BW path, and
 /// `WARM_FASTSCAN_NO_QUAD` unset (read once).
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 pub(crate) fn quad_available() -> bool {
     #[cfg(target_arch = "x86_64")]
     {
@@ -180,6 +184,7 @@ pub(crate) fn quad_available() -> bool {
 /// sum is below `cuts[k]`; `out[k]` holds that table's sums only when its mask is non-zero.
 /// Sums are exact in `u32` for any `m`. Requires [`quad_available`].
 #[inline]
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 pub(crate) fn scan32q_lt<const Q: usize>(
     codes: &[u8],
     luts: &[u8],
@@ -199,6 +204,7 @@ pub(crate) fn scan32q_lt<const Q: usize>(
 
 #[cfg(target_arch = "x86_64")]
 #[inline]
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 fn quad_dispatch<const Q: usize>(
     codes: &[u8],
     luts: &[u8],
@@ -215,6 +221,7 @@ fn quad_dispatch<const Q: usize>(
 }
 
 #[cfg(not(target_arch = "x86_64"))]
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 fn quad_dispatch<const Q: usize>(
     _codes: &[u8],
     _luts: &[u8],
@@ -242,6 +249,7 @@ mod quad {
     /// The CPU supports AVX-512 F/BW/VL/VBMI/VNNI; `codes` holds `64 * nq` bytes and table `k`
     /// holds `64 * nq` bytes at `luts + sel[k] * lstride`.
     #[target_feature(enable = "avx512f,avx512bw,avx512vl,avx512vbmi,avx512vnni")]
+    #[cfg_attr(not(feature = "experimental"), allow(dead_code))]
     pub(super) unsafe fn scan<const Q: usize>(
         codes: *const u8,
         luts: *const u8,
@@ -520,6 +528,7 @@ mod avx2 {
     /// # Safety
     /// As [`scan32`].
     #[target_feature(enable = "avx2")]
+    #[cfg_attr(not(feature = "experimental"), allow(dead_code))]
     pub(super) unsafe fn scan32_lt(
         codes: &[u8],
         lut: &[u8],
@@ -707,6 +716,7 @@ mod avx512 {
     /// # Safety
     /// As [`scan32`].
     #[target_feature(enable = "avx512f,avx512bw,avx512vl,avx2")]
+    #[cfg_attr(not(feature = "experimental"), allow(dead_code))]
     pub(super) unsafe fn scan32_lt(
         codes: &[u8],
         lut: &[u8],
