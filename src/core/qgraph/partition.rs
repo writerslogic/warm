@@ -1145,6 +1145,12 @@ mod tests {
             dim,
             PartitionParams {
                 train_at: usize::MAX,
+                reorder: crate::compatibility::var("WARM_L22_ACC_REORDER")
+                    .map(|v| v.trim().parse().unwrap())
+                    .unwrap_or(PartitionParams::default().reorder),
+                pq_m: crate::compatibility::var("WARM_L22_ACC_PQM")
+                    .map(|v| v.trim().parse().unwrap())
+                    .unwrap_or(PartitionParams::default().pq_m),
                 ..PartitionParams::default()
             },
         )
