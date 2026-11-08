@@ -23,6 +23,8 @@
 
 mod adjacency;
 mod build_kernels;
+#[cfg(feature = "experimental")]
+mod exact_l2;
 mod fastscan;
 pub mod filter;
 pub(crate) mod kernels;
