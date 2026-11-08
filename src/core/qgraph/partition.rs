@@ -17,6 +17,7 @@ use std::collections::HashMap;
 
 use rayon::prelude::*;
 
+use super::exact_l2;
 use super::fastscan::{
     build_lut, quad_available, quad_pos, quad_stride, scan32_lt, scan32q_lt, BLOCK,
 };
@@ -227,7 +228,7 @@ fn admit_cut(thr: f32, base: f32, scale: f32) -> u32 {
 
 /// Scores one quad-layout block against `live` of the [`QB`] tables, table `i` being
 /// `luts[sel[i] * lstride..]`; returns the admission masks by `i`.
-#[inline]
+#[inline(always)]
 #[allow(clippy::too_many_arguments)]
 fn scan_group(
     live: usize,
@@ -239,6 +240,7 @@ fn scan_group(
     cuts: &[u32; QB],
     outs: &mut [[u32; BLOCK]; QB],
 ) -> [u32; QB] {
+    #[inline(always)]
     #[allow(clippy::too_many_arguments)]
     fn run<const K: usize>(
         codes: &[u8],
@@ -266,7 +268,11 @@ fn scan_group(
         1 => run::<1>(codes, luts, lstride, m, sel, cuts, outs),
         2 => run::<2>(codes, luts, lstride, m, sel, cuts, outs),
         3 => run::<3>(codes, luts, lstride, m, sel, cuts, outs),
-        _ => run::<4>(codes, luts, lstride, m, sel, cuts, outs),
+        4 => run::<4>(codes, luts, lstride, m, sel, cuts, outs),
+        5 => run::<5>(codes, luts, lstride, m, sel, cuts, outs),
+        6 => run::<6>(codes, luts, lstride, m, sel, cuts, outs),
+        7 => run::<7>(codes, luts, lstride, m, sel, cuts, outs),
+        _ => run::<8>(codes, luts, lstride, m, sel, cuts, outs),
     }
 }
 
@@ -322,8 +328,45 @@ fn smallest_k(vals: &[f32], k: usize, out: &mut Vec<(f32, u32)>) {
     }
 }
 
-fn sq(a: &[f32], b: &[f32]) -> f32 {
-    a.iter().zip(b).map(|(x, y)| (x - y) * (x - y)).sum()
+use exact_l2::sq;
+
+/// Membership of slots seen so far in one reorder: open addressing over a power-of-two table
+/// sized for at most `cap` members, cleared between queries.
+struct SlotSet {
+    table: Vec<u32>,
+    shift: u32,
+}
+
+impl SlotSet {
+    const EMPTY: u32 = u32::MAX;
+
+    fn new(cap: usize) -> Self {
+        let size = (2 * cap).next_power_of_two().max(16);
+        Self {
+            table: vec![Self::EMPTY; size],
+            shift: 32 - size.trailing_zeros(),
+        }
+    }
+
+    fn clear(&mut self) {
+        self.table.fill(Self::EMPTY);
+    }
+
+    /// True when `slot` was not yet a member.
+    fn insert(&mut self, slot: u32) -> bool {
+        let mask = self.table.len() - 1;
+        let mut i = (slot.wrapping_mul(0x9E37_79B1) >> self.shift) as usize;
+        loop {
+            match self.table[i] {
+                Self::EMPTY => {
+                    self.table[i] = slot;
+                    return true;
+                }
+                v if v == slot => return false,
+                _ => i = (i + 1) & mask,
+            }
+        }
+    }
 }
 
 fn dot(a: &[f32], b: &[f32]) -> f32 {
@@ -417,7 +460,7 @@ impl SplitMix {
 }
 
 /// Queries scored per pass over a block by the quad kernel.
-const QB: usize = 4;
+const QB: usize = 8;
 
 /// How a list stores its codes: `m` nibbles per code in blocks of [`BLOCK`] codes, in either the
 /// LUT16 shuffle layout (`16 * m` bytes per block) or, on AVX-512 VBMI/VNNI hardware, the quad
@@ -989,12 +1032,28 @@ impl PartitionTier {
             .collect();
         let probes: u64 = probe.iter().map(|p| p.len() as u64).sum();
         let centres_s = t0.elapsed().as_secs_f64();
-        let mut by_list: Vec<Vec<u32>> = vec![Vec::new(); l];
-        for (q, ls) in probe.iter().enumerate() {
-            for &li in ls {
-                by_list[li as usize].push(q as u32);
-            }
-        }
+        // Per list, the probing queries with their centre distance, in query order. Built in
+        // parallel over ranges of lists, each pass reading every probe.
+        let span = l.div_ceil(2 * rayon::current_num_threads().max(1)).max(1);
+        let by_list: Vec<Vec<(u32, f32)>> = (0..l)
+            .step_by(span)
+            .collect::<Vec<_>>()
+            .into_par_iter()
+            .flat_map_iter(|lo| {
+                let hi = (lo + span).min(l);
+                let mut part: Vec<Vec<(u32, f32)>> = vec![Vec::new(); hi - lo];
+                for (q, ls) in probe.iter().enumerate() {
+                    for &li in ls {
+                        let li = li as usize;
+                        if (lo..hi).contains(&li) {
+                            part[li - lo].push((q as u32, qc[q * l + li]));
+                        }
+                    }
+                }
+                part
+            })
+            .collect();
+        drop(qc);
         // Per-query table term -2 <q_b, v>.
         let qtab: Vec<f32> = queries
             .par_chunks(dim)
@@ -1020,7 +1079,7 @@ impl PartitionTier {
                 let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
                 let mut luts = vec![0u8; if sh.quad { QB * lstride } else { 0 }];
                 let mut outs = [[0u32; BLOCK]; QB];
-                let mut own: Vec<u32> = Vec::new();
+                let mut own: Vec<(u32, f32)> = Vec::new();
                 let mut out = [0u32; BLOCK];
                 let (mut lut_s, mut blocks, mut admitted) = (0f64, 0u64, 0u64);
                 let ts = std::time::Instant::now();
@@ -1036,15 +1095,19 @@ impl PartitionTier {
                         own.extend(
                             qs.iter()
                                 .copied()
-                                .filter(|q| owner[*q as usize] as usize == th),
+                                .filter(|(q, _)| owner[*q as usize] as usize == th),
                         );
-                        for chunk in own.chunks(QB) {
+                        for (ci, chunk) in own.chunks(QB).enumerate() {
+                            // The next chunk's query tables are read cold; request them now.
+                            for &(q, _) in own.iter().skip((ci + 1) * QB).take(QB) {
+                                exact_l2::prefetch_l2(&qtab[q as usize * e..(q as usize + 1) * e]);
+                            }
                             let kq = chunk.len();
                             let (mut js, mut bases) = ([0usize; QB], [0f32; QB]);
                             let (mut scales, mut cuts) = ([0f32; QB], [0u32; QB]);
-                            for (k, &q) in chunk.iter().enumerate() {
+                            let tl = std::time::Instant::now();
+                            for (k, &(q, dc)) in chunk.iter().enumerate() {
                                 let j = local(q);
-                                let tl = std::time::Instant::now();
                                 let (base, scale) = build_lut(
                                     &qtab[q as usize * e..(q as usize + 1) * e],
                                     lt,
@@ -1052,21 +1115,22 @@ impl PartitionTier {
                                     &mut mins,
                                     &mut luts[k * lstride..k * lstride + e],
                                 );
-                                lut_s += tl.elapsed().as_secs_f64();
-                                let base = base + qc[q as usize * l + li];
+                                let base = base + dc;
                                 (js[k], bases[k], scales[k]) = (j, base, scale);
                                 cuts[k] = admit_cut(thr[j], base, scale);
                             }
-                            for blk in 0..n.div_ceil(BLOCK) {
-                                // Members whose threshold fell to this list's base are finished
-                                // with it; only the live ones go through the kernel.
-                                let (mut sel, mut cs, mut live) = ([0usize; QB], [0u32; QB], 0);
-                                for k in 0..kq {
-                                    if thr[js[k]] > bases[k] {
-                                        (sel[live], cs[live]) = (k, cuts[k]);
-                                        live += 1;
-                                    }
+                            lut_s += tl.elapsed().as_secs_f64();
+                            // Members whose threshold fell to this list's base are finished with
+                            // it (a threshold only falls), so only the live ones go through the
+                            // kernel; the set changes only when a threshold does.
+                            let (mut sel, mut cs, mut live) = ([0usize; QB], [0u32; QB], 0);
+                            for k in 0..kq {
+                                if thr[js[k]] > bases[k] {
+                                    (sel[live], cs[live]) = (k, cuts[k]);
+                                    live += 1;
                                 }
+                            }
+                            for blk in 0..n.div_ceil(BLOCK) {
                                 if live == 0 {
                                     break;
                                 }
@@ -1082,7 +1146,9 @@ impl PartitionTier {
                                     &mut outs,
                                 );
                                 let valid = (n - blk * BLOCK).min(BLOCK);
-                                for (i, &k) in sel[..live].iter().enumerate() {
+                                let mut retired = false;
+                                let any = masks[..live].iter().fold(0, |a, &m| a | m);
+                                for i in 0..if any == 0 { 0 } else { live } {
                                     let mut mask = masks[i];
                                     if mask == 0 {
                                         continue;
@@ -1090,6 +1156,7 @@ impl PartitionTier {
                                     if valid < BLOCK {
                                         mask &= (1u32 << valid) - 1;
                                     }
+                                    let k = sel[i];
                                     let (j, base, scale) = (js[k], bases[k], scales[k]);
                                     let buf = &mut bufs[j];
                                     while mask != 0 {
@@ -1106,18 +1173,30 @@ impl PartitionTier {
                                             a.0.total_cmp(&b.0)
                                         });
                                         buf.truncate(reorder);
-                                        thr[j] = buf
-                                            .iter()
-                                            .map(|x| x.0)
-                                            .fold(f32::NEG_INFINITY, f32::max);
-                                        cuts[k] = admit_cut(thr[j], base, scale);
+                                        // The selected element is the largest kept score.
+                                        thr[j] = buf[reorder - 1].0;
+                                        cs[i] = admit_cut(thr[j], base, scale);
+                                        if thr[j] <= base {
+                                            sel[i] = usize::MAX;
+                                            retired = true;
+                                        }
                                     }
+                                }
+                                if retired {
+                                    let mut w = 0;
+                                    for i in 0..live {
+                                        if sel[i] != usize::MAX {
+                                            (sel[w], cs[w]) = (sel[i], cs[i]);
+                                            w += 1;
+                                        }
+                                    }
+                                    live = w;
                                 }
                             }
                         }
                         continue;
                     }
-                    for &q in qs.iter().filter(|q| owner[**q as usize] as usize == th) {
+                    for &(q, dc) in qs.iter().filter(|(q, _)| owner[*q as usize] as usize == th) {
                         let j = local(q);
                         let tl = std::time::Instant::now();
                         let (base, scale) = build_lut(
@@ -1128,7 +1207,7 @@ impl PartitionTier {
                             &mut lut,
                         );
                         lut_s += tl.elapsed().as_secs_f64();
-                        let base = base + qc[q as usize * l + li];
+                        let base = base + dc;
                         let buf = &mut bufs[j];
                         let mut cut = admit_cut(thr[j], base, scale);
                         for blk in 0..n.div_ceil(BLOCK) {
@@ -1166,22 +1245,46 @@ impl PartitionTier {
                     }
                 }
                 let scan_s = ts.elapsed().as_secs_f64();
+                let mut seen = SlotSet::new(reorder);
+                let mut uniq: Vec<u32> = Vec::with_capacity(reorder);
+                let mut dist = vec![0f32; reorder + exact_l2::LANES];
                 let res: Vec<(u32, Vec<u32>)> = mine
                     .iter()
                     .zip(bufs)
                     .map(|(&q, mut buf)| {
                         buf.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
-                        let mut seen = std::collections::HashSet::with_capacity(reorder);
                         let qv = &queries[q as usize * dim..(q as usize + 1) * dim];
-                        let mut exact: Vec<(f32, u32)> = Vec::with_capacity(reorder);
+                        // The best `reorder` distinct slots in score order.
+                        seen.clear();
+                        uniq.clear();
                         for (_, s) in buf {
-                            if exact.len() == reorder {
+                            if uniq.len() == reorder {
                                 break;
                             }
                             if seen.insert(s) {
-                                exact.push((sq(qv, self.row(s)), s));
+                                uniq.push(s);
                             }
                         }
+                        // Exact distances in batches, the rows of the next batch requested
+                        // while this one is computed.
+                        for (b, slots) in uniq.chunks(exact_l2::LANES).enumerate() {
+                            for &s in uniq
+                                .iter()
+                                .skip((b + 1) * exact_l2::LANES)
+                                .take(exact_l2::LANES)
+                            {
+                                exact_l2::prefetch_row(&self.rows, dim, s);
+                            }
+                            exact_l2::sq_batch(
+                                qv,
+                                &self.rows,
+                                dim,
+                                slots,
+                                &mut dist[b * exact_l2::LANES..],
+                            );
+                        }
+                        let mut exact: Vec<(f32, u32)> =
+                            dist.iter().copied().zip(uniq.iter().copied()).collect();
                         exact.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
                         (
                             q,
@@ -1458,6 +1561,26 @@ mod tests {
     /// and admissions through deletes and reinserts, with a reorder small enough that the
     /// running threshold prunes and an `m` that pads the last quad.
     #[test]
+    fn slot_set_agrees_with_a_hash_set() {
+        let mut rng = SplitMix(9);
+        for cap in [1usize, 7, 1000] {
+            let mut set = SlotSet::new(cap);
+            let mut want = std::collections::HashSet::new();
+            for round in 0..3 {
+                set.clear();
+                want.clear();
+                // `cap` distinct members at most, with repeats and clustered values.
+                for _ in 0..4 * cap {
+                    let s = (rng.next() % (cap as u64).max(2)) as u32 * 4096 + round;
+                    if want.len() < cap || want.contains(&s) {
+                        assert_eq!(set.insert(s), want.insert(s), "cap {cap}");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn quad_layout_equals_lut16_layout() {
         if !quad_available() {
             eprintln!("skipped: no AVX-512 VBMI/VNNI");
@@ -1465,7 +1588,8 @@ mod tests {
         }
         let (n, dim, k) = (3000, 40, 10);
         let x = data(n, dim, 25, 1);
-        let q = data(60, dim, 25, 2);
+        // Enough queries that each thread meets full chunks of `QB` and partial ones.
+        let q = data(400, dim, 25, 2);
         let ids: Vec<u32> = (0..n as u32).map(|i| i * 5 + 1).collect();
         for m in [8usize, 10] {
             let mk = |quad: bool| {
