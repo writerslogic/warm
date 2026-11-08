@@ -60,6 +60,26 @@ def tie_recall(gt_i, gt_d, res, k=10):
     return out
 
 
+def exact_topk(mm, live, Qh, k=10, blk=500_000):
+    """Exact top-k source-row ids of every query over the live rows (float32 GEMM, blockwise)."""
+    ids = np.flatnonzero(live)
+    best_d = np.full((len(Qh), k), np.inf, dtype=np.float32)
+    best_i = np.zeros((len(Qh), k), dtype=np.int64)
+    q2 = Qh
+    for s in range(0, len(ids), blk):
+        b = ids[s:s + blk]
+        X = np.ascontiguousarray(mm[b])
+        d = (X * X).sum(1)[None, :] - 2.0 * (q2 @ X.T)
+        part = np.argpartition(d, k - 1, axis=1)[:, :k]
+        cd = np.take_along_axis(d, part, 1)
+        ci = b[part]
+        md = np.concatenate([best_d, cd], 1)
+        mi = np.concatenate([best_i, ci], 1)
+        o = np.argsort(md, 1)[:, :k]
+        best_d, best_i = np.take_along_axis(md, o, 1), np.take_along_axis(mi, o, 1)
+    return best_i
+
+
 def fnv(h, a):
     for x in a.ravel().tolist():
         h = ((h ^ x) * FNVP) & 0xFFFFFFFFFFFFFFFF
@@ -92,9 +112,11 @@ def main():
     a.add_argument("--dump", default="", help="comma list of steps whose result ids are saved to DIR/stepN.npy")
     a.add_argument("--dump-dir", default=".")
     a.add_argument("--no-gt", action="store_true")
+    a.add_argument("--audit", action="store_true", help="classify the misses at the --dump steps")
+    a.add_argument("--heldout", default="", help="f32 nq x dim query file audited at the dump steps against exact GT over the live rows")
     a.add_argument("--lists", type=int, default=5000)
     a.add_argument("--train-at", type=int, default=1_000_000)
-    a.add_argument("--settle", type=float, default=0.0)
+    a.add_argument("--place", action="store_true", help="renumber slots in list order after training")
     a.add_argument("--prefetch", type=int, default=0, help="read-ahead depth in insert ranges (0 = off)")
     args = a.parse_args()
     from writerslogic_warm import PartitionIndex
@@ -105,7 +127,7 @@ def main():
     ops = parse_runbook(args.runbook)[: args.steps]
     dump = {int(x) for x in args.dump.split(",") if x}
     idx = PartitionIndex.create(dim, lists=args.lists, train_at=args.train_at, nprobe=args.np,
-                                reorder=args.ro, threads=args.threads)
+                                reorder=args.ro, threads=args.threads, place=args.place)
     pre = None
     if args.prefetch:
         import threading
@@ -130,8 +152,10 @@ def main():
 
         threading.Thread(target=worker, daemon=True).start()
         pre = (state, cond)
+    live = np.zeros(rows, dtype=bool)
+    QH = np.ascontiguousarray(np.fromfile(args.heldout, dtype="<f4").reshape(-1, dim)) if args.heldout else None
     t = {"insert": 0.0, "delete": 0.0, "search": 0.0, "read": 0.0, "convert": 0.0}
-    h, recalls, steps_rec = FNV0, [], []
+    h, recalls, steps_rec, audits = FNV0, [], [], []
     t_all = time.perf_counter()
     for n, o in enumerate(ops, 1):
         op = o["operation"]
@@ -146,6 +170,7 @@ def main():
             i64 = ids.astype(np.int64)
             t3 = time.perf_counter()
             idx.insert(i64, X)
+            live[s:e] = True
             t4 = time.perf_counter()
             t["read"] += t2 - t1
             t["convert"] += (t1 - t0) + (t3 - t2)
@@ -158,6 +183,7 @@ def main():
             ids = np.arange(int(o["start"]), int(o["end"]), dtype=np.uint32).astype(np.int64)
             t1 = time.perf_counter()
             idx.delete(ids)
+            live[int(o["start"]):int(o["end"])] = False
             t["delete"] += time.perf_counter() - t1
         else:
             t1 = time.perf_counter()
@@ -173,6 +199,26 @@ def main():
             steps_rec.append((n, round(dt, 3), rec))
             if n in dump:
                 np.save(os.path.join(args.dump_dir, f"step{n}.npy"), res.astype(np.int32))
+                if args.audit:
+                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                    from audit import audit
+                    mm = np.memmap(base, dtype="<f4", mode="r", offset=8, shape=(rows, dim))
+                    gi, _ = read_gt(os.path.join(args.gt, f"step{n}.gt100"))
+                    summ, recs = audit(idx, Q, res, gi, mm, args.np)
+                    if QH is not None:
+                        resh = np.asarray(idx.search(QH, 10))
+                        gth = exact_topk(mm, live, QH)
+                        for g, (lo, hi) in {"board500": (0, 500), "next2000": (500, 2500), "heldout2000": (2500, len(QH))}.items():
+                            sh, rh = audit(idx, QH[lo:hi], resh[lo:hi], gth[lo:hi], mm, args.np)
+                            sh["step"], sh["set"] = n, g
+                            audits.append(sh)
+                            json.dump(rh, open(os.path.join(args.dump_dir, f"audit_step{n}_{g}.json"), "w"))
+                    summ["step"] = n
+                    summ["set"] = "board10k"
+                    summ["live"] = len(idx)
+                    audits.append(summ)
+                    json.dump({"summary": summ, "misses": recs},
+                              open(os.path.join(args.dump_dir, f"audit_step{n}.json"), "w"))
     wall = time.perf_counter() - t_all
     st = idx.stats()
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 / 1024
@@ -182,7 +228,7 @@ def main():
            "digest": f"{h:016x}", "recall_mean": (round(float(np.mean(recalls)), 6) if recalls else None),
            "searches": len(steps_rec), "peak_rss_gib": round(rss, 3), "smaps_kb": smaps(),
            "stats": {k: (float(v) if not isinstance(v, str) else v) for k, v in st.items()},
-           "search_steps": steps_rec[-3:]}
+           "search_steps": steps_rec[-3:], "audits": audits}
     line = json.dumps(rep)
     print(line)
     if args.out:
