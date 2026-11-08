@@ -41,7 +41,7 @@ fn thp_enabled() -> bool {
             let p = unsafe { libc::getenv(c"WARM_THP".as_ptr()) };
             if !p.is_null() {
                 // SAFETY: p points at a NUL-terminated string owned by the environment.
-                v = u8::from(unsafe { *p } == b'1');
+                v = u8::from(unsafe { *p } as u8 == b'1');
             }
         }
         THP.store(v, Ordering::Relaxed);
