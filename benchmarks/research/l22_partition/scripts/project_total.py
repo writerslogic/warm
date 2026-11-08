@@ -32,7 +32,8 @@ def parse(path):
 
 
 def f_curve(path, arm, P):
-    d = json.load(open(path))
+    with open(path) as fh:
+        d = json.load(fh)
     rows = d.get("stream") or d.get("eval")
     pts = sorted((r["op"], r[arm][str(P)]["codes_scanned"] / r["live"]) for r in rows if arm in r)
 
@@ -67,7 +68,8 @@ def main():
     # Prefer a sustained run (most repetitions) and its MEAN components; else the best-of-3 min.
     best = None
     for p in a.bench:
-        b = json.load(open(p))
+        with open(p) as fh:
+            b = json.load(fh)
         if b["nprobe"] == a.nprobe and (best is None or b.get("reps", 3) > best.get("reps", 3)
                                         or (b.get("reps", 3) == best.get("reps", 3) and b["step_s"] < best["step_s"])):
             best = b

@@ -15,7 +15,6 @@ usage: l22c_maint.py --out DIR [--train-op 32] [--K 32] [--kernel restricted|ful
 import argparse, importlib.util, json, os, sys, time
 
 import numpy as np
-from threadpoolctl import threadpool_limits
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 

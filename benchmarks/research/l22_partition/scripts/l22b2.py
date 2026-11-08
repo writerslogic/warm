@@ -7,7 +7,7 @@ ceilings on the A3 stream (arms: full = l22b exact K32, restricted K) for the gi
 paired ceilings on A2 1M/3M prefixes.
 usage: l22b2.py --out DIR --cents C32.npy [C22.npy ...] | --synthetic
 """
-import argparse, importlib.util, json, os, sys, time
+import argparse, importlib.util, json, os, sys
 
 import numpy as np
 

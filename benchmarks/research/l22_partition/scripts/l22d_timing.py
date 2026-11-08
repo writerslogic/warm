@@ -1,7 +1,7 @@
 """Sustained-variance check for the L22 assignment term (STATE.md 01:15Z): GEMM alone (8 workers x
 BLAS 1) at start and end, restricted K32 nearest+spill on the 1M insert rows twice, all with C32.
 usage: l22d_timing.py C32.npy OUT.json [start|end|both]"""
-import importlib.util, json, os, sys, time
+import importlib.util, json, os, sys
 
 import numpy as np
 

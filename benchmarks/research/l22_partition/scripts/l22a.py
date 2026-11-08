@@ -208,7 +208,6 @@ def run(X, Q, gt, C, assign, args, tag, out):
             bd[qs] = nd
             bi[qs] = ni
     res["t_quant_scan_s"] = round(time.time() - t2, 1)
-    q2q = (Qq * Qq).sum(1)
     for a in arms:
         found = np.empty((nqq, 10), np.int64)
         for i in range(nqq):
