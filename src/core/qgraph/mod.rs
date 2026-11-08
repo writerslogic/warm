@@ -51,6 +51,9 @@ pub mod order_diagnostic;
 #[cfg(feature = "experimental")]
 pub mod ivf;
 
+#[cfg(feature = "experimental")]
+pub mod partition;
+
 use std::cell::RefCell;
 
 use rayon::prelude::*;
