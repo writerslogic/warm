@@ -58,6 +58,8 @@ fn resonator_work(dim: usize, items: usize, factors: usize, iterations: usize) -
 #[cfg(feature = "local-embed")]
 mod embed;
 mod filter_index;
+#[cfg(feature = "experimental")]
+mod partition_index;
 mod sparse_index;
 mod vector_index;
 
@@ -206,6 +208,8 @@ fn writerslogic_warm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     vector_index::register(m)?;
     filter_index::register(m)?;
     sparse_index::register(m)?;
+    #[cfg(feature = "experimental")]
+    partition_index::register(m)?;
     #[cfg(feature = "local-embed")]
     embed::register(m)?;
     Ok(())

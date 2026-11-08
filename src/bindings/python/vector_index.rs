@@ -742,7 +742,7 @@ fn update_err(e: UpdateError) -> PyErr {
 }
 
 /// The ids of a 1-D array as u32, rejecting values outside 0..u32::MAX.
-fn u32_ids(ids: &PyArrayLike1<'_, i64, AllowTypeChange>) -> PyResult<Vec<u32>> {
+pub(super) fn u32_ids(ids: &PyArrayLike1<'_, i64, AllowTypeChange>) -> PyResult<Vec<u32>> {
     ids.as_array()
         .iter()
         .map(|&i| {
@@ -796,7 +796,7 @@ impl PyUpdatableIndex {
     }
 }
 
-fn thread_pool(threads: usize) -> PyResult<Option<rayon::ThreadPool>> {
+pub(super) fn thread_pool(threads: usize) -> PyResult<Option<rayon::ThreadPool>> {
     match threads {
         0 => Ok(None),
         n => rayon::ThreadPoolBuilder::new()
