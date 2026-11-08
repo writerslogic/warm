@@ -4,7 +4,9 @@
 import re
 import sys
 rows = []
-for line in open(sys.argv[1]):
+with open(sys.argv[1]) as fh:
+    lines = fh.readlines()
+for line in lines:
     m=re.match(r'ef=(\d+) rerank=(\d+): (.*)',line.strip())
     if not m: continue
     ef,rr=int(m[1]),int(m[2])

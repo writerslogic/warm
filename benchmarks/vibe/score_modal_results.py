@@ -13,7 +13,6 @@ from pathlib import Path
 
 import fsspec
 import h5py
-import numpy as np
 
 REVISION = "07b387891a221b7b073b83d2f752b76462e5fa03"
 TARGETS = (0.90, 0.94, 0.95, 0.99, 1.0)
