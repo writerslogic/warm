@@ -8,7 +8,8 @@ hits every arm alike. One query at a time on one thread. Recall is VIBE's distan
 recall@k (epsilon 1e-3) from run.score, with strict neighbor-ID recall kept beside it.
 A diagnostic on a corpus prefix, not a VIBE result; no CPU pinning (macOS), so QPS is relative.
 
-An arm is `degree:build_ef:code_bits:query_aware`, for example `64:500:8:1`.
+An arm is `degree:build_ef:code_bits:query_aware[:escape:reach:projected_degree:training_neighbors:training_ef]`,
+for example `64:500:8:1`.
 """
 
 import argparse
@@ -46,10 +47,23 @@ def registered_grid(metric):
     return [(ef, rr) for ef in query["ef"] for rr in query["rerank"]]
 
 
+ARM_FIELDS = ("degree", "build_ef", "code_bits", "query_aware", "escape_edges", "reach_edges",
+              "projected_degree", "training_neighbors", "training_ef")
+ARM_DEFAULTS = (None, None, None, None, 0, 0, 32, 100, 0)
+
+
 def parse_arm(text):
-    degree, build_ef, code_bits, query_aware = (int(v) for v in text.split(":"))
-    return {"name": text, "degree": degree, "build_ef": build_ef, "code_bits": code_bits,
-            "query_aware": bool(query_aware)}
+    """Colon-separated ARM_FIELDS; trailing fields default to the submitted adapter's values."""
+    values = [int(v) for v in text.split(":")]
+    if not 4 <= len(values) <= len(ARM_FIELDS):
+        raise ValueError(f"arm {text!r}: expected 4 to {len(ARM_FIELDS)} fields")
+    values += list(ARM_DEFAULTS[len(values):])
+    arm = dict(zip(ARM_FIELDS, values))
+    arm["query_aware"] = bool(arm["query_aware"])
+    arm["escape_edges"] = bool(arm["escape_edges"])
+    arm["reach_edges"] = bool(arm["reach_edges"])
+    arm["name"] = text
+    return arm
 
 
 def run(args):
@@ -66,17 +80,23 @@ def run(args):
         truth, distances = handle["neighbors"][:, :args.k], handle["distances"][:, :args.k]
         metric = str(handle.attrs["distance"])
         learn = handle["learn"][:] if "learn" in handle else None
+    if args.max_queries:
+        queries, truth, distances = queries[:args.max_queries], truth[:args.max_queries], distances[:args.max_queries]
     if not np.isfinite(train).all() or not np.isfinite(queries).all():
         raise ValueError("nonfinite input")
     registered = set(registered_grid(metric))
     efs = sorted({ef for ef, _ in registered} | set(EXTENDED_EF))
     rerank = sorted({rr for _, rr in registered} | set(EXTENDED_RERANK))
-    grid = [(ef, rr) for ef in efs for rr in rerank]
+    grid = [(ef, rr, 0) for ef in efs for rr in rerank]
+    if args.points:
+        grid = [tuple(int(v) for v in (p.split(":") + ["0"])[:3]) for p in args.points.split(",")]
 
     arms = [parse_arm(a) for a in args.arms]
 
     def build(arm):
-        index = adapter_module.WARM(metric, arm["degree"], arm["build_ef"], arm["code_bits"], arm["query_aware"])
+        index = adapter_module.WARM(metric, arm["degree"], arm["build_ef"], arm["code_bits"], arm["query_aware"],
+                                        arm["escape_edges"], arm["reach_edges"], arm["projected_degree"],
+                                        arm["training_neighbors"], arm["training_ef"])
         started = time.perf_counter()
         if learn is not None:
             index.fit_ood(train.copy(), learn, None)
@@ -93,14 +113,14 @@ def run(args):
         built = list(pool.map(build, arms))
 
     rows = {arm["name"]: [] for arm in arms}
-    for ef, rr in grid:
+    for ef, rr, reservoir in grid:
         runs = {arm["name"]: {"qps": [], "ids": None, "load": []} for arm in arms}
         for repeat in range(args.repeats):
             order = list(range(len(arms)))
             order = order[repeat % len(order):] + order[:repeat % len(order)]
             for position in order:
                 index, name = built[position], arms[position]["name"]
-                index.set_query_arguments(ef, rr)
+                index.set_query_arguments(ef, rr, 0, reservoir)
                 index.query(queries[0], args.k)
                 elapsed, answers = [], []
                 runs[name]["load"].append(os.getloadavg()[0])
@@ -121,10 +141,10 @@ def run(args):
             name = arm["name"]
             row = harness.score(runs[name]["ids"], train, queries, truth, distances, metric)
             del row["query_recalls"], row["strict_query_recalls"]
-            row.update(ef=ef, rerank=rr, registered=(ef, rr) in registered, qps_runs=runs[name]["qps"],
+            row.update(ef=ef, rerank=rr, reservoir=reservoir, registered=(ef, rr) in registered and not reservoir, qps_runs=runs[name]["qps"],
                        median_qps=float(np.median(runs[name]["qps"])), load_1m=runs[name]["load"])
             rows[name].append(row)
-        print(f"ef={ef} rerank={rr}: " + " | ".join(
+        print(f"ef={ef} rerank={rr} reservoir={reservoir}: " + " | ".join(
             f"{arm['name']} {rows[arm['name']][-1]['recall']:.4f}@{rows[arm['name']][-1]['median_qps']:.0f}"
             for arm in arms), flush=True)
 
@@ -138,7 +158,7 @@ def run(args):
                 eligible = [r for r in pool if r["recall"] >= target]
                 best = max(eligible, key=lambda r: r["median_qps"]) if eligible else None
                 summary[name][f"{target}:{scope}"] = None if best is None else {
-                    "ef": best["ef"], "rerank": best["rerank"], "recall": best["recall"],
+                    "ef": best["ef"], "rerank": best["rerank"], "reservoir": best["reservoir"], "recall": best["recall"],
                     "strict": best["strict_id_recall"], "median_qps": best["median_qps"]}
     result = {"schema_version": 1, "input": manifest, "metric": metric, "k": args.k, "repeats": args.repeats,
               "queries": len(queries), "train_rows": len(train), "arms": arms, "summary": summary, "rows": rows,
@@ -159,6 +179,8 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--arms", nargs="+", required=True)
     parser.add_argument("--k", type=int, default=100)
+    parser.add_argument("--points", help="comma-separated ef:rerank[:reservoir] list replacing the default grid")
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--max-queries", type=int, default=0, help="score and time only the first N queries")
     parser.add_argument("--build-threads", type=int, default=1, help="arms built concurrently (timing is unaffected)")
     run(parser.parse_args())
