@@ -17,7 +17,9 @@ use std::collections::HashMap;
 
 use rayon::prelude::*;
 
-use super::fastscan::{build_lut, scan32, BLOCK};
+use super::fastscan::{
+    build_lut, quad_available, quad_pos, quad_stride, scan32_lt, scan32q_lt, BLOCK,
+};
 use super::invalid;
 use crate::core::error::WarmError;
 
@@ -145,6 +147,7 @@ pub struct PartitionTier {
     id_slot: HashMap<u32, u32, foldhash::fast::RandomState>,
     free: Vec<u32>,
     trained: Option<Trained>,
+    shape: Shape,
     profile: std::sync::Mutex<SearchProfile>,
 }
 
@@ -209,6 +212,62 @@ fn balance_queries(
         members[th].push(q);
     }
     (owner, local, members)
+}
+
+/// The u32 sums a scan admits under the running threshold `thr`: a code with sum `v` is kept when
+/// `v < ((thr - base) / scale).max(0)`, which for integer `v` is `v < ceil(..)`.
+#[inline]
+fn admit_cut(thr: f32, base: f32, scale: f32) -> u32 {
+    if thr.is_finite() {
+        ((thr - base) / scale).max(0.0).ceil() as u32
+    } else {
+        u32::MAX
+    }
+}
+
+/// Scores one quad-layout block against `live` of the [`QB`] tables, table `i` being
+/// `luts[sel[i] * lstride..]`; returns the admission masks by `i`.
+#[inline]
+#[allow(clippy::too_many_arguments)]
+fn scan_group(
+    live: usize,
+    codes: &[u8],
+    luts: &[u8],
+    lstride: usize,
+    m: usize,
+    sel: &[usize; QB],
+    cuts: &[u32; QB],
+    outs: &mut [[u32; BLOCK]; QB],
+) -> [u32; QB] {
+    #[allow(clippy::too_many_arguments)]
+    fn run<const K: usize>(
+        codes: &[u8],
+        luts: &[u8],
+        lstride: usize,
+        m: usize,
+        sel: &[usize; QB],
+        cuts: &[u32; QB],
+        outs: &mut [[u32; BLOCK]; QB],
+    ) -> [u32; QB] {
+        let mut res = [0u32; QB];
+        let masks = scan32q_lt::<K>(
+            codes,
+            luts,
+            lstride,
+            m,
+            sel[..K].try_into().expect("K <= QB"),
+            cuts[..K].try_into().expect("K <= QB"),
+            (&mut outs[..K]).try_into().expect("K <= QB"),
+        );
+        res[..K].copy_from_slice(&masks);
+        res
+    }
+    match live {
+        1 => run::<1>(codes, luts, lstride, m, sel, cuts, outs),
+        2 => run::<2>(codes, luts, lstride, m, sel, cuts, outs),
+        3 => run::<3>(codes, luts, lstride, m, sel, cuts, outs),
+        _ => run::<4>(codes, luts, lstride, m, sel, cuts, outs),
+    }
 }
 
 /// `c[m x n] = a[m x k] . b[n x k]^T`, single-threaded.
@@ -357,24 +416,62 @@ impl SplitMix {
     }
 }
 
-/// Nibble `j` of code position `i` (within its block) in the block layout.
-#[inline]
-fn get_nibble(block: &[u8], i: usize, j: usize) -> u8 {
-    let byte = block[16 * j + (i & 15)];
-    if i < 16 {
-        byte & 15
-    } else {
-        byte >> 4
-    }
+/// Queries scored per pass over a block by the quad kernel.
+const QB: usize = 4;
+
+/// How a list stores its codes: `m` nibbles per code in blocks of [`BLOCK`] codes, in either the
+/// LUT16 shuffle layout (`16 * m` bytes per block) or, on AVX-512 VBMI/VNNI hardware, the quad
+/// layout (see [`quad_pos`]).
+#[derive(Clone, Copy)]
+struct Shape {
+    m: usize,
+    quad: bool,
 }
 
-#[inline]
-fn set_nibble(block: &mut [u8], i: usize, j: usize, v: u8) {
-    let byte = &mut block[16 * j + (i & 15)];
-    if i < 16 {
-        *byte = (*byte & 0xF0) | v;
-    } else {
-        *byte = (*byte & 0x0F) | (v << 4);
+impl Shape {
+    fn new(m: usize) -> Self {
+        Self {
+            m,
+            quad: quad_available(),
+        }
+    }
+
+    /// Bytes per block.
+    fn stride(self) -> usize {
+        if self.quad {
+            quad_stride(self.m)
+        } else {
+            16 * self.m
+        }
+    }
+
+    fn pos(self, i: usize, j: usize) -> usize {
+        if self.quad {
+            quad_pos(i, j)
+        } else {
+            16 * j + (i & 15)
+        }
+    }
+
+    /// Nibble `j` of code position `i` within `block`.
+    #[inline]
+    fn get(self, block: &[u8], i: usize, j: usize) -> u8 {
+        let byte = block[self.pos(i, j)];
+        if i < 16 {
+            byte & 15
+        } else {
+            byte >> 4
+        }
+    }
+
+    #[inline]
+    fn set(self, block: &mut [u8], i: usize, j: usize, v: u8) {
+        let byte = &mut block[self.pos(i, j)];
+        if i < 16 {
+            *byte = (*byte & 0xF0) | v;
+        } else {
+            *byte = (*byte & 0x0F) | (v << 4);
+        }
     }
 }
 
@@ -397,30 +494,30 @@ impl List {
         self.dist_sq += sign * d * d;
     }
 
-    fn append(&mut self, m: usize, code: &[u8], slot: u32) -> u32 {
-        let pos = self.slots.len();
+    fn append(&mut self, sh: Shape, code: &[u8], slot: u32) -> u32 {
+        let (pos, stride) = (self.slots.len(), sh.stride());
         if pos.is_multiple_of(BLOCK) {
-            self.codes.resize(self.codes.len() + 16 * m, 0);
+            self.codes.resize(self.codes.len() + stride, 0);
         }
-        let block = &mut self.codes[(pos / BLOCK) * 16 * m..(pos / BLOCK + 1) * 16 * m];
+        let block = &mut self.codes[(pos / BLOCK) * stride..(pos / BLOCK + 1) * stride];
         for (j, &v) in code.iter().enumerate() {
-            set_nibble(block, pos % BLOCK, j, v);
+            sh.set(block, pos % BLOCK, j, v);
         }
         self.slots.push(slot);
         pos as u32
     }
 
     /// Swap-removes position `pos`; returns the slot moved into `pos`, if any.
-    fn remove(&mut self, m: usize, pos: usize) -> Option<u32> {
-        let last = self.slots.len() - 1;
+    fn remove(&mut self, sh: Shape, pos: usize) -> Option<u32> {
+        let (last, stride) = (self.slots.len() - 1, sh.stride());
         let moved = if pos != last {
             let (lb, li) = (last / BLOCK, last % BLOCK);
-            let code: Vec<u8> = (0..m)
-                .map(|j| get_nibble(&self.codes[lb * 16 * m..(lb + 1) * 16 * m], li, j))
+            let code: Vec<u8> = (0..sh.m)
+                .map(|j| sh.get(&self.codes[lb * stride..(lb + 1) * stride], li, j))
                 .collect();
-            let block = &mut self.codes[(pos / BLOCK) * 16 * m..(pos / BLOCK + 1) * 16 * m];
+            let block = &mut self.codes[(pos / BLOCK) * stride..(pos / BLOCK + 1) * stride];
             for (j, &v) in code.iter().enumerate() {
-                set_nibble(block, pos % BLOCK, j, v);
+                sh.set(block, pos % BLOCK, j, v);
             }
             self.slots[pos] = self.slots[last];
             Some(self.slots[pos])
@@ -429,13 +526,13 @@ impl List {
         };
         self.slots.pop();
         if self.slots.len().is_multiple_of(BLOCK) {
-            self.codes.truncate((self.slots.len() / BLOCK) * 16 * m);
+            self.codes.truncate((self.slots.len() / BLOCK) * stride);
         } else {
             // Clear the vacated code so padding lanes stay zero.
             let (lb, li) = (last / BLOCK, last % BLOCK);
-            let block = &mut self.codes[lb * 16 * m..(lb + 1) * 16 * m];
-            for j in 0..m {
-                set_nibble(block, li, j, 0);
+            let block = &mut self.codes[lb * stride..(lb + 1) * stride];
+            for j in 0..sh.m {
+                sh.set(block, li, j, 0);
             }
         }
         moved
@@ -541,6 +638,7 @@ impl PartitionTier {
                 "partition tier: lists, spill_k >= 2; reorder, nprobe >= 1".into(),
             ));
         }
+        let shape = Shape::new(params.pq_m);
         Ok(Self {
             dim,
             params,
@@ -549,6 +647,7 @@ impl PartitionTier {
             id_slot: HashMap::default(),
             free: Vec::new(),
             trained: None,
+            shape,
             profile: std::sync::Mutex::new(SearchProfile::default()),
         })
     }
@@ -622,7 +721,7 @@ impl PartitionTier {
 
     /// Assigns, encodes and appends the given slots (rows in `vectors`, same order).
     fn place(&mut self, slots: &[u32], vectors: &[f32]) {
-        let (dim, m) = (self.dim, self.params.pq_m);
+        let (dim, m, sh) = (self.dim, self.params.pq_m, self.shape);
         let t = self.trained.as_mut().expect("trained");
         let asg = t.assign(vectors, dim, self.params.spill_k, self.params.soar_lambda);
         let codes: Vec<u8> = {
@@ -643,8 +742,9 @@ impl PartitionTier {
         }
         for (i, (&slot, &(a1, a2))) in slots.iter().zip(&asg).enumerate() {
             let x = &vectors[i * dim..(i + 1) * dim];
-            let p1 = t.lists[a1 as usize].append(m, &codes[2 * i * m..(2 * i + 1) * m], slot);
-            let p2 = t.lists[a2 as usize].append(m, &codes[(2 * i + 1) * m..(2 * i + 2) * m], slot);
+            let p1 = t.lists[a1 as usize].append(sh, &codes[2 * i * m..(2 * i + 1) * m], slot);
+            let p2 =
+                t.lists[a2 as usize].append(sh, &codes[(2 * i + 1) * m..(2 * i + 2) * m], slot);
             for a in [a1 as usize, a2 as usize] {
                 let d = sq(x, &t.centres[a * dim..(a + 1) * dim]).sqrt();
                 t.lists[a].track(d, 1.0);
@@ -655,7 +755,7 @@ impl PartitionTier {
 
     /// Deletes ids; unknown ids are ignored. Returns how many were removed.
     pub fn delete(&mut self, ids: &[u32]) -> usize {
-        let (m, dim) = (self.params.pq_m, self.dim);
+        let (sh, dim) = (self.shape, self.dim);
         let mut removed = 0;
         for id in ids {
             let Some(slot) = self.id_slot.remove(id) else {
@@ -672,7 +772,7 @@ impl PartitionTier {
                     let x = &self.rows[slot as usize * dim..(slot as usize + 1) * dim];
                     let d = sq(x, &t.centres[c * dim..(c + 1) * dim]).sqrt();
                     t.lists[c].track(d, -1.0);
-                    if let Some(moved) = t.lists[list as usize].remove(m, pos as usize) {
+                    if let Some(moved) = t.lists[list as usize].remove(sh, pos as usize) {
                         // The moved code came from this list's old last position, which is
                         // the list's new length; a slot is in a list at most once.
                         let last = t.lists[list as usize].slots.len() as u32;
@@ -852,6 +952,8 @@ impl PartitionTier {
         let t = self.trained.as_ref().expect("trained");
         let (dim, m) = (self.dim, self.params.pq_m);
         let (l, e, sub) = (t.lists_len(), 16 * m, dim / m);
+        let sh = self.shape;
+        let lstride = sh.stride();
         let nq = queries.len() / dim;
         let nprobe = self.params.nprobe.min(l);
         let (rule, nmin) = (self.params.probe_rule, self.params.nprobe_min);
@@ -916,6 +1018,9 @@ impl PartitionTier {
                     vec![Vec::with_capacity(2 * reorder + BLOCK); mine.len()];
                 let mut thr = vec![f32::INFINITY; mine.len()];
                 let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
+                let mut luts = vec![0u8; if sh.quad { QB * lstride } else { 0 }];
+                let mut outs = [[0u32; BLOCK]; QB];
+                let mut own: Vec<u32> = Vec::new();
                 let mut out = [0u32; BLOCK];
                 let (mut lut_s, mut blocks, mut admitted) = (0f64, 0u64, 0u64);
                 let ts = std::time::Instant::now();
@@ -926,6 +1031,92 @@ impl PartitionTier {
                         continue;
                     }
                     let lt = &t.list_tab[li * e..(li + 1) * e];
+                    if sh.quad {
+                        own.clear();
+                        own.extend(
+                            qs.iter()
+                                .copied()
+                                .filter(|q| owner[*q as usize] as usize == th),
+                        );
+                        for chunk in own.chunks(QB) {
+                            let kq = chunk.len();
+                            let (mut js, mut bases) = ([0usize; QB], [0f32; QB]);
+                            let (mut scales, mut cuts) = ([0f32; QB], [0u32; QB]);
+                            for (k, &q) in chunk.iter().enumerate() {
+                                let j = local(q);
+                                let tl = std::time::Instant::now();
+                                let (base, scale) = build_lut(
+                                    &qtab[q as usize * e..(q as usize + 1) * e],
+                                    lt,
+                                    &mut ent,
+                                    &mut mins,
+                                    &mut luts[k * lstride..k * lstride + e],
+                                );
+                                lut_s += tl.elapsed().as_secs_f64();
+                                let base = base + qc[q as usize * l + li];
+                                (js[k], bases[k], scales[k]) = (j, base, scale);
+                                cuts[k] = admit_cut(thr[j], base, scale);
+                            }
+                            for blk in 0..n.div_ceil(BLOCK) {
+                                // Members whose threshold fell to this list's base are finished
+                                // with it; only the live ones go through the kernel.
+                                let (mut sel, mut cs, mut live) = ([0usize; QB], [0u32; QB], 0);
+                                for k in 0..kq {
+                                    if thr[js[k]] > bases[k] {
+                                        (sel[live], cs[live]) = (k, cuts[k]);
+                                        live += 1;
+                                    }
+                                }
+                                if live == 0 {
+                                    break;
+                                }
+                                blocks += live as u64;
+                                let masks = scan_group(
+                                    live,
+                                    &list.codes[blk * lstride..(blk + 1) * lstride],
+                                    &luts,
+                                    lstride,
+                                    m,
+                                    &sel,
+                                    &cs,
+                                    &mut outs,
+                                );
+                                let valid = (n - blk * BLOCK).min(BLOCK);
+                                for (i, &k) in sel[..live].iter().enumerate() {
+                                    let mut mask = masks[i];
+                                    if mask == 0 {
+                                        continue;
+                                    }
+                                    if valid < BLOCK {
+                                        mask &= (1u32 << valid) - 1;
+                                    }
+                                    let (j, base, scale) = (js[k], bases[k], scales[k]);
+                                    let buf = &mut bufs[j];
+                                    while mask != 0 {
+                                        let c = mask.trailing_zeros() as usize;
+                                        mask &= mask - 1;
+                                        admitted += 1;
+                                        buf.push((
+                                            base + outs[i][c] as f32 * scale,
+                                            list.slots[blk * BLOCK + c],
+                                        ));
+                                    }
+                                    if buf.len() >= 2 * reorder {
+                                        buf.select_nth_unstable_by(reorder - 1, |a, b| {
+                                            a.0.total_cmp(&b.0)
+                                        });
+                                        buf.truncate(reorder);
+                                        thr[j] = buf
+                                            .iter()
+                                            .map(|x| x.0)
+                                            .fold(f32::NEG_INFINITY, f32::max);
+                                        cuts[k] = admit_cut(thr[j], base, scale);
+                                    }
+                                }
+                            }
+                        }
+                        continue;
+                    }
                     for &q in qs.iter().filter(|q| owner[**q as usize] as usize == th) {
                         let j = local(q);
                         let tl = std::time::Instant::now();
@@ -939,32 +1130,37 @@ impl PartitionTier {
                         lut_s += tl.elapsed().as_secs_f64();
                         let base = base + qc[q as usize * l + li];
                         let buf = &mut bufs[j];
+                        let mut cut = admit_cut(thr[j], base, scale);
                         for blk in 0..n.div_ceil(BLOCK) {
                             if thr[j] <= base {
                                 break;
                             }
-                            // P6: the running threshold in this table's u32 units.
-                            let lim = if thr[j].is_finite() {
-                                ((thr[j] - base) / scale).max(0.0)
-                            } else {
-                                f32::INFINITY
-                            };
-                            scan32(&list.codes[blk * e..(blk + 1) * e], &lut, m, &mut out);
+                            let mut mask = scan32_lt(
+                                &list.codes[blk * lstride..(blk + 1) * lstride],
+                                &lut,
+                                m,
+                                cut,
+                                &mut out,
+                            );
                             blocks += 1;
                             let valid = (n - blk * BLOCK).min(BLOCK);
-                            for (c, &v) in out[..valid].iter().enumerate() {
-                                if (v as f32) < lim {
-                                    admitted += 1;
-                                    buf.push((
-                                        base + v as f32 * scale,
-                                        list.slots[blk * BLOCK + c],
-                                    ));
-                                }
+                            if valid < BLOCK {
+                                mask &= (1u32 << valid) - 1;
+                            }
+                            while mask != 0 {
+                                let c = mask.trailing_zeros() as usize;
+                                mask &= mask - 1;
+                                admitted += 1;
+                                buf.push((
+                                    base + out[c] as f32 * scale,
+                                    list.slots[blk * BLOCK + c],
+                                ));
                             }
                             if buf.len() >= 2 * reorder {
                                 buf.select_nth_unstable_by(reorder - 1, |a, b| a.0.total_cmp(&b.0));
                                 buf.truncate(reorder);
                                 thr[j] = buf.iter().map(|x| x.0).fold(f32::NEG_INFINITY, f32::max);
+                                cut = admit_cut(thr[j], base, scale);
                             }
                         }
                     }
@@ -1087,7 +1283,7 @@ mod tests {
         for (li, l) in tr.lists.iter().enumerate() {
             assert_eq!(
                 l.codes.len(),
-                l.slots.len().div_ceil(BLOCK) * 16 * t.params.pq_m
+                l.slots.len().div_ceil(BLOCK) * t.shape.stride()
             );
             let c = &tr.centres[li * t.dim..(li + 1) * t.dim];
             let (mut s1, mut s2) = (0f64, 0f64);
@@ -1258,6 +1454,59 @@ mod tests {
         assert_eq!(recall(&t.search_exact(&q, k), &want), 1.0);
     }
 
+    /// The quad layout (AVX-512 VBMI/VNNI) and the LUT16 layout give the same results, blocks
+    /// and admissions through deletes and reinserts, with a reorder small enough that the
+    /// running threshold prunes and an `m` that pads the last quad.
+    #[test]
+    fn quad_layout_equals_lut16_layout() {
+        if !quad_available() {
+            eprintln!("skipped: no AVX-512 VBMI/VNNI");
+            return;
+        }
+        let (n, dim, k) = (3000, 40, 10);
+        let x = data(n, dim, 25, 1);
+        let q = data(60, dim, 25, 2);
+        let ids: Vec<u32> = (0..n as u32).map(|i| i * 5 + 1).collect();
+        for m in [8usize, 10] {
+            let mk = |quad: bool| {
+                let mut t = PartitionTier::new(
+                    dim,
+                    PartitionParams {
+                        pq_m: m,
+                        nprobe: 8,
+                        reorder: 40,
+                        ..params(20)
+                    },
+                )
+                .unwrap();
+                t.shape.quad = quad;
+                t
+            };
+            let (mut a, mut b) = (mk(true), mk(false));
+            for t in [&mut a, &mut b] {
+                t.insert(&ids, &x).unwrap();
+            }
+            let same = |a: &mut PartitionTier, b: &mut PartitionTier| {
+                let (ra, rb) = (a.search(&q, k).unwrap(), b.search(&q, k).unwrap());
+                assert_eq!(ra, rb, "m {m}");
+                let (pa, pb) = (a.last_search_profile(), b.last_search_profile());
+                assert_eq!((pa.blocks, pa.admitted), (pb.blocks, pb.admitted), "m {m}");
+            };
+            // The first search trains both tiers.
+            same(&mut a, &mut b);
+            check_lists(&a);
+            check_lists(&b);
+            let del: Vec<u32> = ids.iter().copied().step_by(3).collect();
+            for t in [&mut a, &mut b] {
+                assert_eq!(t.delete(&del), del.len());
+                check_lists(t);
+                t.insert(&del[..200], &x[..200 * dim]).unwrap();
+                check_lists(t);
+            }
+            same(&mut a, &mut b);
+        }
+    }
+
     #[test]
     fn restricted_spill_equals_full_soar_when_all_centres_are_candidates() {
         let (n, dim, lists) = (2000, 16, 12);
@@ -1348,6 +1597,9 @@ mod tests {
             dim,
             PartitionParams {
                 train_at: usize::MAX,
+                lists: crate::compatibility::var("WARM_L22_ACC_LISTS")
+                    .map(|v| v.trim().parse().unwrap())
+                    .unwrap_or(PartitionParams::default().lists),
                 reorder: crate::compatibility::var("WARM_L22_ACC_REORDER")
                     .map(|v| v.trim().parse().unwrap())
                     .unwrap_or(PartitionParams::default().reorder),
@@ -1416,8 +1668,14 @@ mod tests {
             let got = t.search(&q, 10).unwrap();
             let s = t0.elapsed().as_secs_f64();
             let pf = t.last_search_profile();
+            let digest = got
+                .iter()
+                .flatten()
+                .fold(0xcbf2_9ce4_8422_2325u64, |h, &id| {
+                    (h ^ u64::from(id)).wrapping_mul(0x0000_0100_0000_01b3)
+                });
             rep += &format!(
-                ", \"recall_{label}\": {:.4}, \"search_{label}_s\": {s:.3}, \"profile_{label}\": \
+                ", \"digest_{label}\": \"{digest:016x}\", \"recall_{label}\": {:.4}, \"search_{label}_s\": {s:.3}, \"profile_{label}\": \
                  {{\"centres\": {:.3}, \"route\": {:.3}, \"scan\": {:.3}, \"scan_mean\": {:.3}, \"lut_mean\": {:.3}, \"probes_mean\": {:.1}, \"blocks\": {}, \"admitted\": {}, \
                  \"reorder\": {:.3}, \"total\": {:.3}}}",
                 recall(&got, &gt),
