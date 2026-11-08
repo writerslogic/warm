@@ -8,6 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Expose the partition tier to Python and record the L22 full-stream run (#398)
 - Validate the query width in PartitionIndex and record the L22 test B run
 - Expose the experimental partition tier to Python as PartitionIndex
 - Report the partition scan split and take acceptance nprobes from the environment
@@ -148,6 +149,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record ToIP collaboration introduction
 
 ### Fixed
+- Bump oauthlib to 4.0.1 in the chroma benchmark requirements
 - Decode checkpoint hits at capture so nothing reads the mapping after its locks
 - Install a pinned Temurin 21 in the Modal bench image for Lucene 10
 - Drop the chunk flags check now that every bit is assigned
