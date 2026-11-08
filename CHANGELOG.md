@@ -8,6 +8,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Report the partition scan split and take acceptance nprobes from the environment
+- Add the experimental partition tier (IVF, SOAR spill, LUT16 residual codes) (#396)
 - Record per-phase timings of the last partition search
 - Add the experimental partition tier with SOAR spilling and LUT16 residual codes
 - Write document checkpoints with block-packed postings (version 2) (#390)
@@ -57,6 +59,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the L22 search profile, live sweep and nprobe selection
+- Record the L22 partition-tier kill tests, kernels and acceptance with their scripts and results
 - Avoid an intra-doc link to the private fastscan module
 - Correct the RSS range and the measured binary commit in the consolidation heap peak record
 - Record the consolidation heap peak measurement

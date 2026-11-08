@@ -92,13 +92,23 @@ struct Trained {
 pub struct SearchProfile {
     pub centres_s: f64,
     pub route_s: f64,
+    /// Slowest thread's scan phase (table builds included).
     pub scan_s: f64,
+    /// Mean over threads of the scan phase, to expose imbalance against `scan_s`.
+    pub scan_mean_s: f64,
+    /// Mean over threads of the time spent building per-(query, list) tables.
+    pub lut_mean_s: f64,
+    /// 32-code blocks scanned, summed over threads.
+    pub blocks: u64,
+    /// Candidates admitted below the running threshold, summed over threads.
+    pub admitted: u64,
     pub reorder_s: f64,
     pub total_s: f64,
 }
 
-/// One search thread's (query, ids) results with its scan and reorder seconds.
-type ThreadPart = (Vec<(u32, Vec<u32>)>, f64, f64);
+/// One search thread's (query, ids) results with its scan, reorder and
+/// table-build seconds and its scanned block count.
+type ThreadPart = (Vec<(u32, Vec<u32>)>, f64, f64, f64, u64, u64);
 
 /// Streaming partition tier over external `u32` ids.
 pub struct PartitionTier {
@@ -782,6 +792,7 @@ impl PartitionTier {
                 let mut thr = vec![f32::INFINITY; mine.len()];
                 let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
                 let mut out = [0u32; BLOCK];
+                let (mut lut_s, mut blocks, mut admitted) = (0f64, 0u64, 0u64);
                 let ts = std::time::Instant::now();
                 for (li, qs) in by_list.iter().enumerate() {
                     let list = &t.lists[li];
@@ -792,6 +803,7 @@ impl PartitionTier {
                     let lt = &t.list_tab[li * e..(li + 1) * e];
                     for &q in qs.iter().filter(|q| **q as usize % threads == th) {
                         let j = local(q);
+                        let tl = std::time::Instant::now();
                         let (base, scale) = build_lut(
                             &qtab[q as usize * e..(q as usize + 1) * e],
                             lt,
@@ -799,6 +811,7 @@ impl PartitionTier {
                             &mut mins,
                             &mut lut,
                         );
+                        lut_s += tl.elapsed().as_secs_f64();
                         let base = base + qc[q as usize * l + li];
                         let buf = &mut bufs[j];
                         for blk in 0..n.div_ceil(BLOCK) {
@@ -812,9 +825,11 @@ impl PartitionTier {
                                 f32::INFINITY
                             };
                             scan32(&list.codes[blk * e..(blk + 1) * e], &lut, m, &mut out);
+                            blocks += 1;
                             let valid = (n - blk * BLOCK).min(BLOCK);
                             for (c, &v) in out[..valid].iter().enumerate() {
                                 if (v as f32) < lim {
+                                    admitted += 1;
                                     buf.push((
                                         base + v as f32 * scale,
                                         list.slots[blk * BLOCK + c],
@@ -857,14 +872,27 @@ impl PartitionTier {
                         )
                     })
                     .collect();
-                (res, scan_s, ts.elapsed().as_secs_f64() - scan_s)
+                (
+                    res,
+                    scan_s,
+                    ts.elapsed().as_secs_f64() - scan_s,
+                    lut_s,
+                    blocks,
+                    admitted,
+                )
             })
             .collect();
         let mut res = vec![Vec::new(); nq];
-        let (mut scan_s, mut reorder_s) = (0f64, 0f64);
-        for (part, sc, ro) in parts {
+        let (mut scan_s, mut reorder_s, mut scan_sum, mut lut_sum) = (0f64, 0f64, 0f64, 0f64);
+        let (mut blocks, mut admitted) = (0u64, 0u64);
+        let nparts = parts.len().max(1) as f64;
+        for (part, sc, ro, lu, bl, ad) in parts {
             scan_s = scan_s.max(sc);
             reorder_s = reorder_s.max(ro);
+            scan_sum += sc;
+            lut_sum += lu;
+            blocks += bl;
+            admitted += ad;
             for (q, ids) in part {
                 res[q as usize] = ids;
             }
@@ -873,6 +901,10 @@ impl PartitionTier {
             centres_s,
             route_s,
             scan_s,
+            scan_mean_s: scan_sum / nparts,
+            lut_mean_s: lut_sum / nparts,
+            blocks,
+            admitted,
             reorder_s,
             total_s: t0.elapsed().as_secs_f64(),
         };
@@ -1092,7 +1124,10 @@ mod tests {
         t.train(Some(centres)).unwrap();
         let train_s = t0.elapsed().as_secs_f64();
         let mut rep = format!("{{\"n\": {n}, \"nq\": {}, \"insert_rows_s\": {insert_s:.3}, \"train_place_s\": {train_s:.3}", gt.len());
-        for np in [350, 700] {
+        let nprobes: Vec<usize> = crate::compatibility::var("WARM_L22_ACC_NPROBES")
+            .map(|v| v.split(',').map(|x| x.trim().parse().unwrap()).collect())
+            .unwrap_or_else(|_| vec![350, 700]);
+        for np in nprobes {
             t.set_nprobe(np);
             let t0 = Instant::now();
             let got = t.search(&q, 10).unwrap();
@@ -1100,11 +1135,16 @@ mod tests {
             let pf = t.last_search_profile();
             rep += &format!(
                 ", \"recall_np{np}\": {:.4}, \"search_np{np}_s\": {s:.3}, \"profile_np{np}\": \
-                 {{\"centres\": {:.3}, \"route\": {:.3}, \"scan\": {:.3}, \"reorder\": {:.3}, \"total\": {:.3}}}",
+                 {{\"centres\": {:.3}, \"route\": {:.3}, \"scan\": {:.3}, \"scan_mean\": {:.3}, \"lut_mean\": {:.3}, \"blocks\": {}, \"admitted\": {}, \
+                 \"reorder\": {:.3}, \"total\": {:.3}}}",
                 recall(&got, &gt),
                 pf.centres_s,
                 pf.route_s,
                 pf.scan_s,
+                pf.scan_mean_s,
+                pf.lut_mean_s,
+                pf.blocks,
+                pf.admitted,
                 pf.reorder_s,
                 pf.total_s
             );
