@@ -1,0 +1,37 @@
+{
+ "avx512": false,
+ "best_qps_at_recall": {
+  "warm": {
+   "0.90": {
+    "build_time": 1535.699191570282,
+    "index_size": 804328.0,
+    "params": "WARM(metric=cosine, degree=32, build_ef=500, ef=50, rerank=100, code_bits=8, learn_queries=32768)|50_100",
+    "qps": 5950.821943212467,
+    "recall": 0.9219700000000001
+   },
+   "0.95": {
+    "build_time": 1661.248497247696,
+    "index_size": 894452.0,
+    "params": "WARM(metric=cosine, degree=64, build_ef=500, ef=80, rerank=400, code_bits=8, learn_queries=32768)|80_400",
+    "qps": 4695.637378192546,
+    "recall": 0.95508
+   },
+   "0.99": {
+    "build_time": 1661.248497247696,
+    "index_size": 894452.0,
+    "params": "WARM(metric=cosine, degree=64, build_ef=500, ef=256, rerank=100, code_bits=8, learn_queries=32768)|256_100",
+    "qps": 2169.2994199068153,
+    "recall": 0.9902799999999999
+   }
+  }
+ },
+ "container": "ta-01M6S4MNYSN8K5W8JEBAKSVZRR",
+ "cpu_model": "AMD EPYC 7003 (Zen 3, Milan; family 25 model 1)",
+ "dataset": "yandex-200-cosine",
+ "flags_sha": "ec7ab2242885",
+ "generated": "2026-11-06T21:19:02Z",
+ "k": 100,
+ "nproc": 8,
+ "vibe_commit": "6e5fb9daf276ecba73d87dcdd6a14448d434dba7",
+ "warm_commit": "af8d4017c6157688359dc2e31cc461fb3f28fa8e"
+}

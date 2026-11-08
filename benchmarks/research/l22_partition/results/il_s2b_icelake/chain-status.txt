@@ -1,0 +1,14 @@
+2026-11-08T07:26:47Z chain-start pid=2493
+rustc 1.99.0 (b940084d7 2026-09-28)
+2026-11-08T07:26:53Z tools ok
+2026-11-08T07:27:05Z harness+venv ok
+2026-11-08T07:27:05Z data download started
+2026-11-08T07:27:05Z wheel build start (rustc 1.99.0 (b940084d7 2026-09-28))
+2026-11-08T07:28:16Z wheel built warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl
+2026-11-08T07:30:02Z data ok fbin_s=98 all_s=135 
+2026-11-08T07:30:06Z smoke: top10 recall pre-train 1.000 at-train 1.000 after-churn 1.000 SMOKE OK 
+2026-11-08T07:30:06Z scope check: 8589934592 0 
+2026-11-08T07:31:06Z run start (partition nprobe 300, 8 threads, taskset 0-7, nice 19, 8G scope no swap, load=0.46)
+2026-11-08T09:04:46Z run end run_exit=0
+2026-11-08T09:08:05Z export exit=0
+2026-11-08T09:08:06Z REPORT mean recall 0.972619 (pin 0.876839); trained at search 16 live 1239816; min post-train 0.9543; pre-train mean 1.0000 GATES {'mean>=0.90': True, 'post-train min>=0.80': True, 'wall<3000': False, 'rss<8GiB': True} TEST B: FAIL 

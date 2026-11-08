@@ -87,3 +87,28 @@ def test_leaderboard_keeps_missing_datasets_in_denominator(tmp_path):
     assert all(row["mean_normalized_qps"] == 0 for row in result["thresholds"]["1.0"])
     with pytest.raises(ValueError, match="no k=10"):
         leaderboard.summarize(tmp_path, k=10)
+
+
+def test_learn_sample_matches_the_adapter_draw_and_whole_split_keeps_file_order(tmp_path):
+    import argparse
+    import h5py
+
+    rng = np.random.default_rng(3)
+    source = tmp_path / "yi-128-ip.hdf5"
+    learn = rng.standard_normal((300, 128)).astype(np.float32)
+    with h5py.File(source, "w") as handle:
+        handle.attrs.update(dimension=128, distance="ip")
+        handle.create_dataset("train", data=rng.standard_normal((200, 128)).astype(np.float32))
+        handle.create_dataset("test", data=rng.standard_normal((4, 128)).astype(np.float32))
+        handle.create_dataset("learn", data=learn)
+    outputs = {}
+    for sample in (40, 1000):
+        out = tmp_path / str(sample)
+        preparation.prepare(argparse.Namespace(dataset="yi-128-ip", rows=200, queries=4, out=out,
+                                               source=source, learn_sample=sample))
+        with h5py.File(out / "yi-128-ip-n200.hdf5", "r") as handle:
+            outputs[sample] = handle["learn"][:]
+            assert "learn_neighbors" not in handle
+    keep = np.sort(np.random.default_rng(24301).permutation(300)[:40])
+    assert np.array_equal(outputs[40], learn[keep])
+    assert np.array_equal(outputs[1000], learn)

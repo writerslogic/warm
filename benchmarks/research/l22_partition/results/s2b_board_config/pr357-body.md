@@ -1,4 +1,4 @@
-**Draft.** The msturing-30M-clustered result below was measured on a workstation, not on the Azure evaluation VM, so it is not a board result.
+**Draft, not ready.** On an Ice Lake VM of the evaluation VM's class, this configuration takes 5,618 s, over the one-hour limit. I am working on a faster configuration. The numbers below are measurements, not board results.
 
 Adds `neurips23/streaming/warm` (algorithm key `warm`). Source: https://github.com/writerslogic/warm, pinned to commit `e29b62fc53c1e5f652520e6f63288bc53796324f` (Apache-2.0) by the single `ARG WARM_COMMIT` in `neurips23/streaming/warm/Dockerfile`, built with `--features python,experimental` on a pinned Rust 1.99.0 toolchain.
 
@@ -29,6 +29,11 @@ The run was `python run.py --nodocker --neurips23track streaming --algorithm war
 | minimum recall@10 after training | 0.9543 (training happened at search 16, with 1,239,816 vectors live) |
 | total of the step times | 2,550 s (insert 160 s, delete 36 s, search 2,353 s); process elapsed 42:31 |
 | peak RSS | 6.45 GiB |
+
+Same harness, commit and config on a GCP n2-custom-8-16384 (Intel Xeon @ 2.60 GHz, Ice Lake, 4 cores / 8 threads, 16 GiB), the closest class to D8lds_v5 available to me:
+- Recall is identical: 0.972619 mean, 0.9543 minimum.
+- Peak RSS is 6.41 GiB.
+- The total of the step times is **5,618 s** (search 5,293 s, insert 300 s, delete 26 s), and the process took 1:33:40. **This exceeds the one-hour limit.**
 
 An earlier run of the same tier at nprobe 250 scored 0.9651 mean recall in 2,276 s.
 

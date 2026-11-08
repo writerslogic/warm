@@ -181,6 +181,12 @@ The run was `run.py --nodocker` with the final runbook, on 8 threads of a Core U
 | wall time (sum of step seconds) | 2,550 s (search 2,353, insert 160, delete 36) |
 | peak RSS | 6.45 GiB |
 
+The same harness, commit and config ran on a GCP n2-custom-8-16384 (Xeon @ 2.60 GHz, Ice Lake, 4 cores / 8 threads), the class of the evaluation VM (`results/il_s2b_icelake`) [M]:
+- Recall and peak RSS match: 0.972619 and 6.41 GiB.
+- The step times total **5,618 s**: search 5,293, insert 300, delete 26.
+- That is 2.2x the Core Ultra time and **over the one-hour limit**. The scanned blocks and admitted counts are identical, so the extra time is per-operation cost on the slower cores.
+- The entry does not qualify until the scan is about 2x cheaper on Ice Lake or the operating point drops.
+
 An earlier run at nprobe 250 (`results/testb_run1`) measured 0.9651 in 2,276 s. This hardware is not the Azure evaluation VM, so neither run is a board result. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
 
 ## Merged consolidation (development measurements)
