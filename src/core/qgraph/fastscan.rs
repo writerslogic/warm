@@ -183,7 +183,7 @@ pub(crate) fn quad_available() -> bool {
 /// `quad_stride(m)` bytes (groups beyond `m` zero). Returns per table the mask of codes whose
 /// sum is below `cuts[k]`; `out[k]` holds that table's sums only when its mask is non-zero.
 /// Sums are exact in `u32` for any `m`. Requires [`quad_available`].
-#[inline]
+#[inline(always)]
 #[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 pub(crate) fn scan32q_lt<const Q: usize>(
     codes: &[u8],
@@ -203,7 +203,7 @@ pub(crate) fn scan32q_lt<const Q: usize>(
 }
 
 #[cfg(target_arch = "x86_64")]
-#[inline]
+#[inline(always)]
 #[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 fn quad_dispatch<const Q: usize>(
     codes: &[u8],
@@ -631,6 +631,63 @@ mod avx512 {
         (lo_all, lo_odd, hi_all, hi_odd)
     }
 
+    /// Min (`MIN`) or max over the 16 lanes of each of 16 registers, in one register whose lane
+    /// `4 * j + t` holds register `j + 4 * t`'s result (undone by [`unshuffle`]).
+    ///
+    /// # Safety
+    /// The CPU supports AVX-512F.
+    #[inline]
+    #[target_feature(enable = "avx512f,avx512bw,avx512vl,avx2")]
+    unsafe fn fold16<const MIN: bool>(v: &[__m512; 16]) -> __m512 {
+        #[inline(always)]
+        unsafe fn op<const MIN: bool>(a: __m512, b: __m512) -> __m512 {
+            if MIN {
+                _mm512_min_ps(a, b)
+            } else {
+                _mm512_max_ps(a, b)
+            }
+        }
+        // 256-bit halves: register pair (2g, 2g + 1) -> quarters [2g: a, b; 2g+1: a, b].
+        let w: [__m512; 8] = std::array::from_fn(|g| {
+            let (a, b) = (v[2 * g], v[2 * g + 1]);
+            op::<MIN>(
+                _mm512_shuffle_f32x4::<0x44>(a, b),
+                _mm512_shuffle_f32x4::<0xEE>(a, b),
+            )
+        });
+        // 128-bit quarters: quarter `j` of `u[h]` belongs to register `4 * h + j`.
+        let u: [__m512; 4] = std::array::from_fn(|h| {
+            let (a, b) = (w[2 * h], w[2 * h + 1]);
+            op::<MIN>(
+                _mm512_shuffle_f32x4::<0x88>(a, b),
+                _mm512_shuffle_f32x4::<0xDD>(a, b),
+            )
+        });
+        // Within each quarter: pairs of lanes, then single lanes.
+        let z: [__m512; 2] = std::array::from_fn(|i| {
+            let (a, b) = (u[2 * i], u[2 * i + 1]);
+            op::<MIN>(
+                _mm512_shuffle_ps::<0x88>(a, b),
+                _mm512_shuffle_ps::<0xDD>(a, b),
+            )
+        });
+        op::<MIN>(
+            _mm512_shuffle_ps::<0x88>(z[0], z[1]),
+            _mm512_shuffle_ps::<0xDD>(z[0], z[1]),
+        )
+    }
+
+    /// Puts [`fold16`]'s lanes in register order.
+    ///
+    /// # Safety
+    /// The CPU supports AVX-512F.
+    #[inline]
+    #[target_feature(enable = "avx512f,avx512bw,avx512vl,avx2")]
+    unsafe fn unshuffle(r: __m512) -> __m512 {
+        let idx = _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
+        _mm512_permutexvar_ps(idx, r)
+    }
+
     /// [`super::build_lut_scalar`] with the same arithmetic order: the sums are recomputed in
     /// the second pass instead of stored, and min, max and the u8 conversion are lane-wise
     /// (min and max are exact; the scale step is a multiply then an add, never fused).
@@ -645,21 +702,37 @@ mod avx512 {
         mins: &mut [f32],
         lut: &mut [u8],
     ) -> (f32, f32) {
-        let (mut base, mut span) = (0f32, 0f32);
-        for (b, mn) in mins.iter_mut().enumerate() {
-            let x = _mm512_add_ps(
+        let m = mins.len();
+        let sum = |b: usize| {
+            _mm512_add_ps(
                 _mm512_loadu_ps(qt.as_ptr().add(16 * b)),
                 _mm512_loadu_ps(lt.as_ptr().add(16 * b)),
-            );
+            )
+        };
+        let mut span = 0f32;
+        let mut b = 0;
+        // Sixteen groups at a time: the per-group min and max come out of two shuffle trees as
+        // one register each, instead of sixteen horizontal reductions.
+        while b + 16 <= m {
+            let x: [__m512; 16] = std::array::from_fn(|i| sum(b + i));
+            let lo = fold16::<true>(&x);
+            let hi = fold16::<false>(&x);
+            span = span.max(_mm512_reduce_max_ps(_mm512_sub_ps(hi, lo)));
+            _mm512_storeu_ps(mins.as_mut_ptr().add(b), unshuffle(lo));
+            b += 16;
+        }
+        for (g, mn) in mins.iter_mut().enumerate().skip(b) {
+            let x = sum(g);
             let lo = _mm512_reduce_min_ps(x);
-            let hi = _mm512_reduce_max_ps(x);
             *mn = lo;
-            span = span.max(hi - lo);
-            base += lo;
+            span = span.max(_mm512_reduce_max_ps(x) - lo);
+        }
+        let mut base = 0f32;
+        for &mn in mins.iter() {
+            base += mn;
         }
         let scale = span.max(1e-12) / 255.0;
         let (inv, half) = (_mm512_set1_ps(1.0 / scale), _mm512_set1_ps(0.5));
-        let top = _mm512_set1_epi32(255);
         for (b, &mn) in mins.iter().enumerate() {
             let x = _mm512_add_ps(
                 _mm512_loadu_ps(qt.as_ptr().add(16 * b)),
@@ -669,9 +742,13 @@ mod avx512 {
                 _mm512_mul_ps(_mm512_sub_ps(x, _mm512_set1_ps(mn)), inv),
                 half,
             );
-            // y is in [0.5, 255.5 + rounding]: truncation equals the scalar `as u8` cast.
-            let q = _mm512_min_epi32(_mm512_cvttps_epi32(y), top);
-            _mm_storeu_si128(lut.as_mut_ptr().add(16 * b).cast(), _mm512_cvtepi32_epi8(q));
+            // y is in [0.5, 255.5 + rounding]: truncation then an unsigned saturating narrow
+            // equals the scalar `as u8` cast.
+            let q = _mm512_cvttps_epi32(y);
+            _mm_storeu_si128(
+                lut.as_mut_ptr().add(16 * b).cast(),
+                _mm512_cvtusepi32_epi8(q),
+            );
         }
         (base, scale)
     }
