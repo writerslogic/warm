@@ -182,3 +182,14 @@ Test B, the full stream through the harness (`results/testb_run1`, `testb/`) [M]
 - **Scope.** This is one run on wl-03 (Core Ultra 9 185H, 8 threads on 4 P-cores). It is not the board's evaluation VM.
   - The board configuration selects partition mode from a `config.yaml` key (`testb/partition-mode-config.patch`). It needs its own run on a public commit before any submission claim.
 
+s2b, the board configuration on the public pin (`results/s2b_board_config`) [M]:
+- **Setup.**
+  - Partition mode is selected by the `config.yaml` key `"mode": "partition"`, with `WARM_MODE` unset (`testb/partition-mode-config.patch`, now commit 56fc6e6 on the PR 357 branch).
+  - The wheel was built from a `git archive` of main `e29b62fc`. Parameters: nprobe 300, reorder 317, 5,000 lists, train_at 1M, with the LPT query balancer.
+  - Same command, host and scope as test B.
+- **Run.** Valid: 1,280 steps, exit 0, 640 searches. The tier trained at search 16 with 1,239,816 rows live.
+- **Recall@10.** The mean is 0.9726. The lowest post-train search is 0.9543. Means over 80-search bins run 0.9669-0.9780.
+- **Time and memory.** Wall time (sum of step seconds) is 2,550 s: search 2,353, insert 160, delete 36. Process elapsed is 42:31. Peak RSS is 6.45 GiB. Every gate passed.
+- **Against expectation.** The run10 step fit put nprobe 300 at about 2,800 s with non-search at 485 s. The measured 2,550 s is under that, as in test B.
+- **Scope.** One run on wl-03, not the evaluation VM. The PR 357 description (`pr357-body.md`) carries the same numbers and that caveat.
+

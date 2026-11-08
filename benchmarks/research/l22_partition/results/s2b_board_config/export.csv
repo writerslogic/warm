@@ -1,0 +1,2 @@
+algorithm,parameters,dataset,count,distcomps,build,indexsize,mean_ssd_ios,mean_latency,track,recall/ap
+warm,"warm(partition_l5000_np300_ro317, {'nprobe': 300})",msturing-30M-clustered(final_runbook.yaml),10,0.0,0.0007808208465576172,312.0,0.0,0.0,streaming,0.9726185468749999
