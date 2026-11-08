@@ -234,6 +234,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Balance partition search threads by estimated scan work
 - Restore the fused table-build loop
 - Accumulate the AVX2 block scan in 16-bit words and vectorise the table build
 - Build the upper layers before the adjacency during consolidation (#393)
