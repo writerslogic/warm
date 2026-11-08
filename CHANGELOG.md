@@ -8,6 +8,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [Unreleased]
 
 ### Added
+- Record per-phase timings of the last partition search
+- Add the experimental partition tier with SOAR spilling and LUT16 residual codes
 - Write document checkpoints with block-packed postings (version 2) (#390)
 - Write document checkpoints with block-packed postings (version 2)
 - Land the supersession probes, k-mer, FPE timestamp and AVX2 popcount work (#388)
@@ -224,6 +226,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Restore the fused table-build loop
+- Accumulate the AVX2 block scan in 16-bit words and vectorise the table build
+- Build the upper layers before the adjacency during consolidation (#393)
 - Build the upper layers before the adjacency and free the slot maps early
 - Decode checkpoint hits without a chunk vector and fuse the streaming rescoring pass (#392)
 - Prefetch and fuse the base rescoring pass on the tombstone path
@@ -260,6 +265,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Pin AML runtime artifacts and document model dependency reachability
 
 ### Bench
+- Report every repetition of the partition step with mean, median and p90
+- Carry the reused table's base and scale in the scan-only mode
+- Time one partition-tier search step over the LUT16 block scan
 - Pin the text comparison and speed up mapped-checkpoint posting decode (#389)
 - Rerun SIFT-1M against hnswlib at a pinned commit
 - Rerun the text comparison at pinned commits against the current comparator pins
@@ -298,6 +306,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Freeze the Matryoshka prefix retrieval study
 
 ### Style
+- Satisfy clippy 1.99 in the partition tier
 - Format the record walker
 - Format the checkpoint block codec and its tests
 - Close files with pathlib in the remaining probe scripts and drop an unused import
