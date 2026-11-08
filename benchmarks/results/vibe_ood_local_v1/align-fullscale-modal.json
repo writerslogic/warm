@@ -1,0 +1,588 @@
+{
+ "dataset": "imagenet-align-640-normalized",
+ "builds": {
+  "normalized_64_500_8_true.hdf5": [
+   {
+    "config": "1000_100",
+    "recall": 0.9940300000000001,
+    "best_qps": 452.2691285160732,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=1000, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "1000_200",
+    "recall": 0.9989100000000001,
+    "best_qps": 453.5146760853374,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=1000, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "1000_400",
+    "recall": 0.9989100000000001,
+    "best_qps": 484.72924215967674,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=1000, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "100_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 2412.6333298698314,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=100, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "100_200",
+    "recall": 0.9659099999999999,
+    "best_qps": 2577.2817786592486,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=100, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "100_400",
+    "recall": 0.9659099999999999,
+    "best_qps": 2299.306387206389,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=100, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "128_100",
+    "recall": 0.97315,
+    "best_qps": 2139.089055025251,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=128, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "128_200",
+    "recall": 0.97976,
+    "best_qps": 2138.734538019847,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=128, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "128_400",
+    "recall": 0.97976,
+    "best_qps": 1410.4833616939802,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=128, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "160_100",
+    "recall": 0.97907,
+    "best_qps": 1578.7382005927564,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=160, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "160_200",
+    "recall": 0.98554,
+    "best_qps": 1519.1396018744247,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=160, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "160_400",
+    "recall": 0.98554,
+    "best_qps": 1852.0118176069197,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=160, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "200_100",
+    "recall": 0.9851800000000001,
+    "best_qps": 1614.753830004129,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=200, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "200_200",
+    "recall": 0.99138,
+    "best_qps": 1475.7608835799688,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=200, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "200_400",
+    "recall": 0.99138,
+    "best_qps": 1451.3603571610481,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=200, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "256_100",
+    "recall": 0.98737,
+    "best_qps": 1456.426507216145,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=256, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "256_200",
+    "recall": 0.99343,
+    "best_qps": 1383.9744705002204,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=256, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "256_400",
+    "recall": 0.99343,
+    "best_qps": 1355.586921170178,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=256, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "320_100",
+    "recall": 0.98907,
+    "best_qps": 1031.9096012642742,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=320, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "320_200",
+    "recall": 0.99478,
+    "best_qps": 1099.0961546598844,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=320, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "320_400",
+    "recall": 0.99478,
+    "best_qps": 1014.7966206430802,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=320, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "400_100",
+    "recall": 0.9903799999999999,
+    "best_qps": 1045.7363730723166,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=400, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "400_200",
+    "recall": 0.99587,
+    "best_qps": 1026.2825964776619,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=400, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "400_400",
+    "recall": 0.99587,
+    "best_qps": 750.5642513150641,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=400, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "40_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 1722.2276687969497,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=40, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "40_200",
+    "recall": 0.9659099999999999,
+    "best_qps": 1698.6358771973992,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=40, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "40_400",
+    "recall": 0.9659099999999999,
+    "best_qps": 2373.3246060133665,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=40, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "50_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 2425.53297833086,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=50, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "50_200",
+    "recall": 0.9659099999999999,
+    "best_qps": 2405.9225691370057,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=50, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "50_400",
+    "recall": 0.9659099999999999,
+    "best_qps": 2531.632757654766,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=50, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "512_100",
+    "recall": 0.99158,
+    "best_qps": 908.3044388211389,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=512, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "512_200",
+    "recall": 0.99685,
+    "best_qps": 750.0373953712884,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=512, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "512_400",
+    "recall": 0.99685,
+    "best_qps": 635.7271975600693,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=512, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "640_100",
+    "recall": 0.9926699999999999,
+    "best_qps": 745.2008928382587,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=640, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "640_200",
+    "recall": 0.9978100000000001,
+    "best_qps": 701.2588134911504,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=640, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "640_400",
+    "recall": 0.9978100000000001,
+    "best_qps": 474.1381623801208,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=640, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "64_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 2677.5821410053018,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=64, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "64_200",
+    "recall": 0.9659099999999999,
+    "best_qps": 2621.5105737249164,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=64, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "64_400",
+    "recall": 0.9659099999999999,
+    "best_qps": 2234.463586922499,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=64, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "800_100",
+    "recall": 0.9934499999999999,
+    "best_qps": 424.50463751800527,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=800, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "800_200",
+    "recall": 0.99845,
+    "best_qps": 464.1163972825148,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=800, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "800_400",
+    "recall": 0.99845,
+    "best_qps": 400.19184060300034,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=800, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "80_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 1741.3116775019755,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=80, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "80_200",
+    "recall": 0.9659099999999999,
+    "best_qps": 2276.79574108497,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=80, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "80_400",
+    "recall": 0.9659099999999999,
+    "best_qps": 2514.5991717755956,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=80, rerank=400, code_bits=8, learn_queries=32768)"
+   }
+  ],
+  "normalized_96_500_8_true.hdf5": [
+   {
+    "config": "1000_100",
+    "recall": 0.99419,
+    "best_qps": 344.4164820251938,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=1000, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "1000_200",
+    "recall": 0.9990300000000001,
+    "best_qps": 339.264504795306,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=1000, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "1000_400",
+    "recall": 0.9990300000000001,
+    "best_qps": 412.74669896960097,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=1000, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "100_100",
+    "recall": 0.97199,
+    "best_qps": 1807.0643574597038,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=100, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "100_200",
+    "recall": 0.97199,
+    "best_qps": 1997.9492409848863,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=100, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "100_400",
+    "recall": 0.97199,
+    "best_qps": 2038.86822962128,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=100, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "128_100",
+    "recall": 0.97787,
+    "best_qps": 1772.8646514387003,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=128, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "128_200",
+    "recall": 0.98429,
+    "best_qps": 1695.914291503958,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=128, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "128_400",
+    "recall": 0.98429,
+    "best_qps": 1801.0995223509808,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=128, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "160_100",
+    "recall": 0.98271,
+    "best_qps": 1625.99759688965,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=160, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "160_200",
+    "recall": 0.98894,
+    "best_qps": 1176.6911389013144,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=160, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "160_400",
+    "recall": 0.98894,
+    "best_qps": 1441.3353196535604,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=160, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "200_100",
+    "recall": 0.98706,
+    "best_qps": 914.6647873144962,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=200, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "200_200",
+    "recall": 0.99307,
+    "best_qps": 845.8175016909363,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=200, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "200_400",
+    "recall": 0.99307,
+    "best_qps": 830.1542403280995,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=200, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "256_100",
+    "recall": 0.98886,
+    "best_qps": 760.4182204828263,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=256, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "256_200",
+    "recall": 0.9944799999999999,
+    "best_qps": 751.796314284253,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=256, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "256_400",
+    "recall": 0.9944799999999999,
+    "best_qps": 717.1894360474982,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=256, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "320_100",
+    "recall": 0.9902599999999999,
+    "best_qps": 672.5858508054475,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=320, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "320_200",
+    "recall": 0.99578,
+    "best_qps": 645.6002993531505,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=320, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "320_400",
+    "recall": 0.99578,
+    "best_qps": 620.8360379524898,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=320, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "400_100",
+    "recall": 0.99137,
+    "best_qps": 562.5652685206802,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=400, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "400_200",
+    "recall": 0.99681,
+    "best_qps": 558.0030972531542,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=400, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "400_400",
+    "recall": 0.99681,
+    "best_qps": 534.2848579051672,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=400, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "40_100",
+    "recall": 0.97199,
+    "best_qps": 1852.7756731893646,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=40, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "40_200",
+    "recall": 0.97199,
+    "best_qps": 1337.096550660841,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=40, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "40_400",
+    "recall": 0.97199,
+    "best_qps": 1338.2113689178825,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=40, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "50_100",
+    "recall": 0.97199,
+    "best_qps": 1264.906988951741,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=50, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "50_200",
+    "recall": 0.97199,
+    "best_qps": 1460.129137061789,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=50, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "50_400",
+    "recall": 0.97199,
+    "best_qps": 1780.1497378441002,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=50, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "512_100",
+    "recall": 0.99232,
+    "best_qps": 657.4273855510485,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=512, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "512_200",
+    "recall": 0.99751,
+    "best_qps": 668.1429981167207,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=512, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "512_400",
+    "recall": 0.99751,
+    "best_qps": 616.3461320445624,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=512, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "640_100",
+    "recall": 0.99316,
+    "best_qps": 407.41086274768355,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=640, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "640_200",
+    "recall": 0.9982099999999999,
+    "best_qps": 385.06193857748775,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=640, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "640_400",
+    "recall": 0.9982099999999999,
+    "best_qps": 421.7177927662095,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=640, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "64_100",
+    "recall": 0.97199,
+    "best_qps": 1296.635912621652,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=64, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "64_200",
+    "recall": 0.97199,
+    "best_qps": 1310.0966709915613,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=64, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "64_400",
+    "recall": 0.97199,
+    "best_qps": 1937.6854842139176,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=64, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "800_100",
+    "recall": 0.9937699999999999,
+    "best_qps": 367.82085945275406,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=800, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "800_200",
+    "recall": 0.9986700000000001,
+    "best_qps": 364.06128776820145,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=800, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "800_400",
+    "recall": 0.9986700000000001,
+    "best_qps": 317.25703496700004,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=800, rerank=400, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "80_100",
+    "recall": 0.97199,
+    "best_qps": 1932.8841505554835,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=80, rerank=100, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "80_200",
+    "recall": 0.97199,
+    "best_qps": 1333.2583864873386,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=80, rerank=200, code_bits=8, learn_queries=32768)"
+   },
+   {
+    "config": "80_400",
+    "recall": 0.97199,
+    "best_qps": 2020.9554936388795,
+    "name": "WARM(metric=normalized, degree=96, build_ef=500, ef=80, rerank=400, code_bits=8, learn_queries=32768)"
+   }
+  ]
+ },
+ "best": {
+  "0.9": [
+   "normalized_64_500_8_true.hdf5",
+   {
+    "config": "64_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 2677.5821410053018,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=64, rerank=100, code_bits=8, learn_queries=32768)"
+   }
+  ],
+  "0.94": [
+   "normalized_64_500_8_true.hdf5",
+   {
+    "config": "64_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 2677.5821410053018,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=64, rerank=100, code_bits=8, learn_queries=32768)"
+   }
+  ],
+  "0.95": [
+   "normalized_64_500_8_true.hdf5",
+   {
+    "config": "64_100",
+    "recall": 0.9659099999999999,
+    "best_qps": 2677.5821410053018,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=64, rerank=100, code_bits=8, learn_queries=32768)"
+   }
+  ],
+  "0.99": [
+   "normalized_64_500_8_true.hdf5",
+   {
+    "config": "200_200",
+    "recall": 0.99138,
+    "best_qps": 1475.7608835799688,
+    "name": "WARM(metric=normalized, degree=64, build_ef=500, ef=200, rerank=200, code_bits=8, learn_queries=32768)"
+   }
+  ],
+  "1.0": null
+ }
+}

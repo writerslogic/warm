@@ -1,0 +1,31 @@
+{
+ "avx512": false,
+ "best_qps_at_recall": {
+  "warm": {
+   "0.90": {
+    "build_time": 3124.1678833961487,
+    "index_size": 990248.0,
+    "params": "WARM(metric=cosine, degree=96, build_ef=500, ef=320, rerank=100, code_bits=8)|320_100",
+    "qps": 837.1888888419443,
+    "recall": 0.90741
+   },
+   "0.95": {
+    "build_time": 3124.1678833961487,
+    "index_size": 990248.0,
+    "params": "WARM(metric=cosine, degree=96, build_ef=500, ef=640, rerank=100, code_bits=8)|640_100",
+    "qps": 452.0088697305655,
+    "recall": 0.95398
+   },
+   "0.99": null
+  }
+ },
+ "container": "ta-01M6SBAVT6414QTH3QTWP422ER",
+ "cpu_model": "AMD EPYC 7003 (Zen 3, Milan; family 25 model 1)",
+ "dataset": "glove-200-cosine",
+ "flags_sha": "ec7ab2242885",
+ "generated": "2026-11-06T22:04:54Z",
+ "k": 100,
+ "nproc": 8,
+ "vibe_commit": "6e5fb9daf276ecba73d87dcdd6a14448d434dba7",
+ "warm_commit": "af8d4017c6157688359dc2e31cc461fb3f28fa8e"
+}
