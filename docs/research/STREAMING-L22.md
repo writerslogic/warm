@@ -140,6 +140,27 @@ Assignment and brute force (`l22b.py` -> `a_out6`, `l22b2.py` -> `a_out8`) [M]:
 
 List maintenance (`l22c_maint.py` -> `a_out7`, stopped at op 400) [M]: splits at T x the current mean, without neighbour reassignment, need nprobe >= 700 (T = 3) or never reach the fixed arm's nprobe-350 recall (T = 2, which runs away to 30,147 lists). Both are REJECTED; stage 1 has no maintenance.
 
-Total-time rule (`project_total.py`, sustained bench means in `bench_run5`): at nprobe 350 with fixed centres, search 2,198 s (tables 490 + scan 1,558 + 150 [I]) plus non-search 485 s (k-means 38, train assignment 15, insert assignment 338, pre-train brute force 64, deletes 30 [I]) gives 2,682 s, which passes the 3,000 s gate with 318 s spare. This is a projection; the stream has not been run end to end.
+Total-time rule (`project_total.py`, sustained bench means in `bench_run5`): at nprobe 350 with fixed centres, search 2,198 s (tables 490 + scan 1,558 + 150 [I]) plus non-search 485 s (k-means 38, train assignment 15, insert assignment 338, pre-train brute force 64, deletes 30 [I]) gives 2,682 s, which passes the 3,000 s gate with 318 s spare. This is a projection; the stream has not been run end to end. The Rust measurements below supersede it: the bench's scan rate was not reached on real lists.
 
 PartitionTier (`src/core/qgraph/partition.rs`, `experimental`) A2 prefix acceptance (`bench_run6`) [M]: recall@10 at nprobe 350 / 700 is 0.9496 / 0.9802 at 1M (A2 0.9494 / 0.9794) and 0.9676 / 0.9880 at 3M (A2 0.9694 / 0.9894), within the 0.003 gate. A 10k-query step on the 3M prefix takes 2.38-2.42 s, against the projection's ~1.9 s and the pre-check gate of 2.3 s. The search path is profiled before the full-stream test B.
+
+PartitionTier search profile and live sweep (`bench_run8` to `bench_run11`, 10k queries per step, RAYON 8) [M]:
+- 3M prefix with prefix-trained centres (`bench_run8`, `bench_run9`): step 2.22-2.41 s at nprobe 350. Table builds take 0.79-0.82 s, as projected. The code scan runs at 3.5-3.7e9 codes/s against the uniform bench's 4.75-5.2e9, and thread imbalance (slowest thread minus mean) adds 0.10-0.18 s.
+- Stage-1 state (`bench_run10`, `l22f_prep.py`): op-32 centres trained by A3's procedure, the real live rows at ops 200 / 1172 / 648 (2,999,384 / 6,001,880 / 9,990,953 rows), and official step GT.
+  - At nprobe 350 a query scans 0.227-0.238 of live (A3's 0.23). The step takes 3.0-3.2 / 4.6-5.1 / 7.2-7.6 s, with recall@10 of 0.9712 / 0.9786 / 0.9862.
+  - The code-scan rate stays at 3.5-4.1e9 at the longer lists. Admitted candidates (3.9-4.6k per query) do not drive cost.
+  - The fit is step = 1.23 s + 0.62 s per 1M live. Whole-run total: 625 a + b x 3.209e9 + 485 s non-search = ~3,240 s, which FAILS the 3,000 s rule.
+- nprobe sweep on the same states (`bench_run11`):
+
+  | nprobe | recall@10 at 3.0M / 6.0M / 10.0M | fitted total |
+  |---|---|---|
+  | 150 | 0.9208 / 0.9362 / 0.9548 | 1,876 s |
+  | 200 | 0.9396 / 0.9542 / 0.9670 | 2,170 s |
+  | 250 | 0.9542 / 0.9644 / 0.9762 | 2,573 s |
+  | 350 | 0.9712 / 0.9786 / 0.9862 | 3,157 s |
+
+  The pre-registered rule takes the smallest nprobe with recall >= 0.95 at all three states and a total <= 2,850 s, which selects nprobe 250 for stage 1.
+  - These totals are projections from a linear fit inside the 3-10M range, which covers the run's live quantiles of 2.42-7.90M.
+  - Searches below 3M live may have lower recall.
+  - The stream has not been run end to end; test B does that at nprobe 250.
+  - Dynamic thread scheduling (imbalance 0.1-0.4 s per step) and multi-query blocking (the scan rate) are held in reserve.
