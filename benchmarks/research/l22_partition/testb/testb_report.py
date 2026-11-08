@@ -35,6 +35,7 @@ def recall(p):
     for l in lines(p):
         if l.startswith("Recall:"):
             return ast.literal_eval(l.split(":", 1)[1].strip())
+    return None
 
 
 runbook, pin, s2 = sys.argv[1:4]
