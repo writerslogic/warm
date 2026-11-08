@@ -1,0 +1,4 @@
+commit=97505b38258fd449579886b1fb9455c6f83e4454 (git archive of bench/l22-testb, /Volumes/A/.hms-wt-l22b; not pushed)
+wheel=/home/davidcondrey/bigann/s2/wheels/warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl
+986fd83b219919c99a56c48edb9c258be209fb500d488680332f85223a3d2993  /home/davidcondrey/bigann/s2/wheels/warm_python-0.6.5-cp39-abi3-manylinux_2_34_x86_64.whl
+rustc 1.99.0 (b940084d7 2026-09-28)

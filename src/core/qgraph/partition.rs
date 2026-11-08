@@ -122,6 +122,39 @@ pub struct PartitionTier {
     profile: std::sync::Mutex<SearchProfile>,
 }
 
+/// Per-(query, list) table build cost in scanned-code equivalents (measured on wl-03: ~2.7 us
+/// per table against ~4.9e8 codes/s per thread).
+const TABLE_CODES: u64 = 1300;
+
+/// Assigns queries to `threads` workers by estimated scan work (one table plus the codes of each
+/// probed list), longest first onto the least-loaded worker. Returns each query's worker, its
+/// index within that worker, and each worker's queries in that index order.
+fn balance_queries(
+    probe: &[Vec<u32>],
+    lists: &[List],
+    threads: usize,
+) -> (Vec<u32>, Vec<u32>, Vec<Vec<u32>>) {
+    let cost = |q: usize| -> u64 {
+        probe[q]
+            .iter()
+            .map(|&li| lists[li as usize].slots.len() as u64 + TABLE_CODES)
+            .sum()
+    };
+    let mut order: Vec<(u64, u32)> = (0..probe.len()).map(|q| (cost(q), q as u32)).collect();
+    order.sort_unstable_by(|a, b| b.cmp(a));
+    let mut load = vec![0u64; threads];
+    let (mut owner, mut local) = (vec![0u32; probe.len()], vec![0u32; probe.len()]);
+    let mut members: Vec<Vec<u32>> = vec![Vec::new(); threads];
+    for (c, q) in order {
+        let th = (0..threads).min_by_key(|&i| (load[i], i)).unwrap_or(0);
+        load[th] += c;
+        owner[q as usize] = th as u32;
+        local[q as usize] = members[th].len() as u32;
+        members[th].push(q);
+    }
+    (owner, local, members)
+}
+
 /// `c[m x n] = a[m x k] . b[n x k]^T`, single-threaded.
 fn gemm_nt(a: &[f32], m: usize, b: &[f32], n: usize, k: usize, c: &mut [f32]) {
     assert!(a.len() >= m * k && b.len() >= n * k && c.len() >= m * n);
@@ -780,13 +813,12 @@ impl PartitionTier {
             .collect();
         let route_s = t0.elapsed().as_secs_f64() - centres_s;
         let threads = rayon::current_num_threads().max(1);
+        let (owner, local_at, members) = balance_queries(&probe, &t.lists, threads);
         let parts: Vec<ThreadPart> = (0..threads)
             .into_par_iter()
             .map(|th| {
-                let mine: Vec<u32> = (0..nq as u32)
-                    .filter(|q| *q as usize % threads == th)
-                    .collect();
-                let local = |q: u32| (q as usize / threads) as usize;
+                let mine: &[u32] = &members[th];
+                let local = |q: u32| local_at[q as usize] as usize;
                 let mut bufs: Vec<Vec<(f32, u32)>> =
                     vec![Vec::with_capacity(2 * reorder + BLOCK); mine.len()];
                 let mut thr = vec![f32::INFINITY; mine.len()];
@@ -801,7 +833,7 @@ impl PartitionTier {
                         continue;
                     }
                     let lt = &t.list_tab[li * e..(li + 1) * e];
-                    for &q in qs.iter().filter(|q| **q as usize % threads == th) {
+                    for &q in qs.iter().filter(|q| owner[**q as usize] as usize == th) {
                         let j = local(q);
                         let tl = std::time::Instant::now();
                         let (base, scale) = build_lut(
