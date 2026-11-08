@@ -81,11 +81,34 @@ Reading:
 
 ## Elite and ablation
 
-ELITE_SECTION
+The elite is one component, the adapter read-ahead (`scripts/lowlevel/fork-streaming-io-readahead.patch`, applied to the harness at 56fc6e6b); every other candidate was killed on the proxy. With one component the ablation is control against elite, and a factorial has a single factor.
+
+Full 1,280-step runs, np600 / ro1000, Ice Lake VM, 8 GiB scope, nice 19, taskset 0-7, page cache dropped before each run [M]:
+
+| run | recall@10 | min post-train | step sum s | elapsed | insert s | delete s | search s | peak RSS GiB |
+|---|---|---|---|---|---|---|---|---|
+| control IL-S2E (a), c5cd1c61, same VM, earlier today | 0.993062 | 0.9836 | 2601 | 43:22.14 | 270.712 | 36.776 | 2247.615 | 6.53 |
+| elite1 (read-ahead) | 0.993062 | 0.9836 | 2587 | 43:09.02 | 272.441 | 37.501 | 2269.840 | 6.60 |
+
+Results are bit-identical to the control (same recall, same post-train minimum). The full-run gain (-14 s, -0.5 %) is far smaller than the proxy's -2.4 %: the control run's input file was probably already in the VM page cache from earlier runs, so its reads were cheap, while the elite run started from a dropped cache [I, not verified]. The honest reading is that read-ahead removes the cold-read cost (read time -90 % in the proxy) but that cost is at most about 1 % of the run. Step-sum change against the control: -14 s (-0.5 %) (elite runs finished: 1; the second run was started and stopped at the tool-call cap, so the two-run requirement is NOT met and the figure rests on a single run). The control is the IL-S2E run of earlier today, not an interleaved partner, so the comparison carries the between-run variance of the VM, which was not measured separately; the proxy shows 0.2 % between identical runs [M]. Recall and the term split are in `benchmarks/results/lowlevel/ice_lake_full_*_report.txt`. Joint effects among the killed singles (huge pages, placement, read-ahead together) were not run; the single effects are 0.0 to -0.7 %, so an additive prediction is -3 % dominated by read-ahead [I].
 
 ## Graph benchmark (SIFT-1M, official single-CPU protocol)
 
-GRAPH_SECTION
+Run through the official `run.py --local`, one CPU (`taskset -c 4`), 2 runs per arm, under the timing lock, arms ctrl (main wheel), ybase (this branch, THP off), ythp (THP on), ymi (mimalloc). QPS at recall >= 0.95 and 0.99 (best point at or above the threshold, and log-linear interpolation):
+
+```
+dataset                        arm                     n | 0.95 hc med   interp                 rounds(hc) | 0.99 hc med   interp                 rounds(hc) | maxrec
+sift-128-euclidean             ctrl                    1 |      17,858   18,524                     17,858 |       9,378    9,779                      9,378 | 0.9999
+sift-128-euclidean             ybase                   2 |      18,279   19,876              14,788/21,771 |       7,924    8,443               5,102/10,745 | 0.9999
+sift-128-euclidean             ythp                    1 |      16,990   17,751                     16,990 |       8,947    9,217                      8,947 | 0.9999
+12:16:07 done ymi sift-128-euclidean r 0 rc 1 1643s
+12:16:07 start ybase sift-128-euclidean r 1 load (6.13525390625, 5.40234375, 6.0458984375)
+12:56:22 done ybase sift-128-euclidean r 1 rc 0 2415s
+12:56:22 start ythp sift-128-euclidean r 1 load (1.0302734375, 1.51904296875, 2.57421875)
+
+```
+
+The host was shared with other timing jobs at load 6 to 18 during these runs, and ctrl against ybase (same algorithm, same code path, allocator wrapper compiled out) differs by up to 45 % at 0.99, so the graph benchmark cannot resolve a systems effect on this host [M]. mimalloc (ymi) failed to load in the wheel built before the dynamic-TLS fix (rc 1). No graph-benchmark gain is claimed.
 
 ## Docker and THP
 
