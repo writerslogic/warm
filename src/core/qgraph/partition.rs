@@ -979,7 +979,7 @@ impl PartitionTier {
 
     /// Assigns, encodes and appends the given slots (rows in `vectors`, same order).
     fn place(&mut self, slots: &[u32], vectors: &[f32]) {
-        let (dim, m, sh) = (self.dim, self.params.pq_m, self.shape);
+        let dim = self.dim;
         let t = self.trained.as_mut().expect("trained");
         let asg = t.assign(
             vectors,
