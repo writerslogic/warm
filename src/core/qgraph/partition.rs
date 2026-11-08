@@ -74,6 +74,9 @@ pub struct PartitionParams {
     /// `retrain_sample` live rows (0 = a cold k-means as at the first training).
     pub retrain_warm_iters: usize,
     pub retrain_sample: usize,
+    /// A warm retrain re-places each row among the `retrain_route` new centres nearest its old
+    /// primary centre instead of among all of them (0 = all, exact).
+    pub retrain_route: usize,
     /// Reseed near-empty centres onto the largest clusters between Lloyd iterations (in the
     /// first training and in retrains), which restores balance after the data has moved.
     pub kmeans_rebalance: bool,
@@ -109,6 +112,7 @@ impl Default for PartitionParams {
             retrain_min_inserts: 1_000_000,
             retrain_warm_iters: 0,
             retrain_sample: 262_144,
+            retrain_route: 0,
             kmeans_rebalance: false,
             nprobe_by_live: Vec::new(),
             spill_eps: f32::INFINITY,
@@ -189,6 +193,8 @@ pub struct PartitionTier {
     trained_live: usize,
     retrain_next: usize,
     inserts_since_train: usize,
+    /// Seconds of the last training: centres, codebook and tables, placement.
+    train_phases: [f64; 3],
 }
 
 /// Lists to probe for one query under an adaptive rule. `d2` is the query's squared distance to
@@ -722,49 +728,119 @@ impl Trained {
                     for ((dv, &v), &cc) in d.iter_mut().zip(row).zip(&self.c2) {
                         *dv = cc - 2.0 * v;
                     }
-                    smallest_k(&d, k, &mut cand);
-                    let c1 = cand
-                        .iter()
-                        .min_by(|a, b| a.0.total_cmp(&b.0))
-                        .map(|x| x.1)
-                        .unwrap() as usize;
-                    let xi = &xb[i * dim..(i + 1) * dim];
-                    let ci = &self.centres[c1 * dim..(c1 + 1) * dim];
-                    let rr: f64 = xi
-                        .iter()
-                        .zip(ci)
-                        .map(|(a, c)| f64::from(a - c).powi(2))
-                        .sum::<f64>()
-                        .max(1e-20);
-                    let xr: f64 = xi
-                        .iter()
-                        .zip(ci)
-                        .map(|(a, c)| f64::from(*a) * f64::from(a - c))
-                        .sum();
-                    let x2: f64 = xi.iter().map(|a| f64::from(*a).powi(2)).sum();
-                    let g = &self.gram[c1 * l..(c1 + 1) * l];
-                    let mut best = (f64::INFINITY, c1 as u32);
-                    let mut best_dist = 0f64;
-                    for &(_, c) in &cand {
-                        let c = c as usize;
-                        if c == c1 {
-                            continue;
-                        }
-                        let xcc = f64::from(row[c]);
-                        let dist = x2 - 2.0 * xcc + f64::from(self.c2[c]);
-                        // <x - c, r> with r = x - c1: <x, r> - (<c, x> - <c, c1>).
-                        let proj = xr - (xcc - f64::from(g[c]));
-                        let loss = dist + f64::from(lambda) * proj * proj / rr;
-                        if loss < best.0 {
-                            best = (loss, c as u32);
-                            best_dist = dist;
-                        }
-                    }
-                    let spill = best.1 != c1 as u32 && best_dist <= (1.0 + f64::from(eps)) * rr;
-                    *oi = (c1 as u32, if spill { best.1 } else { u32::MAX });
+                    *oi = self.pick(
+                        &xb[i * dim..(i + 1) * dim],
+                        row,
+                        None,
+                        &d,
+                        k,
+                        lambda,
+                        eps,
+                        &mut cand,
+                    );
                 }
             });
         out
+    }
+
+    /// `assign` restricted to candidate centres: rows `units[u].1..units[u].2` of `x` are scored
+    /// against the `r` centres `cands[units[u].0 * r..][..r]` only.
+    #[allow(clippy::too_many_arguments)]
+    fn assign_routed(
+        &self,
+        x: &[f32],
+        dim: usize,
+        k: usize,
+        lambda: f32,
+        eps: f32,
+        units: &[(usize, usize, usize)],
+        cands: &[u32],
+        r: usize,
+    ) -> Vec<(u32, u32)> {
+        let parts: Vec<Vec<(u32, u32)>> = units
+            .par_iter()
+            .map(|&(o, s, e)| {
+                let ids = &cands[o * r..(o + 1) * r];
+                let mut cm = Vec::with_capacity(r * dim);
+                for &c in ids {
+                    cm.extend_from_slice(&self.centres[c as usize * dim..(c as usize + 1) * dim]);
+                }
+                let b = e - s;
+                let mut xc = vec![0f32; b * r];
+                gemm_nt(&x[s * dim..e * dim], b, &cm, r, dim, &mut xc);
+                let mut d = vec![0f32; r];
+                let mut cand = Vec::with_capacity(k);
+                (0..b)
+                    .map(|i| {
+                        let row = &xc[i * r..(i + 1) * r];
+                        for ((dv, &v), &c) in d.iter_mut().zip(row).zip(ids) {
+                            *dv = self.c2[c as usize] - 2.0 * v;
+                        }
+                        let xi = &x[(s + i) * dim..(s + i + 1) * dim];
+                        self.pick(xi, row, Some(ids), &d, k, lambda, eps, &mut cand)
+                    })
+                    .collect()
+            })
+            .collect();
+        parts.concat()
+    }
+
+    /// Primary list and SOAR spill of one row. `row[j]` is `<x, c_j>` and `d[j]` the ranking
+    /// distance for candidate `j`, which is centre `ids[j]` (`j` itself when `ids` is None).
+    #[allow(clippy::too_many_arguments)]
+    fn pick(
+        &self,
+        xi: &[f32],
+        row: &[f32],
+        ids: Option<&[u32]>,
+        d: &[f32],
+        k: usize,
+        lambda: f32,
+        eps: f32,
+        cand: &mut Vec<(f32, u32)>,
+    ) -> (u32, u32) {
+        let l = self.lists_len();
+        let id = |j: u32| ids.map_or(j as usize, |s| s[j as usize] as usize);
+        smallest_k(d, k, cand);
+        let p1 = cand
+            .iter()
+            .min_by(|a, b| a.0.total_cmp(&b.0))
+            .map(|x| x.1)
+            .unwrap();
+        let c1 = id(p1);
+        let ci = &self.centres[c1 * xi.len()..(c1 + 1) * xi.len()];
+        let rr: f64 = xi
+            .iter()
+            .zip(ci)
+            .map(|(a, c)| f64::from(a - c).powi(2))
+            .sum::<f64>()
+            .max(1e-20);
+        let xr: f64 = xi
+            .iter()
+            .zip(ci)
+            .map(|(a, c)| f64::from(*a) * f64::from(a - c))
+            .sum();
+        let x2: f64 = xi.iter().map(|a| f64::from(*a).powi(2)).sum();
+        let g = &self.gram[c1 * l..(c1 + 1) * l];
+        let mut best = (f64::INFINITY, c1 as u32);
+        let mut best_dist = 0f64;
+        for &(_, j) in cand.iter() {
+            if j == p1 {
+                continue;
+            }
+            let c = id(j);
+            let xcc = f64::from(row[j as usize]);
+            let dist = x2 - 2.0 * xcc + f64::from(self.c2[c]);
+            // <x - c, r> with r = x - c1: <x, r> - (<c, x> - <c, c1>).
+            let proj = xr - (xcc - f64::from(g[c]));
+            let loss = dist + f64::from(lambda) * proj * proj / rr;
+            if loss < best.0 {
+                best = (loss, c as u32);
+                best_dist = dist;
+            }
+        }
+        let spill = best.1 != c1 as u32 && best_dist <= (1.0 + f64::from(eps)) * rr;
+        (c1 as u32, if spill { best.1 } else { u32::MAX })
     }
 
     /// PQ nibbles of the residual `x - c_list`.
@@ -816,6 +892,7 @@ impl PartitionTier {
             trained_live: 0,
             retrain_next: 0,
             inserts_since_train: 0,
+            train_phases: [0.0; 3],
         })
     }
 
@@ -911,6 +988,14 @@ impl PartitionTier {
             self.params.soar_lambda,
             self.params.spill_eps,
         );
+        let asg = asg;
+        self.place_asg(slots, vectors, &asg);
+    }
+
+    /// Encodes and appends the given slots to the lists named by `asg`.
+    fn place_asg(&mut self, slots: &[u32], vectors: &[f32], asg: &[(u32, u32)]) {
+        let (dim, m, sh) = (self.dim, self.params.pq_m, self.shape);
+        let t = self.trained.as_mut().expect("trained");
         let codes: Vec<u8> = {
             let t = &*t;
             asg.par_iter()
@@ -929,7 +1014,7 @@ impl PartitionTier {
         if t.loc.len() < self.slot_id.len() {
             t.loc.resize(self.slot_id.len(), [(u32::MAX, u32::MAX); 2]);
         }
-        for (i, (&slot, &(a1, a2))) in slots.iter().zip(&asg).enumerate() {
+        for (i, (&slot, &(a1, a2))) in slots.iter().zip(asg).enumerate() {
             let x = &vectors[i * dim..(i + 1) * dim];
             let p1 = t.lists[a1 as usize].append(sh, &codes[2 * i * m..(2 * i + 1) * m], slot);
             let mut p2 = u32::MAX;
@@ -994,6 +1079,8 @@ impl PartitionTier {
             return Err(invalid("partition tier: fewer live rows than lists".into()));
         }
         let mut rng = SplitMix(p.seed);
+        let t_start = std::time::Instant::now();
+        let mut warm = false;
         let gather = |idx: &[usize]| -> Vec<f32> {
             let mut s = Vec::with_capacity(idx.len() * dim);
             for &i in idx {
@@ -1012,6 +1099,7 @@ impl PartitionTier {
                 // A retrain continues from the current centres: a few iterations restore
                 // balance at a fraction of a cold k-means.
                 Some(old) if p.retrain_warm_iters > 0 && old.centres.len() == p.lists * dim => {
+                    warm = true;
                     let sample = gather(&sample_indices(live.len(), p.retrain_sample, &mut rng));
                     kmeans_from(
                         &sample,
@@ -1035,6 +1123,7 @@ impl PartitionTier {
                 }
             },
         };
+        let t_centres = t_start.elapsed().as_secs_f64();
         let l = p.lists;
         let c2: Vec<f32> = centres.chunks(dim).map(|r| dot(r, r)).collect();
         let mut gram = vec![0f32; l * l];
@@ -1075,6 +1164,13 @@ impl PartitionTier {
                     }
                 }
             });
+        let t_tables = t_start.elapsed().as_secs_f64();
+        // Rows grouped by old primary list, with the new centres nearest each old centre.
+        let route = if warm && p.retrain_route > 0 {
+            self.old_routes(&centres, &c2, &live, p.retrain_route.min(l))
+        } else {
+            None
+        };
         self.trained = Some(Trained {
             centres,
             c2,
@@ -1087,14 +1183,99 @@ impl PartitionTier {
         self.trained_live = live.len();
         self.inserts_since_train = 0;
         // Placed in chunks so a retrain at 10M rows does not hold a second copy of the rows.
-        for chunk in live.chunks(PLACE_CHUNK) {
-            let mut vectors = Vec::with_capacity(chunk.len() * dim);
-            for &slot in chunk {
-                vectors.extend_from_slice(self.row(slot));
+        if let Some((cands, r, groups)) = route {
+            let mut slots: Vec<u32> = Vec::new();
+            let mut units: Vec<(usize, usize, usize)> = Vec::new();
+            let flush =
+                |this: &mut Self, slots: &mut Vec<u32>, units: &mut Vec<(usize, usize, usize)>| {
+                    if slots.is_empty() {
+                        return;
+                    }
+                    let mut vectors = Vec::with_capacity(slots.len() * dim);
+                    for &slot in slots.iter() {
+                        vectors.extend_from_slice(this.row(slot));
+                    }
+                    let t = this.trained.as_ref().expect("trained");
+                    let asg = t.assign_routed(
+                        &vectors,
+                        dim,
+                        p.spill_k,
+                        p.soar_lambda,
+                        p.spill_eps,
+                        units,
+                        &cands,
+                        r,
+                    );
+                    this.place_asg(slots, &vectors, &asg);
+                    slots.clear();
+                    units.clear();
+                };
+            for (o, g) in groups.iter().enumerate() {
+                for part in g.chunks(ROWS) {
+                    let s0 = slots.len();
+                    slots.extend_from_slice(part);
+                    units.push((o, s0, slots.len()));
+                }
+                if slots.len() >= PLACE_CHUNK {
+                    flush(self, &mut slots, &mut units);
+                }
             }
-            self.place(chunk, &vectors);
+            flush(self, &mut slots, &mut units);
+        } else {
+            for chunk in live.chunks(PLACE_CHUNK) {
+                let mut vectors = Vec::with_capacity(chunk.len() * dim);
+                for &slot in chunk {
+                    vectors.extend_from_slice(self.row(slot));
+                }
+                self.place(chunk, &vectors);
+            }
         }
+        let t_end = t_start.elapsed().as_secs_f64();
+        self.train_phases = [t_centres, t_tables - t_centres, t_end - t_tables];
         Ok(())
+    }
+
+    /// For a warm retrain: the `r` new centres nearest each old centre, and the live slots
+    /// grouped by old primary list. None when rows lack an old placement.
+    #[allow(clippy::type_complexity)]
+    fn old_routes(
+        &self,
+        new_centres: &[f32],
+        new_c2: &[f32],
+        live: &[u32],
+        r: usize,
+    ) -> Option<(Vec<u32>, usize, Vec<Vec<u32>>)> {
+        let old = self.trained.as_ref()?;
+        let (dim, l) = (self.dim, old.lists_len());
+        let mut groups: Vec<Vec<u32>> = vec![Vec::new(); l];
+        for &slot in live {
+            let a = old.loc.get(slot as usize)?[0].0;
+            if a == u32::MAX {
+                return None;
+            }
+            groups[a as usize].push(slot);
+        }
+        let mut cands = vec![0u32; l * r];
+        cands
+            .par_chunks_mut(ROWS * r)
+            .zip(old.centres.par_chunks(ROWS * dim))
+            .for_each(|(out, ob)| {
+                let b = ob.len() / dim;
+                let mut xc = vec![0f32; b * l];
+                gemm_nt(ob, b, new_centres, l, dim, &mut xc);
+                let mut d = vec![0f32; l];
+                let mut near = Vec::with_capacity(r);
+                for i in 0..b {
+                    for ((dv, &v), &cc) in d.iter_mut().zip(&xc[i * l..(i + 1) * l]).zip(new_c2) {
+                        *dv = cc - 2.0 * v;
+                    }
+                    smallest_k(&d, r, &mut near);
+                    for (o, &(_, c)) in out[i * r..(i + 1) * r].iter_mut().zip(&near) {
+                        *o = c;
+                    }
+                }
+            });
+        Some((cands, r, groups))
     }
 
     /// Retrains in place; `WARM_LOG_RETRAIN` prints one line per retrain to stderr.
@@ -1103,9 +1284,13 @@ impl PartitionTier {
         self.train(None)?;
         if crate::compatibility::var("WARM_LOG_RETRAIN").is_ok() {
             eprintln!(
-                "[warm] retrain ({why}) live={live} imbalance {imb:.3} -> {:.3} in {:.1}s",
+                "[warm] retrain ({why}) live={live} imbalance {imb:.3} -> {:.3} in {:.1}s \
+                 (centres {:.1}s, tables {:.1}s, place {:.1}s)",
                 self.list_imbalance(),
-                t0.elapsed().as_secs_f64()
+                t0.elapsed().as_secs_f64(),
+                self.train_phases[0],
+                self.train_phases[1],
+                self.train_phases[2]
             );
         }
         Ok(())
@@ -1891,7 +2076,13 @@ mod tests {
                 .collect();
             q.chunks(dim).map(|qq| naive(&rows, qq, k)).collect()
         };
-        for (warm, imb) in [(0, 0.0f32), (2, 0.0), (2, 1.0001)] {
+        for (warm, imb, route) in [
+            (0, 0.0f32, 0),
+            (2, 0.0, 0),
+            (2, 1.0001, 0),
+            (2, 0.0, 6),
+            (2, 1.0001, 4),
+        ] {
             let mut t = PartitionTier::new(
                 dim,
                 PartitionParams {
@@ -1900,6 +2091,7 @@ mod tests {
                     retrain_min_inserts: 500,
                     retrain_warm_iters: warm,
                     retrain_sample: 1500,
+                    retrain_route: route,
                     spill_eps: if imb > 0.0 { 0.25 } else { f32::INFINITY },
                     ..params(20)
                 },
@@ -1914,7 +2106,7 @@ mod tests {
             // The 2000 threshold fired once; the imbalance rule may add retrains.
             assert!(
                 t.trained_live >= 2500 && t.retrain_next >= 1,
-                "warm {warm} imb {imb}"
+                "warm {warm} imb {imb} route {route}"
             );
             check_lists(&t);
             assert_eq!(recall(&got, &want_for(&(0..2500).collect::<Vec<_>>())), 1.0);
@@ -2042,6 +2234,21 @@ mod tests {
             assert_ne!(a2, a1);
             assert!(loss(a2 as usize) <= best * (1.0 + 1e-4) + 1e-6, "row {i}");
         }
+    }
+
+    #[test]
+    fn routed_assignment_equals_full_when_all_centres_are_candidates() {
+        let (n, dim, lists) = (1500, 16, 12);
+        let x = data(n, dim, 20, 5);
+        let mut t = PartitionTier::new(dim, params(lists)).unwrap();
+        t.insert(&(0..n as u32).collect::<Vec<_>>(), &x).unwrap();
+        t.train(None).unwrap();
+        let tr = t.trained.as_ref().unwrap();
+        let full = tr.assign(&x, dim, 8, 1.0, f32::INFINITY);
+        let cands: Vec<u32> = (0..lists).flat_map(|_| (0..lists as u32).rev()).collect();
+        let units = [(3usize, 0usize, 700usize), (5, 700, n)];
+        let routed = tr.assign_routed(&x, dim, 8, 1.0, f32::INFINITY, &units, &cands, lists);
+        assert_eq!(routed, full);
     }
 
     /// The `i`-th token of a `;`-separated rule list as a JSON-key-safe label.
@@ -2177,6 +2384,24 @@ mod tests {
         let t0 = Instant::now();
         t.train(centres).unwrap();
         let train_s = t0.elapsed().as_secs_f64();
+        // RETRAIN=1: replay a warm retrain of the placed tier (stale centres above) with the
+        // RT_ITERS / RT_SAMPLE / REBAL / ROUTE knobs and report its phases.
+        let mut retrain_rep = String::new();
+        if envn("RETRAIN") == Some(1) {
+            t.params.retrain_warm_iters = envn("RT_ITERS").unwrap_or(3);
+            t.params.retrain_sample = envn("RT_SAMPLE").unwrap_or(1_000_000);
+            t.params.retrain_route = envn("ROUTE").unwrap_or(0);
+            let t0 = Instant::now();
+            t.train(None).unwrap();
+            let ph = t.train_phases;
+            retrain_rep = format!(
+                ", \"retrain_s\": {:.3}, \"retrain_centres_s\": {:.3}, \"retrain_tables_s\": {:.3}, \"retrain_place_s\": {:.3}",
+                t0.elapsed().as_secs_f64(),
+                ph[0],
+                ph[1],
+                ph[2]
+            );
+        }
         let ls = {
             let mut v: Vec<usize> = t
                 .trained
@@ -2198,7 +2423,7 @@ mod tests {
                 sq * v.len() as f64 / (tot as f64).powi(2)
             )
         };
-        let mut rep = format!("{{\"n\": {n}, \"nq\": {}, \"insert_rows_s\": {insert_s:.3}, \"kmeans_s\": {kmeans_s:.3}, \"train_place_s\": {train_s:.3}, \"lists\": {ls}", gt.len());
+        let mut rep = format!("{{\"n\": {n}, \"nq\": {}, \"insert_rows_s\": {insert_s:.3}, \"kmeans_s\": {kmeans_s:.3}, \"train_place_s\": {train_s:.3}, \"lists\": {ls}{retrain_rep}", gt.len());
         // WARM_L22_ACC_RULES: `;`-separated `fixed:NP`, `ratio:EPS:MIN:MAX`, `radius:EPS:SCALE:MIN:MAX`.
         // Each is searched in order after one discarded warm-up search; keys are `<idx>_<rule>`.
         let rules: Vec<(String, ProbeRule, usize, usize)> =
