@@ -63,6 +63,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the Ice Lake np650 streaming run (recall 0.9942 in 2,722 s) (#411)
+- Record the Ice Lake np650 streaming run (recall 0.9942 in 2,722 s)
 - Record the Ice Lake streaming runs (recall 0.9848 in 2,666 s) (#404)
 - Record the Ice Lake streaming runs (recall 0.9848 in 2,666 s)
 - Record that the streaming entry takes 5,618 s on Ice Lake, over the hour
@@ -247,6 +249,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Cut the L22 scan overhead around the quad kernel and batch the reorder (#406)
+- Cut the L22 scan overhead around the quad kernel and batch the reorder
 - Fuse admission into the LUT16 scan and add AVX-512 and VNNI quad paths (#403)
 - Fuse admission into the LUT16 scan and add a VNNI quad layout
 - Add an AVX-512BW path to the LUT16 block scan
