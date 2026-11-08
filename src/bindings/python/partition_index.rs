@@ -197,6 +197,33 @@ impl PyPartitionIndex {
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))
     }
 
+    /// The trained centres as a (lists, dim) float32 array (None before training).
+    fn centres<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyArray2<f32>>>> {
+        let Some(c) = self.tier.centres() else {
+            return Ok(None);
+        };
+        numpy::ndarray::Array2::from_shape_vec((c.len() / self.dim, self.dim), c.to_vec())
+            .map(|a| Some(a.into_pyarray(py)))
+            .map_err(|e| PyRuntimeError::new_err(e.to_string()))
+    }
+
+    /// (primary, spill) list of each id as an (n, 2) uint32 array; 4294967295 marks a missing
+    /// id or an untrained index.
+    fn lists_of<'py>(
+        &self,
+        py: Python<'py>,
+        ids: PyArrayLike1<'_, i64, AllowTypeChange>,
+    ) -> PyResult<Bound<'py, PyArray2<u32>>> {
+        let ids = u32_ids(&ids)?;
+        let mut out = Vec::with_capacity(ids.len() * 2);
+        for id in &ids {
+            out.extend(self.tier.lists_of(*id).unwrap_or([u32::MAX; 2]));
+        }
+        numpy::ndarray::Array2::from_shape_vec((ids.len(), 2), out)
+            .map(|a| a.into_pyarray(py))
+            .map_err(|e| PyRuntimeError::new_err(e.to_string()))
+    }
+
     /// Live rows, training state, and the summed operation seconds and search phases.
     fn stats<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let d = PyDict::new(py);
