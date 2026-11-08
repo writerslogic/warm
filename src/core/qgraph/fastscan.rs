@@ -85,6 +85,8 @@ fn add_group(codes: &[u8], lut: &[u8], out: &mut [u16; BLOCK]) {
 /// table (`16 * m` entries each, summed): each group is shifted by its minimum and all groups
 /// share one scale so the largest group span maps to 255. Returns `(base, scale)`: a code's
 /// float score is `base + scale * sum`, where `base` is the sum of the group minimums.
+// The only library caller is the experimental partition tier.
+#[cfg_attr(not(feature = "experimental"), allow(dead_code))]
 pub(crate) fn build_lut(
     qt: &[f32],
     lt: &[f32],
@@ -94,9 +96,15 @@ pub(crate) fn build_lut(
 ) -> (f32, f32) {
     let e = qt.len();
     let m = e / 16;
-    assert!(e % 16 == 0 && lt.len() == e && ent.len() >= e && mins.len() >= m && lut.len() >= e);
+    assert!(
+        e.is_multiple_of(16)
+            && lt.len() == e
+            && ent.len() >= e
+            && mins.len() >= m
+            && lut.len() >= e
+    );
     let (mut base, mut span) = (0f32, 0f32);
-    for b in 0..m {
+    for (b, mn) in mins[..m].iter_mut().enumerate() {
         let (mut lo, mut hi) = (f32::INFINITY, f32::NEG_INFINITY);
         for v in 16 * b..16 * b + 16 {
             let x = qt[v] + lt[v];
@@ -104,15 +112,15 @@ pub(crate) fn build_lut(
             lo = lo.min(x);
             hi = hi.max(x);
         }
-        mins[b] = lo;
+        *mn = lo;
         span = span.max(hi - lo);
         base += lo;
     }
     let scale = span.max(1e-12) / 255.0;
     let inv = 1.0 / scale;
-    for b in 0..m {
+    for (b, &mn) in mins[..m].iter().enumerate() {
         for v in 16 * b..16 * b + 16 {
-            lut[v] = ((ent[v] - mins[b]) * inv + 0.5) as u8;
+            lut[v] = ((ent[v] - mn) * inv + 0.5) as u8;
         }
     }
     (base, scale)

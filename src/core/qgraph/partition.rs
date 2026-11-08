@@ -1,0 +1,1065 @@
+// Copyright 2024-2026 WritersLogic Contributors
+// SPDX-License-Identifier: Apache-2.0
+//! Experimental partition tier for streaming L2 search (the L22 design): an IVF of `lists`
+//! k-means centres trained once, every row in its nearest list plus one SOAR spill list
+//! (Sun et al., 2023), residual PQ codes with 16 centroids per sub-space stored in the
+//! 32-code LUT16 blocks of [`super::fastscan`], an INT8 table per (query, list), and an exact
+//! reorder of the best candidates from the resident f32 rows.
+//!
+//! Before training the tier answers by exact brute force. Training happens at the first search
+//! with at least `train_at` live rows; centres are then fixed (no list maintenance).
+//!
+//! Insert assignment uses one rows x centres product per block: the `spill_k` nearest centres
+//! by L2 give the exact nearest list, and the spill list is the SOAR minimiser among the other
+//! `spill_k - 1`, computed from `x.c` and the centre Gram matrix (no second product).
+
+use std::collections::HashMap;
+
+use rayon::prelude::*;
+
+use super::fastscan::{build_lut, scan32, BLOCK};
+use super::invalid;
+use crate::core::error::WarmError;
+
+/// Tier parameters. Defaults are the stage-1 operating point.
+#[derive(Clone, Debug)]
+pub struct PartitionParams {
+    pub lists: usize,
+    /// Train at the first search with at least this many live rows.
+    pub train_at: usize,
+    pub train_sample: usize,
+    pub kmeans_iters: usize,
+    /// PQ sub-spaces (must divide the dimension), 16 centroids each.
+    pub pq_m: usize,
+    pub pq_sample: usize,
+    pub pq_iters: usize,
+    /// Candidate centres for the spill choice (nearest `spill_k` by L2).
+    pub spill_k: usize,
+    pub soar_lambda: f32,
+    pub nprobe: usize,
+    pub reorder: usize,
+    pub seed: u64,
+}
+
+impl Default for PartitionParams {
+    fn default() -> Self {
+        Self {
+            lists: 5000,
+            train_at: 1_000_000,
+            train_sample: 262_144,
+            kmeans_iters: 10,
+            pq_m: 50,
+            pq_sample: 32_000,
+            pq_iters: 10,
+            spill_k: 32,
+            soar_lambda: 1.0,
+            nprobe: 350,
+            reorder: 317,
+            seed: 7,
+        }
+    }
+}
+
+/// Rows per assignment / brute-force block (the block's product is `ROWS x lists` floats).
+const ROWS: usize = 1024;
+const BF_QUERIES: usize = 256;
+const BF_ROWS: usize = 8192;
+
+struct List {
+    /// `blocks * 16 * m` bytes in the LUT16 block layout.
+    codes: Vec<u8>,
+    /// Slot of each code, in position order.
+    slots: Vec<u32>,
+}
+
+struct Trained {
+    centres: Vec<f32>,
+    c2: Vec<f32>,
+    /// Centre Gram matrix `C C^T`, row-major `lists x lists`.
+    gram: Vec<f32>,
+    /// `m x 16 x sub` codebook.
+    codebook: Vec<f32>,
+    /// Per-list table term `|v|^2 + 2 <c_b, v>`, `lists x 16m`.
+    list_tab: Vec<f32>,
+    lists: Vec<List>,
+    /// Per slot: (list, position) of the primary and spill memberships; `u32::MAX` = none.
+    loc: Vec<[(u32, u32); 2]>,
+}
+
+/// Streaming partition tier over external `u32` ids.
+pub struct PartitionTier {
+    dim: usize,
+    params: PartitionParams,
+    rows: Vec<f32>,
+    slot_id: Vec<u32>,
+    id_slot: HashMap<u32, u32, foldhash::fast::RandomState>,
+    free: Vec<u32>,
+    trained: Option<Trained>,
+}
+
+/// `c[m x n] = a[m x k] . b[n x k]^T`, single-threaded.
+fn gemm_nt(a: &[f32], m: usize, b: &[f32], n: usize, k: usize, c: &mut [f32]) {
+    assert!(a.len() >= m * k && b.len() >= n * k && c.len() >= m * n);
+    if m == 0 || n == 0 {
+        return;
+    }
+    // SAFETY: the asserts bound every access: A is m x k row-major (rsa = k, csa = 1), B^T is
+    // read from b as k x n with rsb = 1, csb = k, C is m x n row-major.
+    unsafe {
+        matrixmultiply::sgemm(
+            m,
+            k,
+            n,
+            1.0,
+            a.as_ptr(),
+            k as isize,
+            1,
+            b.as_ptr(),
+            1,
+            k as isize,
+            0.0,
+            c.as_mut_ptr(),
+            n as isize,
+            1,
+        );
+    }
+}
+
+/// The `k` smallest `(value, index)` of `vals` (unordered), by a running worst-of-k filter.
+fn smallest_k(vals: &[f32], k: usize, out: &mut Vec<(f32, u32)>) {
+    out.clear();
+    let k = k.min(vals.len());
+    if k == 0 {
+        return;
+    }
+    out.extend(vals[..k].iter().enumerate().map(|(i, &v)| (v, i as u32)));
+    let worst = |o: &[(f32, u32)]| {
+        o.iter()
+            .enumerate()
+            .max_by(|a, b| a.1 .0.total_cmp(&b.1 .0))
+            .map(|(i, x)| (i, x.0))
+            .unwrap()
+    };
+    let (mut wi, mut wv) = worst(out);
+    for (i, &v) in vals.iter().enumerate().skip(k) {
+        if v < wv {
+            out[wi] = (v, i as u32);
+            (wi, wv) = worst(out);
+        }
+    }
+}
+
+fn sq(a: &[f32], b: &[f32]) -> f32 {
+    a.iter().zip(b).map(|(x, y)| (x - y) * (x - y)).sum()
+}
+
+fn dot(a: &[f32], b: &[f32]) -> f32 {
+    a.iter().zip(b).map(|(x, y)| x * y).sum()
+}
+
+/// Nearest centre index for every row (`rows` row-major, `dim` wide), parallel over blocks.
+fn nearest_all(rows: &[f32], dim: usize, centres: &[f32], c2: &[f32]) -> Vec<u32> {
+    let l = c2.len();
+    let n = rows.len() / dim;
+    let mut out = vec![0u32; n];
+    out.par_chunks_mut(ROWS)
+        .zip(rows.par_chunks(ROWS * dim))
+        .for_each(|(o, x)| {
+            let b = o.len();
+            let mut xc = vec![0f32; b * l];
+            gemm_nt(x, b, centres, l, dim, &mut xc);
+            for (i, oi) in o.iter_mut().enumerate() {
+                let row = &xc[i * l..(i + 1) * l];
+                let mut best = (f32::INFINITY, 0u32);
+                for (c, (&v, &cc)) in row.iter().zip(c2).enumerate() {
+                    let d = cc - 2.0 * v;
+                    if d < best.0 {
+                        best = (d, c as u32);
+                    }
+                }
+                *oi = best.1;
+            }
+        });
+    out
+}
+
+/// Lloyd k-means (`iters` iterations, random-row init, empty clusters reseeded from rows).
+fn kmeans(rows: &[f32], dim: usize, k: usize, iters: usize, rng: &mut SplitMix) -> Vec<f32> {
+    let n = rows.len() / dim;
+    let mut c: Vec<f32> = Vec::with_capacity(k * dim);
+    for &i in &sample_indices(n, k, rng) {
+        c.extend_from_slice(&rows[i * dim..(i + 1) * dim]);
+    }
+    for _ in 0..iters {
+        let c2: Vec<f32> = c.chunks(dim).map(|r| dot(r, r)).collect();
+        let a = nearest_all(rows, dim, &c, &c2);
+        let mut sums = vec![0f64; k * dim];
+        let mut counts = vec![0usize; k];
+        for (i, &ai) in a.iter().enumerate() {
+            counts[ai as usize] += 1;
+            for (s, &x) in sums[ai as usize * dim..(ai as usize + 1) * dim]
+                .iter_mut()
+                .zip(&rows[i * dim..(i + 1) * dim])
+            {
+                *s += f64::from(x);
+            }
+        }
+        for j in 0..k {
+            if counts[j] > 0 {
+                for t in 0..dim {
+                    c[j * dim + t] = (sums[j * dim + t] / counts[j] as f64) as f32;
+                }
+            } else {
+                let r = (rng.next() % n as u64) as usize;
+                c[j * dim..(j + 1) * dim].copy_from_slice(&rows[r * dim..(r + 1) * dim]);
+            }
+        }
+    }
+    c
+}
+
+/// `k` distinct indices below `n` (partial Fisher-Yates).
+fn sample_indices(n: usize, k: usize, rng: &mut SplitMix) -> Vec<usize> {
+    let k = k.min(n);
+    let mut idx: Vec<usize> = (0..n).collect();
+    for i in 0..k {
+        let j = i + (rng.next() % (n - i) as u64) as usize;
+        idx.swap(i, j);
+    }
+    idx.truncate(k);
+    idx.sort_unstable();
+    idx
+}
+
+struct SplitMix(u64);
+
+impl SplitMix {
+    fn next(&mut self) -> u64 {
+        self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = self.0;
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z >> 31)
+    }
+}
+
+/// Nibble `j` of code position `i` (within its block) in the block layout.
+#[inline]
+fn get_nibble(block: &[u8], i: usize, j: usize) -> u8 {
+    let byte = block[16 * j + (i & 15)];
+    if i < 16 {
+        byte & 15
+    } else {
+        byte >> 4
+    }
+}
+
+#[inline]
+fn set_nibble(block: &mut [u8], i: usize, j: usize, v: u8) {
+    let byte = &mut block[16 * j + (i & 15)];
+    if i < 16 {
+        *byte = (*byte & 0xF0) | v;
+    } else {
+        *byte = (*byte & 0x0F) | (v << 4);
+    }
+}
+
+impl List {
+    fn append(&mut self, m: usize, code: &[u8], slot: u32) -> u32 {
+        let pos = self.slots.len();
+        if pos.is_multiple_of(BLOCK) {
+            self.codes.resize(self.codes.len() + 16 * m, 0);
+        }
+        let block = &mut self.codes[(pos / BLOCK) * 16 * m..(pos / BLOCK + 1) * 16 * m];
+        for (j, &v) in code.iter().enumerate() {
+            set_nibble(block, pos % BLOCK, j, v);
+        }
+        self.slots.push(slot);
+        pos as u32
+    }
+
+    /// Swap-removes position `pos`; returns the slot moved into `pos`, if any.
+    fn remove(&mut self, m: usize, pos: usize) -> Option<u32> {
+        let last = self.slots.len() - 1;
+        let moved = if pos != last {
+            let (lb, li) = (last / BLOCK, last % BLOCK);
+            let code: Vec<u8> = (0..m)
+                .map(|j| get_nibble(&self.codes[lb * 16 * m..(lb + 1) * 16 * m], li, j))
+                .collect();
+            let block = &mut self.codes[(pos / BLOCK) * 16 * m..(pos / BLOCK + 1) * 16 * m];
+            for (j, &v) in code.iter().enumerate() {
+                set_nibble(block, pos % BLOCK, j, v);
+            }
+            self.slots[pos] = self.slots[last];
+            Some(self.slots[pos])
+        } else {
+            None
+        };
+        self.slots.pop();
+        if self.slots.len().is_multiple_of(BLOCK) {
+            self.codes.truncate((self.slots.len() / BLOCK) * 16 * m);
+        } else {
+            // Clear the vacated code so padding lanes stay zero.
+            let (lb, li) = (last / BLOCK, last % BLOCK);
+            let block = &mut self.codes[lb * 16 * m..(lb + 1) * 16 * m];
+            for j in 0..m {
+                set_nibble(block, li, j, 0);
+            }
+        }
+        moved
+    }
+}
+
+impl Trained {
+    fn lists_len(&self) -> usize {
+        self.c2.len()
+    }
+
+    /// Nearest list and SOAR spill list for each row of `x` (`b` rows).
+    fn assign(&self, x: &[f32], dim: usize, k: usize, lambda: f32) -> Vec<(u32, u32)> {
+        let l = self.lists_len();
+        let mut out = vec![(0u32, 0u32); x.len() / dim];
+        out.par_chunks_mut(ROWS)
+            .zip(x.par_chunks(ROWS * dim))
+            .for_each(|(o, xb)| {
+                let b = o.len();
+                let mut xc = vec![0f32; b * l];
+                gemm_nt(xb, b, &self.centres, l, dim, &mut xc);
+                let mut d = vec![0f32; l];
+                let mut cand = Vec::with_capacity(k);
+                for (i, oi) in o.iter_mut().enumerate() {
+                    let row = &xc[i * l..(i + 1) * l];
+                    for ((dv, &v), &cc) in d.iter_mut().zip(row).zip(&self.c2) {
+                        *dv = cc - 2.0 * v;
+                    }
+                    smallest_k(&d, k, &mut cand);
+                    let c1 = cand
+                        .iter()
+                        .min_by(|a, b| a.0.total_cmp(&b.0))
+                        .map(|x| x.1)
+                        .unwrap() as usize;
+                    let xi = &xb[i * dim..(i + 1) * dim];
+                    let ci = &self.centres[c1 * dim..(c1 + 1) * dim];
+                    let rr: f64 = xi
+                        .iter()
+                        .zip(ci)
+                        .map(|(a, c)| f64::from(a - c).powi(2))
+                        .sum::<f64>()
+                        .max(1e-20);
+                    let xr: f64 = xi
+                        .iter()
+                        .zip(ci)
+                        .map(|(a, c)| f64::from(*a) * f64::from(a - c))
+                        .sum();
+                    let x2: f64 = xi.iter().map(|a| f64::from(*a).powi(2)).sum();
+                    let g = &self.gram[c1 * l..(c1 + 1) * l];
+                    let mut best = (f64::INFINITY, c1 as u32);
+                    for &(_, c) in &cand {
+                        let c = c as usize;
+                        if c == c1 {
+                            continue;
+                        }
+                        let xcc = f64::from(row[c]);
+                        let dist = x2 - 2.0 * xcc + f64::from(self.c2[c]);
+                        // <x - c, r> with r = x - c1: <x, r> - (<c, x> - <c, c1>).
+                        let proj = xr - (xcc - f64::from(g[c]));
+                        let loss = dist + f64::from(lambda) * proj * proj / rr;
+                        if loss < best.0 {
+                            best = (loss, c as u32);
+                        }
+                    }
+                    *oi = (c1 as u32, best.1);
+                }
+            });
+        out
+    }
+
+    /// PQ nibbles of the residual `x - c_list`.
+    fn encode(&self, x: &[f32], list: usize, dim: usize, m: usize, code: &mut [u8]) {
+        let sub = dim / m;
+        let c = &self.centres[list * dim..(list + 1) * dim];
+        for b in 0..m {
+            let mut best = (f32::INFINITY, 0u8);
+            for v in 0..16 {
+                let cb = &self.codebook[(b * 16 + v) * sub..(b * 16 + v + 1) * sub];
+                let mut s = 0f32;
+                for t in 0..sub {
+                    let r = x[b * sub + t] - c[b * sub + t] - cb[t];
+                    s += r * r;
+                }
+                if s < best.0 {
+                    best = (s, v as u8);
+                }
+            }
+            code[b] = best.1;
+        }
+    }
+}
+
+impl PartitionTier {
+    pub fn new(dim: usize, params: PartitionParams) -> Result<Self, WarmError> {
+        if dim == 0 || params.pq_m == 0 || !dim.is_multiple_of(params.pq_m) {
+            return Err(invalid(format!(
+                "partition tier: pq_m {} must divide dim {dim}",
+                params.pq_m
+            )));
+        }
+        if params.lists < 2 || params.spill_k < 2 || params.reorder == 0 || params.nprobe == 0 {
+            return Err(invalid(
+                "partition tier: lists, spill_k >= 2; reorder, nprobe >= 1".into(),
+            ));
+        }
+        Ok(Self {
+            dim,
+            params,
+            rows: Vec::new(),
+            slot_id: Vec::new(),
+            id_slot: HashMap::default(),
+            free: Vec::new(),
+            trained: None,
+        })
+    }
+
+    pub fn len(&self) -> usize {
+        self.id_slot.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.id_slot.is_empty()
+    }
+
+    /// Changes the number of probed lists for later searches.
+    pub fn set_nprobe(&mut self, nprobe: usize) {
+        self.params.nprobe = nprobe.max(1);
+    }
+
+    pub fn is_trained(&self) -> bool {
+        self.trained.is_some()
+    }
+
+    fn row(&self, slot: u32) -> &[f32] {
+        &self.rows[slot as usize * self.dim..(slot as usize + 1) * self.dim]
+    }
+
+    /// Inserts rows (`vectors` = `ids.len() x dim`). Re-inserting a live id is an error.
+    pub fn insert(&mut self, ids: &[u32], vectors: &[f32]) -> Result<(), WarmError> {
+        if vectors.len() != ids.len() * self.dim {
+            return Err(invalid(
+                "partition tier: vectors must be ids.len() x dim".into(),
+            ));
+        }
+        let mut slots = Vec::with_capacity(ids.len());
+        for (i, &id) in ids.iter().enumerate() {
+            if self.id_slot.contains_key(&id) {
+                return Err(invalid(format!("partition tier: id {id} is already live")));
+            }
+            let v = &vectors[i * self.dim..(i + 1) * self.dim];
+            let slot = if let Some(s) = self.free.pop() {
+                self.rows[s as usize * self.dim..(s as usize + 1) * self.dim].copy_from_slice(v);
+                self.slot_id[s as usize] = id;
+                s
+            } else {
+                let s =
+                    u32::try_from(self.slot_id.len()).map_err(|_| WarmError::CapacityExceeded {
+                        limit: "partition tier slots".into(),
+                    })?;
+                self.rows.extend_from_slice(v);
+                self.slot_id.push(id);
+                s
+            };
+            self.id_slot.insert(id, slot);
+            slots.push(slot);
+        }
+        if self.trained.is_some() {
+            self.place(&slots, vectors);
+        }
+        Ok(())
+    }
+
+    /// Assigns, encodes and appends the given slots (rows in `vectors`, same order).
+    fn place(&mut self, slots: &[u32], vectors: &[f32]) {
+        let (dim, m) = (self.dim, self.params.pq_m);
+        let t = self.trained.as_mut().expect("trained");
+        let asg = t.assign(vectors, dim, self.params.spill_k, self.params.soar_lambda);
+        let codes: Vec<u8> = {
+            let t = &*t;
+            asg.par_iter()
+                .enumerate()
+                .flat_map_iter(|(i, &(a1, a2))| {
+                    let x = &vectors[i * dim..(i + 1) * dim];
+                    let mut c = vec![0u8; 2 * m];
+                    t.encode(x, a1 as usize, dim, m, &mut c[..m]);
+                    t.encode(x, a2 as usize, dim, m, &mut c[m..]);
+                    c
+                })
+                .collect()
+        };
+        if t.loc.len() < self.slot_id.len() {
+            t.loc.resize(self.slot_id.len(), [(u32::MAX, u32::MAX); 2]);
+        }
+        for (i, (&slot, &(a1, a2))) in slots.iter().zip(&asg).enumerate() {
+            let p1 = t.lists[a1 as usize].append(m, &codes[2 * i * m..(2 * i + 1) * m], slot);
+            let p2 = t.lists[a2 as usize].append(m, &codes[(2 * i + 1) * m..(2 * i + 2) * m], slot);
+            t.loc[slot as usize] = [(a1, p1), (a2, p2)];
+        }
+    }
+
+    /// Deletes ids; unknown ids are ignored. Returns how many were removed.
+    pub fn delete(&mut self, ids: &[u32]) -> usize {
+        let m = self.params.pq_m;
+        let mut removed = 0;
+        for id in ids {
+            let Some(slot) = self.id_slot.remove(id) else {
+                continue;
+            };
+            removed += 1;
+            if let Some(t) = self.trained.as_mut() {
+                for k in 0..2 {
+                    let (list, pos) = t.loc[slot as usize][k];
+                    if list == u32::MAX {
+                        continue;
+                    }
+                    if let Some(moved) = t.lists[list as usize].remove(m, pos as usize) {
+                        // The moved code came from this list's old last position, which is
+                        // the list's new length; a slot is in a list at most once.
+                        let last = t.lists[list as usize].slots.len() as u32;
+                        let e = &mut t.loc[moved as usize];
+                        let idx = usize::from(e[0] != (list, last));
+                        debug_assert_eq!(e[idx], (list, last));
+                        e[idx].1 = pos;
+                    }
+                }
+                t.loc[slot as usize] = [(u32::MAX, u32::MAX); 2];
+            }
+            self.free.push(slot);
+        }
+        removed
+    }
+
+    /// Trains centres (or uses `centres` when given), the PQ codebook, and places every live row.
+    pub fn train(&mut self, centres: Option<Vec<f32>>) -> Result<(), WarmError> {
+        let (dim, p) = (self.dim, self.params.clone());
+        let live: Vec<u32> = {
+            let mut v: Vec<u32> = self.id_slot.values().copied().collect();
+            v.sort_unstable();
+            v
+        };
+        if live.len() < p.lists {
+            return Err(invalid("partition tier: fewer live rows than lists".into()));
+        }
+        let mut rng = SplitMix(p.seed);
+        let gather = |idx: &[usize]| -> Vec<f32> {
+            let mut s = Vec::with_capacity(idx.len() * dim);
+            for &i in idx {
+                s.extend_from_slice(self.row(live[i]));
+            }
+            s
+        };
+        let centres = match centres {
+            Some(c) if c.len() == p.lists * dim => c,
+            Some(_) => {
+                return Err(invalid(
+                    "partition tier: centres must be lists x dim".into(),
+                ))
+            }
+            None => {
+                let sample = gather(&sample_indices(live.len(), p.train_sample, &mut rng));
+                kmeans(&sample, dim, p.lists, p.kmeans_iters, &mut rng)
+            }
+        };
+        let l = p.lists;
+        let c2: Vec<f32> = centres.chunks(dim).map(|r| dot(r, r)).collect();
+        let mut gram = vec![0f32; l * l];
+        gram.par_chunks_mut(ROWS * l)
+            .zip(centres.par_chunks(ROWS * dim))
+            .for_each(|(g, cb)| gemm_nt(cb, cb.len() / dim, &centres, l, dim, g));
+        // PQ codebook on residuals to the nearest centre of a sample.
+        let m = p.pq_m;
+        let sub = dim / m;
+        let ps = gather(&sample_indices(live.len(), p.pq_sample, &mut rng));
+        let pa = nearest_all(&ps, dim, &centres, &c2);
+        let mut resid = ps.clone();
+        for (i, &a) in pa.iter().enumerate() {
+            for t in 0..dim {
+                resid[i * dim + t] -= centres[a as usize * dim + t];
+            }
+        }
+        let n_ps = pa.len();
+        let mut codebook = vec![0f32; m * 16 * sub];
+        for b in 0..m {
+            let mut x = Vec::with_capacity(n_ps * sub);
+            for i in 0..n_ps {
+                x.extend_from_slice(&resid[i * dim + b * sub..i * dim + (b + 1) * sub]);
+            }
+            let cb = kmeans(&x, sub, 16, p.pq_iters, &mut rng);
+            codebook[b * 16 * sub..(b + 1) * 16 * sub].copy_from_slice(&cb);
+        }
+        let mut list_tab = vec![0f32; l * 16 * m];
+        list_tab
+            .par_chunks_mut(16 * m)
+            .enumerate()
+            .for_each(|(li, tab)| {
+                let c = &centres[li * dim..(li + 1) * dim];
+                for b in 0..m {
+                    for v in 0..16 {
+                        let cb = &codebook[(b * 16 + v) * sub..(b * 16 + v + 1) * sub];
+                        tab[b * 16 + v] = dot(cb, cb) + 2.0 * dot(&c[b * sub..(b + 1) * sub], cb);
+                    }
+                }
+            });
+        let vectors = {
+            let idx: Vec<usize> = (0..live.len()).collect();
+            gather(&idx)
+        };
+        self.trained = Some(Trained {
+            centres,
+            c2,
+            gram,
+            codebook,
+            list_tab,
+            lists: (0..l)
+                .map(|_| List {
+                    codes: Vec::new(),
+                    slots: Vec::new(),
+                })
+                .collect(),
+            loc: vec![[(u32::MAX, u32::MAX); 2]; self.slot_id.len()],
+        });
+        self.place(&live, &vectors);
+        Ok(())
+    }
+
+    /// Top-`k` ids per query (`queries` = `nq x dim`), nearest first.
+    pub fn search(&mut self, queries: &[f32], k: usize) -> Result<Vec<Vec<u32>>, WarmError> {
+        if !queries.len().is_multiple_of(self.dim) || k == 0 {
+            return Err(invalid(
+                "partition tier: queries must be nq x dim, k >= 1".into(),
+            ));
+        }
+        if self.trained.is_none() && self.len() >= self.params.train_at.max(self.params.lists) {
+            self.train(None)?;
+        }
+        Ok(if self.trained.is_some() {
+            self.search_partition(queries, k)
+        } else {
+            self.search_exact(queries, k)
+        })
+    }
+
+    /// Exact brute force over live rows: query blocks in parallel, row blocks through one
+    /// product each, a running k-th-best filter per query.
+    pub fn search_exact(&self, queries: &[f32], k: usize) -> Vec<Vec<u32>> {
+        let dim = self.dim;
+        let live: Vec<u32> = {
+            let mut v: Vec<u32> = self.id_slot.values().copied().collect();
+            v.sort_unstable();
+            v
+        };
+        let mut x = Vec::with_capacity(live.len() * dim);
+        for &s in &live {
+            x.extend_from_slice(self.row(s));
+        }
+        let x2: Vec<f32> = x.chunks(dim).map(|r| dot(r, r)).collect();
+        let nq = queries.len() / dim;
+        let mut out: Vec<Vec<u32>> = vec![Vec::new(); nq];
+        out.par_chunks_mut(BF_QUERIES)
+            .zip(queries.par_chunks(BF_QUERIES * dim))
+            .for_each(|(o, q)| {
+                let nb = o.len();
+                let mut best: Vec<Vec<(f32, u32)>> = vec![Vec::with_capacity(k + 1); nb];
+                let mut prod = vec![0f32; nb * BF_ROWS];
+                for (r0, xr) in x.chunks(BF_ROWS * dim).enumerate() {
+                    let rn = xr.len() / dim;
+                    gemm_nt(q, nb, xr, rn, dim, &mut prod);
+                    for (qi, bq) in best.iter_mut().enumerate() {
+                        let mut worst = if bq.len() == k {
+                            bq[k - 1].0
+                        } else {
+                            f32::INFINITY
+                        };
+                        for j in 0..rn {
+                            let d = x2[r0 * BF_ROWS + j] - 2.0 * prod[qi * rn + j];
+                            if d < worst {
+                                let pos = bq.partition_point(|e| e.0 <= d);
+                                bq.insert(pos, (d, live[r0 * BF_ROWS + j]));
+                                bq.truncate(k);
+                                if bq.len() == k {
+                                    worst = bq[k - 1].0;
+                                }
+                            }
+                        }
+                    }
+                }
+                for (oi, bq) in o.iter_mut().zip(best) {
+                    *oi = bq
+                        .into_iter()
+                        .map(|(_, s)| self.slot_id[s as usize])
+                        .collect();
+                }
+            });
+        out
+    }
+
+    fn search_partition(&self, queries: &[f32], k: usize) -> Vec<Vec<u32>> {
+        let t = self.trained.as_ref().expect("trained");
+        let (dim, m) = (self.dim, self.params.pq_m);
+        let (l, e, sub) = (t.lists_len(), 16 * m, dim / m);
+        let nq = queries.len() / dim;
+        let nprobe = self.params.nprobe.min(l);
+        let reorder = self.params.reorder.max(k);
+        // Centre distances |q - c|^2 and the probed lists per query.
+        let mut qc = vec![0f32; nq * l];
+        qc.par_chunks_mut(ROWS * l)
+            .zip(queries.par_chunks(ROWS * dim))
+            .for_each(|(o, q)| gemm_nt(q, q.len() / dim, &t.centres, l, dim, o));
+        let probe: Vec<Vec<u32>> = qc
+            .par_chunks_mut(l)
+            .zip(queries.par_chunks(dim))
+            .map(|(row, q)| {
+                let q2 = dot(q, q);
+                for (v, &cc) in row.iter_mut().zip(&t.c2) {
+                    *v = (q2 - 2.0 * *v + cc).max(0.0);
+                }
+                let mut idx: Vec<u32> = (0..l as u32).collect();
+                idx.select_nth_unstable_by(nprobe - 1, |a, b| {
+                    row[*a as usize].total_cmp(&row[*b as usize])
+                });
+                idx.truncate(nprobe);
+                idx
+            })
+            .collect();
+        let mut by_list: Vec<Vec<u32>> = vec![Vec::new(); l];
+        for (q, ls) in probe.iter().enumerate() {
+            for &li in ls {
+                by_list[li as usize].push(q as u32);
+            }
+        }
+        // Per-query table term -2 <q_b, v>.
+        let qtab: Vec<f32> = queries
+            .par_chunks(dim)
+            .flat_map_iter(|q| {
+                (0..e).map(move |i| {
+                    let (b, v) = (i / 16, i % 16);
+                    let cb = &t.codebook[(b * 16 + v) * sub..(b * 16 + v + 1) * sub];
+                    -2.0 * dot(&q[b * sub..(b + 1) * sub], cb)
+                })
+            })
+            .collect();
+        let threads = rayon::current_num_threads().max(1);
+        let parts: Vec<Vec<(u32, Vec<u32>)>> = (0..threads)
+            .into_par_iter()
+            .map(|th| {
+                let mine: Vec<u32> = (0..nq as u32)
+                    .filter(|q| *q as usize % threads == th)
+                    .collect();
+                let local = |q: u32| (q as usize / threads) as usize;
+                let mut bufs: Vec<Vec<(f32, u32)>> =
+                    vec![Vec::with_capacity(2 * reorder + BLOCK); mine.len()];
+                let mut thr = vec![f32::INFINITY; mine.len()];
+                let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
+                let mut out = [0u32; BLOCK];
+                for (li, qs) in by_list.iter().enumerate() {
+                    let list = &t.lists[li];
+                    let n = list.slots.len();
+                    if n == 0 {
+                        continue;
+                    }
+                    let lt = &t.list_tab[li * e..(li + 1) * e];
+                    for &q in qs.iter().filter(|q| **q as usize % threads == th) {
+                        let j = local(q);
+                        let (base, scale) = build_lut(
+                            &qtab[q as usize * e..(q as usize + 1) * e],
+                            lt,
+                            &mut ent,
+                            &mut mins,
+                            &mut lut,
+                        );
+                        let base = base + qc[q as usize * l + li];
+                        let buf = &mut bufs[j];
+                        for blk in 0..n.div_ceil(BLOCK) {
+                            if thr[j] <= base {
+                                break;
+                            }
+                            // P6: the running threshold in this table's u32 units.
+                            let lim = if thr[j].is_finite() {
+                                ((thr[j] - base) / scale).max(0.0)
+                            } else {
+                                f32::INFINITY
+                            };
+                            scan32(&list.codes[blk * e..(blk + 1) * e], &lut, m, &mut out);
+                            let valid = (n - blk * BLOCK).min(BLOCK);
+                            for (c, &v) in out[..valid].iter().enumerate() {
+                                if (v as f32) < lim {
+                                    buf.push((
+                                        base + v as f32 * scale,
+                                        list.slots[blk * BLOCK + c],
+                                    ));
+                                }
+                            }
+                            if buf.len() >= 2 * reorder {
+                                buf.select_nth_unstable_by(reorder - 1, |a, b| a.0.total_cmp(&b.0));
+                                buf.truncate(reorder);
+                                thr[j] = buf.iter().map(|x| x.0).fold(f32::NEG_INFINITY, f32::max);
+                            }
+                        }
+                    }
+                }
+                mine.iter()
+                    .zip(bufs)
+                    .map(|(&q, mut buf)| {
+                        buf.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
+                        let mut seen = std::collections::HashSet::with_capacity(reorder);
+                        let qv = &queries[q as usize * dim..(q as usize + 1) * dim];
+                        let mut exact: Vec<(f32, u32)> = Vec::with_capacity(reorder);
+                        for (_, s) in buf {
+                            if exact.len() == reorder {
+                                break;
+                            }
+                            if seen.insert(s) {
+                                exact.push((sq(qv, self.row(s)), s));
+                            }
+                        }
+                        exact.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
+                        (
+                            q,
+                            exact
+                                .into_iter()
+                                .take(k)
+                                .map(|(_, s)| self.slot_id[s as usize])
+                                .collect(),
+                        )
+                    })
+                    .collect()
+            })
+            .collect();
+        let mut res = vec![Vec::new(); nq];
+        for (q, ids) in parts.into_iter().flatten() {
+            res[q as usize] = ids;
+        }
+        res
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn data(n: usize, dim: usize, clusters: usize, seed: u64) -> Vec<f32> {
+        let mut r = SplitMix(seed);
+        let mut u = move || (r.next() >> 40) as f32 / (1u64 << 24) as f32 - 0.5;
+        let centres: Vec<f32> = (0..clusters * dim).map(|_| 8.0 * u()).collect();
+        let mut out = Vec::with_capacity(n * dim);
+        for i in 0..n {
+            let c = i % clusters;
+            for t in 0..dim {
+                out.push(centres[c * dim + t] + u());
+            }
+        }
+        out
+    }
+
+    fn naive(rows: &[(u32, &[f32])], q: &[f32], k: usize) -> Vec<u32> {
+        let mut d: Vec<(f32, u32)> = rows.iter().map(|(id, r)| (sq(q, r), *id)).collect();
+        d.sort_by(|a, b| a.0.total_cmp(&b.0));
+        d.into_iter().take(k).map(|x| x.1).collect()
+    }
+
+    fn recall(a: &[Vec<u32>], b: &[Vec<u32>]) -> f64 {
+        let hit: usize = a
+            .iter()
+            .zip(b)
+            .map(|(x, y)| x.iter().filter(|i| y.contains(i)).count())
+            .sum();
+        hit as f64 / b.iter().map(Vec::len).sum::<usize>() as f64
+    }
+
+    /// Every live slot's two memberships point at list positions holding that slot, and the
+    /// lists hold exactly two memberships per live row.
+    fn check_lists(t: &PartitionTier) {
+        let tr = t.trained.as_ref().unwrap();
+        let total: usize = tr.lists.iter().map(|l| l.slots.len()).sum();
+        assert_eq!(total, 2 * t.len());
+        for &slot in t.id_slot.values() {
+            let e = tr.loc[slot as usize];
+            assert_ne!(e[0].0, e[1].0, "spill list equals primary");
+            for (list, pos) in e {
+                assert_eq!(tr.lists[list as usize].slots[pos as usize], slot);
+            }
+        }
+        for l in &tr.lists {
+            assert_eq!(
+                l.codes.len(),
+                l.slots.len().div_ceil(BLOCK) * 16 * t.params.pq_m
+            );
+        }
+    }
+
+    fn params(lists: usize) -> PartitionParams {
+        PartitionParams {
+            lists,
+            train_at: 1000,
+            train_sample: 2000,
+            pq_m: 8,
+            pq_sample: 2000,
+            nprobe: lists,
+            reorder: 4000,
+            ..PartitionParams::default()
+        }
+    }
+
+    #[test]
+    fn full_probe_matches_exact_through_deletes_and_reinserts() {
+        let (n, dim, k) = (3000, 16, 10);
+        let x = data(n, dim, 25, 1);
+        let q = data(40, dim, 25, 2);
+        let mut t = PartitionTier::new(dim, params(20)).unwrap();
+        let ids: Vec<u32> = (0..n as u32).map(|i| i * 7 + 3).collect();
+        t.insert(&ids[..500], &x[..500 * dim]).unwrap();
+        // Below train_at: exact brute force.
+        let got = t.search(&q, k).unwrap();
+        assert!(!t.is_trained());
+        let rows: Vec<(u32, &[f32])> = (0..500)
+            .map(|i| (ids[i], &x[i * dim..(i + 1) * dim]))
+            .collect();
+        let want: Vec<Vec<u32>> = q.chunks(dim).map(|qq| naive(&rows, qq, k)).collect();
+        assert_eq!(recall(&got, &want), 1.0);
+        t.insert(&ids[500..], &x[500 * dim..]).unwrap();
+        let got = t.search(&q, k).unwrap();
+        assert!(t.is_trained());
+        check_lists(&t);
+        let rows: Vec<(u32, &[f32])> = (0..n)
+            .map(|i| (ids[i], &x[i * dim..(i + 1) * dim]))
+            .collect();
+        let want: Vec<Vec<u32>> = q.chunks(dim).map(|qq| naive(&rows, qq, k)).collect();
+        assert_eq!(recall(&got, &want), 1.0);
+        // Delete every third row, reinsert a third of those, check invariants and exactness.
+        let del: Vec<u32> = ids.iter().copied().step_by(3).collect();
+        assert_eq!(t.delete(&del), del.len());
+        assert_eq!(t.delete(&del[..5]), 0);
+        check_lists(&t);
+        let back: Vec<usize> = (0..n).step_by(9).collect();
+        let bid: Vec<u32> = back.iter().map(|&i| ids[i]).collect();
+        let bx: Vec<f32> = back
+            .iter()
+            .flat_map(|&i| x[i * dim..(i + 1) * dim].to_vec())
+            .collect();
+        t.insert(&bid, &bx).unwrap();
+        assert!(t.insert(&bid[..1], &bx[..dim]).is_err());
+        check_lists(&t);
+        let live: Vec<(u32, &[f32])> = (0..n)
+            .filter(|i| i % 3 != 0 || i % 9 == 0)
+            .map(|i| (ids[i], &x[i * dim..(i + 1) * dim]))
+            .collect();
+        assert_eq!(live.len(), t.len());
+        let want: Vec<Vec<u32>> = q.chunks(dim).map(|qq| naive(&live, qq, k)).collect();
+        assert_eq!(recall(&t.search(&q, k).unwrap(), &want), 1.0);
+        assert_eq!(recall(&t.search_exact(&q, k), &want), 1.0);
+    }
+
+    #[test]
+    fn restricted_spill_equals_full_soar_when_all_centres_are_candidates() {
+        let (n, dim, lists) = (2000, 16, 12);
+        let x = data(n, dim, 30, 3);
+        let mut p = params(lists);
+        p.spill_k = lists;
+        let mut t = PartitionTier::new(dim, p).unwrap();
+        t.insert(&(0..n as u32).collect::<Vec<_>>(), &x).unwrap();
+        t.train(None).unwrap();
+        let tr = t.trained.as_ref().unwrap();
+        let asg = tr.assign(&x, dim, lists, 1.0);
+        for (i, &(a1, a2)) in asg.iter().enumerate() {
+            let xi: Vec<f64> = x[i * dim..(i + 1) * dim]
+                .iter()
+                .map(|&v| f64::from(v))
+                .collect();
+            let c = |j: usize| -> Vec<f64> {
+                tr.centres[j * dim..(j + 1) * dim]
+                    .iter()
+                    .map(|&v| f64::from(v))
+                    .collect()
+            };
+            let d = |j: usize| -> f64 { xi.iter().zip(c(j)).map(|(a, b)| (a - b).powi(2)).sum() };
+            let near = (0..lists).min_by(|&a, &b| d(a).total_cmp(&d(b))).unwrap();
+            assert!(d(a1 as usize) <= d(near) * (1.0 + 1e-5) + 1e-6);
+            let r: Vec<f64> = xi.iter().zip(c(a1 as usize)).map(|(a, b)| a - b).collect();
+            let rr: f64 = r.iter().map(|v| v * v).sum::<f64>().max(1e-20);
+            let loss = |j: usize| -> f64 {
+                let xc: Vec<f64> = xi.iter().zip(c(j)).map(|(a, b)| a - b).collect();
+                let pr: f64 = xc.iter().zip(&r).map(|(a, b)| a * b).sum();
+                xc.iter().map(|v| v * v).sum::<f64>() + pr * pr / rr
+            };
+            let best = (0..lists)
+                .filter(|&j| j != a1 as usize)
+                .map(loss)
+                .fold(f64::INFINITY, f64::min);
+            assert_ne!(a2, a1);
+            assert!(loss(a2 as usize) <= best * (1.0 + 1e-4) + 1e-6, "row {i}");
+        }
+    }
+
+    /// A2 prefix acceptance (STATE.md 02:15Z): WARM_L22_ACC_{BASE,N,QUERIES,GT,CENTRES,OUT}.
+    /// Base is the msturing fbin (first N rows), queries `nq x 100` f32, GT `nq x 10` i32,
+    /// centres `5000 x 100` f32 (A2's, reproduced by seed). Prints recall at nprobe 350 and 700.
+    #[test]
+    #[ignore]
+    fn partition_prefix_acceptance() {
+        use std::time::Instant;
+        let var = |k: &str| crate::compatibility::var(&format!("WARM_L22_ACC_{k}")).unwrap();
+        let f32s = |b: Vec<u8>| -> Vec<f32> {
+            b.chunks_exact(4)
+                .map(|c| f32::from_le_bytes(c.try_into().unwrap()))
+                .collect()
+        };
+        let dim = 100;
+        let n: usize = var("N").parse().unwrap();
+        let base = {
+            use std::io::{Read, Seek, SeekFrom};
+            let mut f = std::fs::File::open(var("BASE")).unwrap();
+            f.seek(SeekFrom::Start(8)).unwrap();
+            let mut b = vec![0u8; n * dim * 4];
+            f.read_exact(&mut b).unwrap();
+            f32s(b)
+        };
+        let q = f32s(std::fs::read(var("QUERIES")).unwrap());
+        let gt: Vec<Vec<u32>> = std::fs::read(var("GT"))
+            .unwrap()
+            .chunks_exact(40)
+            .map(|r| {
+                r.chunks_exact(4)
+                    .map(|c| i32::from_le_bytes(c.try_into().unwrap()) as u32)
+                    .collect()
+            })
+            .collect();
+        let centres = f32s(std::fs::read(var("CENTRES")).unwrap());
+        let mut t = PartitionTier::new(
+            dim,
+            PartitionParams {
+                train_at: usize::MAX,
+                ..PartitionParams::default()
+            },
+        )
+        .unwrap();
+        let t0 = Instant::now();
+        t.insert(&(0..n as u32).collect::<Vec<_>>(), &base).unwrap();
+        let insert_s = t0.elapsed().as_secs_f64();
+        let t0 = Instant::now();
+        t.train(Some(centres)).unwrap();
+        let train_s = t0.elapsed().as_secs_f64();
+        let mut rep = format!("{{\"n\": {n}, \"nq\": {}, \"insert_rows_s\": {insert_s:.3}, \"train_place_s\": {train_s:.3}", gt.len());
+        for np in [350, 700] {
+            t.set_nprobe(np);
+            let t0 = Instant::now();
+            let got = t.search(&q, 10).unwrap();
+            let s = t0.elapsed().as_secs_f64();
+            rep += &format!(
+                ", \"recall_np{np}\": {:.4}, \"search_np{np}_s\": {s:.3}",
+                recall(&got, &gt)
+            );
+        }
+        rep += "}";
+        println!("{rep}");
+        if let Ok(p) = crate::compatibility::var("WARM_L22_ACC_OUT") {
+            std::fs::write(p, rep + "\n").unwrap();
+        }
+    }
+}
