@@ -321,11 +321,21 @@ jobs:
         run: |
           set -euo pipefail
           cd tarballs
+          # A rerun after a partial publish skips versions the registry already has.
+          publish() {
+            local spec
+            spec=$(tar -xzOf "$1" package/package.json | node -e 'const p=JSON.parse(require("fs").readFileSync(0,"utf8"));process.stdout.write(p.name+"@"+p.version)')
+            if npm view "$spec" version >/dev/null 2>&1; then
+              echo "skip $spec: already published"
+            else
+              npm publish "$1" --provenance --access public
+            fi
+          }
           for tarball in warm-sdk-*-*.tgz; do
-            npm publish "$tarball" --provenance --access public
+            publish "$tarball"
           done
           root=$(ls warm-sdk-[0-9]*.tgz)
-          npm publish "$root" --provenance --access public
+          publish "$root"
 
   verify-published:
     name: install the published packages and search
