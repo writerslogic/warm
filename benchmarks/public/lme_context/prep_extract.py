@@ -1,8 +1,8 @@
 """Build extraction prompts for unique (session id, date) pairs. usage: prep_extract.py dev|heldout|all out.jsonl"""
 import json, hashlib, os, sys
 scope, out = sys.argv[1], sys.argv[2]
-D = json.load(open(os.path.expanduser("~/.cache/warm-bench/downloads/longmemeval_s_cleaned.json")))
-split = json.load(open("../frozen/longmemeval_split.json"))
+with open(os.path.expanduser("~/.cache/warm-bench/downloads/longmemeval_s_cleaned.json")) as fh: D = json.load(fh)
+with open("../frozen/longmemeval_split.json") as fh: split = json.load(fh)
 want = {"dev": set(split["dev"]), "heldout": set(split["heldout"]), "all": {e["question_id"] for e in D}}[scope]
 PROMPT = """You are building the long-term memory of a user from their chat history with an AI assistant. Below is ONE chat session held on {date}.
 

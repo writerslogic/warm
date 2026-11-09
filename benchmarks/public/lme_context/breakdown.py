@@ -1,11 +1,13 @@
 import json, os, collections
-D = {e["question_id"]: e for e in json.load(open(os.path.expanduser("~/.cache/warm-bench/downloads/longmemeval_s_cleaned.json")))}
-split = json.load(open("../frozen/longmemeval_split.json")); dev = set(split["dev"])
-R = json.load(open("../out/lme500.rankings.json"))
+with open(os.path.expanduser("~/.cache/warm-bench/downloads/longmemeval_s_cleaned.json")) as fh: D = {e["question_id"]: e for e in json.load(fh)}
+with open("../frozen/longmemeval_split.json") as fh: split = json.load(fh)
+dev = set(split["dev"])
+with open("../out/lme500.rankings.json") as fh: R = json.load(fh)
 def labels(p):
     out = {}
-    for l in open(p):
-        r = json.loads(l); out[r["question_id"]] = bool(r["autoeval_label"]["label"])
+    with open(p) as fh:
+        for l in fh:
+            r = json.loads(l); out[r["question_id"]] = bool(r["autoeval_label"]["label"])
     return out
 runs = {f"5mini_k30pre_r{i}": labels(f"../l01/out/l01-gpt-5-mini-k30-preopen-r{i}.hypotheses.jsonl.eval-results-gpt-4o-mini") for i in (1,2,3)}
 runs["4o_k10"] = labels("../out/lme500.hypotheses.jsonl.eval-results-gpt-4o")
@@ -45,5 +47,5 @@ rep["4o_k10_retrieval_split"] = dict(sp)
 tsz = collections.Counter(typ(q) for q in qs); rep["type_sizes"] = dict(tsz)
 rep["dev_wrong_4o_k10"] = [q for q in w4 if q in dev]
 rep["dev_types_wrong_4o_k10"] = dict(collections.Counter(typ(q) for q in w4 if q in dev))
-json.dump(rep, open("breakdown.json", "w"), indent=1)
+with open("breakdown.json", "w") as fh: json.dump(rep, fh, indent=1)
 print(json.dumps(rep, indent=1)[:3500])

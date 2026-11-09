@@ -14,11 +14,13 @@ ap.add_argument("--subset", default="dev"); ap.add_argument("--reader", default=
 ap.add_argument("--repeat", type=int, default=0); ap.add_argument("--extract", nargs="*", default=[str(HERE / "ext_out_dev.jsonl")])
 ap.add_argument("--judges", default="gpt-4o,gpt-4o-mini"); ap.add_argument("--dry", action="store_true"); ap.add_argument("--qids")
 a = ap.parse_args()
-split = json.load(open(HERE.parent / "frozen/longmemeval_split.json"))
+with open(HERE.parent / "frozen/longmemeval_split.json") as fh: split = json.load(fh)
 ids = {"dev": split["dev"], "heldout": split["heldout"], "all": split["dev"] + split["heldout"]}[a.subset]
 if a.qids: ids = a.qids.split(",")
 store = render.Store(*[p for p in a.extract if Path(p).exists()])
-spec = json.loads(a.spec) if a.spec.startswith("{") else json.load(open(a.spec))
+if a.spec.startswith("{"): spec = json.loads(a.spec)
+else:
+    with open(a.spec) as fh: spec = json.load(fh)
 prompts = {q: render.build(q, store, spec) for q in ids}
 tok = {q: len(render.qa.ENC.encode(p, disallowed_special=())) for q, p in prompts.items()}
 est = sum(tok.values()) * 2.5e-6 + len(ids) * 250 * 10e-6 + len(ids) * 400 * 2.5e-6
@@ -48,8 +50,9 @@ for j in a.judges.split(","):
     code = f"import sys,runpy; sys.path.insert(0,{str(DL)!r}); sys.argv=['e',{j!r},{str(hp)!r},{str(DL/'longmemeval_s_cleaned.json')!r}]; runpy.run_path({str(DL/'longmemeval_evaluate_qa_9e0b455f4ef0.py')!r}, run_name='__main__')"
     subprocess.run(["uv", "run", "--no-project", "--python", "3.11", "--with", "openai==2.8.1", "--with", "tqdm", "--with", "backoff", "--with", "numpy", "python", "-I", "-c", code], check=True, env=env, stdout=subprocess.DEVNULL)
     lab = {}
-    for l in open(str(hp) + f".eval-results-{j}"):
-        r = json.loads(l); lab[r["question_id"]] = bool(r["autoeval_label"]["label"])
+    with open(str(hp) + f".eval-results-{j}") as fh:
+        for l in fh:
+            r = json.loads(l); lab[r["question_id"]] = bool(r["autoeval_label"]["label"])
     res[j] = {"correct": sum(lab.values()), "n": len(lab), "labels": lab}
 D = render.data(); bytype = {}
 for q in ids:

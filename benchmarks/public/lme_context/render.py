@@ -10,12 +10,13 @@ DATA = None
 def data():
     global DATA
     if DATA is None:
-        DATA = {e["question_id"]: e for e in json.load(open(os.path.expanduser("~/.cache/warm-bench/downloads/longmemeval_s_cleaned.json")))}
+        with open(os.path.expanduser("~/.cache/warm-bench/downloads/longmemeval_s_cleaned.json")) as fh: DATA = {e["question_id"]: e for e in json.load(fh)}
     return DATA
 RANK = None
 def rankings():
     global RANK
-    if RANK is None: RANK = json.load(open(HERE.parent / "out/lme500.rankings.json"))
+    if RANK is None:
+        with open(HERE.parent / "out/lme500.rankings.json") as fh: RANK = json.load(fh)
     return RANK
 DEFAULT = dict(k=30, pre="opening", facts=0, summ=0, date_ref=False, offsets=False, chain=False, pos="post",
                route=False, factscope="retrieved", maxfacts=400, drop_rounds=0)
@@ -43,10 +44,11 @@ class Store:
     def __init__(self, *paths):
         self.m = {}; self.bad = 0
         for p in paths:
-            for l in open(p):
-                r = json.loads(l); o = parse_ext(r["out"])
-                if o is None: self.bad += 1; o = {"summary": "", "facts": []}
-                self.m[(r["sid"], r["date"])] = o
+            with open(p) as fh:
+                for l in fh:
+                    r = json.loads(l); o = parse_ext(r["out"])
+                    if o is None: self.bad += 1; o = {"summary": "", "facts": []}
+                    self.m[(r["sid"], r["date"])] = o
     def get(self, sid, date): return self.m.get((sid, date), {"summary": "", "facts": []})
 # ---- dates
 def pdate(s):

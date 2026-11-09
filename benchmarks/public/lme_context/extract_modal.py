@@ -23,10 +23,10 @@ def run(prompts: list[str]) -> tuple[list[str], float]:
 
 @app.local_entrypoint()
 def main(inp: str, out: str, chunk: int = 1200):
-    items = [json.loads(l) for l in open(inp)]
+    with open(inp) as fh: items = [json.loads(l) for l in fh]
     done = set()
     if Path(out).exists():
-        done = {json.loads(l)["key"] for l in open(out) if l.strip()}
+        with open(out) as fh: done = {json.loads(l)["key"] for l in fh if l.strip()}
     todo = [i for i in items if i["key"] not in done]
     print({"total": len(items), "todo": len(todo)}, flush=True)
     chunks = [todo[i:i + chunk] for i in range(0, len(todo), chunk)]
