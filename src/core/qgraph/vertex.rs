@@ -27,7 +27,7 @@ use super::kernels::{
     dot_i4_query, dot_i4_query_x4, dot_i8_query, dot_i8_query_x4, interleave_for_i4, prefetch,
     prefetch_bytes, raw_one, QueryCode, Rotation, SplitMix,
 };
-use super::rerank::{dot_f32_i4, dot_f32_i8};
+use super::rerank::{dot_f32_i4, dot_f32_i4_i8, dot_f32_i8};
 use super::vnni::query_sum;
 use super::{invalid, prepare_rows, upper_bytes, BuildParams, Graph, GraphView, Metric, NONE};
 use crate::core::error::WarmError;
@@ -1814,6 +1814,13 @@ impl VGraph {
     /// Re-rank score with the float query: negative estimated inner product with the
     /// reconstructed centred vector (Euclidean: plus `|x|^2 / 2`).
     fn fine(&self, qf: &[f32], v: u32) -> f32 {
+        if self.bits == 4 && self.res_bits == 8 {
+            let row = v as usize;
+            let residual = &self.residual[row * self.res_stride..(row + 1) * self.res_stride];
+            let (primary, secondary) = dot_f32_i4_i8(qf, self.code(v), residual);
+            let ip = self.scales[row] * primary + self.res_scales[row] * secondary;
+            return self.order(v, ip, 1.0);
+        }
         let primary = if self.bits == 8 {
             dot_f32_i8(qf, self.code(v))
         } else {
@@ -3123,14 +3130,19 @@ impl SearchScratch {
             if PROFILE {
                 profile.rerank_evaluations = take;
             }
-            for &c in &self.keys[..take] {
+            let lead = (8192 / (g.stride + g.res_stride)).clamp(1, 8);
+            for &c in &self.keys[..take.min(lead)] {
                 g.prefetch_rerank_rows(key_id(c));
             }
             // Ties (duplicate vectors) break by the original id, independent of the layout.
-            self.results.extend(self.keys[..take].iter().map(|&c| {
+            self.results.reserve(take);
+            for (position, &c) in self.keys[..take].iter().enumerate() {
+                if position + lead < take {
+                    g.prefetch_rerank_rows(key_id(self.keys[position + lead]));
+                }
                 let id = key_id(c);
-                (g.fine(&self.qf, id), g.original(id))
-            }));
+                self.results.push((g.fine(&self.qf, id), g.original(id)));
+            }
             evals += take;
             self.results
                 .sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
