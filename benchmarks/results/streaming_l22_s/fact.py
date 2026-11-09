@@ -12,7 +12,7 @@ res={}
 for name,p in cells.items():
     for op in (1172,648):
         try: res[(name,op)]=rec(f'{p}_op{op}.json',op)
-        except Exception as e: res[(name,op)]=None
+        except Exception: res[(name,op)]=None
 for op in (1172,648):
     print('state',op,'control (op32 centres)  %.4f'%rec(f'G1/K0g_op{op}.json',op)[0])
     v={k:res[(k,op)] for k in cells}

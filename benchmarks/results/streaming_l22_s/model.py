@@ -3,7 +3,7 @@ usage: model.py DIR CONFIG [CTRL_DIR CTRL_CONFIG]
 Assumptions (stated, not measured): blocks scale with live size L at fixed np (checked 3M->10M within 5%);
 recall at L < 3M uses the 3M curve; steps with L < 1M are exact (recall 1, cost ~0); search time =
 tau*blocks + fixed, calibrated so control np600 sums to 2250 s with fixed=265 s."""
-import json,sys,math
+import json,sys
 NP=[400,600,800,1000,1300,1600]
 ST={200:2999384,1172:6001880,648:9990953}
 with open('/Volumes/A/.hms-lb/bigann/wl03-l22bench/runS/runbook_live.json') as fh: live=[a for a,b in json.load(fh)]
@@ -21,6 +21,7 @@ def at(c,L):
     for a,b in zip(Ls,Ls[1:]):
         if a<=L<=b:
             t=(L-a)/(b-a); return [(n,x1+(x2-x1)*t,r1+(r2-r1)*t) for (n,x1,r1),(_,x2,r2) in zip(c[a],c[b])]
+    return None
 TAU=1.0
 TAUP=6.0e-8  # s per (query,list) table build, Ice Lake np600 run: 223 s / (600*10k*~620 steps)
 def run(c,sched):
