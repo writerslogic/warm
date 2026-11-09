@@ -11,6 +11,7 @@ use numpy::{PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
+use super::vector_index::result_array;
 use crate::core::qgraph::filter::{
     FilterBuildParams, FilterSearchParams, FilterTuning, FilteredIndex,
 };
@@ -194,7 +195,7 @@ impl PyFilteredIndex {
             )));
         }
         let (ptr, ids) = csr(&indptr, &indices, nq)?;
-        let mut out = vec![-1i64; nq * k];
+        let mut out = result_array(nq, k)?;
         let mut search = || {
             self.index
                 .search_batch(&rows, &ptr, &ids, k, &self.params, &mut out)
