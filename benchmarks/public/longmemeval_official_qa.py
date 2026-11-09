@@ -43,7 +43,9 @@ import tiktoken
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+import longmemeval_compact_context as K  # noqa: E402
 import longmemeval_pipeline as P  # noqa: E402
+import longmemeval_retrieval_limits as L  # noqa: E402
 
 SPLIT = HERE / "longmemeval_split.json"
 SOURCE = Path.home() / ".cache/warm-bench/downloads/longmemeval_s_cleaned.json"
@@ -131,8 +133,13 @@ def rankings(entries: list[dict], sub_weight: float, round_weight: float = 0.0) 
     return out
 
 
-def official_prompt(entry: dict, ranked: list[str], topk: int) -> str:
-    """run_generation.prepare_prompt with flat-turn, json, cot=true, merge none, useronly false."""
+def official_prompt(entry: dict, ranked: list[str], topk: int, layout: str = "official") -> str:
+    """run_generation.prepare_prompt with flat-turn, json, cot=true, merge none, useronly false.
+
+    `layout="compact"` keeps the same rounds and template but merges rounds by session under
+    one date header, one `U:`/`A:` line per turn. User turns stay literal; assistant turns lose
+    pleasantries, markdown, intensifiers and articles unless the question asks what the
+    assistant said."""
     by_id, dates = {}, {}
     for date, sid, session in zip(entry["haystack_dates"], entry["haystack_session_ids"], entry["haystack_sessions"]):
         by_id[sid], dates[sid] = session, date
@@ -151,8 +158,11 @@ def official_prompt(entry: dict, ranked: list[str], topk: int) -> str:
         for turn in session:
             turn.pop("has_answer", None)
     chunks.sort(key=lambda chunk: chunk[0])
-    history = ""
-    for i, (date, session) in enumerate(chunks):
+    if layout == "compact":
+        history = compact_history(entry, ranked, topk)
+    else:
+        history = ""
+    for i, (date, session) in enumerate(chunks if layout != "compact" else []):
         history += "\n### Session {}:\nSession Date: {}\nSession Content:\n{}\n".format(
             i + 1, date, "\n" + json.dumps(session))
     tokens = ENC.encode(history, allowed_special={"<|endoftext|>"})
@@ -161,6 +171,39 @@ def official_prompt(entry: dict, ranked: list[str], topk: int) -> str:
     if "has_answer" in history:
         raise ValueError("evidence label reached the reader input")
     return TEMPLATE.format(history, entry["question_date"], entry["question"])
+
+
+def compact_history(entry: dict, ranked: list[str], topk: int) -> str:
+    """The rounds `official_prompt` selects, merged per session in date order."""
+    by_id = dict(zip(entry["haystack_session_ids"], zip(entry["haystack_dates"], entry["haystack_sessions"])))
+    order = {sid: i for i, sid in enumerate(entry["haystack_session_ids"])}
+    picked, rounds = {}, 0
+    for corpus_id in ranked:
+        converted = corpus_id.replace("noans_", "answer_")
+        sid, turn = "_".join(converted.split("_")[:-1]), int(converted.split("_")[-1]) - 1
+        if sid not in by_id or turn >= len(by_id[sid][1]):
+            continue
+        if rounds == topk:
+            break
+        rounds += 1
+        picked.setdefault(sid, set()).update(t for t in (turn, turn + 1) if t < len(by_id[sid][1]))
+    keep_assistant = L.assistant_intent(entry["question"])
+    history = ""
+    for sid in sorted(picked, key=lambda s: (by_id[s][0], order[s])):
+        date, session = by_id[sid]
+        history += f"\n## {date}\n"
+        previous = None
+        for t in sorted(picked[sid]):
+            if previous is not None and t > previous + 1:
+                history += "...\n"
+            turn = session[t]
+            if turn["role"] == "user" or keep_assistant:
+                text = turn["content"].strip()
+            else:
+                text = K.squeeze(turn["content"])
+            history += ("U: " if turn["role"] == "user" else "A: ") + text + "\n"
+            previous = t
+    return history
 
 
 def load_judge_prompt():
@@ -401,8 +444,12 @@ def write_summary() -> dict:
         run = json.loads(path.read_text())
         key = (f'{run["reader"]["model"]}|k{run["retrieval"]["topk_context"]}|sub{run["retrieval"]["subquery_weight"]}'
                f'|round{run["retrieval"].get("round_key_weight", 0.0)}')
+        layout = run["reader"].get("layout", "official")
+        if layout != "official":
+            key += f"|{layout}"
         arm = arms.setdefault(key, {"reader": run["reader"]["model"], "topk_context": run["retrieval"]["topk_context"],
-                                    "subquery_weight": run["retrieval"]["subquery_weight"], "runs": []})
+                                    "subquery_weight": run["retrieval"]["subquery_weight"], "layout": layout,
+                                    "runs": []})
         arm["runs"].append({"file": path.name, "repeat": run.get("repeat", 0), **run["summary"]})
     for arm in arms.values():
         correct = [r["correct"] for r in arm["runs"]]
@@ -480,6 +527,8 @@ def main() -> None:
     parser.add_argument("--sub", type=float, default=0.0, help="reference subquery variant weight")
     parser.add_argument("--round", type=float, default=0.0, help="weight of user+reply round keys")
     parser.add_argument("--tag")
+    parser.add_argument("--layout", choices=("official", "compact"), default="official",
+                        help="history rendering; compact merges rounds per session and squeezes text")
     parser.add_argument("--estimate", action="store_true", help="count reader input tokens only")
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--repeat", type=int, default=0, help="fresh reader and judge samples of the same inputs")
@@ -508,7 +557,7 @@ def main() -> None:
         if len(entries) != len(wanted):
             parser.error("--qids names a question outside the dev split")
     ranked = rankings(entries, args.sub, args.round)
-    prompts = {e["question_id"]: official_prompt(e, ranked[e["question_id"]], args.topk) for e in entries}
+    prompts = {e["question_id"]: official_prompt(e, ranked[e["question_id"]], args.topk, args.layout) for e in entries}
     tokens = sum(len(ENC.encode(p)) for p in prompts.values())
     rates = BATCH_PRICES if args.batch else PRICES
     estimate = tokens * rates[args.reader][0] + len(entries) * GEN_LENGTH * rates[args.reader][2]
@@ -549,8 +598,11 @@ def main() -> None:
     summary = summarize(rows)
     report = {"schema_version": 1, "split": "dev", "heldout_evaluated": 0, "tag": args.tag,
               "reader": {"model": args.reader, "snapshots_observed": sorted({r["reader_model"] for r in rows}),
-                         "protocol": "official run_generation.py flat-turn, json history, cot (con), temperature 0, "
-                                     f"max_tokens {GEN_LENGTH}, topk_context {args.topk}"},
+                         "protocol": ("official run_generation.py flat-turn, json history" if args.layout == "official"
+                                      else "official run_generation.py rounds and template, compact session history")
+                                     + ", cot (con), temperature 0, "
+                                     f"max_tokens {GEN_LENGTH}, topk_context {args.topk}",
+                         "layout": args.layout},
               "judge": {"model": JUDGE_MODEL, "snapshots_observed": sorted({r["judge_model"] for r in rows}),
                         "protocol": "official evaluate_qa.py get_anscheck_prompt, temperature 0, max_tokens 10"},
               "retrieval": {"ranking": "reference pipeline turn ranking over cached Qwen3 scores "
