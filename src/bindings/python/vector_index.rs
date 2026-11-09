@@ -31,9 +31,10 @@ fn err(e: WarmError) -> PyErr {
 }
 
 pub(super) fn result_array(rows: usize, cols: usize) -> PyResult<Vec<i64>> {
+    let max_items = isize::MAX as usize / std::mem::size_of::<i64>();
     let len = rows
         .checked_mul(cols)
-        .filter(|&len| len <= isize::MAX as usize / std::mem::size_of::<i64>())
+        .filter(|&len| cols <= max_items && len <= max_items)
         .ok_or_else(|| PyValueError::new_err("result array size exceeds the addressable range"))?;
     let mut out = Vec::new();
     out.try_reserve_exact(len)

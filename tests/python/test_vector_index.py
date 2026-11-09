@@ -40,14 +40,17 @@ def test_requested_count_larger_than_index_does_not_overallocate(k):
     np.testing.assert_array_equal(index.batch_query(rows[:1], k)[0], expected)
 
 
-@pytest.mark.parametrize("rows", [1, 2, 3])
+@pytest.mark.parametrize("rows", [0, 1, 2, 3])
 @pytest.mark.parametrize("offset", [-1, 0, 1])
 def test_batch_result_byte_size_overflow_is_rejected(rows, offset):
     index = hm.VectorIndex("euclidean", degree=2, build_ef=4, threads=1)
     base = np.eye(4, dtype=np.float32)
     index.fit(base)
     k = sys.maxsize // 8 + offset
-    if rows * k <= sys.maxsize // 8:
+    if rows == 0 and offset <= 0:
+        assert index.batch_query_array(base[:rows], k).shape == (0, k)
+        return
+    if k <= sys.maxsize // 8 and rows * k <= sys.maxsize // 8:
         # This shape fits in usize but still cannot be allocated; reserve must fail without a panic.
         expected = MemoryError
     else:

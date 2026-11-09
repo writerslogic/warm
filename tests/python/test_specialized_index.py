@@ -16,12 +16,15 @@ def filtered():
     return index, base
 
 
-@pytest.mark.parametrize("rows", [1, 2])
+@pytest.mark.parametrize("rows", [0, 1, 2])
 @pytest.mark.parametrize("offset", [-1, 0, 1])
 def test_filtered_result_byte_limit(filtered, rows, offset):
     index, base = filtered
     k = sys.maxsize // 8 + offset
-    expected = MemoryError if rows * k <= sys.maxsize // 8 else ValueError
+    if rows == 0 and offset <= 0:
+        assert index.search(base[:rows], [0], [], k).shape == (0, k)
+        return
+    expected = MemoryError if k <= sys.maxsize // 8 and rows * k <= sys.maxsize // 8 else ValueError
     with pytest.raises(expected):
         index.search(base[:rows], np.arange(rows + 1), np.zeros(rows), k)
 
