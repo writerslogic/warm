@@ -1069,7 +1069,6 @@ impl PartitionTier {
             self.params.spill_eps,
             routed,
         );
-        let asg = asg;
         self.place_asg(slots, vectors, &asg);
     }
 
@@ -1246,7 +1245,7 @@ impl PartitionTier {
         let t_tables = t_start.elapsed().as_secs_f64();
         let coarse = (p.route_cands > 0).then(|| {
             let (ns, r) = (p.route_lists.clamp(1, l), p.route_cands.min(l));
-            let supers = kmeans(&centres, dim, ns, 5, &mut SplitMix(p.seed ^ 0xC0A2_5E));
+            let supers = kmeans(&centres, dim, ns, 5, &mut SplitMix(p.seed ^ 0x00C0_A25E));
             let s2: Vec<f32> = supers.chunks(dim).map(|v| dot(v, v)).collect();
             let mut cands = Vec::with_capacity(ns * r);
             let (mut d, mut near) = (vec![0f32; l], Vec::with_capacity(r));
