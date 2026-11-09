@@ -5,6 +5,78 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [Unreleased]
+
+### Added
+- Measure and repair bottom-layer reachability, and expose the build options to the VIBE adapter
+
+### Documentation
+- Record the Ice Lake filter-track tuning with held-out selection and ablation
+- Add the second control run and the official-protocol logs to the Ice Lake filter results
+- Record the llama test-set confirmation of the held-out selection
+- Record the generation-2 screens and the routed-placement full run; keep only the retrain phase log
+- Record the local-rebalance full runs L5a and L5b and the gen-2 conclusion
+- Record the balanced warm-retrain streaming study and Ice Lake runs
+- Record the second E2 Ice Lake run
+- Record the rescore-budget A/B and the pending consolidation measurements
+
+### Fixed
+- Close files with context managers and drop unused imports in the VIBE scripts
+- Close files with context managers and drop unused imports in the L22 scripts
+- Remove an unused import and variable and return explicitly in the L22 scripts
+- Upgrade rmcp to 3.9 for RUSTSEC-2026-0462 (#420)
+- Upgrade rmcp to 3.9 for RUSTSEC-2026-0462
+- Close files with context managers in the LongMemEval context-assembly scripts
+- Drop an unused import and tighten the blind-rankings test assertions
+- Use assertLessEqual in the compact-context fill test
+- Skip already-published npm versions so a partial release can be re-run (#418)
+- Skip already-published npm versions so a partial release can be re-run
+- Model background-compaction tail schedules in the simulation (#419)
+- Model background-compaction tail schedules in the simulation
+
+### Performance
+- Speed up the filtered index and retune it for the yfcc-10M filter track (#417)
+- Block the multi-label filter and skip the tombstone probe when nothing is deleted
+- Cache the intersection of repeated label sets in a sorted filtered batch
+- Size-banded inverted-file target for the filtered index
+- Add result-preserving filter tuning (tag-grouped batch order, prefetch distance, zmm VNNI)
+- Make the result-preserving filter execution choices the default
+- Keep ef 175 and add ef 320 to the WARM VIBE grid (56 points) and record the llama test re-measures
+- Restore ef 500/800 in the WARM VIBE grid (52 points) and record the llama test re-measure
+- Balanced warm retrain for streaming L22 (study and Ice Lake results) (#413)
+- Add route_inserts and the knob override for coarse placement
+- Drop an unused binding in place
+- Expose the local rebalance knobs to the knob override
+- Route row placement through super-centres (route_cands, route_lists) for inserts and retrains
+- Fix the python binding for route_cands and satisfy clippy
+- Add a local rebalance that splits only the oversized lists
+- Route warm-retrain placement through the nearest new centres and log retrain phases
+- Default the python partition index to the balanced-retrain streaming configuration
+- Add retrain, per-live-size nprobe and selective spill knobs to the partition tier
+- Rebalance near-empty centres between k-means iterations and log retrains
+- Honour rerank on a base with deletes; bench: compact LongMemEval context (#391)
+- Rescore only the rerank best live candidates on a base with deletes
+
+### Bench
+- Held-out search for the VIBE recall tail, learn-heavy builds and a rerank-dense grid (#410)
+- Add the learn-heavy VIBE builds and a rerank-dense grid, with held-out search tooling and results
+- LongMemEval dev context-assembly screen (partial, no 500 confirmation) (#407)
+- Add the LongMemEval dev context-assembly screen (summaries, facts, date references)
+- Record the LongMemEval_S k30+preopen reader passes
+- LongMemEval_S 500-question held-out run (#394)
+- Re-pin the LongMemEval 500 frozen config to the single-turn export
+- Record the LongMemEval_S 500-question held-out run
+- Create the LongMemEval 500 state directory before writing the spend ledger
+- Export each LongMemEval turn once, at its first position
+- Freeze the LongMemEval 500-question protocol at the implementation commit
+- Re-pin the LongMemEval 500 frozen config to the out-of-memory fix
+- Add a sealed LongMemEval 500-question run with a label-blind rankings export
+- Derive the per-item rate without the container start time in the LongMemEval Modal waves
+- Retry LongMemEval embed and rerank batches at half size on CUDA out-of-memory
+- Re-pin the LongMemEval 500 frozen config and raise the Modal GPU cap to 30 USD
+- Measure compact LongMemEval context and user-turn fill under a fixed reader-token budget
+- Keep compact-layout LongMemEval runs in their own summary arm
+- Add base-with-deletes search and staged consolidation cgroup fixtures
 ## [0.6.6] - 2026-11-09
 
 ### Added
