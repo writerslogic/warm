@@ -23,6 +23,7 @@
 
 mod adjacency;
 mod build_kernels;
+pub mod connectivity;
 #[cfg(feature = "experimental")]
 mod exact_l2;
 mod fastscan;
