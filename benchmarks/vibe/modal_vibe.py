@@ -42,7 +42,7 @@ from pathlib import Path
 import modal
 
 VIBE_REPO = "https://github.com/dcondrey/vibe.git"
-VIBE_REV = "60625ecd00c639ebe1b6ce19434e89dae7fedff0"
+VIBE_REV = "6e5fb9daf276ecba73d87dcdd6a14448d434dba7"  # add-warm head, PR vector-index-bench/vibe#18
 WARM_REPO = "https://github.com/writerslogic/warm.git"
 HF = "https://huggingface.co/datasets/vector-index-bench/vibe/resolve/main/{}.hdf5"
 HF_TREE = "https://huggingface.co/api/datasets/vector-index-bench/vibe/tree/main"
@@ -69,7 +69,7 @@ OOD = {"hotpotqa-harrier-640-normalized", "imagenet-align-640-normalized", "laio
 NAMED = {"llama-128-ip": ["roargraph"], "yi-128-ip": ["roargraph"]}
 SMOKE = "smoke-64-cosine"  # generated in the container for --test
 MAX_MEM_GIB = 64
-LIVE_NS = "run"
+LIVE_NS = "lb-af8d4017"
 THRESHOLDS = ("0.9", "0.95", "0.99")
 # Competitors this image can build: algorithm -> (installer, micromamba env, needs AVX-512).
 INSTALLABLE = {
@@ -89,6 +89,12 @@ KNOWN_CPUS = {
 CPU_REQ, CPU_LIMIT = 2.0, 8.0
 USD_CORE_H, USD_GIB_H = 0.0000131 * 3600, 0.00000222 * 3600  # Modal published rates
 FN_TIMEOUT_S = 24 * 3600
+
+
+def mem_tuple(gib: int) -> tuple[int, int]:
+    """(request, hard limit) in MiB: the limit is twice the request, at most MAX_MEM_GIB."""
+    return gib * 1024, min(2 * gib, MAX_MEM_GIB) * 1024
+
 CONTAINER_BUDGET_S = 23 * 3600  # hand over to a fresh container before Modal's 24 h limit
 HEARTBEAT_S = 60
 STALE_S = 15 * 60
@@ -167,6 +173,8 @@ rabitq() {
 }
 warm() {
   git clone -q "$WARM_REPO" warm && cd warm && git checkout -q "$WARM_REV"
+  # The adapter and grid under test come from this revision, not from the VIBE fork pin.
+  cp benchmarks/vibe/warm/module.py benchmarks/vibe/warm/config.yml /opt/vibe/vibe/algorithms/warm/
   RUSTFLAGS="-C target-cpu=native" CARGO_BUILD_JOBS="$(nproc)" maturin build --release --locked --out /work/warm-dist
   pip install --no-cache-dir --force-reinstall --no-deps /work/warm-dist/*.whl
   cd / && python -c 'from writerslogic_warm import VectorIndex; print(VectorIndex)'
@@ -974,7 +982,7 @@ class Runner:
         VOL.commit()
 
 
-@app.function(image=image, volumes={"/vol": VOL}, cpu=(CPU_REQ, CPU_LIMIT), memory=8 * 1024, timeout=FN_TIMEOUT_S,
+@app.function(image=image, volumes={"/vol": VOL}, cpu=(CPU_REQ, CPU_LIMIT), memory=(8 * 1024, 16 * 1024), timeout=FN_TIMEOUT_S,
               retries=modal.Retries(max_retries=3, backoff_coefficient=2.0, initial_delay=60.0))
 def run_dataset(dataset: str, meta: dict, warm_rev: str, warm_only: bool, test: bool, cap: float, hard_cap: float) -> dict:
     """All jobs of one dataset, WARM first. Memory is set per call through with_options."""
@@ -1067,7 +1075,7 @@ def run_dataset(dataset: str, meta: dict, warm_rev: str, warm_only: bool, test: 
     if any(v == "handover" for v in results.values()):
         r.release()
         runner = run_dataset_nonpreemptible if meta.get("nonpreemptible") else run_dataset
-        call = runner.with_options(memory=r.mem_gib * 1024).spawn(dataset, meta, warm_rev, warm_only, test, cap, hard_cap)
+        call = runner.with_options(memory=mem_tuple(r.mem_gib)).spawn(dataset, meta, warm_rev, warm_only, test, cap, hard_cap)
         return {"dataset": dataset, "container": r.cid, "jobs": results, "handed_over_to": call.object_id}
     if not test or results.get(warm_job) == "done":
         r.long_phase = True
@@ -1078,7 +1086,7 @@ def run_dataset(dataset: str, meta: dict, warm_rev: str, warm_only: bool, test: 
             "spend_usd": round(spend_total(ns, r.root), 2)}
 
 
-@app.function(image=image, volumes={"/vol": VOL}, cpu=(CPU_REQ, CPU_LIMIT), memory=8 * 1024,
+@app.function(image=image, volumes={"/vol": VOL}, cpu=(CPU_REQ, CPU_LIMIT), memory=(8 * 1024, 16 * 1024),
               timeout=FN_TIMEOUT_S, nonpreemptible=True, retries=1)
 def run_dataset_nonpreemptible(dataset: str, meta: dict, warm_rev: str, warm_only: bool,
                               test: bool, cap: float, hard_cap: float) -> dict:
@@ -1320,7 +1328,7 @@ def main(resume: bool = False, status: bool = False, warm_rev: str = "", warm_on
         if nonpreemptible:
             meta["nonpreemptible"] = True
         runner = run_dataset_nonpreemptible if nonpreemptible else run_dataset
-        calls.append((d, runner.with_options(memory=meta["mem_gib"] * 1024).spawn(d, meta, hms_rev, hms_only, test, cap_usd, hard_cap_usd)))
+        calls.append((d, runner.with_options(memory=mem_tuple(meta["mem_gib"])).spawn(d, meta, warm_rev, warm_only, test, cap_usd, hard_cap_usd)))
     for d, call in calls:
         try:
             print(json.dumps(call.get(), default=str))

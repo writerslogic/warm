@@ -309,7 +309,7 @@ impl Graph {
             .ok_or_else(|| invalid("repair degree capacity overflows".into()))
     }
 
-    fn query_distance(&self, query: &[f32], id: u32) -> f32 {
+    pub(super) fn query_distance(&self, query: &[f32], id: u32) -> f32 {
         let row = &self.vectors[id as usize * self.dim..(id as usize + 1) * self.dim];
         let product = dot(query, row);
         match self.metric {
