@@ -20,7 +20,7 @@ def at(rows, thr):
 res = collections.defaultdict(list)
 for p in sorted(glob.glob(f"{RUNS}/{gen}/*/export.csv")):
     arm, ds, r = os.path.basename(os.path.dirname(p)).split("__")
-    rows = list(csv.DictReader(open(p)))
+    with open(p) as fh: rows = list(csv.DictReader(fh))
     if not rows: continue
     res[(ds, arm)].append((r, {t: at(rows, t) for t in (0.95, 0.99)}, max(float(x["k-nn"]) for x in rows)))
 f = lambda v: "-" if v is None else f"{v:,.0f}"
