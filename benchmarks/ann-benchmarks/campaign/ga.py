@@ -3,7 +3,7 @@ official harness (run_gen.py). cfg: {name, dataset, ef_grid, wheels:[..], builds
 max_gens, pop, rounds, noise (relative gain below which a generation counts as no gain), rng}
 genome: {wheel, build, env{}, rerank, patience}. Fitness = sqrt(QPS@0.95 * QPS@0.99), log-linear interpolation
 on the frontier, median over rounds; 0 when 0.99 is not reached."""
-import json, math, os, random, subprocess, sys, statistics as st, csv, glob
+import json, math, os, random, subprocess, sys, statistics as st, csv
 H = os.path.expanduser("~"); RUNS = f"{H}/ab-a/runs"; PY = f"{H}/ab-hms/venv/bin/python"
 with open(sys.argv[1]) as fh: cfg = json.load(fh)
 rnd = random.Random(cfg.get("rng", 7))
