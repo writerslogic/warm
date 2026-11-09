@@ -11,7 +11,9 @@ use numpy::{PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
-use crate::core::qgraph::filter::{FilterBuildParams, FilterSearchParams, FilteredIndex};
+use crate::core::qgraph::filter::{
+    FilterBuildParams, FilterSearchParams, FilterTuning, FilteredIndex,
+};
 
 #[pyclass(name = "FilteredIndex")]
 struct PyFilteredIndex {
@@ -127,14 +129,22 @@ impl PyFilteredIndex {
     /// and at least `min_lists` lists are probed. Multi-label queries whose rarest label has at
     /// most `intersect_max` members are intersected first and scored exactly when the matches
     /// number at most `brute_max`.
-    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000))]
+    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=false, prefetch=24, wide=false))]
     fn set_search(
         &mut self,
         brute_max: usize,
         target: usize,
         min_lists: usize,
         intersect_max: usize,
+        sort_queries: bool,
+        prefetch: usize,
+        wide: bool,
     ) {
+        self.index.set_tuning(FilterTuning {
+            sort_queries,
+            prefetch,
+            wide,
+        });
         self.params = FilterSearchParams {
             brute_max,
             target,
