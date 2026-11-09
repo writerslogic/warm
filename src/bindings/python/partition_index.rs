@@ -90,6 +90,10 @@ fn apply_knobs(p: &mut PartitionParams) -> PyResult<()> {
         let (k, v) = kv.split_once('=').ok_or_else(|| bad(kv))?;
         let n = || v.trim().parse::<usize>().map_err(|_| bad(kv));
         match k.trim() {
+            "local_rebalance" => p.local_rebalance = n()? != 0,
+            "lb_hi" => p.lb_hi = v.trim().parse().map_err(|_| bad(kv))?,
+            "lb_lo" => p.lb_lo = v.trim().parse().map_err(|_| bad(kv))?,
+            "lb_target" => p.lb_target = v.trim().parse().map_err(|_| bad(kv))?,
             "route_cands" => p.route_cands = n()?,
             "route_lists" => p.route_lists = n()?,
             "route_inserts" => p.route_inserts = n()? != 0,
