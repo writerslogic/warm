@@ -6,11 +6,11 @@ tau*blocks + fixed, calibrated so control np600 sums to 2250 s with fixed=265 s.
 import json,sys,math
 NP=[400,600,800,1000,1300,1600]
 ST={200:2999384,1172:6001880,648:9990953}
-live=[a for a,b in json.load(open('/Volumes/A/.hms-lb/bigann/wl03-l22bench/runS/runbook_live.json'))]
+with open('/Volumes/A/.hms-lb/bigann/wl03-l22bench/runS/runbook_live.json') as fh: live=[a for a,b in json.load(fh)]
 def curves(d,cfg):
     out={}
     for op,L in ST.items():
-        j=json.load(open(f'{d}/{cfg}_op{op}.json'))
+        with open(f'{d}/{cfg}_op{op}.json') as fh: j=json.load(fh)
         out[L]=[(n,j['profile_np%d'%n]['blocks'],j['recall_np%d'%n]) for n in NP if 'recall_np%d'%n in j]
     return out
 def at(c,L):

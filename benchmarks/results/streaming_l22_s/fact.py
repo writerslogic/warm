@@ -1,8 +1,9 @@
-import json,math,sys
+import json,sys
 sys.argv=['x']
-exec(open('front.py').read().split("rows=load")[0].replace("d=sys.argv[1]; ctrl=sys.argv[2]; ref_np=sys.argv[3]",""))
+with open('front.py') as _fh: _src=_fh.read()
+exec(_src.split("rows=load")[0].replace("d=sys.argv[1]; ctrl=sys.argv[2]; ref_np=sys.argv[3]",""))
 def load1(path):
-    return json.load(open(path))
+    with open(path) as fh: return json.load(fh)
 ctrl={op:load1(f'G1/K0g_op{op}.json') for op in (200,1172,648)}
 def rec(path,op):
     j=load1(path); B=ctrl[op]['profile_np600']['blocks']; return interp(pts(j),B), j['lists']['imb']

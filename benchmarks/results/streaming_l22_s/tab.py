@@ -3,7 +3,8 @@ d=sys.argv[1]; nps=sys.argv[2].split(',') if len(sys.argv)>2 else ['400','600','
 rows={}
 for f in sorted(glob.glob(d+'/*_op*.json')):
     m=re.match(r'(.+)_op(\d+)\.json',os.path.basename(f)); lab,op=m.group(1),int(m.group(2))
-    j=json.load(open(f)); rows.setdefault(lab,{})[op]=j
+    with open(f) as fh: j=json.load(fh)
+    rows.setdefault(lab,{})[op]=j
 ops=[200,1172,648]
 print('label  | '+' | '.join(f'op{op}: '+'/'.join(f'r{n}' for n in nps)+' t' for op in ops)+' | mean recall by np | lists(imb,max) at 648')
 for lab,r in rows.items():

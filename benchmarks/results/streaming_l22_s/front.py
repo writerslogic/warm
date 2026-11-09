@@ -4,7 +4,8 @@ NPS=[400,500,600,700,800,1000,1300,1600]
 def load(d):
     rows={}
     for f in sorted(glob.glob(d+'/*_op*.json')):
-        m=re.match(r'(.+)_op(\d+)\.json',os.path.basename(f)); rows.setdefault(m.group(1),{})[int(m.group(2))]=json.load(open(f))
+        m=re.match(r'(.+)_op(\d+)\.json',os.path.basename(f))
+        with open(f) as fh: rows.setdefault(m.group(1),{})[int(m.group(2))]=json.load(fh)
     return rows
 def pts(j):
     return sorted((j['profile_np%d'%n]['blocks'],j['recall_np%d'%n],j['search_np%d_s'%n]) for n in NPS if 'recall_np%d'%n in j)
