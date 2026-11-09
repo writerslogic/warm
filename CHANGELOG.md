@@ -63,6 +63,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Record the low-level systems candidates, proxy results and miss audit
+- Record the Ice Lake full-run confirmation, the graph runs and the read-ahead patch
 - Record the Ice Lake np650 streaming run (recall 0.9942 in 2,722 s) (#411)
 - Record the Ice Lake np650 streaming run (recall 0.9942 in 2,722 s)
 - Record the Ice Lake streaming runs (recall 0.9848 in 2,666 s) (#404)
@@ -249,6 +251,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve audited integrity and retrieval defects (#334)
 
 ### Performance
+- Test the low-level system defaults of the L22 streaming path (#409)
+- Add an opt-in transparent-huge-page allocator for the Python extension and a runbook replay driver
+- Expose the partition centres and per-id lists for the miss audit
+- Gate the wheel allocator behind a cfg and load mimalloc with dynamic TLS
+- Add opt-in list-order slot placement for the partition tier and held-out miss audit in the replay driver
+- Read WARM_PLACE for the partition index placement switch
+- Drop the killed allocator and placement arms, keep the miss-audit diagnostics
 - Cut the L22 scan overhead around the quad kernel and batch the reorder (#406)
 - Cut the L22 scan overhead around the quad kernel and batch the reorder
 - Fuse admission into the LUT16 scan and add AVX-512 and VNNI quad paths (#403)
