@@ -79,6 +79,8 @@ pub struct PartitionParams {
     /// (0 = all, exact). Applies to inserts and to the re-placement in a retrain.
     pub route_cands: usize,
     pub route_lists: usize,
+    /// Whether inserts (as opposed to a retrain's re-placement) use the coarse routing.
+    pub route_inserts: bool,
     /// Reseed near-empty centres onto the largest clusters between Lloyd iterations (in the
     /// first training and in retrains), which restores balance after the data has moved.
     pub kmeans_rebalance: bool,
@@ -116,6 +118,7 @@ impl Default for PartitionParams {
             retrain_sample: 262_144,
             route_cands: 0,
             route_lists: 64,
+            route_inserts: true,
             kmeans_rebalance: false,
             nprobe_by_live: Vec::new(),
             spill_eps: f32::INFINITY,
@@ -724,8 +727,16 @@ impl Trained {
     }
 
     /// Nearest list and SOAR spill list for each row of `x` (`b` rows).
-    fn assign(&self, x: &[f32], dim: usize, k: usize, lambda: f32, eps: f32) -> Vec<(u32, u32)> {
-        if let Some(c) = &self.coarse {
+    fn assign(
+        &self,
+        x: &[f32],
+        dim: usize,
+        k: usize,
+        lambda: f32,
+        eps: f32,
+        routed: bool,
+    ) -> Vec<(u32, u32)> {
+        if let Some(c) = self.coarse.as_ref().filter(|_| routed) {
             return self.assign_coarse(c, x, dim, k, lambda, eps);
         }
         let l = self.lists_len();
@@ -1041,13 +1052,13 @@ impl PartitionTier {
         }
         if self.trained.is_some() {
             self.inserts_since_train += ids.len();
-            self.place(&slots, vectors);
+            self.place(&slots, vectors, self.params.route_inserts);
         }
         Ok(())
     }
 
     /// Assigns, encodes and appends the given slots (rows in `vectors`, same order).
-    fn place(&mut self, slots: &[u32], vectors: &[f32]) {
+    fn place(&mut self, slots: &[u32], vectors: &[f32], routed: bool) {
         let dim = self.dim;
         let t = self.trained.as_mut().expect("trained");
         let asg = t.assign(
@@ -1056,6 +1067,7 @@ impl PartitionTier {
             self.params.spill_k,
             self.params.soar_lambda,
             self.params.spill_eps,
+            routed,
         );
         let asg = asg;
         self.place_asg(slots, vectors, &asg);
@@ -1270,7 +1282,7 @@ impl PartitionTier {
             for &slot in chunk {
                 vectors.extend_from_slice(self.row(slot));
             }
-            self.place(chunk, &vectors);
+            self.place(chunk, &vectors, true);
         }
         let t_end = t_start.elapsed().as_secs_f64();
         self.train_phases = [t_centres, t_tables - t_centres, t_end - t_tables];
@@ -2204,7 +2216,7 @@ mod tests {
         t.insert(&(0..n as u32).collect::<Vec<_>>(), &x).unwrap();
         t.train(None).unwrap();
         let tr = t.trained.as_ref().unwrap();
-        let asg = tr.assign(&x, dim, lists, 1.0, f32::INFINITY);
+        let asg = tr.assign(&x, dim, lists, 1.0, f32::INFINITY, false);
         for (i, &(a1, a2)) in asg.iter().enumerate() {
             let xi: Vec<f64> = x[i * dim..(i + 1) * dim]
                 .iter()
@@ -2250,12 +2262,10 @@ mod tests {
         .unwrap();
         t.insert(&(0..n as u32).collect::<Vec<_>>(), &x).unwrap();
         t.train(None).unwrap();
-        let tr = t.trained.as_mut().unwrap();
+        let tr = t.trained.as_ref().unwrap();
         assert!(tr.coarse.is_some());
-        let routed = tr.assign(&x, dim, 8, 1.0, f32::INFINITY);
-        let coarse = tr.coarse.take();
-        let full = tr.assign(&x, dim, 8, 1.0, f32::INFINITY);
-        tr.coarse = coarse;
+        let routed = tr.assign(&x, dim, 8, 1.0, f32::INFINITY, true);
+        let full = tr.assign(&x, dim, 8, 1.0, f32::INFINITY, false);
         assert_eq!(routed, full);
     }
 
