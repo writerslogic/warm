@@ -753,6 +753,21 @@ pub(crate) fn dot_i8_query_x4(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4]
     }
 }
 
+/// [`dot_i8_query_x4`] with 512-bit `vpdpbusd` on the VNNI tier; the same integers on every
+/// tier (other tiers run [`dot_i8_query_x4`]).
+#[must_use]
+#[inline(always)]
+pub(crate) fn dot_i8_query_x4_wide(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4] {
+    #[cfg(target_arch = "x86_64")]
+    if tier::get() == tier::VNNI {
+        assert!(a.len().is_multiple_of(16) && rows.iter().all(|r| r.len() == a.len()));
+        // SAFETY: the tier is VNNI only after detecting `avx2`, `avx512f`, `avx512vl` and
+        // `avx512vnni`; the lengths are checked above.
+        return unsafe { super::vnni::zmm::dot_i8_x4(a, rows, qsum) };
+    }
+    dot_i8_query_x4(a, rows, qsum)
+}
+
 /// [`dot_i4_inline`] with the query sum precomputed, as [`dot_i8_query`].
 #[must_use]
 #[inline(always)]

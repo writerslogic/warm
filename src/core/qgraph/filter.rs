@@ -25,7 +25,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use rayon::prelude::*;
 
-use super::kernels::{dot_i8_query, dot_i8_query_x4, prefetch_bytes};
+use super::kernels::{dot_i8_query, dot_i8_query_x4, dot_i8_query_x4_wide, prefetch_bytes};
 
 /// Largest row whose squared u8 Euclidean distance fits the returned `u32`.
 pub const MAX_DIMENSIONS: usize = (u32::MAX / (255 * 255)) as usize;
@@ -126,6 +126,28 @@ impl Default for FilterSearchParams {
     }
 }
 
+/// Execution choices that never change a result: the same ids and distances for any value.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FilterTuning {
+    /// [`FilteredIndex::search_batch`] runs queries that share a rarest label back to back on
+    /// one thread, so the label's rows and lists stay cached for the next of them.
+    pub sort_queries: bool,
+    /// Rows ahead of the one being scored whose cache lines are prefetched.
+    pub prefetch: usize,
+    /// Score with 512-bit `vpdpbusd` where the CPU has AVX512-VNNI.
+    pub wide: bool,
+}
+
+impl Default for FilterTuning {
+    fn default() -> Self {
+        Self {
+            sort_queries: false,
+            prefetch: 24,
+            wide: false,
+        }
+    }
+}
+
 impl FilterSearchParams {
     /// Parameters under which every query returns the exact filtered top-k.
     #[must_use]
@@ -189,6 +211,7 @@ pub struct FilteredIndex {
     ivfs: Vec<LabelIvf>,
     deleted: Vec<AtomicU64>,
     live: usize,
+    tuning: FilterTuning,
     brute_queries: AtomicU64,
     ivf_queries: AtomicU64,
     scored: AtomicU64,
@@ -434,10 +457,16 @@ impl FilteredIndex {
             ivfs,
             deleted: (0..words).map(|_| AtomicU64::new(0)).collect(),
             live: n,
+            tuning: FilterTuning::default(),
             brute_queries: AtomicU64::new(0),
             ivf_queries: AtomicU64::new(0),
             scored: AtomicU64::new(0),
         })
+    }
+
+    /// Sets the execution choices of the searches that follow.
+    pub fn set_tuning(&mut self, tuning: FilterTuning) {
+        self.tuning = tuning;
     }
 
     /// Row width.
@@ -749,10 +778,11 @@ impl FilteredIndex {
 
     /// Scores every id of `ids` (all live and matching) into `top`.
     fn score_ids(&self, q: &[i8], qsum: i32, ids: &[u32], top: &mut TopK) {
-        const AHEAD: usize = 24;
+        let ahead = self.tuning.prefetch;
+        let wide = self.tuning.wide;
         let (chunks, tail) = ids.as_chunks::<4>();
         for (c, ch) in chunks.iter().enumerate() {
-            for &p in ids.iter().skip(c * 4 + AHEAD).take(4) {
+            for &p in ids.iter().skip(c * 4 + ahead).take(if ahead == 0 { 0 } else { 4 }) {
                 prefetch_bytes(self.row(p));
                 prefetch_norm(&self.norms[p as usize]);
             }
@@ -762,7 +792,11 @@ impl FilteredIndex {
                 self.row(ch[2]),
                 self.row(ch[3]),
             ];
-            let d = dot_i8_query_x4(q, rows, qsum);
+            let d = if wide {
+                dot_i8_query_x4_wide(q, rows, qsum)
+            } else {
+                dot_i8_query_x4(q, rows, qsum)
+            };
             for j in 0..4 {
                 let key = i64::from(self.norms[ch[j] as usize]) - 2 * i64::from(d[j]);
                 top.push(key, ch[j]);
@@ -910,6 +944,9 @@ impl FilteredIndex {
         if k == 0 {
             return Ok(());
         }
+        if self.tuning.sort_queries && nq > 1 {
+            return self.search_batch_grouped(queries, label_indptr, label_ids, k, params, out);
+        }
         out.par_chunks_mut(k)
             .zip(queries.par_chunks(self.dim))
             .enumerate()
@@ -925,6 +962,54 @@ impl FilteredIndex {
                     Ok(())
                 },
             )
+    }
+}
+
+impl FilteredIndex {
+    /// [`Self::search_batch`] with the queries ordered by their rarest label, so the queries of
+    /// one label run back to back on a thread. Results are written back in query order.
+    fn search_batch_grouped(
+        &self,
+        queries: &[u8],
+        label_indptr: &[u64],
+        label_ids: &[u32],
+        k: usize,
+        params: &FilterSearchParams,
+        out: &mut [i64],
+    ) -> Result<(), FilterError> {
+        let nq = out.len() / k;
+        let labels_of = |i: usize| &label_ids[label_indptr[i] as usize..label_indptr[i + 1] as usize];
+        let mut order: Vec<(u32, u32)> = (0..nq)
+            .map(|i| {
+                let rarest = labels_of(i)
+                    .iter()
+                    .copied()
+                    .min_by_key(|&l| (self.label_len(l), l))
+                    .unwrap_or(u32::MAX);
+                (rarest, i as u32)
+            })
+            .collect();
+        order.par_sort_unstable();
+        let mut sorted = vec![-1i64; out.len()];
+        sorted
+            .par_chunks_mut(k)
+            .zip(order.par_iter())
+            .try_for_each_init(
+                || (SearchScratch::default(), Vec::new()),
+                |(scratch, found), (row, &(_, i))| {
+                    let i = i as usize;
+                    let q = &queries[i * self.dim..(i + 1) * self.dim];
+                    self.search_with_scratch(q, labels_of(i), k, params, found, scratch)?;
+                    for (slot, &(_, id)) in row.iter_mut().zip(found.iter()) {
+                        *slot = i64::from(id);
+                    }
+                    Ok(())
+                },
+            )?;
+        for (row, &(_, i)) in sorted.chunks(k).zip(&order) {
+            out[i as usize * k..(i as usize + 1) * k].copy_from_slice(row);
+        }
+        Ok(())
     }
 }
 
@@ -1329,6 +1414,52 @@ mod tests {
         idx.search(&qs[0].0, &[labels + 100], k, &p, &mut one)
             .unwrap();
         assert!(one.is_empty());
+    }
+
+    #[test]
+    fn tuning_never_changes_a_result() {
+        let labels = 25;
+        let f = fixture(3_000, 32, labels, 9);
+        let mut idx =
+            FilteredIndex::build(&f.data, f.dim, &f.indptr, &f.ids, 0, &small_params()).unwrap();
+        let qs = queries(&f, 96, labels, 10);
+        let mut flat = Vec::new();
+        let mut indptr = vec![0u64];
+        let mut lids = Vec::new();
+        for (q, ls) in &qs {
+            flat.extend_from_slice(q);
+            lids.extend_from_slice(ls);
+            indptr.push(lids.len() as u64);
+        }
+        let k = 10;
+        // Both routes: a small brute_max sends the big labels to their lists.
+        for p in [
+            FilterSearchParams::default(),
+            FilterSearchParams {
+                brute_max: 20,
+                target: 60,
+                ..FilterSearchParams::default()
+            },
+        ] {
+            let mut want = vec![0i64; qs.len() * k];
+            idx.search_batch(&flat, &indptr, &lids, k, &p, &mut want)
+                .unwrap();
+            for sort_queries in [false, true] {
+                for prefetch in [0, 1, 24] {
+                    for wide in [false, true] {
+                        idx.set_tuning(FilterTuning {
+                            sort_queries,
+                            prefetch,
+                            wide,
+                        });
+                        let mut got = vec![0i64; qs.len() * k];
+                        idx.search_batch(&flat, &indptr, &lids, k, &p, &mut got)
+                            .unwrap();
+                        assert_eq!(got, want, "{sort_queries} {prefetch} {wide}");
+                    }
+                }
+            }
+        }
     }
 
     #[test]
