@@ -1306,7 +1306,7 @@ impl VGraph {
             let q = self.unit_row(g, qi).to_vec();
             s.scratch.qf[..self.dim].copy_from_slice(&q);
             let sq = self.encode_query(
-                &s.scratch.qf,
+                &mut s.scratch.qf,
                 &mut s.scratch.qc,
                 &mut s.scratch.qtmp,
                 &mut s.scratch.qrot,
@@ -1424,7 +1424,7 @@ impl VGraph {
         for _ in 0..nq {
             let q = (rng.next_u64() % self.n as u64) as usize;
             qf[..self.dim].copy_from_slice(&g.vectors[q * self.dim..(q + 1) * self.dim]);
-            let sq = self.encode_query(&qf, &mut qc, &mut qtmp, &mut qrot, &mut qs);
+            let sq = self.encode_query(&mut qf, &mut qc, &mut qtmp, &mut qrot, &mut qs);
             if sq == 0.0 {
                 continue;
             }
@@ -1447,19 +1447,34 @@ impl VGraph {
     /// query scaled like the code into `qs`; returns the query's quantization scale.
     fn encode_query(
         &self,
-        qf: &[f32],
+        qf: &mut [f32],
         qc: &mut [i8],
         qtmp: &mut [i8],
         qrot: &mut [f32],
         qs: &mut QueryCode,
     ) -> f32 {
-        let sq = if self.bits == 8 {
-            quantize(qf, qc)
-        } else {
-            let s = quantize(qf, qtmp);
-            interleave_for_i4(qtmp, qc);
-            s
+        let encode = |qf: &[f32], qc: &mut [i8], qtmp: &mut [i8]| {
+            if self.bits == 8 {
+                quantize(qf, qc)
+            } else {
+                let s = quantize(qf, qtmp);
+                interleave_for_i4(qtmp, qc);
+                s
+            }
         };
+        let mut sq = encode(qf, qc, qtmp);
+        if self.metric == VMetric::Angular
+            && (sq < f32::MIN_POSITIVE.sqrt()
+                || sq > f32::MAX.sqrt() / (127.0 * self.padded as f32))
+        {
+            // A positive query scale cancels in cosine ranking, but not in overflowing
+            // dot products or subnormal quantization. Ordinary queries retain their bits.
+            let largest = qf.iter().fold(0.0f32, |m, v| m.max(v.abs()));
+            if largest > 0.0 {
+                qf.iter_mut().for_each(|v| *v /= largest);
+                sq = encode(qf, qc, qtmp);
+            }
+        }
         if let Some(rot) = &self.screen_rot {
             rot.apply(&qf[..self.dim], qrot);
             if sq > 0.0 {
@@ -2646,7 +2661,7 @@ impl SearchScratch {
         // `<q, mean>` term is common to all candidates) and its scale is dropped.
         self.qf[..g.dim].copy_from_slice(query);
         let sq = g.encode_query(
-            &self.qf,
+            &mut self.qf,
             &mut self.qc,
             &mut self.qtmp,
             &mut self.qrot,
@@ -3352,7 +3367,7 @@ impl VGraph {
         searcher.search(query, k, params, &mut report.results)?;
         let scratch = &mut searcher.scratch;
         let sq = self.encode_query(
-            &scratch.qf,
+            &mut scratch.qf,
             &mut scratch.qc,
             &mut scratch.qtmp,
             &mut scratch.qrot,
@@ -3636,6 +3651,50 @@ mod serving_tests {
                 .results
                 .windows(2)
                 .all(|w| { w[0].0.total_cmp(&w[1].0).then(w[0].1.cmp(&w[1].1)).is_le() }));
+        }
+    }
+
+    #[test]
+    fn extreme_angular_queries_preserve_complete_order() {
+        for dim in [15, 16, 17, 31, 32, 33] {
+            let mut rows = vec![0.0; dim * dim];
+            for row in 0..dim {
+                rows[row * dim + row] = 1.0;
+            }
+            let graph = Graph::build(
+                &rows,
+                dim,
+                &BuildParams {
+                    degree: 4,
+                    build_ef: 64,
+                    metric: Metric::Angular,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            for bits in [4, 8] {
+                let index = VGraph::from_graph_with(&graph, bits, 8, true, true, 3, false).unwrap();
+                let mut searcher = index.searcher_with(SearchKnobs::OFF);
+                let mut out = Vec::new();
+                for scale in [1.0, 1e-30, 1e-40, f32::MAX] {
+                    let query: Vec<_> =
+                        (1..=dim).map(|i| (i as f32 / dim as f32) * scale).collect();
+                    searcher
+                        .search(
+                            &query,
+                            dim,
+                            VSearchParams {
+                                ef: dim,
+                                rerank: dim,
+                                ..Default::default()
+                            },
+                            &mut out,
+                        )
+                        .unwrap();
+                    assert_eq!(out, (0..dim as u32).rev().collect::<Vec<_>>());
+                    assert_complete(&searcher, &out, dim, dim);
+                }
+            }
         }
     }
 
@@ -4514,7 +4573,7 @@ mod tests {
                         for query in queries.chunks_exact(dim) {
                             scratch.qf[..dim].copy_from_slice(query);
                             index.encode_query(
-                                &scratch.qf,
+                                &mut scratch.qf,
                                 &mut scratch.qc,
                                 &mut scratch.qtmp,
                                 &mut scratch.qrot,
@@ -4573,7 +4632,7 @@ mod tests {
                                     for s in [&mut serial.scratch, &mut fused.scratch] {
                                         s.qf[..dim].copy_from_slice(&query);
                                         index.encode_query(
-                                            &s.qf,
+                                            &mut s.qf,
                                             &mut s.qc,
                                             &mut s.qtmp,
                                             &mut s.qrot,
@@ -5886,7 +5945,7 @@ mod tests {
             let q: Vec<f32> = unit[7 * d..8 * d].to_vec();
             s.scratch.qf[..d].copy_from_slice(&q);
             let sq = g.encode_query(
-                &s.scratch.qf,
+                &mut s.scratch.qf,
                 &mut s.scratch.qc,
                 &mut s.scratch.qtmp,
                 &mut s.scratch.qrot,
