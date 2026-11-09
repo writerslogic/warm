@@ -1,0 +1,14 @@
+valid True steps 1280 run_exit=0 searches 640 warm_line True
+wall(sum of steps) 3125 s; process elapsed 52:06.41; per op {'insert': 169, 'search': 2917, 'delete': 38}
+mean recall 0.996181 (pin 0.876839); trained at search 16 live 1239816; min post-train 0.9927; pre-train mean 1.0000
+recall by 80-search bins [0.9959, 0.996, 0.9955, 0.9961, 0.9963, 0.9961, 0.9966, 0.997]
+peak RSS 6.38 GiB (6 GB projection, 8 GiB scope)
+WARM_MODE terms {'live': '2367854', 'trained': 'True', 'trained_at_search': '16', 'trained_at_live': '1239816', 'train_search_s': '63.963', 'searches': '640', 'insert_s': '122.443', 'delete_s': '38.117', 'search_s': '2915.620', 'centres_s': '74.409', 'route_s': '47.103', 'scan_s': '2351.199', 'scan_mean_s': '2316.687', 'lut_mean_s': '252.265', 'blocks': '460662000755', 'admitted': '78623711394', 'reorder_s': '166.680', 'partition_search_s': '2629.944', 'adapter_wall_s': '3125.1'}
+GATES {'mean>=0.90': True, 'post-train min>=0.80': True, 'wall<3000': False, 'rss<8GiB': True}
+TEST B: FAIL
+1794183540.090 [warm] retrain (imbalance) live=1636119 imbalance 5.118 -> 2.670 in 12.9s (centres 5.5s, tables 0.5s, place 6.8s)
+1794183715.947 [warm] retrain (imbalance) live=6069499 imbalance 4.189 -> 2.959 in 31.0s (centres 5.3s, tables 0.6s, place 25.0s)
+1794184261.791 [warm] retrain (imbalance) live=4744845 imbalance 3.991 -> 2.890 in 25.9s (centres 5.8s, tables 0.6s, place 19.5s)
+1794184478.543 [warm] retrain (imbalance) live=8949227 imbalance 2.961 -> 2.772 in 42.9s (centres 5.3s, tables 0.6s, place 36.8s)
+1794185045.987 [warm] retrain (imbalance) live=5815547 imbalance 3.551 -> 2.804 in 30.1s (centres 5.4s, tables 0.5s, place 24.0s)
+1794185510.255 [warm] retrain (imbalance) live=4252669 imbalance 4.491 -> 2.931 in 23.8s (centres 5.4s, tables 0.5s, place 17.8s)
