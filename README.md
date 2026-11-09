@@ -13,7 +13,7 @@
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/writerslogic/warm)](https://securityscorecards.dev/viewer/?uri=github.com/writerslogic/warm)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13977/badge)](https://www.bestpractices.dev/projects/13977)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](#license)
-[![WARM MCP MCP server – quality and maintenance score on Glama](https://glama.ai/mcp/servers/writerslogic/warm/badges/score.svg)](https://glama.ai/mcp/servers/writerslogic/warm)
+[![WARM MCP server: quality and maintenance score on Glama](https://glama.ai/mcp/servers/writerslogic/warm/badges/score.svg)](https://glama.ai/mcp/servers/writerslogic/warm)
 
 [![Bemula forgetting score, DeepSeek backbone](https://img.shields.io/badge/Bemula%20forgetting%2C%20DeepSeek%20backbone-32.2%20vs%2031.0%20best%20published-blue)](benchmarks/results/bemula_v1.json)
 [![LongMemEval dev, gpt-4o reader and judge](https://img.shields.io/badge/LongMemEval%20dev%2C%20gpt--4o%20reader-89.75%25%20mean%20of%204%20runs-blue)](benchmarks/results/longmemeval_official_dev_summary.json)
@@ -21,7 +21,7 @@
 
 [Website](https://writerslogic.com/warm) ·
 [Docs](https://writerslogic.com/warm/docs/) ·
-[Get started](#get-started-in-60-seconds) ·
+[Get started](#get-started) ·
 [Standards and provenance](docs/reference/standards.md) ·
 [Results](#headline-results) ·
 [Capabilities](#what-ships-today) ·
@@ -66,10 +66,10 @@ protocols, not a substitute for testing your own data.
 | LongMemEval dev 89.75 of 100 correct (mean of 4 runs, range 87 to 93) | Official generation and judge prompts, `gpt-4o-2024-08-06` as reader and judge, top 10 context. Retrieval is the reference turn ranking over cached Qwen3 scores, not native conversation-memory recall. k was chosen on dev; there is no held-out result. | [`longmemeval_official_dev_summary.json`](benchmarks/results/longmemeval_official_dev_summary.json) |
 | VIBE llama-128-ip strict recall@100 up to 0.99687 at 1,457 QPS | Official test queries, one thread, query-aware graph (ef=512). Neither frozen RoarGraph configuration reached 0.99. Behind at 0.95 and 0.99 QPS (see below). | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
 | VIBE yi-128-ip at recall 0.95: 3,214 QPS against 1,953 (MLANN RF80) | Same protocol; compared only with the frozen RoarGraph and MLANN configurations measured there. Recall 0.99 was not reached. | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
-| SIFT-1M at recall@10 0.95: 23,918 QPS against hnswlib 8,125 (2.94x, interval 2.75 to 3.01); 3.09x at 0.99, 1.40x faster build, 1.83x less serving RSS, 3.74x faster cold start | Core Ultra 9 185H at `4b7a849f`, 10,000 queries issued one at a time from one client thread, index built with 8 threads; WARM through the Rust API, hnswlib through its Python binding; Bonferroni-adjusted bootstrap intervals | [`heavy-ann-sift-...-185h-22c-27g.json`](benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
-| big-ann-benchmarks streaming final runbook (msturing-30M-clustered): mean recall@10 **0.9942** in 2,722 s (45:23 elapsed) at 6.53 GiB peak RSS, inside the one-hour limit. The `neurips23/README.md` DiskANN baseline is 0.883. | `run.py --nodocker`, all 1,280 steps, on a GCP Ice Lake VM (n2-custom-8, Xeon 2.6 GHz, 4 cores / 8 threads), the evaluation VM's class but not the Azure VM itself, so this is not a board result (draft PR 357). Partition tier at nprobe 650, reorder 1000, with the fused AVX-512 VNNI scan (8 queries per block). | [`BIG-ANN-STREAMING.md`](docs/benchmarks/BIG-ANN-STREAMING.md), [`il_s2e_np650_ro1000/report.txt`](benchmarks/research/l22_partition/results/il_s2e_np650_ro1000/report.txt) |
+| SIFT-1M at recall@10 0.95: 23,918 QPS against hnswlib 8,125 (2.94x, interval 2.75 to 3.01); 3.09x at 0.99, 1.40x faster build, 1.83x less serving RSS, 3.74x faster cold start | Core Ultra 9 185H at `4b7a849f`, 10,000 queries issued one at a time from one client thread, index built with 8 threads; WARM through the Rust API, hnswlib through its Python binding; Bonferroni-adjusted bootstrap intervals | [`heavy-ann-sift-...-185h-22c-27g.json`](benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json), [COMPARISON.md](docs/benchmarks/COMPARISON.md) (ratios and intervals) |
+| big-ann-benchmarks streaming final runbook (msturing-30M-clustered): mean recall@10 **0.9942** in 2,722 s (45:23 elapsed) at 6.53 GiB peak RSS, inside the one-hour limit. The `neurips23/README.md` DiskANN baseline is 0.883. | `run.py --nodocker`, all 1,280 steps, on a GCP Ice Lake VM (n2-custom-8, Xeon 2.6 GHz, 4 cores / 8 threads), the evaluation VM's class but not the Azure VM itself, so this is not a board result. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks, pinned at `f21de886`. Partition tier at nprobe 650, reorder 1000, with the fused AVX-512 VNNI scan (8 queries per block). Wall time on the Azure VM is unmeasured. | [`BIG-ANN-STREAMING.md`](docs/benchmarks/BIG-ANN-STREAMING.md), [`il_s2e_np650_ro1000/report.txt`](benchmarks/research/l22_partition/results/il_s2e_np650_ro1000/report.txt) |
 | BM25 search on SciFact, NFCorpus and the memory corpus: 1.66x to 2.00x the single-thread QPS of the fastest of tantivy 0.27, Lucene 10.6 and SQLite FTS5, with 1.69x to 2.91x less serving memory and 3.1x to 5.7x faster cold start, at tied nDCG@10 | Two machines (Core Ultra 9 185H at `4b7a849f`, Modal 8 vCPU at `7ba2d4fe`, same engine source), 5 and 3 interleaved serve rounds, Bonferroni-adjusted bootstrap intervals exclude parity for every win. Lexical only, one chunk per document | [COMPARISON.md](docs/benchmarks/COMPARISON.md), [`standard-text-beir-scifact-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
-| SciFact nDCG@10 hybrid 0.729, above its own BM25 (0.688) and dense (0.645) | 5,183 documents, 300 queries, MiniLM embeddings supplied by the harness. NFCorpus: 0.355 against 0.323 and 0.317. | [`public_scifact.json`](benchmarks/results/public_scifact.json), [`public_nfcorpus.json`](benchmarks/results/public_nfcorpus.json) |
+| SciFact nDCG@10 hybrid 0.729, above its own BM25 (0.688) and dense (0.645) | 5,183 documents, 300 queries, MiniLM embeddings supplied by the harness. NFCorpus: 0.355 against 0.323 and 0.317. Apple M4, engine 0.6.1 (the last AGPL release). | [`public_scifact.json`](benchmarks/results/public_scifact.json), [`public_nfcorpus.json`](benchmarks/results/public_nfcorpus.json) |
 
 ### Where it's behind
 
@@ -77,8 +77,8 @@ protocols, not a substitute for testing your own data.
 |--------|------------|-------------|
 | ann-benchmarks at recall 0.95: sift 2,819 QPS against faiss-ivfpqfs 3,788 (0.74x); glove 1,019 against ScaNN 1,535 (0.66x) | Official ann-benchmarks runner, each run pinned to one CPU, AVX2 host | [`ann_benchmarks_harness_wl02_v1.json`](benchmarks/results/ann_benchmarks_harness_wl02_v1.json) |
 | VIBE llama-128-ip QPS: 24.6% behind RoarGraph at recall 0.95, 54.8% behind MLANN RF80 at 0.99 | One thread, official test queries | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
-| SIFT-1M index file 1,389 MiB against hnswlib's 752 (0.54x, no interval); peak build RSS 0.94x of hnswlib's | Same run as the SIFT-1M row above | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
-| BEIR FiQA (57,600 documents) single-thread BM25 QPS: 1,269 against Lucene 10.6's 1,625 (0.78x); p50 and p99 latency also behind | Core Ultra 9 185H at `4b7a849f`, 5 interleaved serve rounds; serving memory (1.26x less than SQLite FTS5) and cold start (2.37x faster than tantivy) still win | [`standard-text-beir-fiqa-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
+| SIFT-1M index file 1,389 MiB against hnswlib's 752 (0.54x, no interval); peak build RSS 0.94x of hnswlib's | Same run as the SIFT-1M row above | [COMPARISON.md](docs/benchmarks/COMPARISON.md) (index size), [`GAPS.md`](docs/benchmarks/GAPS.md) (build RSS) |
+| BEIR FiQA (57,600 documents) single-thread BM25 QPS: 1,269 against Lucene 10.6's 1,625 (0.78x); p50 and p99 latency also behind | Core Ultra 9 185H at `4b7a849f`, 5 interleaved serve rounds; serving memory (1.26x less than SQLite FTS5) and cold start (2.37x faster than tantivy) still win | [`standard-text-beir-fiqa-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json), [COMPARISON.md](docs/benchmarks/COMPARISON.md) |
 | Text ingest: peak build memory 1.1x to 2.1x SQLite FTS5's on every corpus; ingest time behind SQLite FTS5 on SciFact, NFCorpus and memory (0.46x to 0.97x), tied on FiQA | Same runs, both machines | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
 | glove-100-angular with the sparse vector path: recall@10 0.252 at 33.7 QPS against FAISS HNSW 0.832 at 4,111 QPS | One thread, Apple M4; the sparse path is experimental | [`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json) |
 
@@ -149,7 +149,7 @@ Run the offline agent-memory demo with `cargo run --release --example demo-offli
 <details open>
 <summary><strong>Rust</strong></summary>
 
-From your own Rust project, add the current Apache-2.0 source:
+From your own Rust project, add the current Apache-2.0 source. The crate is `warm-rust`; the library is imported as `writerslogic_warm`. The MSRV is Rust 1.89; `local-models` and `--all-features` need Rust 1.94 or newer.
 
 ```sh
 cargo add warm-rust
@@ -176,7 +176,7 @@ let hits = warm.search_documents("restore backups", &SearchOptions::default())?;
 println!("{} {:?}", hits[0].document_id, hits[0].source_uri);
 ```
 
-Unreleased Rust API change: `WarmCore::query`, `query_batch`, and
+Rust API change in 0.6.6 (0.6.5 returns these values directly): `WarmCore::query`, `query_batch`, and
 `analyze_components` return `Result`. Handle the result with `?` or an explicit
 error branch; deferred-encoding failures no longer become successful partial
 query results. `get_document`, `list_documents`, `get_document_info`, and `list_document_info`
@@ -195,8 +195,10 @@ Install the Node.js package and its platform-specific native binary:
 npm install warm-sdk
 ```
 
+`warm-sdk` is first published with the 0.6.6 release. Earlier releases (up to 0.6.4) are on npm as `writerslogic-warm`.
+
 To build from source, run `npm ci --omit=optional && npm run build` with Rust installed.
-The WARM release includes `listDocuments` for scoped pruning. See the
+`listDocuments` supports scoped pruning. See the
 [integration guide](docs/integrations/organizational-knowledge.md) for source
 provenance, namespace isolation, dry runs and deletion limits.
 
@@ -224,7 +226,7 @@ main().catch(error => { console.error(error); process.exit(1) })
 <summary><strong>Server and Python</strong></summary>
 
 The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores vectors you
-supply. (`warm-python` provides native vector search and phase vectors, but no document search.)
+supply. (`warm-python`, imported as `writerslogic_warm`, provides native vector indexes and phase vectors, but no document search.)
 
 ```sh
 cargo build --release --features server --bin warm-server
@@ -295,9 +297,9 @@ network, run `cargo run --example demo-offline-agent`.
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |
-| Node.js bindings | Ships on npm and from source | Native binaries are selected by platform at install time |
+| Node.js bindings | Ships from source; `warm-sdk` on npm from 0.6.6 | Native binaries are selected by platform at install time |
 | C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
-| Python | Client + phase substrate | No in-process document search |
+| Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | No in-process document search |
 | Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |
 
 Every capability above except document search and the vector index is behind a Cargo feature or
