@@ -334,8 +334,14 @@ Ice Lake clone (n2-custom-8-16384), board queries, reorder 1000, all steps summe
 | submitted control | c5cd1c61 | np650 | 0.994244 | 2,722 | | | 0.9859 |
 | E2a / E2b | b15ec08e | exact, 3 it / 1M, np650 | 0.996571 / 0.996571 | 3,194 / 3,171 | 332 / 2,821 / 42 | 390 | 0.9943 |
 | S1 | c492ef1b | routed placement for inserts and retrains, 2 it / 500k, np600 | 0.996181 | 3,125 | 169 / 2,917 / 38 | 167 | 0.9927 |
+| L5a | e5e482e7 | local rebalance (hi 3, lo 0.5), no global retrain, np580 | 0.990489 | 2,452 | 334 / 2,071 / 47 | 124 (six rebalances) | 0.9850 |
+| L5b | e5e482e7 | same as L5a, np700 | 0.993475 | 2,715 | 330 / 2,337 / 47 | 122 (six rebalances) | 0.9893 |
 
 S1 retrains at live 1.64M, 6.07M, 4.74M, 8.95M, 5.82M, 4.25M took 12.9, 31.0, 25.9, 42.9, 30.1, 23.8 s (centres 5.4 s each, tables 0.5 s, placement 6.8 to 36.8 s). Routing halves the insert time (332 s to 169 s) and cuts the retrains by 223 s, but search rises from 2,821 s to 2,917 s although np fell from 650 to 600 (about 79 s less expected): the less even lists add roughly 400 s of scan. Imbalance right after the retrains is 2.7 to 3.0 against 1.7 to 2.0 for exact placement. Routed placement is therefore rejected (insert routing alone was not run; its imbalance cost is unmeasured).
+
+L5a rebalances at six events took 10.6, 29.4, 16.5, 21.5, 23.0 and 22.6 s; imbalance afterwards stayed 1.27 to 1.34 (exact warm retrain: 1.7 to 2.0). Summed step time is 2,452 s, 348 s under the 2,800 s budget, but board recall is 0.9905: recall by 80-search bin is 0.9958, 0.9944, 0.9891, 0.9899, 0.9884, 0.9873, 0.9891, 0.9900, so it drifts down after the first rebalance because the centres are never globally refreshed. Peak RSS 7.31 GiB, all gates true, TEST B pass. The static screen (0.0005 to 0.0008 below exact warm at equal blocks) was too optimistic; the full run shows about 0.006 below the control at 130 fewer nprobe units than the control.
+
+L5b (same code, np700) answers whether the 348 s of L5a headroom can be converted into recall: +120 nprobe units cost +263 s (2.2 s per unit, more than the 1.58 s of exact warm because the first-pass scan is spread over more blocks per unit) and gave +0.0030 recall, 0.993475 at 2,715 s. That is below the control (0.994244 at 2,722 s) at equal time. Recall by bin 0.9974, 0.9963, 0.9925, 0.9929, 0.9920, 0.9910, 0.9925, 0.9933; min post-train 0.9893; RSS 7.30 GiB; gates true; TEST B pass. Linear extrapolation (inference, past the tested range) needs about np 740 for 0.9945 and about 2,800 s, i.e. at best a tie with the control within noise, so no further run was made.
 
 ### 11.4 Candidate verdicts and the 2,800 s prediction
 
@@ -353,3 +359,5 @@ Per-candidate retrain seconds (Ice Lake, from the wl-03 screen times scaled by 1
 | (d) overlap with inserts | not run | cores are shared | accounting only |
 
 Prediction from the measured components (inference, not measurement): holding recall at the E2a level, every variant above needs 330 to 390 s removed from E2a's 3,194 s; that is 210 to 250 nprobe units at the measured 1.58 s per unit, which lowers board recall by about 0.0042 at the static slope of 0.00002 per unit (0.9924 to 0.9927). The best case, L5 in place of the six exact retrains (saving about 270 s) at np about 570, predicts about 0.9944 at 2,800 s, which does not clear the 0.9945 kill threshold and is within the error of the control (0.994244).
+
+Gen-2 conclusion: no candidate reaches more than 0.9945 board recall at <= 2,800 s summed step time. Best measured point under 2,800 s remains the submitted control (c5cd1c61, np650, 0.994244 at 2,722 s). Local rebalance trades 0.0007 recall at equal time for ~270 s cheaper maintenance but its recall per scanned block is below the exact warm retrain, and exact warm retrain (0.996571) costs 3,194 s.
