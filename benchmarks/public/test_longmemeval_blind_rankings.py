@@ -100,7 +100,7 @@ class BlindRankings(unittest.TestCase):
         for q in qs:
             ids = {tid.replace("noans_", "answer_") for s in q.sessions for tid, _, _ in s.turns}
             self.assertEqual(len(out[q.qid]), len(set(out[q.qid])))
-            self.assertTrue(set(out[q.qid]) <= ids)
+            self.assertLessEqual(set(out[q.qid]), ids)
             self.assertGreaterEqual(len(out[q.qid]), 10)
 
     def test_control_unblinded_run_does_depend_on_labels(self):
@@ -120,6 +120,5 @@ if __name__ == "__main__":
 
 
 def test_export_rankings_drops_repeated_turns_keeping_first_position():
-    from longmemeval_pipeline import export_rankings
-    out = export_rankings({"q": ["noans_a_1_3", "b_2_1", "answer_a_1_3", "b_2_1", "c_1_1"]}, depth=3)
+    out = P.export_rankings({"q": ["noans_a_1_3", "b_2_1", "answer_a_1_3", "b_2_1", "c_1_1"]}, depth=3)
     assert out == {"q": ["answer_a_1_3", "b_2_1", "c_1_1"]}
