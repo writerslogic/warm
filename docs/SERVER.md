@@ -154,7 +154,7 @@ A query may then be `{"query": str, "today"?: str, "top_k"?, "filter"?, "query_v
 
 ## Storage
 
-Each tenant is one engine store. Documents (embedding, text and metadata) go through the engine's document API. A batch writes its final distinct ids in one transaction; a validation failure leaves existing documents unchanged. Embeddings are kept at full precision, so the sparse-code compression described in the main README does not apply to this service.
+Each tenant is one engine store. Documents (embedding, text and metadata) go through the engine's document API. A batch writes its final distinct ids in one transaction; a validation failure leaves existing documents unchanged. Embeddings are kept at full precision, so the sparse-code path measured in [public benchmarks](PUBLIC-BENCHMARKS.md) does not apply to this service.
 
 The store records the embedding model, revision and input dimension (`--embedding-model`, `--embedding-revision`, `--input-dim`). Reopening a store with different values is refused, so vectors from different models are never mixed.
 

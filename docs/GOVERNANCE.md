@@ -12,7 +12,7 @@ decisions are made and who may do what, as it works today and as the repository 
 | --- | --- | --- |
 | Maintainer | `@dcondrey` (listed in `.github/CODEOWNERS`) | merge to `main`, cut releases, approve environments (`release`, `crates-io`, `npm`, `pypi`), triage security reports, change repository settings |
 | Committer (write access) | granted by the maintainer, one account today | open branches in the repository and review; cannot bypass branch protection |
-| Contributor | anyone | open issues, discussions in issues, and pull requests from a fork under the [DCO](../CONTRIBUTING.md#developer-certificate-of-origin) |
+| Contributor | anyone | open issues, discussions in issues, and pull requests from a fork under the [DCO](../CONTRIBUTING.md#sign-off-your-commits-dco) |
 | Security reporter | anyone | report privately through GitHub Security Advisories or the address in [SECURITY.md](../SECURITY.md) |
 
 Becoming a committer: a contributor with several merged, non-trivial pull requests that show
