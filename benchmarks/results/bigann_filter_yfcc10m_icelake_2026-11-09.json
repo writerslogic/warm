@@ -3481,6 +3481,120 @@
     "recall/ap": "0.940259"
    }
   ],
+  "export_ctl_2.csv": [
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 2500})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "24332.15427045637",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.904454"
+   },
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 10000, 'target': 2500})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "22182.228235305814",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.906728"
+   },
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 15000, 'target': 2500})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "22298.039275728817",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.908584"
+   },
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 2750})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "24556.635270526414",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.9123530000000001"
+   },
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 10000, 'target': 2750})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "21356.390996891838",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.914142"
+   },
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 10000, 'target': 3000})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "21418.43273373558",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.9208080000000001"
+   },
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 10000, 'target': 3500})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "20689.137071481906",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.9312060000000001"
+   },
+   {
+    "algorithm": "warm",
+    "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 1000, 'max_lists': 2048, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 10000, 'target': 4000})",
+    "dataset": "yfcc-10M",
+    "count": "10",
+    "qps": "20155.710560562537",
+    "distcomps": "0.0",
+    "build": "171.0030369758606",
+    "indexsize": "9786844.0",
+    "mean_ssd_ios": "0",
+    "mean_latency": "0",
+    "track": "filter",
+    "recall/ap": "0.940259"
+   }
+  ],
   "export_elt_1.csv": [
    {
     "algorithm": "warm",
@@ -3657,6 +3771,7 @@
  "official_docker_status": [
   "run ctl 1 rc=0 secs=415",
   "run elt 1 rc=0 secs=537",
-  "run elt 2 rc=0 secs=514"
+  "run elt 2 rc=0 secs=514",
+  "run ctl 2 rc=0 secs=360"
  ]
 }

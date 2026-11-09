@@ -181,13 +181,16 @@ and are not result-preserving. Single-run spread: 24,187 vs 24,301 and 46,048 vs
 
 Unchanged harness (PR #356 head `68b8ba5d`), docker mode, `run.py --neurips23track filter
 --algorithm warm --dataset yfcc-10M` (5 runs per search configuration, best kept), same VM,
-runs interleaved. Control image: fork `8c9e575`, WARM `af8d4017`. Elite image: fork `f0b5c00`,
+runs interleaved (control, elite, elite, control). Control image: fork `8c9e575`, WARM `af8d4017`. Elite image: fork `f0b5c00`,
 WARM `6091c519` (`perf/filter-yfcc`). QPS at recall@10 >= 0.90:
 
 | run | search configuration | QPS | recall@10 |
 |---|---|---|---|
 | control 1 | brute_max 5000, target 2500 | 24,457 | 0.9044 |
 | control 1 | brute_max 10000, target 2500 | 23,811 | 0.9067 |
+| control 2 | brute_max 5000, target 2500 | 24,332 | 0.9044 |
+| control 2 | brute_max 5000, target 2750 (control's best) | 24,557 | 0.9123 |
+| control 2 | brute_max 10000, target 2500 | 22,182 | 0.9067 |
 | elite 1 | brute_max 5000, target 1750 (chosen on sel) | 47,920 | 0.9064 |
 | elite 2 | brute_max 5000, target 1750 (chosen on sel) | 45,768 | 0.9064 |
 | elite 1 | brute_max 3000, target 1750 (best of its six) | 48,537 | 0.9061 |
@@ -195,7 +198,7 @@ WARM `6091c519` (`perf/filter-yfcc`). QPS at recall@10 >= 0.90:
 | elite 1 / 2 | brute_max 5000, target 1650 | 47,947 / 47,110 | 0.9014 |
 
 The configuration chosen on the held-out split scores 47,920 and 45,768 on the official protocol
-(spread 4.5% between two runs), 1.87-1.96 times the control's best (24,457). The sel recall of the
+(spread 4.5% between two runs), 1.87-1.96 times the control's best of two runs (24,557). The sel recall of the
 chosen configuration (0.9069) matches the all-queries recall (0.9064) to 0.0005, so the choice
 transferred. `brute_max 3000` was not evaluated at target 1750 on sel, so it is a post-hoc
 neighbour on the public set and is not the headline. The control's own run-to-run spread in this
