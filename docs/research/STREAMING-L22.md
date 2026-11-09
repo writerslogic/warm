@@ -274,3 +274,82 @@ Reading: at equal nprobe (650) the balanced configuration gains 0.0023 recall ov
 Miss audit (agent Y, LOWLEVEL-SYSTEMS.md): 93 to 95 percent of misses are IVF probe misses, so recall per scanned block, not the scan or reorder, is the quantity to move. The 50 busiest lists carry 18 to 25 percent of missed neighbours, consistent with the imbalance finding above.
 
 E2b (identical configuration, second full run): board recall 0.996571 (bit-identical to E2a), summed step time 3,171 s versus 3,194 s (23 s, 0.7 percent run-to-run spread), search 2,801 s, same six retrains (31.3, 73.7, 61.1, 99.4, 70.0, 56.8 s). Recall is deterministic; time spread is under 1 percent, so the 400 s excess over 2,800 s is not noise. VM warm-bench-icelake-s was stopped after the runs (TERMINATED).
+
+## 11. Generation 2: a cheap balanced retrain
+
+Target: a full Ice Lake final-runbook run at or below 2,800 s summed step time with board recall above 0.994244 (the submitted c5cd1c61 at np650, 2,722 s). The balanced retrain of section 10 reaches 0.99657 at np650 but costs 3,194 s, of which 390 s is the six retrains. Per-retrain time splits into k-means on the warm sample (about 16 s on Ice Lake at 3 iterations over a 1M sample), and re-placing every live row (about 8 s per million live rows: a 5,000-centre GEMM and SOAR selection per row, plus encode and append).
+
+### 11.1 Candidates and lineage
+
+| id | change | parent |
+|---|---|---|
+| E2 | warm retrain, 3 iterations, 1M sample, exact placement (section 10.5) | b15ec08e |
+| M1 | route each row through a super-centre: score only the `route_cands` list centres nearest its nearest of `route_lists` super-centres (k-means of the centres, 5 iterations); applies to inserts and to the retrain re-placement (`route_cands`, `route_lists`, `route_inserts`; 0 = exact, bit-identical to E2) | E2 |
+| M2 | smaller warm k-means: 2 iterations over a 500k sample | M1 |
+| M1' | rejected variant of M1: candidates from the new centres nearest the row's old primary centre (needs the old placement; recall 0.0003-0.0005 below exact at R512, same cost) | E2 |
+
+Held-out screening (the run10 stage states op648 at 10M live and op1172 at 6M, 2,000 held-out queries, reorder 1000, replaying a warm retrain from centres trained at op200; retrain seconds measured on the wl-03 machine, which is about 1.7 times faster than Ice Lake):
+
+| arm | state | retrain s (centres + place) | imbalance | recall np400 / np600 / np800 |
+|---|---|---|---|---|
+| exact, 3 it, 1M | 10M | 57.8 (9.0 + 48.2) | 1.61 | 0.9961 / 0.9983 / 0.9990 |
+| M1' R64 | 10M | 21.5 (9.0 + 12.0) | 1.95 | 0.9902 / 0.9951 / 0.9977 reject |
+| M1' R256 | 10M | 26.5 (9.1 + 16.9) | 1.79 | 0.9944 / 0.9974 / 0.9987 |
+| M1' R512 | 10M | 29.9 (9.1 + 20.2) | 1.76 | 0.9956 / 0.9982 / 0.9990 |
+| M1 S64 R256, 3 it, 1M | 10M | 24.9 (9.1 + 15.2) | 2.67 | 0.9933 / 0.9970 / 0.9983 |
+| M1 S64 R512, 3 it, 1M | 10M | 27.9 (8.9 + 18.5) | 2.26 | 0.9951 / 0.9980 / 0.9989 |
+| M1 S32 R512, 3 it, 1M | 10M | 28.0 (9.2 + 18.3) | 2.53 | 0.9949 / 0.9980 / 0.9988 |
+| M1 S128 R256, 3 it, 1M | 10M | 25.3 (9.0 + 15.8) | 2.40 | 0.9928 / 0.9964 / 0.9981 |
+| M1' R256, 1 it, 500k | 10M | 19.0 (1.7 + 16.8) | 2.07, max list 75k | 0.9921 / 0.9967 / 0.9987 reject |
+| M1' R256, 2 it, 500k | 6M | 13.6 (3.1 + 10.1) | 2.18 | 0.9920 / 0.9965 / 0.9981 |
+| exact, 2 it, 500k (M2) | 10M | 51.1 (3.1 + 47.4) | 1.69 | 0.9946 / 0.9981 / 0.9992 |
+| M1 + M2 (S64 R512) | 10M | 22.1 (3.0 + 18.6) | 2.43 | 0.9944 / 0.9980 / 0.9992 |
+| exact, 2 it, 500k (M2) | 6M | 31.8 (3.0 + 28.3) | 1.86 | 0.9919 / 0.9962 / 0.9982 |
+| M1 + M2 (S64 R512) | 6M | 14.5 (3.0 + 11.1) | 2.83 | 0.9914 / 0.9963 / 0.9981 |
+
+Readings: the warm sample can fall from 1M x 3 iterations to 500k x 2 with no recall change (3 s instead of 9 s of k-means); one iteration leaves one oversized list and loses recall. Routed placement matches exact placement within 0.0001 recall at np500 and above although the list imbalance it leaves is higher (2.4-2.8 against 1.7-1.9), and removes 60 percent of the retrain at 10M. Fewer super-centres or more candidates did not matter between S32 and S64 at R512; R256 loses 0.001 at np600.
+
+Not tested: overlapping the retrain with inserts (candidate d). The 8-thread search and insert steps already use all cores of the 8-vCPU machine and the harness sums step times, so a background retrain would take the same cores and the saving would be an accounting effect rather than a speedup.
+
+### 11.2 The metric that decides it: recall at equal blocks, not at equal nprobe
+
+The screen above compares recall at equal nprobe. Scan time scales with the 32-code blocks scanned, and list imbalance changes blocks at a fixed nprobe, so the same screen read at equal blocks gives a different answer:
+
+| 10M live, np600 | blocks | recall | imbalance |
+|---|---|---|---|
+| stale centres, no retrain (N0) | 212k | 0.9968 | 2.25 |
+| exact warm retrain, 2 it / 500k (M2) | 200k | 0.9981 | 1.69 |
+| routed placement, S64 R512 (M1 + M2) | 265k | 0.9980 | 2.43 |
+| old-centre routed R512 (M1') | 235k | 0.9982 | 1.76 |
+| local rebalance, hi=3 (L5) | 173k | 0.9967 | 1.31 |
+
+Routed placement matches exact recall at equal nprobe but scans 19 to 33 percent more blocks, so at equal blocks it is about 0.003 behind. This is the reason it fails at full scale (11.3).
+
+### 11.3 Full-runbook results of generation 2
+
+Ice Lake clone (n2-custom-8-16384), board queries, reorder 1000, all steps summed:
+
+| run | commit | change | board recall | summed step s | insert / search / delete s | retrains s | min post-train |
+|---|---|---|---|---|---|---|---|
+| submitted control | c5cd1c61 | np650 | 0.994244 | 2,722 | | | 0.9859 |
+| E2a / E2b | b15ec08e | exact, 3 it / 1M, np650 | 0.996571 / 0.996571 | 3,194 / 3,171 | 332 / 2,821 / 42 | 390 | 0.9943 |
+| S1 | c492ef1b | routed placement for inserts and retrains, 2 it / 500k, np600 | 0.996181 | 3,125 | 169 / 2,917 / 38 | 167 | 0.9927 |
+
+S1 retrains at live 1.64M, 6.07M, 4.74M, 8.95M, 5.82M, 4.25M took 12.9, 31.0, 25.9, 42.9, 30.1, 23.8 s (centres 5.4 s each, tables 0.5 s, placement 6.8 to 36.8 s). Routing halves the insert time (332 s to 169 s) and cuts the retrains by 223 s, but search rises from 2,821 s to 2,917 s although np fell from 650 to 600 (about 79 s less expected): the less even lists add roughly 400 s of scan. Imbalance right after the retrains is 2.7 to 3.0 against 1.7 to 2.0 for exact placement. Routed placement is therefore rejected (insert routing alone was not run; its imbalance cost is unmeasured).
+
+### 11.4 Candidate verdicts and the 2,800 s prediction
+
+Per-candidate retrain seconds (Ice Lake, from the wl-03 screen times scaled by 1.7 and from the S1 log):
+
+| candidate | retrain s at 10M live | screened result | verdict |
+|---|---|---|---|
+| E2 exact, 3 it / 1M | about 98 (E2a log: 99.4 at 8.95M) | reference | too slow |
+| (b) 2 it / 500k warm sample | about 87 (centres 5 s instead of 15 s) | recall equal to 3 it / 1M, blocks equal | keep, saves about 60 s over the run |
+| (b) 1 it / 500k | about 32 | one oversized list (75k), recall lower | reject |
+| M1 routed placement (a variant of d: cheaper placement) | about 38 | +19 to 33 percent blocks | reject (S1) |
+| (a) local rebalance, hi=3 (L5) | about 38 | imbalance 1.31, recall at equal blocks 0.0005 to 0.0008 below exact, 0.0017 above stale | closest |
+| (a) local rebalance, hi=1.5 to 2 (L1 to L4) | 63 to 120 | re-places 6.5 to 12M rows, recall below exact | reject |
+| (c) fewer retrains | not run | each retrain is roughly break-even in time-equivalent recall at 10M | not worth a run |
+| (d) overlap with inserts | not run | cores are shared | accounting only |
+
+Prediction from the measured components (inference, not measurement): holding recall at the E2a level, every variant above needs 330 to 390 s removed from E2a's 3,194 s; that is 210 to 250 nprobe units at the measured 1.58 s per unit, which lowers board recall by about 0.0042 at the static slope of 0.00002 per unit (0.9924 to 0.9927). The best case, L5 in place of the six exact retrains (saving about 270 s) at np about 570, predicts about 0.9944 at 2,800 s, which does not clear the 0.9945 kill threshold and is within the error of the control (0.994244).
