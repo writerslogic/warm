@@ -220,9 +220,13 @@ attestations, not compared).
 
 ## If something goes wrong
 
-- A publish job failed before publishing: fix and re-run the failed job; every publish is
-  idempotent (`cargo publish` and `npm publish` refuse a version that exists, PyPI uses
-  `skip-existing`).
+- A publish job failed partway: fix the cause and re-run the failed job. The npm step skips any
+  package version the registry already has, `cargo publish` refuses an existing version, and PyPI
+  uses `skip-existing`. A re-run uses the workflow file at the tag, so a fix to the workflow applies
+  from the next tag.
+- npm answered `E403 Package name triggered spam detection` for a new package name: ask npm
+  support to clear the name, then re-run the job. This stopped the first `warm-sdk` publish at 0.6.6
+  after 7 of the 8 platform packages.
 - A tag's crate upload failed because the archive is too large: fix the `Cargo.toml` package
   contents on `main` and verify `cargo package --locked --no-default-features` reports less than
   9.5 MB compressed. The `crates-io` environment normally permits only `v*` tags; temporarily
