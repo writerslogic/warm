@@ -219,6 +219,59 @@ kernels!(
     _mm_dpbusd_epi32
 );
 
+/// 512-bit `vpdpbusd` (AVX512-VNNI, Ice Lake and later servers): one instruction per 64
+/// coordinates, so a 192-wide row takes three instead of six.
+#[cfg(target_arch = "x86_64")]
+pub(crate) mod zmm {
+    use std::arch::x86_64::*;
+
+    /// [`super::evex::dot_i8_x4`] with 512-bit accumulation; the same integers.
+    ///
+    /// # Safety
+    /// The CPU supports `avx2`, `avx512f`, `avx512vl` and `avx512vnni`; `a` and every row have
+    /// the same length, a multiple of 16.
+    #[target_feature(enable = "avx2,avx512f,avx512vl,avx512vnni")]
+    pub(crate) unsafe fn dot_i8_x4(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4] {
+        let flip = _mm512_set1_epi8(-128);
+        let mut acc = [_mm512_setzero_si512(); 4];
+        let mut i = 0;
+        // SAFETY (all loads): `i + 64 <= len` in the loop, every row having the length of `a`.
+        while i + 64 <= a.len() {
+            let q = _mm512_loadu_si512(a.as_ptr().add(i).cast());
+            for (s, row) in acc.iter_mut().zip(rows) {
+                let r = _mm512_xor_si512(_mm512_loadu_si512(row.as_ptr().add(i).cast()), flip);
+                *s = _mm512_dpbusd_epi32(*s, r, q);
+            }
+            i += 64;
+        }
+        let mut out = acc.map(|s| _mm512_reduce_add_epi32(s));
+        if i + 32 <= a.len() {
+            let q = _mm256_loadu_si256(a.as_ptr().add(i).cast());
+            for (o, row) in out.iter_mut().zip(rows) {
+                let r = _mm256_xor_si256(
+                    _mm256_loadu_si256(row.as_ptr().add(i).cast()),
+                    _mm256_set1_epi8(-128),
+                );
+                let v = _mm256_dpbusd_epi32(_mm256_setzero_si256(), r, q);
+                *o = o.wrapping_add(_mm512_reduce_add_epi32(_mm512_castsi256_si512(v)));
+            }
+            i += 32;
+        }
+        if i < a.len() {
+            let q = _mm_loadu_si128(a.as_ptr().add(i).cast());
+            for (o, row) in out.iter_mut().zip(rows) {
+                let r = _mm_xor_si128(
+                    _mm_loadu_si128(row.as_ptr().add(i).cast()),
+                    _mm_set1_epi8(-128),
+                );
+                let v = _mm_dpbusd_epi32(_mm_setzero_si128(), r, q);
+                *o = o.wrapping_add(_mm512_reduce_add_epi32(_mm512_castsi128_si512(v)));
+            }
+        }
+        out.map(|o| o.wrapping_sub(128i32.wrapping_mul(qsum)))
+    }
+}
+
 #[cfg(all(test, target_arch = "x86_64"))]
 mod tests {
     use super::*;
@@ -279,6 +332,31 @@ mod tests {
                 _ => rng.next_u64() as i8,
             })
             .collect()
+    }
+
+    #[test]
+    fn zmm_kernel_equals_the_scalar_sums_at_every_width() {
+        if !(is_x86_feature_detected!("avx2")
+            && is_x86_feature_detected!("avx512f")
+            && is_x86_feature_detected!("avx512vl")
+            && is_x86_feature_detected!("avx512vnni"))
+        {
+            eprintln!("AVX512-VNNI not available; skipped");
+            return;
+        }
+        let mut rng = SplitMix(77);
+        for len in (0..=512).step_by(16) {
+            for extreme in [false, true] {
+                let a = rows(&mut rng, len, extreme);
+                let bs: Vec<Vec<i8>> = (0..4).map(|_| rows(&mut rng, len, !extreme)).collect();
+                let four = [&bs[0][..], &bs[1][..], &bs[2][..], &bs[3][..]];
+                let want: Vec<i32> = bs.iter().map(|b| scalar_i8(&a, b)).collect();
+                // SAFETY: the features were detected; every row has the length of `a`, a
+                // multiple of 16.
+                let got = unsafe { zmm::dot_i8_x4(&a, four, query_sum(&a)) };
+                assert_eq!(got.to_vec(), want, "zmm len {len} extreme {extreme}");
+            }
+        }
     }
 
     #[test]

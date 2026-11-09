@@ -11,7 +11,9 @@ use numpy::{PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
-use crate::core::qgraph::filter::{FilterBuildParams, FilterSearchParams, FilteredIndex};
+use crate::core::qgraph::filter::{
+    FilterBuildParams, FilterSearchParams, FilterTuning, FilteredIndex,
+};
 
 #[pyclass(name = "FilteredIndex")]
 struct PyFilteredIndex {
@@ -127,14 +129,42 @@ impl PyFilteredIndex {
     /// and at least `min_lists` lists are probed. Multi-label queries whose rarest label has at
     /// most `intersect_max` members are intersected first and scored exactly when the matches
     /// number at most `brute_max`.
-    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000))]
+    ///
+    /// The remaining arguments never change a result except the last four. `sort_queries` runs a
+    /// batch's queries grouped by their rarest label; `block_filter` tests the other labels of a
+    /// query a block of ids at a time; `skip_tombstones` skips the delete probe while nothing is
+    /// deleted; `cache_intersections` reuses the matches of a repeated label set; `prefetch` is
+    /// the row prefetch distance; `wide` uses 512-bit VNNI. `target_mid`/`target_large` replace
+    /// `target` for rarest labels above `edge_mid`/`edge_large` members (0 keeps it).
+    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, target_mid=0, target_large=0, edge_mid=50_000, edge_large=200_000))]
+    #[allow(clippy::too_many_arguments)]
     fn set_search(
         &mut self,
         brute_max: usize,
         target: usize,
         min_lists: usize,
         intersect_max: usize,
+        sort_queries: bool,
+        prefetch: usize,
+        wide: bool,
+        skip_tombstones: bool,
+        block_filter: bool,
+        cache_intersections: bool,
+        target_mid: usize,
+        target_large: usize,
+        edge_mid: usize,
+        edge_large: usize,
     ) {
+        self.index.set_tuning(FilterTuning {
+            sort_queries,
+            prefetch,
+            wide,
+            skip_tombstones,
+            block_filter,
+            cache_intersections,
+            target_bands: [target_mid, target_large],
+            band_edges: [edge_mid, edge_large],
+        });
         self.params = FilterSearchParams {
             brute_max,
             target,
