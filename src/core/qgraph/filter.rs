@@ -136,6 +136,11 @@ pub struct FilterTuning {
     pub prefetch: usize,
     /// Score with 512-bit `vpdpbusd` where the CPU has AVX512-VNNI.
     pub wide: bool,
+    /// Skip the tombstone probe while nothing is deleted.
+    pub skip_tombstones: bool,
+    /// Test the other labels of a multi-label query a block of ids at a time, with the
+    /// bitset words of the next block prefetched, instead of one id at a time.
+    pub block_filter: bool,
 }
 
 impl Default for FilterTuning {
@@ -144,6 +149,8 @@ impl Default for FilterTuning {
             sort_queries: false,
             prefetch: 24,
             wide: false,
+            skip_tombstones: false,
+            block_filter: false,
         }
     }
 }
@@ -220,6 +227,19 @@ pub struct FilteredIndex {
 #[inline]
 fn shift(v: u8) -> i8 {
     (v ^ 0x80) as i8
+}
+
+#[inline]
+fn prefetch_word(v: &u64) {
+    // SAFETY: a prefetch hint never faults or writes; the pointer comes from a live reference.
+    #[cfg(target_arch = "x86_64")]
+    unsafe {
+        std::arch::x86_64::_mm_prefetch::<{ std::arch::x86_64::_MM_HINT_T0 }>(
+            std::ptr::from_ref(v).cast::<i8>(),
+        );
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    let _ = v;
 }
 
 #[inline]
@@ -555,6 +575,9 @@ impl FilteredIndex {
 
     #[inline]
     fn is_deleted(&self, id: u32) -> bool {
+        if self.tuning.skip_tombstones && self.live == self.n {
+            return false;
+        }
         self.deleted[(id >> 6) as usize].load(Ordering::Relaxed) >> (id & 63) & 1 == 1
     }
 
@@ -723,6 +746,93 @@ impl FilteredIndex {
         true
     }
 
+    /// Appends to `out` the entries of `ids` (ascending) that are live and hold every label
+    /// of `others`: the id itself, or `base + offset` when `positions` is set. Labels with a
+    /// bitset are tested for 64 ids at a time without branching, the words of the next block
+    /// prefetched; the rest go through [`Self::holds`] for the survivors.
+    fn match_block(
+        &self,
+        ids: &[u32],
+        base: u32,
+        positions: bool,
+        others: &[u32],
+        cursors: &mut [usize],
+        out: &mut Vec<u32>,
+    ) {
+        const MAX_SETS: usize = 4;
+        let mut sets: [&[u64]; MAX_SETS] = [&[]; MAX_SETS];
+        let mut in_set = [false; MAX_SETS];
+        let mut used = 0;
+        let mut rest = false;
+        if others.len() <= MAX_SETS {
+            for (j, &l) in others.iter().enumerate() {
+                if let Some(set) = self.bitset(l) {
+                    sets[used] = set;
+                    used += 1;
+                    in_set[j] = true;
+                } else {
+                    rest = true;
+                }
+            }
+        }
+        if used == 0 || others.len() > MAX_SETS {
+            for (j, &id) in ids.iter().enumerate() {
+                if !self.is_deleted(id) && self.holds(id, others, cursors) {
+                    out.push(if positions { base + j as u32 } else { id });
+                }
+            }
+            return;
+        }
+        let check_deleted = !(self.tuning.skip_tombstones && self.live == self.n);
+        let mut offset = 0;
+        for block in ids.chunks(64) {
+            let mut mask = u64::MAX >> (64 - block.len());
+            for set in &sets[..used] {
+                let mut m = 0u64;
+                for (j, &id) in block.iter().enumerate() {
+                    m |= u64::from(bit(set, id)) << j;
+                }
+                mask &= m;
+            }
+            if let Some(next) = ids.get(offset + 64..) {
+                for set in &sets[..used] {
+                    for &id in next.iter().take(64) {
+                        prefetch_word(&set[(id >> 6) as usize]);
+                    }
+                }
+            }
+            while mask != 0 {
+                let j = mask.trailing_zeros() as usize;
+                mask &= mask - 1;
+                let id = block[j];
+                if check_deleted && self.is_deleted(id) {
+                    continue;
+                }
+                if rest {
+                    // Cursors advance with ids, so only passing ids may reach `holds`.
+                    let mut pass = true;
+                    for (k, &l) in others.iter().enumerate() {
+                        if !in_set[k]
+                            && !self.holds(id, std::slice::from_ref(&l), &mut cursors[k..=k])
+                        {
+                            pass = false;
+                            break;
+                        }
+                    }
+                    if !pass {
+                        continue;
+                    }
+                }
+                out.push(if positions {
+                    base + (offset + j) as u32
+                } else {
+                    id
+                });
+            }
+            offset += 64;
+        }
+    }
+
     /// The live members of `rarest` that hold every label in `others`, ascending.
     fn intersect(
         &self,
@@ -734,6 +844,10 @@ impl FilteredIndex {
         matches.clear();
         cursors.resize(others.len(), 0);
         cursors.fill(0);
+        if self.tuning.block_filter {
+            self.match_block(self.posting(rarest), 0, false, others, cursors, matches);
+            return;
+        }
         matches.extend(
             self.posting(rarest)
                 .iter()
@@ -758,6 +872,20 @@ impl FilteredIndex {
         }
         cursors.clear();
         cursors.resize(others.len(), 0);
+        if self.tuning.block_filter {
+            let mut batch = Vec::with_capacity(256);
+            let mut scored = 0;
+            for chunk in posting.chunks(128) {
+                self.match_block(chunk, 0, false, others, cursors, &mut batch);
+                if batch.len() >= 128 {
+                    self.score_ids(q, qsum, &batch, top);
+                    scored += batch.len();
+                    batch.clear();
+                }
+            }
+            self.score_ids(q, qsum, &batch, top);
+            return scored + batch.len();
+        }
         let mut batch = [0u32; 128];
         let mut used = 0;
         let mut scored = 0;
@@ -782,7 +910,11 @@ impl FilteredIndex {
         let wide = self.tuning.wide;
         let (chunks, tail) = ids.as_chunks::<4>();
         for (c, ch) in chunks.iter().enumerate() {
-            for &p in ids.iter().skip(c * 4 + ahead).take(if ahead == 0 { 0 } else { 4 }) {
+            for &p in ids
+                .iter()
+                .skip(c * 4 + ahead)
+                .take(if ahead == 0 { 0 } else { 4 })
+            {
                 prefetch_bytes(self.row(p));
                 prefetch_norm(&self.norms[p as usize]);
             }
@@ -884,7 +1016,23 @@ impl FilteredIndex {
             );
             let members = &ivf.members[a..b];
             cursors.fill(0);
-            if ivf.rows.is_empty() {
+            if self.tuning.block_filter && !others.is_empty() {
+                batch.clear();
+                self.match_block(
+                    members,
+                    a as u32,
+                    !ivf.rows.is_empty(),
+                    others,
+                    cursors,
+                    batch,
+                );
+                if ivf.rows.is_empty() {
+                    self.score_ids(q, qsum, batch, top);
+                } else {
+                    self.score_copied(ivf, q, qsum, batch, top);
+                }
+                scored += batch.len();
+            } else if ivf.rows.is_empty() {
                 batch.clear();
                 batch.extend(
                     members
@@ -978,7 +1126,8 @@ impl FilteredIndex {
         out: &mut [i64],
     ) -> Result<(), FilterError> {
         let nq = out.len() / k;
-        let labels_of = |i: usize| &label_ids[label_indptr[i] as usize..label_indptr[i + 1] as usize];
+        let labels_of =
+            |i: usize| &label_ids[label_indptr[i] as usize..label_indptr[i + 1] as usize];
         let mut order: Vec<(u32, u32)> = (0..nq)
             .map(|i| {
                 let rarest = labels_of(i)
@@ -1420,8 +1569,6 @@ mod tests {
     fn tuning_never_changes_a_result() {
         let labels = 25;
         let f = fixture(3_000, 32, labels, 9);
-        let mut idx =
-            FilteredIndex::build(&f.data, f.dim, &f.indptr, &f.ids, 0, &small_params()).unwrap();
         let qs = queries(&f, 96, labels, 10);
         let mut flat = Vec::new();
         let mut indptr = vec![0u64];
@@ -1432,30 +1579,45 @@ mod tests {
             indptr.push(lids.len() as u64);
         }
         let k = 10;
-        // Both routes: a small brute_max sends the big labels to their lists.
-        for p in [
-            FilterSearchParams::default(),
-            FilterSearchParams {
-                brute_max: 20,
-                target: 60,
-                ..FilterSearchParams::default()
-            },
-        ] {
-            let mut want = vec![0i64; qs.len() * k];
-            idx.search_batch(&flat, &indptr, &lids, k, &p, &mut want)
-                .unwrap();
-            for sort_queries in [false, true] {
-                for prefetch in [0, 1, 24] {
-                    for wide in [false, true] {
+        // Bitsets for every label, for the big ones only, and for none; with and without
+        // tombstones.
+        for bitset_min in [1, 300, usize::MAX] {
+            for deletes in [false, true] {
+                let build = FilterBuildParams {
+                    bitset_min,
+                    ..small_params()
+                };
+                let mut idx =
+                    FilteredIndex::build(&f.data, f.dim, &f.indptr, &f.ids, 0, &build).unwrap();
+                if deletes {
+                    for id in (0..3_000).step_by(7) {
+                        idx.delete(id);
+                    }
+                }
+                // Both routes: a small brute_max sends the big labels to their lists.
+                for p in [
+                    FilterSearchParams::default(),
+                    FilterSearchParams {
+                        brute_max: 20,
+                        target: 60,
+                        ..FilterSearchParams::default()
+                    },
+                ] {
+                    let mut want = vec![0i64; qs.len() * k];
+                    idx.search_batch(&flat, &indptr, &lids, k, &p, &mut want)
+                        .unwrap();
+                    for bits in 0..32u32 {
                         idx.set_tuning(FilterTuning {
-                            sort_queries,
-                            prefetch,
-                            wide,
+                            sort_queries: bits & 1 != 0,
+                            prefetch: [0, 1, 24][(bits >> 1) as usize % 3],
+                            wide: bits & 2 != 0,
+                            skip_tombstones: bits & 4 != 0,
+                            block_filter: bits & 8 != 0,
                         });
                         let mut got = vec![0i64; qs.len() * k];
                         idx.search_batch(&flat, &indptr, &lids, k, &p, &mut got)
                             .unwrap();
-                        assert_eq!(got, want, "{sort_queries} {prefetch} {wide}");
+                        assert_eq!(got, want, "{bitset_min} {deletes} {bits}");
                     }
                 }
             }
