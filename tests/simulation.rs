@@ -301,6 +301,10 @@ struct Epoch {
     /// Bounds of the running maximum carried in by a compaction's synthetic prefix. They
     /// differ only when a background compaction's snapshot point is unknown.
     base: (Option<Millis>, Option<Millis>),
+    /// A background compaction published while writes ran beside it. Whichever of them its
+    /// snapshot missed are real frames after the synthetic prefix that the model has no
+    /// anchors for; which ones is the scheduler's choice.
+    unmodeled_tail: bool,
     anchors: Vec<Anchor>,
 }
 
@@ -380,6 +384,9 @@ struct Sim {
     /// The largest ingest stamp of any frame ever written, for the background-compaction
     /// upper bound.
     max_stamp: Option<Millis>,
+    /// Operations are running beside a background compaction, which may publish at any
+    /// point among them.
+    beside_compaction: bool,
     log: Vec<String>,
     step: usize,
     stats: BTreeMap<String, usize>,
@@ -425,9 +432,11 @@ impl Sim {
                 oldest: start.clone(),
                 recorded: Vec::new(),
                 base: (None, None),
+                unmodeled_tail: false,
                 anchors: Vec::new(),
             },
             max_stamp: None,
+            beside_compaction: false,
             log: Vec::new(),
             step: 0,
             stats: BTreeMap::new(),
@@ -651,13 +660,23 @@ impl Sim {
         }
     }
 
-    fn expect_unchanged(&self, before: &JournalPosition, what: &str) {
-        assert_eq!(
-            &self.core().journal_position(),
-            before,
-            "{what} wrote a frame; {}",
-            self.ctx()
-        );
+    /// The operation that was just run wrote no frame. Offsets of different generations say
+    /// nothing about a frame, and a write waits out a publication, so beside a background
+    /// compaction a generation change between the two reads leaves nothing to compare. The
+    /// operation is a no-write by construction, so `rerun` repeats it against a fresh
+    /// position in the new generation (at most two compactions run at once).
+    fn expect_unchanged(&self, before: &JournalPosition, what: &str, rerun: impl Fn()) {
+        let mut before = before.clone();
+        for _ in 0..3 {
+            let now = self.core().journal_position();
+            if !self.beside_compaction || now.generation == before.generation {
+                assert_eq!(now, before, "{what} wrote a frame; {}", self.ctx());
+                return;
+            }
+            before = now;
+            rerun();
+        }
+        panic!("{what}: the generation kept changing; {}", self.ctx());
     }
 
     fn remember(&mut self) {
@@ -680,7 +699,9 @@ impl Sim {
                 self.model.facts.insert(id, fact);
                 self.anchor(before, self.now, false);
             }
-            (false, Err(_)) => self.expect_unchanged(&before, "a rejected remember"),
+            (false, Err(_)) => self.expect_unchanged(&before, "a rejected remember", || {
+                assert!(self.memory().remember(spec.input(&id)).is_err());
+            }),
             (ok, result) => panic!("remember expected ok={ok}, got {result:?}; {}", self.ctx()),
         }
     }
@@ -716,12 +737,29 @@ impl Sim {
                 }
                 self.anchor(before, self.now, false);
             }
-            (false, Err(_)) => self.expect_unchanged(&before, "a rejected batch"),
+            (false, Err(_)) => self.expect_unchanged(&before, "a rejected batch", || {
+                assert!(self
+                    .memory()
+                    .remember_many(ids.iter().zip(&specs).map(|(id, s)| s.input(id)).collect())
+                    .is_err());
+            }),
             (ok, result) => panic!(
                 "remember_many expected ok={ok}, got {result:?}; {}",
                 self.ctx()
             ),
         }
+    }
+
+    /// Writes one new fact, whatever the random choices would otherwise do.
+    fn remember_new_fact(&mut self) {
+        let before = self.core().journal_position();
+        for _ in 0..100 {
+            self.remember();
+            if self.core().journal_position() != before {
+                return;
+            }
+        }
+        panic!("no write in 100 attempts; {}", self.ctx());
     }
 
     fn retry_or_conflict(&mut self) {
@@ -744,7 +782,15 @@ impl Sim {
                 .unwrap_or_else(|e| panic!("retry failed: {e:#}; {}", self.ctx()));
             assert!(!r.created, "{}", self.ctx());
             assert_eq!(r.ingest_time, fact.ingest, "{}", self.ctx());
-            self.expect_unchanged(&before, "an idempotent retry");
+            self.expect_unchanged(&before, "an idempotent retry", || {
+                assert!(
+                    !self
+                        .memory()
+                        .remember(fact.spec.input(&id))
+                        .unwrap()
+                        .created
+                );
+            });
         } else {
             self.log.push(format!("conflict {id}"));
             let mut spec = fact.spec.clone();
@@ -762,7 +808,9 @@ impl Sim {
                 "{error:#}; {}",
                 self.ctx()
             );
-            self.expect_unchanged(&before, "a conflicting write");
+            self.expect_unchanged(&before, "a conflicting write", || {
+                assert!(self.memory().remember(spec.input(&id)).is_err());
+            });
         }
     }
 
@@ -782,12 +830,13 @@ impl Sim {
             self.check_views();
         }
         let before = self.core().journal_position();
+        let scope = ForgetScope::Ids {
+            ids: ids.iter().cloned().collect(),
+        };
         let report = self
             .memory()
             .forget(
-                &ForgetScope::Ids {
-                    ids: ids.iter().cloned().collect(),
-                },
+                &scope,
                 &ForgetOptions {
                     purge,
                     ..Default::default()
@@ -818,7 +867,11 @@ impl Sim {
         let bridged = self.model.forget(&dead);
         if dead.is_empty() {
             if !purge {
-                self.expect_unchanged(&before, "forgetting nothing");
+                self.expect_unchanged(&before, "forgetting nothing", || {
+                    self.memory()
+                        .forget(&scope, &ForgetOptions::default())
+                        .unwrap();
+                });
             }
         } else if bridged && !purge {
             self.count("bridged forget");
@@ -937,6 +990,7 @@ impl Sim {
         let dirs = generation_dirs(&self.path);
         let handle = self.core().start_compaction(options.clone()).unwrap();
         let other = second.then(|| self.core().start_compaction(options).unwrap());
+        self.beside_compaction = true;
         for _ in 0..tail {
             match self.rng.below(4) {
                 0 => self.remember(),
@@ -945,6 +999,11 @@ impl Sim {
                 _ => self.forget_quiet(),
             }
         }
+        self.beside_compaction = false;
+        // A cancel that arrives after the job has finished is not in its report. This narrows
+        // the window to the worker's last steps (report built, result not yet visible); no
+        // check from here can close it.
+        let finished = handle.is_finished();
         if cancel {
             handle.cancel();
         }
@@ -970,7 +1029,11 @@ impl Sim {
                 "{r:?}; {}",
                 self.ctx()
             );
-            if cancel && std::ptr::eq(r, &report) && r.status == CompactionStatus::Completed {
+            if cancel
+                && !finished
+                && std::ptr::eq(r, &report)
+                && r.status == CompactionStatus::Completed
+            {
                 assert!(r.progress.cancel_requested, "{r:?}");
             }
         }
@@ -1079,6 +1142,7 @@ impl Sim {
                     oldest: at,
                     recorded: Vec::new(),
                     base: (live_max, hi.max(live_max)),
+                    unmodeled_tail: false,
                     anchors: Vec::new(),
                 };
                 return;
@@ -1119,6 +1183,7 @@ impl Sim {
             oldest: bounds.oldest.clone(),
             recorded: Vec::new(),
             base: (live_max, hi.max(live_max)),
+            unmodeled_tail: uncertain,
             anchors: Vec::new(),
         };
         self.record();
@@ -1232,15 +1297,19 @@ impl Sim {
                 } else {
                     assert_eq!(bounds.oldest, before, "{}", self.ctx());
                     if bounds.oldest != self.epoch.oldest {
+                        // The first record is the end of the journal at a publication, which
+                        // is where the history now starts when nothing was written since.
                         let first = self.epoch.recorded[0].0.clone();
-                        assert!(
-                            matches!(
-                                history_error(core.history_view(&first).err().unwrap()),
-                                HistoryError::BeforeRetained { .. }
-                            ),
-                            "{}",
-                            self.ctx()
-                        );
+                        if first != bounds.oldest {
+                            assert!(
+                                matches!(
+                                    history_error(core.history_view(&first).err().unwrap()),
+                                    HistoryError::BeforeRetained { .. }
+                                ),
+                                "{}",
+                                self.ctx()
+                            );
+                        }
                         self.epoch.oldest = bounds.oldest.clone();
                         self.epoch
                             .recorded
@@ -1393,6 +1462,37 @@ impl Sim {
                 format!("{lo:?}").split('(').next().unwrap()
             ));
             let got = core.resolve_history_time(t);
+            // With nothing modeled at or before `t`, the answer is the prefix or, when the
+            // compaction's snapshot preceded some tail writes, the end of one of those frames.
+            if self.epoch.unmodeled_tail
+                && matches!(lo, Resolved::Prefix | Resolved::BeforeRetained)
+            {
+                if let Ok(r) = &got {
+                    let end = self
+                        .epoch
+                        .anchors
+                        .first()
+                        .map_or_else(|| core.journal_position(), |a| a.before.clone());
+                    if r.position.generation == self.epoch.oldest.generation
+                        && self.epoch.oldest.offset < r.position.offset
+                        && r.position.offset <= end.offset
+                    {
+                        assert!(
+                            r.anchor_ms.is_some_and(|a| a <= t),
+                            "resolve {t}: {r:?}; {}",
+                            self.ctx()
+                        );
+                        assert!(
+                            core.history_view(&r.position).is_ok(),
+                            "resolve {t} gave {:?}, not a frame boundary; {}",
+                            r.position,
+                            self.ctx()
+                        );
+                        self.count("resolve into unmodeled tail");
+                        continue;
+                    }
+                }
+            }
             match (&lo, got) {
                 (Resolved::At(at, anchor), Ok(r)) => {
                     assert_eq!(
@@ -1623,6 +1723,87 @@ fn simulation_long_run() {
             });
         }
     });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Schedules of a background compaction's tail that the seeds reach only by timing
+
+/// A simulation with documents and facts in a store that has not been compacted, on a seed
+/// whose store takes the replayable (not checkpoint) path.
+fn populated_sim() -> Sim {
+    let mut sim = Sim::new(1);
+    assert!(!sim.tiny_checkpoint);
+    for _ in 0..4 {
+        sim.put_doc();
+    }
+    while sim.model.facts.len() < 3 {
+        sim.remember();
+    }
+    sim
+}
+
+/// A write that waits out a publication reads its `before` in the old generation and its
+/// `after` in the new one; offsets of different generations say nothing about a frame. The
+/// no-write operation is repeated in the new generation, where a frame is still caught.
+#[test]
+fn a_publication_between_two_position_reads_is_not_a_write() {
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    let mut sim = populated_sim();
+    let (id, fact) = sim.model.facts.iter().next().unwrap();
+    let (id, spec) = (id.clone(), fact.spec.clone());
+    let core = Arc::clone(sim.core());
+    let memory = Memory::new(Arc::clone(&core)).with_clock(Arc::new(ManualClock::new(T0)));
+    let retry = || assert!(!memory.remember(spec.input(&id)).unwrap().created);
+    let put = || {
+        let doc = json!({"id": "d9", "text": "plaindoc late"});
+        core.memorize_document(serde_json::from_value::<DocumentInput>(doc).unwrap())
+            .unwrap();
+    };
+
+    let before = sim.core().journal_position();
+    sim.core().compact().unwrap();
+    assert_ne!(sim.core().journal_position().generation, before.generation);
+    // Not beside a compaction, the change of generation is the failure it looks like.
+    assert!(catch_unwind(AssertUnwindSafe(|| {
+        sim.expect_unchanged(&before, "an idempotent retry", retry)
+    }))
+    .is_err());
+    sim.beside_compaction = true;
+    sim.expect_unchanged(&before, "an idempotent retry", retry);
+    // A repeat that does write is still caught.
+    assert!(catch_unwind(AssertUnwindSafe(|| {
+        sim.expect_unchanged(&before, "a write", put)
+    }))
+    .is_err());
+    // Within one generation the offsets are compared directly.
+    let same = sim.core().journal_position();
+    sim.remember_new_fact();
+    assert!(catch_unwind(AssertUnwindSafe(|| {
+        sim.expect_unchanged(&same, "a write", retry)
+    }))
+    .is_err());
+}
+
+/// A compaction whose snapshot precedes a tail write publishes that write as a frame after
+/// the synthetic prefix; a time at or after its stamp resolves to the frame, not the prefix.
+#[test]
+fn a_tail_write_after_the_snapshot_resolves_past_the_prefix() {
+    let mut sim = populated_sim();
+    sim.core().compact().unwrap();
+    sim.remember_new_fact();
+    sim.after_publication(true);
+    assert!(sim.epoch.unmodeled_tail && !sim.epoch.checkpointed);
+    assert_eq!(sim.epoch.base.0, sim.epoch.base.1);
+    for _ in 0..40 {
+        sim.check_time_resolution();
+    }
+    assert!(
+        sim.stats
+            .get("resolve into unmodeled tail")
+            .is_some_and(|n| *n > 0),
+        "{:?}",
+        sim.stats
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
