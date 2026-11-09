@@ -103,7 +103,7 @@ tokenizers = { version = "0.23", default-features = false, features = ["fancy-re
 rust-stemmers = "1.2.0"
 unicode-normalization = "0.1.25"
 # MCP server (`warm-mcp`): the official Rust SDK; client + child-process transport serve the tests.
-rmcp = { version = "3.7", default-features = false, features = ["server", "client", "transport-io", "transport-child-process", "transport-streamable-http-server"], optional = true }
+rmcp = { version = "3.9", default-features = false, features = ["server", "client", "transport-io", "transport-child-process", "transport-streamable-http-server"], optional = true }
 tokio-util = { version = "0.7", optional = true }
 libm = { version = "0.2", optional = true }
 
