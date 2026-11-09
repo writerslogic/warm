@@ -30,7 +30,7 @@ fn err(e: WarmError) -> PyErr {
     PyValueError::new_err(e.to_string())
 }
 
-fn result_array(rows: usize, cols: usize) -> PyResult<Vec<i64>> {
+pub(super) fn result_array(rows: usize, cols: usize) -> PyResult<Vec<i64>> {
     let len = rows
         .checked_mul(cols)
         .filter(|&len| len <= isize::MAX as usize / std::mem::size_of::<i64>())
