@@ -17,7 +17,7 @@
 | Tampering with arena log | CRC32 for accidental corruption; AES-GCM authentication when encrypted | default / `security` |
 | Repudiation of operations | Signed append-only audit trail | `security` |
 | Key extraction from disk | Ed25519 private key stored as raw 32 bytes; protect via OS file permissions | `security` |
-| Inference of original content from vectors | No inherent protection; see [PRIVACY.md](PRIVACY.md) | — |
+| Inference of original content from vectors | No inherent protection; see [PRIVACY.md](PRIVACY.md) | None |
 | Side-channel on signing | ed25519-dalek uses constant-time operations | `security` |
 
 ### Trust Boundaries
@@ -242,7 +242,7 @@ Lower values provide stronger poisoning resistance at the cost of reduced discri
 ```rust
 // In Cargo.toml
 [dependencies]
-writerslogic-warm = { version = "0.6", features = ["security"] }
+warm-rust = { version = "0.6", features = ["security"] }
 ```
 
 ```rust

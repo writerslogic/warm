@@ -2,10 +2,10 @@
 
 The modern embedding benchmark and upstream contribution work is tracked in
 [VIBE](VIBE.md), single-core results on the ann-benchmarks runner in
-[ANN-BENCHMARKS](ANN-BENCHMARKS.md), and the big-ann-benchmarks streaming track (inserts,
+[ANN-BENCHMARKS](ANN-BENCHMARKS.md), the big-ann-benchmarks streaming track (inserts,
 deletes and searches under an 8 GiB cap) in [BIG-ANN-STREAMING](BIG-ANN-STREAMING.md),
 and conversational memory QA against the published Mem0 and Zep LoCoMo results in
-[LOCOMO](LOCOMO.md), separately from the SIFT/GloVe comparison below.
+[LOCOMO](LOCOMO.md). Each is separate from the SIFT/GloVe comparison below.
 
 One command reproduces the WARM comparison against the vector, text and embedded-search systems
 people actually use. The generated results are in [COMPARISON.md](COMPARISON.md); the rule that
@@ -30,7 +30,7 @@ uv run --no-project --python 3.13 --with pytest --with numpy==2.5.4 pytest bench
 `warm-bench run` builds nothing itself: it needs `public-bench` and the `competitive_text` example
 (`cargo build --profile dist --features cli,mimalloc --bin public-bench --example competitive_text`, with
 `CARGO_TARGET_DIR` if you use a private target directory; `dist` is the release build without the
-symbol table, the binary the install-size row measures), `uv`, a JVM (17+) for the Lucene row,
+symbol table, the binary the install-size row measures), `uv`, a JDK 21 or newer for the Lucene row,
 and network access for the first run (datasets, pinned wheels, two Lucene jars with pinned sha256).
 
 ## What is compared
@@ -38,7 +38,7 @@ and network access for the first run (datasets, pinned wheels, two Lucene jars w
 | Family | Systems (version pinned in `benchmarks/competitive/requirements/*.txt`) |
 |---|---|
 | Vector / ANN | hnswlib, FAISS (HNSW, IVF-PQ with and without exact refine, Flat), USearch (f32, int8), Annoy, sqlite-vec, LanceDB (IVF-PQ, IVF-HNSW-SQ), Chroma, Qdrant embedded local mode, Milvus Lite (HNSW, IVF-Flat), DuckDB vss, NGT (ONNG), PyNNDescent, ScaNN and DiskANN (Linux only), Voyager |
-| Text (BM25) | SQLite FTS5, tantivy, Apache Lucene 9.12.3 (JVM), Whoosh, bm25s |
+| Text (BM25) | SQLite FTS5, tantivy, Apache Lucene 10.6.0 (JVM), Whoosh, bm25s |
 | Agent-memory systems | Mem0, Zep, Letta, LangMem: not run here; see "Plugging in more systems" |
 | Not run, with reasons | pgvector (needs a PostgreSQL server; not installable from pip/cargo/npm) |
 
@@ -133,7 +133,7 @@ existing bytes and do not claim a fresh performance measurement.
   opens that file (`--load-index`) memory-mapped and prefaulted before the timer, as every comparator
   opens its persisted index in a fresh serve process. Build time and build peak RSS come from the
   build processes, serving RSS from the serve processes; the index's file-backed pages count in RSS.
-  The VGraph is static, so ANN replace/delete are "n/m".
+  The serving graph is static, so ANN replace and delete are timed in a separate `public-bench ann-updates` session on the updatable index (one durable commit each); the table prints those rows without a verdict ("n/v").
 * Above 200k vectors the slow exact-scan systems answer a prefix of the query file
   (`protocol.query_caps`); recall and QPS are over that prefix.
 

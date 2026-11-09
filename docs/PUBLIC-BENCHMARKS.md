@@ -48,7 +48,7 @@ Datasets and ground truth from [ann-benchmarks](https://ann-benchmarks.com): `ny
 system searches single-threaded, one query at a time; builds use all cores. FAISS 1.15.1,
 hnswlib 0.8.0.
 
-WARM's only vector-search path is the sparse one: each dense vector is encoded with `from_dense`
+This table measures WARM's sparse vector path, not the graph index (see [COMPARISON](benchmarks/COMPARISON.md)): each dense vector is encoded with `from_dense`
 (D=16384, 64 active indices) and searched exactly in the inverted index. Its query time includes
 encoding, because the other systems take dense input directly.
 

@@ -13,7 +13,7 @@ run.
 | `py-models-vX.Y.Z` | `.github/workflows/warm-models-release.yml` | the pinned default offline `warm-models` pack, published to PyPI through Trusted Publishing |
 | `py-vX.Y.Z` | `.github/workflows/warm-py-release.yml` | `warm-python` wheels and sdist, published to PyPI through Trusted Publishing |
 | `sdk-vX.Y.Z` | `.github/workflows/warm-sdk-release.yml` | `warm-sdk` wheel and sdist, published to PyPI through Trusted Publishing |
-| `mcp-vX.Y.Z` | `.github/workflows/mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
+| `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
 
 Publish the model pack before the native wheel that offers it through `[embed]`. The Python
 distributions have separate release tags and Trusted Publisher workflows. For a full engine release,
@@ -164,8 +164,9 @@ These cannot be committed; the publish jobs wait on them.
 
 ### First npm release under `warm-sdk`
 
-The source rename prepares `warm-sdk@0.6.5` and the eight platform packages; it does
-not publish them or transfer ownership from `writerslogic-warm`. Before release,
+The 0.6.6 release is the first publish of `warm-sdk` and the eight platform packages. The
+source rename did not publish them or transfer ownership from `writerslogic-warm`, whose
+latest release is 0.6.4. Before release,
 confirm publishing authority for all nine names and configure `NPM_TOKEN` for them.
 Publish the platform tarballs first, then the root, through the existing protected
 release workflow. Require the cross-platform build/install gates, provenance checks,
@@ -174,8 +175,8 @@ and registry consumer smoke test before directing consumers to the new name.
 Consumers replace `writerslogic-warm` with `warm-sdk` in their package manifests and
 imports, including `/semantic` and `/memory`. Keep existing store directories and
 configuration. Framework adapters in `integrations/js` also need a coordinated release
-because their core peer dependency changes to `warm-sdk >=0.6.5`. Until the new packages
-are available, released consumers continue using the existing published package.
+because their core peer dependency changes to `warm-sdk >=0.6.5`, which 0.6.6 satisfies. Until
+the new packages are available, released consumers continue using the existing published package.
 
 Retiring or deprecating `writerslogic-warm` requires a separate maintainer action after
 the replacement is verified. This rename leaves the MCP launcher, embedding-model
@@ -185,7 +186,7 @@ PyPI can independently use the name `warm-sdk`.
 ## Verify an artefact
 
 ```sh
-gh attestation verify writerslogic_warm_py-X.Y.Z-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
+gh attestation verify warm_python-X.Y.Z-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
   --repo writerslogic/warm
 gh attestation verify warm-sdk-linux-x64-gnu-X.Y.Z.tgz --repo writerslogic/warm
 npm audit signatures            # in a project that depends on warm-sdk

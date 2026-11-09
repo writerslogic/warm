@@ -2,7 +2,11 @@
 
 ## Rust
 
-Use `WarmCore` for vectors, documents, and structural knowledge. The default feature set is
+```sh
+cargo add warm-rust
+```
+
+The crate is `warm-rust`; the library is imported as `writerslogic_warm`. Use `WarmCore` for vectors, documents, and structural knowledge. The default feature set is
 empty; enable `security` for encryption/signing and `provenance` for provenance APIs. Optional
 experimental modules have separate compatibility guarantees. Rust 1.89 or newer is required.
 
@@ -19,7 +23,11 @@ fn main() -> anyhow::Result<()> {
 
 ## Node.js
 
-CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when
+```sh
+npm install warm-sdk
+```
+
+`warm-sdk` is first published with the 0.6.6 release; earlier releases are `writerslogic-warm`. CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when
 work is scheduled off the event loop. For documents, import `DocumentMemory` from
 `warm-sdk/semantic`; it serializes model work, bounds its queue, and supports async
 iterable ingestion. The default document search is lexical BM25. Add an embedder for cosine
@@ -31,14 +39,16 @@ existing model directory and explicit model/revision identity. The store schema 
 the adapter's embedding space. Keep models alive while operations are pending and dispose
 of them after ingestion/search finishes. No model is downloaded by these factories.
 
-`memorizeFile` now ingests a bounded UTF-8 file as chunks. Use `searchDocuments` to retrieve
+`memorizeFile` ingests a bounded UTF-8 file as chunks. Use `searchDocuments` to retrieve
 passages and `deleteDocument` to remove it. The earlier whole-file vector behavior can be
 expressed explicitly with `memorizeText` for bounded inputs if needed.
 
 ## Python
 
-The Python wheel exposes `PhaseHVec` and `PhaseResonator`, not the persistent document/search
-engine. Build with `maturin develop --features python`:
+The `warm-python` wheel (`uv pip install warm-python`, imported as `writerslogic_warm`) exposes `PhaseHVec`,
+`resonator_factorize` and the native indexes `VectorIndex`, `UpdatableIndex`, `FilteredIndex` and
+`SparseIndex`, not the persistent document/search engine. `Embedder` and `SemanticIndex` are included
+in the published wheels, which build with `local-embed`. To build from source, run `maturin develop --features python`:
 
 ```python
 from writerslogic_warm import PhaseHVec

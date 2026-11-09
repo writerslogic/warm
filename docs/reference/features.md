@@ -25,6 +25,8 @@ can change in any release.
 | `python` | The `warm-python` Python wheel (vector search and phase vectors) | experimental | no | [Python API](../api/python/vsa.md) |
 | `private-search` | Query-private similarity scoring over an index held by someone else (LWE, SimplePIR-style): the index holder ranks an encrypted query and learns nothing about it | experimental, research | no (you transport the messages) | [Private search](../PRIVATE-SEARCH.md) |
 | `experimental` | VSA research modules (block codes, Bloom memories, algebraic codebooks, operand retriever, connection and phase graphs) and the experiment binaries | experimental, research | no | [Research](../RESEARCH.md) |
+| `experimental-batch-pool`, `experimental-neighbor-admission`, `experimental-query-x4`, `experimental-build-search` | Individual build and query variants of the vector index; each implies `experimental` | experimental, research | no | [Research](../RESEARCH.md) |
+| `base64`, `ciborium` | Accepted for builds that name them; the dependencies are always present, so they turn nothing on | stable | no | |
 
 ## Which features need a server
 
