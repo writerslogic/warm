@@ -11,4 +11,4 @@ cfg = {"float": {"any": [{"base_args": ["@metric"], "constructor": "WARM", "disa
                           "docker_tag": "ann-benchmarks-warm", "module": "ann_benchmarks.algorithms.warm",
                           "name": "warm", "run_groups": groups}]}}
 d = os.path.join(out, arm, "warm"); os.makedirs(d, exist_ok=True)
-yaml.safe_dump(cfg, open(os.path.join(d, "config.yml"), "w"))
+with open(os.path.join(d, "config.yml"), "w") as fh: yaml.safe_dump(cfg, fh)

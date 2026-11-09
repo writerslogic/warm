@@ -5,7 +5,8 @@ genome: {wheel, build, env{}, rerank, patience}. Fitness = sqrt(QPS@0.95 * QPS@0
 on the frontier, median over rounds; 0 when 0.99 is not reached."""
 import json, math, os, random, subprocess, sys, statistics as st, csv, glob
 H = os.path.expanduser("~"); RUNS = f"{H}/ab-a/runs"; PY = f"{H}/ab-hms/venv/bin/python"
-cfg = json.load(open(sys.argv[1])); rnd = random.Random(cfg.get("rng", 7))
+with open(sys.argv[1]) as fh: cfg = json.load(fh)
+rnd = random.Random(cfg.get("rng", 7))
 ENV = {"WARM_QGRAPH_PREFETCH": [0, 1, 2, 3], "WARM_QGRAPH_BATCH_EST": [0, 1], "WARM_QGRAPH_FRONTIER": [1.0, 0.95, 0.9, 0.85],
        "WARM_QGRAPH_RERANK_Z": [0, 1, 2, 3], "WARM_QGRAPH_KERNEL": ["auto", "avx2"]}
 RERANK = [16, 24, 32, 48, 64, 96, 128]; PAT = [0, 10, 20, 40, 80]
@@ -47,7 +48,7 @@ def score(gen, arm, rounds):
     for r in range(rounds):
         p = f"{RUNS}/{gen}/{arm}__{cfg['dataset']}__r{r}/export.csv"
         if not os.path.exists(p): continue
-        rows = list(csv.DictReader(open(p)))
+        with open(p) as fh: rows = list(csv.DictReader(fh))
         if not rows: continue
         a, b = at(rows, 0.95), at(rows, 0.99)
         if a: s95.append(a)
@@ -74,7 +75,7 @@ for gi in range(cfg["max_gens"]):
         env = dict(g.get("env", {}))
         arms[arm] = {"algo": "warm", "wheel": g["wheel"], "buildtag": "f21de886", "python": PY, "defs": d, "env": env}
     plan = {"gen": gen, "rounds": cfg["rounds"], "cpu": 4, "datasets": [cfg["dataset"]], "arms": arms}
-    json.dump(plan, open(f"{H}/ab-a/plans/{gen}.json", "w"))
+    with open(f"{H}/ab-a/plans/{gen}.json", "w") as fh: json.dump(plan, fh)
     log(f"{gen} start pop={len(pop)}")
     subprocess.run([PY, f"{H}/ab-a/run_gen.py", f"{H}/ab-a/plans/{gen}.json"])
     res = []
@@ -87,4 +88,5 @@ for gi in range(cfg["max_gens"]):
     stale = stale + 1 if gain < cfg["noise"] else 0
     best_prev = max(best_prev, best)
     if stale >= 2: log("STOP: two generations with no gain above noise"); break
-log("GA_DONE"); open(f"{RUNS}/ga-{cfg['name']}.done", "w").write("ok")
+log("GA_DONE")
+with open(f"{RUNS}/ga-{cfg['name']}.done", "w") as fh: fh.write("ok")
