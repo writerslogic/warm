@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
-## [Unreleased]
+## [0.6.6] - 2026-11-09
 
 ### Added
 - Add adaptive per-query probe rules to the partition tier
@@ -63,6 +63,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rename the benchmark package to warmbench
 
 ### Documentation
+- Bring the README and project docs up to date for 0.6.6 (#416)
+- List every Cargo feature and remove rename artifacts
+- Correct package names, release steps and API names
+- Update benchmark method notes and streaming status
+- Fix README sources, install notes and anchors for 0.6.6
 - Record the low-level systems candidates, proxy results and miss audit
 - Record the Ice Lake full-run confirmation, the graph runs and the read-ahead patch
 - Record the Ice Lake np650 streaming run (recall 0.9942 in 2,722 s) (#411)
