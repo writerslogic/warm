@@ -690,6 +690,21 @@ impl VGraph {
         if ids.iter().any(|&u| u as usize >= n) || upper_ids.iter().any(|&u| u as usize >= n) {
             return Err(bad("vertex id out of range".into()));
         }
+        if !ids.is_empty() {
+            let words = n.div_ceil(64);
+            let mut seen = Vec::new();
+            seen.try_reserve_exact(words)
+                .map_err(|_| bad("cannot allocate vertex ID validation bitmap".into()))?;
+            seen.resize(words, 0u64);
+            for &id in ids.iter() {
+                let word = &mut seen[id as usize / 64];
+                let bit = 1u64 << (id % 64);
+                if *word & bit != 0 {
+                    return Err(bad("vertex ID map is not a permutation".into()));
+                }
+                *word |= bit;
+            }
+        }
         if upper_ids.len() > n {
             return Err(bad("more upper-layer vertices than vertices".into()));
         }
@@ -1317,6 +1332,32 @@ mod tests {
         let end = adjv.len() as u32;
         assert!(!delta_lists_ok(&adjv, &[0, end, end], 2, 2));
         assert!(delta_lists_ok(&[0x02, 0x00], &[0, 2, 2, 2], 3, 2));
+    }
+
+    #[test]
+    fn duplicate_original_ids_are_rejected_in_every_residency() {
+        let dir = tempfile::tempdir().unwrap();
+        let (_, index, _) = index_variants().swap_remove(0);
+        assert!(!index.ids.is_empty());
+        let path = dir.path().join("original");
+        index.save(&path).unwrap();
+        let good = std::fs::read(&path).unwrap();
+        let table = 8 + 8 * HEADER_WORDS + 16 * 9;
+        let offset = u64::from_le_bytes(good[table..table + 8].try_into().unwrap()) as usize;
+        for duplicate_at in [1, index.n / 2, index.n - 1] {
+            let mut damaged = good.clone();
+            let first: [u8; 4] = damaged[offset..offset + 4].try_into().unwrap();
+            let at = offset + duplicate_at * 4;
+            damaged[at..at + 4].copy_from_slice(&first);
+            let path = dir.path().join(format!("duplicate-{duplicate_at}"));
+            std::fs::write(&path, damaged).unwrap();
+            for residency in [Residency::Mapped, Residency::Prefaulted, Residency::Heap] {
+                let err = VGraph::open(&path, residency)
+                    .err()
+                    .expect("duplicate ID accepted");
+                assert!(err.to_string().contains("not a permutation"), "{err}");
+            }
+        }
     }
 
     #[test]
