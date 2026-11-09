@@ -3,7 +3,7 @@
 """Per-query misses of one arm: build with connectivity report, list queries whose tolerant recall is below 1.
 
 Usage: concentration.py DATA.hdf5 ESCAPE(0|1) REACH(0|1)"""
-import sys, time, json, numpy as np, h5py
+import sys, time, numpy as np, h5py
 from writerslogic_warm import VectorIndex
 data, escape, reach = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 h=h5py.File(data); train=h['train'][:]; q=h['test'][:]; nb=h['neighbors'][:]; dist=h['distances'][:]; learn=h['learn'][:]

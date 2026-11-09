@@ -15,7 +15,8 @@ def at(fr,t):
     w=(t-r0)/(r1-r0) if r1>r0 else 1
     return float(np.exp(np.log(q0)*(1-w)+np.log(q1)*w))
 for p in sys.argv[1:]:
-    d=json.load(open(p)); print(p.split('/')[-1])
+    with open(p) as fh: d=json.load(fh)
+    print(p.split('/')[-1])
     base=None
     for a in d['arms']:
         fr=frontier(d['rows'][a['name']])

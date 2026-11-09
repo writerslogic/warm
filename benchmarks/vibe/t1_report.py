@@ -1,9 +1,10 @@
-import json, numpy as np
+import json
 O='/Volumes/A/.hms-lb/vibe-apex/out/'
 import sys
 GRID52=len(sys.argv)>1 and sys.argv[1] in ('52','52b','56')
 F52={'52b':'t3-llama-test-52b.json','56':'t4b-llama-test.json'}.get(sys.argv[1] if len(sys.argv)>1 else '','t2-llama-test-52.json')
-new=json.load(open(O+(F52 if GRID52 else 't1-llama-test.json'))); old=json.load(open(O+'t1-llama-test-oldgrid.json'))
+with open(O+(F52 if GRID52 else 't1-llama-test.json')) as fh: new=json.load(fh)
+with open(O+'t1-llama-test-oldgrid.json') as fh: old=json.load(fh)
 def firstat(rows,t):
     q=[r['median_qps'] for r in rows if r['recall']>=t]; return max(q) if q else 0
 base=['32:500:8:1','48:500:8:1','64:500:8:1','96:500:8:1']
