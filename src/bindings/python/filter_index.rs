@@ -129,7 +129,7 @@ impl PyFilteredIndex {
     /// and at least `min_lists` lists are probed. Multi-label queries whose rarest label has at
     /// most `intersect_max` members are intersected first and scored exactly when the matches
     /// number at most `brute_max`.
-    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=false, prefetch=24, wide=false, skip_tombstones=false, block_filter=false))]
+    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=false, prefetch=24, wide=false, skip_tombstones=false, block_filter=false, target_mid=0, target_large=0, edge_mid=50_000, edge_large=200_000))]
     fn set_search(
         &mut self,
         brute_max: usize,
@@ -141,6 +141,10 @@ impl PyFilteredIndex {
         wide: bool,
         skip_tombstones: bool,
         block_filter: bool,
+        target_mid: usize,
+        target_large: usize,
+        edge_mid: usize,
+        edge_large: usize,
     ) {
         self.index.set_tuning(FilterTuning {
             sort_queries,
@@ -148,6 +152,8 @@ impl PyFilteredIndex {
             wide,
             skip_tombstones,
             block_filter,
+            target_bands: [target_mid, target_large],
+            band_edges: [edge_mid, edge_large],
         });
         self.params = FilterSearchParams {
             brute_max,

@@ -141,6 +141,12 @@ pub struct FilterTuning {
     /// Test the other labels of a multi-label query a block of ids at a time, with the
     /// bitset words of the next block prefetched, instead of one id at a time.
     pub block_filter: bool,
+    /// Inverted-file `target` by the rarest label's size: `[mid, large]` replace `target` for
+    /// labels above `band_edges[0]` and `band_edges[1]` members (0 keeps `target`). Unlike the
+    /// other fields this changes results: it moves the recall-time trade-off.
+    pub target_bands: [usize; 2],
+    /// Label sizes at which `target_bands` start.
+    pub band_edges: [usize; 2],
 }
 
 impl Default for FilterTuning {
@@ -151,6 +157,8 @@ impl Default for FilterTuning {
             wide: false,
             skip_tombstones: false,
             block_filter: false,
+            target_bands: [0, 0],
+            band_edges: [50_000, 200_000],
         }
     }
 }
@@ -696,6 +704,18 @@ impl FilteredIndex {
                 matches.len()
             } else {
                 self.ivf_queries.fetch_add(1, Ordering::Relaxed);
+                let t = &self.tuning;
+                let banded = if n_rare > t.band_edges[1] {
+                    t.target_bands[1]
+                } else if n_rare > t.band_edges[0] {
+                    t.target_bands[0]
+                } else {
+                    0
+                };
+                let params = &FilterSearchParams {
+                    target: if banded == 0 { params.target } else { banded },
+                    ..*params
+                };
                 self.search_ivf(
                     &self.ivfs[ivf as usize],
                     (q, qsum),
@@ -1603,6 +1623,7 @@ mod tests {
                         ..FilterSearchParams::default()
                     },
                 ] {
+                    idx.set_tuning(FilterTuning::default());
                     let mut want = vec![0i64; qs.len() * k];
                     idx.search_batch(&flat, &indptr, &lids, k, &p, &mut want)
                         .unwrap();
@@ -1613,12 +1634,23 @@ mod tests {
                             wide: bits & 2 != 0,
                             skip_tombstones: bits & 4 != 0,
                             block_filter: bits & 8 != 0,
+                            ..FilterTuning::default()
                         });
                         let mut got = vec![0i64; qs.len() * k];
                         idx.search_batch(&flat, &indptr, &lids, k, &p, &mut got)
                             .unwrap();
                         assert_eq!(got, want, "{bitset_min} {deletes} {bits}");
                     }
+                    // Bands that restate `target` leave every result as it was.
+                    idx.set_tuning(FilterTuning {
+                        target_bands: [p.target, p.target],
+                        band_edges: [0, 0],
+                        ..FilterTuning::default()
+                    });
+                    let mut got = vec![0i64; qs.len() * k];
+                    idx.search_batch(&flat, &indptr, &lids, k, &p, &mut got)
+                        .unwrap();
+                    assert_eq!(got, want, "bands {bitset_min} {deletes}");
                 }
             }
         }
