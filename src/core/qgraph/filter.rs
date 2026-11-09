@@ -152,8 +152,10 @@ pub struct FilterTuning {
     pub band_edges: [usize; 2],
 }
 
-impl Default for FilterTuning {
-    fn default() -> Self {
+impl FilterTuning {
+    /// Every execution choice off: one query at a time, one id at a time, no caches.
+    #[must_use]
+    pub const fn plain() -> Self {
         Self {
             sort_queries: false,
             prefetch: 24,
@@ -163,6 +165,18 @@ impl Default for FilterTuning {
             cache_intersections: false,
             target_bands: [0, 0],
             band_edges: [50_000, 200_000],
+        }
+    }
+}
+
+impl Default for FilterTuning {
+    fn default() -> Self {
+        Self {
+            sort_queries: true,
+            skip_tombstones: true,
+            block_filter: true,
+            cache_intersections: true,
+            ..Self::plain()
         }
     }
 }
@@ -1663,7 +1677,7 @@ mod tests {
                         ..FilterSearchParams::default()
                     },
                 ] {
-                    idx.set_tuning(FilterTuning::default());
+                    idx.set_tuning(FilterTuning::plain());
                     let mut want = vec![0i64; qs.len() * k];
                     idx.search_batch(&flat, &indptr, &lids, k, &p, &mut want)
                         .unwrap();
@@ -1675,7 +1689,7 @@ mod tests {
                             skip_tombstones: bits & 4 != 0,
                             block_filter: bits & 8 != 0,
                             cache_intersections: bits & 16 != 0,
-                            ..FilterTuning::default()
+                            ..FilterTuning::plain()
                         });
                         let mut got = vec![0i64; qs.len() * k];
                         idx.search_batch(&flat, &indptr, &lids, k, &p, &mut got)
@@ -1686,7 +1700,7 @@ mod tests {
                     idx.set_tuning(FilterTuning {
                         target_bands: [p.target, p.target],
                         band_edges: [0, 0],
-                        ..FilterTuning::default()
+                        ..FilterTuning::plain()
                     });
                     let mut got = vec![0i64; qs.len() * k];
                     idx.search_batch(&flat, &indptr, &lids, k, &p, &mut got)
