@@ -998,13 +998,12 @@ impl FilteredIndex {
                 dot_i8_query_x4(q, rows, qsum)
             };
             for j in 0..4 {
-                let key = i64::from(self.norms[ch[j] as usize]) - 2 * i64::from(d[j]);
+                let key = i64::from(self.norms[ch[j] as usize]) - 2 * d[j];
                 top.push(key, ch[j]);
             }
         }
         for &id in tail {
-            let key = i64::from(self.norms[id as usize])
-                - 2 * i64::from(dot_i8_query(q, self.row(id), qsum));
+            let key = i64::from(self.norms[id as usize]) - 2 * dot_i8_query(q, self.row(id), qsum);
             top.push(key, id);
         }
     }
@@ -1017,13 +1016,12 @@ impl FilteredIndex {
         for ch in chunks {
             let d = dot_i8_query_x4(q, [row(ch[0]), row(ch[1]), row(ch[2]), row(ch[3])], qsum);
             for (&p, &dot) in ch.iter().zip(&d) {
-                let key = i64::from(ivf.norms[p as usize]) - 2 * i64::from(dot);
+                let key = i64::from(ivf.norms[p as usize]) - 2 * dot;
                 top.push(key, ivf.members[p as usize]);
             }
         }
         for &p in tail {
-            let key =
-                i64::from(ivf.norms[p as usize]) - 2 * i64::from(dot_i8_query(q, row(p), qsum));
+            let key = i64::from(ivf.norms[p as usize]) - 2 * dot_i8_query(q, row(p), qsum);
             top.push(key, ivf.members[p as usize]);
         }
     }
@@ -1059,13 +1057,12 @@ impl FilteredIndex {
                 qsum,
             );
             for (j, dot) in dots.into_iter().enumerate() {
-                let key = i64::from(ivf.centroid_norms[c + j]) - 2 * i64::from(dot);
+                let key = i64::from(ivf.centroid_norms[c + j]) - 2 * dot;
                 order.push((key, (c + j) as u32));
             }
         }
         for c in grouped..lists {
-            let key = i64::from(ivf.centroid_norms[c])
-                - 2 * i64::from(dot_i8_query(q, centroid(c), qsum));
+            let key = i64::from(ivf.centroid_norms[c]) - 2 * dot_i8_query(q, centroid(c), qsum);
             order.push((key, c as u32));
         }
         order.sort_unstable();
@@ -1265,7 +1262,7 @@ fn train_label(
         let qsum: i32 = x.iter().map(|&v| i32::from(v)).sum();
         let mut best = (i64::MAX, 0u32);
         for (c, cent) in centroids.chunks_exact(dim).enumerate() {
-            let key = i64::from(cnorms[c]) - 2 * i64::from(dot_i8_query(x, cent, qsum));
+            let key = i64::from(cnorms[c]) - 2 * dot_i8_query(x, cent, qsum);
             if key < best.0 {
                 best = (key, c as u32);
             }

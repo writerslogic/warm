@@ -65,6 +65,22 @@ def test_updatable_result_byte_size_overflow_is_rejected(tmp_path, offset):
         index.search(np.ones((1, 4), dtype=np.float32), k)
 
 
+@pytest.mark.parametrize("dim", [133143, 133144, 133145, 262144])
+def test_wide_eight_bit_search_does_not_reverse_cosine_order(dim):
+    rows = np.ones((4, dim), dtype=np.float32)
+    rows[1, 1::2] = -1
+    rows[2] = -rows[0]
+    rows[3] = -rows[1]
+    index = hm.VectorIndex("angular", degree=2, build_ef=4, threads=1, code_bits=8)
+    index.fit(rows)
+    index.set_query_arguments(ef=4, rerank=0)
+    result = index.query(rows[0], 4)
+    assert result[0] == 0
+    assert result[-1] == 2
+    index.set_query_arguments(ef=1, rerank=1)
+    np.testing.assert_array_equal(index.query(rows[0], 1), [0])
+
+
 @pytest.mark.parametrize("metric", ["angular", "euclidean", "ip"])
 @pytest.mark.parametrize("bits", [4, 8])
 def test_compact_adjacency_preserves_trained_results(metric, bits):

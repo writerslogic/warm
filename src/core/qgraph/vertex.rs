@@ -1792,11 +1792,11 @@ impl VGraph {
     #[inline]
     fn est(&self, qc: &[i8], qsum: i32, v: u32, w: f32) -> f32 {
         let dot = if self.bits == 8 {
-            dot_i8_query(qc, self.code(v), qsum)
+            dot_i8_query(qc, self.code(v), qsum) as f32
         } else {
-            dot_i4_query(qc, self.code(v), qsum)
+            dot_i4_query(qc, self.code(v), qsum) as f32
         };
-        self.order(v, self.scales[v as usize] * dot as f32, w)
+        self.order(v, self.scales[v as usize] * dot, w)
     }
 
     /// The distance order of `v` from its estimated (or re-ranked) inner product `ip` in
@@ -1816,14 +1816,14 @@ impl VGraph {
     fn est4<const QUERY_X4: bool>(&self, qc: &[i8], qsum: i32, v: [u32; 4], w: f32) -> [f32; 4] {
         let dots = if self.bits == 8 {
             if QUERY_X4 {
-                dot_i8_query_x4(qc, v.map(|u| self.code(u)), qsum)
+                dot_i8_query_x4(qc, v.map(|u| self.code(u)), qsum).map(|dot| dot as f32)
             } else {
-                v.map(|u| dot_i8_query(qc, self.code(u), qsum))
+                v.map(|u| dot_i8_query(qc, self.code(u), qsum) as f32)
             }
         } else {
-            dot_i4_query_x4(qc, v.map(|u| self.code(u)), qsum)
+            dot_i4_query_x4(qc, v.map(|u| self.code(u)), qsum).map(|dot| dot as f32)
         };
-        std::array::from_fn(|i| self.order(v[i], self.scales[v[i] as usize] * dots[i] as f32, w))
+        std::array::from_fn(|i| self.order(v[i], self.scales[v[i] as usize] * dots[i], w))
     }
 
     /// Re-rank score with the float query: negative estimated inner product with the
