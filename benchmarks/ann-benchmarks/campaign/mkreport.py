@@ -20,7 +20,7 @@ for gen in sys.argv[2:]:
     G = {}
     for p in sorted(glob.glob(f"{RUNS}/{gen}/*/export.csv")):
         arm, ds, r = os.path.basename(os.path.dirname(p)).split("__")
-        rows = list(csv.DictReader(open(p)))
+        with open(p) as fh: rows = list(csv.DictReader(fh))
         if not rows: continue
         d = G.setdefault(ds, {}).setdefault(arm, {"rounds": {}, "params": sorted({x["parameters"] for x in rows})[:1]})
         d["rounds"][r] = {str(t): dict(zip(("hc", "interp"), at(rows, t))) for t in (0.95, 0.99)}
@@ -41,5 +41,5 @@ for gen in sys.argv[2:]:
             f = lambda v: f"{v:,.0f}" if v else "-"
             md.append(f"| {arm} | {len(d['rounds'])} | {f(m['0.95']['hc'])} | {f(m['0.95']['interp'])} | {ratio('0.95')} | {f(m['0.99']['hc'])} | {f(m['0.99']['interp'])} | {ratio('0.99')} | {max(x['max_recall'] for x in d['rounds'].values()):.4f} |")
     out["generations"][gen] = G
-json.dump(out, open(sys.argv[1], "w"), indent=1)
+with open(sys.argv[1], "w") as fh: json.dump(out, fh, indent=1)
 print("\n".join(md))

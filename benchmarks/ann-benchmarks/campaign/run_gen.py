@@ -3,11 +3,12 @@
 Per round the arm order rotates; each (arm,dataset) is one official run.py --local under flock on cpu <cpu>."""
 import fcntl, json, os, subprocess, sys, time
 H = os.path.expanduser("~/ab-a/harness"); RUNS = os.path.expanduser("~/ab-a/runs")
-plan = json.load(open(sys.argv[1])); gen = plan["gen"]
+with open(sys.argv[1]) as fh: plan = json.load(fh)
+gen = plan["gen"]
 names = list(plan["arms"])
-log = open(f"{RUNS}/{gen}.log", "a")
 def say(*a):
-    print(time.strftime("%H:%M:%S"), *a, file=log, flush=True)
+    with open(f"{RUNS}/{gen}.log", "a") as log:
+        print(time.strftime("%H:%M:%S"), *a, file=log, flush=True)
 lk = open(os.path.expanduser("~/hms-timing.lock"), "a"); t_w = time.time(); fcntl.flock(lk, fcntl.LOCK_EX); say("lock acquired after", f"{time.time()-t_w:.0f}s")
 for r in range(plan["rounds"]):
     order = names[r % len(names):] + names[:r % len(names)]
@@ -40,4 +41,4 @@ for r in range(plan["rounds"]):
             say("done", arm, ds, "r", r, "rc", rc, f"{time.time()-t0:.0f}s")
 fcntl.flock(lk, fcntl.LOCK_UN); lk.close()
 say("GEN_DONE")
-open(f"{RUNS}/{gen}.done", "w").write("ok")
+with open(f"{RUNS}/{gen}.done", "w") as fh: fh.write("ok")
