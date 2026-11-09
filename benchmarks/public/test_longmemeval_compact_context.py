@@ -43,7 +43,7 @@ class CompactContextTest(unittest.TestCase):
         for budget in (K.tokens(render(base)), K.tokens(render(sources[:2])) - 1,
                        K.tokens(render(sources[:2])), K.tokens(render(sources))):
             chosen = K.fill(list(available), available, budget, render, base, lambda sid: [available[sid]])
-            self.assertTrue({s["sourceId"] for s in base} <= {s["sourceId"] for s in chosen})
+            self.assertLessEqual({s["sourceId"] for s in base}, {s["sourceId"] for s in chosen})
             self.assertLessEqual(K.tokens(render(chosen)), budget)
         self.assertEqual(len(K.fill(list(available), available, K.tokens(render(sources)), render, base,
                                     lambda sid: [available[sid]])), 3)
