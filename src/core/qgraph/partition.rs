@@ -74,6 +74,14 @@ pub struct PartitionParams {
     /// `retrain_sample` live rows (0 = a cold k-means as at the first training).
     pub retrain_warm_iters: usize,
     pub retrain_sample: usize,
+    /// Rebalance by splitting only the oversized lists instead of retraining every centre:
+    /// lists above `lb_hi` times the mean length are split by a local k-means into pieces of
+    /// about `lb_target` times the mean, whose extra centres replace lists below `lb_lo` times
+    /// the mean; only the rows of those lists are re-placed.
+    pub local_rebalance: bool,
+    pub lb_hi: f32,
+    pub lb_lo: f32,
+    pub lb_target: f32,
     /// Coarse routing of row placement: a row is scored against the `route_cands` centres
     /// nearest its nearest of `route_lists` super-centres instead of against all of them
     /// (0 = all, exact). Applies to inserts and to the re-placement in a retrain.
@@ -116,6 +124,10 @@ impl Default for PartitionParams {
             retrain_min_inserts: 1_000_000,
             retrain_warm_iters: 0,
             retrain_sample: 262_144,
+            local_rebalance: false,
+            lb_hi: 2.0,
+            lb_lo: 0.5,
+            lb_target: 1.0,
             route_cands: 0,
             route_lists: 64,
             route_inserts: true,
@@ -945,6 +957,30 @@ impl Trained {
     }
 }
 
+/// Removes a slot's list memberships and radius statistics.
+fn unplace(t: &mut Trained, rows: &[f32], dim: usize, sh: Shape, slot: u32) {
+    for k in 0..2 {
+        let (list, pos) = t.loc[slot as usize][k];
+        if list == u32::MAX {
+            continue;
+        }
+        let c = list as usize;
+        let x = &rows[slot as usize * dim..(slot as usize + 1) * dim];
+        let d = sq(x, &t.centres[c * dim..(c + 1) * dim]).sqrt();
+        t.lists[c].track(d, -1.0);
+        if let Some(moved) = t.lists[list as usize].remove(sh, pos as usize) {
+            // The moved code came from this list's old last position, which is
+            // the list's new length; a slot is in a list at most once.
+            let last = t.lists[list as usize].slots.len() as u32;
+            let e = &mut t.loc[moved as usize];
+            let idx = usize::from(e[0] != (list, last));
+            debug_assert_eq!(e[idx], (list, last));
+            e[idx].1 = pos;
+        }
+    }
+    t.loc[slot as usize] = [(u32::MAX, u32::MAX); 2];
+}
+
 impl PartitionTier {
     pub fn new(dim: usize, params: PartitionParams) -> Result<Self, WarmError> {
         if dim == 0 || params.pq_m == 0 || !dim.is_multiple_of(params.pq_m) {
@@ -1121,26 +1157,7 @@ impl PartitionTier {
             };
             removed += 1;
             if let Some(t) = self.trained.as_mut() {
-                for k in 0..2 {
-                    let (list, pos) = t.loc[slot as usize][k];
-                    if list == u32::MAX {
-                        continue;
-                    }
-                    let c = list as usize;
-                    let x = &self.rows[slot as usize * dim..(slot as usize + 1) * dim];
-                    let d = sq(x, &t.centres[c * dim..(c + 1) * dim]).sqrt();
-                    t.lists[c].track(d, -1.0);
-                    if let Some(moved) = t.lists[list as usize].remove(sh, pos as usize) {
-                        // The moved code came from this list's old last position, which is
-                        // the list's new length; a slot is in a list at most once.
-                        let last = t.lists[list as usize].slots.len() as u32;
-                        let e = &mut t.loc[moved as usize];
-                        let idx = usize::from(e[0] != (list, last));
-                        debug_assert_eq!(e[idx], (list, last));
-                        e[idx].1 = pos;
-                    }
-                }
-                t.loc[slot as usize] = [(u32::MAX, u32::MAX); 2];
+                unplace(t, &self.rows, dim, sh, slot);
             }
             self.free.push(slot);
         }
@@ -1288,9 +1305,111 @@ impl PartitionTier {
         Ok(())
     }
 
+    /// Splits the oversized lists in place (see `PartitionParams::local_rebalance`). Returns the
+    /// number of rows re-placed, 0 when no list is oversized or none is free to take a piece.
+    pub fn rebalance_local(&mut self) -> usize {
+        let (dim, sh, p) = (self.dim, self.shape, self.params.clone());
+        let Some(t) = self.trained.as_ref() else {
+            return 0;
+        };
+        let l = t.lists_len();
+        let lens: Vec<usize> = t.lists.iter().map(|x| x.slots.len()).collect();
+        let mean = lens.iter().sum::<usize>() as f64 / l as f64;
+        let mut donors: Vec<usize> = (0..l)
+            .filter(|&i| lens[i] as f64 > f64::from(p.lb_hi) * mean)
+            .collect();
+        donors.sort_by_key(|&i| std::cmp::Reverse(lens[i]));
+        let mut free: Vec<usize> = (0..l)
+            .filter(|&i| (lens[i] as f64) < f64::from(p.lb_lo) * mean)
+            .collect();
+        free.sort_by_key(|&i| std::cmp::Reverse(lens[i]));
+        let mut rng = SplitMix(p.seed ^ self.trained_live as u64);
+        // (list, new centre) for every changed list.
+        let mut changed: Vec<(usize, Vec<f32>)> = Vec::new();
+        for &d in &donors {
+            let want =
+                ((lens[d] as f64 / (f64::from(p.lb_target) * mean)).round() as usize).clamp(2, 64);
+            let k = want.min(free.len() + 1);
+            if k < 2 {
+                break;
+            }
+            let mut rows = Vec::new();
+            for &slot in &t.lists[d].slots {
+                if t.loc[slot as usize][0].0 as usize == d {
+                    rows.extend_from_slice(self.row(slot));
+                }
+            }
+            if rows.len() / dim < 2 * k {
+                continue;
+            }
+            let cs = kmeans(&rows, dim, k, 3, &mut rng);
+            changed.push((d, cs[..dim].to_vec()));
+            for j in 1..k {
+                let r = free.pop().expect("free list");
+                changed.push((r, cs[j * dim..(j + 1) * dim].to_vec()));
+            }
+        }
+        if changed.is_empty() {
+            return 0;
+        }
+        let mut is_changed = vec![false; l];
+        for (c, _) in &changed {
+            is_changed[*c] = true;
+        }
+        let mut slots: Vec<u32> = Vec::new();
+        for (c, _) in &changed {
+            slots.extend_from_slice(&t.lists[*c].slots);
+        }
+        slots.sort_unstable();
+        slots.dedup();
+        let t = self.trained.as_mut().expect("trained");
+        for &slot in &slots {
+            unplace(t, &self.rows, dim, sh, slot);
+        }
+        let (m, sub) = (p.pq_m, dim / p.pq_m);
+        for (c, v) in &changed {
+            let c = *c;
+            t.centres[c * dim..(c + 1) * dim].copy_from_slice(v);
+            t.c2[c] = dot(v, v);
+            t.lists[c] = List::default();
+            for j in 0..l {
+                let g = dot(v, &t.centres[j * dim..(j + 1) * dim]);
+                t.gram[c * l + j] = g;
+                t.gram[j * l + c] = g;
+            }
+            for b in 0..m {
+                for q in 0..16 {
+                    let cb = &t.codebook[(b * 16 + q) * sub..(b * 16 + q + 1) * sub];
+                    t.list_tab[c * 16 * m + b * 16 + q] =
+                        dot(cb, cb) + 2.0 * dot(&v[b * sub..(b + 1) * sub], cb);
+                }
+            }
+        }
+        t.coarse = None;
+        let mut vectors = Vec::with_capacity(slots.len() * dim);
+        for &slot in &slots {
+            vectors.extend_from_slice(self.row(slot));
+        }
+        self.place(&slots, &vectors, false);
+        self.trained_live = self.len();
+        self.inserts_since_train = 0;
+        slots.len()
+    }
+
     /// Retrains in place; `WARM_LOG_RETRAIN` prints one line per retrain to stderr.
     fn retrain(&mut self, why: &str) -> Result<(), WarmError> {
         let (t0, imb, live) = (std::time::Instant::now(), self.list_imbalance(), self.len());
+        if self.params.local_rebalance {
+            let rows = self.rebalance_local();
+            if crate::compatibility::var("WARM_LOG_RETRAIN").is_ok() {
+                eprintln!(
+                    "[warm] local rebalance ({why}) live={live} rows {rows} imbalance {imb:.3} -> {:.3} in {:.1}s",
+                    self.list_imbalance(),
+                    t0.elapsed().as_secs_f64()
+                );
+            }
+            return Ok(());
+        }
         self.train(None)?;
         if crate::compatibility::var("WARM_LOG_RETRAIN").is_ok() {
             eprintln!(
@@ -2013,6 +2132,40 @@ mod tests {
         assert_eq!(recall(&t.search_exact(&q, k), &want), 1.0);
     }
 
+    #[test]
+    fn local_rebalance_splits_oversized_lists_and_keeps_rows_searchable() {
+        let (n, extra, dim, k, lists) = (1600, 3000, 16, 10, 20);
+        let x = data(n, dim, 20, 1);
+        let hot = data(extra, dim, 1, 77);
+        let q = data(40, dim, 20, 2);
+        let mut t = PartitionTier::new(dim, params(lists)).unwrap();
+        let ids: Vec<u32> = (0..(n + extra) as u32).collect();
+        t.insert(&ids[..n], &x).unwrap();
+        t.search(&q, k).unwrap();
+        assert!(t.is_trained());
+        // A burst of near-identical rows overloads one list and leaves the rest short.
+        t.insert(&ids[n..], &hot).unwrap();
+        let before = t.list_imbalance();
+        let moved = t.rebalance_local();
+        assert!(moved > 0, "nothing was split");
+        check_lists(&t);
+        assert!(
+            t.list_imbalance() < before,
+            "{} !< {before}",
+            t.list_imbalance()
+        );
+        let all: Vec<f32> = x.iter().chain(&hot).copied().collect();
+        let rows: Vec<(u32, &[f32])> = (0..n + extra)
+            .map(|i| (ids[i], &all[i * dim..(i + 1) * dim]))
+            .collect();
+        let want: Vec<Vec<u32>> = q.chunks(dim).map(|qq| naive(&rows, qq, k)).collect();
+        assert_eq!(recall(&t.search(&q, k).unwrap(), &want), 1.0);
+        t.delete(&ids[..300]);
+        t.insert(&ids[..300], &x[..300 * dim]).unwrap();
+        check_lists(&t);
+        assert_eq!(recall(&t.search(&q, k).unwrap(), &want), 1.0);
+    }
+
     /// Starting from centres that sit on a small part of the data (a stale set), a few Lloyd
     /// iterations with rebalancing give clusters that are more even than without it.
     #[test]
@@ -2404,6 +2557,20 @@ mod tests {
         // RETRAIN=1: replay a warm retrain of the placed tier (stale centres above) with the
         // RT_ITERS / RT_SAMPLE / REBAL / ROUTE knobs and report its phases.
         let mut retrain_rep = String::new();
+        if envn("RETRAIN") == Some(2) {
+            t.params.lb_hi = envn("LB_HI").map_or(2.0, |v| v as f32 / 100.0);
+            t.params.lb_lo = envn("LB_LO").map_or(0.5, |v| v as f32 / 100.0);
+            t.params.lb_target = envn("LB_TARGET").map_or(1.0, |v| v as f32 / 100.0);
+            let t0 = Instant::now();
+            let mut rows = 0;
+            for _ in 0..envn("LB_PASSES").unwrap_or(1) {
+                rows += t.rebalance_local();
+            }
+            retrain_rep = format!(
+                ", \"retrain_s\": {:.3}, \"retrain_rows\": {rows}",
+                t0.elapsed().as_secs_f64()
+            );
+        }
         if envn("RETRAIN") == Some(1) {
             t.params.retrain_warm_iters = envn("RT_ITERS").unwrap_or(3);
             t.params.retrain_sample = envn("RT_SAMPLE").unwrap_or(1_000_000);
