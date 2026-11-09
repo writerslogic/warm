@@ -439,7 +439,7 @@ mod tests {
                 best
             };
             let i8_plain = time(&|r| dot_i8_inline(&q, r), dim);
-            let i8_query = time(&|r| dot_i8_query(&q, r, qs), dim);
+            let i8_query = time(&|r| dot_i8_query(&q, r, qs) as i32, dim);
             let (i4_plain, i4_query) = if dim.is_multiple_of(32) {
                 (
                     time(&|r| dot_i4_inline(&q, r), dim / 2),
