@@ -137,6 +137,7 @@ impl PyFilteredIndex {
     /// the row prefetch distance; `wide` uses 512-bit VNNI. `target_mid`/`target_large` replace
     /// `target` for rarest labels above `edge_mid`/`edge_large` members (0 keeps it).
     #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, target_mid=0, target_large=0, edge_mid=50_000, edge_large=200_000))]
+    #[allow(clippy::too_many_arguments)]
     fn set_search(
         &mut self,
         brute_max: usize,
