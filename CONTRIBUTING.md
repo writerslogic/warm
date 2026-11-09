@@ -22,12 +22,12 @@ privately as described in [SECURITY.md](SECURITY.md), never in a public issue.
 The default Rust library supports Rust 1.89 or newer. `local-models` and
 `--all-features` need Rust 1.94 or newer; CI uses the current stable toolchain.
 The Node bindings require Node.js 22 or newer (24 for the quickstart, which uses
-`node:sqlite`). The HTTP Python SDK requires Python 3.10 or newer; native Python
+`node:sqlite`). The HTTP Python SDK requires Python 3.11 or newer (the published 0.1.3 still declares 3.10); native Python
 binding requirements are documented separately.
 
 ```sh
 git clone https://github.com/writerslogic/warm
-cd writerslogic-warm
+cd warm
 cargo test                          # default features, no native dependencies
 cargo test --all-features           # everything CI builds
 npm ci --omit=optional && npm run build && npm test   # Node bindings
@@ -122,5 +122,5 @@ squash-merge, so your commits do not need a GPG or SSH signature.
 
 ## Release process
 
-Maintainers cut releases; see the Releasing section of the documentation. Contributors do not
+Maintainers cut releases; see [docs/RELEASING.md](docs/RELEASING.md). Contributors do not
 tag, publish packages, or edit version numbers.
