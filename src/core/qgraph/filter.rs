@@ -141,6 +141,9 @@ pub struct FilterTuning {
     /// Test the other labels of a multi-label query a block of ids at a time, with the
     /// bitset words of the next block prefetched, instead of one id at a time.
     pub block_filter: bool,
+    /// Keep the matches of the last multi-label query's labels, so a query with the same
+    /// labels right after it (see `sort_queries`) skips the intersection.
+    pub cache_intersections: bool,
     /// Inverted-file `target` by the rarest label's size: `[mid, large]` replace `target` for
     /// labels above `band_edges[0]` and `band_edges[1]` members (0 keeps `target`). Unlike the
     /// other fields this changes results: it moves the recall-time trade-off.
@@ -157,6 +160,7 @@ impl Default for FilterTuning {
             wide: false,
             skip_tombstones: false,
             block_filter: false,
+            cache_intersections: false,
             target_bands: [0, 0],
             band_edges: [50_000, 200_000],
         }
@@ -309,6 +313,8 @@ struct SearchScratch {
     query: Vec<i8>,
     top: TopK,
     matches: Vec<u32>,
+    /// The sorted labels whose intersection `matches` holds (empty when it holds none).
+    matches_for: Vec<u32>,
     cursors: Vec<usize>,
     ivf: IvfScratch,
 }
@@ -664,6 +670,7 @@ impl FilteredIndex {
             query: q,
             top,
             matches,
+            matches_for,
             cursors,
             ivf: ivf_scratch,
         } = scratch;
@@ -692,11 +699,21 @@ impl FilteredIndex {
         let ivf = self.ivf_slot[rarest as usize];
         let scored = if n_rare <= params.brute_max || ivf == u32::MAX {
             self.brute_queries.fetch_add(1, Ordering::Relaxed);
-            self.score_intersection((q, qsum), rarest, others, top, cursors)
+            if self.tuning.cache_intersections && !others.is_empty() {
+                self.cached_intersect(order, matches, matches_for, cursors);
+                self.score_ids(q, qsum, matches, top);
+                matches.len()
+            } else {
+                self.score_intersection((q, qsum), rarest, others, top, cursors)
+            }
         } else {
             let intersected = !others.is_empty() && n_rare <= params.intersect_max;
             if intersected {
-                self.intersect(rarest, others, matches, cursors);
+                if self.tuning.cache_intersections {
+                    self.cached_intersect(order, matches, matches_for, cursors);
+                } else {
+                    self.intersect(rarest, others, matches, cursors);
+                }
             }
             if intersected && matches.len() <= params.brute_max {
                 self.brute_queries.fetch_add(1, Ordering::Relaxed);
@@ -851,6 +868,23 @@ impl FilteredIndex {
             }
             offset += 64;
         }
+    }
+
+    /// [`Self::intersect`] of `labels` (sorted by size, the rarest first), skipped when
+    /// `matches` already holds exactly that intersection.
+    fn cached_intersect(
+        &self,
+        labels: &[u32],
+        matches: &mut Vec<u32>,
+        matches_for: &mut Vec<u32>,
+        cursors: &mut Vec<usize>,
+    ) {
+        if matches_for.as_slice() == labels {
+            return;
+        }
+        matches_for.clear();
+        self.intersect(labels[0], &labels[1..], matches, cursors);
+        matches_for.extend_from_slice(labels);
     }
 
     /// The live members of `rarest` that hold every label in `others`, ascending.
@@ -1148,14 +1182,13 @@ impl FilteredIndex {
         let nq = out.len() / k;
         let labels_of =
             |i: usize| &label_ids[label_indptr[i] as usize..label_indptr[i + 1] as usize];
-        let mut order: Vec<(u32, u32)> = (0..nq)
+        let mut order: Vec<(u32, u32, u32)> = (0..nq)
             .map(|i| {
-                let rarest = labels_of(i)
-                    .iter()
-                    .copied()
-                    .min_by_key(|&l| (self.label_len(l), l))
-                    .unwrap_or(u32::MAX);
-                (rarest, i as u32)
+                let mut ls = labels_of(i).to_vec();
+                ls.sort_by_key(|&l| (self.label_len(l), l));
+                ls.dedup();
+                let at = |j: usize| ls.get(j).copied().unwrap_or(u32::MAX);
+                (at(0), at(1), i as u32)
             })
             .collect();
         order.par_sort_unstable();
@@ -1165,7 +1198,7 @@ impl FilteredIndex {
             .zip(order.par_iter())
             .try_for_each_init(
                 || (SearchScratch::default(), Vec::new()),
-                |(scratch, found), (row, &(_, i))| {
+                |(scratch, found), (row, &(_, _, i))| {
                     let i = i as usize;
                     let q = &queries[i * self.dim..(i + 1) * self.dim];
                     self.search_with_scratch(q, labels_of(i), k, params, found, scratch)?;
@@ -1175,7 +1208,7 @@ impl FilteredIndex {
                     Ok(())
                 },
             )?;
-        for (row, &(_, i)) in sorted.chunks(k).zip(&order) {
+        for (row, &(_, _, i)) in sorted.chunks(k).zip(&order) {
             out[i as usize * k..(i as usize + 1) * k].copy_from_slice(row);
         }
         Ok(())
@@ -1589,7 +1622,14 @@ mod tests {
     fn tuning_never_changes_a_result() {
         let labels = 25;
         let f = fixture(3_000, 32, labels, 9);
-        let qs = queries(&f, 96, labels, 10);
+        let mut qs = queries(&f, 96, labels, 10);
+        // Repeated label sets (reversed order too) with other vectors, for the intersection
+        // cache.
+        for i in 0..48 {
+            let mut ls = qs[i].1.clone();
+            ls.reverse();
+            qs.push((qs[i + 48].0.clone(), ls));
+        }
         let mut flat = Vec::new();
         let mut indptr = vec![0u64];
         let mut lids = Vec::new();
@@ -1634,6 +1674,7 @@ mod tests {
                             wide: bits & 2 != 0,
                             skip_tombstones: bits & 4 != 0,
                             block_filter: bits & 8 != 0,
+                            cache_intersections: bits & 16 != 0,
                             ..FilterTuning::default()
                         });
                         let mut got = vec![0i64; qs.len() * k];
