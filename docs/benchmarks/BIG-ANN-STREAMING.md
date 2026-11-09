@@ -1,17 +1,27 @@
 # big-ann-benchmarks streaming track (NeurIPS'23)
 
-The streaming track replays a runbook of inserts, deletes and searches from an empty index
-(`neurips23/runbooks/delete_runbook.yaml` on msturing-10M-clustered: 100-d float32, L2,
-at most 6M live rows, 33 search checkpoints of 10,000 public queries) and scores the mean
-recall@10 over the checkpoints, under 8 GiB of DRAM and one hour. WARM enters it with
-`UpdatableIndex` (`src/bindings/python/vector_index.rs` over `core::qgraph::UpdatableVGraph`): a
-memory-mapped base graph, an in-memory delta graph of the rows inserted since the last
-consolidation, and a rebuild of the base over the live rows when the delta or the deleted
-share passes the adapter's thresholds (delta 1.0x the base, 30% deleted, 100k rows minimum).
+The streaming track replays a runbook of inserts, deletes and searches from an empty index and
+scores the mean recall@10 over its search checkpoints, under 8 GiB of DRAM and one hour.
 
-Every number below traces to `benchmarks/results/bigann_streaming_delete_runbook_v1.json`
-or, from "Operating point" on, `benchmarks/results/bigann_streaming_delete_runbook_v2.json`;
-both record the WARM commit, the harness commit (`89a3aba`), the machine and the parameters.
+WARM's current entry runs the final runbook (msturing-30M-clustered, 1,280 steps) on
+`PartitionIndex`. Its result is in [the partition tier section](#final-runbook-msturing-30m-clustered-partition-tier):
+mean recall@10 0.9942 in 2,722 s at nprobe 650 and reorder 1000, with the submitted configuration
+pinned at `f21de886`, measured on a GCP Ice Lake VM. It is not a board result; wall time on the
+Azure evaluation VM is unmeasured.
+
+The sections before it describe the earlier graph entry. It ran the delete runbook
+(`neurips23/runbooks/delete_runbook.yaml` on msturing-10M-clustered: 100-d float32, L2, at most 6M
+live rows, 33 search checkpoints of 10,000 public queries) with `UpdatableIndex`
+(`src/bindings/python/vector_index.rs` over `core::qgraph::UpdatableVGraph`): a memory-mapped base
+graph, an in-memory delta graph of the rows inserted since the last consolidation, and a rebuild of
+the base over the live rows when the delta or the deleted share passes the adapter's thresholds
+(delta 1.0x the base, 30% deleted, 100k rows minimum).
+
+Every number in those graph-entry sections traces to
+`benchmarks/results/bigann_streaming_delete_runbook_v1.json` or, from "Operating point" on,
+`benchmarks/results/bigann_streaming_delete_runbook_v2.json`; both record the WARM commit, the
+harness commit (`89a3aba`), the machine and the parameters. The final-runbook numbers trace to the
+evidence directories under `benchmarks/research/l22_partition/results/`.
 
 ## Where the recall went
 
@@ -187,7 +197,7 @@ All runs below use `run.py --nodocker` with the final runbook, all 1,280 steps, 
 - The submitted configuration is the last row, pinned at `f21de886`: `c5cd1c61` merged, with an identical source tree. It is the highest recall with a step-time total at or below 2,800 s, which leaves 878 s under the hour.
 - The scan change cut Ice Lake search from 5,293 s to 1,790 s at identical recall. Blocks and admitted counts are identical. The extra time went into higher nprobe and a larger reorder. The second scan round (`c5cd1c61`) bought another 250 lists of nprobe at about the same time.
 - The `neurips23/README.md` baselines table quotes DiskANN at 0.883 on this runbook.
-- Wall time on the Azure evaluation VM is unmeasured. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
+- This is not a board result: wall time on the Azure evaluation VM is unmeasured. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
 
 ## Merged consolidation (development measurements)
 
