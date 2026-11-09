@@ -8,7 +8,7 @@ Integration sources: [bf46965a](https://github.com/writerslogic/warm/commit/bf46
 
 ## Discussion body
 
-I'm working on [WARM (WARM)](https://github.com/writerslogic/warm),
+I'm working on [WARM](https://github.com/writerslogic/warm),
 an Apache-2.0 Rust library with Node bindings for local search and agent memory.
 I'd like to explore whether it could be a useful optional backend for your
 organizational knowledge prototype, particularly

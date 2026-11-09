@@ -2,7 +2,7 @@
 
 **Hybrid search, graph indexing, and vector-symbolic memory.**
 
-WARM (WARM) combines several retrieval and memory paths in one local Rust engine. The paths have different roles; the vector-symbolic layer does not rank ordinary document-search results.
+WARM combines several retrieval and memory paths in one local Rust engine. The paths have different roles; the vector-symbolic layer does not rank ordinary document-search results.
 
 | Need | WARM path | Useful comparison |
 |------|----------|-------------------|
