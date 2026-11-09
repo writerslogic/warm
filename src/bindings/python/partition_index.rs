@@ -79,7 +79,7 @@ const DEFAULT_NPROBE_BY_LIVE: [(usize, f32); 6] = [
 ];
 
 /// Experiment overrides from `WARM_PARTITION_KNOBS=key=value,...` (unset = none), for runs where
-/// the harness cannot pass keyword arguments: `retrain_route`, `retrain_imb`,
+/// the harness cannot pass keyword arguments: `route_cands`, `route_lists`, `route_inserts` (0/1), `retrain_imb`,
 /// `retrain_min_inserts`, `retrain_warm_iters`, `retrain_sample`, `train_sample`, `kmeans_iters`.
 fn apply_knobs(p: &mut PartitionParams) -> PyResult<()> {
     let Ok(spec) = std::env::var("WARM_PARTITION_KNOBS") else {
@@ -90,7 +90,9 @@ fn apply_knobs(p: &mut PartitionParams) -> PyResult<()> {
         let (k, v) = kv.split_once('=').ok_or_else(|| bad(kv))?;
         let n = || v.trim().parse::<usize>().map_err(|_| bad(kv));
         match k.trim() {
-            "retrain_route" => p.retrain_route = n()?,
+            "route_cands" => p.route_cands = n()?,
+            "route_lists" => p.route_lists = n()?,
+            "route_inserts" => p.route_inserts = n()? != 0,
             "retrain_min_inserts" => p.retrain_min_inserts = n()?,
             "retrain_warm_iters" => p.retrain_warm_iters = n()?,
             "retrain_sample" => p.retrain_sample = n()?,
@@ -112,7 +114,7 @@ impl PyPartitionIndex {
     #[pyo3(signature = (dim, lists=5000, train_at=1_000_000, nprobe=250, reorder=317, pq_m=50,
         threads=0, seed=7, retrain_at=None, retrain_imb=1.7, retrain_min_inserts=4_000_000,
         soar_lambda=1.0, train_sample=1_000_000, kmeans_iters=10, retrain_warm_iters=3,
-        retrain_sample=1_000_000, kmeans_rebalance=true, nprobe_by_live=None, retrain_route=0))]
+        retrain_sample=1_000_000, kmeans_rebalance=true, nprobe_by_live=None, route_cands=0, route_lists=64))]
     fn create(
         dim: usize,
         lists: usize,
@@ -132,7 +134,8 @@ impl PyPartitionIndex {
         retrain_sample: usize,
         kmeans_rebalance: bool,
         nprobe_by_live: Option<Vec<(usize, f32)>>,
-        retrain_route: usize,
+        route_cands: usize,
+        route_lists: usize,
     ) -> PyResult<Self> {
         if nprobe == 0 || reorder == 0 {
             return Err(PyValueError::new_err("nprobe and reorder must be positive"));
@@ -153,7 +156,8 @@ impl PyPartitionIndex {
             retrain_warm_iters,
             retrain_sample,
             kmeans_rebalance,
-            retrain_route,
+            route_cands,
+            route_lists,
             nprobe_by_live: nprobe_by_live.unwrap_or_else(|| DEFAULT_NPROBE_BY_LIVE.to_vec()),
             ..PartitionParams::default()
         };
