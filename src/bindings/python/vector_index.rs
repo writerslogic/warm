@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use numpy::{AllowTypeChange, IntoPyArray, PyArray1, PyArray2, PyArrayLike1, PyArrayLike2};
 use numpy::{PyReadonlyArray2, PyUntypedArrayMethods};
-use pyo3::exceptions::{PyRuntimeError, PyValueError};
+use pyo3::exceptions::{PyMemoryError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
@@ -28,6 +28,18 @@ const THREE_BYTE_IDS_BELOW: usize = (1 << 24) - 1;
 
 fn err(e: WarmError) -> PyErr {
     PyValueError::new_err(e.to_string())
+}
+
+fn result_array(rows: usize, cols: usize) -> PyResult<Vec<i64>> {
+    let len = rows
+        .checked_mul(cols)
+        .filter(|&len| len <= isize::MAX as usize / std::mem::size_of::<i64>())
+        .ok_or_else(|| PyValueError::new_err("result array size exceeds the addressable range"))?;
+    let mut out = Vec::new();
+    out.try_reserve_exact(len)
+        .map_err(|_| PyMemoryError::new_err("unable to allocate result array"))?;
+    out.resize(len, -1);
+    Ok(out)
 }
 
 /// A built index with the searcher `query` reuses (its visited marks are one word per vector,
@@ -572,7 +584,7 @@ impl PyVectorIndex {
             }
             query_buf.push(0.0);
         }
-        let mut out = Vec::with_capacity(k);
+        let mut out = Vec::with_capacity(k.min(built.graph.len()));
         let q = &query_buf[..];
         let searcher = &mut built.searcher;
         py.detach(|| searcher.search(q, k, params, &mut out))
@@ -619,7 +631,7 @@ impl PyVectorIndex {
                             let mut s = graph.searcher();
                             rows.chunks_exact(dim)
                                 .map(|q| {
-                                    let mut out = Vec::with_capacity(k);
+                                    let mut out = Vec::with_capacity(k.min(graph.len()));
                                     s.search(q, k, params, &mut out).map(|_| out)
                                 })
                                 .collect::<Result<Vec<_>, WarmError>>()
@@ -659,7 +671,7 @@ impl PyVectorIndex {
         let params = self.params();
         let graph = &*built.graph;
         let dim = graph.dim();
-        let mut ids = vec![-1i64; nq * k];
+        let mut ids = result_array(nq, k)?;
         py.detach(|| {
             self.run(|| {
                 let chunk = nq.div_ceil(rayon::current_num_threads() * 4).max(1);
@@ -667,7 +679,7 @@ impl PyVectorIndex {
                     .zip(queries.par_chunks(chunk * dim))
                     .try_for_each(|(out, rows)| {
                         let mut s = graph.searcher();
-                        let mut found = Vec::with_capacity(k);
+                        let mut found = Vec::with_capacity(k.min(graph.len()));
                         for (q, slot) in rows.chunks_exact(dim).zip(out.chunks_exact_mut(k)) {
                             s.search(q, k, params, &mut found)?;
                             for (o, &id) in slot.iter_mut().zip(&found) {
@@ -1021,7 +1033,7 @@ impl PyUpdatableIndex {
             rerank: self.rerank,
             ..VSearchParams::default()
         };
-        let mut out = vec![-1i64; nq * k];
+        let mut out = result_array(nq, k)?;
         py.detach(|| {
             self.run(|| {
                 out.par_chunks_mut(k)
