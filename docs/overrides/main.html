@@ -2,6 +2,8 @@
     SPDX-License-Identifier: Apache-2.0 -#}
 {% extends "base.html" %}
 
+{% block styles %}{{ super() | warm_inline_theme_styles }}{% endblock %}
+
 {% block site_meta %}
   {{ super() }}
   <link rel="preload" href="{{ 'assets/fonts/geist-latin-wght-normal.woff2' | url }}" as="font" type="font/woff2" crossorigin>
