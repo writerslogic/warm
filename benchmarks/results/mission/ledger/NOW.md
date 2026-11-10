@@ -5,13 +5,13 @@ Base candidate: /Volumes/A/.hms-wt-vdbbench-perf, perf/vdbbench-low-level, 74bb9
 Root /Volumes/A/holographic-memory at 8f54c796; unrelated untracked ait_l5.sh preserved.
 Prior local and Azure ANN results are development evidence, not mission confirmation. Azure VDB workload never started.
 Prior cleanup receipt: /Volumes/A/.hms-lb/azure/az1/group-exists-final.txt=false; revalidated 2026-11-10: Azure group absent; GCP warm-bench-icelake and -s TERMINATED (not deleted).
-Lane A next: H-A-2 rejected E5:m3K128=.625625,m10K256=.905625<.99. No larger K sweep. H-A-3/E10 failed before measurement (header KeyError rows); laneA fixing pinned-schema parser, rerun changed script asE11. CPU eligibility verified E6;65VIBE rows registered.
+Lane A next: H-A-2 rejected E5:m3K128=.625625,m10K256=.905625<.99. No larger K sweep. H-A-3 rejected E11:zero-discovery .000384-.001787;0 exact parent certificates across4cells. E10 schema failure retained. Next dependency-round model, no skip-threshold rescue. CPU eligibility verified E6;65VIBE rows registered.
 Lane B next: H-B-2 rejected by E4:18.2080 ideal bytes/row/query vs1.5 cap; .000942875 refinement vs.0003 cap;0 oracle violations. Do not run harder dataset. H-B-3/E9 rejected:mean975188.9375,p99994147.45 surviving rows vs1000/5000;4194centers,0violations. Different proof representation/batch cost model next.
-Lane C next: E3 found156 flags/5 link mismatches; E7 independently supports2 corrections,3 qualified decisions. Remaining temporal review active; full key/official+audited scoring still absent. Artifact /Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E3.
+Lane C next: E3 found156 flags/5 link mismatches; E7 independently supports2 corrections,3 qualified decisions. 26temporal+24attribution claims reviewed; E12 validates45 new claim pointers. Hallucination33 review active; full key/official+audited scoring absent. Artifact /Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E3.
 Orchestrator next: integrate lane inventories, rank frontier cards and run lowest-rung experiment. PR425 open draft at74bb9fa8 and PR898 open at4c6bdb5, both mergeable, reverified.
-Integration worktree: /Volumes/A/.hms-wt-mission-integrated, mission/integrated-frontier at74bb9fa8.
+Integration worktree: /Volumes/A/.hms-wt-mission-integrated, mission/integrated-frontier; signed commitcc15db114da6215cc5bcced5945a8a39dbd90061 records initial evidence. Later counter/audit artifacts awaiting next commit.
 Findings: ann-benchmarks upstream inactive (retain mission scope); VIBE current k10 differs from historical k100. LongMemEval now points to cleaned S/M. LoCoMo legacy answer caching disqualifies confirmation; retain as development only. Agent Memory Challenge Cycle2 entry closed Oct31/evaluation Nov4; results dueNov19.
-Backlog: H-A-1 static inventory; H-B-1 dynamic inventory; H-C-1 memory inventory/instrument audit.
+Backlog: H-B-4 packed exact-bound batch scan model; H-A-4 dominant-phase frontier model; H-C-1 remaining instrument audit; H-C-2 typed event proofs (pending audit); H-A-1 unresolved ANN/SISAP/VDB rows; H-B-1 other20streaming runbooks+VDB rows.
 Seeds assigned: A owns Z2,A1-A8; B owns B1-B5; C owns Z1,C1-C4. All unverified until individually carded.
 Service boundary: reuse matched_server persistent HTTP lifecycle for future VDB adapter; native QGraph gains do not establish service throughput (E2).
 Open PENDING items: 3 (P1 partial LoCoMo audit review; P2 LAFS target mapping; P3 BigANN comparator discrepancies).

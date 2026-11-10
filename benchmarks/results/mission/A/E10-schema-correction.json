@@ -1,0 +1,27 @@
+{
+  "experiment": "E10",
+  "classification": "parser failed before measurement; no performance or mechanism conclusion",
+  "cause": "Parser assumed current trace header schema for both archives. The pinned100k archive predates rows/corpusRows fields;10k archive includes them.",
+  "inspection": "Read only first three records of each gzip archive, both terminal receipt schemas and Yi/Llama profile metadata. No counter experiment was executed.",
+  "pinned100k": {
+    "mode": "navigation",
+    "header_has_rows": false,
+    "receipt_has_corpusRows": false,
+    "topology_rows": 100000,
+    "graph_hash": "b032161111580eb9",
+    "graph_identity_field": "receipt.expectedGraphHash",
+    "raw_sha256": "2fa90ae2c8694787728bf4ca81cd1f6c49fc4cf17280da0b8675d40a7c19812e"
+  },
+  "pinned10k": {
+    "mode": "navigation10k",
+    "header_rows": 10000,
+    "receipt_corpusRows": 10000,
+    "topology_rows": 10000,
+    "graph_hash": "1252cb6267c5dd80",
+    "graph_identity_field": "receipt.result.graphHash; receipt.expectedGraphHash is null",
+    "raw_sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5"
+  },
+  "profiles": "Both Yi/Llama use schema_version1, validation_queries256, two layouts compact=false/true with256 query records each. All consumed phase fields are present.",
+  "repair": "Pass explicit manifest corpus sizes and validate corresponding legacy/current schema, exact topology size and graph identity. Preserve full raw hash and2002-record checks. Also require source verification counts2000 production/1000 exact, reject duplicate adjacency IDs, and validate profile schema/counts. No fabricated defaults or weakened integrity checks.",
+  "next_experiment": "E11 after root copies corrected navigation_headroom.py; same fixed H-A-3 thresholds. Specialist did not run corrected parser."
+}

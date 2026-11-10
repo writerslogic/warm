@@ -1,0 +1,8 @@
+{
+  "id": "E11",
+  "hypothesis": "H-A-3",
+  "question": "Does exact parent-neighborhood domination remove frontier-sized expansion work?",
+  "prediction": "zero-discovery>=.5,certificates>=1/3 all4cells;reject certificates below1/3",
+  "change": "repair archived schema;E10 no measurement",
+  "script_sha256": "68dda6c8c48f7afade5f5008356ae022b4ad268dd29cfcb80c64c52d07dc81a2"
+}
