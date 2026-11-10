@@ -1,0 +1,9 @@
+rep0 qps=1451 recall~0.9556
+rep1 qps=1443 recall~0.9556
+rep2 qps=1429 recall~0.9556
+rep3 qps=1529 recall~0.9556
+rep4 qps=1227 recall~0.9556
+rep5 qps=1432 recall~0.9556
+[ perf record: Woken up 26 times to write data ]
+[ perf record: Captured and wrote 6.487 MB /home/davidcondrey/ab-a/runs/perf-glove-ef240.data (169793 samples) ]
+PROF_DONE glove-ef240
