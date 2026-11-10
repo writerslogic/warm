@@ -494,7 +494,38 @@ impl VGraph {
         Ok(out)
     }
 
+    /// Maps a Linux memfd whose write, shrink and grow seals make its contents immutable.
+    /// Multiple processes may open the same sealed inode without copying its index arrays.
+    #[cfg(target_os = "linux")]
+    pub fn open_sealed(path: &Path) -> std::io::Result<Self> {
+        use std::os::fd::AsRawFd;
+
+        let file = File::open(path)?;
+        // SAFETY: the descriptor belongs to `file`; F_GET_SEALS takes no third argument.
+        let seals = unsafe { libc::fcntl(file.as_raw_fd(), libc::F_GET_SEALS) };
+        if seals < 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+        let required = libc::F_SEAL_WRITE | libc::F_SEAL_SHRINK | libc::F_SEAL_GROW;
+        if seals & required != required {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "shared index requires write, shrink and grow seals",
+            ));
+        }
+        // SAFETY: seals are irreversible and belong to this opened inode. F_SEAL_WRITE
+        // excludes existing writable mappings; the size seals also prevent truncation.
+        let backing = Arc::new(Backing::Map(unsafe { memmap2::Mmap::map(&file)? }));
+        Self::from_backing(&backing)
+    }
+
     fn from_backing(backing: &Arc<Backing>) -> std::io::Result<Self> {
+        if cfg!(target_endian = "big") {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "index files are little-endian; this target is big-endian",
+            ));
+        }
         let bytes = backing.bytes();
         if bytes.len() < PREFIX {
             return Err(bad(format!(
