@@ -1,0 +1,121 @@
+{
+  "hypothesis": "H-A-6",
+  "status": "conditional_frontier_necessary_bound_not_run",
+  "owned_worktree": "/Volumes/A/.hms-wt-mission-a",
+  "base": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "selected_seed": "A5 memory-level parallelism",
+  "mechanism": "Fixed eight-candidate speculative adjacency/distance preparation with original serial commit, single core, unchanged traversal decisions.",
+  "claim_labels": {
+    "E21_counts": "local archived deterministic measurements, exposed development evidence",
+    "E26_outcome": "root-reported local necessary-bound result, not new measurement by this card",
+    "phase_totals": "existing local instrumented means, not production QPS or memory-stall measurements",
+    "gain": "projected only, conditional on unproved overlap, overhead and matched-gap premises",
+    "prior_art": "published mechanism descriptions, no imported speedup"
+  },
+  "existing_evidence": {
+    "E21": {
+      "path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E21/result.json",
+      "sha256": "084def3ff85c4b08616afe3b8c95bb94ca902a52efe2d964a4df3bd2426ac343",
+      "cells": [
+        {"rows": 100000, "ef": 128, "queries": 1000, "expansions": 130214, "neighbor_reads": 4166848, "fresh_estimates_including_entry": 2846631},
+        {"rows": 100000, "ef": 256, "queries": 1000, "expansions": 257284, "neighbor_reads": 8233088, "fresh_estimates_including_entry": 5152615},
+        {"rows": 10000, "ef": 128, "queries": 1000, "expansions": 128566, "neighbor_reads": 4114112, "fresh_estimates_including_entry": 2440197},
+        {"rows": 10000, "ef": 256, "queries": 1000, "expansions": 256245, "neighbor_reads": 8199840, "fresh_estimates_including_entry": 3980319}
+      ]
+    },
+    "E26": {
+      "path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-result.json",
+      "decision": "Prefix-only allocation rejected. Full gold discoveries 100k ef128=9235/10000, ef256=9634/10000; 10k ef128=9847/10000, ef256=9976/10000. Only 10k ef256 at .99 passed both work bounds. Every perfect-1 floor infeasible within its frozen trace.",
+      "implication": "Do not fit an early-stop classifier or increase beam under this card. Semantics-preserving preparation only addresses speed; qualifying recall still needs a separate accepted mechanism or already eligible baseline."
+    },
+    "phase_model_source": "benchmarks/results/mission/A/research-4.json:6-13; underlying benchmarks/results/query_aware_graph_v2/summary.json:34,213",
+    "phase_inputs": [
+      {"dataset": "llama", "total_us": 389.36559375, "adjacency_percent": 47.346943333061255, "scoring_pool_percent": 37.691546561437804, "expansions": 257.1875, "neighbor_reads": 23510.01953125, "estimates": 10410.796875},
+      {"dataset": "yi", "total_us": 558.2368828125, "adjacency_percent": 45.48267136986719, "scoring_pool_percent": 36.3694331375705, "expansions": 513.3046875, "neighbor_reads": 41782.765625, "estimates": 12063.31640625}
+    ],
+    "phase_limits": "These combined stages include scalar visited, arithmetic and beam maintenance. Their entire time is not memory stall. They establish a generous affected-phase ceiling only. Do not multiply GloVe event counts by these workloads' average costs."
+  },
+  "existing_code_check": [
+    {"path": "src/core/qgraph/vertex.rs:141-148", "finding": "Existing prefetch depths already fetch next/second candidate adjacency and next candidate's unvisited rows; batch_est already evaluates four rows together."},
+    {"path": "src/core/qgraph/vertex.rs:2975-3100", "finding": "Admission mutates visited, builds fresh, then score_fresh mutates pool. Speculation must not move either state transition before original commit."},
+    {"path": "src/core/qgraph/vertex.rs:3101-3118", "finding": "Existing depth-3 row lookahead covers one next candidate, not a retained eight-expansion preparation window. Any eventual timing comparison must include this existing alternative."},
+    {"path": "src/core/qgraph/vertex.rs:1993,2443", "finding": "Two-hop paths already exist; archived single-hop replay cannot certify their preparation semantics."},
+    {"path": "src/core/qgraph/vertex.rs:748-770,1195-1235", "finding": "BFS reordering and per-vertex SymphonyQG neighbor-code blocks already exist. Reimplementing either is not the new mechanism."},
+    {"path": "src/core/qgraph/partition.rs:3-13,585-602", "finding": "Existing IVF/SOAR partition tier uses 32-row LUT16/quad code blocks; ordinary clustered SIMD scanning is already implemented."},
+    {"path": "src/core/qgraph/projection.rs:149-219", "finding": "Training-query graph projection already exists; construction queries must be independent of evaluation."},
+    {"path": "src/core/qgraph/repair.rs:23-55,96-135", "finding": "Training-query missed-neighbor edges, antihub repair and medoid entry layer already exist."},
+    {"path": "benchmarks/results/qgraph_repair_v1/README.md:3-9,62-83", "finding": "Existing repair was parked: large in-sample improvement transferred poorly; no end-to-end held-out win on GloVe/SIFT. Do not duplicate this as seed A8."}
+  ],
+  "primary_sources": [
+    {
+      "title": "Speed-ANN: Low-Latency and High-Accuracy Nearest Neighbor Search via Intra-Query Parallelism",
+      "url": "https://arxiv.org/abs/2201.13007",
+      "version_date": "2022-01-31",
+      "used_for": "Prior art for preparing multiple paths, critical dependency chains and redundant expansion. Its multi-core throughput does not establish single-core benefit."
+    },
+    {
+      "title": "iQAN: Fast and Accurate Vector Search with Efficient Intra-Query Parallelism on Multi-Core Architectures",
+      "url": "https://johnpzh.github.io/assets/papers/PPoPP-2023_iQAN_Zhen.CameraReady.pdf",
+      "version_date": "PPoPP 2023",
+      "used_for": "Primary author paper: separates path/edge parallelism and notes poor scaling of small-degree edge parallelism. No paper speedup is used in the model."
+    },
+    {
+      "title": "GraSP: Optimizing Graph-Based Nearest Neighbor Search with Subgraph Sampling and Pruning",
+      "url": "https://www.microsoft.com/en-us/research/publication/grasp-optimizing-graph-based-nearest-neighbor-search-with-subgraph-sampling-and-pruning/?lang=ko-kr",
+      "version_date": "WSDM 2022",
+      "used_for": "Seed A8 prior art. E21 fresh/read ratios .485-.683 make duplicate-only pruning incapable of a fourfold adjacency-work reduction while preserving all first discoveries. Stronger query-trained edge repair already has negative local evidence."
+    },
+    {
+      "title": "Starling: An I/O-Efficient Disk-Resident Graph Index Framework for High-Dimensional Vector Similarity Search on Data Segment",
+      "url": "https://arxiv.org/abs/2401.02116",
+      "version_date": "2024-01-04; publication DOI 10.1145/3639269",
+      "used_for": "Bias check for whole-block traversal. Disk I/O savings do not imply CPU-memory gains; scanning every cell member can amplify scoring. This unselected alternative gets no implementation or counter under H-A-6."
+    }
+  ],
+  "frozen_counter_specification": {
+    "window": 8,
+    "group_boundary": "Before each group of up to eight actual expansions, snapshot the nearest eight currently admitted, unexpanded beam members by exact f32-distance/u32-ID key. The first group begins after the archived entry offer. Snapshot membership is fixed until the next boundary.",
+    "speculative_actions": "Read each snapshot vertex adjacency once and prepare each not-yet-estimated neighbor's query score. Preserve adjacency order for later commit. Extra rows outside archived offered IDs still incur full estimate work. Reuse query-local scores; do not admit, evict, mark visited or follow speculative neighbors.",
+    "demand_actions": "Replay original offers and expansion order. An expansion absent from the snapshot performs ordinary adjacency admission; estimate any row not already prepared. Adjacency buffers are retained only for their group; score cache is retained for the entire query, including unused speculative estimates. Read each committed neighbor slot and mutate visited/pool in original order. Staged slots therefore incur both preparation reads and commit-time buffer reads.",
+    "round_bound": "Per query B=ceil(U/8), D=number of committed expansions absent from their current group snapshot. R=B+D grants one parallel preparation round per group plus one demand round per miss. This ideal schedule has no bandwidth, computation or synchronization delay. It counts logical dependency rounds, not actual cache misses: cache retention across groups can help real hardware. Failure retires this fixed scheduling-budget hypothesis, not every possible speculative design.",
+    "adjacency_accounting": "A counts index adjacency slots read at preparation or demand, including repeated preparations in different groups. Also report the unchanged E21 commit-time neighbor inspections. For staged expansions these are a second read from the prepared buffer; demand expansions can fuse index read and commit inspection. Total physical slot reads = A + staged committed neighbor slots. Never present A as total slot reads or omit that additional work from the timing overhead premise.",
+    "counts": ["committed expansions U", "groups B", "unstaged demand expansions D", "ideal rounds R", "index adjacency entries prepared/read A", "commit-time neighbor inspections", "additional staged-buffer slot reads", "total physical slot reads", "unique estimates including entry Q", "unused prepared expansions", "unused prepared estimates", "pool snapshot candidate count", "query-local cache writes and lookups", "peak retained cache entries", "bytes reset", "baseline and candidate per-query p99 counts"],
+    "accept_necessary_only": {
+      "all_four_cells": true,
+      "round_ratio_max": 0.25,
+      "adjacency_amplification_max": 1.25,
+      "estimate_amplification_max": 1.25,
+      "p99_per_query_adjacency_amplification_max": 1.5,
+      "p99_per_query_estimate_amplification_max": 1.5,
+      "extra_scratch_bytes_per_corpus_row_max": 16,
+      "integrity_failures": 0
+    },
+    "integrity": "Reuse corrected raw/receipt hashes and schema validation from packet_eligibility.py and effort_allocation.py. Float keys use the existing float32-bit transform, including ID tie-break. Reconstruct admission, eviction and expansion flags exactly; require every archived decision and E21 baseline total to agree. Unsupported or incomplete metadata is an error, not a default. Independent gold equality remains verified by existing pinned oracle inputs, but gold never affects staging.",
+    "data_receipts": [
+      {"path": "/Volumes/A/.hms-bench-cache/warm-navigation-20261102-v1/navigation.ndjson.gz", "sha256": "2fa90ae2c8694787728bf4ca81cd1f6c49fc4cf17280da0b8675d40a7c19812e", "rows": 100000, "graph_hash": "b032161111580eb9"},
+      {"path": "/Volumes/A/.hms-bench-cache/warm-navigation-10k-20261102-v1/navigation.ndjson.gz", "sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5", "rows": 10000, "graph_hash": "1252cb6267c5dd80"}
+    ],
+    "exposure": "All archived queries already exposed. This is neither a fresh holdout nor a current serving comparison.",
+    "failure_policy": "Any threshold failure rejects fixed-window H-A-6. No window-size sweep, demand threshold, beam change or dropped cell.",
+    "pass_policy": "Necessary headroom only. Before native implementation establish a matched eligible W/C and support the overlap/overhead premise. Before accepting performance measure one core with existing prefetch/batch alternatives, unchanged output/work semantics, every row's recall floor and required fresh-holdout/resource gates."
+  },
+  "conditional_cost_model": {
+    "affected_phase_fraction_p": "adjacency_visited_prefetch + scoring_pool, separately for each existing Yi/Llama profile",
+    "overlap_eligible_fraction_of_p_required": 0.8,
+    "effective_delay_speedup_required": 4,
+    "additional_fraction_of_original_total_max": 0.03,
+    "formula": "T_new/T_old = 1 - p*0.8*(1 - 1/4) + 0.03",
+    "projected_llama_speedup_approx": 1.924,
+    "projected_yi_speedup_approx": 1.856,
+    "conservative_conditional_speedup": 1.85,
+    "matched_W_over_C_required": "at least 1/(1.85-0.5)=0.7407407407, at equal-or-better row recall and boundary",
+    "unknowns": ["actual memory-stall fraction within combined phases", "existing prefetch's hidden latency", "single-core sustainable issue/bandwidth", "score-cache and speculation cost", "matched eligible W/C", "transfer to two-hop/stateful code paths", "whether fixed-window counter passes"],
+    "interpretation": "These are conjunctive future acceptance requirements, not observed forecasts. Event-count success cannot verify the fourfold delay reduction or the 80% overlap fraction. No actual throughput or half-gap closure is claimed."
+  },
+  "validation": {
+    "performed": "Narrow source/artifact reading and primary prior-art research only. Two new text artifacts written.",
+    "not_performed": "No counter implementation or execution, build, test, native search, profile, competitor run, paid API or cloud work.",
+    "next_validation": "Root review of this fixed protocol; only then assign one deterministic counter implementation. There is intentionally no runnable experiment command before that implementation exists.",
+    "blockers": "No blocker to the authorized card deliverable. Matched-gap and overlap premises remain unresolved conditions for later implementation/performance acceptance."
+  }
+}

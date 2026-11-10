@@ -1,0 +1,7 @@
+{
+  "experiment": "E37-check",
+  "question": "Do fixed-eight staging counts match independent finite timelines including group boundaries, invalidation and unused work?",
+  "prediction": "five cases and9 threshold boundaries pass; no performance claim",
+  "source_commit": "3c1b4767e3f32b642e5438279193c3537f76b2ac",
+  "script_sha256": "0c0bc1f99098ceb0d483fe72593776b5f4791caf33ed0eeec4090ea119c9d0a7"
+}

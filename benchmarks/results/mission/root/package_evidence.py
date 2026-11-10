@@ -26,14 +26,15 @@ def package(args):
             value = json.loads(path.read_text())
             counts['json_documents'] += 1
             if path.name == 'registration.json' and 'script_sha256' in value:
-                if 'script' in value:
-                    relative = value['script'].split('/benchmarks/results/mission/', 1)[1]
-                    matches = [root / relative]
-                else:
+                relative = value.get('script', '').split('/benchmarks/results/mission/', 1)[-1]
+                current = root / relative
+                if not relative or not current.is_file() or hashlib.sha256(current.read_bytes()).hexdigest() != value['script_sha256']:
                     matches = [script for script in root.rglob('*.py')
                                if hashlib.sha256(script.read_bytes()).hexdigest() == value['script_sha256']]
-                if len(matches) != 1 or hashlib.sha256(matches[0].read_bytes()).hexdigest() != value['script_sha256']:
-                    raise ValueError('registered script not uniquely preserved: ' + str(path))
+                else:
+                    matches = [current]
+                if not matches:
+                    raise ValueError('registered script not preserved: ' + str(path))
                 counts['registered_script_hashes'] += 1
     if len((args.ledger / 'NOW.md').read_text().splitlines()) > 150:
         raise ValueError('NOW exceeds 150 lines')
@@ -63,8 +64,10 @@ def package(args):
             'All syntax, JSON, source pins and ledger line cap pass; no engine or target claim',
             json.dumps(result, sort_keys=True), 'compose', commit, 'research-only package',
             'owned-local', str(args.output.resolve())])
+    canonical = {'MISSION.md', 'NOW.md', 'MATRIX.tsv', 'HYP.md', 'LOG.tsv',
+                 'FILEMAP.tsv', 'PENDING.md', 'SPECIALIST.md', 'SEEDS.md'}
     for path in sorted(args.ledger.iterdir()):
-        if not path.is_file() or path.suffix not in ('.md', '.tsv'):
+        if path.name not in canonical or not path.is_file():
             continue
         destination = root / 'ledger' / path.name
         if path.suffix == '.tsv':

@@ -1,0 +1,1 @@
+E37 reject: 100000/ef128:R/U=0.431705,A/E=1.247078,Q/Q0=1.019265,pass=False; 100000/ef256:R/U=0.367862,A/E=1.213274,Q/Q0=1.006029,pass=False; 10000/ef128:R/U=0.380777,A/E=1.198381,Q/Q0=1.005366,pass=False; 10000/ef256:R/U=0.298843,A/E=1.145802,Q/Q0=1.001316,pass=False; performance unproved; benchmarks/results/mission/A/speculation-result.json

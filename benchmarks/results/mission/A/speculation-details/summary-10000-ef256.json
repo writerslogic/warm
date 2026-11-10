@@ -1,0 +1,135 @@
+{
+  "rows": 10000,
+  "ef": 256,
+  "queries": 1000,
+  "totals": {
+    "expansions": 256245,
+    "groups": 32193,
+    "demand_expansions": 44384,
+    "ideal_rounds": 76577,
+    "snapshot_candidates": 249222,
+    "unused_snapshot_candidates": 37361,
+    "prepare_index_reads": 7975104,
+    "demand_index_reads": 1420288,
+    "index_reads": 9395392,
+    "commit_neighbor_inspections": 8199840,
+    "staged_buffer_reads": 6779552,
+    "physical_slot_reads": 16174944,
+    "baseline_estimates": 3980319,
+    "estimates": 3985556,
+    "seed_estimates": 1000,
+    "speculative_estimates": 3083356,
+    "demand_estimates": 901200,
+    "unused_speculative_estimates": 5237,
+    "cache_presence_checks": 11954423,
+    "cache_value_reads": 3078119,
+    "cache_value_writes": 3985556,
+    "modeled_cache_presence_read_bytes": 95635384,
+    "modeled_cache_value_read_bytes": 12312476,
+    "modeled_cache_write_bytes": 47826672,
+    "modeled_buffer_write_bytes": 31900416,
+    "modeled_buffer_read_bytes": 27118208,
+    "modeled_reset_bytes": 1384000
+  },
+  "gates": {
+    "rounds": false,
+    "index_reads": true,
+    "estimates": true,
+    "p99_index_reads": true,
+    "p99_estimates": true,
+    "scratch": true
+  },
+  "necessary_condition_passed": false,
+  "p99_per_query_ratios": {
+    "rounds": {
+      "numerator": 118,
+      "denominator": 257,
+      "value": 0.4591439688715953,
+      "witness_query": 970
+    },
+    "index_reads": {
+      "numerator": 167,
+      "denominator": 128,
+      "value": 1.3046875,
+      "witness_query": 869
+    },
+    "estimates": {
+      "numerator": 4457,
+      "denominator": 4421,
+      "value": 1.0081429540827866,
+      "witness_query": 440
+    },
+    "physical_reads": {
+      "numerator": 509,
+      "denominator": 258,
+      "value": 1.9728682170542635,
+      "witness_query": 404
+    }
+  },
+  "p99_counts": {
+    "expansions": 258,
+    "groups": 33,
+    "demand_expansions": 86,
+    "ideal_rounds": 118,
+    "snapshot_candidates": 251,
+    "unused_snapshot_candidates": 78,
+    "prepare_index_reads": 8032,
+    "demand_index_reads": 2752,
+    "index_reads": 10720,
+    "commit_neighbor_inspections": 8256,
+    "staged_buffer_reads": 7936,
+    "physical_slot_reads": 16288,
+    "baseline_estimates": 4672,
+    "estimates": 4681,
+    "seed_estimates": 1,
+    "speculative_estimates": 3705,
+    "demand_estimates": 1722,
+    "unused_speculative_estimates": 34,
+    "cache_presence_checks": 12664,
+    "cache_value_reads": 3698,
+    "cache_value_writes": 4681,
+    "modeled_cache_presence_read_bytes": 101312,
+    "modeled_cache_value_read_bytes": 14792,
+    "modeled_cache_write_bytes": 56172,
+    "modeled_buffer_write_bytes": 32128,
+    "modeled_buffer_read_bytes": 31744,
+    "modeled_reset_bytes": 1384
+  },
+  "max_modeled_scratch_bytes": 42440,
+  "max_peak_cached_rows": 4778,
+  "max_peak_buffer_slots": 256,
+  "aggregate_ratios": {
+    "rounds": {
+      "numerator": 76577,
+      "denominator": 256245,
+      "value": 0.2988429042517903
+    },
+    "index_reads": {
+      "numerator": 9395392,
+      "denominator": 8199840,
+      "value": 1.145801869304767
+    },
+    "estimates": {
+      "numerator": 3985556,
+      "denominator": 3980319,
+      "value": 1.0013157236894832
+    },
+    "physical_reads": {
+      "numerator": 16174944,
+      "denominator": 8199840,
+      "value": 1.9725926359538724
+    }
+  },
+  "details_path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/speculation-details/queries-10000-ef256.ndjson.gz",
+  "details_raw_sha256": "ae1c18fd0d1046be347ec8e1030edd5f2449be094c945db59480ea144200be34",
+  "details_gzip_sha256": "8f14203e512281544579af7110fa1497c7127be4fa9f7e3d305555a610b583a7",
+  "raw_path": "/Volumes/A/.hms-bench-cache/warm-navigation-10k-20261102-v1/navigation.ndjson.gz",
+  "raw_sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5",
+  "receipt_path": "/Volumes/A/.hms-wt-mission-integrated/docs/research/milestones-20261102/navigation-10k/finished.json",
+  "receipt_sha256": "097400b995962ca71e875827890e47b3a4b1aeb1e9bccce6c978db0e5547dca2",
+  "oracle_source": {
+    "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0020-glove-10000-oracle-oracle.ndjson",
+    "sha256": "a4b91500c62d94d71c6f965dc2ac5f48ce928a6e50df7dec426bbc234391aa94"
+  },
+  "scalar_oracle_counters_matched": true
+}

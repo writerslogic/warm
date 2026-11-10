@@ -1,0 +1,118 @@
+{
+  "experiment": "E37",
+  "hypothesis": "H-A-6",
+  "question": "Does fixed-eight preparation satisfy every frozen dependence-round and amplification gate?",
+  "prediction": "At least one cell exceeds a dependence-round or amplification cap; retain every cell.",
+  "window": 8,
+  "max_seconds": 900,
+  "source_commit": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+  "source_vertex_sha256": "98dbb33e82c316b02ff815f5f098d5f1c3fb3f2b4752bcfd19ff54ab1ee62508",
+  "dependency_sha256": {
+    "packet_eligibility.py": "59501edf635f15aa98f6836c82438f6e79533a159871d620886ea5de7f67394f",
+    "effort_allocation.py": "db8f68aa9647a6caf2a63433edba4210909f4b7b972b2f7527a9385fd1cb149d",
+    "research5.json": "d9e358b9a637c1b36ddb001a2dc32b3c47496966e302e3b75bec74c40e35983d",
+    "next-card6.md": "3c9f97d6588eca477e7a8e75bcd752e8e6ab3904d4a09ce3a92b8f76f571c57e",
+    "research6.json": "7c81b00a37d0b5c5a3797aebadd4c18d3d220123d2de730d8c6dc075e7067046"
+  },
+  "script_sha256": "1806ba9f5cb70c2ee8d46a662386faf9b4a349db5731de907c59482dd8fab2c8",
+  "e21_sha256": "084def3ff85c4b08616afe3b8c95bb94ca902a52efe2d964a4df3bd2426ac343",
+  "check_receipt": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E37-check/result.json",
+  "check_receipt_sha256": "ef3622914e3d206e5142d3f30894f8194a6606222161f404b83d5731df6c3043",
+  "preregistration": {
+    "window": 8,
+    "group_boundary": "Before each group of up to eight actual expansions, snapshot the nearest eight currently admitted, unexpanded beam members by exact f32-distance/u32-ID key. The first group begins after the archived entry offer. Snapshot membership is fixed until the next boundary.",
+    "speculative_actions": "Read each snapshot vertex adjacency once and prepare each not-yet-estimated neighbor's query score. Preserve adjacency order for later commit. Extra rows outside archived offered IDs still incur full estimate work. Reuse query-local scores; do not admit, evict, mark visited or follow speculative neighbors.",
+    "demand_actions": "Replay original offers and expansion order. An expansion absent from the snapshot performs ordinary adjacency admission; estimate any row not already prepared. Adjacency buffers are retained only for their group; score cache is retained for the entire query, including unused speculative estimates. Read each committed neighbor slot and mutate visited/pool in original order. Staged slots therefore incur both preparation reads and commit-time buffer reads.",
+    "round_bound": "Per query B=ceil(U/8), D=number of committed expansions absent from their current group snapshot. R=B+D grants one parallel preparation round per group plus one demand round per miss. This ideal schedule has no bandwidth, computation or synchronization delay. It counts logical dependency rounds, not actual cache misses: cache retention across groups can help real hardware. Failure retires this fixed scheduling-budget hypothesis, not every possible speculative design.",
+    "adjacency_accounting": "A counts index adjacency slots read at preparation or demand, including repeated preparations in different groups. Also report the unchanged E21 commit-time neighbor inspections. For staged expansions these are a second read from the prepared buffer; demand expansions can fuse index read and commit inspection. Total physical slot reads = A + staged committed neighbor slots. Never present A as total slot reads or omit that additional work from the timing overhead premise.",
+    "counts": [
+      "committed expansions U",
+      "groups B",
+      "unstaged demand expansions D",
+      "ideal rounds R",
+      "index adjacency entries prepared/read A",
+      "commit-time neighbor inspections",
+      "additional staged-buffer slot reads",
+      "total physical slot reads",
+      "unique estimates including entry Q",
+      "unused prepared expansions",
+      "unused prepared estimates",
+      "pool snapshot candidate count",
+      "query-local cache writes and lookups",
+      "peak retained cache entries",
+      "bytes reset",
+      "baseline and candidate per-query p99 counts"
+    ],
+    "accept_necessary_only": {
+      "all_four_cells": true,
+      "round_ratio_max": 0.25,
+      "adjacency_amplification_max": 1.25,
+      "estimate_amplification_max": 1.25,
+      "p99_per_query_adjacency_amplification_max": 1.5,
+      "p99_per_query_estimate_amplification_max": 1.5,
+      "extra_scratch_bytes_per_corpus_row_max": 16,
+      "integrity_failures": 0
+    },
+    "integrity": "Reuse corrected raw/receipt hashes and schema validation from packet_eligibility.py and effort_allocation.py. Float keys use the existing float32-bit transform, including ID tie-break. Reconstruct admission, eviction and expansion flags exactly; require every archived decision and E21 baseline total to agree. Unsupported or incomplete metadata is an error, not a default. Independent gold equality remains verified by existing pinned oracle inputs, but gold never affects staging.",
+    "data_receipts": [
+      {
+        "path": "/Volumes/A/.hms-bench-cache/warm-navigation-20261102-v1/navigation.ndjson.gz",
+        "sha256": "2fa90ae2c8694787728bf4ca81cd1f6c49fc4cf17280da0b8675d40a7c19812e",
+        "rows": 100000,
+        "graph_hash": "b032161111580eb9"
+      },
+      {
+        "path": "/Volumes/A/.hms-bench-cache/warm-navigation-10k-20261102-v1/navigation.ndjson.gz",
+        "sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5",
+        "rows": 10000,
+        "graph_hash": "1252cb6267c5dd80"
+      }
+    ],
+    "exposure": "All archived queries already exposed. This is neither a fresh holdout nor a current serving comparison.",
+    "failure_policy": "Any threshold failure rejects fixed-window H-A-6. No window-size sweep, demand threshold, beam change or dropped cell.",
+    "pass_policy": "Necessary headroom only. Before native implementation establish a matched eligible W/C and support the overlap/overhead premise. Before accepting performance measure one core with existing prefetch/batch alternatives, unchanged output/work semantics, every row's recall floor and required fresh-holdout/resource gates."
+  },
+  "inputs": [
+    {
+      "size": "100k",
+      "receipt_path": "docs/research/milestones-20261102/navigation-100k/finished.json",
+      "receipt_sha256": "ecf21d85bd3ab7294bd1b32af8e7c3d45e447e5a29dbdc3aeec5d2b3715756aa",
+      "source_commit": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+      "raw_sha256": "2fa90ae2c8694787728bf4ca81cd1f6c49fc4cf17280da0b8675d40a7c19812e",
+      "oracle_reference": {
+        "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0030-glove-100000-oracle-oracle.ndjson",
+        "sha256": "d3d9b337c191f8c2ff628a2af63d206367dcfcb05e016017797b62576bfc8ae8"
+      },
+      "corpus_path": "/Volumes/A/.hms-bench-cache/competitive/data/glove-100-angular-n100000-q1000/train.f32",
+      "corpus_sha256": "119360a40fed67fd92d9a16ff15b21e5566ecaef1865f93ff07efc53e2bca8e7",
+      "queries_path": "/Volumes/A/.hms-bench-cache/competitive/data/glove-100-angular-n100000-q1000/test.f32",
+      "queries_sha256": "d834585869aac11aba8de8dffe22ec50006b22d223ed1cce1ad357611091d613",
+      "verification_counts": {
+        "production_rankings": 2000,
+        "exact_rankings": 1000
+      }
+    },
+    {
+      "size": "10k",
+      "receipt_path": "docs/research/milestones-20261102/navigation-10k/finished.json",
+      "receipt_sha256": "097400b995962ca71e875827890e47b3a4b1aeb1e9bccce6c978db0e5547dca2",
+      "source_commit": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+      "raw_sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5",
+      "oracle_reference": {
+        "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0020-glove-10000-oracle-oracle.ndjson",
+        "sha256": "a4b91500c62d94d71c6f965dc2ac5f48ce928a6e50df7dec426bbc234391aa94"
+      },
+      "corpus_path": "/Volumes/A/.hms-bench-cache/competitive/data/glove-100-angular-n100000-q1000/train.f32",
+      "corpus_sha256": "119360a40fed67fd92d9a16ff15b21e5566ecaef1865f93ff07efc53e2bca8e7",
+      "queries_path": "/Volumes/A/.hms-bench-cache/competitive/data/glove-100-angular-n100000-q1000/test.f32",
+      "queries_sha256": "d834585869aac11aba8de8dffe22ec50006b22d223ed1cce1ad357611091d613",
+      "verification_counts": {
+        "production_rankings": 2000,
+        "exact_rankings": 1000
+      }
+    }
+  ],
+  "percentile": "Nearest rank: sorted per-query values at ceil(.99*n), with exact rational ratio ordering.",
+  "scratch_model": "Proposed f32 score array4*N, 64-bit validity words8*ceil(N/64), u32 group adjacency buffers, eight u32 candidate IDs and128 control bytes. Scores need no zeroing; reset validity words and control bytes once/query. This is modeled serving scratch/traffic, not Python RSS or a native allocation measurement.",
+  "cache_traffic_model": "Each presence check reads one8-byte validity word; each new estimate writes one4-byte score and one8-byte validity word; each reused committed estimate reads4bytes. Group buffer writes/reads are4bytes/ID. Index ID byte width and actual cache-line misses are not inferred."
+}

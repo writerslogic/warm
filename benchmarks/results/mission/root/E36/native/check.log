@@ -1,0 +1,1 @@
+{"decision": "accept-native-arithmetic-only", "checks": 6364, "native_prunes": 70, "environment_error_paths": 12}

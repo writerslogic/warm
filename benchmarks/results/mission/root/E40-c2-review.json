@@ -1,0 +1,15 @@
+{
+  "experiment": "E40",
+  "hypothesis": "H-C-2",
+  "decision": "reject-mainline-insufficient-proof",
+  "classification_sha256": "77d19b9b29a855bff13972bff0cd455281be4bdc7768dc6ef19580315d3aa0ab",
+  "validated_records": 21,
+  "required_complete_proofs": 11,
+  "complete_proofs": 0,
+  "validated_extraction_artifacts": 0,
+  "partial_reader_error_diagnoses": 6,
+  "independent_root_assessment": "The six positive diagnoses do not establish complete extraction or globally complete operand coverage; wrong-key/correct-reader records are not gains. Preserve unresolved premises. Missing required extraction evidence suffices to reject this proposed mainline; this is not a bound on future operators or achievable scores.",
+  "source_corrections_accepted_here": 0,
+  "official_score": null,
+  "audited_score": null
+}
