@@ -32,7 +32,8 @@ def test_filtered_result_byte_limit(filtered, rows, offset):
 def test_filtered_result_padding_and_deletes(filtered):
     index, base = filtered
     np.testing.assert_array_equal(index.search(base[:1], [0, 1], [0], 3), [[0, 1, -1]])
-    assert index.delete(0)
+    deleted = index.delete(0)
+    assert deleted
     np.testing.assert_array_equal(index.search(base[:1], [0, 1], [0], 3), [[1, -1, -1]])
 
 
