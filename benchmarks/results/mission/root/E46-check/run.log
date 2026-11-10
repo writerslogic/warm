@@ -1,2 +1,0 @@
-warning: `VIRTUAL_ENV=/Volumes/A/.hms-lb/bigann/venv` does not match the project environment path `benchmarks/results/mission/.venv` and will be ignored; use `--active` to target the active environment instead
-{"decision": "accept-parser-boundaries", "checks": 47, "failures": 0, "receipt": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/packed-parser-check-E46.json"}

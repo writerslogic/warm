@@ -31,6 +31,22 @@ compiled library is checked into Git.
   that optional adapter branch. `shared-adapter.patch` is the retained earlier
   per-worker-hash alternative.
 
+The retained cloud recipe now pins the historical local base image's OCI
+manifest. Restore the preserved `images.tar.gz` (SHA256
+`5c1287fb78cd1b31793bb16fb048e56fc5f232034e81288aa273826408f53b84`)
+into a daemon using Docker's [containerd image store](https://docs.docker.com/engine/storage/containerd/).
+Before building with that same daemon, verify the following command succeeds
+and its `RepoDigests` contains the exact reference assigned to `base_image`:
+
+```sh
+base_image=warm-az1-streaming-control@sha256:ee4fd2a1b821af91813f9cf87b8d79811ac384057382b3c593ab8f7f931fe823
+docker image inspect "$base_image" --format '{{json .RepoDigests}}'
+```
+
+A legacy tag-only restore is insufficient; registry availability is not assumed.
+This pin constrains future builds and does not change historical measurements.
+The pinned recipe has not been rebuilt.
+
 Recompute the shared summary from the repository root:
 
 ```sh

@@ -1,7 +1,0 @@
-{
-  "id": "E13",
-  "hypothesis": "H-B-1",
-  "question": "Can packaged generator independently reproduce E4/E9 input hashes?",
-  "prediction": "Both base and query npy SHA256 equal E4 source hashes; no new benchmark measurement",
-  "configuration": "numpy2.4.6,PCG64seed1,1000clusters,1M100D,noise.7"
-}
