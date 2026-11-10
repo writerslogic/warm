@@ -127,18 +127,24 @@ advisories and one DiskCache advisory (OSV also returns duplicate PYSEC aliases)
   [pre-authentication code injection](https://github.com/advisories/GHSA-f4j7-r4q5-qw2c),
   [tenant authorization](https://github.com/advisories/GHSA-xph7-9rjv-w5fr), and
   [cross-tenant access](https://github.com/advisories/GHSA-2wm9-hf6c-p5cr)
-  advisories include that release. WARM's importer reads local collections or an
-  external Chroma service; it does not start a Chroma HTTP server. This is not a
-  demonstrated mitigation of all four advisories. Do not deploy these extras as
-  a security-qualified integration until their actual paths are verified or the
-  dependency is patched/replaced.
+  advisories include that release. The importer requires at least 1.5.9 and
+  explicitly selects the Rust backend for local reads, disables embedding-function
+  construction, and validates returned collection scope before reading records.
+  Regression tests cover poisoned configuration, backend overrides and the real
+  HTTP client's response handling. The reviewed WARM-side paths do not invoke the
+  vulnerable Python server/configuration code. This does not patch Chroma or
+  certify an external server's authorization, CrewAI's built-in storage, or
+  arbitrary use of the installed dependency. The scoped callgraph review is in
+  `benchmarks/results/release_0_6_7/release-alert-dispositions.json`.
 - DSPy requires DiskCache 5.6.3, whose default pickle deserialization permits code
   execution if an attacker can write its cache directory
   ([GHSA-w8v5-vhqr-4h9v](https://github.com/advisories/GHSA-w8v5-vhqr-4h9v)).
   Shared or untrusted cache directories are unsafe. The [verified DSPy profile](integrations/frameworks/dspy.md#cache-safety)
   disables disk caching before first use and tests a fresh process that rejects
-  DiskCache imports. This mitigates that cache path, not arbitrary use of the
-  dependency or untrusted serialized DSPy programs.
+  DiskCache imports. Both WARM-owned DSPy adapters also bypass caching on actual
+  `dspy.Embedder` calls without changing global policy. Generic callables and
+  separate application cache/LM use remain caller-controlled; DiskCache itself
+  and untrusted serialized DSPy programs remain outside these protections.
 
 These are dependency matches, not five reproduced WARM exploits. The base HTTP
 client depends only on `httpx` and `sniffio`; install only needed extras and audit

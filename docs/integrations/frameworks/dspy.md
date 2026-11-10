@@ -47,6 +47,12 @@ Runnable (offline, `DummyLM`): `integrations/python/examples/dspy_rag.py`.
 
 ## Cache safety
 
+When an embedder is a `dspy.Embedder`, `WarmRetriever` and the HTTP SDK's `WarmRM`
+pass `caching=False` on each embedding call. This bypasses DSPy's cache for
+dimension inference, ingestion and retrieval without changing the embedder's
+configured defaults or the application's global cache policy. Other callables
+retain their normal calling convention and control their own cache behavior.
+
 Configure memory-only caching before any DSPy program, LM, or first access to
 `dspy.cache`, as in the quickstart. DSPy 3.4.1 lazily constructs its default disk
 cache; calling `configure_cache(enable_disk_cache=False, enable_memory_cache=True)`

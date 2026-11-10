@@ -157,8 +157,13 @@ These cannot be committed; the publish jobs wait on them.
    package.json with its `optionalDependencies`, package-lock.json and `docs/server/openapi.json`;
    `scripts/ci/check-versions.py`
    runs in every artefact job and again against the tag, so a mismatch fails the build.
-2. **Changelog.** `git cliff -c cliff.toml -o CHANGELOG.md`, committed as `chore: update changelog`.
-   Tag the commit before any `[skip ci]` commit (those run no workflows).
+2. **Changelog.** Use git-cliff 2.14.2, matching the pinned workflow; older versions can
+   assign merged branch commits to releases that never contained them. Run
+   `git cliff -c cliff.toml --tag vX.Y.Z -o CHANGELOG.md` and commit as
+   `chore: Update changelog`. The tag argument prepares the release heading without
+   creating a Git tag. Generate it on the intended UTC tag date and require the
+   changelog gate on the actual tag. Tag the commit before any `[skip ci]` commit
+   (those run no workflows).
 3. **Dry run.** Merge to `main`, then run Actions, Release and Python native release on `main`.
    Keep all publish inputs false. Run Python SDK release and MCP launcher release when those
    distributions change; run Python models release only when a new pack is needed. The dry runs
