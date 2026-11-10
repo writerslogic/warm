@@ -74,7 +74,7 @@
     "test:types": "tsc --noEmit --strict --target es2022 --module nodenext --moduleResolution nodenext --types node tests/node/types.test.mts tests/node/memory-types.test.mts tests/node/vector-record-types.test.mts tests/node/vectra-types.test.mts"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.10.8",
+    "@napi-rs/cli": "^3.10.12",
     "@types/node": "^26.6.6",
     "typescript": "^7.0.2"
   },
