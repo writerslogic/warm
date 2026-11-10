@@ -213,6 +213,25 @@ set, and any run-to-run spread beyond two elite runs.
 
 
 
+## Frozen Azure confirmation, 2026-11-09–10
+
+On Azure E8bds_v5 (Xeon Platinum 8370C, 4 cores / 8 threads), the same frozen
+`6091c519` entry and headline `brute_max=5000, target=1750` measured **54,721.70
+and 53,972.75 QPS**, both at recall@10 **.906415**. Each official Docker run
+covered all 100,000 public queries and retained the complete submitted six-point
+grid; the headline was not reselected from that grid.
+
+The container limit was 16 GiB with no swap. Peak process RSS was 14.3841 and
+14.3846 GiB; this is GNU-time RSS, not cgroup memory.peak. Complete workload wall
+time was 456.23 / 456.39 seconds. The host page cache was dropped before each run.
+[Raw exports, frozen protocol and archive receipt](../../benchmarks/results/azure/az1-2026-11-09/)
+retain both runs and every configuration.
+
+E8bds_v5 has 64 GiB host RAM and different storage limits from the official
+D8lds_v5. These results therefore confirm the entry on an Azure Ice Lake host,
+but do not establish official placement or a private-query result. They remain
+below the previously reported leading filter-board throughput.
+
 ## Not done
 
 - Graph search with a tag predicate for the common tags (filtered-Vamana / ACORN style) and

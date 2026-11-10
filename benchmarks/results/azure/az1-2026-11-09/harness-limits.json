@@ -1,0 +1,14 @@
+{
+  "streaming": {
+    "before_sha256": "af0f1d1b9d2a5f683ad36f4860fa348ddf3d994650d94887954e9955263b2526",
+    "after_sha256": "976bddcb366694bffaccf42e4cfaf9efbfbda4ee2e0bc7b112207dc688475f2a",
+    "memory_gib": 8,
+    "swap_gib": 0
+  },
+  "filter": {
+    "before_sha256": "af0f1d1b9d2a5f683ad36f4860fa348ddf3d994650d94887954e9955263b2526",
+    "after_sha256": "eb6205b41dda22a03461ee48c1f357a62bbba1f5bd16bb8f11bd2f78c01ce5dc",
+    "memory_gib": 16,
+    "swap_gib": 0
+  }
+}
