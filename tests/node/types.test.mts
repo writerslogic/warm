@@ -1,5 +1,5 @@
-import { WarmMemorySystem, type DocumentInput } from 'warm-sdk'
-import { DocumentMemory, createLocalEmbedder, type Embedder } from 'warm-sdk/semantic'
+import { WarmMemorySystem, type DocumentInput } from 'writerslogic-warm'
+import { DocumentMemory, createLocalEmbedder, type Embedder } from 'writerslogic-warm/semantic'
 
 const input: DocumentInput = {
   id: 'guide', text: 'Restore verified backups.', metadata: { project: 'alpha' },
@@ -29,7 +29,7 @@ const vectors = new WarmMemorySystem(1024, './vectors-types-only', {
   embeddingModel: 'matryoshka-model', embeddingRevision: '1', embeddingDimensions: 1024,
   vectorCandidateDimensions: 256, vectorRerankCandidates: 100,
 })
-const vectorOptions: import('warm-sdk').VectorSearchOptions = {
+const vectorOptions: import('writerslogic-warm').VectorSearchOptions = {
   mode: 'auto', ef: 128, minScore: -1, filter: { project: 'alpha' },
   sourceUri: 'guide.md', documentIds: ['guide'],
 }
