@@ -248,6 +248,8 @@ Full official runs below use the same Intel host restricted to 8 logical CPUs,
 16 GiB, no swap, grouping enabled, and heap/shared/shared/heap order. Recall is
 .9406 throughout. QPS is the harness maximum across the three reported levels;
 all levels and memory receipts are preserved.
+The local sequence did not clear the host page cache between containers;
+the registered Azure sequence clears it before every run.
 
 | Load mode | Run 1 QPS | Run 2 QPS | Peak GiB, run 1 / 2 |
 |---|---:|---:|---:|
@@ -320,8 +322,10 @@ This is a build workaround, not a performance change.
 
 Azure VDBBench full runs are registered after the independent ANN live chain:
 8 vCPUs, 16 GiB/no-swap containers, unchanged query settings and 14 mirrored
-released/main/integrated/shared arms. Results are pending. Local figures cannot
-establish a win against Zilliz Cloud: an embedded index and a managed service
+released/main/integrated/shared arms. At the user's stop request, input checks and
+image loading had completed, but no VDBBench workload had started. The service
+was stopped; no Azure VDBBench result is available. Frozen inputs and the stop
+receipt are retained. Local figures cannot establish a win against Zilliz Cloud: an embedded index and a managed service
 have different deployment costs and boundaries. The published comparison point
 is [13,316.23 QPS at recall@100=.9383 on the $1000/month tier](https://zilliz.com/vdbbench-leaderboard).
 No matched-service or official leaderboard standing is claimed.

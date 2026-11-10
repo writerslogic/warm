@@ -58,6 +58,9 @@ Local archive SHA256:
 
 These are submitter measurements. Previously exposed public queries are not an
 untouched holdout. Query-quality settings were not changed during this study.
-The Azure run and its final archive receipt will be added after completion;
-local results do not establish official standing or a matched-service win over
+The Azure VDBBench chain was stopped at the user's request after input verification
+and image loading, before its first workload. `azure-stopped/stop-receipt.json`
+records zero completed runs. The frozen package is retained for a future run with
+a new VM, run ID and deadline; the old launch script must not be reused unchanged.
+Local results do not establish official standing or a matched-service win over
 Zilliz Cloud.
