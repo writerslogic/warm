@@ -1,0 +1,44 @@
+[
+  {
+    "ef": 120,
+    "control_us": 117.1080205,
+    "candidate_us": 114.9819165,
+    "speedup": 1.018490768502715,
+    "digest_match": true
+  },
+  {
+    "ef": 150,
+    "control_us": 143.495959,
+    "candidate_us": 138.4976045,
+    "speedup": 1.0360898263767444,
+    "digest_match": true
+  },
+  {
+    "ef": 200,
+    "control_us": 184.892834,
+    "candidate_us": 181.06368799999998,
+    "speedup": 1.0211480614489639,
+    "digest_match": true
+  },
+  {
+    "ef": 400,
+    "control_us": 353.055604,
+    "candidate_us": 346.26424950000006,
+    "speedup": 1.019613213058543,
+    "digest_match": true
+  },
+  {
+    "ef": 600,
+    "control_us": 522.369875,
+    "candidate_us": 509.7768125,
+    "speedup": 1.024703090040997,
+    "digest_match": true
+  },
+  {
+    "ef": 800,
+    "control_us": 694.4781875,
+    "candidate_us": 673.6661455,
+    "speedup": 1.0308937032668506,
+    "digest_match": true
+  }
+]

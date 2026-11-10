@@ -1,0 +1,38 @@
+[
+  {
+    "measured_commit": "30c28eb38a1aa3c11f978b80eadfd2a560ff4fd6",
+    "signed_off_commit": "72c323f46e95a130f2ad9a9bfdf146a984e807ec",
+    "tree": "b918d2e02ad1d05f1a888a1ead4a69879b1fcb44",
+    "subject": "perf: Share query loads and bound rerank prefetch"
+  },
+  {
+    "measured_commit": "298837f42ccb5ddbde3969cee5f5a3c22d016e66",
+    "signed_off_commit": "580896f00c9c92cef44129ab0026ef70bf020637",
+    "tree": "64580e526365089536ed1c4881f8bf5db194cef7",
+    "subject": "fix: Bound Python result allocations and stabilize extreme cosine queries"
+  },
+  {
+    "measured_commit": "375c6ca43d5ac0abd365784043094a651aa77427",
+    "signed_off_commit": "6ed0122959669c5e7894cb8305695466541cce5e",
+    "tree": "2d1af9ef107bf3645e4ccd02525ef66559021f7c",
+    "subject": "fix: Widen quantized dot products before integer overflow"
+  },
+  {
+    "measured_commit": "90a55d818476d8dffe43fc67d1a93aacd50d7d75",
+    "signed_off_commit": "0ecc515d89ec2d33a61ed5b86e6c313fd8ac8b67",
+    "tree": "99aa6af6f8f41ee01dd0c36b1bdbc088afb161f7",
+    "subject": "fix: Reject duplicate IDs in persisted graph mappings"
+  },
+  {
+    "measured_commit": "d0c2224e0caae710dcc2635865c6680f57e6da2e",
+    "signed_off_commit": "42ea28932b0735dae9f19496ceb2187693332ca6",
+    "tree": "804a0b663bf41fc71d2b10c4d0b41eb9553b8007",
+    "subject": "fix: Check specialized Python result allocations before search"
+  },
+  {
+    "measured_commit": "7b7bd21be5c1c73fada07def0f669b6186eed677",
+    "signed_off_commit": "0c5a94ec694d0c25566fedf142821170fac075b0",
+    "tree": "4516e6c8ad6e5c48725fb1ab446a4d8a7a5370c3",
+    "subject": "fix: Reject overflowing strides in empty Python result arrays"
+  }
+]

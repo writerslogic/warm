@@ -1,0 +1,63 @@
+[
+    {
+        "Architecture": "amd64",
+        "Config": {
+            "Entrypoint": [
+                "/bin/bash",
+                "/opt/warm-pr898/run-one.sh"
+            ],
+            "Env": [
+                "PATH=/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Labels": {
+                "org.opencontainers.image.version": "22.04"
+            },
+            "WorkingDir": "/opt/warm-pr898"
+        },
+        "Created": "2026-11-09T16:36:32.87566019-08:00",
+        "Descriptor": {
+            "digest": "sha256:721f0fca08b8d3ee106af9d211f0679a5bf9d2aecdcb9d98bd8df575ed1560d6",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "size": 4938
+        },
+        "Id": "sha256:721f0fca08b8d3ee106af9d211f0679a5bf9d2aecdcb9d98bd8df575ed1560d6",
+        "Metadata": {
+            "LastTagTime": "2026-11-10T00:36:36.773823462Z"
+        },
+        "Os": "linux",
+        "Parent": "sha256:904dd6a907e5e297a782b8a86bab7c8e3fa6fe7e54cd157f627c8e54d8c9aed2",
+        "RepoDigests": [
+            "warm-pr898-bound-live@sha256:721f0fca08b8d3ee106af9d211f0679a5bf9d2aecdcb9d98bd8df575ed1560d6"
+        ],
+        "RepoTags": [
+            "warm-pr898-bound-live:latest"
+        ],
+        "RootFS": {
+            "Layers": [
+                "sha256:297a592b66593a3dddc39e7970a718cc1cbb04c8a9b904009b33eb623dafc588",
+                "sha256:6db13695d5b68e7da2023f19761e8f8d66fd9e53217eb191614258dd53e3ec47",
+                "sha256:4de4e083155a3e97c1fa8317820d2a79ff8c162b5ea1d2e68d4c8bc05c071d1d",
+                "sha256:2bf5f546ff75995b5bc33c98b0c9afea03ea3ce8483404f49de7e17d36859375",
+                "sha256:dd0eba6be24920efed4201cfd80240e42d7fa70088b470d388176087f8f6a7d7",
+                "sha256:008dee709779c1068d6c460d1b14181f0cb0a17e95e4d35910bb01a3c190bbed",
+                "sha256:5d69f1b04d4a4559e88eb09834e99f099417d21b374fe364fff50fb9789484f7",
+                "sha256:beaa98eda3bd25c36558d763d4938eb6ffea143d764d8a9cca03df41527e6a4f",
+                "sha256:aaff02532a7132ae833415fe9074a9814a30ef226cf1e3ce24987679e7400e69",
+                "sha256:c90da0990a2e548463c056a3e9423ea8bb929e65a7561dd6fef08c83afa4e8a9",
+                "sha256:baaefbadda4640b458bb1d63319a535a0a6586c36e720d85920b5887b3e34388",
+                "sha256:619eabfb111076074ad2a26478c8eb9bdd50465df53662894c0f0eb63298e7e6",
+                "sha256:0a9b23d2366fb14c415e6dbe5c2622062cc015cf4e169d5dc644d90e84878d3c",
+                "sha256:516a673e4820f4cbf000604d3fd0025af73025044709bb5fa970be31736b09a3",
+                "sha256:ad3ea9b754b0356852f1d0dd971d8347edc112d211f7bf8b80c18dfa06b56b83",
+                "sha256:18ff81ff47eb5854beae921eb5a7ed22047ac9a9132e0090de76950969043392",
+                "sha256:ce605ab829b5d25f4990aea97a1ee143b83643d1209ff98119cee4cbd46eadae",
+                "sha256:8643dfcede5203c713f364f1e60f517399836bc51a6a21f93dfc8d59b8682392",
+                "sha256:9d8f7f09fa9c3292443d3fbd99689585fbac6e1f4ede01b4ac3061cf4d4f6351",
+                "sha256:2a3f53dc2564176f8ce44b87949b74c22dc5a42a946232f90db5bc4a16a8c5a1",
+                "sha256:8bdfc5db2af921b1fe16c573694cccebbfc97dca8553106d2f0a920ddec1ee4b"
+            ],
+            "Type": "layers"
+        },
+        "Size": 1772138972
+    }
+]

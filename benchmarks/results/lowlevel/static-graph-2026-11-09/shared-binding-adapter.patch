@@ -1,0 +1,27 @@
+--- a/vectordb_bench/backend/clients/warm/warm.py
++++ b/vectordb_bench/backend/clients/warm/warm.py
+@@ -9,6 +9,7 @@
+ 
+ import json
+ import logging
++import os
+ import shutil
+ import uuid
+ from contextlib import contextmanager
+@@ -111,7 +112,15 @@
+         try:
+             if self._read_manifest()["built"]:
+                 self._index = self._new_index()
+-                self._index.load(self.root / INDEX_FILE)
++                snapshot = os.getenv("WARM_SHARED_INDEX_PATH")
++                if snapshot:
++                    from sealed_index_run import verify_binding
++
++                    with Path(snapshot).open("rb") as shared, (self.root / INDEX_FILE).open("rb") as source:
++                        verify_binding(os.getenv("WARM_SHARED_INDEX_BINDING", ""), source, shared)
++                        self._index.load(f"/proc/self/fd/{shared.fileno()}", shared=True)
++                else:
++                    self._index.load(self.root / INDEX_FILE)
+                 self._ids = np.load(self.root / IDS_FILE, allow_pickle=False)
+             self._k = None
+             yield

@@ -1,0 +1,128 @@
+{
+  "run_id": "fd4bb7fa5b1d4f1ba7cf9eb63fedad11",
+  "task_label": "wl3-prefetch-r1-ef150",
+  "results": [
+    {
+      "metrics": {
+        "max_load_count": 0,
+        "insert_duration": 0.0,
+        "optimize_duration": 0.0,
+        "load_duration": 0.0,
+        "qps": 20924.3114,
+        "serial_latency_p99": 0.0005,
+        "serial_latency_p95": 0.0003,
+        "serial_latency_p50": 0.0003,
+        "recall": 0.9406,
+        "recall_at": {
+          "100": 0.9406
+        },
+        "ndcg": 0.9496,
+        "mrr": 0.0,
+        "conc_num_list": [
+          1,
+          5,
+          10
+        ],
+        "conc_qps_list": [
+          4014.456,
+          16038.1112,
+          20924.3114
+        ],
+        "conc_latency_p99_list": [
+          0.0003940371636417694,
+          0.00046047834795899685,
+          0.0008885402593296021
+        ],
+        "conc_latency_p95_list": [
+          0.0002975610754219815,
+          0.0003860649885609746,
+          0.0007665239972993731
+        ],
+        "conc_latency_p50_list": [
+          0.0002425494894850999,
+          0.0002989459899254143,
+          0.0003967984957853332
+        ],
+        "conc_latency_avg_list": [
+          0.00024438689831147986,
+          0.00030193591621312845,
+          0.00045457343546278443
+        ],
+        "payload_profile": "ids_only",
+        "payload_estimated_bytes_per_query": 2000,
+        "inserted_count": 0,
+        "insert_rows_per_second": 0.0,
+        "insert_completion_seconds": 0.0,
+        "searchable_after_insert_seconds": 0.0,
+        "indexed_after_searchable_seconds": 0.0,
+        "additional_parameters": {
+          "ground_truth": {
+            "file": "neighbors.parquet",
+            "query_count": 1000,
+            "width": 1000
+          }
+        },
+        "st_ideal_insert_duration": 0,
+        "st_search_stage_list": [],
+        "st_search_time_list": [],
+        "st_max_qps_list_list": [],
+        "st_recall_list": [],
+        "st_ndcg_list": [],
+        "st_serial_latency_p99_list": [],
+        "st_serial_latency_p95_list": [],
+        "st_conc_failed_rate_list": [],
+        "st_conc_num_list_list": [],
+        "st_conc_qps_list_list": [],
+        "st_conc_latency_p99_list_list": [],
+        "st_conc_latency_p95_list_list": [],
+        "st_conc_latency_avg_list_list": []
+      },
+      "task_config": {
+        "db": "Warm",
+        "db_config": {
+          "db_label": "wl3-prefetch",
+          "version": "",
+          "note": "",
+          "path": "\/opt\/warm-pr898\/index-064"
+        },
+        "db_case_config": {
+          "metric_type": "COSINE",
+          "m": 16,
+          "ef_construction": 300,
+          "ef_search": 150,
+          "rerank": 0,
+          "code_bits": 4,
+          "residual_bits": 8,
+          "threads": 0
+        },
+        "case_config": {
+          "case_id": 5,
+          "custom_case": {},
+          "payload_profile": "ids_only",
+          "k": 100,
+          "nq": 1,
+          "concurrency_search_config": {
+            "num_concurrency": [
+              1,
+              5,
+              10
+            ],
+            "concurrency_duration": 30,
+            "concurrency_timeout": 3600,
+            "serial_cooldown": 0.0
+          }
+        },
+        "stages": [
+          "search_serial",
+          "search_concurrent"
+        ],
+        "load_concurrency": 0,
+        "insert_batch_size": 1000
+      },
+      "label": ":)",
+      "dataset_metadata": null
+    }
+  ],
+  "file_fmt": "result_{}_{}_{}.json",
+  "timestamp": 1794211200.0
+}
