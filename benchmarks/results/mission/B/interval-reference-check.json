@@ -1,0 +1,31 @@
+{
+  "hypothesis": "H-B-6",
+  "claim": "scalar exact-rational interval reference only; no native or performance claim",
+  "dimensions": [
+    99,
+    100,
+    101,
+    127,
+    128,
+    129
+  ],
+  "seconds_cap": 180,
+  "checks": 2308,
+  "failures": [],
+  "decision_modes": {
+    "binary32-interval": 150,
+    "exact-fallback": 150
+  },
+  "supported_prunes": 25,
+  "positive_dots": 75,
+  "negative_dots": 20,
+  "threshold_checks": 54,
+  "invalid_inputs_rejected": 33,
+  "decision": "accept-reference-only",
+  "check_wall_seconds_not_benchmark": 0.9049358749762177,
+  "source_sha256": {
+    "interval_reference.py": "9b6b4abf1f923a7780d61c9142bbebe6aa99afd891e29c6170c606b9f69782b1",
+    "check_interval_reference.py": "2e1cd6e5e8e260077e280d5abb7972bd12ef72ab85f416929ebfedcda9286553",
+    "next-card-b6.md": "6915aab650fcca5ab61f60e54876ddd8ca74455b1f556622bd4ae4fe9be5ec2d"
+  }
+}

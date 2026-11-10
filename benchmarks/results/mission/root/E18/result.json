@@ -1,0 +1,16 @@
+{
+  "matched": true,
+  "regenerated": {
+    "numpy_version": "2.4.6",
+    "noise": 1.5,
+    "sha256": {
+      "base": "a25191f5d26c40806ed1d6526a5620733f9c3f02f1013d1a90bd717d8c8c4f14",
+      "queries": "4e105ae4277146c4cda597d5d0877a2572831f9eb54cc304affafca49abb918d"
+    },
+    "scope": "existing exposed development only"
+  },
+  "expected": {
+    "base": "a25191f5d26c40806ed1d6526a5620733f9c3f02f1013d1a90bd717d8c8c4f14",
+    "queries": "4e105ae4277146c4cda597d5d0877a2572831f9eb54cc304affafca49abb918d"
+  }
+}

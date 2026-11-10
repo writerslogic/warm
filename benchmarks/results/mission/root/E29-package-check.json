@@ -1,0 +1,12 @@
+{
+  "experiment": "E29",
+  "decision": "accept-research-package-only",
+  "checks": {
+    "python_syntax": 21,
+    "json_documents": 111,
+    "registered_script_hashes": 14
+  },
+  "engine_gates_rerun": false,
+  "confirmation_rows_met": 0,
+  "scope": "Syntax, JSON and registered script provenance only; lock validated separately."
+}

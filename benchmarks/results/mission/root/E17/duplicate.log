@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/verify_audit_pointers.py", line 42, in <module>
+    raise ValueError('duplicate or inconsistent claim identity')
+ValueError: duplicate or inconsistent claim identity

@@ -1,8 +1,8 @@
 # Pending authorizations and rulings
 
 ## P1 — LoCoMo audited instrument review (partial; no deadline)
-Review manifest: /Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E7-source-review.json and lane-C audited-key-proposals.json (to be integrated).
-Pinned original: snap-research/locomo3eb6f2c, SHA25679fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4. E3 links156 external flags;5 contain unresolved evidence references. E7 independently supports2 corrections and retains3 qualified decisions. No score or ceiling is established. Requested decision: review the source-evidenced audited-key/rubric proposals; full audit continues without waiting. No answer logic changes, benchmark submissions or paid run requested.
+Review manifest: /Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E7-source-review.json and benchmarks/results/mission/C/audit-index.json with its six linked review reports.
+Pinned original: snap-research/locomo3eb6f2c, SHA25679fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4. E3 links156 external flags;5 contain unresolved evidence references. E7 independently supports2 corrections and retains3 qualified decisions. E23 structurally verifies all156flags and1069source references;108proposals,40unresolved,7rejected,1wording-only disposition. Other1384nonadversarial and446adversarial questions are outside this flag index. No score or ceiling is established. Requested decision: review the source-evidenced audited-key/rubric proposals; full audit continues without waiting. No answer logic changes, benchmark submissions or paid run requested.
 
 ## P2 — LongMemEval-V2 ranking target mapping (tier2; no deadline)
 Primary source: https://xiaowu0162.github.io/longmemeval-v2/ ; evidence manifest lane-C research.json and inventory.tsv.

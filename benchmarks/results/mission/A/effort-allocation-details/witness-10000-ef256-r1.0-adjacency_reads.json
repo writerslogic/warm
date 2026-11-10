@@ -1,0 +1,16 @@
+{
+  "rows": 10000,
+  "ef": 256,
+  "recall_floor": "1.0",
+  "objective": "adjacency_reads",
+  "curve_path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/curves-10000-ef256.ndjson.gz",
+  "curve_raw_sha256": "53d5013aef62f443c61eb95c79d671392bab052eeafd29f618e283439db2833e",
+  "optimum": {
+    "feasible": false,
+    "maximum_hits": 9976,
+    "irreducible_misses": 24,
+    "cost": null,
+    "missed": null
+  },
+  "selections": null
+}

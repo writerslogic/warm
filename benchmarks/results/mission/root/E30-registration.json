@@ -1,0 +1,6 @@
+{
+  "experiment": "E30",
+  "question": "Does research snapshot validation pass after integrating the native score/memory contract and normalizing snapshot Markdown EOF whitespace?",
+  "prediction": "All syntax/JSON/script pins and ledger limits pass; staged whitespace gate clean",
+  "change": "Snapshot Markdown final blank lines normalized; canonical rules unchanged; native plan limits rung3 to one recorded run"
+}

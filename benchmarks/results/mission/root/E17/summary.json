@@ -1,0 +1,14 @@
+{
+  "duplicate": {
+    "exit_code": 1,
+    "result_created": false
+  },
+  "wrong_identity": {
+    "exit_code": 1,
+    "result_created": false
+  },
+  "missing_claim": {
+    "exit_code": 1,
+    "result_created": false
+  }
+}

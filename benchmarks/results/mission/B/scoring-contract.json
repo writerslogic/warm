@@ -1,0 +1,130 @@
+{
+  "hypothesis": "H-B-6",
+  "row": "R68",
+  "status": "source and arithmetic audit; no new experiment",
+  "bigann_pin": "ec58203170e3636ba7da82154ce6322de9cb8b33",
+  "candidate_base": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "dataset": {
+    "name": "msturing-30M-clustered",
+    "source_rows": 29998994,
+    "dimension": 100,
+    "source_dtype": "IEEE binary32",
+    "query_count": 10000,
+    "metric_label": "euclidean",
+    "k": 10,
+    "base_sha256": "05d699b8b973fb1da53752d406d8e7a8204e3f35007e22a060eb93ba76a1cd22",
+    "queries_sha256": "4785fe3c90c94c5f004f9cd84dca4cc398fc83280517a8d3acb6bc693d6ccd29",
+    "identity_evidence": "benchmarks/results/azure/az1-2026-11-09/input-manifest.json:3",
+    "runbook_sha256": "92347aff3bdc378b3bead517df33311bec615be2a9c8af0f5b5e0a14e51865f2",
+    "searches": 640,
+    "declared_max_live": 10292043,
+    "range_count_model_max_live": 10292043,
+    "largest_insert_range_rows": 757735,
+    "live_membership_audit_status": "range-count model exists; independent tag-set/replacement replay still required"
+  },
+  "official_recall": {
+    "truth_shape": "10000 x 100 IDs and distances per search checkpoint",
+    "stored_id_dtype": "int32 read from binary ground-truth file; live tags are uint32",
+    "stored_distance_dtype": "float32",
+    "distance_recomputed_by_scorer": false,
+    "algorithm": [
+      "Always admit the stored first k ground-truth IDs.",
+      "Starting at index k, extend the stored prefix while abs(D[k-1]-D[i]) < 1e-6; stop at the first failing comparison.",
+      "Intersect the admitted prefix ID set with the returned ID set; duplicate returned IDs count once.",
+      "Divide the per-query intersection count by k, average over queries, then average over search checkpoints."
+    ],
+    "numpy_environment": "Must freeze scorer Python/NumPy versions and test the exact comparison. Local historical requirements offer NumPy 1.24.2 for Python 3.10 and 1.26.* for Python 3.12; neither establishes the organisers' actual installed version.",
+    "limitations": [
+      "Distance tolerance is anchored at the stored kth distance, not a mathematical equality test.",
+      "No tie beyond stored rank 100 is representable, even if it is an exact real tie.",
+      "Stored score ordering and finite distances are assumed by the scorer, not independently verified there.",
+      "Returning any exact-real top-10 set is not yet proved to yield official recall 1.0.",
+      "Mission confirmation must validate exactly k unique live tags per query, rather than exploit unconstrained set cardinality."
+    ],
+    "required_output_ownership": "Each search result matrix must retain its own stable storage because StreamingRunner appends results to all_results until run completion.",
+    "int64_result_storage_bytes_for_640_searches": 512000000
+  },
+  "ground_truth_generation": {
+    "wrapper": "benchmark/streaming/compute_gt.py",
+    "arguments": "external --gt_cmdline_tool with --dist_fn l2 --data_type float --K 100, live data slice and tag file",
+    "tag_semantics": "insert maps tag to matching source row; replace changes that source row under the same tag; delete removes the tag",
+    "verified_historical_generator_revision": null,
+    "verified_historical_mkl_version": null,
+    "verified_historical_instruction_order": null,
+    "representative_generator": {
+      "source": "https://raw.githubusercontent.com/microsoft/DiskANN/0.6.1/apps/utils/compute_groundtruth.cpp",
+      "scope": "primary tagged implementation illustrates numeric risk; not established as the executable that generated published GT",
+      "lines": "67-95, 195-215",
+      "behavior": "float32 BLAS self-dot norms and SGEMM norm-minus-dot distances; strict score comparison in the local heap; no tag tie ordering established by this code"
+    },
+    "wrapper_defects_relevant_to_audit": [
+      "Both branches of --private_query select ds.qs_fn, so this wrapper flag alone cannot establish fresh queries.",
+      "The external os.system return code is not checked before deleting intermediate source data.",
+      "A generator name or exact_knn function name does not establish exact rational squared L2."
+    ],
+    "minimum_frozen_audit": [
+      "Freeze source/query/runbook/each GT-file identity and scorer environment.",
+      "Replay all operation keys independently, including live tag ownership and replacement source rows.",
+      "Check GT shape, finite monotonic scores, unique live IDs, and exact source distances of stored candidates.",
+      "At every scored checkpoint compute an independent exact top-k oracle on the scored fresh queries; candidate-only checks cannot prove no omitted nearer row.",
+      "Retain official and audited scores, disagreement counts and concrete evidence. Do not select known-wrong labels to inflate official recall.",
+      "Record organiser-dependent corrections in PENDING while continuing native correctness work."
+    ]
+  },
+  "native_mathematical_contract": {
+    "score": "exact real squared L2 of the stored binary32 source values",
+    "supported_source_domain": "1..128 dimensions; coordinates zero or magnitude in [2^-16,2^16]",
+    "unsupported_finite_inputs": "exact source fallback; never silent clamp, truncate, flush or discard",
+    "invalid_inputs": "NaN, infinity and malformed shapes fail explicitly",
+    "candidate_exact_representation": "Decode coordinates as signed integers in units 2^-39; sum squared integer differences in checked unsigned128; score unit is 2^-78 and maximum sum is 2^119.",
+    "ranking": "Compare exact squared-distance integers and use stable live tag as the deterministic exact-tie tiebreaker; this is an audited policy, not an assertion of official GT tie parity.",
+    "prune": "Only a strict lower(reconstructed squared distance) > upper((sqrt(incumbent upper)+data error upper+query error upper)^2).",
+    "threshold": "kth smallest actual incumbent distance upper bounds; never a ground-truth threshold",
+    "e24": "Orchestrator reports 2308 scalar checks, 25 supported strict prunes, 150 interval and 150 fallback decisions, zero failures; native machine arithmetic remains unverified.",
+    "throughput_established": false
+  },
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/plotting/metrics.py",
+      "local": "benchmarks/results/mission/B/sources/bigann/benchmark/plotting/metrics.py:15",
+      "lines": "15-65"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/dataset_io.py",
+      "local": "benchmarks/results/mission/B/sources/bigann/benchmark/dataset_io.py:133",
+      "lines": "133-140"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/streaming/compute_gt.py",
+      "local": "benchmarks/results/mission/B/sources/bigann/benchmark/streaming/compute_gt.py:43",
+      "lines": "43-88,116-139"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/plotting/utils.py",
+      "git_blob": "a3313469b0c022f6db30bdeec711a920cc0cb137",
+      "lines": "72-86,97-101,149-160"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/streaming/run.py",
+      "git_blob": "f154c574442483e47bb9948280885e08880b54b9",
+      "lines": "29-60"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/runner.py",
+      "git_blob": "ba046ef4cb599ce1e3d8d88cf03658d8d6be2f40",
+      "claim": "container-level streaming timeout; allocation and full workload must be measured, not only search phases"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/README.md",
+      "lines": "32-34,65,148-150",
+      "claim": "one hour, 8GB prose limit, active-point indexing intent, reference host and DiskANN generation instructions"
+    }
+  ],
+  "unresolved": [
+    "Historical public GT executable, BLAS build and exact evaluation order.",
+    "Official GT correctness and exact-real tie completeness at every checkpoint.",
+    "Fresh-query source and matching newly generated audited GT.",
+    "Prose 8GB versus mission/prior container 8GiB boundary must be frozen explicitly for matched comparison.",
+    "Native rounding/metadata/refinement implementation, sustained fused throughput and complete cgroup peak."
+  ]
+}

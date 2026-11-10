@@ -1,0 +1,17 @@
+{
+  "experiment": "E22",
+  "hypothesis": "H-C-1",
+  "source_sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+  "receipts": [
+    {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/mission/C/audited-key-citations.json",
+      "sha256": "5a18cff8d4651af4497328bf88e2dd3c77909e72c27d15af4a5bbcc60861682b",
+      "claims": 57,
+      "source_references": 262
+    }
+  ],
+  "claim": "local structural verification only",
+  "accepted_semantic_corrections": 0,
+  "official_score": null,
+  "audited_score": null
+}

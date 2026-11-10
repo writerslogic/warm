@@ -1,0 +1,16 @@
+{
+  "source": "https://www.intel.com/content/dam/develop/public/us/en/include/intrinsics-guide/perf2.js",
+  "source_sha256": "b306e94d917ea16ee23f0a398239d6dff2b2bd82846557d9701bb04a2268410d",
+  "extracts": [
+    "\t\"VPDPBUSDS_XMMi32_MASKmskw_XMMu8_XMMu32_AVX512\":[\n\t\t{\"Icelake Intel Core\":{l:\"\",t:\"0.5\"}},\n\t\t{\"Icelake Xeon\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSDS_XMMi32_XMMu32_XMMu32\":[\n\t\t{\"Alderlake\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSDS_YMMi32_MASKmskw_YMMu8_YMMu32_AVX512\":[\n\t\t{\"Icelake Intel Core\":{l:\"\",t:\"0.5\"}},\n\t\t{\"Icelake Xeon\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSDS_YMMi32_YMMu32_YMMu32\":[\n\t\t{\"Alderlake\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSDS_ZMMi32_MASKmskw_ZMMu8_ZMMu32_AVX512\":[\n\t\t{\"Icelake Intel Core\":{l:\"\",t:\"1\"}},\n\t\t{\"Icelake Xeon\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSD_XMMi32_MASKmskw_XMMu8_XMMu32_AVX512\":[\n\t\t{\"Icelake Intel Core\":{l:\"\",t:\"0.5\"}},\n\t\t{\"Icelake Xeon\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSD_XMMi32_XMMu32_XMMu32\":[\n\t\t{\"Alderlake\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSD_YMMi32_MASKmskw_YMMu8_YMMu32_AVX512\":[\n\t\t{\"Icelake Intel Core\":{l:\"\",t:\"0.5\"}},\n\t\t{\"Icelake Xeon\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSD_YMMi32_YMMu32_YMMu32\":[\n\t\t{\"Alderlake\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],",
+    "\t\"VPDPBUSD_ZMMi32_MASKmskw_ZMMu8_ZMMu32_AVX512\":[\n\t\t{\"Icelake Intel Core\":{l:\"\",t:\"1\"}},\n\t\t{\"Icelake Xeon\":{l:\"5\",t:\"0.5\"}},\n\t\t{\"Sapphire Rapids\":{l:\"5\",t:\"0.5\"}},\n\t],"
+  ]
+}

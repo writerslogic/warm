@@ -1,0 +1,40 @@
+{
+  "experiment": "E26",
+  "hypothesis": "H-A-5",
+  "question": "Can frozen ef256 base traversal prefixes reduce both independently counted work totals at least3x at .99 in both corpora under unattainable perfect stopping?",
+  "prediction": "Both independent necessary bounds pass in both corpora; otherwise reject prefix-only family. Perfect1.0 reported separately.",
+  "optimizer_check_question": "Does DP match independent Cartesian enumeration, including nonconcave and infeasible cases and threefold boundaries?",
+  "optimizer_check_prediction": "All finite fixtures match and invalid budgets reject",
+  "check_argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--no-project",
+    "--python",
+    "/Volumes/A/.hms-lb/bigann/venv/bin/python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort_allocation_check.py",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E26-check/result.json"
+  ],
+  "counter_sha256": "db8f68aa9647a6caf2a63433edba4210909f4b7b972b2f7527a9385fd1cb149d",
+  "card_sha256": "617415d3a8f86834600f90f435ea92720d0be7ffe395dc86cd9fe5c3c2bcbed7",
+  "counter_argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--no-project",
+    "--python",
+    "/Volumes/A/.hms-lb/bigann/venv/bin/python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort_allocation.py",
+    "--repo",
+    "/Volumes/A/.hms-wt-mission-integrated",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-result.json",
+    "--details",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details",
+    "--ledger",
+    "/Volumes/A/.hms-lb/mission/LOG.tsv",
+    "--experiment",
+    "E26"
+  ]
+}

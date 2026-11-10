@@ -5,6 +5,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 from pathlib import Path
 
 p = argparse.ArgumentParser(description=__doc__)
@@ -13,6 +14,8 @@ p.add_argument('--reports', nargs='+', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--ledger', type=Path, required=True)
 p.add_argument('--experiment', required=True)
+p.add_argument('--expected-type')
+p.add_argument('--external-sources', type=Path)
 a = p.parse_args()
 if a.output.exists() or not a.experiment[1:].isdigit() or not a.experiment.startswith('E'):
     p.error('unique output and numeric experiment ID required')
@@ -27,12 +30,17 @@ def resolve(pointer):
         value = value[int(key)] if isinstance(value, list) else value[key]
     return value
 receipts = []
+seen = set()
 for path in a.reports:
     report = json.loads(path.read_text())
     if report['source_sha256'] != sha:
         raise ValueError('source hash mismatch')
     refs = 0
     for item in report['reviewed']:
+        identity = re.fullmatch(r'locomo_(\d+)_qa(\d+)', item['id'])
+        if not identity or item['id'] in seen or item['official_pointer'] != f'/{int(identity[1])}/qa/{int(identity[2])}':
+            raise ValueError('duplicate or inconsistent claim identity')
+        seen.add(item['id'])
         if resolve(item['official_pointer']) != item['official']:
             raise ValueError('official question mismatch: ' + item['id'])
         for identity, evidence in item['evidence'].items():
@@ -43,6 +51,12 @@ for path in a.reports:
                 raise ValueError('source date mismatch: ' + item['id'])
             refs += 1
     receipts.append({'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(), 'claims': len(report['reviewed']), 'source_references': refs})
+if a.expected_type:
+    if a.external_sources is None:
+        p.error('--expected-type requires --external-sources')
+    expected = {item['question_id'] for index in range(10) for item in json.loads((a.external_sources / f'errors_conv_{index}.json').read_text()) if item['error_type'] == a.expected_type}
+    if expected != seen:
+        raise ValueError('external claim coverage mismatch')
 result = {'experiment': a.experiment, 'hypothesis': 'H-C-1', 'source_sha256': sha, 'receipts': receipts, 'claim': 'local structural verification only', 'accepted_semantic_corrections': 0, 'official_score': None, 'audited_score': None}
 a.output.write_text(json.dumps(result, indent=2) + '\n')
 with a.ledger.open('a') as f:
