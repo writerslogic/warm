@@ -12,6 +12,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Measure and repair bottom-layer reachability, and expose the build options to the VIBE adapter
 
 ### Documentation
+- Focus the public repository on product usage
 - Integrate historical Big ANN evidence with qualified comparisons
 - Record the requested benchmark stopping point
 - Record frozen Azure streaming and filter confirmations
@@ -28,6 +29,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Mark the filter operating point in the pinned-run table
 
 ### Fixed
+- Render documentation styles and version notice before paint
 - Harden release dependencies and benchmark tooling
 - Widen quantized dot products before integer overflow
 - Bound Python result allocations and stabilize extreme cosine queries
