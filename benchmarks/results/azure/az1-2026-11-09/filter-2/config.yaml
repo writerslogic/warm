@@ -1,0 +1,31 @@
+random-filter-s:
+    warm:
+      docker-tag: neurips23-filter-warm
+      module: neurips23.filter.warm.warm
+      constructor: Warm
+      base-args: ["@metric"]
+      run-groups:
+        base:
+          args: |
+            [{"ivf_min": 2000, "cluster_size": 500, "bitset_min": 2000}]
+          query-args: |
+            [{"brute_max": 2000, "target": 2000},
+             {"brute_max": 5000, "target": 5000}]
+yfcc-10M:
+    warm:
+      docker-tag: neurips23-filter-warm
+      module: neurips23.filter.warm.warm
+      constructor: Warm
+      base-args: ["@metric"]
+      run-groups:
+        base:
+          args: |
+            [{"ivf_min": 5000, "cluster_size": 500, "max_lists": 4096,
+              "bitset_min": 20000, "copy_min": 50000, "threads": 8}]
+          query-args: |
+            [{"brute_max": 5000, "target": 1650, "intersect_max": 1000000, "prefetch": 32},
+             {"brute_max": 5000, "target": 1750, "intersect_max": 1000000, "prefetch": 32},
+             {"brute_max": 5000, "target": 1850, "intersect_max": 1000000, "prefetch": 32},
+             {"brute_max": 5000, "target": 2000, "intersect_max": 1000000, "prefetch": 32},
+             {"brute_max": 7500, "target": 1750, "intersect_max": 1000000, "prefetch": 32},
+             {"brute_max": 3000, "target": 1750, "intersect_max": 1000000, "prefetch": 32}]
