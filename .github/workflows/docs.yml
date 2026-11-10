@@ -147,7 +147,9 @@ jobs:
           PERF_THRESHOLD: 85
 
       - name: Search (real queries)
-        run: node scripts/docs-qa/search.mjs _site
+        run: |
+          node scripts/docs-qa/search-init.mjs _site
+          node scripts/docs-qa/search.mjs _site
         env:
           VERSION: dev
 
