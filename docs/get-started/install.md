@@ -23,10 +23,10 @@ Package installation needs network access; the engine can run offline after inst
 
 | You need | For |
 |---|---|
-| Rust 1.89 or newer (the MSRV) | the Rust crate, the HTTP server and the Node build |
+| Rust 1.89 or newer (the MSRV) | the Rust crate, the HTTP server and embedded Node source builds |
 | Node 18 or newer, or standard Fetch and Web Streams APIs | the portable JavaScript client |
 | Node 22 or newer | the embedded Node bindings; Node 24 for the native quickstart, which uses `node:sqlite` |
-| Python 3.10 or newer | the Python SDK (`warm-python` needs 3.9) |
+| Python 3.11 or newer | the Python HTTP SDK (`warm-python` needs 3.9) |
 
 For Python, create and activate a virtual environment first: `uv venv`, then
 `source .venv/bin/activate` (PowerShell: `.venv\Scripts\Activate.ps1`).
@@ -70,8 +70,14 @@ For Python, create and activate a virtual environment first: `uv venv`, then
 
 === "JavaScript client"
 
-    `warm-sdk` 0.2.0 has no runtime dependencies or native binaries. Its npm publication is
-    pending; build from the checkout, then install the built directory in your application:
+    `warm-sdk` 0.2.0 has no runtime dependencies or native binaries. For a published release:
+
+    ```sh
+    npm install warm-sdk@0.2.0
+    ```
+
+    Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
+    To build from the checkout, then install the built directory in your application:
 
     ```sh
     npm ci --prefix bindings/js/warm-sdk
@@ -80,23 +86,28 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     npm install /absolute/path/to/warm/bindings/js/warm-sdk
     ```
 
-    After verified publication, use `npm install warm-sdk@0.2.0`. Run `warm-server` separately
-    using the Python tab's server commands; the same service supports both clients. See
+    Run `warm-server` separately using the Python tab's server commands; the same service
+    supports both clients. Installing the client does not start the server or download models. See
     [package availability](../RELEASING.md#javascript-package-availability).
 
 === "Embedded Node"
 
     `writerslogic-warm` embeds the engine in Node and selects an optional native binary for
-    your OS, CPU and libc. Engine 0.6.7 is available from source pending registry verification:
+    your OS, CPU and libc. For a published engine release, keep optional dependencies enabled:
+
+    ```sh
+    npm install writerslogic-warm@0.6.7
+    ```
+
+    Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
+    To build the embedded bindings from a checkout with Rust installed:
 
     ```sh
     npm ci --omit=optional
     npm run build
     ```
 
-    This build requires Rust. After verified publication, applications can use
-    `npm install writerslogic-warm@0.6.7` with optional dependencies enabled. The portable
-    client has no embedded subpath. `writerslogic-warm-mcp` is a separate MCP launcher.
+    The portable client has no embedded subpath. `writerslogic-warm-mcp` is a separate MCP launcher.
 
 ## Check that it works
 

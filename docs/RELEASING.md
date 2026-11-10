@@ -221,10 +221,12 @@ These cannot be committed; the publish jobs wait on them.
 
 ### JavaScript package availability
 
-The prepared releases are portable `warm-sdk` 0.2.0 and embedded `writerslogic-warm` 0.6.7.
-Neither prepared version is claimed published here. Use the [source installation](get-started/install.md)
-until the respective registry consumer gate passes. The existing native `writerslogic-warm`
-family is retained; it is not deprecated or replaced by the client.
+The JavaScript packages are portable `warm-sdk` 0.2.0 and embedded `writerslogic-warm` 0.6.7.
+Check available npm versions for [the client](https://www.npmjs.com/package/warm-sdk?activeTab=versions)
+and [the embedded engine](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions)
+before choosing a registry release. The [installation guide](get-started/install.md) also covers
+source builds. The existing native `writerslogic-warm` family is retained; it is not deprecated
+or replaced by the client.
 
 For the SDK, verify `npm view warm-sdk@0.2.0 version`, install that exact version in a clean
 consumer, verify signatures, and run an authenticated memory round trip against the supported
