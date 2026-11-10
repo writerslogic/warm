@@ -7,16 +7,20 @@ selects a native binding for your operating system and architecture. It does not
 make service calls for ordinary document search.
 
 The primary JavaScript client is the separate portable `warm-sdk` HTTP package. Choose this
-`writerslogic-warm` package when the engine should run inside Node. Engine 0.6.7 is prepared
-from source; see [release availability](https://github.com/writerslogic/warm/blob/main/docs/RELEASING.md#javascript-package-availability)
-before installing that version from npm. From the repository root:
+`writerslogic-warm` package when the engine should run inside Node. For a published engine
+release, install it explicitly:
+
+```sh
+npm install writerslogic-warm@0.6.7
+```
+
+Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
+To build from the repository root with Rust installed:
 
 ```sh
 npm ci --omit=optional
 npm run build
 ```
-
-After verified publication, install with `npm install writerslogic-warm@0.6.7`.
 
 The native binding is distributed through an optional platform package, so keep npm's optional
 dependencies enabled. The release targets are macOS (arm64, x64), Linux (arm64, x64; glibc and musl),
