@@ -331,10 +331,10 @@ jobs:
               npm publish "$1" --provenance --access public
             fi
           }
-          for tarball in warm-sdk-*-*.tgz; do
+          for tarball in writerslogic-warm-*-*.tgz; do
             publish "$tarball"
           done
-          root=$(ls warm-sdk-[0-9]*.tgz)
+          root=$(ls writerslogic-warm-[0-9]*.tgz)
           publish "$root"
 
   verify-published:
@@ -364,7 +364,7 @@ jobs:
           npm init -y > /dev/null
           for attempt in {1..20}; do
             ready=1
-            for package in warm-sdk "${platform_packages[@]}"; do
+            for package in writerslogic-warm "${platform_packages[@]}"; do
               if ! npm_config_cache="$RUNNER_TEMP/npm-release-$attempt" npm view "${package}@${version}" version > /dev/null 2>&1; then
                 echo "${package}@${version} is not available yet (attempt $attempt/20)"
                 ready=0
@@ -374,13 +374,13 @@ jobs:
             [ "$attempt" = 20 ] && { echo "Published npm packages did not all become available" >&2; exit 1; }
             sleep 30
           done
-          npm_config_cache="$RUNNER_TEMP/npm-release-install" npm install --ignore-scripts --save-exact --no-audit --no-fund "warm-sdk@${version}"
+          npm_config_cache="$RUNNER_TEMP/npm-release-install" npm install --ignore-scripts --save-exact --no-audit --no-fund "writerslogic-warm@${version}"
           npm audit signatures
           node -e "
             const assert = require('node:assert/strict');
             (async () => {
-              const { WarmMemorySystem } = require('warm-sdk');
-              const { DocumentMemory } = await import('warm-sdk/semantic');
+              const { WarmMemorySystem } = require('writerslogic-warm');
+              const { DocumentMemory } = await import('writerslogic-warm/semantic');
               const memory = new DocumentMemory(new WarmMemorySystem(4096, './store'));
               await memory.memorize({ id: 'a', text: 'Backups protect stored documents.', sourceUri: 'a.md' });
               assert.equal((await memory.search('backups'))[0].sourceUri, 'a.md');

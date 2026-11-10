@@ -14,7 +14,8 @@ at 1.0.0.
 |---|---|---|---|
 | Rust crate (`warm-rust`) | crate version | items reachable without the `experimental` feature, outside `core::format::scan` internals | `experimental` feature, `doc(hidden)`, `pub(crate)` |
 | Python (`warm-python` wheels, `warm-sdk`) | PyPI version | documented classes and functions | underscore names; the `phase` substrate is experimental |
-| Node (`warm-sdk` on npm) | npm version | the exports in `index.d.ts`, `memory.d.ts`, `semantic.d.ts` | undocumented properties |
+| Portable JavaScript/TypeScript (`warm-sdk` on npm) | shared JS/Python SDK version and `sdk-vX.Y.Z` | documented `WarmClient` and memory client types | undocumented properties; server behavior outside the HTTP contract |
+| Embedded Node (`writerslogic-warm` on npm) | engine version and `vX.Y.Z` | the exports in `index.d.ts`, `memory.d.ts`, `semantic.d.ts`, `vectra.d.ts` | undocumented properties |
 | HTTP (`warm-server`) | URL prefix `/api/v1` | documented endpoints, request and response fields, error codes | new optional fields may appear; new endpoints |
 | [C ABI](runtimes/c/README.md) | `writerslogic-warm-c` package version and `hms1_*` ABI major | documented v1 symbols, ownership rules and fixed value-struct layouts; size-tagged option structs grow append-only | Rust layouts, internal symbols and unversioned convenience macros |
 | [Go](runtimes/go/README.md), [Java](runtimes/java/README.md) and [.NET](runtimes/dotnet/README.md) | binding package version and underlying C ABI major | documented wrappers over the versioned C contract | private FFI helpers; package availability is recorded in each runtime guide |

@@ -1,0 +1,69 @@
+# Copyright 2024-2026 WritersLogic Contributors
+# SPDX-License-Identifier: Apache-2.0
+name: JavaScript SDK validation
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: Validated portable SDK version
+        value: ${{ jobs.build.outputs.version }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Portable JavaScript SDK
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - name: Check SDK versions
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/sdk-v* ]]; then
+            python3 scripts/ci/check-sdk-versions.py --tag "$GITHUB_REF_NAME"
+          else
+            python3 scripts/ci/check-sdk-versions.py
+          fi
+          node -e 'console.log("version=" + require("./bindings/js/warm-sdk/package.json").version)' >> "$GITHUB_OUTPUT"
+      - name: Install, typecheck and build
+        working-directory: bindings/js/warm-sdk
+        run: |
+          npm ci --ignore-scripts
+          npm run typecheck
+          npm run build
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - name: Build warm-server for the live tests
+        run: cargo build --locked --features server --bin warm-server
+      - name: Test transport, server contracts and packed ESM/CJS consumers
+        working-directory: bindings/js/warm-sdk
+        env:
+          WARM_SERVER_BIN: ${{ github.workspace }}/target/debug/warm-server
+        run: npm test
+      - name: Pack the portable client and dependency inventory
+        working-directory: bindings/js/warm-sdk
+        run: |
+          mkdir -p tarballs
+          npm pack --ignore-scripts --pack-destination tarballs
+          npm sbom --sbom-format cyclonedx --package-lock-only --omit dev > tarballs/warm-sdk.cdx.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: js-sdk-dist
+          path: bindings/js/warm-sdk/tarballs
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: js-sdk-test-server
+          path: target/debug/warm-server
+          if-no-files-found: error

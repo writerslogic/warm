@@ -16,6 +16,17 @@ import sys
 import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+NATIVE_NAME = "writerslogic-warm"
+PLATFORMS = {
+    "aarch64-apple-darwin": "darwin-arm64",
+    "x86_64-apple-darwin": "darwin-x64",
+    "aarch64-unknown-linux-gnu": "linux-arm64-gnu",
+    "aarch64-unknown-linux-musl": "linux-arm64-musl",
+    "x86_64-unknown-linux-gnu": "linux-x64-gnu",
+    "x86_64-unknown-linux-musl": "linux-x64-musl",
+    "aarch64-pc-windows-msvc": "win32-arm64-msvc",
+    "x86_64-pc-windows-msvc": "win32-x64-msvc",
+}
 
 
 def main() -> int:
@@ -29,7 +40,6 @@ def main() -> int:
     openapi = json.loads((ROOT / "docs/server/openapi.json").read_text())
     native = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
     models = tomllib.loads((ROOT / "bindings/embed-models/python/pyproject.toml").read_text())["project"]
-    sdk = tomllib.loads((ROOT / "bindings/python/warm-sdk/pyproject.toml").read_text())["project"]
     problems = []
     if native["name"] != "warm-python":
         problems.append(f"native Python distribution is {native['name']}")
@@ -39,13 +49,29 @@ def main() -> int:
         f"warm-models=={models['version']}"
     ]:
         problems.append("native Python embed extra disagrees with the model package")
-    if sdk["name"] != "warm-sdk":
-        problems.append(f"SDK distribution is {sdk['name']}")
+    if package.get("name") != NATIVE_NAME:
+        problems.append(f"native package.json must be named {NATIVE_NAME}")
+    napi = package.get("napi", {})
+    if not isinstance(napi, dict):
+        napi = {}
+    if napi.get("binaryName") != NATIVE_NAME:
+        problems.append(f"native napi.binaryName must be {NATIVE_NAME}")
+    targets = napi.get("targets", [])
+    if not isinstance(targets, list) or not targets or any(
+        not isinstance(target, str) or target not in PLATFORMS for target in targets
+    ) or len(set(targets)) != len(targets):
+        problems.append("native napi.targets must contain unique supported platform targets")
+    else:
+        expected = {f"{NATIVE_NAME}-{PLATFORMS[target]}" for target in targets}
+        if set(package.get("optionalDependencies", {})) != expected:
+            problems.append("native optionalDependencies disagree with the package family and napi.targets")
     if package["version"] != cargo:
         problems.append(f"package.json is {package['version']}, Cargo.toml is {cargo}")
     locked_packages = lock.get("packages", {})
     locked_root = locked_packages.get("", {})
     for label, entry in (("package-lock.json", lock), ("package-lock.json root package", locked_root)):
+        if entry.get("name") != NATIVE_NAME:
+            problems.append(f"{label} must be named {NATIVE_NAME}")
         if entry.get("version") != cargo:
             problems.append(f"{label} is {entry.get('version')}, Cargo.toml is {cargo}")
     if locked_root.get("optionalDependencies", {}) != package.get("optionalDependencies", {}):
@@ -58,6 +84,9 @@ def main() -> int:
         locked_version = locked_packages.get(f"node_modules/{name}", {}).get("version")
         if locked_version != cargo:
             problems.append(f"package-lock.json {name} is {locked_version}, Cargo.toml is {cargo}")
+        locked_name = locked_packages.get(f"node_modules/{name}", {}).get("name", name)
+        if locked_name != name:
+            problems.append(f"package-lock.json {name} names a different native package")
     if args.tag:
         tag_version = args.tag.removeprefix("refs/tags/").removeprefix("py-").removeprefix("v")
         if tag_version != cargo:

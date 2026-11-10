@@ -9,8 +9,9 @@ an agreed ToIP contract, a connector, or an MCP backend. The nested model propos
 in upstream issue #8 is rejected, not converted.
 
 Zero dependencies. Needs Node 20+ and the native binding of this checkout
-(`warm-sdk` resolves by package self-reference from inside the checkout;
-elsewhere, install it). It uses the same document ID, metadata, chunking, and dimensions
+(`writerslogic-warm` resolves by package self-reference from inside the checkout;
+elsewhere, install that embedded engine). This adapter is separate from the portable
+`warm-sdk` HTTP client. It uses the same document ID, metadata, chunking, and dimensions
 as `examples/organizational_knowledge.rs`, so one store can be written by either tool
 (see Interoperability).
 
@@ -36,7 +37,7 @@ and `forget --apply`, do not create a store: a path without a `store.json` is tr
 removes the rest of that source system's documents in the namespace; it refuses when PATH holds none.
 
 ```js
-const { WarmMemorySystem } = require('warm-sdk')
+const { WarmMemorySystem } = require('writerslogic-warm')
 const { OrganizationalKnowledge, readCuratedFiles } = require('./integrations/organizational-knowledge/index.cjs')
 
 async function main() {
@@ -56,7 +57,7 @@ dependency this checkout does not install, and a model directory holding `onnx/m
 the tokenizer files), the store must be created with the embedder's embedding space:
 
 ```js
-const { createLocalEmbedder } = require('warm-sdk/semantic')
+const { createLocalEmbedder } = require('writerslogic-warm/semantic')
 
 const embedder = await createLocalEmbedder({ modelPath: '/path/to/model-dir', modelId: 'BAAI/bge-small-en-v1.5', revision: 'local' })
 const { model, revision, dimensions } = embedder.space

@@ -89,7 +89,7 @@ def highlight(code, lang):
     return md.convert(f"```{lang}\n{code}\n```")
 
 
-LANGS = {"rust": "rust", "python": "python", "node": "js", "go": "go", "java": "java",
+LANGS = {"rust": "rust", "python": "python", "node": "js", "node-embedded": "js", "go": "go", "java": "java",
          "dotnet": "csharp", "swift": "swift", "kotlin": "kotlin", "wasm": "js"}
 
 

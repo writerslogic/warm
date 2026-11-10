@@ -1,6 +1,20 @@
 # @writerslogic/warm-core (JS/TS)
 
-Shared record API used by the JS adapters. It runs the native engine in process (the `warm-sdk` npm package) and adds `remember`, `recall`, `get`, `list` and `forget` with explicit collection metadata. It mirrors the Python framework core (`writerslogic_warm_integrations.core`); the native temporal memory API carries its own fact and policy contracts.
+Shared record API used by the JS adapters. It runs the optional native engine in process (`writerslogic-warm`) and adds `remember`, `recall`, `get`, `list` and `forget` with explicit collection metadata. It mirrors the Python framework core (`writerslogic_warm_integrations.core`); the native temporal memory API carries its own fact and policy contracts. These adapters are separate from the portable `warm-sdk` HTTP client.
+
+## Source setup
+
+The framework packages are available from the source workspace; they are not published by the
+engine or SDK release. From the repository root, build the native engine and adapters:
+
+```sh
+npm ci --omit=optional
+npm run build
+npm ci --ignore-scripts --prefix integrations/js
+npm run build --prefix integrations/js
+```
+
+Run the adapter examples from that workspace so its local packages resolve.
 
 ```ts
 import { WarmStore } from '@writerslogic/warm-core'
@@ -14,7 +28,7 @@ await store.forget(['a'])
 await store.close()
 ```
 
-ESM and CJS are both published. `warm-sdk` is a peer dependency (`>=0.6.5`).
+The build produces ESM and CJS. `writerslogic-warm` is a peer dependency (`>=0.6.5`).
 
 ## API (stable)
 
@@ -25,7 +39,7 @@ ESM and CJS are both published. `warm-sdk` is a peer dependency (`>=0.6.5`).
 | `memory` | created | An existing native `WarmMemorySystem`; its embedding space must match `embedder` |
 | `path` | in-memory | Storage directory for a store this class creates |
 | `dimensions` | 4096 | Hypervector dimensions of a created store |
-| `embedder` | `HashingEmbedder(384)` | The encoder. Same shape as `warm-sdk/semantic`'s `Embedder`, so `createLocalEmbedder(...)` works directly |
+| `embedder` | `HashingEmbedder(384)` | The encoder. Same shape as `writerslogic-warm/semantic`'s `Embedder`, so `createLocalEmbedder(...)` works directly |
 | `rerank` | none | `(query, passages) => Promise<number[]>`, applied to candidates |
 | `collection` | none | Namespaces ids and restricts every query inside one store |
 | `titleWeight`, `chunkWords`, `overlapWords` | engine defaults | Passed to document ingestion |

@@ -8,14 +8,15 @@ next_steps:
     text: What "holographic" means in this code, and what is lossy.
     url: concepts/index.md
   - title: Server
-    text: Run warm-server for the Python client.
+    text: Run warm-server for the JavaScript or Python client.
     url: SERVER.md
 ---
 
 # Install
 
-WARM is a Rust engine. Use it directly, install the Node bindings, connect an editor through MCP,
-or call a self-hosted server from Python. [Choose an integration](choose.md) before installing.
+WARM is a Rust engine. The primary JavaScript package, `warm-sdk`, is a portable HTTP client,
+as is the Python SDK. Embed the engine with the separate `writerslogic-warm` Node package or
+Rust crate, or connect an editor through MCP. [Choose an integration](choose.md) before installing.
 Package installation needs network access; the engine can run offline after installation.
 
 ## Requirements
@@ -23,7 +24,8 @@ Package installation needs network access; the engine can run offline after inst
 | You need | For |
 |---|---|
 | Rust 1.89 or newer (the MSRV) | the Rust crate, the HTTP server and the Node build |
-| Node 22 or newer | the Node bindings; Node 24 for the quickstart, which uses `node:sqlite` |
+| Node 18 or newer, or standard Fetch and Web Streams APIs | the portable JavaScript client |
+| Node 22 or newer | the embedded Node bindings; Node 24 for the native quickstart, which uses `node:sqlite` |
 | Python 3.10 or newer | the Python SDK (`warm-python` needs 3.9) |
 
 For Python, create and activate a virtual environment first: `uv venv`, then
@@ -66,16 +68,35 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     uv pip install warm-python
     ```
 
-=== "Node"
+=== "JavaScript client"
 
-    Install the Node bindings. npm selects the native binary for your platform:
+    `warm-sdk` 0.2.0 has no runtime dependencies or native binaries. Its npm publication is
+    pending; build from the checkout, then install the built directory in your application:
 
     ```sh
-    npm install warm-sdk
+    npm ci --prefix bindings/js/warm-sdk
+    npm run build --prefix bindings/js/warm-sdk
+    # From your application directory:
+    npm install /absolute/path/to/warm/bindings/js/warm-sdk
     ```
 
-    To build from a checkout instead, run `npm ci --omit=optional && npm run build` with a Rust
-    toolchain. The separate `writerslogic-warm-mcp` package launches the MCP server.
+    After verified publication, use `npm install warm-sdk@0.2.0`. Run `warm-server` separately
+    using the Python tab's server commands; the same service supports both clients. See
+    [package availability](../RELEASING.md#javascript-package-availability).
+
+=== "Embedded Node"
+
+    `writerslogic-warm` embeds the engine in Node and selects an optional native binary for
+    your OS, CPU and libc. Engine 0.6.7 is available from source pending registry verification:
+
+    ```sh
+    npm ci --omit=optional
+    npm run build
+    ```
+
+    This build requires Rust. After verified publication, applications can use
+    `npm install writerslogic-warm@0.6.7` with optional dependencies enabled. The portable
+    client has no embedded subpath. `writerslogic-warm-mcp` is a separate MCP launcher.
 
 ## Check that it works
 
@@ -91,16 +112,23 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     uv run --with warm-sdk python -c "from writerslogic_warm_sdk import WarmClient; print(WarmClient.__name__)"
     ```
 
-=== "Node"
+=== "JavaScript client"
 
     ```sh
-    node -e "const { WarmMemorySystem } = require('warm-sdk'); console.log(typeof WarmMemorySystem)"
+    node -e "const { WarmClient } = require('warm-sdk'); console.log(typeof WarmClient)"
+    ```
+
+=== "Embedded Node"
+
+    ```sh
+    node -e "const { WarmMemorySystem } = require('writerslogic-warm'); console.log(typeof WarmMemorySystem)"
     ```
 
 The [quickstart](../quickstart/index.md) runs a full ingest and search against the same checkout.
 
-The Python check verifies the SDK import; it does not contact the server. For a complete
-round trip, run the Python tab in the [quickstart](../quickstart/index.md).
+The client checks verify imports without contacting the server. The
+[JavaScript memory example](../memory-api/README.md#quick-start) and Python tab in the
+[quickstart](../quickstart/index.md) perform server round trips.
 
 ## Connect an editor
 

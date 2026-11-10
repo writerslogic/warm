@@ -31,17 +31,17 @@ const sourceHashes = {}
 for (const [source, name] of artifacts) { const target = path.join(root, name); await fs.mkdir(path.dirname(target), { recursive: true }); await fs.copyFile(path.join(here, source), target, fs.constants.COPYFILE_EXCL); sourceHashes[name] = await sha256(target) }
 for (const mode of ['baseline', 'candidate']) {
   const packagePath = path.join(root, `package-${mode}`); await fs.mkdir(packagePath)
-  for (const name of ['index.js', 'vectra-selector.js', 'warm-sdk.node']) await fs.copyFile(path.join(repo, name), path.join(packagePath, name), fs.constants.COPYFILE_EXCL)
+  for (const name of ['index.js', 'vectra-selector.js', 'writerslogic-warm.node']) await fs.copyFile(path.join(repo, name), path.join(packagePath, name), fs.constants.COPYFILE_EXCL)
   if (mode === 'baseline') await fs.writeFile(path.join(packagePath, 'vectra.js'), baseline, { flag: 'wx' })
   else await fs.copyFile(path.join(repo, 'vectra.js'), path.join(packagePath, 'vectra.js'), fs.constants.COPYFILE_EXCL)
 }
 const packageHashes = {}
 for (const mode of ['baseline', 'candidate']) {
   packageHashes[mode] = {}
-  for (const name of ['index.js', 'vectra-selector.js', 'warm-sdk.node', 'vectra.js']) packageHashes[mode][name] = await sha256(path.join(root, `package-${mode}`, name))
+  for (const name of ['index.js', 'vectra-selector.js', 'writerslogic-warm.node', 'vectra.js']) packageHashes[mode][name] = await sha256(path.join(root, `package-${mode}`, name))
 }
 assert.notEqual(packageHashes.baseline['vectra.js'], packageHashes.candidate['vectra.js'])
-for (const name of ['index.js', 'vectra-selector.js', 'warm-sdk.node']) assert.equal(packageHashes.baseline[name], packageHashes.candidate[name])
+for (const name of ['index.js', 'vectra-selector.js', 'writerslogic-warm.node']) assert.equal(packageHashes.baseline[name], packageHashes.candidate[name])
 const frozen = { sourceCommit, baselineSource, nativeFilter, sourceHashes, packageHashes, fixture, dataset, datasetHashes: { corpus: await sha256(dataset.corpus), queries: await sha256(dataset.queries) }, node: process.version, executable: process.execPath, nodeSha256: await sha256(process.execPath), modes: ['baseline', 'candidate'], schedule: Array.from({ length: 10 }, (_, i) => i % 2), deadlineMs: 7_200_000, scope: 'Alternating filters on exposed data; shared-host development, not a frozen study or performance-advantage claim.' }
 await writeOnce(path.join(root, 'started.json'), frozen)
 const deadline = Date.now() + frozen.deadlineMs, hostFile = path.join(root, 'host.ndjson'), watcher = watchPhase(hostFile, deadline, false)
@@ -55,7 +55,7 @@ try {
     await cloneStore(root, fixture, store)
     assert.deepEqual(identity(await manifest(store)), sourceTree, 'fixture copy changed')
     const stem = path.join(root, mode), output = `${stem}.ndjson`
-    const job = { development: true, package: packagePath, addon: path.join(packagePath, 'warm-sdk.node'), store, dataset, output }
+    const job = { development: true, package: packagePath, addon: path.join(packagePath, 'writerslogic-warm.node'), store, dataset, output }
     const receipt = await runMonitored({ worker: path.join(here, 'worker.mjs'), job, jobFile: `${stem}-job.json`, receipt: `${stem}-receipt.json`, hostFile, deadline, signal: watcher.signal, environment: { RAYON_NUM_THREADS: '1', OMP_NUM_THREADS: '1', VECLIB_MAXIMUM_THREADS: '1' } })
     assert.ok(receipt.complete, `incomplete ${mode} worker`)
     const rows = (await fs.readFile(output, 'utf8')).trim().split('\n').map(JSON.parse), queries = rows.filter(row => row.type === 'query')

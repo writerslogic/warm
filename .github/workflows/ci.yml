@@ -54,6 +54,7 @@ jobs:
       - name: Release version metadata
         run: |
           uv run --no-project --python 3.12 python scripts/ci/check-versions.py
+          uv run --no-project --python 3.12 python scripts/ci/check-sdk-versions.py
           uv run --no-project --python 3.12 python -m unittest scripts/ci/test_versions.py
       - name: Campaign integrity regressions
         run: uv run --no-project --python 3.12 --with numpy==2.5.4 python -m unittest discover -s benchmarks/ann-benchmarks/campaign -p test_campaign_integrity.py
@@ -396,7 +397,10 @@ jobs:
         shell: bash
         run: |
           node scripts/build-node.cjs --release --features node-api,security,local-embed --no-js --output-dir target/node-embed
-          WARM_EMBED_ADDON="$PWD/target/node-embed/warm-sdk.node" node --test tests/node/embedding-limits.test.cjs
+          WARM_EMBED_ADDON="$PWD/target/node-embed/writerslogic-warm.node" node --test tests/node/embedding-limits.test.cjs
+
+  javascript-sdk:
+    uses: ./.github/workflows/js-sdk.yml
 
   workflows:
     name: workflow lint and pins
@@ -420,7 +424,7 @@ jobs:
   check:
     name: check
     if: always()
-    needs: [lint, features, docs-rs, test, test-windows, bench-build, deny, msrv, retrieval-quality, python-sdk, node, workflows]
+    needs: [lint, features, docs-rs, test, test-windows, bench-build, deny, msrv, retrieval-quality, python-sdk, javascript-sdk, node, workflows]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs succeeded

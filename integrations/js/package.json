@@ -13,7 +13,7 @@
     "@types/node": "^22.20.2",
     "tsup": "^9.0.0",
     "typescript": "^5.9.3",
-    "warm-sdk": "file:../.."
+    "writerslogic-warm": "file:../.."
   },
   "overrides": {
     "@llamaindex/node-parser": {

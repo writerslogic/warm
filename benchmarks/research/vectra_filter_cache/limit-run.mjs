@@ -23,7 +23,7 @@ const identity = tree => tree.files.filter(file => path.basename(file.path) !== 
 await fs.mkdir(root)
 const packagePath = path.join(root, 'package'); await fs.mkdir(packagePath)
 const packageHashes = {}
-for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'warm-sdk.node']) {
+for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'writerslogic-warm.node']) {
   const target = path.join(packagePath, name); await fs.copyFile(path.join(repo, name), target, fs.constants.COPYFILE_EXCL); packageHashes[name] = await sha256(target)
 }
 const artifacts = [['LIMIT-PLAN.md', 'LIMIT-PLAN.md'], ['limit-run.mjs', 'limit-run.mjs'], ['limit-worker.mjs', 'limit-worker.mjs'], ['../../public/vectra_comparison/vector-worker.mjs', 'harness/vector-worker.mjs'], ['../../public/vectra_comparison/oracle-vector.mjs', 'harness/oracle-vector.mjs'], ['../../public/vectra_comparison/vector-receipts.mjs', 'harness/vector-receipts.mjs']]
@@ -39,7 +39,7 @@ try {
   assert.deepEqual(identity(await manifest(store)), sourceTree, 'fixture copy changed')
   watcher.check()
   const output = path.join(root, 'results.ndjson')
-  const receipt = await runMonitored({ worker: path.join(here, 'limit-worker.mjs'), job: { development: true, package: packagePath, addon: path.join(packagePath, 'warm-sdk.node'), store, dataset, oracle, output }, jobFile: path.join(root, 'job.json'), receipt: path.join(root, 'receipt.json'), hostFile, deadline, signal: watcher.signal, environment: { RAYON_NUM_THREADS: '1', OMP_NUM_THREADS: '1', VECLIB_MAXIMUM_THREADS: '1' } })
+  const receipt = await runMonitored({ worker: path.join(here, 'limit-worker.mjs'), job: { development: true, package: packagePath, addon: path.join(packagePath, 'writerslogic-warm.node'), store, dataset, oracle, output }, jobFile: path.join(root, 'job.json'), receipt: path.join(root, 'receipt.json'), hostFile, deadline, signal: watcher.signal, environment: { RAYON_NUM_THREADS: '1', OMP_NUM_THREADS: '1', VECLIB_MAXIMUM_THREADS: '1' } })
   assert.ok(receipt.complete, 'boundary worker incomplete')
   const rows = (await fs.readFile(output, 'utf8')).trim().split('\n').map(JSON.parse), queries = rows.filter(row => row.type === 'query')
   assert.equal(queries.length, 6); assert.equal(rows.at(-1).type, 'complete'); assert.equal(rows.at(-1).calls, 404)
