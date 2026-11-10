@@ -1,0 +1,395 @@
+{
+  "generated_utc": "2026-11-10T01:06:01.438216+00:00",
+  "run_id": "AZ-1",
+  "platform": "Azure Standard_E8bds_v5, East US; see hardware.txt for measured CPU/topology",
+  "official_evaluation_vm": false,
+  "published_board_result": false,
+  "protocol": {
+    "run_id": "AZ-1",
+    "purpose": "Live full-dataset official Docker harness runs of frozen streaming control, streaming E2a, and filter entry",
+    "region": "eastus",
+    "vm_size": "Standard_E8bds_v5",
+    "official_evaluation_vm": false,
+    "compute_hours_max": 8,
+    "cost_usd_max": 10,
+    "development_compute": "Local WSL host only; no paid development or smoke runs",
+    "streaming": {
+      "harness_commit": "b843ee3365782178f0a811e7e97b56e2341612da",
+      "control_commit": "f21de8861b194326dcc641dc18483cc365ed3de6",
+      "e2a_commit": "b15ec08e521d5f168d0fad8bd1e7ba678df93bc2",
+      "nprobe": 650,
+      "reorder": 1000,
+      "e2a_defaults": {
+        "retrain_imb": 1.7,
+        "retrain_min_inserts": 4000000,
+        "retrain_warm_iters": 3,
+        "retrain_sample": 1000000,
+        "train_sample": 1000000,
+        "kmeans_rebalance": true,
+        "nprobe_by_live": [
+          [
+            2000000,
+            1.4
+          ],
+          [
+            3000000,
+            1.3
+          ],
+          [
+            4500000,
+            1.0
+          ],
+          [
+            6000000,
+            0.8
+          ],
+          [
+            8000000,
+            0.7
+          ],
+          [
+            10000000,
+            0.6
+          ]
+        ]
+      },
+      "memory_gib": 8,
+      "swap_gib": 0,
+      "runbook": "neurips23/runbooks/final_runbook.yaml",
+      "expected_operations": 1280,
+      "expected_searches": 640,
+      "container_timeout_seconds": 3600,
+      "e2a_candidate_gate_seconds": 3240,
+      "e2a_candidate_gate_metric": "Complete workload elapsed time, not just summed operation time; unofficial E8bds_v5 evidence only",
+      "repetitions": "control, E2a, E2a, control"
+    },
+    "filter": {
+      "harness_commit": "f0b5c0006fb927ca364f32f8449efbc364ff0e90",
+      "warm_commit": "6091c519e56690abce9c27f9499387f89a3707d3",
+      "memory_gib": 16,
+      "swap_gib": 0,
+      "repetitions": 2,
+      "headline": {
+        "brute_max": 5000,
+        "target": 1750
+      },
+      "selection": "Frozen before Azure results; retain the submitted six-config grid without retuning"
+    },
+    "acceptance": "Record every run including failures, verify full results and recall, measure time and peak RSS, fetch artifacts before deleting this run's resource group; never claim D8lds_v5 or published placement"
+  },
+  "hardware": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  8\nOn-line CPU(s) list:                     0-7\nVendor ID:                               GenuineIntel\nBIOS Vendor ID:                          Intel(R) Corporation\nModel name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz\nBIOS Model name:                         Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz None CPU @ 2.8GHz\nBIOS CPU family:                         179\nCPU family:                              6\nModel:                                   106\nThread(s) per core:                      2\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                6\nCPU(s) scaling MHz:                      125%\nCPU max MHz:                             2800.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5586.87\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               192 KiB (4 instances)\nL1i cache:                               128 KiB (4 instances)\nL2 cache:                                5 MiB (4 instances)\nL3 cache:                                48 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-7\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\nLinux warm-az1 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n               total        used        free      shared  buff/cache   available\nMem:     67416641536  1912819712 53637627904     4231168 12612390912 65503821824\nSwap:              0           0           0\nNAME     SIZE TYPE MOUNTPOINTS\nsda       64G disk \n\u251c\u2500sda1    63G part /\n\u251c\u2500sda14    4M part \n\u251c\u2500sda15  106M part /boot/efi\n\u2514\u2500sda16  913M part /boot\nsdb      300G disk \n\u2514\u2500sdb1   300G part /mnt\nsr0      632K rom  \nTARGET SOURCE    FSTYPE OPTIONS\n/mnt   /dev/sdb1 ext4   rw,relatime\n",
+  "runs": [
+    {
+      "run": "streaming-control-1",
+      "track": "streaming",
+      "result_files": 1,
+      "step_seconds": 2597.181840658188,
+      "operation_seconds": {
+        "insert": 265.8516182899475,
+        "search": 2296.6743297576904,
+        "delete": 34.65589261054993
+      },
+      "max_rss_kib": 6908596,
+      "elapsed_seconds": 2598.39,
+      "rss_limit_gib": 8,
+      "official_results": [
+        {
+          "algorithm": "warm",
+          "parameters": "warm(partition_l5000_np650_ro1000, {'nprobe': 650})",
+          "dataset": "msturing-30M-clustered(final_runbook.yaml)",
+          "count": "10",
+          "distcomps": "0.0",
+          "build": "0.0006182193756103516",
+          "indexsize": "564.0",
+          "mean_ssd_ios": "0.0",
+          "mean_latency": "0.0",
+          "track": "streaming",
+          "recall/ap": "0.994244125"
+        }
+      ]
+    },
+    {
+      "run": "streaming-e2a-1",
+      "track": "streaming",
+      "result_files": 1,
+      "step_seconds": 2864.3625721931458,
+      "operation_seconds": {
+        "insert": 263.58501172065735,
+        "search": 2567.538857460022,
+        "delete": 33.23870301246643
+      },
+      "max_rss_kib": 6846004,
+      "elapsed_seconds": 2865.57,
+      "rss_limit_gib": 8,
+      "official_results": [
+        {
+          "algorithm": "warm",
+          "parameters": "warm(partition_l5000_np650_ro1000, {'nprobe': 650})",
+          "dataset": "msturing-30M-clustered(final_runbook.yaml)",
+          "count": "10",
+          "distcomps": "0.0",
+          "build": "0.0005125999450683594",
+          "indexsize": "580.0",
+          "mean_ssd_ios": "0.0",
+          "mean_latency": "0.0",
+          "track": "streaming",
+          "recall/ap": "0.9965711875000001"
+        }
+      ]
+    },
+    {
+      "run": "streaming-e2a-2",
+      "track": "streaming",
+      "result_files": 1,
+      "step_seconds": 2870.7640335559845,
+      "operation_seconds": {
+        "insert": 264.39424538612366,
+        "search": 2573.19305229187,
+        "delete": 33.17673587799072
+      },
+      "max_rss_kib": 6831744,
+      "elapsed_seconds": 2871.94,
+      "rss_limit_gib": 8,
+      "official_results": [
+        {
+          "algorithm": "warm",
+          "parameters": "warm(partition_l5000_np650_ro1000, {'nprobe': 650})",
+          "dataset": "msturing-30M-clustered(final_runbook.yaml)",
+          "count": "10",
+          "distcomps": "0.0",
+          "build": "0.000576019287109375",
+          "indexsize": "580.0",
+          "mean_ssd_ios": "0.0",
+          "mean_latency": "0.0",
+          "track": "streaming",
+          "recall/ap": "0.9965711875000001"
+        }
+      ]
+    },
+    {
+      "run": "streaming-control-2",
+      "track": "streaming",
+      "result_files": 1,
+      "step_seconds": 2590.2673518657684,
+      "operation_seconds": {
+        "insert": 265.3835418224335,
+        "search": 2289.9447412490845,
+        "delete": 34.93906879425049
+      },
+      "max_rss_kib": 6896824,
+      "elapsed_seconds": 2591.44,
+      "rss_limit_gib": 8,
+      "official_results": [
+        {
+          "algorithm": "warm",
+          "parameters": "warm(partition_l5000_np650_ro1000, {'nprobe': 650})",
+          "dataset": "msturing-30M-clustered(final_runbook.yaml)",
+          "count": "10",
+          "distcomps": "0.0",
+          "build": "0.0005502700805664062",
+          "indexsize": "564.0",
+          "mean_ssd_ios": "0.0",
+          "mean_latency": "0.0",
+          "track": "streaming",
+          "recall/ap": "0.994244125"
+        }
+      ]
+    },
+    {
+      "run": "filter-1",
+      "track": "filter",
+      "result_files": 6,
+      "max_rss_kib": 15082804,
+      "elapsed_seconds": 456.23,
+      "rss_limit_gib": 16,
+      "official_results": [
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 1650, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "55441.49059915826",
+          "distcomps": "0.0",
+          "build": "398.8576328754425",
+          "indexsize": "9799636.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.901413"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 3000, 'target': 1750, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "54886.10584477649",
+          "distcomps": "0.0",
+          "build": "398.8576328754425",
+          "indexsize": "9799636.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.906191"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 1750, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "54721.7008265457",
+          "distcomps": "0.0",
+          "build": "398.8576328754425",
+          "indexsize": "9799636.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.906415"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 7500, 'target': 1750, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "51909.33677819352",
+          "distcomps": "0.0",
+          "build": "398.8576328754425",
+          "indexsize": "9799636.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.907542"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 1850, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "53128.38124210067",
+          "distcomps": "0.0",
+          "build": "398.8576328754425",
+          "indexsize": "9799636.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.911012"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 2000, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "51232.07007511538",
+          "distcomps": "0.0",
+          "build": "398.8576328754425",
+          "indexsize": "9799636.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.917182"
+        }
+      ]
+    },
+    {
+      "run": "filter-2",
+      "track": "filter",
+      "result_files": 6,
+      "max_rss_kib": 15083380,
+      "elapsed_seconds": 456.39,
+      "rss_limit_gib": 16,
+      "official_results": [
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 1650, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "55064.800165628796",
+          "distcomps": "0.0",
+          "build": "398.86475682258606",
+          "indexsize": "9800412.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.901413"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 3000, 'target': 1750, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "55372.95218098699",
+          "distcomps": "0.0",
+          "build": "398.86475682258606",
+          "indexsize": "9800412.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.906191"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 1750, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "53972.75126940655",
+          "distcomps": "0.0",
+          "build": "398.86475682258606",
+          "indexsize": "9800412.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.906415"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 7500, 'target': 1750, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "51220.40187638216",
+          "distcomps": "0.0",
+          "build": "398.86475682258606",
+          "indexsize": "9800412.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.907542"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 1850, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "53379.70608418365",
+          "distcomps": "0.0",
+          "build": "398.86475682258606",
+          "indexsize": "9800412.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.911012"
+        },
+        {
+          "algorithm": "warm",
+          "parameters": "Warm({'ivf_min': 5000, 'cluster_size': 500, 'max_lists': 4096, 'bitset_min': 20000, 'copy_min': 50000}, {'brute_max': 5000, 'target': 2000, 'intersect_max': 1000000, 'prefetch': 32})",
+          "dataset": "yfcc-10M",
+          "count": "10",
+          "qps": "51064.8203498405",
+          "distcomps": "0.0",
+          "build": "398.86475682258606",
+          "indexsize": "9800412.0",
+          "mean_ssd_ios": "0",
+          "mean_latency": "0",
+          "track": "filter",
+          "recall/ap": "0.917182"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "E8bds_v5 has 64 GiB host RAM and different storage limits from the official D8lds_v5.",
+    "Workload containers are limited to 8 GiB streaming / 16 GiB filter with no swap; host page cache dropped before each run.",
+    "Peak RSS is measured by GNU time inside the workload container; it is not cgroup memory.peak.",
+    "Public queries only; no parameter selection on Azure.",
+    "The E2a and filter Docker builds explicitly fetch their frozen commits, which may be absent from a fresh clone's advertised refs."
+  ],
+  "raw_artifacts": "Full raw HDF5/log archive retained under AZ-1; SHA256 in archive.sha256."
+}

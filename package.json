@@ -1,6 +1,6 @@
 {
   "name": "warm-sdk",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "license": "Apache-2.0",
   "author": "WritersLogic, Inc. <david@writerslogic.com>",
   "description": "WritersLogic Adaptive Retention & Memory (WARM): local document search (BM25 + embedding cosine) and vector-symbolic associative memory.",
@@ -74,19 +74,19 @@
     "test:types": "tsc --noEmit --strict --target es2022 --module nodenext --moduleResolution nodenext --types node tests/node/types.test.mts tests/node/memory-types.test.mts tests/node/vector-record-types.test.mts tests/node/vectra-types.test.mts"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.10.8",
+    "@napi-rs/cli": "^3.10.12",
     "@types/node": "^26.6.6",
     "typescript": "^7.0.2"
   },
   "optionalDependencies": {
-    "warm-sdk-darwin-arm64": "0.6.6",
-    "warm-sdk-darwin-x64": "0.6.6",
-    "warm-sdk-linux-arm64-gnu": "0.6.6",
-    "warm-sdk-linux-arm64-musl": "0.6.6",
-    "warm-sdk-linux-x64-gnu": "0.6.6",
-    "warm-sdk-linux-x64-musl": "0.6.6",
-    "warm-sdk-win32-arm64-msvc": "0.6.6",
-    "warm-sdk-win32-x64-msvc": "0.6.6"
+    "warm-sdk-darwin-arm64": "0.6.7",
+    "warm-sdk-darwin-x64": "0.6.7",
+    "warm-sdk-linux-arm64-gnu": "0.6.7",
+    "warm-sdk-linux-arm64-musl": "0.6.7",
+    "warm-sdk-linux-x64-gnu": "0.6.7",
+    "warm-sdk-linux-x64-musl": "0.6.7",
+    "warm-sdk-win32-arm64-msvc": "0.6.7",
+    "warm-sdk-win32-x64-msvc": "0.6.7"
   },
   "peerDependencies": {
     "@huggingface/transformers": "^3.8.1 || ^4.2.0"

@@ -8,5 +8,12 @@
     "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.14.1",
     "typescript": "6.0.3"
+  },
+  "overrides": {
+    "minimatch": "11.0.1"
+  },
+  "scripts": {
+    "postinstall": "node patch-typedoc.cjs",
+    "test": "node --test test-glob.mjs"
   }
 }

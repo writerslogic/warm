@@ -14,6 +14,14 @@ stores vectors you supply and exposes document and query endpoints. See the
 
 ## Installation
 
+Version 0.2.0 requires Python 3.11 or newer and removes the legacy `embedchain`,
+`phidata` and `semantic_kernel` modules and their extras, including the old
+`all` extra. These retired integrations were not maintained through a published
+six-month deprecation period. Install individual supported extras and update
+imports before upgrading. The newer Semantic Kernel `WarmStore`/`WarmCollection`
+adapter in this repository is a separate API, not a drop-in replacement; its
+framework-integration distribution is not published by the SDK release.
+
 ```bash
 uv add warm-sdk
 ```
@@ -62,7 +70,9 @@ listing or similarity search. This adapter does not yet implement the complete
 Haystack DocumentStore protocol or support FilterRetriever. Call `store.close()`
 when finished. Do not treat unsupported operations as empty successful results.
 
-DSPy users must configure memory-only caching before the first cache or LM use:
+The SDK's `WarmRM` bypasses caching on supplied `dspy.Embedder` calls without
+changing global settings. DSPy users must still configure memory-only caching
+before other application cache or LM use:
 `dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)`.
 See the [tested dependency profile and its limits](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/dspy.md#cache-safety):
 newer LiteLLM versions can force an older vulnerable Filelock. The DSPy extra

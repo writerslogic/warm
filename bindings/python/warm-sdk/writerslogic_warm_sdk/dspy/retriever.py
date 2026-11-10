@@ -32,7 +32,10 @@ class WarmRM(dspy.Retrieve):
             if not self.embedder:
                 raise ValueError("An embedder must be provided to WarmRM")
             
-            embedding = self.embedder(query)
+            if isinstance(self.embedder, dspy.Embedder):
+                embedding = self.embedder(query, caching=False).tolist()
+            else:
+                embedding = self.embedder(query)
             res = self._client.query(query_vector=embedding, top_k=k)
             
             for doc in res.get("matches", []):

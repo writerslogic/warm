@@ -1,0 +1,29 @@
+{
+  "run": "streaming-control-1",
+  "track": "streaming",
+  "result_files": 1,
+  "step_seconds": 2597.181840658188,
+  "operation_seconds": {
+    "insert": 265.8516182899475,
+    "search": 2296.6743297576904,
+    "delete": 34.65589261054993
+  },
+  "max_rss_kib": 6908596,
+  "elapsed_seconds": 2598.39,
+  "rss_limit_gib": 8,
+  "official_results": [
+    {
+      "algorithm": "warm",
+      "parameters": "warm(partition_l5000_np650_ro1000, {'nprobe': 650})",
+      "dataset": "msturing-30M-clustered(final_runbook.yaml)",
+      "count": "10",
+      "distcomps": "0.0",
+      "build": "0.0006182193756103516",
+      "indexsize": "564.0",
+      "mean_ssd_ios": "0.0",
+      "mean_latency": "0.0",
+      "track": "streaming",
+      "recall/ap": "0.994244125"
+    }
+  ]
+}

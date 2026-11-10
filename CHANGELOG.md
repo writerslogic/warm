@@ -5,12 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
-## [Unreleased]
+## [0.6.7] - 2026-11-10
 
 ### Added
+- Load immutable index snapshots shared across Linux processes
 - Measure and repair bottom-layer reachability, and expose the build options to the VIBE adapter
 
 ### Documentation
+- Integrate historical Big ANN evidence with qualified comparisons
+- Record the requested benchmark stopping point
+- Record frozen Azure streaming and filter confirmations
+- Record low-level ablations and immutable sharing tradeoffs
 - Record the Ice Lake filter-track tuning with held-out selection and ablation
 - Add the second control run and the official-protocol logs to the Ice Lake filter results
 - Record the llama test-set confirmation of the held-out selection
@@ -19,8 +24,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record the balanced warm-retrain streaming study and Ice Lake runs
 - Record the second E2 Ice Lake run
 - Record the rescore-budget A/B and the pending consolidation measurements
+- Correct the streaming run hosts to Zen 4 and Zen 2 and note the live leaderboard CSV
+- Mark the filter operating point in the pinned-run table
 
 ### Fixed
+- Harden release dependencies and benchmark tooling
+- Widen quantized dot products before integer overflow
+- Bound Python result allocations and stabilize extreme cosine queries
+- Check specialized Python result allocations before search
+- Reject duplicate IDs in persisted graph mappings
+- Reject overflowing strides in empty Python result arrays
 - Close files with context managers and drop unused imports in the VIBE scripts
 - Close files with context managers and drop unused imports in the L22 scripts
 - Remove an unused import and variable and return explicitly in the L22 scripts
@@ -33,8 +46,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Skip already-published npm versions so a partial release can be re-run
 - Model background-compaction tail schedules in the simulation (#419)
 - Model background-compaction tail schedules in the simulation
+- Close the export file in summ.py and drop an unused import in ga.py
+- Close files with context managers in the ann-benchmarks campaign scripts
 
 ### Performance
+- Validate shared snapshot bindings without rereading vectors
+- Share query loads and bound rerank prefetch
 - Speed up the filtered index and retune it for the yfcc-10M filter track (#417)
 - Block the multi-label filter and skip the tombstone probe when nothing is deleted
 - Cache the intersection of repeated label sets in a sorted filtered batch
@@ -77,6 +94,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Measure compact LongMemEval context and user-turn fill under a fixed reader-token budget
 - Keep compact-layout LongMemEval runs in their own summary arm
 - Add base-with-deletes search and staged consolidation cgroup fixtures
+- Re-measure the ann-benchmarks entry through the harness and add the held-out candidate search tooling
+- Add the 8 GiB streaming final-runbook run
+- Record the pinned-commit yfcc-10M filter and msturing-30M streaming harness runs
+
+### Research
+- Validate upper seed bounds and reject speculative traversal
+- Validate certificate arithmetic and audit benchmark instruments
+- Bound navigation headroom and verify audit provenance
+- Record mission baselines and rejected frontier mechanisms
 ## [0.6.6] - 2026-11-09
 
 ### Added
