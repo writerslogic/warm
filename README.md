@@ -30,9 +30,10 @@ through HTTP, or from an MCP client, with storage on infrastructure you control.
 ## What it is
 
 WARM is a Rust library that stores text, vectors and facts in a
-directory on your machine and finds them again. It ships with Node.js bindings, C, WASM and UniFFI
-bindings, an HTTP server with a Python client, and an MCP server. There are no service calls, no
-telemetry and no model downloads unless you turn on a feature that asks for one.
+directory on your machine and finds them again. It ships with optional Node.js, C, WASM and UniFFI
+bindings, an HTTP server with portable JavaScript and Python clients, and an MCP server.
+The embedded engine makes no service calls or telemetry requests. HTTP clients connect to the
+server you configure; model stages are opt-in.
 
 | Capability | What you get |
 |------------|--------------|
@@ -106,25 +107,78 @@ entire checkpoint or hold store locks during text I/O.
 </details>
 
 <details>
-<summary><strong>Node.js</strong></summary>
+<summary><strong>JavaScript and TypeScript: portable client</strong></summary>
 
-The native Node.js SDK is available from source while publication of the complete `warm-sdk`
-package family is pending. From the cloned repository, with Rust installed:
+`warm-sdk` 0.2.0 is the portable HTTP client for a separately running `warm-server`.
+It has no native binaries or runtime dependencies and uses standard Fetch and Web Streams APIs
+(Node 18 or newer). Installing or importing it does not load the embedded engine or download models.
+The npm release is pending. Build the client from this checkout:
+
+```sh
+npm ci --prefix bindings/js/warm-sdk
+npm run build --prefix bindings/js/warm-sdk
+```
+
+In your application, install that directory with
+`npm install /absolute/path/to/warm/bindings/js/warm-sdk`.
+After verified publication, the registry command is `npm install warm-sdk@0.2.0`.
+
+Start the server in a separate terminal:
+
+```sh
+cargo build --release --features server --bin warm-server
+WARM_API_KEY=change-me target/release/warm-server --input-dim 384
+```
+
+```js
+import { WarmClient } from 'warm-sdk'
+
+const warm = new WarmClient({
+  url: process.env.WARM_URL ?? 'http://127.0.0.1:8080',
+  apiKey: process.env.WARM_API_KEY, tenantId: 'demo',
+})
+await warm.memory.remember('Restore deleted documents from verified backups.', {
+  id: 'backups', metadata: { project: 'alpha' },
+})
+const hits = await warm.memory.recall('restore backups', { filter: { project: 'alpha' } })
+console.log(hits[0]?.text)
+```
+
+Set `WARM_API_KEY` to the server's key before running the client. This memory example uses
+lexical retrieval and needs no embedding model. A runnable source example also checks retrieval
+and deletion in an isolated namespace:
+
+```sh
+WARM_URL=http://127.0.0.1:8080 WARM_API_KEY=change-me \
+  node examples/quickstart/js-client/quickstart.mjs
+```
+
+See the [client API](bindings/js/warm-sdk/README.md) and
+[release availability](docs/RELEASING.md#javascript-package-availability).
+Browser deployments must permit the application's origin at the HTTP service boundary.
+
+</details>
+
+<details>
+<summary><strong>Node.js: optional embedded engine</strong></summary>
+
+`writerslogic-warm` embeds the Rust engine in Node. Its engine version is 0.6.7;
+this release is available from source pending registry verification. The existing npm family
+keeps its name. From the cloned repository, with Rust installed:
 
 ```sh
 npm ci --omit=optional
 npm run build
 ```
 
-Earlier published releases (up to 0.6.4) use the npm name `writerslogic-warm`.
-See [release availability](docs/RELEASING.md#first-npm-release-under-warm-sdk) before adopting the new name.
+The portable client and embedded engine are separate packages with different APIs.
 `listDocuments` supports scoped pruning. See the
 [integration guide](docs/integrations/organizational-knowledge.md) for source
 provenance, namespace isolation, dry runs and deletion limits.
 
 ```js quickstart-check
-const { WarmMemorySystem } = require('warm-sdk')
-const { DocumentMemory } = require('warm-sdk/semantic')
+const { WarmMemorySystem } = require('writerslogic-warm')
+const { DocumentMemory } = require('writerslogic-warm/semantic')
 
 async function main() {
   const dir = require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'warm-readme-'))
@@ -227,13 +281,14 @@ provide the evidence for evaluating WARM on your own workload.
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |
-| Node.js bindings | Ships from source; complete `warm-sdk` npm publication pending | Native binaries are selected by platform at install time |
+| JavaScript/TypeScript client (`warm-sdk` 0.2.0) | Source available; npm publication pending | Portable HTTP client; requires a separately running server |
+| Embedded Node.js (`writerslogic-warm` 0.6.7) | Source available; this version's npm publication pending | Eight optional native platform packages; separate from the client |
 | C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
 | Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | No in-process document search |
 | Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |
 
-Every capability above except document search and the vector index is behind a Cargo feature or
-runtime option that is off by default; [Cargo features](docs/reference/features.md) lists them all.
+Optional engine capabilities use Cargo features or runtime configuration;
+[Cargo features](docs/reference/features.md) lists the build choices.
 
 The [compatibility policy](docs/STABILITY.md) defines API stability, deprecation windows and
 storage-format migration rules.
@@ -244,9 +299,9 @@ storage-format migration rules.
 flowchart TB
   subgraph bindings["Bindings and servers"]
     rust["Rust crate"]
-    node["Node.js (napi)"]
+    node["Node: writerslogic-warm (napi)"]
     ffi["C, WASM, UniFFI"]
-    python["Python: warm-sdk"]
+    clients["JavaScript and Python: warm-sdk"]
     server["warm-server (HTTP)"]
     mcp["warm-mcp (stdio, HTTP)"]
   end
@@ -266,7 +321,7 @@ flowchart TB
     mapped["Memory-mapped files"]
     crypto["AES-256-GCM encryption (optional)"]
   end
-  python --> server
+  clients --> server
   rust --> core
   node --> core
   ffi --> core

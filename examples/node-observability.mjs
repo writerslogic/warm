@@ -1,4 +1,4 @@
-import { WarmMemorySystem } from 'warm-sdk';
+import { WarmMemorySystem } from 'writerslogic-warm';
 
 const memory = new WarmMemorySystem(16_384, './memory_db');
 await memory.memorizeText('berlin', 'Berlin is the capital of Germany');

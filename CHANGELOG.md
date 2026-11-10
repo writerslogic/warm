@@ -8,6 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [0.6.7] - 2026-11-10
 
 ### Added
+- Add portable JavaScript client and retain optional embedded engine
 - Load immutable index snapshots shared across Linux processes
 - Measure and repair bottom-layer reachability, and expose the build options to the VIBE adapter
 
