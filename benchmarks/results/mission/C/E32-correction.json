@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "hypothesis": "H-C-1",
+  "failed_experiment": "E32",
+  "status": "correction_ready_for_root_E34",
+  "primary_commit_resolution": {
+    "requested_revision": "9e0b455f4ef0",
+    "api_url": "https://api.github.com/repos/xiaowu0162/LongMemEval/commits/9e0b455f4ef0",
+    "response_sha256": "13d59988c36e63f5461f7eb55b15686eff9dffecb48c4a63ab036ca98b2c7be7",
+    "resolved_commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+    "commit_url": "https://github.com/xiaowu0162/LongMemEval/commit/9e0b455f4ef0e2ab8f2e582289761153549043fc",
+    "commit_date": "2026-05-11T22:49:24Z"
+  },
+  "resolved_harness": {
+    "url": "https://raw.githubusercontent.com/xiaowu0162/LongMemEval/9e0b455f4ef0e2ab8f2e582289761153549043fc/src/evaluation/evaluate_qa.py",
+    "bytes": 7436,
+    "sha256": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251"
+  },
+  "failure": {
+    "receipt": "benchmarks/results/mission/C/longmemeval-semantic-validation.json",
+    "receipt_sha256": "a2a84995fc2377f8afa8740798076a2a3bae3ac928610523e050a94ec75fa977",
+    "error": "harness commit metadata",
+    "cause": "The validator compared the literal12-character report field with a full40-character resolved SHA. This exact-string comparison confused revision spelling with commit identity."
+  },
+  "source_evidence": [
+    {
+      "path": "benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r1.json",
+      "sha256": "827a7aaf43b37e1c1f54a6b7d306d48aec420453a958ad23070a0f5b9a5c0145",
+      "fields": {
+        "official_commit": {
+          "pointer": "/official_commit",
+          "value": "9e0b455f4ef0"
+        },
+        "evaluate_qa_sha256": {
+          "pointer": "/evaluate_qa_sha256",
+          "value": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251"
+        },
+        "pinned_warm_revision": {
+          "pointer": "/pinned_warm_revision",
+          "value": "425d30e4"
+        }
+      }
+    },
+    {
+      "path": "benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r2.json",
+      "sha256": "12425b4f9971c2be1a0fdee960aafc05ad22a59e73cccfafdc0bdff7a0e97113",
+      "fields": {
+        "official_commit": {
+          "pointer": "/official_commit",
+          "value": "9e0b455f4ef0"
+        },
+        "evaluate_qa_sha256": {
+          "pointer": "/evaluate_qa_sha256",
+          "value": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251"
+        },
+        "pinned_warm_revision": {
+          "pointer": "/pinned_warm_revision",
+          "value": "425d30e4"
+        }
+      }
+    },
+    {
+      "path": "benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r3.json",
+      "sha256": "eac53a43e04c023681f0a8a977a12d1283b1fe350944b130707534c02263af07",
+      "fields": {
+        "official_commit": {
+          "pointer": "/official_commit",
+          "value": "9e0b455f4ef0"
+        },
+        "evaluate_qa_sha256": {
+          "pointer": "/evaluate_qa_sha256",
+          "value": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251"
+        },
+        "pinned_warm_revision": {
+          "pointer": "/pinned_warm_revision",
+          "value": "425d30e4"
+        }
+      }
+    },
+    {
+      "path": "benchmarks/public/longmemeval_qa_l01.py",
+      "lines": [
+        51,
+        52,
+        684
+      ],
+      "finding": "Evaluator file uses the historical abbreviated revision in its name and report field; evaluator bytes are pinned by SHA256."
+    },
+    {
+      "path": "benchmarks/results/longmemeval_k30_preopen_v1/NOTE.md",
+      "lines": [
+        17,
+        19
+      ],
+      "finding": "Separately documents historical reader/rankings lineage and abbreviated official evaluator revision."
+    },
+    {
+      "path": "benchmarks/results/mission/C/sources/longmemeval-evaluate_qa.py",
+      "sha256": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251",
+      "bytes": 7436
+    }
+  ],
+  "correction": {
+    "historical_report_revision": "9e0b455f4ef0",
+    "resolved_historical_commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+    "inspected_source_commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+    "evaluation_file_sha256": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251",
+    "revision_identity": "Primary commit API resolution establishes equality; all three historical report evaluator hashes and the newly fetched immutable source bytes also agree. No unchecked prefix acceptance.",
+    "changed_files": [
+      "benchmarks/results/mission/C/longmemeval-instrument-audit.json",
+      "benchmarks/results/mission/C/audit_longmemeval_semantic.py",
+      "benchmarks/results/mission/C/E32-correction.json"
+    ],
+    "historical_run_metadata_preserved": true,
+    "E32_receipt_preserved": true,
+    "question_records_changed": false
+  },
+  "limits": [
+    "This correction repairs audit-validator metadata only; no historical artifact, key, hypothesis, label, score or mechanism changes.",
+    "The report pinned_warm_revision425d30e4 is reader lineage, not proof of the rankings-producing revision. HistoricalNOTE records rankings lineage02468f57 separately.",
+    "Independent source corrections are recorded by root inE33; this artifact does not accept or apply them."
+  ],
+  "validation": {
+    "experiment": "E34",
+    "command": "uv run --no-project python benchmarks/results/mission/C/audit_longmemeval_semantic.py --audit benchmarks/results/mission/C/longmemeval-instrument-audit.json --source /Users/davidcondrey/.cache/warm-bench/downloads/longmemeval_s_cleaned.json --provenance /Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/C/longmemeval-provenance-result.json --repo /Volumes/A/.hms-wt-mission-c --output /Volumes/A/.hms-wt-mission-c/benchmarks/results/mission/C/longmemeval-semantic-validation-E34.json",
+    "output": "benchmarks/results/mission/C/longmemeval-semantic-validation-E34.json",
+    "specialist_executed": false,
+    "expected_decision": "accept-reference-integrity-only"
+  }
+}

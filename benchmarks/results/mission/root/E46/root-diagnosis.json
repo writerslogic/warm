@@ -1,0 +1,8 @@
+{
+  "experiment": "E46-root-diagnosis",
+  "compiled_kernel_rejection_established": false,
+  "failure": "instruction tokenizer excluded underscores and allowed zero whitespace before operands",
+  "observed": "vcmpgt_oqps parsed as mnemonicvcmpgt and operands_oqps...",
+  "decision": "reject-lexer-contract",
+  "next": "E50strictfullopcode/separator fixtures thenreplayexactE43assembly;no compilation"
+}

@@ -361,3 +361,24 @@ Per-candidate retrain seconds (Ice Lake, from the wl-03 screen times scaled by 1
 Prediction from the measured components (inference, not measurement): holding recall at the E2a level, every variant above needs 330 to 390 s removed from E2a's 3,194 s; that is 210 to 250 nprobe units at the measured 1.58 s per unit, which lowers board recall by about 0.0042 at the static slope of 0.00002 per unit (0.9924 to 0.9927). The best case, L5 in place of the six exact retrains (saving about 270 s) at np about 570, predicts about 0.9944 at 2,800 s, which does not clear the 0.9945 kill threshold and is within the error of the control (0.994244).
 
 Gen-2 conclusion: no candidate reaches more than 0.9945 board recall at <= 2,800 s summed step time. Best measured point under 2,800 s remains the submitted control (c5cd1c61, np650, 0.994244 at 2,722 s). Local rebalance trades 0.0007 recall at equal time for ~270 s cheaper maintenance but its recall per scanned block is below the exact warm retrain, and exact warm retrain (0.996571) costs 3,194 s.
+
+## 12. Frozen Azure confirmation, 2026-11-09–10
+
+Full official-harness repeats used Azure E8bds_v5, Intel Xeon Platinum 8370C,
+4 cores / 8 threads, with an 8 GiB/no-swap container. E8bds_v5 has 64 GiB host
+RAM and different storage limits from the official D8lds_v5, so this is
+confirmation evidence, not an official platform result. Source and settings
+were frozen before the run; order was control/E2a/E2a/control.
+
+| Frozen source | Recall | Complete workload seconds, run 1 / 2 | Peak RSS GiB, run 1 / 2 |
+|---|---:|---:|---:|
+| Control `f21de886`, np650 | .994244125 | 2598.39 / 2591.44 | 6.5886 / 6.5773 |
+| E2a `b15ec08e`, np650 | .9965711875 | 2865.57 / 2871.94 | 6.5289 / 6.5153 |
+
+All 1,280 operations and 640 searches completed in every run. Both E2a runs
+pass the preregistered 3,240-second complete-workload gate; this does not change
+the earlier 2,800-second study's verdict. No parameters were selected on Azure.
+Time is measured by GNU time around the workload, rather than only summed
+operations. Peak RSS is not a cgroup memory peak. The host page cache was dropped
+before each run. [Exports, protocol and archive receipt](../../benchmarks/results/azure/az1-2026-11-09/)
+retain all repeats. Official D8lds_v5 and private-query evaluation remain pending.

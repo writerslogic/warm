@@ -1,0 +1,77 @@
+{
+  "registered_utc": "2026-11-09T23:36:06.239213+00:00",
+  "warm_source": "4299b5399c5b843aebb447f5e66d96a72420fdde",
+  "source_base": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+  "source_patch_sha256": "1cb69b6341cdfaca9162f48efcbf78bb9173ba0a42a644ce9df371e2e03a071d",
+  "harness": "4c6bdb566423d39afc2287bd27c4a3787eb80113",
+  "baseline": "warm-python==0.6.4 (published PyPI wheel)",
+  "native_features": [
+    "default",
+    "python",
+    "local-embed-download"
+  ],
+  "native_rustflags": [],
+  "case": "Performance768D1M",
+  "vectors": 1000000,
+  "dimensions": 768,
+  "queries": 1000,
+  "metric": "cosine",
+  "k": 100,
+  "nq": 1,
+  "m": 16,
+  "degree": 32,
+  "ef_construction": 300,
+  "ef_search": 150,
+  "rerank": 150,
+  "concurrency": [
+    1,
+    5,
+    10
+  ],
+  "seconds_per_concurrency": 30,
+  "limits": {
+    "cpus": 8,
+    "cpuset": "0-7",
+    "memory_bytes": 17179869184,
+    "swap": false
+  },
+  "order": [
+    "sdk064:0:fresh:azure-sdk064-b0-r1",
+    "main:0:reuse:azure-main-b0-r1",
+    "final:0:reuse:azure-final-b0-r1",
+    "final:1:reuse:azure-final-b1-r1",
+    "shared:1:reuse:azure-shared-b1-r1",
+    "main:1:reuse:azure-main-b1-r1",
+    "sdk064:1:reuse:azure-sdk064-b1-r1",
+    "sdk064:1:reuse:azure-sdk064-b1-r2",
+    "main:1:reuse:azure-main-b1-r2",
+    "shared:1:reuse:azure-shared-b1-r2",
+    "final:1:reuse:azure-final-b1-r2",
+    "final:0:reuse:azure-final-b0-r2",
+    "main:0:reuse:azure-main-b0-r2",
+    "sdk064:0:reuse:azure-sdk064-b0-r2"
+  ],
+  "constraints": [
+    "All compilation and preparation on owned hosts",
+    "No cloud development, tuning, subset or smoke runs",
+    "Start after independent ANN chain completes",
+    "Do not automatically retry a failed cloud run",
+    "Preserve all results and memory peaks",
+    "Archive and verify results, then delete owned warm-bench-azure resource group before 2026-11-10T05:03:00Z"
+  ],
+  "updated_utc": "2026-11-10T00:45:16.059712+00:00",
+  "main_control": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+  "control_expansion_reason": "Before cloud measurement: published SDK grouped arm exceeded integrated grouped arm locally; include same-source-build main controls to separate version/build effects from changes.",
+  "harness_adapter_patch_sha256": "2fe20d6b3f52c8ac0d362312f430378c316c992863830c9d878ebb03e7579fe9",
+  "shared_mapping": "Explicit Linux sealed memfd; publisher hashes while copying once and binds exact source and sealed snapshot inodes; workers validate binding, immutable seals and native index parser. Publisher and workers share the measured cgroup. Snapshot setup and total wall time recorded separately; official worker init timing unchanged.",
+  "local_order": [
+    "final:local-bound-heap-r1",
+    "shared:local-bound-map-r1",
+    "shared:local-bound-map-r2",
+    "final:local-bound-heap-r2"
+  ],
+  "embedded_manifest_note": "The tested image records the pre-commit working tree based on 0c5a94ec plus this same full source patch; cmp verified it equals commit4299b539 src exactly.",
+  "snapshot_publisher_source": "699c480e75abad47522631b79374f8b58b07f786",
+  "snapshot_publisher_sha256": "3c07facd488ff2f1c91c97f12097c121a5e14fa1b7e3b2c78629083ae14c96a7",
+  "shared_tradeoff": "Local full ABBA reduces peak cgroup memory but lowers throughput; retain private heap default and report all arms."
+}

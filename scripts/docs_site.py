@@ -25,6 +25,7 @@ from pathlib import Path
 import yaml
 from urllib.parse import quote_from_bytes, urlsplit
 from mkdocs.exceptions import PluginError
+from mkdocs.plugins import event_priority
 from markupsafe import Markup
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -202,17 +203,31 @@ def on_config(config):
     return config
 
 
+def _validate_inline_css(css, asset):
+    if "</style" in css.lower() or "@import" in css.lower():
+        raise PluginError(f"Cannot inline stylesheet: {asset}")
+    for url in re.finditer(r"\burl\(\s*(?:\"([^\"]*)\"|'([^']*)'|([^)]*))\s*\)", css):
+        value = next(group for group in url.groups() if group is not None).strip()
+        if not value.startswith(("data:", "#")):
+            raise PluginError(f"Stylesheet needs asset URL rewriting: {asset}")
+
+
+@event_priority(-50)  # mkdocstrings writes its stylesheet at priority -20.
 def on_env(env, config, files):
+    api_css = "assets/_mkdocstrings.css"
+    if api_css in config.get("extra_css", []):
+        from csscompressor import compress
+
+        css = (Path(config["site_dir"]) / api_css).read_text(encoding="utf-8")
+        _validate_inline_css(css, api_css)
+        config["extra"]["warm"]["inline_css"] = compress(css) + "\n" + config["extra"]["warm"]["inline_css"]
+        config["extra_css"].remove(api_css)
+
     def inline_theme_styles(markup):
         def replace(match):
             asset = "assets/stylesheets/" + match["name"]
             css = env.loader.get_source(env, asset)[0]
-            if "</style" in css.lower() or "@import" in css.lower():
-                raise PluginError(f"Cannot inline theme stylesheet: {asset}")
-            for url in re.finditer(r"\burl\(\s*(?:\"([^\"]*)\"|'([^']*)'|([^)]*))\s*\)", css):
-                value = next(group for group in url.groups() if group is not None).strip()
-                if not value.startswith(("data:", "#")):
-                    raise PluginError(f"Theme stylesheet needs asset URL rewriting: {asset}")
+            _validate_inline_css(css, asset)
             return f'<style data-warm-theme="{match["name"]}">{css}</style>'
 
         return Markup(re.sub(

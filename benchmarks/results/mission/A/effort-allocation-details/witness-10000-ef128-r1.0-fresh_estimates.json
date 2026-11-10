@@ -1,0 +1,16 @@
+{
+  "rows": 10000,
+  "ef": 128,
+  "recall_floor": "1.0",
+  "objective": "fresh_estimates",
+  "curve_path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/curves-10000-ef128.ndjson.gz",
+  "curve_raw_sha256": "7c2784008cc3bd05b9b7ddfeed52e27af4de1061309568e1f0567f9e18e0b574",
+  "optimum": {
+    "feasible": false,
+    "maximum_hits": 9847,
+    "irreducible_misses": 153,
+    "cost": null,
+    "missed": null
+  },
+  "selections": null
+}

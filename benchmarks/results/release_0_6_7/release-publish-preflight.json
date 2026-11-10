@@ -1,0 +1,639 @@
+{
+  "schema_version": 1,
+  "task": "Release publication preflight; read-only investigation",
+  "recorded_at_utc": "2026-11-10",
+  "worktree": "/Volumes/A/.hms-wt-mission-c",
+  "source_commit": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "scope": {
+    "files_authored": [
+      "benchmarks/results/mission/C/release-publish-preflight.json"
+    ],
+    "publication_mutations": false,
+    "secret_reads": false,
+    "settings_changes": false,
+    "tests_builds_installs": false,
+    "paid_calls": false,
+    "limitation": "The root's evolving release worktree was not audited. Recheck relevant workflow changes on its final frozen commit."
+  },
+  "finding": {
+    "npm_failure": "The v0.6.6 tag workflow published seven native platform packages, then npm rejected warm-sdk-win32-x64-msvc with E403 and a package-name spam-detection message. The platform-first loop stopped before publishing root warm-sdk.",
+    "independent_success": "The crates.io job and GitHub draft-release job succeeded independently; native Python was published by its separate py-v0.6.6 workflow.",
+    "draft": "Draft creation is intentional: release.yml invokes gh release create --draft. Publication of GitHub release notes is a separate maintainer action. The connector's public releases list omits drafts, so present draft metadata was not independently read.",
+    "ownership": "Neither the E403 spam-detection message nor a registry 404 establishes package ownership, token failure, or permission to claim a package name.",
+    "next_external_step": "Resolve npm's spam-detection rejection for the exact name warm-sdk-win32-x64-msvc through the support route supplied in the error. Attach the run/job URL and timestamp; require evidence that this name can be published. A version bump alone does not establish clearance."
+  },
+  "prior_release": {
+    "tag": "v0.6.6",
+    "peeled_commit": "0b4c5322e81771a7de8d73fc1a5159bdee7a6e1f",
+    "run_id": 42557810040,
+    "url": "https://github.com/writerslogic/warm/actions/runs/42557810040",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [
+      {
+        "id": 128967350281,
+        "name": "npm / verify npm publishing credentials",
+        "conclusion": "skipped",
+        "url": "https://github.com/writerslogic/warm/actions/runs/42557810040/job/128967350281"
+      },
+      {
+        "id": 128969748569,
+        "name": "publish to npm",
+        "conclusion": "failure",
+        "url": "https://github.com/writerslogic/warm/actions/runs/42557810040/job/128969748569"
+      },
+      {
+        "id": 128969748575,
+        "name": "publish to crates.io",
+        "conclusion": "success",
+        "url": "https://github.com/writerslogic/warm/actions/runs/42557810040/job/128969748575"
+      },
+      {
+        "id": 128969748590,
+        "name": "draft GitHub release",
+        "conclusion": "success",
+        "url": "https://github.com/writerslogic/warm/actions/runs/42557810040/job/128969748590"
+      },
+      {
+        "id": 128996891208,
+        "name": "install the published packages and search",
+        "conclusion": "skipped",
+        "url": "https://github.com/writerslogic/warm/actions/runs/42557810040/job/128996891208"
+      }
+    ],
+    "npm_log_evidence": [
+      {
+        "line": 105,
+        "text": "2026-11-09T05:27:07.1225194Z + warm-sdk-darwin-arm64@0.6.6"
+      },
+      {
+        "line": 127,
+        "text": "2026-11-09T05:27:10.6866317Z + warm-sdk-darwin-x64@0.6.6"
+      },
+      {
+        "line": 149,
+        "text": "2026-11-09T05:27:14.0501351Z + warm-sdk-linux-arm64-gnu@0.6.6"
+      },
+      {
+        "line": 171,
+        "text": "2026-11-09T05:27:17.4766098Z + warm-sdk-linux-arm64-musl@0.6.6"
+      },
+      {
+        "line": 193,
+        "text": "2026-11-09T05:27:20.8981534Z + warm-sdk-linux-x64-gnu@0.6.6"
+      },
+      {
+        "line": 215,
+        "text": "2026-11-09T05:27:24.0492924Z + warm-sdk-linux-x64-musl@0.6.6"
+      },
+      {
+        "line": 237,
+        "text": "2026-11-09T05:27:27.4763900Z + warm-sdk-win32-arm64-msvc@0.6.6"
+      },
+      {
+        "line": 258,
+        "text": "2026-11-09T05:27:29.0645845Z npm error code E403"
+      },
+      {
+        "line": 259,
+        "text": "2026-11-09T05:27:29.0647020Z npm error 403 403 Forbidden - PUT https://registry.npmjs.org/warm-sdk-win32-x64-msvc - Package name triggered spam detection; if you believe this is in error, please contact support at https://npmjs.com/support"
+      }
+    ],
+    "draft_log": {
+      "job": 128969748590,
+      "command_line": 63,
+      "created_url_line": 70,
+      "created_url": "https://github.com/writerslogic/warm/releases/tag/untagged-4ce3e1d9edda4c38b8d6"
+    },
+    "skipped_credential_job": "The reusable npm workflow's credential preflight is conditioned on manual publish_npm=true on main. Its skipped state on this tag run is expected and is not an authentication failure.",
+    "native_python": {
+      "tag": "py-v0.6.6",
+      "commit": "0b4c5322e81771a7de8d73fc1a5159bdee7a6e1f",
+      "run_id": 42557809850,
+      "url": "https://github.com/writerslogic/warm/actions/runs/42557809850",
+      "conclusion": "success"
+    }
+  },
+  "registry_observations": {
+    "date_utc": "2026-11-10",
+    "method": "Unauthenticated bounded public package-metadata GETs; 2 MiB maximum response per URL. These observations are publication state, not ownership checks.",
+    "npm": [
+      {
+        "name": "warm-sdk",
+        "url": "https://registry.npmjs.org/warm-sdk",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "warm-sdk-win32-x64-msvc",
+        "url": "https://registry.npmjs.org/warm-sdk-win32-x64-msvc",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "warm-sdk-darwin-arm64",
+        "url": "https://registry.npmjs.org/warm-sdk-darwin-arm64",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "warm-sdk-darwin-x64",
+        "url": "https://registry.npmjs.org/warm-sdk-darwin-x64",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "warm-sdk-linux-arm64-gnu",
+        "url": "https://registry.npmjs.org/warm-sdk-linux-arm64-gnu",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "warm-sdk-linux-arm64-musl",
+        "url": "https://registry.npmjs.org/warm-sdk-linux-arm64-musl",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "warm-sdk-linux-x64-gnu",
+        "url": "https://registry.npmjs.org/warm-sdk-linux-x64-gnu",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "warm-sdk-linux-x64-musl",
+        "url": "https://registry.npmjs.org/warm-sdk-linux-x64-musl",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "warm-sdk-win32-arm64-msvc",
+        "url": "https://registry.npmjs.org/warm-sdk-win32-arm64-msvc",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "writerslogic-warm-mcp",
+        "url": "https://registry.npmjs.org/writerslogic-warm-mcp",
+        "http_status": 200,
+        "latest": "0.1.5"
+      },
+      {
+        "name": "@writerslogic/warm-core",
+        "url": "https://registry.npmjs.org/%40writerslogic%2Fwarm-core",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "@writerslogic/warm-langchain",
+        "url": "https://registry.npmjs.org/%40writerslogic%2Fwarm-langchain",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "@writerslogic/warm-llamaindex",
+        "url": "https://registry.npmjs.org/%40writerslogic%2Fwarm-llamaindex",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "@writerslogic/warm-mastra",
+        "url": "https://registry.npmjs.org/%40writerslogic%2Fwarm-mastra",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "@writerslogic/warm-openai-agents",
+        "url": "https://registry.npmjs.org/%40writerslogic%2Fwarm-openai-agents",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "@writerslogic/warm-vercel-ai",
+        "url": "https://registry.npmjs.org/%40writerslogic%2Fwarm-vercel-ai",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "writerslogic-warm-claude-tool",
+        "url": "https://registry.npmjs.org/writerslogic-warm-claude-tool",
+        "http_status": 404,
+        "latest": null
+      }
+    ],
+    "pypi": [
+      {
+        "name": "warm-python",
+        "url": "https://pypi.org/pypi/warm-python/json",
+        "http_status": 200,
+        "latest": "0.6.6"
+      },
+      {
+        "name": "warm-sdk",
+        "url": "https://pypi.org/pypi/warm-sdk/json",
+        "http_status": 200,
+        "latest": "0.1.3"
+      },
+      {
+        "name": "warm-models",
+        "url": "https://pypi.org/pypi/warm-models/json",
+        "http_status": 200,
+        "latest": "0.1.0"
+      },
+      {
+        "name": "warm-mcp",
+        "url": "https://pypi.org/pypi/warm-mcp/json",
+        "http_status": 200,
+        "latest": "0.1.5"
+      },
+      {
+        "name": "writerslogic-warm-integrations",
+        "url": "https://pypi.org/pypi/writerslogic-warm-integrations/json",
+        "http_status": 404,
+        "latest": null
+      },
+      {
+        "name": "writerslogic-warm-claude-tool",
+        "url": "https://pypi.org/pypi/writerslogic-warm-claude-tool/json",
+        "http_status": 404,
+        "latest": null
+      }
+    ],
+    "crate": {
+      "url": "https://crates.io/api/v1/crates/warm-rust/0.6.6",
+      "http_status": 200,
+      "version": "0.6.6",
+      "yanked": false,
+      "created_at": "2026-11-09T05:27:49.383200Z"
+    }
+  },
+  "workflow_source": {
+    "npm_platform_first": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/release.yml#L299",
+    "npm_consumer_verification": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/release.yml#L340",
+    "intentional_draft": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/release.yml#L184",
+    "manual_npm_credentials": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/npm-packages.yml#L202",
+    "manual_npm_integrity_guard": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/npm-packages.yml#L278",
+    "native_python_publish_condition": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/warm-py-release.yml#L37",
+    "release_instructions": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/RELEASING.md#L133"
+  },
+  "release_067_actions": [
+    {
+      "order": 1,
+      "owner": "root/maintainer and npm support",
+      "status": "external blocker",
+      "action": "Obtain resolution for the exact rejected Windows x64 package name.",
+      "evidence": "https://github.com/writerslogic/warm/actions/runs/42557810040/job/128969748569",
+      "support_url": "https://npmjs.com/support",
+      "forbidden_inference": "Do not rotate credentials, claim ownership, remove a supported target, or retry solely because the generic status was 403."
+    },
+    {
+      "order": 2,
+      "owner": "root",
+      "status": "authorized preparation",
+      "action": "Finish all merged security/PR changes, bump the engine to 0.6.7, regenerate changelog, and freeze the final candidate. Preserve published 0.6.6 tags.",
+      "commands": [
+        {
+          "cwd": "repository root",
+          "command": "uv run python scripts/ci/bump-version.py 0.6.7"
+        },
+        {
+          "cwd": "repository root",
+          "command": "git cliff -c cliff.toml -o CHANGELOG.md"
+        }
+      ],
+      "evidence": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/RELEASING.md#L135"
+    },
+    {
+      "order": 3,
+      "owner": "root",
+      "status": "required gates not run by this review",
+      "action": "Require repository CI, security gates, Release dry run, Python native dry run, and Reproducible build on the exact final commit. Use default false publish inputs for dry runs. Confirm native package count, version consistency, checksums, SBOMs and attestations.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/RELEASING.md#L140",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/release.yml#L1",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/warm-py-release.yml#L6"
+      ]
+    },
+    {
+      "order": 4,
+      "owner": "root",
+      "status": "authorized release after prerequisites",
+      "action": "Create and push signed v0.6.7 and py-v0.6.7 tags at the same frozen candidate and satisfy protected release environments. The independent SDK and MCP need their own version/tag decisions.",
+      "commands": [
+        "git tag -s v0.6.7 -m v0.6.7",
+        "git push origin v0.6.7",
+        "git tag -s py-v0.6.7 -m py-v0.6.7",
+        "git push origin py-v0.6.7"
+      ],
+      "evidence": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/RELEASING.md#L143"
+    },
+    {
+      "order": 5,
+      "owner": "root",
+      "status": "postpublication acceptance",
+      "action": "Require root warm-sdk and all eight platform packages at 0.6.7, successful clean registry installation/search, crate and Python availability, complete assets/checksums/attestations and published GitHub notes. A successful draft or seven platforms is incomplete.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/release.yml#L340",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/RELEASING.md#L147"
+      ]
+    }
+  ],
+  "partial_release_recovery": {
+    "normal_path": "Use the new 0.6.7 candidate; do not move the signed 0.6.6 tags.",
+    "repository_supported_npm_only_path": "npm-packages.yml has a protected workflow_dispatch publish_npm=true path on main, with native build/smoke, attestations/SBOMs, exact existing tarball integrity comparison and consumer verification.",
+    "source": "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/npm-packages.yml#L278",
+    "command_not_executed": "gh workflow run npm-packages.yml --ref main -f publish_npm=true",
+    "boundary": "Only root may choose this path after verifying main is the exact intended candidate and npm name clearance. This is not a request to retry the failed historical tag."
+  },
+  "streams": [
+    {
+      "id": "engine-native",
+      "packages": [
+        "warm-rust",
+        "warm-sdk (npm root plus eight native packages)",
+        "warm-python"
+      ],
+      "current_manifest_version": "0.6.6",
+      "planned_version": "0.6.7",
+      "previous_tags": [
+        "v0.6.6",
+        "py-v0.6.6"
+      ],
+      "previous_commit": "0b4c5322e81771a7de8d73fc1a5159bdee7a6e1f",
+      "decision": "Release the integrated engine with coordinated engine/native versions; current npm publication remains incomplete.",
+      "gates": [
+        "release.yml",
+        "python-wheels.yml",
+        "npm-packages.yml",
+        "warm-py-release.yml",
+        "Reproducible build"
+      ],
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/RELEASING.md#L12",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/RELEASING.md#L133"
+      ]
+    },
+    {
+      "id": "python-http-sdk",
+      "package": "warm-sdk (PyPI)",
+      "manifest": "bindings/python/warm-sdk/pyproject.toml",
+      "current_version": "0.1.3",
+      "last_tag": {
+        "name": "sdk-v0.1.3",
+        "commit": "ec4770052b20cfa20eb152c82dfb737b895aa35f",
+        "caveat": "This tag predates the warm-sdk project rename; its old package was holographic-memory-sdk."
+      },
+      "actual_current_name_publication": {
+        "run_id": 41163998718,
+        "url": "https://github.com/writerslogic/warm/actions/runs/41163998718",
+        "commit": "81267d43fa0347d42b508134f1207b90747a83ec",
+        "trigger": "workflow_dispatch",
+        "conclusion": "success",
+        "publish_job": 124428168309
+      },
+      "changes_since_actual_publication": [
+        "Transport and client behavior",
+        "Framework adapters and their real-server tests",
+        "mem0 importer",
+        "Optional dependency requirements",
+        "Legacy embedchain, phidata and semantic_kernel package modules removed"
+      ],
+      "decision": "New independent SDK version required to distribute these changes; choose and document its compatibility boundary before tagging. Never overwrite 0.1.3 or assume engine 0.6.7 bumps it.",
+      "release_trigger": "Signed sdk-v<new pyproject version> tag; warm-sdk-release.yml also has explicit manual publish input, default false.",
+      "validation_commands": [
+        {
+          "cwd": "repository root",
+          "command": "cargo build --locked --features server --bin warm-server"
+        },
+        {
+          "cwd": "bindings/python/warm-sdk",
+          "command": "uv build"
+        },
+        {
+          "cwd": "bindings/python/warm-sdk",
+          "environment": {
+            "WARM_SERVER_BIN": "<repository>/target/debug/warm-server",
+            "PYTHONPATH": "."
+          },
+          "command": "uv run --no-project --with 'httpx>=0.27' --with pytest pytest -q -rs tests"
+        }
+      ],
+      "additional_gates": "Clean wheel installation/import and py.typed inclusion in SDK workflow; framework version-boundary jobs in ci.yml, not merely a base SDK run with optional frameworks absent.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/warm-sdk-release.yml#L25",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/ci.yml#L254",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/bindings/python/warm-sdk/pyproject.toml#L5"
+      ],
+      "diff_command": "git diff --name-status 81267d43fa0347d42b508134f1207b90747a83ec HEAD -- bindings/python/warm-sdk"
+    },
+    {
+      "id": "mcp",
+      "packages": [
+        "writerslogic-warm-mcp (npm)",
+        "warm-mcp (PyPI)",
+        "official MCP Registry entry",
+        "five warm-mcp release binaries"
+      ],
+      "current_version": "0.1.5",
+      "last_published_tag": "mcp-v0.1.5",
+      "publication_commit": "db3d4e1169aebc49ac3a8db7be5ca68fd8da80d3",
+      "publication_run": "https://github.com/writerslogic/warm/actions/runs/41165920099",
+      "changes": [
+        "Cargo dependencies/lockfile",
+        "src/bin/warm-mcp/http.rs",
+        "src/bin/warm-mcp/memory.rs",
+        "src/bin/warm-mcp/oauth.rs",
+        "src/bin/warm-mcp/store.rs",
+        "src/bin/warm-mcp/tools.rs",
+        "integrations/mcp/tests/e2e.test.mjs"
+      ],
+      "decision": "A new MCP release is needed to ship the changed server binary even though launcher code is unchanged.",
+      "version_locations": [
+        "integrations/mcp/npm/package.json:version",
+        "integrations/mcp/pypi/pyproject.toml:project.version",
+        "integrations/mcp/pypi/src/writerslogic_warm_mcp/__init__.py:__version__",
+        "integrations/mcp/server.json:version and both packages[].version"
+      ],
+      "release_trigger": "Signed mcp-v<new matching launcher version> tag; manual MCP workflow is a dry run.",
+      "validation_commands": [
+        "python3 -m unittest scripts/ci/test_mcp_release.py",
+        "python3 scripts/ci/mcp-release.py mcp-v<new-version>",
+        "cargo build --release --locked --features mcp,security --bin warm-mcp"
+      ],
+      "required_gates": "Five target binaries; exact asset inventory/checksums; local asset-server launcher verification; security-enabled real MCP e2e; npm/PyPI packed installs; published npm install check; both package publications before MCP Registry validate/publish.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/scripts/ci/mcp-release.py#L21",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/warm-mcp-release.yml#L25",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/warm-mcp-release.yml#L121",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/warm-mcp-release.yml#L247"
+      ],
+      "diff_command": "git diff --name-only mcp-v0.1.5 HEAD -- Cargo.toml Cargo.lock integrations/mcp src/bin/warm-mcp"
+    },
+    {
+      "id": "model-packs",
+      "packages": [
+        "warm-models (PyPI)",
+        "writerslogic-warm-models (npm manifest; current publication not checked)"
+      ],
+      "current_version": "0.1.0",
+      "old_tag": {
+        "name": "py-models-v0.1.0",
+        "commit": "ec4770052b20cfa20eb152c82dfb737b895aa35f"
+      },
+      "actual_python_publication": {
+        "run_id": 41164000909,
+        "url": "https://github.com/writerslogic/warm/actions/runs/41164000909",
+        "commit": "81267d43fa0347d42b508134f1207b90747a83ec",
+        "trigger": "workflow_dispatch",
+        "conclusion": "success",
+        "publish_job": 124428121461
+      },
+      "changes_since_actual_publication": "Python README and module docstring; Node package description and source comment. No functional pack, builder or Python project-version changes.",
+      "decision": "No new model-pack release or weight download is needed for 0.6.7. warm-python[embed] remains pinned to warm-models==0.1.0.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/bindings/embed-models/python/pyproject.toml#L5",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/bindings/embed-models/python/writerslogic_warm_models/__init__.py#L3"
+      ],
+      "diff_command": "git diff 81267d43fa0347d42b508134f1207b90747a83ec HEAD -- bindings/embed-models"
+    },
+    {
+      "id": "js-framework-adapters",
+      "packages": [
+        "@writerslogic/warm-core",
+        "@writerslogic/warm-langchain",
+        "@writerslogic/warm-llamaindex",
+        "@writerslogic/warm-mastra",
+        "@writerslogic/warm-openai-agents",
+        "@writerslogic/warm-vercel-ai"
+      ],
+      "current_version": "0.1.0",
+      "last_published_tag": null,
+      "publication_observation": "All six package metadata requests returned 404; no integration-specific tag in fetched refs.",
+      "decision": "First-publication stream. Requires warm-sdk native package availability and package scope/publish authority confirmation; neither is established by 404.",
+      "dependencies": "core peers on warm-sdk>=0.6.5; adapters depend on @writerslogic/warm-core ^0.1.0. The integrations/js workspace root is private.",
+      "repository_release_command": null,
+      "release_gap": "No dedicated publication workflow/tag command found in .github/workflows or docs/RELEASING.md. Do not treat pushing v0.6.7 as publishing these.",
+      "exact_existing_gates": [
+        "npm ci --ignore-scripts --prefix integrations/js",
+        "npm run build --prefix integrations/js",
+        "npm test --prefix integrations/js"
+      ],
+      "gate_prerequisite": "Native root addon built first; ci.yml node job supplies it.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/ci.yml#L386",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/integrations/js/package.json#L1",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/integrations/js/packages/core/package.json#L1",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/integrations/frameworks/MATRIX.md#L38"
+      ]
+    },
+    {
+      "id": "python-framework-adapters",
+      "package": "writerslogic-warm-integrations",
+      "current_version": "0.1.0",
+      "last_published_tag": null,
+      "publication_observation": "PyPI metadata returned 404; no integration-specific tag in fetched refs.",
+      "decision": "First-publication stream independent of the engine and HTTP SDK. Requires packaged dependency/consumer verification and publisher setup confirmation.",
+      "dependency": "warm-sdk>=0.1.3; development uv source points to the local SDK, so local tests alone do not prove the public wheel dependency path.",
+      "repository_release_command": null,
+      "release_gap": "No dedicated release workflow/tag command found.",
+      "exact_existing_gate": {
+        "cwd": "repository root",
+        "environment": {
+          "WARM_SERVER_BIN": "<built warm-server>"
+        },
+        "command": "integrations/python/run-matrix.sh"
+      },
+      "gate_boundary": "The script uses isolated Python 3.12 environments for 15 framework extras plus core. Framework matrix documentation records past tests, not a new result. ci.yml additionally pins selected current security-sensitive framework combinations.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/integrations/python/pyproject.toml#L5",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/integrations/python/run-matrix.sh#L5",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/.github/workflows/ci.yml#L302",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/integrations/frameworks/MATRIX.md#L1"
+      ]
+    },
+    {
+      "id": "claude-memory-tool",
+      "packages": [
+        "writerslogic-warm-claude-tool (npm)",
+        "writerslogic-warm-claude-tool (PyPI)"
+      ],
+      "current_version": "0.1.0",
+      "last_published_tag": null,
+      "publication_observation": "Both registries returned 404; no tool-specific tag in fetched refs.",
+      "decision": "First-publication streams with real MCP transport/SDK boundary tests; native MCP binary must be supplied. No live model call is required by documented tests.",
+      "repository_release_command": null,
+      "release_gap": "No dedicated release workflow/tag command found.",
+      "exact_existing_gates": [
+        {
+          "cwd": "repository root",
+          "environment": {
+            "WARM_MCP_BIN": "<built warm-mcp>"
+          },
+          "command": "uv run --project integrations/claude-memory-tool/python pytest integrations/claude-memory-tool/python/tests"
+        },
+        {
+          "cwd": "integrations/claude-memory-tool/typescript",
+          "environment": {
+            "WARM_MCP_BIN": "<built warm-mcp>"
+          },
+          "command": "npm test"
+        }
+      ],
+      "gate_prerequisite": "Install declared local dependencies using the repository lockfile before running; TypeScript test script compiles then runs node --test --test-concurrency=1 dist/test/.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/docs/integrations/mcp/memory-tool.md#L66",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/integrations/claude-memory-tool/typescript/package.json#L1",
+        "https://github.com/writerslogic/warm/blob/74bb9fa84b85a9bf1f58f89e5d35762f728ed17b/integrations/claude-memory-tool/python/pyproject.toml#L7"
+      ]
+    }
+  ],
+  "additional_binding_scope": {
+    "manifests": [
+      "bindings/wasm/npm/package.json (@writerslogic/warm-wasm 0.1.0)",
+      "bindings/dotnet/src/WarmMemory/WarmMemory.csproj (WritersLogic.WarmMemory 0.1.0)",
+      "bindings/go/go.mod (github.com/writerslogic/warm/bindings/go; no manifest version)",
+      "bindings/c/Cargo.toml (0.1.0; publish=false)",
+      "bindings/uniffi/Cargo.toml (0.1.0; publish=false)"
+    ],
+    "observed_tag_state": "Fetched repository refs have no independent WASM, NuGet, Go, C or mobile release tag.",
+    "publication_state": "Not established; registry ownership/current versions were not inspected for these supplemental runtimes.",
+    "decision": "No automatic publication is established by the 0.6.7 engine tag. Do not invent a last-published baseline or add a runtime release based only on manifest presence.",
+    "source_gates": [
+      "bindings/wasm/npm/package.json scripts",
+      "docs/runtimes/wasm/README.md:85",
+      "docs/runtimes/dotnet/README.md:15",
+      "docs/runtimes/go/README.md:22"
+    ]
+  },
+  "documentation_deltas_for_root": [
+    {
+      "path": "docs/RELEASING.md:7",
+      "finding": "Blanket statement that manual dispatch never publishes conflicts with explicit protected publish inputs in current workflows.",
+      "action": "Describe default dry-run behavior and explicit publish inputs separately; root owns this document."
+    },
+    {
+      "path": "docs/RELEASING.md:22",
+      "finding": "MCP version-check code validates four version-bearing files plus package versions in server.json, not only launcher package manifests.",
+      "action": "Use scripts/ci/mcp-release.py as authoritative."
+    },
+    {
+      "path": "docs/RELEASING.md:165",
+      "finding": "0.6.6 is a partial first publication under warm-sdk: seven platforms exist, Windows x64 and root remain missing.",
+      "action": "Document the exact npm name-policy rejection and 0.6.7 recovery boundary without asserting missing credentials or ownership."
+    }
+  ],
+  "remaining_unknowns": [
+    "Current npm support clearance for warm-sdk-win32-x64-msvc.",
+    "Exact new independent Python HTTP SDK and MCP versions; removed legacy SDK adapters need explicit compatibility notes.",
+    "New integration package authority/trusted publishers and their first-release packaging/consumer gates.",
+    "Final merged release candidate and successful CI/reproducibility/security/dry-run artifacts on that commit.",
+    "Current draft-release metadata through an authenticated draft-capable read; historical draft creation is established.",
+    "Present registry state for supplemental WASM/NuGet/Go/mobile streams was not checked."
+  ],
+  "requested_validation": {
+    "mode": "Root only for builds, tests, installs and publication; none of those commands was executed by this specialist. Read-only git/source and public metadata inspections were performed.",
+    "artifact": "Parse this JSON, verify source links against the final candidate, then run the repository's focused package gates and final release gates once on that candidate.",
+    "no_new_benchmark_evidence": true,
+    "paid_resource_status": "No paid resources were started by this task."
+  }
+}

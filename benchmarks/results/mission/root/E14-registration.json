@@ -1,0 +1,31 @@
+{
+  "id": "E14",
+  "hypothesis": "H-B-4",
+  "row": "R68-development-proxy",
+  "question": "Can fixed8bit reconstruction-radius certificates limit optimistic exact refinements to64 mean rows/query?",
+  "prediction": "mean<=64,p99<=256,0falseprunes,0boundviolations;otherwise reject without sweep",
+  "configuration": "1M100D;first16developmentqueries;fixedpervectormaxabs/127;600s cap",
+  "cwd": "/Volumes/A/.hms-wt-mission-b",
+  "script": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer_certificate_counter.py",
+  "result": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer-certificate-data.json",
+  "argv": [
+    "uv",
+    "run",
+    "--no-project",
+    "--python",
+    "/Volumes/A/.hms-lb/bigann/venv/bin/python",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer_certificate_counter.py",
+    "--base",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data/base.npy",
+    "--queries",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data/queries.npy",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer-certificate-data.json"
+  ],
+  "summary_fields": [
+    "mean_surviving_rows",
+    "sample_p99_surviving_rows",
+    "false_prunes",
+    "bound_violations"
+  ]
+}

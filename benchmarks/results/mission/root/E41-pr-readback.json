@@ -1,0 +1,16 @@
+{
+  "experiment": "E41-publication",
+  "source": "GitHub connected get_pr_info readback",
+  "url": "https://github.com/writerslogic/warm/pull/426",
+  "state": "open",
+  "draft": true,
+  "merged": false,
+  "mergeable": true,
+  "head_sha": "a818694973a26c8d8050371dae124abd3049cc4a",
+  "base_sha": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "commits": 4,
+  "changed_files": 274,
+  "updated_at": "2026-11-10T06:18:23Z",
+  "body_validation_counts": {"hashes": 273, "python": 30, "json": 156, "registered_script_pins": 20},
+  "benchmark_targets_met": 0
+}

@@ -1,0 +1,31 @@
+{
+  "decision": "accept-assembly-shape-only",
+  "failures": [],
+  "dynamic_instructions_per_256_pair_tile": {
+    "addq": 25,
+    "jne": 25,
+    "kmovd": 8,
+    "kunpckwd": 8,
+    "leaq": 1,
+    "movl": 8,
+    "movq": 1,
+    "retq": 1,
+    "subq": 25,
+    "vaddps": 32,
+    "vbroadcastss": 24,
+    "vcmpgt_oqps": 16,
+    "vcvtdq2ps": 16,
+    "vmovdqu64": 50,
+    "vmovups": 6,
+    "vmulps": 48,
+    "vpaddd": 16,
+    "vpbroadcastd": 208,
+    "vpdpbusd": 400,
+    "vpsubd": 16,
+    "vpxor": 10,
+    "vpxord": 6,
+    "vsubps": 16,
+    "vzeroupper": 1
+  },
+  "resource_decision": "unresolved: target-specific mixed ports, sustained frequency and cache behavior are not evidenced"
+}

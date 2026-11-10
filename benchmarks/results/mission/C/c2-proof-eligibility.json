@@ -1,0 +1,562 @@
+{
+  "schema_version": 1,
+  "hypothesis": "H-C-2",
+  "claim": "local rung1 evidence classification; no model calls, execution experiment or scores",
+  "decision": "reject-mainline",
+  "decision_scope": "Reject the current source-proven executable event-ledger mainline at its predeclared gate; this is not a benchmark ceiling or a claim that future evidence cannot resolve exclusions.",
+  "card": {
+    "path": "/Volumes/A/.hms-lb/mission/HYP.md",
+    "lines": [
+      77,
+      88
+    ],
+    "owned_copy": "benchmarks/results/mission/C/next-card.md",
+    "required_numerator": 11,
+    "fixed_denominator": 21,
+    "zero_unresolved_entity_date_coverage_premises": true,
+    "extraction_evidence_required": true
+  },
+  "inputs": {
+    "audit": "benchmarks/results/mission/C/longmemeval-instrument-audit.json",
+    "source_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "structural_acceptance": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E34/result.json",
+    "source_acceptance": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E33/source-review.json",
+    "structural_semantic_boundary": "E34 confirms references only. E33 accepts two source findings without label flips or scores. Other case diagnoses remain specialist proposals, independently reviewable."
+  },
+  "proof_contract": {
+    "operand_fields": [
+      "source occurrence and span",
+      "speaker/entity/relation scope",
+      "value and precision",
+      "event/valid time",
+      "observation time",
+      "completion versus plan",
+      "counterevidence coverage"
+    ],
+    "operator_requirement": "The whole answer derivation must preserve each required operand binding and the query's scope. A positive witness can refute a missing-fact assertion without proving an exhaustive count, latest state, unique referent or semantic absence.",
+    "extraction_requirement": "A validated source-to-operand artifact must establish the same complete derivation. Human recognition of an event in an audit is not an implemented, verified extraction result.",
+    "coverage_requirement": "Keyword matches, has_answer markers, full selected sessions and citation existence do not establish exhaustive semantic coverage. Unknown is not false.",
+    "historical_reader_requirement": "No attribution of a failure specifically to the deterministic operator is established merely by seeing the fact in the full source; the actual retained prompt was not preserved."
+  },
+  "counts": {
+    "selected_cases": 21,
+    "provisionally_supported_reader_error_diagnoses": 6,
+    "complete_operator_proofs": 0,
+    "eligible_cases": 0,
+    "required_eligible_cases": 11,
+    "validated_extraction_artifacts": 0,
+    "accepted_source_findings_counted_as_reader_gains": 0,
+    "underqualified_sensitivity_count": 6,
+    "sensitivity_meaning": "Even the unsupported blanket acceptance of all six provisionally diagnosed reader-error cases would remain below11/21. This is a sensitivity check on the present classification, not an upper bound on future audit findings."
+  },
+  "decision_reasons": [
+    "The unchanged source-complete proof gate is not met.",
+    "Validated extraction evidence for the required end-to-end operand proofs is absent; the card independently requires rejection on this condition.",
+    "Wrong-gold findings and correct or qualified historical reader computations are excluded from claimed mechanism gains.",
+    "Unresolved cases remain in the fixed denominator21; none is silently dropped or relabeled to rescue the threshold."
+  ],
+  "records": [
+    {
+      "id": "51a45a95",
+      "audit_record_pointer": "/reviewed/0",
+      "source_question_pointer": "/2",
+      "operator_candidate": "lookup",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "The retailer-to-coupon relation is inferred rather than directly stated.",
+      "unresolved_proof_obligations": [
+        "relation: retailer for the specific coffee-creamer coupon"
+      ],
+      "source_evidence_pointers": [
+        "/2/haystack_sessions/42/2",
+        "/2/haystack_sessions/42/4",
+        "/2/haystack_sessions/42/6"
+      ],
+      "eligibility_rationale": "No complete operand binding; the historical refusal to assume Target is not a proved residual reader error.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "618f13b2",
+      "audit_record_pointer": "/reviewed/1",
+      "source_question_pointer": "/391",
+      "operator_candidate": "latest",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Same-day sessions report six wears earlier and four later.",
+      "unresolved_proof_obligations": [
+        "time: inconsistent cumulative count versus observation order",
+        "state: authoritative update policy"
+      ],
+      "source_evidence_pointers": [
+        "/391/haystack_sessions/32/0",
+        "/391/haystack_sessions/17/2",
+        "/391/haystack_sessions/17/10"
+      ],
+      "eligibility_rationale": "Latest-observation selection would reproduce the readers' four; do not force the official six or invent a reconciled count.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "370a8ff4",
+      "audit_record_pointer": "/reviewed/2",
+      "source_question_pointer": "/263",
+      "operator_candidate": "interval",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Root E33 supports 81 calendar days; all three historical readers already compute the source interval.",
+      "unresolved_proof_obligations": [],
+      "source_evidence_pointers": [
+        "/263/haystack_sessions/18/0",
+        "/263/haystack_sessions/39/0"
+      ],
+      "eligibility_rationale": "Exclude: operator arithmetic is already correct in the historical outputs; this is an accepted source-key finding, not reader-error closure.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "a2f3aa27",
+      "audit_record_pointer": "/reviewed/3",
+      "source_question_pointer": "/423",
+      "operator_candidate": "latest",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Source distinguishes confirmed 1,250 followers from an unverified estimate near 1,300.",
+      "unresolved_proof_obligations": [
+        "certainty: estimate versus exact current account count"
+      ],
+      "source_evidence_pointers": [
+        "/423/haystack_sessions/12/2",
+        "/423/haystack_sessions/39/0"
+      ],
+      "eligibility_rationale": "Do not convert the estimate into an exact count; readers preserve a distinction the official gold omits.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "07741c45",
+      "audit_record_pointer": "/reviewed/4",
+      "source_question_pointer": "/443",
+      "operator_candidate": "latest",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Later session mixes current shoerack language with future storage plans.",
+      "unresolved_proof_obligations": [
+        "state: completed move versus plan",
+        "time: internally conflicting present/future statements"
+      ],
+      "source_evidence_pointers": [
+        "/443/haystack_sessions/2/2",
+        "/443/haystack_sessions/31/0",
+        "/443/haystack_sessions/31/10"
+      ],
+      "eligibility_rationale": "A deterministic latest operator cannot resolve contradictory event modality without inventing a premise.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "830ce83f",
+      "audit_record_pointer": "/reviewed/5",
+      "source_question_pointer": "/368",
+      "operator_candidate": "latest",
+      "supported_reader_error_diagnosis": true,
+      "source_finding": "The May27 suburban move is explicitly completed and later than the May24 Chicago statement.",
+      "unresolved_proof_obligations": [
+        "coverage: complete set of relevant Rachel updates",
+        "extraction: source-complete entity/update operands not validated"
+      ],
+      "source_evidence_pointers": [
+        "/368/haystack_sessions/31/2",
+        "/368/haystack_sessions/31/4",
+        "/368/haystack_sessions/44/2"
+      ],
+      "eligibility_rationale": "A positive counterexample supports an update error. Full relevant sessions and lexical countersearch do not certify a globally complete latest-state operand set.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "3fdac837",
+      "audit_record_pointer": "/reviewed/6",
+      "source_question_pointer": "/187",
+      "operator_candidate": "interval+sum",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Japan trip endpoints plus Chicago four days coexist with five months of Tokyo residence and prior travel.",
+      "unresolved_proof_obligations": [
+        "scope: two trips versus total residence/travel",
+        "judge: all-intermediate-steps clause",
+        "coverage: all time in the requested locations"
+      ],
+      "source_evidence_pointers": [
+        "/187/haystack_sessions/16/2",
+        "/187/haystack_sessions/38/0",
+        "/187/haystack_sessions/31/0",
+        "/187/haystack_sessions/7/2"
+      ],
+      "eligibility_rationale": "The readers supply operands; absence of a final sum alone does not establish rubric failure. No unique whole-history total follows.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "0a995998",
+      "audit_record_pointer": "/reviewed/7",
+      "source_question_pointer": "/70",
+      "operator_candidate": "count-distinct",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Blazer and boots are known, but a pair, individual items and pickup/return actions are different counting units.",
+      "unresolved_proof_obligations": [
+        "scope: counting unit",
+        "state: already exchanged versus still needing return"
+      ],
+      "source_evidence_pointers": [
+        "/70/haystack_sessions/11/0",
+        "/70/haystack_sessions/19/6",
+        "/70/haystack_sessions/30/4"
+      ],
+      "eligibility_rationale": "No unambiguous count operator inputs; do not double-count repeated boot mentions.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "6d550036",
+      "audit_record_pointer": "/reviewed/8",
+      "source_question_pointer": "/71",
+      "operator_candidate": "count-distinct",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Additional engineering projects occur outside designated answer annotations.",
+      "unresolved_proof_obligations": [
+        "entity: project identity across sessions",
+        "relation: led versus participated or solo work",
+        "coverage: all qualifying projects"
+      ],
+      "source_evidence_pointers": [
+        "/71/haystack_sessions/6/0",
+        "/71/haystack_sessions/39/2",
+        "/71/haystack_sessions/35/0",
+        "/71/haystack_sessions/35/2"
+      ],
+      "eligibility_rationale": "The official two is not a sufficient closed operand set; unspecified identity and leadership scope prevent an exact corrected count.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "gpt4_2f8be40d",
+      "audit_record_pointer": "/reviewed/9",
+      "source_question_pointer": "/86",
+      "operator_candidate": "count-distinct",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Sister's completed wedding is additional evidence; cousin/roommate identities and dates remain unresolved.",
+      "unresolved_proof_obligations": [
+        "entity: wedding identity across references",
+        "time: year and relative months",
+        "coverage: all qualifying weddings"
+      ],
+      "source_evidence_pointers": [
+        "/86/haystack_sessions/6/0",
+        "/86/haystack_sessions/9/0",
+        "/86/haystack_sessions/9/6",
+        "/86/haystack_sessions/24/4",
+        "/86/haystack_sessions/41/0"
+      ],
+      "eligibility_rationale": "One output may double-count Emily, but no complete audited exact count establishes a clean operator repair across the case.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "d851d5ba",
+      "audit_record_pointer": "/reviewed/10",
+      "source_question_pointer": "/111",
+      "operator_candidate": "sum-intervals",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Root E33 rejects $3,750 as the complete total and establishes a strict lower bound above $8,750, not an exact sum.",
+      "unresolved_proof_obligations": [
+        "precision: over amounts have unknown excess",
+        "coverage: all charity events",
+        "judge: treatment of weak bounds and unsupported excess qualifiers"
+      ],
+      "source_evidence_pointers": [
+        "/111/haystack_sessions/7/6",
+        "/111/haystack_sessions/14/0",
+        "/111/haystack_sessions/31/0",
+        "/111/haystack_sessions/36/6",
+        "/111/haystack_sessions/43/6"
+      ],
+      "eligibility_rationale": "All three outputs include the omitted event and a valid weak lower bound. Do not count a source-key correction as operator-driven reader improvement or invent exact $8,750.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "5a7937c8",
+      "audit_record_pointer": "/reviewed/11",
+      "source_question_pointer": "/112",
+      "operator_candidate": "count-distinct-dates",
+      "supported_reader_error_diagnosis": true,
+      "source_finding": "Three reported dates include the church food drive omitted by all outputs.",
+      "unresolved_proof_obligations": [
+        "scope: church-affiliated service as faith activity",
+        "coverage: exhaustive December participation dates",
+        "extraction: complete dated event set not validated"
+      ],
+      "source_evidence_pointers": [
+        "/112/haystack_sessions/5/0",
+        "/112/haystack_sessions/22/0",
+        "/112/haystack_sessions/33/0",
+        "/112/haystack_sessions/33/4"
+      ],
+      "eligibility_rationale": "A conditional omitted-event witness supports the audit diagnosis, but it is not a closed exact-count proof.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "gpt4_731e37d7",
+      "audit_record_pointer": "/reviewed/12",
+      "source_question_pointer": "/115",
+      "operator_candidate": "sum+interval-filter",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Workshop dates conflict with observation dates, and some fees/payment times are unstated.",
+      "unresolved_proof_obligations": [
+        "time: March attendance in February-dated sessions",
+        "amount: missing fees",
+        "time: payment date versus attendance date",
+        "coverage: complete eligible payments"
+      ],
+      "source_evidence_pointers": [
+        "/115/haystack_sessions/17/8",
+        "/115/haystack_sessions/17/10",
+        "/115/haystack_sessions/21/0",
+        "/115/haystack_sessions/23/0",
+        "/115/haystack_sessions/42/0"
+      ],
+      "eligibility_rationale": "Known $220 subtotal is not a complete total, while $720 requires an unresolved time-window assumption.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "10d9b85a",
+      "audit_record_pointer": "/reviewed/13",
+      "source_question_pointer": "/117",
+      "operator_candidate": "count-distinct-dates",
+      "supported_reader_error_diagnosis": true,
+      "source_finding": "Source explicitly dates the two-day workshop April17–18, in addition to the April10 lecture.",
+      "unresolved_proof_obligations": [
+        "coverage: all qualifying April attendance dates",
+        "extraction: complete event set not validated",
+        "reader boundary: actual retained historical prompt unavailable"
+      ],
+      "source_evidence_pointers": [
+        "/117/haystack_sessions/29/0",
+        "/117/haystack_sessions/39/2",
+        "/117/haystack_sessions/39/8"
+      ],
+      "eligibility_rationale": "The positive dated source contradicts the claim that workshop dates are missing. It does not prove exhaustive aggregate coverage or localize failure to the operator after extraction.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "6456829e",
+      "audit_record_pointer": "/reviewed/14",
+      "source_question_pointer": "/175",
+      "operator_candidate": "sum",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Outputs already provide five tomatoes and three cucumbers; the upstream rubric accepts intermediate steps.",
+      "unresolved_proof_obligations": [
+        "time: initial cucumber count versus current producing count",
+        "judge: intermediate-step acceptance"
+      ],
+      "source_evidence_pointers": [
+        "/175/haystack_sessions/41/10",
+        "/175/haystack_sessions/38/0",
+        "/175/haystack_sessions/32/0"
+      ],
+      "eligibility_rationale": "Potential judge-rubric violation and unresolved initial state; do not score addition of the already supplied operands as a demonstrated reader repair.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "37f165cf",
+      "audit_record_pointer": "/reviewed/15",
+      "source_question_pointer": "/221",
+      "operator_candidate": "sum+interval-filter",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Page counts exist but are not linked to the requested January and March finishes.",
+      "unresolved_proof_obligations": [
+        "time/entity: novel-to-finish-month bindings",
+        "judge: conditional intermediate-step answer"
+      ],
+      "source_evidence_pointers": [
+        "/221/haystack_sessions/9/0",
+        "/221/haystack_sessions/33/0",
+        "/221/haystack_sessions/32/0"
+      ],
+      "eligibility_rationale": "An arithmetic sum would silently invent month bindings.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "a96c20ee_abs",
+      "audit_record_pointer": "/reviewed/16",
+      "source_question_pointer": "/230",
+      "operator_candidate": "scope-check+abstain",
+      "supported_reader_error_diagnosis": true,
+      "source_finding": "Harvard conference evidence concerns the thesis poster, without an explicit undergrad-course project identity link.",
+      "unresolved_proof_obligations": [
+        "entity: thesis poster versus requested course project",
+        "coverage: semantic absence of the requested link",
+        "extraction: exhaustive relationship validation missing"
+      ],
+      "source_evidence_pointers": [
+        "/230/haystack_sessions/18/0",
+        "/230/haystack_sessions/18/10",
+        "/230/haystack_sessions/51/0"
+      ],
+      "eligibility_rationale": "The unsupported identity join is a supported diagnosis, but a lexical search cannot certify the abstention premise across the full source.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "09ba9854_abs",
+      "audit_record_pointer": "/reviewed/17",
+      "source_question_pointer": "/232",
+      "operator_candidate": "interval-subtract",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Assistant bus/taxi estimates and user prices differ in provenance and route endpoints.",
+      "unresolved_proof_obligations": [
+        "route: station versus hotel and transfer cost",
+        "amount: actual paid prices versus estimates",
+        "coverage: absence of a confirmed end-to-end fare"
+      ],
+      "source_evidence_pointers": [
+        "/232/haystack_sessions/5/6",
+        "/232/haystack_sessions/5/7",
+        "/232/haystack_sessions/32/3",
+        "/232/haystack_sessions/32/4"
+      ],
+      "eligibility_rationale": "Conditional estimate subtraction does not establish actual savings; neither a unique positive answer nor an exhaustive absence proof is available.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "gpt4_7f6b06db",
+      "audit_record_pointer": "/reviewed/18",
+      "source_question_pointer": "/247",
+      "operator_candidate": "sort-by-event-time",
+      "supported_reader_error_diagnosis": false,
+      "source_finding": "Yosemite appears in multiple reports with incompatible start/completion descriptions.",
+      "unresolved_proof_obligations": [
+        "entity: distinct versus repeated Yosemite trips",
+        "time: conflicting event chronology"
+      ],
+      "source_evidence_pointers": [
+        "/247/haystack_sessions/30/8",
+        "/247/haystack_sessions/39/0",
+        "/247/haystack_sessions/44/0",
+        "/247/haystack_sessions/44/2"
+      ],
+      "eligibility_rationale": "Sorting observation times would not resolve event identity and event-time contradictions.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "6e984302",
+      "audit_record_pointer": "/reviewed/19",
+      "source_question_pointer": "/302",
+      "operator_candidate": "interval-filter+projection",
+      "supported_reader_error_diagnosis": true,
+      "source_finding": "March4 source reports acquiring own sculpting tools in a competition discussion; April1 is 28 calendar days later.",
+      "unresolved_proof_obligations": [
+        "relation: acquisition wording versus purchase/competition-purpose binding",
+        "coverage: complete question-referent/extraction evidence not established",
+        "reader boundary: actual retained historical prompt unavailable"
+      ],
+      "source_evidence_pointers": [
+        "/302/haystack_sessions/40/0",
+        "/302/haystack_sessions/40/2",
+        "/302/haystack_sessions/17/0"
+      ],
+      "eligibility_rationale": "Strongest positive witness: a source-backed acquisition at the requested calendar offset refutes a blanket missing-mention claim. Do not upgrade this to a full extracted and source-complete proof of the purchase-purpose/referent chain; no price or exclusive item set is established.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    },
+    {
+      "id": "031748ae_abs",
+      "audit_record_pointer": "/reviewed/20",
+      "source_question_pointer": "/437",
+      "operator_candidate": "scope-check+abstain",
+      "supported_reader_error_diagnosis": true,
+      "source_finding": "Source explicitly says Senior Software Engineer, initially four engineers then five; question names Software Engineer Manager.",
+      "unresolved_proof_obligations": [
+        "role: identity between distinct job titles is unestablished",
+        "coverage: semantic absence of the requested Manager-role event",
+        "extraction: exhaustive role/event validation missing"
+      ],
+      "source_evidence_pointers": [
+        "/437/haystack_sessions/39/8",
+        "/437/haystack_sessions/39/10",
+        "/437/haystack_sessions/44/2"
+      ],
+      "eligibility_rationale": "Do not equate leading engineers with holding the stated Manager title. Full relevant sessions plus keyword search do not certify global absence.",
+      "complete_operator_proof": false,
+      "eligible_for_11_of_21_gate": false,
+      "validated_extraction_artifact": null,
+      "source_or_judge_correction_counted_as_gain": false
+    }
+  ],
+  "validation_request": {
+    "kind": "independent root evidence review and exact21case partition validation",
+    "requirements": [
+      "IDs and audit pointers must map the same21 E34-validated records exactly once.",
+      "Each evidence pointer must occur in the corresponding reviewed source record.",
+      "Verify that all eligibility flags are false and every exclusion has an explicit failed premise or absence of residual reader error.",
+      "Reassess the six positive diagnoses separately from complete proof eligibility; do not treat E34 as semantic acceptance.",
+      "Retain gate11/21 and extraction requirement without denominator reduction.",
+      "Do not run a reader, score historical outputs, apply corrections or inspect fresh holdout items."
+    ],
+    "root_run_required": false,
+    "semantic_reviewer_decision_pending": true
+  },
+  "successor": {
+    "proposal": "H-C-3 — exhaustive raw-history traversal with explicit coverage and cost accounting",
+    "status": "future card proposed in c2-decision.md; no implementation or experiment started",
+    "different_class": "Changes source traversal and retained-context completeness before answer construction, instead of executing operators over a presumed complete event representation.",
+    "not_a_rescue": "H-C-2 stays rejected. A successor requires its own card, prior-art boundary, cost constraints and acceptance criteria."
+  },
+  "official_score": null,
+  "audited_score": null,
+  "score_ceiling": null,
+  "whole_key_audited": false,
+  "paid_spend": 0
+}

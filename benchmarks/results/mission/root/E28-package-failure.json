@@ -1,0 +1,7 @@
+{
+  "experiment": "E28",
+  "decision": "reject-package-schema",
+  "failure_type": "KeyError",
+  "failure": "legacy registration contains script hash without explicit script path",
+  "log": "/Volumes/A/.hms-lb/mission/package-E28.log"
+}

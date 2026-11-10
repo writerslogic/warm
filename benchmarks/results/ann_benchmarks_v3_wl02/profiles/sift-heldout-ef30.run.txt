@@ -1,0 +1,28 @@
+rep0 qps=12992 recall~0.9529
+rep1 qps=13004 recall~0.9529
+rep2 qps=13766 recall~0.9529
+rep3 qps=13300 recall~0.9529
+rep4 qps=12587 recall~0.9529
+rep5 qps=13136 recall~0.9529
+rep6 qps=12989 recall~0.9529
+rep7 qps=13681 recall~0.9529
+rep8 qps=13464 recall~0.9529
+rep9 qps=15297 recall~0.9529
+rep10 qps=14665 recall~0.9529
+rep11 qps=14473 recall~0.9529
+rep12 qps=12866 recall~0.9529
+rep13 qps=14530 recall~0.9529
+rep14 qps=15528 recall~0.9529
+rep15 qps=14232 recall~0.9529
+rep16 qps=12832 recall~0.9529
+rep17 qps=13209 recall~0.9529
+rep18 qps=12415 recall~0.9529
+rep19 qps=13488 recall~0.9529
+rep20 qps=13323 recall~0.9529
+rep21 qps=13269 recall~0.9529
+rep22 qps=12887 recall~0.9529
+rep23 qps=12121 recall~0.9529
+rep24 qps=11156 recall~0.9529
+[ perf record: Woken up 13 times to write data ]
+[ perf record: Captured and wrote 3.065 MB /home/davidcondrey/ab-a/runs/perf-sift-h-ef30.data (80066 samples) ]
+PROF_DONE sift-h-ef30

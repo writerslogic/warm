@@ -1,0 +1,34 @@
+{
+  "id": "E45-check",
+  "hypothesis": "H-A-7",
+  "row": "R51-development",
+  "question": "Do signed rounded-score enclosures,kth upper bounds and exact rejection inequalities match independent Fraction states across cancellation/ties/boundaries?",
+  "prediction": "48enclosures,6kthtransitions,2k100ties,8decisionboundaries pass; no benchmarkinputs",
+  "configuration": "newsequential signed observation proof;reuseE44helpers,noE44rerun",
+  "cwd": "/Volumes/A/.hms-wt-mission-integrated",
+  "script": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier_threshold_check.py",
+  "result": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier-threshold-check-result-E45.json",
+  "argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--locked",
+    "--project",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission",
+    "python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier_threshold_check.py",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier-threshold-check-result-E45.json"
+  ],
+  "summary_fields": [
+    "status",
+    "exact_state_vs_observation_enclosure_checks",
+    "nonidentical_rounded_observations",
+    "kth_monotonic_upper_checks",
+    "k100_tie_checks",
+    "delta_sign_equality_boundary_checks",
+    "invalid_input_checks"
+  ],
+  "source_commit": "a818694973a26c8d8050371dae124abd3049cc4a",
+  "script_sha256": "bf3eaebd35b57fd1bb61030231b4e52585a71d8164ee82a29831047d990fc7df"
+}

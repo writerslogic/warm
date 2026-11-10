@@ -1,0 +1,74 @@
+{
+  "hypothesis": "H-C-1",
+  "decision": "accept-reference-integrity-only",
+  "inputs": {
+    "audit": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/mission/C/longmemeval-instrument-audit.json",
+      "sha256": "3345874c775a916786ed05a5666e6ef7db51ee1bf3b22bd6e304ba71f80220f2",
+      "bytes": 350796
+    },
+    "source": {
+      "path": "/Users/davidcondrey/.cache/warm-bench/downloads/longmemeval_s_cleaned.json",
+      "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+      "bytes": 277383467
+    },
+    "provenance": {
+      "path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/C/longmemeval-provenance-result.json",
+      "sha256": "9c092c70d6db745f73f7de6ad1d16822a6d424bded047f2048cc02a4d0fab41e",
+      "bytes": 25066
+    },
+    "revision_resolution": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/mission/C/E32-correction.json",
+      "sha256": "b471b6c4bfc6aca5c563e3ebb0de686df6cfaa882430afaf2577aab314cef400",
+      "bytes": 6014
+    },
+    "report_r1": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r1.json",
+      "sha256": "827a7aaf43b37e1c1f54a6b7d306d48aec420453a958ad23070a0f5b9a5c0145",
+      "bytes": 563975
+    },
+    "labels_r1": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r1.hypotheses.jsonl.eval-results-gpt-4o-mini",
+      "sha256": "4907b6f01ff0048cae2ce4e75441af6d5da0d65b70dd5d61ac45a3ada8a2bd33",
+      "bytes": 467020
+    },
+    "report_r2": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r2.json",
+      "sha256": "12425b4f9971c2be1a0fdee960aafc05ad22a59e73cccfafdc0bdff7a0e97113",
+      "bytes": 567478
+    },
+    "labels_r2": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r2.hypotheses.jsonl.eval-results-gpt-4o-mini",
+      "sha256": "a7582b0047a55b69b75813632ff32da5e6acc746ab2dec51cdbf8cd5f2977e67",
+      "bytes": 470521
+    },
+    "report_r3": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r3.json",
+      "sha256": "eac53a43e04c023681f0a8a977a12d1283b1fe350944b130707534c02263af07",
+      "bytes": 617036
+    },
+    "labels_r3": {
+      "path": "/Volumes/A/.hms-wt-mission-c/benchmarks/results/longmemeval_k30_preopen_v1/l01-gpt-5-mini-k30-preopen-r3.hypotheses.jsonl.eval-results-gpt-4o-mini",
+      "sha256": "2bff2aa340877432c12ab9aa5d975436fba3df4e0d1a7d1c8a0341b2756e87e8",
+      "bytes": 469504
+    }
+  },
+  "reviewed_count": 21,
+  "full_session_reference_count": 62,
+  "evidence_turn_reference_count": 122,
+  "historical_output_count": 63,
+  "countersearch_match_count": 483,
+  "review_category_counts": {
+    "supported_reader_error": 6,
+    "proposed_wrong_gold": 2,
+    "proposed_judge_rubric_violation": 1,
+    "proposed_key_qualification": 2,
+    "unresolved_source_or_scope": 10
+  },
+  "semantic_acceptance": false,
+  "accepted_corrections": 0,
+  "scoring_performed": false,
+  "whole_key_audited": false,
+  "H-C-2_eligibility_count": null,
+  "limits": "Checks exact artifact references and metadata only; does not certify semantic judgments, exhaustive counterevidence review, historical retained prompts or scores."
+}

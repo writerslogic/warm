@@ -1,0 +1,1 @@
+{"question": "Does the outer guard terminate its owned process after a fixed deadline and retain failure status?", "prediction": "1s deadline kills3s child withSIGKILL;guard exitsnonzero", "scope": "resource cleanup fixture only"}

@@ -1,0 +1,559 @@
+{
+  "experiment": "E26",
+  "hypothesis": "H-A-5",
+  "claim": "local",
+  "rung": 2,
+  "question": "Can an unattainable global oracle allocate completed-expansion prefixes to reduce both actual adjacency reads and fresh estimates by>=3x at fixed mean gold recall, relative to the best eligible already-recorded fixed full trace?",
+  "prediction": "Conjecture to falsify: ef256 prefixes pass both independent>=3x work bounds at mean exact-ID recall.99 on both10k and100k. No gold-discovery curve has been measured for this hypothesis.",
+  "decision": "reject",
+  "necessary_condition_passed": false,
+  "candidate_ef": 256,
+  "performance_acceptance": false,
+  "matched_gap_condition": "UNPROVED",
+  "cells": [
+    {
+      "rows": 100000,
+      "ef": 128,
+      "totals": {
+        "expansions": 130214,
+        "adjacency_reads": 4166848,
+        "fresh_estimates": 2846631
+      },
+      "full_gold_hits": 9235,
+      "serving_selected_hits": 9235,
+      "curve_path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/curves-100000-ef128.ndjson.gz",
+      "curve_raw_sha256": "ea2ee862f3485caef236715faa4c5e6fb2a29e11a2e4649a3a66c76fcb3fc196",
+      "curve_gzip_sha256": "a8c2e57a1a21d58e7374c6940a32e586d4ece38fd1a2ce3dc7f33967bb5b278f",
+      "raw_source": "/Volumes/A/.hms-bench-cache/warm-navigation-20261102-v1/navigation.ndjson.gz",
+      "raw_source_sha256": "2fa90ae2c8694787728bf4ca81cd1f6c49fc4cf17280da0b8675d40a7c19812e",
+      "oracle_source": {
+        "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0030-glove-100000-oracle-oracle.ndjson",
+        "sha256": "d3d9b337c191f8c2ff628a2af63d206367dcfcb05e016017797b62576bfc8ae8"
+      },
+      "receipt_source": {
+        "path": "/Volumes/A/.hms-wt-mission-integrated/docs/research/milestones-20261102/navigation-100k/finished.json",
+        "sha256": "ecf21d85bd3ab7294bd1b32af8e7c3d45e447e5a29dbdc3aeec5d2b3715756aa"
+      },
+      "query_count": 1000,
+      "floors": [
+        {
+          "recall_floor": "0.99",
+          "missed_budget": 100,
+          "required_hits": 9900,
+          "maximum_hits": 9235,
+          "irreducible_misses": 765,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9235,
+              "totals": {
+                "expansions": 130214,
+                "adjacency_reads": 4166848,
+                "fresh_estimates": 2846631
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9634,
+              "totals": {
+                "expansions": 257284,
+                "adjacency_reads": 8233088,
+                "fresh_estimates": 5152615
+              },
+              "eligible": false
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef128-r0.99-adjacency_reads.json",
+              "witness_sha256": "1fbd22f7ab82f16a99121c7628d9129dd0e4e51813e2506ca29692e60f95e5ba"
+            },
+            "fresh_estimates": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef128-r0.99-fresh_estimates.json",
+              "witness_sha256": "04c33e68b07f8595c09f8493a335716e636635047b4d50df65423aeaf1bdeea7"
+            }
+          },
+          "status": "infeasible_within_frozen_trace"
+        },
+        {
+          "recall_floor": "1.0",
+          "missed_budget": 0,
+          "required_hits": 10000,
+          "maximum_hits": 9235,
+          "irreducible_misses": 765,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9235,
+              "totals": {
+                "expansions": 130214,
+                "adjacency_reads": 4166848,
+                "fresh_estimates": 2846631
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9634,
+              "totals": {
+                "expansions": 257284,
+                "adjacency_reads": 8233088,
+                "fresh_estimates": 5152615
+              },
+              "eligible": false
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef128-r1.0-adjacency_reads.json",
+              "witness_sha256": "2417e486fdd84dbe92b95e45a62784890cd0c582f790b11b6e62cd46a2aa1d27"
+            },
+            "fresh_estimates": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef128-r1.0-fresh_estimates.json",
+              "witness_sha256": "854a47b91c7bf2c9ab4a6098977aa7bd1e258f21eae375bc943419e5f9f6cee5"
+            }
+          },
+          "status": "infeasible_within_frozen_trace"
+        }
+      ]
+    },
+    {
+      "rows": 100000,
+      "ef": 256,
+      "totals": {
+        "expansions": 257284,
+        "adjacency_reads": 8233088,
+        "fresh_estimates": 5152615
+      },
+      "full_gold_hits": 9634,
+      "serving_selected_hits": 9634,
+      "curve_path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/curves-100000-ef256.ndjson.gz",
+      "curve_raw_sha256": "7cc77d2b544bd58fb7d9deb6e36778b96e3967fb8b16866425688362921cc766",
+      "curve_gzip_sha256": "020b3267d923843958fa3794962e417b3858dea7f936227860be139eb598300f",
+      "raw_source": "/Volumes/A/.hms-bench-cache/warm-navigation-20261102-v1/navigation.ndjson.gz",
+      "raw_source_sha256": "2fa90ae2c8694787728bf4ca81cd1f6c49fc4cf17280da0b8675d40a7c19812e",
+      "oracle_source": {
+        "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0030-glove-100000-oracle-oracle.ndjson",
+        "sha256": "d3d9b337c191f8c2ff628a2af63d206367dcfcb05e016017797b62576bfc8ae8"
+      },
+      "receipt_source": {
+        "path": "/Volumes/A/.hms-wt-mission-integrated/docs/research/milestones-20261102/navigation-100k/finished.json",
+        "sha256": "ecf21d85bd3ab7294bd1b32af8e7c3d45e447e5a29dbdc3aeec5d2b3715756aa"
+      },
+      "query_count": 1000,
+      "floors": [
+        {
+          "recall_floor": "0.99",
+          "missed_budget": 100,
+          "required_hits": 9900,
+          "maximum_hits": 9634,
+          "irreducible_misses": 366,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9235,
+              "totals": {
+                "expansions": 130214,
+                "adjacency_reads": 4166848,
+                "fresh_estimates": 2846631
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9634,
+              "totals": {
+                "expansions": 257284,
+                "adjacency_reads": 8233088,
+                "fresh_estimates": 5152615
+              },
+              "eligible": false
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef256-r0.99-adjacency_reads.json",
+              "witness_sha256": "629215015311ae62e821bb9905537d0d25c378a2383312431daea7909bbf4fce"
+            },
+            "fresh_estimates": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef256-r0.99-fresh_estimates.json",
+              "witness_sha256": "8d34987d9fc864aa06ba2b63656f65067d46e040698453877c4526cc1f029932"
+            }
+          },
+          "status": "infeasible_within_frozen_trace"
+        },
+        {
+          "recall_floor": "1.0",
+          "missed_budget": 0,
+          "required_hits": 10000,
+          "maximum_hits": 9634,
+          "irreducible_misses": 366,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9235,
+              "totals": {
+                "expansions": 130214,
+                "adjacency_reads": 4166848,
+                "fresh_estimates": 2846631
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9634,
+              "totals": {
+                "expansions": 257284,
+                "adjacency_reads": 8233088,
+                "fresh_estimates": 5152615
+              },
+              "eligible": false
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef256-r1.0-adjacency_reads.json",
+              "witness_sha256": "54f7c817f8d533dddd8a49f3aa4aed4c288a591a9d4259a8afd4246676cb9259"
+            },
+            "fresh_estimates": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-100000-ef256-r1.0-fresh_estimates.json",
+              "witness_sha256": "0b210b8aa7c38885065cf09b069f4358d925f26a59ce27845234961b4170001b"
+            }
+          },
+          "status": "infeasible_within_frozen_trace"
+        }
+      ]
+    },
+    {
+      "rows": 10000,
+      "ef": 128,
+      "totals": {
+        "expansions": 128566,
+        "adjacency_reads": 4114112,
+        "fresh_estimates": 2440197
+      },
+      "full_gold_hits": 9847,
+      "serving_selected_hits": 9847,
+      "curve_path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/curves-10000-ef128.ndjson.gz",
+      "curve_raw_sha256": "7c2784008cc3bd05b9b7ddfeed52e27af4de1061309568e1f0567f9e18e0b574",
+      "curve_gzip_sha256": "9a5620d9a0e3a61a6c4729d35e5cc34161436da9c10d86947583c0690d6096d5",
+      "raw_source": "/Volumes/A/.hms-bench-cache/warm-navigation-10k-20261102-v1/navigation.ndjson.gz",
+      "raw_source_sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5",
+      "oracle_source": {
+        "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0020-glove-10000-oracle-oracle.ndjson",
+        "sha256": "a4b91500c62d94d71c6f965dc2ac5f48ce928a6e50df7dec426bbc234391aa94"
+      },
+      "receipt_source": {
+        "path": "/Volumes/A/.hms-wt-mission-integrated/docs/research/milestones-20261102/navigation-10k/finished.json",
+        "sha256": "097400b995962ca71e875827890e47b3a4b1aeb1e9bccce6c978db0e5547dca2"
+      },
+      "query_count": 1000,
+      "floors": [
+        {
+          "recall_floor": "0.99",
+          "missed_budget": 100,
+          "required_hits": 9900,
+          "maximum_hits": 9847,
+          "irreducible_misses": 153,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9847,
+              "totals": {
+                "expansions": 128566,
+                "adjacency_reads": 4114112,
+                "fresh_estimates": 2440197
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9976,
+              "totals": {
+                "expansions": 256245,
+                "adjacency_reads": 8199840,
+                "fresh_estimates": 3980319
+              },
+              "eligible": true
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": 8199840,
+              "baseline_ef": 256,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef128-r0.99-adjacency_reads.json",
+              "witness_sha256": "3deb33be06f5fc2bf857b4f818ebbfd9e35a8f04a7fcc368f96bddd1bb711034"
+            },
+            "fresh_estimates": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": 3980319,
+              "baseline_ef": 256,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef128-r0.99-fresh_estimates.json",
+              "witness_sha256": "f7da21b92ae8a329053db874c21768773866c49c77e0c35f562c639654ec7189"
+            }
+          },
+          "status": "infeasible_within_frozen_trace"
+        },
+        {
+          "recall_floor": "1.0",
+          "missed_budget": 0,
+          "required_hits": 10000,
+          "maximum_hits": 9847,
+          "irreducible_misses": 153,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9847,
+              "totals": {
+                "expansions": 128566,
+                "adjacency_reads": 4114112,
+                "fresh_estimates": 2440197
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9976,
+              "totals": {
+                "expansions": 256245,
+                "adjacency_reads": 8199840,
+                "fresh_estimates": 3980319
+              },
+              "eligible": false
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef128-r1.0-adjacency_reads.json",
+              "witness_sha256": "33a7a49567e040e32047f0c37799a0d8fe56974717a6b39286790a41a1a76593"
+            },
+            "fresh_estimates": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef128-r1.0-fresh_estimates.json",
+              "witness_sha256": "6398183d79f3a8ca4ed683d8446c389e971f47cc6503d2b569c6d5dde498ba61"
+            }
+          },
+          "status": "infeasible_within_frozen_trace"
+        }
+      ]
+    },
+    {
+      "rows": 10000,
+      "ef": 256,
+      "totals": {
+        "expansions": 256245,
+        "adjacency_reads": 8199840,
+        "fresh_estimates": 3980319
+      },
+      "full_gold_hits": 9976,
+      "serving_selected_hits": 9976,
+      "curve_path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/curves-10000-ef256.ndjson.gz",
+      "curve_raw_sha256": "53d5013aef62f443c61eb95c79d671392bab052eeafd29f618e283439db2833e",
+      "curve_gzip_sha256": "9c5f22c487c47aa9a72757166538d0e56099a959350576e3c93705ed50feade7",
+      "raw_source": "/Volumes/A/.hms-bench-cache/warm-navigation-10k-20261102-v1/navigation.ndjson.gz",
+      "raw_source_sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5",
+      "oracle_source": {
+        "path": "/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results/preparation-0020-glove-10000-oracle-oracle.ndjson",
+        "sha256": "a4b91500c62d94d71c6f965dc2ac5f48ce928a6e50df7dec426bbc234391aa94"
+      },
+      "receipt_source": {
+        "path": "/Volumes/A/.hms-wt-mission-integrated/docs/research/milestones-20261102/navigation-10k/finished.json",
+        "sha256": "097400b995962ca71e875827890e47b3a4b1aeb1e9bccce6c978db0e5547dca2"
+      },
+      "query_count": 1000,
+      "floors": [
+        {
+          "recall_floor": "0.99",
+          "missed_budget": 100,
+          "required_hits": 9900,
+          "maximum_hits": 9976,
+          "irreducible_misses": 24,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9847,
+              "totals": {
+                "expansions": 128566,
+                "adjacency_reads": 4114112,
+                "fresh_estimates": 2440197
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9976,
+              "totals": {
+                "expansions": 256245,
+                "adjacency_reads": 8199840,
+                "fresh_estimates": 3980319
+              },
+              "eligible": true
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": true,
+              "minimum_work": 1585248,
+              "baseline_work": 8199840,
+              "baseline_ef": 256,
+              "work_reduction_factor": 5.172591291709562,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": true,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef256-r0.99-adjacency_reads.json",
+              "witness_sha256": "4c0bfea48723553af4abee3ef9dc8e8934ca5e8ee2d14a42e636cd2862538ebe"
+            },
+            "fresh_estimates": {
+              "feasible": true,
+              "minimum_work": 1130431,
+              "baseline_work": 3980319,
+              "baseline_ef": 256,
+              "work_reduction_factor": 3.5210632050961093,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": true,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef256-r0.99-fresh_estimates.json",
+              "witness_sha256": "bcbca34b9d7bb8bc5ee880f057758ea36be0af64318c03fa280c7c9381077be4"
+            }
+          },
+          "status": "necessary_condition_pass"
+        },
+        {
+          "recall_floor": "1.0",
+          "missed_budget": 0,
+          "required_hits": 10000,
+          "maximum_hits": 9976,
+          "irreducible_misses": 24,
+          "baseline_candidates": [
+            {
+              "ef": 128,
+              "full_gold_hits": 9847,
+              "totals": {
+                "expansions": 128566,
+                "adjacency_reads": 4114112,
+                "fresh_estimates": 2440197
+              },
+              "eligible": false
+            },
+            {
+              "ef": 256,
+              "full_gold_hits": 9976,
+              "totals": {
+                "expansions": 256245,
+                "adjacency_reads": 8199840,
+                "fresh_estimates": 3980319
+              },
+              "eligible": false
+            }
+          ],
+          "objectives": {
+            "adjacency_reads": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef256-r1.0-adjacency_reads.json",
+              "witness_sha256": "2d4af4323d37b3f722c1913948c22cffaacafe9209f54550dec5f1ce49920403"
+            },
+            "fresh_estimates": {
+              "feasible": false,
+              "minimum_work": null,
+              "baseline_work": null,
+              "baseline_ef": null,
+              "work_reduction_factor": null,
+              "zero_cost_oracle": false,
+              "passes_threefold_necessary_condition": false,
+              "witness": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/witness-10000-ef256-r1.0-fresh_estimates.json",
+              "witness_sha256": "46c3e96c8f57ef1054cbaa21fa7ac6026e0582e745fc2ab8dde3792564be5992"
+            }
+          },
+          "status": "infeasible_within_frozen_trace"
+        }
+      ]
+    }
+  ],
+  "manifest": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/effort-allocation-details/manifest.json",
+  "manifest_sha256": "5afaf55f490db28be82df6924163cc3beb6c56e5674ee595830455393535fb42",
+  "script_sha256": "db8f68aa9647a6caf2a63433edba4210909f4b7b972b2f7527a9385fd1cb149d",
+  "limits": "Exposed development oracle only; independent objective minima may have different witnesses. Infeasibility applies only to these frozen prefixes, not deeper adaptive search. Perfect1 remains separate. No classifier, native search, runtime gain, fresh holdout or matched competitor conclusion."
+}

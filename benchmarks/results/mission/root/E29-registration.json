@@ -1,0 +1,5 @@
+{
+  "experiment": "E29",
+  "question": "Do legacy hash-only and explicit-path registrations identify a unique preserved script while syntax/JSON/ledger validation pass?",
+  "prediction": "All pass after schema support; no benchmark remeasurement or engine-gate claim"
+}

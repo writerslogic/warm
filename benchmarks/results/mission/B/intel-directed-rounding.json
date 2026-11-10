@@ -1,0 +1,161 @@
+{
+  "source": "https://www.intel.com/content/dam/develop/public/us/en/include/intrinsics-guide/data-latest.xml",
+  "source_sha256": "6762a50652a35ef663fd532ed83b789d19bbc2ac7e94b1771f19d666d96c2c30",
+  "version": {
+    "version": "3.6.9",
+    "date": "07/12/2024"
+  },
+  "intrinsics": [
+    {
+      "name": "_mm512_cvt_roundepi32_ps",
+      "description": "Convert packed signed 32-bit integers in \"a\" to packed single-precision (32-bit) floating-point elements, and store the results in \"dst\".\n\t[round_note]",
+      "operation": "\nFOR j := 0 to 15\n\ti := 32*j\n\tdst[i+31:i] := Convert_Int32_To_FP32(a[i+31:i])\nENDFOR\ndst[MAX:512] := 0\n\t",
+      "parameters": [
+        {
+          "etype": "SI32",
+          "type": "__m512i",
+          "varname": "a"
+        },
+        {
+          "etype": "IMM",
+          "hint": "TRUE",
+          "immtype": "_MM_FROUND",
+          "type": "int",
+          "varname": "rounding"
+        }
+      ],
+      "instructions": [
+        {
+          "form": "zmm, zmm {er}",
+          "name": "VCVTDQ2PS",
+          "xed": "VCVTDQ2PS_ZMMf32_MASKmskw_ZMMi32_AVX512"
+        }
+      ]
+    },
+    {
+      "name": "_mm512_sqrt_round_ps",
+      "description": "Compute the square root of packed single-precision (32-bit) floating-point elements in \"a\", and store the results in \"dst\".\n\t[round_note].",
+      "operation": "\nFOR j := 0 to 15\n\ti := j*32\n\tdst[i+31:i] := SQRT(a[i+31:i])\nENDFOR\ndst[MAX:512] := 0\n\t",
+      "parameters": [
+        {
+          "etype": "FP32",
+          "type": "__m512",
+          "varname": "a"
+        },
+        {
+          "etype": "IMM",
+          "hint": "TRUE",
+          "immtype": "_MM_FROUND",
+          "type": "int",
+          "varname": "rounding"
+        }
+      ],
+      "instructions": [
+        {
+          "form": "zmm, zmm {er}",
+          "name": "VSQRTPS",
+          "xed": "VSQRTPS_ZMMf32_MASKmskw_ZMMf32_AVX512"
+        }
+      ]
+    },
+    {
+      "name": "_mm512_add_round_ps",
+      "description": "Add packed single-precision (32-bit) floating-point elements in \"a\" and \"b\", and store the results in \"dst\".\n\t[round_note]",
+      "operation": "\nFOR j := 0 to 15\n\ti := j*32\n\tdst[i+31:i] := a[i+31:i] + b[i+31:i]\nENDFOR\ndst[MAX:512] := 0\n\t",
+      "parameters": [
+        {
+          "etype": "FP32",
+          "type": "__m512",
+          "varname": "a"
+        },
+        {
+          "etype": "FP32",
+          "type": "__m512",
+          "varname": "b"
+        },
+        {
+          "etype": "IMM",
+          "hint": "TRUE",
+          "immtype": "_MM_FROUND",
+          "type": "int",
+          "varname": "rounding"
+        }
+      ],
+      "instructions": [
+        {
+          "form": "zmm, zmm, zmm {er}",
+          "name": "VADDPS",
+          "xed": "VADDPS_ZMMf32_MASKmskw_ZMMf32_ZMMf32_AVX512"
+        }
+      ]
+    },
+    {
+      "name": "_mm512_mul_round_ps",
+      "description": "Multiply packed single-precision (32-bit) floating-point elements in \"a\" and \"b\", and store the results in \"dst\". \n\t[round_note]",
+      "operation": "\nFOR j := 0 to 15\n\ti := j*32\n\tdst[i+31:i] := a[i+31:i] * b[i+31:i]\nENDFOR\ndst[MAX:512] := 0\n\t",
+      "parameters": [
+        {
+          "etype": "FP32",
+          "type": "__m512",
+          "varname": "a"
+        },
+        {
+          "etype": "FP32",
+          "type": "__m512",
+          "varname": "b"
+        },
+        {
+          "etype": "IMM",
+          "hint": "TRUE",
+          "immtype": "_MM_FROUND",
+          "type": "int",
+          "varname": "rounding"
+        }
+      ],
+      "instructions": [
+        {
+          "form": "zmm, zmm, zmm {er}",
+          "name": "VMULPS",
+          "xed": "VMULPS_ZMMf32_MASKmskw_ZMMf32_ZMMf32_AVX512"
+        }
+      ]
+    },
+    {
+      "name": "_mm512_sub_round_ps",
+      "description": "Subtract packed single-precision (32-bit) floating-point elements in \"b\" from packed single-precision (32-bit) floating-point elements in \"a\", and store the results in \"dst\".\n\t[round_note]",
+      "operation": "\nFOR j := 0 to 15\n\ti := j*32\n\tdst[i+31:i] := a[i+31:i] - b[i+31:i]\nENDFOR\ndst[MAX:512] := 0\n\t",
+      "parameters": [
+        {
+          "etype": "FP32",
+          "type": "__m512",
+          "varname": "a"
+        },
+        {
+          "etype": "FP32",
+          "type": "__m512",
+          "varname": "b"
+        },
+        {
+          "etype": "IMM",
+          "hint": "TRUE",
+          "immtype": "_MM_FROUND",
+          "type": "int",
+          "varname": "rounding"
+        }
+      ],
+      "instructions": [
+        {
+          "form": "zmm, zmm, zmm {er}",
+          "name": "VSUBPS",
+          "xed": "VSUBPS_ZMMf32_MASKmskw_ZMMf32_ZMMf32_AVX512"
+        }
+      ]
+    }
+  ],
+  "rounding_text_source": "https://www.intel.com/content/dam/develop/public/us/en/include/intrinsics-guide/intrinsicsguide.min.js?3-6-9",
+  "rounding_text_source_sha256": "daa08c6ce5cffa9bea8d912d2a371a08fc3aab75e5421ed63fbd0559c30c3bb4",
+  "rounding_text_extracts": [
+    "eplace(/\\[round_note\\]/g,\"<br />Rounding is done according to the \\\"rounding[3:0]\\\" parameter, which can be one of:<div class='desc_note'>    (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC) // round to nearest, and suppress exceptions\\n    (_MM_FROUND_TO_NEG_INF |_MM_FROUND_NO_EXC)     // round down, and suppress exceptions\\n    (_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)     // round up, and suppress exceptions\\n    (_MM_FROUND_TO_ZERO |_MM_FROUND_NO_EXC)        // truncate, and suppress exceptions\\n    _MM_FROUND_CUR_DIRECTION                       // use MXCSR.RC; see _MM_SET_ROUNDING_MODE</div>\");q=q.replace(/\\[sae_note\\]/g,'<br />Exceptions can be suppressed by passing \"_MM_FROU",
+    "er, which can be one of:<div class='desc_note'>    (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC) // round to nearest, and suppress exceptions\\n    (_MM_FROUND_TO_NEG_INF |_MM_FROUND_NO_EXC)     // round down, and suppress exceptions\\n    (_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)     // round up, and suppress exceptions\\n    (_MM_FROUND_TO_ZERO |_MM_FROUND_NO_EXC)        // truncate, and suppress exceptions\\n    _MM_FROUND_CUR_DIRECTION                       // use MXCSR.RC; see _MM_SET_ROUNDING_MODE</div>\");q=q.replace(/\\[sae_note\\]/g,'<br />Exceptions can be suppressed by passing \"_MM_FROUND_NO_EXC\" in the \"sae\" parameter.');q=q.replace(/\\[round_imm_note\\]/g,\"<br />Rounding is d"
+  ]
+}

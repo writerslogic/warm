@@ -1,0 +1,53 @@
+{
+  "hypothesis": "H-B-7",
+  "claim": "native arithmetic checks only; no performance result",
+  "checks": 6364,
+  "failures": [],
+  "native_decisions": 321,
+  "native_prunes": 70,
+  "exact_fallback_decisions": 164,
+  "native_distances": 63,
+  "exact_fallback_distances": 49,
+  "metadata_vectors": 294,
+  "kth_checks": 21,
+  "rounding_modes": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "environment_error_paths": 12,
+  "positive_dots": 76,
+  "negative_dots": 84,
+  "uint128_maximum_seen": true,
+  "invalid_rejections": 25,
+  "abi_limits": {
+    "input_dimensions": [
+      1,
+      4096
+    ],
+    "kth_rows": [
+      1,
+      64
+    ],
+    "mathematical_dimensions": [
+      1,
+      128
+    ],
+    "outside_resource_caps": "invalid; no fallback allocation"
+  },
+  "abi_dimension_boundary_cases": [
+    4095,
+    4096,
+    4097
+  ],
+  "abi_row_boundary_cases": [
+    0,
+    1,
+    2,
+    63,
+    64,
+    65
+  ],
+  "decision": "accept-native-arithmetic-only"
+}

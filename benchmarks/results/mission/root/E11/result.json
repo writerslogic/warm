@@ -1,0 +1,169 @@
+{
+  "experiment": "E11",
+  "hypothesis": "H-A-3",
+  "claim": "local",
+  "rung": 2,
+  "question": "Does exact discovery-parent domination remove enough expansion work for a frontier mechanism?",
+  "prediction": "zero-discovery fraction>=.50 and exact certificates>=1/3 in every frozen cell",
+  "decision": "reject",
+  "navigation": [
+    {
+      "raw": "/Volumes/A/.hms-bench-cache/warm-navigation-20261102-v1/navigation.ndjson.gz",
+      "raw_sha256": "2fa90ae2c8694787728bf4ca81cd1f6c49fc4cf17280da0b8675d40a7c19812e",
+      "source_commit": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+      "rows": 100000,
+      "cells": [
+        {
+          "ef": 128,
+          "queries": 1000,
+          "expansions": 130214,
+          "offers": 2846631,
+          "zero_discovery": 50,
+          "certified_zero": 0,
+          "adjacency_reads": 4166848,
+          "zero_adjacency_reads": 1600,
+          "certified_adjacency_reads": 0,
+          "rerank_evaluations": 128000,
+          "returned": 10000,
+          "expansions_without_direct_final_discovery": 122426,
+          "zero_discovery_fraction": 0.00038398328904726064,
+          "zero_discovery_equal_expansion_ceiling": 1.000384130788851,
+          "certified_zero_fraction": 0.0,
+          "certified_zero_equal_expansion_ceiling": 1.0,
+          "zero_adjacency_read_fraction": 0.00038398328904726064,
+          "certified_adjacency_read_fraction": 0.0,
+          "decision": "reject",
+          "zero_discovery_main_line_decision": "reject"
+        },
+        {
+          "ef": 256,
+          "queries": 1000,
+          "expansions": 257284,
+          "offers": 5152615,
+          "zero_discovery": 337,
+          "certified_zero": 0,
+          "adjacency_reads": 8233088,
+          "zero_adjacency_reads": 10784,
+          "certified_adjacency_reads": 0,
+          "rerank_evaluations": 256000,
+          "returned": 10000,
+          "expansions_without_direct_final_discovery": 249437,
+          "zero_discovery_fraction": 0.0013098366007991168,
+          "zero_discovery_equal_expansion_ceiling": 1.0013115545229172,
+          "certified_zero_fraction": 0.0,
+          "certified_zero_equal_expansion_ceiling": 1.0,
+          "zero_adjacency_read_fraction": 0.0013098366007991168,
+          "certified_adjacency_read_fraction": 0.0,
+          "decision": "reject",
+          "zero_discovery_main_line_decision": "reject"
+        }
+      ]
+    },
+    {
+      "raw": "/Volumes/A/.hms-bench-cache/warm-navigation-10k-20261102-v1/navigation.ndjson.gz",
+      "raw_sha256": "61fd4343b36ae8d2b60ed4f58f24a46c8e247e572b6ce307f10a107127354ba5",
+      "source_commit": "ab978afd94a2d92a89c162c1e2af77372ffeeb16",
+      "rows": 10000,
+      "cells": [
+        {
+          "ef": 128,
+          "queries": 1000,
+          "expansions": 128566,
+          "offers": 2440197,
+          "zero_discovery": 98,
+          "certified_zero": 0,
+          "adjacency_reads": 4114112,
+          "zero_adjacency_reads": 3136,
+          "certified_adjacency_reads": 0,
+          "rerank_evaluations": 128000,
+          "returned": 10000,
+          "expansions_without_direct_final_discovery": 121030,
+          "zero_discovery_fraction": 0.0007622544062971547,
+          "zero_discovery_equal_expansion_ceiling": 1.000762835881309,
+          "certified_zero_fraction": 0.0,
+          "certified_zero_equal_expansion_ceiling": 1.0,
+          "zero_adjacency_read_fraction": 0.0007622544062971547,
+          "certified_adjacency_read_fraction": 0.0,
+          "decision": "reject",
+          "zero_discovery_main_line_decision": "reject"
+        },
+        {
+          "ef": 256,
+          "queries": 1000,
+          "expansions": 256245,
+          "offers": 3980319,
+          "zero_discovery": 458,
+          "certified_zero": 0,
+          "adjacency_reads": 8199840,
+          "zero_adjacency_reads": 14656,
+          "certified_adjacency_reads": 0,
+          "rerank_evaluations": 256000,
+          "returned": 10000,
+          "expansions_without_direct_final_discovery": 248689,
+          "zero_discovery_fraction": 0.001787351948330699,
+          "zero_discovery_equal_expansion_ceiling": 1.0017905522954647,
+          "certified_zero_fraction": 0.0,
+          "certified_zero_equal_expansion_ceiling": 1.0,
+          "zero_adjacency_read_fraction": 0.001787351948330699,
+          "certified_adjacency_read_fraction": 0.0,
+          "decision": "reject",
+          "zero_discovery_main_line_decision": "reject"
+        }
+      ]
+    }
+  ],
+  "phase_profiles": [
+    {
+      "path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/query_aware_graph_v2/profiles/yi-high.json",
+      "sha256": "3ebebed8b4f98087eee3f846e5d1a87fbc1c140b44225fae4950b698ba174c42",
+      "scope": "validation-only instrumented production traversal; stage timers are not QPS evidence",
+      "layouts": [
+        {
+          "compact": false,
+          "queries": 256,
+          "total_ns": 142908642,
+          "rerank_sort_ns": 19227082,
+          "fraction": 0.13454107275051988,
+          "free_rerank_ceiling": 1.1554563348004343,
+          "rerank_only_main_line_decision": "reject"
+        },
+        {
+          "compact": true,
+          "queries": 256,
+          "total_ns": 146635879,
+          "rerank_sort_ns": 19070630,
+          "fraction": 0.1300543231987582,
+          "free_rerank_ceiling": 1.1494970624797667,
+          "rerank_only_main_line_decision": "reject"
+        }
+      ]
+    },
+    {
+      "path": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/query_aware_graph_v2/profiles/llama-high.json",
+      "sha256": "03572ccd20d9f58909e040762b99bd631d2aee40861476e890acb61f3aed63cd",
+      "scope": "validation-only instrumented production traversal; stage timers are not QPS evidence",
+      "layouts": [
+        {
+          "compact": false,
+          "queries": 256,
+          "total_ns": 99677592,
+          "rerank_sort_ns": 11040824,
+          "fraction": 0.11076535637016592,
+          "free_rerank_ceiling": 1.1245625743032508,
+          "rerank_only_main_line_decision": "reject"
+        },
+        {
+          "compact": true,
+          "queries": 256,
+          "total_ns": 102167777,
+          "rerank_sort_ns": 11027054,
+          "fraction": 0.10793084007299092,
+          "free_rerank_ceiling": 1.1209893189019358,
+          "rerank_only_main_line_decision": "reject"
+        }
+      ]
+    }
+  ],
+  "script_sha256": "68dda6c8c48f7afade5f5008356ae022b4ad268dd29cfcb80c64c52d07dc81a2",
+  "limits": "Archived development only; hypothetical equal-cost expansion ceilings are not throughput bounds without per-event costs; GloVe and Yi/Llama fractions must not be combined; no-direct-final-discovery events may be necessary bridge expansions."
+}

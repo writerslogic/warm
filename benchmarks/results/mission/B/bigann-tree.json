@@ -1,0 +1,181 @@
+{
+  "sha": "ec58203170e3636ba7da82154ce6322de9cb8b33",
+  "selected": [
+    {
+      "path": "benchmark/plotting/metrics.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "697113b15024579937b06089f7723e96db815364",
+      "size": 6070,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/697113b15024579937b06089f7723e96db815364"
+    },
+    {
+      "path": "benchmark/streaming/compute_gt.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9097086090fa9f19c0e864d5e98e1dd6e1d06e6d",
+      "size": 4539,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/9097086090fa9f19c0e864d5e98e1dd6e1d06e6d"
+    },
+    {
+      "path": "benchmark/streaming/load_runbook.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e1c6eedec52c9c6d5be275d3a477b55be5e94492",
+      "size": 2666,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/e1c6eedec52c9c6d5be275d3a477b55be5e94492"
+    },
+    {
+      "path": "neurips23/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d04134e6406c3b1e8a791df7eda9a9202467c63",
+      "size": 19804,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/0d04134e6406c3b1e8a791df7eda9a9202467c63"
+    },
+    {
+      "path": "neurips23/ongoing_leaderboard/Azure_D8lds_v5_table.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3e1718a7ebcc87d7fec844d531ec8498fb7a6a0f",
+      "size": 2253,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/3e1718a7ebcc87d7fec844d531ec8498fb7a6a0f"
+    },
+    {
+      "path": "neurips23/ongoing_leaderboard/leaderboard.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "811098fd997e8a67d094732b7fb38c744d4712d1",
+      "size": 2307,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/811098fd997e8a67d094732b7fb38c744d4712d1"
+    },
+    {
+      "path": "neurips23/ongoing_leaderboard/streaming/res_final_runbook_AzureD8lds_v5.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0f3ef460fbb8e1465caaf445eedee09482e0e6cf",
+      "size": 4671,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/0f3ef460fbb8e1465caaf445eedee09482e0e6cf"
+    },
+    {
+      "path": "neurips23/runbooks/clustered_replace_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "de3abcaac266c65d45f5b567e9de2947ac8e7c1b",
+      "size": 7679,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/de3abcaac266c65d45f5b567e9de2947ac8e7c1b"
+    },
+    {
+      "path": "neurips23/runbooks/clustered_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0323e5eac907b9c5a1d58056abcd43a82be688b",
+      "size": 6398,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/c0323e5eac907b9c5a1d58056abcd43a82be688b"
+    },
+    {
+      "path": "neurips23/runbooks/delete_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04dae3310fe95261a2299863ea1b03573ba0f12c",
+      "size": 7811,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/04dae3310fe95261a2299863ea1b03573ba0f12c"
+    },
+    {
+      "path": "neurips23/runbooks/final_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "612edd538ac6ee7957bf69364cfa10058a254677",
+      "size": 63833,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/612edd538ac6ee7957bf69364cfa10058a254677"
+    },
+    {
+      "path": "neurips23/runbooks/msmarco-100M_expirationtime_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9bf4eaabe2a4e8e66e5ef5c601d6b7013f0e8d87",
+      "size": 157304,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/9bf4eaabe2a4e8e66e5ef5c601d6b7013f0e8d87"
+    },
+    {
+      "path": "neurips23/runbooks/msturing-10M_slidingwindow_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f3acc967ca1c3a6b4550a7a123e98f9646e5776e",
+      "size": 22234,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/f3acc967ca1c3a6b4550a7a123e98f9646e5776e"
+    },
+    {
+      "path": "neurips23/runbooks/random_replace_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "44af3ebf5ad24f92d36b5fd10769d5fcb6d211ec",
+      "size": 7677,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/44af3ebf5ad24f92d36b5fd10769d5fcb6d211ec"
+    },
+    {
+      "path": "neurips23/runbooks/simple_replace_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aeaa0c2b21d3744ccf3b69d32d2ed8253efff78e",
+      "size": 468,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/aeaa0c2b21d3744ccf3b69d32d2ed8253efff78e"
+    },
+    {
+      "path": "neurips23/runbooks/simple_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "796a950cedfd5c3b61c7eaa8992d2c2f3aeffdcd",
+      "size": 2448,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/796a950cedfd5c3b61c7eaa8992d2c2f3aeffdcd"
+    },
+    {
+      "path": "neurips23/runbooks/wikipedia-1M_expiration_time_replace_delete_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "00c227cd2456f97afb5087077a56652c00757497",
+      "size": 20288,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/00c227cd2456f97afb5087077a56652c00757497"
+    },
+    {
+      "path": "neurips23/runbooks/wikipedia-1M_expiration_time_replace_only_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e325a289ecaaf87dc81f2c641c17177433c58ae",
+      "size": 18229,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/7e325a289ecaaf87dc81f2c641c17177433c58ae"
+    },
+    {
+      "path": "neurips23/runbooks/wikipedia-1M_expiration_time_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d40f4b42e024f5c79a7e84ddd2b612158a62e3ef",
+      "size": 12976,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/d40f4b42e024f5c79a7e84ddd2b612158a62e3ef"
+    },
+    {
+      "path": "neurips23/runbooks/wikipedia-35M_expiration_time_replace_delete_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ffa8924df9098b8f1b12b85237ef455c6368b1db",
+      "size": 78411,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/ffa8924df9098b8f1b12b85237ef455c6368b1db"
+    },
+    {
+      "path": "neurips23/runbooks/wikipedia-35M_expiration_time_replace_only_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fe2660d71005565df7bd707d1197659c0a904734",
+      "size": 14942,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/fe2660d71005565df7bd707d1197659c0a904734"
+    },
+    {
+      "path": "neurips23/runbooks/wikipedia-35M_expirationtime_runbook.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eceb5d5adeaaaf01f8bd4caa00c4870d6f992377",
+      "size": 53373,
+      "url": "https://api.github.com/repos/harsha-simhadri/big-ann-benchmarks/git/blobs/eceb5d5adeaaaf01f8bd4caa00c4870d6f992377"
+    }
+  ]
+}

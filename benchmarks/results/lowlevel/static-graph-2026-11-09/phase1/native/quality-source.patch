@@ -1,0 +1,508 @@
+diff --git a/src/bindings/python/vector_index.rs b/src/bindings/python/vector_index.rs
+index 6913493e..b96da075 100644
+--- a/src/bindings/python/vector_index.rs
++++ b/src/bindings/python/vector_index.rs
+@@ -12,7 +12,7 @@ use std::sync::Arc;
+ 
+ use numpy::{AllowTypeChange, IntoPyArray, PyArray1, PyArray2, PyArrayLike1, PyArrayLike2};
+ use numpy::{PyReadonlyArray2, PyUntypedArrayMethods};
+-use pyo3::exceptions::{PyRuntimeError, PyValueError};
++use pyo3::exceptions::{PyMemoryError, PyRuntimeError, PyValueError};
+ use pyo3::prelude::*;
+ use rayon::prelude::*;
+ 
+@@ -30,6 +30,18 @@ fn err(e: WarmError) -> PyErr {
+     PyValueError::new_err(e.to_string())
+ }
+ 
++fn result_array(rows: usize, cols: usize) -> PyResult<Vec<i64>> {
++    let len = rows
++        .checked_mul(cols)
++        .filter(|&len| len <= isize::MAX as usize / std::mem::size_of::<i64>())
++        .ok_or_else(|| PyValueError::new_err("result array size exceeds the addressable range"))?;
++    let mut out = Vec::new();
++    out.try_reserve_exact(len)
++        .map_err(|_| PyMemoryError::new_err("unable to allocate result array"))?;
++    out.resize(len, -1);
++    Ok(out)
++}
++
+ /// A built index with the searcher `query` reuses (its visited marks are one word per vector,
+ /// so a searcher per query would allocate and clear that much every time).
+ struct Built {
+@@ -572,7 +584,7 @@ impl PyVectorIndex {
+             }
+             query_buf.push(0.0);
+         }
+-        let mut out = Vec::with_capacity(k);
++        let mut out = Vec::with_capacity(k.min(built.graph.len()));
+         let q = &query_buf[..];
+         let searcher = &mut built.searcher;
+         py.detach(|| searcher.search(q, k, params, &mut out))
+@@ -619,7 +631,7 @@ impl PyVectorIndex {
+                             let mut s = graph.searcher();
+                             rows.chunks_exact(dim)
+                                 .map(|q| {
+-                                    let mut out = Vec::with_capacity(k);
++                                    let mut out = Vec::with_capacity(k.min(graph.len()));
+                                     s.search(q, k, params, &mut out).map(|_| out)
+                                 })
+                                 .collect::<Result<Vec<_>, WarmError>>()
+@@ -659,7 +671,7 @@ impl PyVectorIndex {
+         let params = self.params();
+         let graph = &*built.graph;
+         let dim = graph.dim();
+-        let mut ids = vec![-1i64; nq * k];
++        let mut ids = result_array(nq, k)?;
+         py.detach(|| {
+             self.run(|| {
+                 let chunk = nq.div_ceil(rayon::current_num_threads() * 4).max(1);
+@@ -667,7 +679,7 @@ impl PyVectorIndex {
+                     .zip(queries.par_chunks(chunk * dim))
+                     .try_for_each(|(out, rows)| {
+                         let mut s = graph.searcher();
+-                        let mut found = Vec::with_capacity(k);
++                        let mut found = Vec::with_capacity(k.min(graph.len()));
+                         for (q, slot) in rows.chunks_exact(dim).zip(out.chunks_exact_mut(k)) {
+                             s.search(q, k, params, &mut found)?;
+                             for (o, &id) in slot.iter_mut().zip(&found) {
+@@ -1021,7 +1033,7 @@ impl PyUpdatableIndex {
+             rerank: self.rerank,
+             ..VSearchParams::default()
+         };
+-        let mut out = vec![-1i64; nq * k];
++        let mut out = result_array(nq, k)?;
+         py.detach(|| {
+             self.run(|| {
+                 out.par_chunks_mut(k)
+diff --git a/src/core/qgraph/rerank.rs b/src/core/qgraph/rerank.rs
+index cea4f74b..5d02f6b2 100644
+--- a/src/core/qgraph/rerank.rs
++++ b/src/core/qgraph/rerank.rs
+@@ -47,6 +47,27 @@ pub(super) fn dot_f32_i4(a: &[f32], packed: &[i8]) -> f32 {
+     kernels::dot_f32_i4(a, packed)
+ }
+ 
++/// Primary and residual dot products with shared query loads and unchanged accumulation order.
++#[inline]
++pub(super) fn dot_f32_i4_i8(a: &[f32], packed: &[i8], residual: &[i8]) -> (f32, f32) {
++    assert_eq!(a.len(), residual.len());
++    assert!(a.len() == 2 * packed.len() && packed.len().is_multiple_of(8));
++    #[cfg(target_arch = "x86_64")]
++    if avx2() {
++        // SAFETY: AVX2 is available and all three row lengths were checked above.
++        return unsafe { x86::dot_f32_i4_i8(a, packed, residual) };
++    }
++    #[cfg(target_arch = "aarch64")]
++    {
++        return neon::dot_f32_i4_i8(a, packed, residual);
++    }
++    #[allow(unreachable_code)]
++    (
++        kernels::dot_f32_i4(a, packed),
++        kernels::dot_f32_i8(a, residual),
++    )
++}
++
+ #[cfg(target_arch = "x86_64")]
+ #[inline(always)]
+ fn avx2() -> bool {
+@@ -73,6 +94,45 @@ fn finish(lanes: [f32; 16], a: &[f32], b: &[i8]) -> f32 {
+ mod x86 {
+     use std::arch::x86_64::*;
+ 
++    /// # Safety
++    /// AVX2 is available; a.len() == residual.len() == 2 * p.len(), a.len() is a multiple of 16.
++    #[target_feature(enable = "avx2")]
++    pub(super) unsafe fn dot_f32_i4_i8(a: &[f32], p: &[i8], residual: &[i8]) -> (f32, f32) {
++        let mask = _mm_set1_epi16(0x0f);
++        let eight = _mm_set1_epi8(8);
++        let mut primary = [_mm256_setzero_ps(); 2];
++        let mut secondary = [_mm256_setzero_ps(); 2];
++        for i in (0..a.len()).step_by(16) {
++            // SAFETY: each iteration has 16 query/residual coordinates and 8 packed bytes.
++            let w = _mm_cvtepu8_epi16(_mm_loadl_epi64(p.as_ptr().add(i / 2).cast()));
++            let n = _mm_or_si128(
++                _mm_and_si128(w, mask),
++                _mm_slli_epi16::<8>(_mm_and_si128(_mm_srli_epi16::<4>(w), mask)),
++            );
++            let c = _mm_sub_epi8(_mm_xor_si128(n, eight), eight);
++            let r = _mm_loadu_si128(residual.as_ptr().add(i).cast());
++            let codes = [c, _mm_srli_si128::<8>(c)];
++            let residues = [r, _mm_srli_si128::<8>(r)];
++            for lane in 0..2 {
++                let x = _mm256_loadu_ps(a.as_ptr().add(i + 8 * lane));
++                let y = _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(codes[lane]));
++                let z = _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(residues[lane]));
++                primary[lane] = _mm256_add_ps(primary[lane], _mm256_mul_ps(x, y));
++                secondary[lane] = _mm256_add_ps(secondary[lane], _mm256_mul_ps(x, z));
++            }
++        }
++        let mut p_lanes = [0.0; 16];
++        let mut r_lanes = [0.0; 16];
++        for lane in 0..2 {
++            _mm256_storeu_ps(p_lanes.as_mut_ptr().add(8 * lane), primary[lane]);
++            _mm256_storeu_ps(r_lanes.as_mut_ptr().add(8 * lane), secondary[lane]);
++        }
++        (
++            super::finish(p_lanes, &[], &[]),
++            super::finish(r_lanes, &[], &[]),
++        )
++    }
++
+     /// # Safety
+     /// The CPU supports AVX2; `a.len() == b.len()`.
+     #[target_feature(enable = "avx2")]
+@@ -133,6 +193,44 @@ mod x86 {
+ mod neon {
+     use std::arch::aarch64::*;
+ 
++    pub(super) fn dot_f32_i4_i8(a: &[f32], p: &[i8], residual: &[i8]) -> (f32, f32) {
++        let mut primary = [unsafe { vdupq_n_f32(0.0) }; 4];
++        let mut secondary = primary;
++        for i in (0..a.len()).step_by(16) {
++            // SAFETY: the wrapper checks complete blocks of 16 query/residual values and 8 packed bytes.
++            unsafe {
++                let w = vld1_u8(p.as_ptr().add(i / 2).cast());
++                let lo = vand_u8(w, vdup_n_u8(0x0f));
++                let hi = vshr_n_u8::<4>(w);
++                let n = vcombine_u8(vzip1_u8(lo, hi), vzip2_u8(lo, hi));
++                let c = vsubq_s8(
++                    vreinterpretq_s8_u8(veorq_u8(n, vdupq_n_u8(8))),
++                    vdupq_n_s8(8),
++                );
++                let codes = widen(c);
++                let residues = widen(vld1q_s8(residual.as_ptr().add(i)));
++                for lane in 0..4 {
++                    let x = vld1q_f32(a.as_ptr().add(i + 4 * lane));
++                    primary[lane] = vaddq_f32(primary[lane], vmulq_f32(x, codes[lane]));
++                    secondary[lane] = vaddq_f32(secondary[lane], vmulq_f32(x, residues[lane]));
++                }
++            }
++        }
++        let mut p_lanes = [0.0; 16];
++        let mut r_lanes = [0.0; 16];
++        for lane in 0..4 {
++            // SAFETY: each output holds four complete NEON vectors.
++            unsafe {
++                vst1q_f32(p_lanes.as_mut_ptr().add(4 * lane), primary[lane]);
++                vst1q_f32(r_lanes.as_mut_ptr().add(4 * lane), secondary[lane]);
++            }
++        }
++        (
++            super::finish(p_lanes, &[], &[]),
++            super::finish(r_lanes, &[], &[]),
++        )
++    }
++
+     #[inline(always)]
+     unsafe fn widen(c: int8x16_t) -> [float32x4_t; 4] {
+         let lo = vmovl_s8(vget_low_s8(c));
+@@ -224,6 +322,9 @@ mod tests {
+                     kernels::dot_f32_i4(&a, &p).to_bits(),
+                     "i4 dim {dim}"
+                 );
++                let (primary, residual) = super::dot_f32_i4_i8(&a, &p, &b);
++                assert_eq!(primary.to_bits(), kernels::dot_f32_i4(&a, &p).to_bits());
++                assert_eq!(residual.to_bits(), kernels::dot_f32_i8(&a, &b).to_bits());
+             }
+         }
+     }
+@@ -245,4 +346,77 @@ mod tests {
+     fn i4_row_with_a_partial_block_panics() {
+         let _ = super::dot_f32_i4(&[1.0; 20], &[1; 10]);
+     }
++
++    #[test]
++    fn paired_rows_check_block_and_length_boundaries() {
++        for dim in [0usize, 15, 16, 17, 31, 32, 33, 767, 768, 769] {
++            for offset in [-1isize, 0, 1] {
++                let residual_len = dim.saturating_add_signed(offset);
++                let a = vec![1.0; dim];
++                let p = vec![-1; dim / 2];
++                let r = vec![-128; residual_len];
++                let result = std::panic::catch_unwind(|| super::dot_f32_i4_i8(&a, &p, &r));
++                assert_eq!(result.is_ok(), dim % 16 == 0 && dim == residual_len);
++            }
++        }
++    }
++
++    #[test]
++    fn paired_rows_preserve_extreme_finite_products() {
++        let values = [
++            0.0,
++            -0.0,
++            f32::MIN_POSITIVE,
++            -f32::MIN_POSITIVE,
++            1e-30,
++            -1e-30,
++            1e30,
++            -1e30,
++        ];
++        let a: Vec<_> = values.into_iter().cycle().take(768).collect();
++        for packed in [-128, -127, -8, -1, 0, 7, 15, 127] {
++            for residual in [-128, -127, -1, 0, 1, 127] {
++                let p = vec![packed; a.len() / 2];
++                let r = vec![residual; a.len()];
++                let actual = super::dot_f32_i4_i8(&a, &p, &r);
++                assert_eq!(actual.0.to_bits(), kernels::dot_f32_i4(&a, &p).to_bits());
++                assert_eq!(actual.1.to_bits(), kernels::dot_f32_i8(&a, &r).to_bits());
++            }
++        }
++    }
++
++    #[test]
++    #[ignore = "development microbenchmark; run with --release --ignored --nocapture"]
++    fn paired_rerank_microbenchmark() {
++        use std::{hint::black_box, time::Instant};
++        let mut rng = SplitMix(0x898_2026);
++        for dim in [128, 768, 1536] {
++            for rows in [32, 8192] {
++                let a: Vec<_> = (0..dim).map(|_| rng.next_f32() * 2.0 - 1.0).collect();
++                let p: Vec<_> = (0..rows * dim / 2).map(|_| rng.next_u64() as i8).collect();
++                let r: Vec<_> = (0..rows * dim).map(|_| rng.next_u64() as i8).collect();
++                for rep in 0..5 {
++                    for paired in [rep % 2 == 0, rep % 2 != 0] {
++                        let start = Instant::now();
++                        let count = 65_536;
++                        for i in 0..count {
++                            let row = (i * 4051) % rows;
++                            let packed = &p[row * dim / 2..(row + 1) * dim / 2];
++                            let residual = &r[row * dim..(row + 1) * dim];
++                            let out = if paired {
++                                super::dot_f32_i4_i8(black_box(&a), packed, residual)
++                            } else {
++                                (
++                                    super::dot_f32_i4(black_box(&a), packed),
++                                    super::dot_f32_i8(black_box(&a), residual),
++                                )
++                            };
++                            black_box(out);
++                        }
++                        println!("{{\"dim\":{dim},\"rows\":{rows},\"rep\":{rep},\"paired\":{paired},\"ns\":{}}}", start.elapsed().as_nanos() as f64 / count as f64);
++                    }
++                }
++            }
++        }
++    }
+ }
+diff --git a/src/core/qgraph/vertex.rs b/src/core/qgraph/vertex.rs
+index 3dc922be..3f51ce33 100644
+--- a/src/core/qgraph/vertex.rs
++++ b/src/core/qgraph/vertex.rs
+@@ -27,7 +27,7 @@ use super::kernels::{
+     dot_i4_query, dot_i4_query_x4, dot_i8_query, dot_i8_query_x4, interleave_for_i4, prefetch,
+     prefetch_bytes, raw_one, QueryCode, Rotation, SplitMix,
+ };
+-use super::rerank::{dot_f32_i4, dot_f32_i8};
++use super::rerank::{dot_f32_i4, dot_f32_i4_i8, dot_f32_i8};
+ use super::vnni::query_sum;
+ use super::{invalid, prepare_rows, upper_bytes, BuildParams, Graph, GraphView, Metric, NONE};
+ use crate::core::error::WarmError;
+@@ -1306,7 +1306,7 @@ impl VGraph {
+             let q = self.unit_row(g, qi).to_vec();
+             s.scratch.qf[..self.dim].copy_from_slice(&q);
+             let sq = self.encode_query(
+-                &s.scratch.qf,
++                &mut s.scratch.qf,
+                 &mut s.scratch.qc,
+                 &mut s.scratch.qtmp,
+                 &mut s.scratch.qrot,
+@@ -1424,7 +1424,7 @@ impl VGraph {
+         for _ in 0..nq {
+             let q = (rng.next_u64() % self.n as u64) as usize;
+             qf[..self.dim].copy_from_slice(&g.vectors[q * self.dim..(q + 1) * self.dim]);
+-            let sq = self.encode_query(&qf, &mut qc, &mut qtmp, &mut qrot, &mut qs);
++            let sq = self.encode_query(&mut qf, &mut qc, &mut qtmp, &mut qrot, &mut qs);
+             if sq == 0.0 {
+                 continue;
+             }
+@@ -1447,19 +1447,34 @@ impl VGraph {
+     /// query scaled like the code into `qs`; returns the query's quantization scale.
+     fn encode_query(
+         &self,
+-        qf: &[f32],
++        qf: &mut [f32],
+         qc: &mut [i8],
+         qtmp: &mut [i8],
+         qrot: &mut [f32],
+         qs: &mut QueryCode,
+     ) -> f32 {
+-        let sq = if self.bits == 8 {
+-            quantize(qf, qc)
+-        } else {
+-            let s = quantize(qf, qtmp);
+-            interleave_for_i4(qtmp, qc);
+-            s
++        let encode = |qf: &[f32], qc: &mut [i8], qtmp: &mut [i8]| {
++            if self.bits == 8 {
++                quantize(qf, qc)
++            } else {
++                let s = quantize(qf, qtmp);
++                interleave_for_i4(qtmp, qc);
++                s
++            }
+         };
++        let mut sq = encode(qf, qc, qtmp);
++        if self.metric == VMetric::Angular
++            && (sq < f32::MIN_POSITIVE.sqrt()
++                || sq > f32::MAX.sqrt() / (127.0 * self.padded as f32))
++        {
++            // A positive query scale cancels in cosine ranking, but not in overflowing
++            // dot products or subnormal quantization. Ordinary queries retain their bits.
++            let largest = qf.iter().fold(0.0f32, |m, v| m.max(v.abs()));
++            if largest > 0.0 {
++                qf.iter_mut().for_each(|v| *v /= largest);
++                sq = encode(qf, qc, qtmp);
++            }
++        }
+         if let Some(rot) = &self.screen_rot {
+             rot.apply(&qf[..self.dim], qrot);
+             if sq > 0.0 {
+@@ -1814,6 +1829,13 @@ impl VGraph {
+     /// Re-rank score with the float query: negative estimated inner product with the
+     /// reconstructed centred vector (Euclidean: plus `|x|^2 / 2`).
+     fn fine(&self, qf: &[f32], v: u32) -> f32 {
++        if self.bits == 4 && self.res_bits == 8 {
++            let row = v as usize;
++            let residual = &self.residual[row * self.res_stride..(row + 1) * self.res_stride];
++            let (primary, secondary) = dot_f32_i4_i8(qf, self.code(v), residual);
++            let ip = self.scales[row] * primary + self.res_scales[row] * secondary;
++            return self.order(v, ip, 1.0);
++        }
+         let primary = if self.bits == 8 {
+             dot_f32_i8(qf, self.code(v))
+         } else {
+@@ -2639,7 +2661,7 @@ impl SearchScratch {
+         // `<q, mean>` term is common to all candidates) and its scale is dropped.
+         self.qf[..g.dim].copy_from_slice(query);
+         let sq = g.encode_query(
+-            &self.qf,
++            &mut self.qf,
+             &mut self.qc,
+             &mut self.qtmp,
+             &mut self.qrot,
+@@ -3123,14 +3145,19 @@ impl SearchScratch {
+             if PROFILE {
+                 profile.rerank_evaluations = take;
+             }
+-            for &c in &self.keys[..take] {
++            let lead = (8192 / (g.stride + g.res_stride)).clamp(1, 8);
++            for &c in &self.keys[..take.min(lead)] {
+                 g.prefetch_rerank_rows(key_id(c));
+             }
+             // Ties (duplicate vectors) break by the original id, independent of the layout.
+-            self.results.extend(self.keys[..take].iter().map(|&c| {
++            self.results.reserve(take);
++            for (position, &c) in self.keys[..take].iter().enumerate() {
++                if position + lead < take {
++                    g.prefetch_rerank_rows(key_id(self.keys[position + lead]));
++                }
+                 let id = key_id(c);
+-                (g.fine(&self.qf, id), g.original(id))
+-            }));
++                self.results.push((g.fine(&self.qf, id), g.original(id)));
++            }
+             evals += take;
+             self.results
+                 .sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+@@ -3340,7 +3367,7 @@ impl VGraph {
+         searcher.search(query, k, params, &mut report.results)?;
+         let scratch = &mut searcher.scratch;
+         let sq = self.encode_query(
+-            &scratch.qf,
++            &mut scratch.qf,
+             &mut scratch.qc,
+             &mut scratch.qtmp,
+             &mut scratch.qrot,
+@@ -3627,6 +3654,50 @@ mod serving_tests {
+         }
+     }
+ 
++    #[test]
++    fn extreme_angular_queries_preserve_complete_order() {
++        for dim in [15, 16, 17, 31, 32, 33] {
++            let mut rows = vec![0.0; dim * dim];
++            for row in 0..dim {
++                rows[row * dim + row] = 1.0;
++            }
++            let graph = Graph::build(
++                &rows,
++                dim,
++                &BuildParams {
++                    degree: 4,
++                    build_ef: 64,
++                    metric: Metric::Angular,
++                    ..Default::default()
++                },
++            )
++            .unwrap();
++            for bits in [4, 8] {
++                let index = VGraph::from_graph_with(&graph, bits, 8, true, true, 3, false).unwrap();
++                let mut searcher = index.searcher_with(SearchKnobs::OFF);
++                let mut out = Vec::new();
++                for scale in [1.0, 1e-30, 1e-40, f32::MAX] {
++                    let query: Vec<_> =
++                        (1..=dim).map(|i| (i as f32 / dim as f32) * scale).collect();
++                    searcher
++                        .search(
++                            &query,
++                            dim,
++                            VSearchParams {
++                                ef: dim,
++                                rerank: dim,
++                                ..Default::default()
++                            },
++                            &mut out,
++                        )
++                        .unwrap();
++                    assert_eq!(out, (0..dim as u32).rev().collect::<Vec<_>>());
++                    assert_complete(&searcher, &out, dim, dim);
++                }
++            }
++        }
++    }
++
+     #[test]
+     fn disconnected_graph_returns_the_requested_number_of_distinct_neighbors() {
+         let rows: Vec<f32> = (0..67 * 2).map(|i| (i * 7 % 31 + 1) as f32).collect();
+@@ -4502,7 +4573,7 @@ mod tests {
+                         for query in queries.chunks_exact(dim) {
+                             scratch.qf[..dim].copy_from_slice(query);
+                             index.encode_query(
+-                                &scratch.qf,
++                                &mut scratch.qf,
+                                 &mut scratch.qc,
+                                 &mut scratch.qtmp,
+                                 &mut scratch.qrot,
+@@ -4561,7 +4632,7 @@ mod tests {
+                                     for s in [&mut serial.scratch, &mut fused.scratch] {
+                                         s.qf[..dim].copy_from_slice(&query);
+                                         index.encode_query(
+-                                            &s.qf,
++                                            &mut s.qf,
+                                             &mut s.qc,
+                                             &mut s.qtmp,
+                                             &mut s.qrot,
+@@ -5874,7 +5945,7 @@ mod tests {
+             let q: Vec<f32> = unit[7 * d..8 * d].to_vec();
+             s.scratch.qf[..d].copy_from_slice(&q);
+             let sq = g.encode_query(
+-                &s.scratch.qf,
++                &mut s.scratch.qf,
+                 &mut s.scratch.qc,
+                 &mut s.scratch.qtmp,
+                 &mut s.scratch.qrot,
+diff --git a/src/core/qgraph/vertex/navigation.rs b/src/core/qgraph/vertex/navigation.rs
+index 0a0b37fe..a1013b64 100644
+--- a/src/core/qgraph/vertex/navigation.rs
++++ b/src/core/qgraph/vertex/navigation.rs
+@@ -37,7 +37,7 @@ impl VGraph {
+         let profile = searcher.profile_search(query, k, params, &mut production)?;
+         let scratch = &mut searcher.scratch;
+         let sq = self.encode_query(
+-            &scratch.qf,
++            &mut scratch.qf,
+             &mut scratch.qc,
+             &mut scratch.qtmp,
+             &mut scratch.qrot,

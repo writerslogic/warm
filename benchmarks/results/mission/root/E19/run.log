@@ -1,0 +1,1 @@
+{"decision": "accept-next-rung", "mean_additional_exact_rows": 1020.6875, "sample_p99_additional_exact_rows": 1144.2, "false_prunes": 0, "bound_violations": 0, "top10_mismatches": 0}

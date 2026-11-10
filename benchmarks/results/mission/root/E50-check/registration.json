@@ -1,0 +1,29 @@
+{
+  "id": "E50-check",
+  "hypothesis": "H-B-9",
+  "row": "R68-development",
+  "question": "Does strict opcode tokenization retain underscore mnemonics and require separators before applying unchanged induction/store gates?",
+  "prediction": "55whole-opcode/negativelexer/induction/store fixtures pass; nohardwareclaim",
+  "configuration": "parseronly;existingnegative/zeroinduction;kmovd/movl;no compiler",
+  "cwd": "/Volumes/A/.hms-wt-mission-integrated",
+  "script": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/check_packed_scan_parser.py",
+  "result": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/packed-parser-check-E50.json",
+  "argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--locked",
+    "--project",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission",
+    "python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/check_packed_scan_parser.py",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/packed-parser-check-E50.json"
+  ],
+  "summary_fields": [
+    "check_count",
+    "failures"
+  ],
+  "source_commit": "a818694973a26c8d8050371dae124abd3049cc4a",
+  "script_sha256": "baf6ef26618432ba147f526a445f8f3017fd0119b19ccb6487c02d6d492c8899"
+}

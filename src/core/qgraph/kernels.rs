@@ -696,24 +696,38 @@ pub(crate) fn dot_i4_inline_x4(q: &[i8], rows: [&[i8]; 4]) -> [i32; 4] {
 
 /// [`dot_i8_inline`] for a traversal query `a` with `qsum == super::vnni::query_sum(a)`,
 /// computed once per query: the VNNI tiers then spend one `vpdpbusd` per 32 coordinates.
-/// The same integer as [`dot_i8_inline`] on every tier.
+/// The same integer on every tier, widening partial sums before a long row can overflow i32.
 #[must_use]
 #[inline(always)]
-pub(crate) fn dot_i8_query(a: &[i8], b: &[i8], qsum: i32) -> i32 {
+pub(crate) fn dot_i8_query(a: &[i8], b: &[i8], qsum: i32) -> i64 {
+    if a.len() > i32::MAX as usize / (128 * 128) {
+        return dot_i8_long(a, b);
+    }
     #[cfg(target_arch = "x86_64")]
     {
         assert!(a.len() == b.len() && a.len().is_multiple_of(16));
         match tier::get() {
             // SAFETY: the tier is AVXVNNI only after detecting `avx2` and `avxvnni`, VNNI only
             // after `avx2`, `avx512f`, `avx512vl` and `avx512vnni`; the lengths are checked.
-            tier::AVXVNNI => return unsafe { super::vnni::avx::dot_i8(a, b, qsum) },
+            tier::AVXVNNI => return i64::from(unsafe { super::vnni::avx::dot_i8(a, b, qsum) }),
             // SAFETY: as above.
-            tier::VNNI => return unsafe { super::vnni::evex::dot_i8(a, b, qsum) },
+            tier::VNNI => return i64::from(unsafe { super::vnni::evex::dot_i8(a, b, qsum) }),
             _ => {}
         }
     }
     let _ = qsum;
-    dot_i8_inline(a, b)
+    i64::from(dot_i8_inline(a, b))
+}
+
+#[cold]
+fn dot_i8_long(a: &[i8], b: &[i8]) -> i64 {
+    assert!(a.len() == b.len() && a.len().is_multiple_of(16));
+    // Even (-128)*(-128) stays in i32 within a chunk; bias correction may wrap,
+    // but the signed chunk result cannot. Widen before adding chunks together.
+    a.chunks(1 << 16)
+        .zip(b.chunks(1 << 16))
+        .map(|(q, row)| dot_i8_query(q, row, super::vnni::query_sum(q)))
+        .sum()
 }
 
 /// [`dot_i8_query`] of one row `a` against four rows of its length: `a` is loaded once per
@@ -721,35 +735,42 @@ pub(crate) fn dot_i8_query(a: &[i8], b: &[i8], qsum: i32) -> i32 {
 /// four single calls, on every tier.
 #[must_use]
 #[inline(always)]
-pub(crate) fn dot_i8_query_x4(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4] {
+pub(crate) fn dot_i8_query_x4(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i64; 4] {
     assert!(a.len().is_multiple_of(16) && rows.iter().all(|r| r.len() == a.len()));
+    if a.len() > i32::MAX as usize / (128 * 128) {
+        return rows.map(|row| dot_i8_long(a, row));
+    }
     #[cfg(all(target_arch = "aarch64", target_feature = "dotprod"))]
     {
         let _ = qsum;
         // SAFETY: `dotprod` is enabled for the whole build; the lengths are checked above.
-        unsafe { neon::sdot_x4(a, rows) }
+        unsafe { neon::sdot_x4(a, rows) }.map(i64::from)
     }
     #[cfg(not(all(target_arch = "aarch64", target_feature = "dotprod")))]
     {
         #[cfg(target_arch = "aarch64")]
         if std::arch::is_aarch64_feature_detected!("dotprod") {
             // SAFETY: `dotprod` was detected at runtime; the lengths are checked above.
-            return unsafe { neon::sdot_x4(a, rows) };
+            return unsafe { neon::sdot_x4(a, rows) }.map(i64::from);
         }
         #[cfg(target_arch = "x86_64")]
         match tier::get() {
             // SAFETY: the tier is AVXVNNI only after detecting `avx2` and `avxvnni`; the
             // lengths are checked above.
-            tier::AVXVNNI => return unsafe { super::vnni::avx::dot_i8_x4(a, rows, qsum) },
+            tier::AVXVNNI => {
+                return unsafe { super::vnni::avx::dot_i8_x4(a, rows, qsum) }.map(i64::from)
+            }
             // SAFETY: the tier is VNNI only after detecting `avx2`, `avx512f`, `avx512vl` and
             // `avx512vnni`; the lengths are checked above.
-            tier::VNNI => return unsafe { super::vnni::evex::dot_i8_x4(a, rows, qsum) },
+            tier::VNNI => {
+                return unsafe { super::vnni::evex::dot_i8_x4(a, rows, qsum) }.map(i64::from)
+            }
             // SAFETY: the tier is AVX2 only after detecting `avx2`; the lengths are checked.
-            tier::AVX2 => return unsafe { x86::dot_i8_avx2_x4(a, rows) },
+            tier::AVX2 => return unsafe { x86::dot_i8_avx2_x4(a, rows) }.map(i64::from),
             _ => {}
         }
         let _ = qsum;
-        rows.map(|r| dot_i8_inline(a, r))
+        rows.map(|r| i64::from(dot_i8_inline(a, r)))
     }
 }
 
@@ -757,13 +778,16 @@ pub(crate) fn dot_i8_query_x4(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4]
 /// tier (other tiers run [`dot_i8_query_x4`]).
 #[must_use]
 #[inline(always)]
-pub(crate) fn dot_i8_query_x4_wide(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4] {
+pub(crate) fn dot_i8_query_x4_wide(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i64; 4] {
+    if a.len() > i32::MAX as usize / (128 * 128) {
+        return dot_i8_query_x4(a, rows, qsum);
+    }
     #[cfg(target_arch = "x86_64")]
     if tier::get() == tier::VNNI {
         assert!(a.len().is_multiple_of(16) && rows.iter().all(|r| r.len() == a.len()));
         // SAFETY: the tier is VNNI only after detecting `avx2`, `avx512f`, `avx512vl` and
         // `avx512vnni`; the lengths are checked above.
-        return unsafe { super::vnni::zmm::dot_i8_x4(a, rows, qsum) };
+        return unsafe { super::vnni::zmm::dot_i8_x4(a, rows, qsum) }.map(i64::from);
     }
     dot_i8_query_x4(a, rows, qsum)
 }
@@ -1584,11 +1608,34 @@ mod tests {
                 let a = row(1);
                 let bs = [row(1), row(-1), row(1), row(-1)];
                 let four = [&bs[0][..], &bs[1][..], &bs[2][..], &bs[3][..]];
-                let want = four.map(|b| dot_i8_scalar(&a, b));
+                let want = four.map(|b| i64::from(dot_i8_scalar(&a, b)));
                 let qsum = super::super::vnni::query_sum(&a);
                 assert_eq!(dot_i8_query_x4(&a, four, qsum), want, "len {len}");
                 assert_eq!(four.map(|b| dot_i8_query(&a, b, qsum)), want, "len {len}");
             }
+        }
+    }
+
+    #[test]
+    fn long_i8_dots_widen_before_accumulation_overflows() {
+        let limit = i32::MAX as usize / (128 * 128);
+        for nonzero in [16, limit - 1, limit, limit + 1, 1 << 20] {
+            let len = nonzero.next_multiple_of(16);
+            let mut query = vec![-128i8; len];
+            query[nonzero..].fill(0);
+            let rows: [Vec<i8>; 4] = [-128, 127, -1, 0].map(|value| vec![value; len]);
+            let rows = rows.each_ref().map(|row| &row[..]);
+            let expected = rows.map(|row| {
+                query
+                    .iter()
+                    .zip(row)
+                    .map(|(&q, &x)| i64::from(q) * i64::from(x))
+                    .sum::<i64>()
+            });
+            let sum = super::super::vnni::query_sum(&query);
+            assert_eq!(rows.map(|row| dot_i8_query(&query, row, sum)), expected);
+            assert_eq!(dot_i8_query_x4(&query, rows, sum), expected);
+            assert_eq!(dot_i8_query_x4_wide(&query, rows, sum), expected);
         }
     }
 
@@ -1608,7 +1655,7 @@ mod tests {
                 let qs = super::super::vnni::query_sum(&q);
                 let ids: Vec<usize> = (0..1 << 16).map(|_| rng.next_u64() as usize % n).collect();
                 let row = |i: usize| &data[i * dim..(i + 1) * dim];
-                let best = |f: &dyn Fn() -> i32| {
+                let best = |f: &dyn Fn() -> i64| {
                     (0..7)
                         .map(|_| {
                             let t = Instant::now();
@@ -1619,10 +1666,10 @@ mod tests {
                 };
                 let one = best(&|| {
                     ids.iter()
-                        .fold(0i32, |a, &i| a.wrapping_add(dot_i8_query(&q, row(i), qs)))
+                        .fold(0i64, |a, &i| a.wrapping_add(dot_i8_query(&q, row(i), qs)))
                 });
                 let four = best(&|| {
-                    ids.as_chunks::<4>().0.iter().fold(0i32, |a, c| {
+                    ids.as_chunks::<4>().0.iter().fold(0i64, |a, c| {
                         let r = dot_i8_query_x4(&q, c.map(row), qs);
                         a.wrapping_add(r[0] ^ r[1] ^ r[2] ^ r[3])
                     })

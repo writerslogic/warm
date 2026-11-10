@@ -1,0 +1,82 @@
+{
+  "hypothesis": "H-A-1",
+  "claim": "local research; no benchmark measurement performed",
+  "date_utc": "2026-11-10",
+  "sources_receipt": "sources/receipts.json",
+  "findings": [
+    {
+      "source": "https://github.com/erikbern/ann-benchmarks",
+      "finding": "Current README explicitly says no longer actively maintained. Preserve mission inventory; inactive maintenance does not authorize dropping rows. ANN published competitor numbers remain unextracted, not replaced with local figures."
+    },
+    {
+      "source": "https://vector-index-bench.github.io/results/summary.parquet",
+      "finding": "Current Parquet, dataset CSV and algorithm CSV are byte-identical to committed vibe_v1/leaderboard_inputs snapshot. Parquet contains only k100; live overview UI defaults k10. Dataset catalogue has24 datasets including13 additional sets. 0.95/0.99/1.0 inventory points are WARM mission proposals based on historical report, not organiser mandatory row boundaries."
+    },
+    {
+      "source": "https://github.com/vector-index-bench/vibe/blob/7ac76c1f8320a411ce7c9cb3791bdd7f2349b30c/README.md",
+      "finding": "Organiser results use Intel Xeon Gold6230, single core; next update plans AMD9965. README recommends16GB per used core. Pinned Slurm example is20h,16CPU,256G total; no hard per-index cap was established."
+    },
+    {
+      "source": "https://zilliz.com/vdbbench-leaderboard",
+      "finding": "Current payload strongest static figures: ZillizCloud-8cu-perf13316.2336QPS/.9383 forCohere1M;7385.2066QPS/.9384 forCohere10M. Embedded WARM results cannot establish service-boundary superiority."
+    },
+    {
+      "source": "https://sisap-challenges.github.io/sisap26-leaderboard/",
+      "finding": "2026 competition closed; public leaderboard remains open, distinct from archived paper-eligible scope. Former hidden workloads now public. No2027 deadline established. Inventory covers8 task/dataset variants, includes task3 owned by laneB.8vCPU AMD EPYC7F72,24GB,8h,one index,15 query settings."
+    }
+  ],
+  "primitive_accounting": {
+    "path": "src/core/qgraph/vertex.rs:73",
+    "existing_counters": [
+      "query encoding",
+      "entry evaluations",
+      "expansions",
+      "neighbors read",
+      "traversal evaluations",
+      "rerank evaluations",
+      "beam retained"
+    ],
+    "path2": "src/core/qgraph/vertex/navigation.rs:22",
+    "existing_diagnostic": "Untimed navigation replay verifies exact production visited set, ordered beam, output and expansion count; use it rather than create another tracer.",
+    "unmeasured": [
+      "dependent cache fetch rounds",
+      "seed-completion coverage",
+      "fraction of expansions discovering a final neighbor"
+    ],
+    "oracle_ceiling": "Three independent completion lists can collapse many serial expansions only if their union contains the query neighbors; H-A-2 tests that necessary condition before implementation."
+  },
+  "assumptions": [
+    {
+      "class": "law",
+      "statement": "Corpus and held-out query identity must remain separated; benchmark-specific serving logic prohibited."
+    },
+    {
+      "class": "law",
+      "statement": "Total storage includes graph, completion IDs, copied codes, metadata and scratch."
+    },
+    {
+      "class": "convention",
+      "statement": "One graph edge set serves navigation and final enumeration."
+    },
+    {
+      "class": "habit",
+      "statement": "Distance-count improvements are treated as time improvements despite serial memory dependence."
+    },
+    {
+      "class": "convention",
+      "statement": "Every expansion needs its predecessor's selected candidate before issuing the next fetch."
+    }
+  ],
+  "seed_triage": {
+    "Z2": "Existing profile_search gives native phase counters; persistent-network surface is being audited by root. No duplicate adapter work.",
+    "A1_A2": "Selected for inexpensive oracle kill test; nearest-neighbor-only completion is threatened by RoarGraph OOD evidence, making it the bias-check hypothesis.",
+    "A3": "NavigationDiagnostic already exposes all admission/expansion events; next candidate if completion coverage fails, requires own card.",
+    "A4": "Requires per-query effort curves; no main-line parameter sweep authorized; deferred pending event data.",
+    "A5": "Code already prefetches all newly discovered neighbor rows together; multiple frontier expansions could differ but must prove latency headroom first.",
+    "A6": "Prior low-level report rejected THP as main line on streaming, graph THP results lacked gains; do not repeat unchanged measurement.",
+    "A7": "VGraph already separates compact traversal and residual rerank; variable per-vector refinement may differ, but decisive-rerank concentration is unmeasured.",
+    "A8": "Query-projected construction already exists; flow-aware edge deletion remains unverified and needs transfer constraints."
+  },
+  "validation_command": "OPENBLAS_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 uv run --no-project --python /Volumes/A/.hms-lb/vdbbench/venv/bin/python python benchmarks/results/mission/A/completion_coverage.py --data /Volumes/A/.hms-lb/vdbbench/dataset/cohere/cohere_medium_1m --output /Volumes/A/.hms-lb/mission/artifacts/E_NUMBER.json --ledger /Volumes/A/.hms-lb/mission/LOG.tsv --experiment E_NUMBER",
+  "constraints_pending_root_adoption": "Root adopted VIBE .95/.99/1 mission points;1core256GiB totalRSS20h fulljob;p99<=2x competitor rung5;fresh recall gap<=.005 and0 for perfect;no extra per-query minimum. Do not exclude current leader without resource receipts."
+}

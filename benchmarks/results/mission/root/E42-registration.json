@@ -1,0 +1,19 @@
+{
+  "experiment": "E42",
+  "hypothesis": "H-C-3",
+  "question": "Does the first physical M record alone exceed the fixed126200 history-token envelope under pinned neutral upstream serialization and o200k_base?",
+  "prediction": "First record exceeds126200, rejecting all500-fit gate without fullMdownload; no accuracy claim",
+  "prefix_byte_range": [
+    0,
+    33554431
+  ],
+  "full_file_bytes": 2737100077,
+  "full_file_hash_verified": false,
+  "fixed_index": 0,
+  "tokenizer": "tiktoken0.14.0 o200k_base",
+  "history_cap": 126200,
+  "aggregate_input_cap": 127200,
+  "output_cap": 800,
+  "fetch_script_sha256": "ae98537e8a3dcdbd7050d86be149558f613ac099be0c72150a97ab52a22802ab",
+  "source_policy": "fixed prefix only; do not inspect or select alternate records; retain all fetch failures; no paid calls"
+}

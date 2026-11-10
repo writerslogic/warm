@@ -1,0 +1,61 @@
+{
+  "module": "/opt/warm-pr898/native/narrow-module/writerslogic_warm.abi3.so",
+  "results": [
+    {
+      "dim": 128,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": false,
+      "ns_per_query": [
+        80384.375,
+        102075.3828125,
+        90100.3359375,
+        89766.1875,
+        93512.3984375
+      ],
+      "digest": "702314f2c09fd691372af214332d28c6b672d62c4991d99bf04807371aaee2c7"
+    },
+    {
+      "dim": 128,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": true,
+      "ns_per_query": [
+        137747.8828125,
+        127180.9453125,
+        131381.34375,
+        125024.5,
+        126572.359375
+      ],
+      "digest": "67bba8b1812f9b4dcf07d678b5e1b5a5acfd4410767eff04fe360b8b889b2d53"
+    },
+    {
+      "dim": 784,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": false,
+      "ns_per_query": [
+        476739.7890625,
+        450630.75,
+        445968.2265625,
+        487492.125,
+        452251.40625
+      ],
+      "digest": "ea0c2f6d512b13bcc4f66d90c683410c057bac18d0c22b5aa8e4c757767dd387"
+    },
+    {
+      "dim": 784,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": true,
+      "ns_per_query": [
+        540585.703125,
+        522725.1640625,
+        506221.3671875,
+        526434.625,
+        596698.4765625
+      ],
+      "digest": "a4208d30726db06ca3fd578968f0e2557fd07e3d7adbca86339101cb9fbb0370"
+    }
+  ]
+}

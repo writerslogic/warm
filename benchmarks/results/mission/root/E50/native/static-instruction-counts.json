@@ -1,0 +1,1658 @@
+{
+  "assembly_sha256": "642c997cf44ea888f98c36802ca6dc700cfd1c615d25006932312dba6117505c",
+  "hot_assembly_sha256": "fefd46c83e15a700900e27f9c7fcd45297c0b1842221baabbad039a3bf31167f",
+  "counts": {
+    "addq": 1,
+    "jne": 1,
+    "kmovd": 8,
+    "kunpckwd": 8,
+    "leaq": 1,
+    "movl": 8,
+    "movq": 1,
+    "retq": 1,
+    "subq": 1,
+    "vaddps": 32,
+    "vbroadcastss": 24,
+    "vcmpgt_oqps": 16,
+    "vcvtdq2ps": 16,
+    "vmovdqu64": 2,
+    "vmovups": 6,
+    "vmulps": 48,
+    "vpaddd": 16,
+    "vpbroadcastd": 16,
+    "vpdpbusd": 16,
+    "vpsubd": 16,
+    "vpxor": 10,
+    "vpxord": 6,
+    "vsubps": 16,
+    "vzeroupper": 1
+  },
+  "parsed_instructions": [
+    {
+      "line": 2,
+      "mnemonic": "leaq",
+      "operands": "88(%rdi), %rax",
+      "text": "leaq\t88(%rdi), %rax"
+    },
+    {
+      "line": 3,
+      "mnemonic": "vpxord",
+      "operands": "%xmm21, %xmm21, %xmm21",
+      "text": "vpxord\t%xmm21, %xmm21, %xmm21"
+    },
+    {
+      "line": 4,
+      "mnemonic": "movq",
+      "operands": "$-100, %rcx",
+      "text": "movq\t$-100, %rcx"
+    },
+    {
+      "line": 5,
+      "mnemonic": "vpxord",
+      "operands": "%xmm20, %xmm20, %xmm20",
+      "text": "vpxord\t%xmm20, %xmm20, %xmm20"
+    },
+    {
+      "line": 6,
+      "mnemonic": "vpxord",
+      "operands": "%xmm19, %xmm19, %xmm19",
+      "text": "vpxord\t%xmm19, %xmm19, %xmm19"
+    },
+    {
+      "line": 7,
+      "mnemonic": "vpxord",
+      "operands": "%xmm18, %xmm18, %xmm18",
+      "text": "vpxord\t%xmm18, %xmm18, %xmm18"
+    },
+    {
+      "line": 8,
+      "mnemonic": "vpxord",
+      "operands": "%xmm17, %xmm17, %xmm17",
+      "text": "vpxord\t%xmm17, %xmm17, %xmm17"
+    },
+    {
+      "line": 9,
+      "mnemonic": "vpxord",
+      "operands": "%xmm16, %xmm16, %xmm16",
+      "text": "vpxord\t%xmm16, %xmm16, %xmm16"
+    },
+    {
+      "line": 10,
+      "mnemonic": "vpxor",
+      "operands": "%xmm15, %xmm15, %xmm15",
+      "text": "vpxor\t%xmm15, %xmm15, %xmm15"
+    },
+    {
+      "line": 11,
+      "mnemonic": "vpxor",
+      "operands": "%xmm14, %xmm14, %xmm14",
+      "text": "vpxor\t%xmm14, %xmm14, %xmm14"
+    },
+    {
+      "line": 12,
+      "mnemonic": "vpxor",
+      "operands": "%xmm10, %xmm10, %xmm10",
+      "text": "vpxor\t%xmm10, %xmm10, %xmm10"
+    },
+    {
+      "line": 13,
+      "mnemonic": "vpxor",
+      "operands": "%xmm6, %xmm6, %xmm6",
+      "text": "vpxor\t%xmm6, %xmm6, %xmm6"
+    },
+    {
+      "line": 14,
+      "mnemonic": "vpxor",
+      "operands": "%xmm5, %xmm5, %xmm5",
+      "text": "vpxor\t%xmm5, %xmm5, %xmm5"
+    },
+    {
+      "line": 15,
+      "mnemonic": "vpxor",
+      "operands": "%xmm4, %xmm4, %xmm4",
+      "text": "vpxor\t%xmm4, %xmm4, %xmm4"
+    },
+    {
+      "line": 16,
+      "mnemonic": "vpxor",
+      "operands": "%xmm3, %xmm3, %xmm3",
+      "text": "vpxor\t%xmm3, %xmm3, %xmm3"
+    },
+    {
+      "line": 17,
+      "mnemonic": "vpxor",
+      "operands": "%xmm2, %xmm2, %xmm2",
+      "text": "vpxor\t%xmm2, %xmm2, %xmm2"
+    },
+    {
+      "line": 18,
+      "mnemonic": "vpxor",
+      "operands": "%xmm1, %xmm1, %xmm1",
+      "text": "vpxor\t%xmm1, %xmm1, %xmm1"
+    },
+    {
+      "line": 19,
+      "mnemonic": "vpxor",
+      "operands": "%xmm0, %xmm0, %xmm0",
+      "text": "vpxor\t%xmm0, %xmm0, %xmm0"
+    },
+    {
+      "line": 22,
+      "mnemonic": "vmovdqu64",
+      "operands": "-64(%rax), %zmm7",
+      "text": "vmovdqu64\t-64(%rax), %zmm7"
+    },
+    {
+      "line": 23,
+      "mnemonic": "vmovdqu64",
+      "operands": "(%rax), %zmm8",
+      "text": "vmovdqu64\t(%rax), %zmm8"
+    },
+    {
+      "line": 24,
+      "mnemonic": "vpbroadcastd",
+      "operands": "3324(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t3324(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 25,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm21",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm21"
+    },
+    {
+      "line": 26,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm20",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm20"
+    },
+    {
+      "line": 27,
+      "mnemonic": "vpbroadcastd",
+      "operands": "3424(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t3424(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 28,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm19",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm19"
+    },
+    {
+      "line": 29,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm18",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm18"
+    },
+    {
+      "line": 30,
+      "mnemonic": "vpbroadcastd",
+      "operands": "3524(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t3524(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 31,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm17",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm17"
+    },
+    {
+      "line": 32,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm16",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm16"
+    },
+    {
+      "line": 33,
+      "mnemonic": "vpbroadcastd",
+      "operands": "3624(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t3624(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 34,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm15",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm15"
+    },
+    {
+      "line": 35,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm14",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm14"
+    },
+    {
+      "line": 36,
+      "mnemonic": "vpbroadcastd",
+      "operands": "3724(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t3724(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 37,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm10",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm10"
+    },
+    {
+      "line": 38,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm6",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm6"
+    },
+    {
+      "line": 39,
+      "mnemonic": "vpbroadcastd",
+      "operands": "3824(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t3824(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 40,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm5",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm5"
+    },
+    {
+      "line": 41,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm4",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm4"
+    },
+    {
+      "line": 42,
+      "mnemonic": "vpbroadcastd",
+      "operands": "3924(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t3924(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 43,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm3",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm3"
+    },
+    {
+      "line": 44,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm2",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm2"
+    },
+    {
+      "line": 45,
+      "mnemonic": "vpbroadcastd",
+      "operands": "4024(%rdi,%rcx), %zmm9",
+      "text": "vpbroadcastd\t4024(%rdi,%rcx), %zmm9"
+    },
+    {
+      "line": 46,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm7, %zmm1",
+      "text": "vpdpbusd\t%zmm9, %zmm7, %zmm1"
+    },
+    {
+      "line": 47,
+      "mnemonic": "vpdpbusd",
+      "operands": "%zmm9, %zmm8, %zmm0",
+      "text": "vpdpbusd\t%zmm9, %zmm8, %zmm0"
+    },
+    {
+      "line": 48,
+      "mnemonic": "subq",
+      "operands": "$-128, %rax",
+      "text": "subq\t$-128, %rax"
+    },
+    {
+      "line": 49,
+      "mnemonic": "addq",
+      "operands": "$4, %rcx",
+      "text": "addq\t$4, %rcx"
+    },
+    {
+      "line": 50,
+      "mnemonic": "jne",
+      "operands": ".LBB0_1",
+      "text": "jne\t.LBB0_1"
+    },
+    {
+      "line": 52,
+      "mnemonic": "vmovups",
+      "operands": "4024(%rdi), %zmm12",
+      "text": "vmovups\t4024(%rdi), %zmm12"
+    },
+    {
+      "line": 53,
+      "mnemonic": "vmovups",
+      "operands": "4088(%rdi), %zmm7",
+      "text": "vmovups\t4088(%rdi), %zmm7"
+    },
+    {
+      "line": 54,
+      "mnemonic": "vmovups",
+      "operands": "4152(%rdi), %zmm13",
+      "text": "vmovups\t4152(%rdi), %zmm13"
+    },
+    {
+      "line": 55,
+      "mnemonic": "vmovups",
+      "operands": "4216(%rdi), %zmm8",
+      "text": "vmovups\t4216(%rdi), %zmm8"
+    },
+    {
+      "line": 56,
+      "mnemonic": "vmovups",
+      "operands": "4408(%rdi), %zmm11",
+      "text": "vmovups\t4408(%rdi), %zmm11"
+    },
+    {
+      "line": 57,
+      "mnemonic": "vmovups",
+      "operands": "4472(%rdi), %zmm9",
+      "text": "vmovups\t4472(%rdi), %zmm9"
+    },
+    {
+      "line": 58,
+      "mnemonic": "movl",
+      "operands": "12(%rsi), %eax",
+      "text": "movl\t12(%rsi), %eax"
+    },
+    {
+      "line": 59,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm22",
+      "text": "vpbroadcastd\t%eax, %zmm22"
+    },
+    {
+      "line": 60,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm22, %zmm21, %zmm21",
+      "text": "vpsubd\t%zmm22, %zmm21, %zmm21"
+    },
+    {
+      "line": 61,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm21, %zmm21, %zmm21",
+      "text": "vpaddd\t%zmm21, %zmm21, %zmm21"
+    },
+    {
+      "line": 62,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm21, %zmm21",
+      "text": "vcvtdq2ps\t%zmm21, %zmm21"
+    },
+    {
+      "line": 63,
+      "mnemonic": "vbroadcastss",
+      "operands": "(%rsi), %zmm23",
+      "text": "vbroadcastss\t(%rsi), %zmm23"
+    },
+    {
+      "line": 64,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm21, %zmm23, %zmm21",
+      "text": "vmulps\t{ru-sae}, %zmm21, %zmm23, %zmm21"
+    },
+    {
+      "line": 65,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm21, %zmm12, %zmm21",
+      "text": "vmulps\t{ru-sae}, %zmm21, %zmm12, %zmm21"
+    },
+    {
+      "line": 66,
+      "mnemonic": "vbroadcastss",
+      "operands": "4(%rsi), %zmm24",
+      "text": "vbroadcastss\t4(%rsi), %zmm24"
+    },
+    {
+      "line": 67,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm24, %zmm13, %zmm25",
+      "text": "vaddps\t{rd-sae}, %zmm24, %zmm13, %zmm25"
+    },
+    {
+      "line": 68,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm21, %zmm25, %zmm21",
+      "text": "vsubps\t{rd-sae}, %zmm21, %zmm25, %zmm21"
+    },
+    {
+      "line": 69,
+      "mnemonic": "vbroadcastss",
+      "operands": "8(%rsi), %zmm25",
+      "text": "vbroadcastss\t8(%rsi), %zmm25"
+    },
+    {
+      "line": 70,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm25, %zmm26",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm25, %zmm26"
+    },
+    {
+      "line": 71,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm26, %zmm26, %zmm26",
+      "text": "vmulps\t{ru-sae}, %zmm26, %zmm26, %zmm26"
+    },
+    {
+      "line": 72,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm26, %zmm21, %k0",
+      "text": "vcmpgt_oqps\t%zmm26, %zmm21, %k0"
+    },
+    {
+      "line": 73,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm22, %zmm20, %zmm20",
+      "text": "vpsubd\t%zmm22, %zmm20, %zmm20"
+    },
+    {
+      "line": 74,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm20, %zmm20, %zmm20",
+      "text": "vpaddd\t%zmm20, %zmm20, %zmm20"
+    },
+    {
+      "line": 75,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm20, %zmm20",
+      "text": "vcvtdq2ps\t%zmm20, %zmm20"
+    },
+    {
+      "line": 76,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm20, %zmm23, %zmm20",
+      "text": "vmulps\t{ru-sae}, %zmm20, %zmm23, %zmm20"
+    },
+    {
+      "line": 77,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm20, %zmm7, %zmm20",
+      "text": "vmulps\t{ru-sae}, %zmm20, %zmm7, %zmm20"
+    },
+    {
+      "line": 78,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm24, %zmm8, %zmm21",
+      "text": "vaddps\t{rd-sae}, %zmm24, %zmm8, %zmm21"
+    },
+    {
+      "line": 79,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm20, %zmm21, %zmm20",
+      "text": "vsubps\t{rd-sae}, %zmm20, %zmm21, %zmm20"
+    },
+    {
+      "line": 80,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm25, %zmm21",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm25, %zmm21"
+    },
+    {
+      "line": 81,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm21, %zmm21, %zmm21",
+      "text": "vmulps\t{ru-sae}, %zmm21, %zmm21, %zmm21"
+    },
+    {
+      "line": 82,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm21, %zmm20, %k1",
+      "text": "vcmpgt_oqps\t%zmm21, %zmm20, %k1"
+    },
+    {
+      "line": 83,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 84,
+      "mnemonic": "kmovd",
+      "operands": "%k0, (%rdx)",
+      "text": "kmovd\t%k0, (%rdx)"
+    },
+    {
+      "line": 85,
+      "mnemonic": "movl",
+      "operands": "28(%rsi), %eax",
+      "text": "movl\t28(%rsi), %eax"
+    },
+    {
+      "line": 86,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm20",
+      "text": "vpbroadcastd\t%eax, %zmm20"
+    },
+    {
+      "line": 87,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm20, %zmm19, %zmm19",
+      "text": "vpsubd\t%zmm20, %zmm19, %zmm19"
+    },
+    {
+      "line": 88,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm19, %zmm19, %zmm19",
+      "text": "vpaddd\t%zmm19, %zmm19, %zmm19"
+    },
+    {
+      "line": 89,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm19, %zmm19",
+      "text": "vcvtdq2ps\t%zmm19, %zmm19"
+    },
+    {
+      "line": 90,
+      "mnemonic": "vbroadcastss",
+      "operands": "16(%rsi), %zmm21",
+      "text": "vbroadcastss\t16(%rsi), %zmm21"
+    },
+    {
+      "line": 91,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm19, %zmm21, %zmm19",
+      "text": "vmulps\t{ru-sae}, %zmm19, %zmm21, %zmm19"
+    },
+    {
+      "line": 92,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm19, %zmm12, %zmm19",
+      "text": "vmulps\t{ru-sae}, %zmm19, %zmm12, %zmm19"
+    },
+    {
+      "line": 93,
+      "mnemonic": "vbroadcastss",
+      "operands": "20(%rsi), %zmm22",
+      "text": "vbroadcastss\t20(%rsi), %zmm22"
+    },
+    {
+      "line": 94,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm22, %zmm13, %zmm23",
+      "text": "vaddps\t{rd-sae}, %zmm22, %zmm13, %zmm23"
+    },
+    {
+      "line": 95,
+      "mnemonic": "vbroadcastss",
+      "operands": "24(%rsi), %zmm24",
+      "text": "vbroadcastss\t24(%rsi), %zmm24"
+    },
+    {
+      "line": 96,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm19, %zmm23, %zmm19",
+      "text": "vsubps\t{rd-sae}, %zmm19, %zmm23, %zmm19"
+    },
+    {
+      "line": 97,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm24, %zmm23",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm24, %zmm23"
+    },
+    {
+      "line": 98,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm23, %zmm23, %zmm23",
+      "text": "vmulps\t{ru-sae}, %zmm23, %zmm23, %zmm23"
+    },
+    {
+      "line": 99,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm23, %zmm19, %k0",
+      "text": "vcmpgt_oqps\t%zmm23, %zmm19, %k0"
+    },
+    {
+      "line": 100,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm20, %zmm18, %zmm18",
+      "text": "vpsubd\t%zmm20, %zmm18, %zmm18"
+    },
+    {
+      "line": 101,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm18, %zmm18, %zmm18",
+      "text": "vpaddd\t%zmm18, %zmm18, %zmm18"
+    },
+    {
+      "line": 102,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm18, %zmm18",
+      "text": "vcvtdq2ps\t%zmm18, %zmm18"
+    },
+    {
+      "line": 103,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm18, %zmm21, %zmm18",
+      "text": "vmulps\t{ru-sae}, %zmm18, %zmm21, %zmm18"
+    },
+    {
+      "line": 104,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm18, %zmm7, %zmm18",
+      "text": "vmulps\t{ru-sae}, %zmm18, %zmm7, %zmm18"
+    },
+    {
+      "line": 105,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm22, %zmm8, %zmm19",
+      "text": "vaddps\t{rd-sae}, %zmm22, %zmm8, %zmm19"
+    },
+    {
+      "line": 106,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm18, %zmm19, %zmm18",
+      "text": "vsubps\t{rd-sae}, %zmm18, %zmm19, %zmm18"
+    },
+    {
+      "line": 107,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm24, %zmm19",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm24, %zmm19"
+    },
+    {
+      "line": 108,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm19, %zmm19, %zmm19",
+      "text": "vmulps\t{ru-sae}, %zmm19, %zmm19, %zmm19"
+    },
+    {
+      "line": 109,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm19, %zmm18, %k1",
+      "text": "vcmpgt_oqps\t%zmm19, %zmm18, %k1"
+    },
+    {
+      "line": 110,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 111,
+      "mnemonic": "kmovd",
+      "operands": "%k0, 4(%rdx)",
+      "text": "kmovd\t%k0, 4(%rdx)"
+    },
+    {
+      "line": 112,
+      "mnemonic": "movl",
+      "operands": "44(%rsi), %eax",
+      "text": "movl\t44(%rsi), %eax"
+    },
+    {
+      "line": 113,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm18",
+      "text": "vpbroadcastd\t%eax, %zmm18"
+    },
+    {
+      "line": 114,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm18, %zmm17, %zmm17",
+      "text": "vpsubd\t%zmm18, %zmm17, %zmm17"
+    },
+    {
+      "line": 115,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm17, %zmm17, %zmm17",
+      "text": "vpaddd\t%zmm17, %zmm17, %zmm17"
+    },
+    {
+      "line": 116,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm17, %zmm17",
+      "text": "vcvtdq2ps\t%zmm17, %zmm17"
+    },
+    {
+      "line": 117,
+      "mnemonic": "vbroadcastss",
+      "operands": "32(%rsi), %zmm19",
+      "text": "vbroadcastss\t32(%rsi), %zmm19"
+    },
+    {
+      "line": 118,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm17, %zmm19, %zmm17",
+      "text": "vmulps\t{ru-sae}, %zmm17, %zmm19, %zmm17"
+    },
+    {
+      "line": 119,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm17, %zmm12, %zmm17",
+      "text": "vmulps\t{ru-sae}, %zmm17, %zmm12, %zmm17"
+    },
+    {
+      "line": 120,
+      "mnemonic": "vbroadcastss",
+      "operands": "36(%rsi), %zmm20",
+      "text": "vbroadcastss\t36(%rsi), %zmm20"
+    },
+    {
+      "line": 121,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm20, %zmm13, %zmm21",
+      "text": "vaddps\t{rd-sae}, %zmm20, %zmm13, %zmm21"
+    },
+    {
+      "line": 122,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm17, %zmm21, %zmm17",
+      "text": "vsubps\t{rd-sae}, %zmm17, %zmm21, %zmm17"
+    },
+    {
+      "line": 123,
+      "mnemonic": "vbroadcastss",
+      "operands": "40(%rsi), %zmm21",
+      "text": "vbroadcastss\t40(%rsi), %zmm21"
+    },
+    {
+      "line": 124,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm21, %zmm22",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm21, %zmm22"
+    },
+    {
+      "line": 125,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm22, %zmm22, %zmm22",
+      "text": "vmulps\t{ru-sae}, %zmm22, %zmm22, %zmm22"
+    },
+    {
+      "line": 126,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm22, %zmm17, %k0",
+      "text": "vcmpgt_oqps\t%zmm22, %zmm17, %k0"
+    },
+    {
+      "line": 127,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm18, %zmm16, %zmm16",
+      "text": "vpsubd\t%zmm18, %zmm16, %zmm16"
+    },
+    {
+      "line": 128,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm16, %zmm16, %zmm16",
+      "text": "vpaddd\t%zmm16, %zmm16, %zmm16"
+    },
+    {
+      "line": 129,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm16, %zmm16",
+      "text": "vcvtdq2ps\t%zmm16, %zmm16"
+    },
+    {
+      "line": 130,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm16, %zmm19, %zmm16",
+      "text": "vmulps\t{ru-sae}, %zmm16, %zmm19, %zmm16"
+    },
+    {
+      "line": 131,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm16, %zmm7, %zmm16",
+      "text": "vmulps\t{ru-sae}, %zmm16, %zmm7, %zmm16"
+    },
+    {
+      "line": 132,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm20, %zmm8, %zmm17",
+      "text": "vaddps\t{rd-sae}, %zmm20, %zmm8, %zmm17"
+    },
+    {
+      "line": 133,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm16, %zmm17, %zmm16",
+      "text": "vsubps\t{rd-sae}, %zmm16, %zmm17, %zmm16"
+    },
+    {
+      "line": 134,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm21, %zmm17",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm21, %zmm17"
+    },
+    {
+      "line": 135,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm17, %zmm17, %zmm17",
+      "text": "vmulps\t{ru-sae}, %zmm17, %zmm17, %zmm17"
+    },
+    {
+      "line": 136,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm17, %zmm16, %k1",
+      "text": "vcmpgt_oqps\t%zmm17, %zmm16, %k1"
+    },
+    {
+      "line": 137,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 138,
+      "mnemonic": "kmovd",
+      "operands": "%k0, 8(%rdx)",
+      "text": "kmovd\t%k0, 8(%rdx)"
+    },
+    {
+      "line": 139,
+      "mnemonic": "movl",
+      "operands": "60(%rsi), %eax",
+      "text": "movl\t60(%rsi), %eax"
+    },
+    {
+      "line": 140,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm16",
+      "text": "vpbroadcastd\t%eax, %zmm16"
+    },
+    {
+      "line": 141,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm16, %zmm15, %zmm15",
+      "text": "vpsubd\t%zmm16, %zmm15, %zmm15"
+    },
+    {
+      "line": 142,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm15, %zmm15, %zmm15",
+      "text": "vpaddd\t%zmm15, %zmm15, %zmm15"
+    },
+    {
+      "line": 143,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm15, %zmm15",
+      "text": "vcvtdq2ps\t%zmm15, %zmm15"
+    },
+    {
+      "line": 144,
+      "mnemonic": "vbroadcastss",
+      "operands": "48(%rsi), %zmm17",
+      "text": "vbroadcastss\t48(%rsi), %zmm17"
+    },
+    {
+      "line": 145,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm15, %zmm17, %zmm15",
+      "text": "vmulps\t{ru-sae}, %zmm15, %zmm17, %zmm15"
+    },
+    {
+      "line": 146,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm15, %zmm12, %zmm15",
+      "text": "vmulps\t{ru-sae}, %zmm15, %zmm12, %zmm15"
+    },
+    {
+      "line": 147,
+      "mnemonic": "vbroadcastss",
+      "operands": "52(%rsi), %zmm18",
+      "text": "vbroadcastss\t52(%rsi), %zmm18"
+    },
+    {
+      "line": 148,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm18, %zmm13, %zmm19",
+      "text": "vaddps\t{rd-sae}, %zmm18, %zmm13, %zmm19"
+    },
+    {
+      "line": 149,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm15, %zmm19, %zmm15",
+      "text": "vsubps\t{rd-sae}, %zmm15, %zmm19, %zmm15"
+    },
+    {
+      "line": 150,
+      "mnemonic": "vbroadcastss",
+      "operands": "56(%rsi), %zmm19",
+      "text": "vbroadcastss\t56(%rsi), %zmm19"
+    },
+    {
+      "line": 151,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm19, %zmm20",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm19, %zmm20"
+    },
+    {
+      "line": 152,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm20, %zmm20, %zmm20",
+      "text": "vmulps\t{ru-sae}, %zmm20, %zmm20, %zmm20"
+    },
+    {
+      "line": 153,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm20, %zmm15, %k0",
+      "text": "vcmpgt_oqps\t%zmm20, %zmm15, %k0"
+    },
+    {
+      "line": 154,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm16, %zmm14, %zmm14",
+      "text": "vpsubd\t%zmm16, %zmm14, %zmm14"
+    },
+    {
+      "line": 155,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm14, %zmm14, %zmm14",
+      "text": "vpaddd\t%zmm14, %zmm14, %zmm14"
+    },
+    {
+      "line": 156,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm14, %zmm14",
+      "text": "vcvtdq2ps\t%zmm14, %zmm14"
+    },
+    {
+      "line": 157,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm14, %zmm17, %zmm14",
+      "text": "vmulps\t{ru-sae}, %zmm14, %zmm17, %zmm14"
+    },
+    {
+      "line": 158,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm14, %zmm7, %zmm14",
+      "text": "vmulps\t{ru-sae}, %zmm14, %zmm7, %zmm14"
+    },
+    {
+      "line": 159,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm18, %zmm8, %zmm15",
+      "text": "vaddps\t{rd-sae}, %zmm18, %zmm8, %zmm15"
+    },
+    {
+      "line": 160,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm14, %zmm15, %zmm14",
+      "text": "vsubps\t{rd-sae}, %zmm14, %zmm15, %zmm14"
+    },
+    {
+      "line": 161,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm19, %zmm15",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm19, %zmm15"
+    },
+    {
+      "line": 162,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm15, %zmm15, %zmm15",
+      "text": "vmulps\t{ru-sae}, %zmm15, %zmm15, %zmm15"
+    },
+    {
+      "line": 163,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm15, %zmm14, %k1",
+      "text": "vcmpgt_oqps\t%zmm15, %zmm14, %k1"
+    },
+    {
+      "line": 164,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 165,
+      "mnemonic": "kmovd",
+      "operands": "%k0, 12(%rdx)",
+      "text": "kmovd\t%k0, 12(%rdx)"
+    },
+    {
+      "line": 166,
+      "mnemonic": "movl",
+      "operands": "76(%rsi), %eax",
+      "text": "movl\t76(%rsi), %eax"
+    },
+    {
+      "line": 167,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm14",
+      "text": "vpbroadcastd\t%eax, %zmm14"
+    },
+    {
+      "line": 168,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm14, %zmm10, %zmm10",
+      "text": "vpsubd\t%zmm14, %zmm10, %zmm10"
+    },
+    {
+      "line": 169,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm10, %zmm10, %zmm10",
+      "text": "vpaddd\t%zmm10, %zmm10, %zmm10"
+    },
+    {
+      "line": 170,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm10, %zmm10",
+      "text": "vcvtdq2ps\t%zmm10, %zmm10"
+    },
+    {
+      "line": 171,
+      "mnemonic": "vbroadcastss",
+      "operands": "64(%rsi), %zmm15",
+      "text": "vbroadcastss\t64(%rsi), %zmm15"
+    },
+    {
+      "line": 172,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm10, %zmm15, %zmm10",
+      "text": "vmulps\t{ru-sae}, %zmm10, %zmm15, %zmm10"
+    },
+    {
+      "line": 173,
+      "mnemonic": "vbroadcastss",
+      "operands": "68(%rsi), %zmm16",
+      "text": "vbroadcastss\t68(%rsi), %zmm16"
+    },
+    {
+      "line": 174,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm10, %zmm12, %zmm10",
+      "text": "vmulps\t{ru-sae}, %zmm10, %zmm12, %zmm10"
+    },
+    {
+      "line": 175,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm16, %zmm13, %zmm17",
+      "text": "vaddps\t{rd-sae}, %zmm16, %zmm13, %zmm17"
+    },
+    {
+      "line": 176,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm10, %zmm17, %zmm10",
+      "text": "vsubps\t{rd-sae}, %zmm10, %zmm17, %zmm10"
+    },
+    {
+      "line": 177,
+      "mnemonic": "vbroadcastss",
+      "operands": "72(%rsi), %zmm17",
+      "text": "vbroadcastss\t72(%rsi), %zmm17"
+    },
+    {
+      "line": 178,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm17, %zmm18",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm17, %zmm18"
+    },
+    {
+      "line": 179,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm18, %zmm18, %zmm18",
+      "text": "vmulps\t{ru-sae}, %zmm18, %zmm18, %zmm18"
+    },
+    {
+      "line": 180,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm18, %zmm10, %k0",
+      "text": "vcmpgt_oqps\t%zmm18, %zmm10, %k0"
+    },
+    {
+      "line": 181,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm14, %zmm6, %zmm6",
+      "text": "vpsubd\t%zmm14, %zmm6, %zmm6"
+    },
+    {
+      "line": 182,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm6, %zmm6, %zmm6",
+      "text": "vpaddd\t%zmm6, %zmm6, %zmm6"
+    },
+    {
+      "line": 183,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm6, %zmm6",
+      "text": "vcvtdq2ps\t%zmm6, %zmm6"
+    },
+    {
+      "line": 184,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm6, %zmm15, %zmm6",
+      "text": "vmulps\t{ru-sae}, %zmm6, %zmm15, %zmm6"
+    },
+    {
+      "line": 185,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm6, %zmm7, %zmm6",
+      "text": "vmulps\t{ru-sae}, %zmm6, %zmm7, %zmm6"
+    },
+    {
+      "line": 186,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm16, %zmm8, %zmm10",
+      "text": "vaddps\t{rd-sae}, %zmm16, %zmm8, %zmm10"
+    },
+    {
+      "line": 187,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm6, %zmm10, %zmm6",
+      "text": "vsubps\t{rd-sae}, %zmm6, %zmm10, %zmm6"
+    },
+    {
+      "line": 188,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm17, %zmm10",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm17, %zmm10"
+    },
+    {
+      "line": 189,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm10, %zmm10, %zmm10",
+      "text": "vmulps\t{ru-sae}, %zmm10, %zmm10, %zmm10"
+    },
+    {
+      "line": 190,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm10, %zmm6, %k1",
+      "text": "vcmpgt_oqps\t%zmm10, %zmm6, %k1"
+    },
+    {
+      "line": 191,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 192,
+      "mnemonic": "kmovd",
+      "operands": "%k0, 16(%rdx)",
+      "text": "kmovd\t%k0, 16(%rdx)"
+    },
+    {
+      "line": 193,
+      "mnemonic": "movl",
+      "operands": "92(%rsi), %eax",
+      "text": "movl\t92(%rsi), %eax"
+    },
+    {
+      "line": 194,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm6",
+      "text": "vpbroadcastd\t%eax, %zmm6"
+    },
+    {
+      "line": 195,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm6, %zmm5, %zmm5",
+      "text": "vpsubd\t%zmm6, %zmm5, %zmm5"
+    },
+    {
+      "line": 196,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm5, %zmm5, %zmm5",
+      "text": "vpaddd\t%zmm5, %zmm5, %zmm5"
+    },
+    {
+      "line": 197,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm5, %zmm5",
+      "text": "vcvtdq2ps\t%zmm5, %zmm5"
+    },
+    {
+      "line": 198,
+      "mnemonic": "vbroadcastss",
+      "operands": "80(%rsi), %zmm10",
+      "text": "vbroadcastss\t80(%rsi), %zmm10"
+    },
+    {
+      "line": 199,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm5, %zmm10, %zmm5",
+      "text": "vmulps\t{ru-sae}, %zmm5, %zmm10, %zmm5"
+    },
+    {
+      "line": 200,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm5, %zmm12, %zmm5",
+      "text": "vmulps\t{ru-sae}, %zmm5, %zmm12, %zmm5"
+    },
+    {
+      "line": 201,
+      "mnemonic": "vbroadcastss",
+      "operands": "84(%rsi), %zmm14",
+      "text": "vbroadcastss\t84(%rsi), %zmm14"
+    },
+    {
+      "line": 202,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm14, %zmm13, %zmm15",
+      "text": "vaddps\t{rd-sae}, %zmm14, %zmm13, %zmm15"
+    },
+    {
+      "line": 203,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm5, %zmm15, %zmm5",
+      "text": "vsubps\t{rd-sae}, %zmm5, %zmm15, %zmm5"
+    },
+    {
+      "line": 204,
+      "mnemonic": "vbroadcastss",
+      "operands": "88(%rsi), %zmm15",
+      "text": "vbroadcastss\t88(%rsi), %zmm15"
+    },
+    {
+      "line": 205,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm15, %zmm16",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm15, %zmm16"
+    },
+    {
+      "line": 206,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm16, %zmm16, %zmm16",
+      "text": "vmulps\t{ru-sae}, %zmm16, %zmm16, %zmm16"
+    },
+    {
+      "line": 207,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm16, %zmm5, %k0",
+      "text": "vcmpgt_oqps\t%zmm16, %zmm5, %k0"
+    },
+    {
+      "line": 208,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm6, %zmm4, %zmm4",
+      "text": "vpsubd\t%zmm6, %zmm4, %zmm4"
+    },
+    {
+      "line": 209,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm4, %zmm4, %zmm4",
+      "text": "vpaddd\t%zmm4, %zmm4, %zmm4"
+    },
+    {
+      "line": 210,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm4, %zmm4",
+      "text": "vcvtdq2ps\t%zmm4, %zmm4"
+    },
+    {
+      "line": 211,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm4, %zmm10, %zmm4",
+      "text": "vmulps\t{ru-sae}, %zmm4, %zmm10, %zmm4"
+    },
+    {
+      "line": 212,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm4, %zmm7, %zmm4",
+      "text": "vmulps\t{ru-sae}, %zmm4, %zmm7, %zmm4"
+    },
+    {
+      "line": 213,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm14, %zmm8, %zmm5",
+      "text": "vaddps\t{rd-sae}, %zmm14, %zmm8, %zmm5"
+    },
+    {
+      "line": 214,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm4, %zmm5, %zmm4",
+      "text": "vsubps\t{rd-sae}, %zmm4, %zmm5, %zmm4"
+    },
+    {
+      "line": 215,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm15, %zmm5",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm15, %zmm5"
+    },
+    {
+      "line": 216,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm5, %zmm5, %zmm5",
+      "text": "vmulps\t{ru-sae}, %zmm5, %zmm5, %zmm5"
+    },
+    {
+      "line": 217,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm5, %zmm4, %k1",
+      "text": "vcmpgt_oqps\t%zmm5, %zmm4, %k1"
+    },
+    {
+      "line": 218,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 219,
+      "mnemonic": "kmovd",
+      "operands": "%k0, 20(%rdx)",
+      "text": "kmovd\t%k0, 20(%rdx)"
+    },
+    {
+      "line": 220,
+      "mnemonic": "movl",
+      "operands": "108(%rsi), %eax",
+      "text": "movl\t108(%rsi), %eax"
+    },
+    {
+      "line": 221,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm4",
+      "text": "vpbroadcastd\t%eax, %zmm4"
+    },
+    {
+      "line": 222,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm4, %zmm3, %zmm3",
+      "text": "vpsubd\t%zmm4, %zmm3, %zmm3"
+    },
+    {
+      "line": 223,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm3, %zmm3, %zmm3",
+      "text": "vpaddd\t%zmm3, %zmm3, %zmm3"
+    },
+    {
+      "line": 224,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm3, %zmm3",
+      "text": "vcvtdq2ps\t%zmm3, %zmm3"
+    },
+    {
+      "line": 225,
+      "mnemonic": "vbroadcastss",
+      "operands": "96(%rsi), %zmm5",
+      "text": "vbroadcastss\t96(%rsi), %zmm5"
+    },
+    {
+      "line": 226,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm3, %zmm5, %zmm3",
+      "text": "vmulps\t{ru-sae}, %zmm3, %zmm5, %zmm3"
+    },
+    {
+      "line": 227,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm3, %zmm12, %zmm3",
+      "text": "vmulps\t{ru-sae}, %zmm3, %zmm12, %zmm3"
+    },
+    {
+      "line": 228,
+      "mnemonic": "vbroadcastss",
+      "operands": "100(%rsi), %zmm6",
+      "text": "vbroadcastss\t100(%rsi), %zmm6"
+    },
+    {
+      "line": 229,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm6, %zmm13, %zmm10",
+      "text": "vaddps\t{rd-sae}, %zmm6, %zmm13, %zmm10"
+    },
+    {
+      "line": 230,
+      "mnemonic": "vbroadcastss",
+      "operands": "104(%rsi), %zmm14",
+      "text": "vbroadcastss\t104(%rsi), %zmm14"
+    },
+    {
+      "line": 231,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm3, %zmm10, %zmm3",
+      "text": "vsubps\t{rd-sae}, %zmm3, %zmm10, %zmm3"
+    },
+    {
+      "line": 232,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm14, %zmm10",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm14, %zmm10"
+    },
+    {
+      "line": 233,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm10, %zmm10, %zmm10",
+      "text": "vmulps\t{ru-sae}, %zmm10, %zmm10, %zmm10"
+    },
+    {
+      "line": 234,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm10, %zmm3, %k0",
+      "text": "vcmpgt_oqps\t%zmm10, %zmm3, %k0"
+    },
+    {
+      "line": 235,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm4, %zmm2, %zmm2",
+      "text": "vpsubd\t%zmm4, %zmm2, %zmm2"
+    },
+    {
+      "line": 236,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm2, %zmm2, %zmm2",
+      "text": "vpaddd\t%zmm2, %zmm2, %zmm2"
+    },
+    {
+      "line": 237,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm2, %zmm2",
+      "text": "vcvtdq2ps\t%zmm2, %zmm2"
+    },
+    {
+      "line": 238,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm2, %zmm5, %zmm2",
+      "text": "vmulps\t{ru-sae}, %zmm2, %zmm5, %zmm2"
+    },
+    {
+      "line": 239,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm2, %zmm7, %zmm2",
+      "text": "vmulps\t{ru-sae}, %zmm2, %zmm7, %zmm2"
+    },
+    {
+      "line": 240,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm6, %zmm8, %zmm3",
+      "text": "vaddps\t{rd-sae}, %zmm6, %zmm8, %zmm3"
+    },
+    {
+      "line": 241,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm2, %zmm3, %zmm2",
+      "text": "vsubps\t{rd-sae}, %zmm2, %zmm3, %zmm2"
+    },
+    {
+      "line": 242,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm14, %zmm3",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm14, %zmm3"
+    },
+    {
+      "line": 243,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm3, %zmm3, %zmm3",
+      "text": "vmulps\t{ru-sae}, %zmm3, %zmm3, %zmm3"
+    },
+    {
+      "line": 244,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm3, %zmm2, %k1",
+      "text": "vcmpgt_oqps\t%zmm3, %zmm2, %k1"
+    },
+    {
+      "line": 245,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 246,
+      "mnemonic": "kmovd",
+      "operands": "%k0, 24(%rdx)",
+      "text": "kmovd\t%k0, 24(%rdx)"
+    },
+    {
+      "line": 247,
+      "mnemonic": "movl",
+      "operands": "124(%rsi), %eax",
+      "text": "movl\t124(%rsi), %eax"
+    },
+    {
+      "line": 248,
+      "mnemonic": "vpbroadcastd",
+      "operands": "%eax, %zmm2",
+      "text": "vpbroadcastd\t%eax, %zmm2"
+    },
+    {
+      "line": 249,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm2, %zmm1, %zmm1",
+      "text": "vpsubd\t%zmm2, %zmm1, %zmm1"
+    },
+    {
+      "line": 250,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm1, %zmm1, %zmm1",
+      "text": "vpaddd\t%zmm1, %zmm1, %zmm1"
+    },
+    {
+      "line": 251,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm1, %zmm1",
+      "text": "vcvtdq2ps\t%zmm1, %zmm1"
+    },
+    {
+      "line": 252,
+      "mnemonic": "vbroadcastss",
+      "operands": "112(%rsi), %zmm3",
+      "text": "vbroadcastss\t112(%rsi), %zmm3"
+    },
+    {
+      "line": 253,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm1, %zmm3, %zmm1",
+      "text": "vmulps\t{ru-sae}, %zmm1, %zmm3, %zmm1"
+    },
+    {
+      "line": 254,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm1, %zmm12, %zmm1",
+      "text": "vmulps\t{ru-sae}, %zmm1, %zmm12, %zmm1"
+    },
+    {
+      "line": 255,
+      "mnemonic": "vbroadcastss",
+      "operands": "116(%rsi), %zmm4",
+      "text": "vbroadcastss\t116(%rsi), %zmm4"
+    },
+    {
+      "line": 256,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm4, %zmm13, %zmm5",
+      "text": "vaddps\t{rd-sae}, %zmm4, %zmm13, %zmm5"
+    },
+    {
+      "line": 257,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm1, %zmm5, %zmm1",
+      "text": "vsubps\t{rd-sae}, %zmm1, %zmm5, %zmm1"
+    },
+    {
+      "line": 258,
+      "mnemonic": "vbroadcastss",
+      "operands": "120(%rsi), %zmm5",
+      "text": "vbroadcastss\t120(%rsi), %zmm5"
+    },
+    {
+      "line": 259,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm11, %zmm5, %zmm6",
+      "text": "vaddps\t{ru-sae}, %zmm11, %zmm5, %zmm6"
+    },
+    {
+      "line": 260,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm6, %zmm6, %zmm6",
+      "text": "vmulps\t{ru-sae}, %zmm6, %zmm6, %zmm6"
+    },
+    {
+      "line": 261,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm6, %zmm1, %k0",
+      "text": "vcmpgt_oqps\t%zmm6, %zmm1, %k0"
+    },
+    {
+      "line": 262,
+      "mnemonic": "vpsubd",
+      "operands": "%zmm2, %zmm0, %zmm0",
+      "text": "vpsubd\t%zmm2, %zmm0, %zmm0"
+    },
+    {
+      "line": 263,
+      "mnemonic": "vpaddd",
+      "operands": "%zmm0, %zmm0, %zmm0",
+      "text": "vpaddd\t%zmm0, %zmm0, %zmm0"
+    },
+    {
+      "line": 264,
+      "mnemonic": "vcvtdq2ps",
+      "operands": "%zmm0, %zmm0",
+      "text": "vcvtdq2ps\t%zmm0, %zmm0"
+    },
+    {
+      "line": 265,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm0, %zmm3, %zmm0",
+      "text": "vmulps\t{ru-sae}, %zmm0, %zmm3, %zmm0"
+    },
+    {
+      "line": 266,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm0, %zmm7, %zmm0",
+      "text": "vmulps\t{ru-sae}, %zmm0, %zmm7, %zmm0"
+    },
+    {
+      "line": 267,
+      "mnemonic": "vaddps",
+      "operands": "{rd-sae}, %zmm4, %zmm8, %zmm1",
+      "text": "vaddps\t{rd-sae}, %zmm4, %zmm8, %zmm1"
+    },
+    {
+      "line": 268,
+      "mnemonic": "vsubps",
+      "operands": "{rd-sae}, %zmm0, %zmm1, %zmm0",
+      "text": "vsubps\t{rd-sae}, %zmm0, %zmm1, %zmm0"
+    },
+    {
+      "line": 269,
+      "mnemonic": "vaddps",
+      "operands": "{ru-sae}, %zmm9, %zmm5, %zmm1",
+      "text": "vaddps\t{ru-sae}, %zmm9, %zmm5, %zmm1"
+    },
+    {
+      "line": 270,
+      "mnemonic": "vmulps",
+      "operands": "{ru-sae}, %zmm1, %zmm1, %zmm1",
+      "text": "vmulps\t{ru-sae}, %zmm1, %zmm1, %zmm1"
+    },
+    {
+      "line": 271,
+      "mnemonic": "vcmpgt_oqps",
+      "operands": "%zmm1, %zmm0, %k1",
+      "text": "vcmpgt_oqps\t%zmm1, %zmm0, %k1"
+    },
+    {
+      "line": 272,
+      "mnemonic": "kunpckwd",
+      "operands": "%k0, %k1, %k0",
+      "text": "kunpckwd\t%k0, %k1, %k0"
+    },
+    {
+      "line": 273,
+      "mnemonic": "kmovd",
+      "operands": "%k0, 28(%rdx)",
+      "text": "kmovd\t%k0, 28(%rdx)"
+    },
+    {
+      "line": 274,
+      "mnemonic": "vzeroupper",
+      "operands": "",
+      "text": "vzeroupper"
+    },
+    {
+      "line": 275,
+      "mnemonic": "retq",
+      "operands": "",
+      "text": "retq"
+    }
+  ]
+}

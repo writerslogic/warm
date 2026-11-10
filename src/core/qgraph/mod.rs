@@ -490,7 +490,7 @@ impl BuildCodes {
 
     /// The integer dot product of the codes of rows `p` and `u`.
     #[inline]
-    fn raw(&self, p: u32, u: u32) -> i32 {
+    fn raw(&self, p: u32, u: u32) -> i64 {
         dot_i8_query(self.code(p), self.code(u), self.sums[p as usize])
     }
 
@@ -509,7 +509,7 @@ impl BuildCodes {
     }
 
     #[inline]
-    fn est_from_raw(&self, p: u32, u: u32, raw: i32) -> f32 {
+    fn est_from_raw(&self, p: u32, u: u32, raw: i64) -> f32 {
         let raw = raw as f32;
         let (mp, mu) = (&self.meta[p as usize], &self.meta[u as usize]);
         if self.euclidean {

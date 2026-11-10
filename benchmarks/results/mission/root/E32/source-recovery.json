@@ -1,0 +1,7 @@
+{
+  "experiment": "E32",
+  "source_snapshot": "failed-validator.py",
+  "sha256": "238037b590c97e2cb964f82eb59eda6dbf182c163a8fe5908acb2d9d430d64de",
+  "method": "Reverse the explicit revision-spelling correction, then require exact equality with the script hash registered before E32.",
+  "failure_receipt_unchanged": true
+}

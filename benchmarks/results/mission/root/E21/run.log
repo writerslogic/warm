@@ -1,0 +1,1 @@
+E21 reject: 100000/ef128:eligible=0.982646,tail=0.000000,merge_ge8=0.117844; 100000/ef256:eligible=0.982368,tail=0.000000,merge_ge8=0.104437; 10000/ef128:eligible=0.835396,tail=0.000000,merge_ge8=0.106747; 10000/ef256:eligible=0.835542,tail=0.000000,merge_ge8=0.096591; matched gap UNPROVED; /Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E21/result.json

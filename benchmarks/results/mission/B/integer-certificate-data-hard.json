@@ -1,0 +1,43 @@
+{
+  "hypothesis": "H-B-4",
+  "rung": 2,
+  "claim": "local numerical counter; no performance or track claim",
+  "decision": "accept-next-rung",
+  "base": {
+    "path": "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/base.npy",
+    "sha256": "a25191f5d26c40806ed1d6526a5620733f9c3f02f1013d1a90bd717d8c8c4f14",
+    "rows": 1000000,
+    "dimension": 100
+  },
+  "queries": {
+    "path": "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/queries.npy",
+    "sha256": "4e105ae4277146c4cda597d5d0877a2572831f9eb54cc304affafca49abb918d",
+    "prefix_count": 16
+  },
+  "quantization": "symmetric8bit; per-vector maxabs/127 rounded to float32; nearest integer; reconstruction error from source only, rounded upward to float32",
+  "mean_surviving_rows": 16.4375,
+  "sample_p99_surviving_rows": 23.7,
+  "max_surviving_rows": 24,
+  "survivor_fraction": 1.64375e-05,
+  "false_prunes": 0,
+  "bound_violations": 0,
+  "maximum_absolute_signed_integer_dot": 172087,
+  "unsigned_signed_vnni_absolute_accumulator_bound": 3238500,
+  "counter_code_and_metadata_bytes": 124000000,
+  "counter_scope": "int64 dot and float64 bound checking, not a fused VNNI implementation; oracle kth threshold is optimistic and forbidden in serving; no cross-checkpoint cached scores",
+  "thresholds": {
+    "mean_rows_max": 64,
+    "sample_p99_rows_max": 256,
+    "false_prunes_max": 0,
+    "bound_violations_max": 0,
+    "seconds_cap": 600
+  },
+  "unproved": [
+    "formal outward-rounded serving epilogue",
+    "non-oracle threshold inflation",
+    "sustained fused10.713Gpairs/s",
+    "complete8GiB/3600s live workload",
+    "transfer to untouched source queries"
+  ],
+  "counter_wall_seconds_not_benchmark": 4.4713484172243625
+}

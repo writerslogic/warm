@@ -1,0 +1,2242 @@
+{
+  "hypothesis": "H-A-1",
+  "claim_label": "published (archived organiser plot coordinates); no WARM performance measurement",
+  "scope": "27 proposed ANN operating points: 9 datasets x mission-selected .95/.99/1.0; older .90 proposal superseded only in this resolution artifact by orchestrator assignment, not by editing frozen inventory",
+  "generated_utc": "2026-11-10T04:46:44.649877+00:00",
+  "source_code_pin": "2e081ad32c1eccab72dcb739ad886c310b90f715",
+  "current_comparator_status": "unresolved for all27: exact archived coordinate maxima are not a proof of strongest current eligible result or of matched resource boundary",
+  "counts": {
+    "rows": 27,
+    "archived_winner_points": 20,
+    "rows_without_archived_winner": 7,
+    "resolved_current_comparators": 0
+  },
+  "findings": [
+    {
+      "finding": "The organiser now says ann-benchmarks is no longer actively maintained and points to VIBE. Mission retains ANN scope.",
+      "evidence": "ann-sources/README.md:4"
+    },
+    {
+      "finding": "The current README labels PNG results April2025 on AWS r6i.16xlarge, parallelism31, hyperthreading disabled, singleCPU, but explicitly has TODO update website plots. Eight downloaded dataset pages have HTTP Last-Modified Dec9,2024; glove100 response headers were not retained. HTTP mtime is publication metadata, not benchmark execution date. Website run date/host/source commit cannot be assigned from README2025.",
+      "evidence": [
+        "ann-sources/README.md:85",
+        "ann-sources/README.md:117",
+        "ann-sources/receipts.json"
+      ]
+    },
+    {
+      "finding": "20 archived maxima resolved exactly with no interpolation; NYTimes perfect row has no point (maximum .9991); both hamming pages have zero recall/QPS points, despite named algorithms and other chart blocks containing numeric data. Do not infer recall from relative error or substitute epsilon recall.",
+      "evidence": [
+        "ann-sources/nytimes-256-angular.html",
+        "ann-sources/sift-256-hamming.html:59",
+        "ann-sources/word2bits-800-hamming.html:59"
+      ],
+      "parsed_detail": "datasets"
+    },
+    {
+      "finding": "No raw result HDF5 or downloadable archive was found in the pinned main tree or pinned new-run-2025-03 tree; neither API tree is truncated. GitHub releases query returned []. Current repository results directory contains seven PNGs, pinned here, and no HDF5. This is a bounded discovery result, not proof that no raw files exist elsewhere. Dataset HDF5 links are input datasets and ground truth, not competitor result records.",
+      "evidence": [
+        "ann-sources/tree.json",
+        "ann-sources/2025-tree.json",
+        "ann-sources/releases.json",
+        "ann-sources/README.md:67",
+        "ann-sources/published-plot-receipts.json"
+      ]
+    },
+    {
+      "finding": "Latest glove100 PNG commit is30fa646a3b1bf0ed029ec9a559fe2a4e8ae3d096, authored2025-03-30; retained source snapshots do not provide its exact curve coordinates. No pixel digitisation has been represented as an exact result.",
+      "evidence": "ann-sources/2025-results-commit.json"
+    },
+    {
+      "finding": "Single-query mode uses a distinct page suffix from batch; current README excludes multithreading and requires local+batch for FAISS GPU. No algorithm was filtered from the selected non-batch pages to lower the reference. Archived run-level core/thread/GPU receipts remain unavailable.",
+      "evidence": [
+        "ann-sources/README.md:162",
+        "ann-sources/README.md:165",
+        "ann-sources/create_website.py:202",
+        "ann-sources/main.py:73",
+        "ann-sources/runners.py:341"
+      ]
+    },
+    {
+      "finding": "Current knn recall is a distance-threshold metric with additive0.001 tolerance, not exact ID-set intersection; default repeated QPS uses best mean search time. Prepared-query adapters time run_prepared_query only, omitting preparation and result retrieval. This code pin explains current semantics, but cannot be asserted as the unknown website-generating commit.",
+      "evidence": [
+        "ann-sources/metrics.py:6",
+        "ann-sources/metrics.py:26",
+        "ann-sources/metrics.py:70",
+        "ann-sources/runners.py:59",
+        "ann-sources/runners.py:128",
+        "ann-sources/main.py:103"
+      ]
+    },
+    {
+      "finding": "Current index_size metric is process-memory growth around fit, not peak or total RSS. The default CLI timeout is2h and memory cap is (available memory-500MB)/parallelism; actual published invocation/caps unknown. Do not transplant VIBE20h/256GiB caps as organiser ANN rules.",
+      "evidence": [
+        "ann-sources/runners.py:185",
+        "ann-sources/main.py:109",
+        "ann-sources/main.py:254"
+      ]
+    },
+    {
+      "finding": "Published labels can alias many query operating points. A tooltip label is retained verbatim, not claimed to be a complete configuration. Auxiliary p99/build/index entries are joined only on exact algorithm,label,recall; empty/multiple matches stay explicit and never justify eligibility exclusions.",
+      "parsed_detail": "datasets[].selections[].winners[].qps_points_sharing_label and auxiliary_metrics"
+    }
+  ],
+  "selection_protocol": {
+    "input": "First Recall/Queries per second chart of each designated non-batch k10 page; verify exact chart ID; parse all algorithm blocks and points.",
+    "numeric": "Decimal from original number strings; recall>=floor, strict at1.0; maximise QPS; preserve all ties; no interpolation, rounding up, non-CPU substitution, memory/build exclusion, or recall-metric substitution.",
+    "frontier": "create_pointset produces per-algorithm Pareto frontiers; maximumQPS at a recall floor is preserved by this transformation for the records supplied to the plotter. This does not establish completeness of unpublished records or current2025 results.",
+    "pointset_evidence": "ann-sources/plotting-utils.py:16",
+    "parser": "balanced-array scanner respects JS strings; regex accepts numeric x/y and a JSON double-quoted label; all data-array residue must consist only of whitespace/commas, and all point counts must match. No downloaded JavaScript is executed.",
+    "known_development_parser_errors": [
+      "Initial strict regex omitted whitespace before x comma and rejected without accepting output; corrected to actual template whitespace.",
+      "Initial summary assumed a nonempty hamming curve and raised max(empty); final extraction preserves explicit zero-point charts. These were static-source parsing errors, not benchmark runs."
+    ],
+    "source_integrity": "All retained source files SHA256-pinned in source_manifest; raw HTML remains the complete coordinate evidence."
+  },
+  "reproduction": {
+    "extraction_python": "import re,json,hashlib\nfrom decimal import Decimal\nfrom pathlib import Path\nDATASETS=[('glove-100-angular','angular','site-glove.html'),('glove-25-angular','angular','glove-25-angular.html'),('nytimes-256-angular','angular','nytimes-256-angular.html'),('fashion-mnist-784-euclidean','euclidean','fashion-mnist-784-euclidean.html'),('gist-960-euclidean','euclidean','gist-960-euclidean.html'),('sift-128-euclidean','euclidean','sift-128-euclidean.html'),('sift-256-hamming','hamming','sift-256-hamming.html'),('word2bits-800-hamming','hamming','word2bits-800-hamming.html'),('kosarak-jaccard','jaccard','kosarak-jaccard.html')]\nCHARTS={'chartRecallQueries per second (1/s)':'qps','chartRecallBuild time (s)':'build_seconds','chartRecallIndex size (kB)':'index_size_kb','chartRecallPercentile 99 (millis)':'p99_ms'}\nPOINT=re.compile(r'\\{\\s*x:\\s*([-+0-9.eE]+)\\s*,\\s*y:\\s*([-+0-9.eE]+)\\s*,\\s*label:\\s*(\"(?:\\\\.|[^\"\\\\])*\")\\s*\\}')\nLABEL=re.compile(r'label:\\s*(\"(?:\\\\.|[^\"\\\\])*\")\\s*,\\s*fill:')\ndef array(s,start):\n    assert s[start]=='['\n    stack=[];quote=None;escape=False\n    for i in range(start,len(s)):\n        c=s[i]\n        if quote:\n            if escape:escape=False\n            elif c=='\\\\':escape=True\n            elif c==quote:quote=None\n        elif c in '\\\"\\'':quote=c\n        elif c in '[{(':stack.append(c)\n        elif c in ']})':\n            assert stack and {'[':']','{':'}','(':')'}[stack.pop()]==c\n            if not stack:return s[start+1:i]\n    raise ValueError('unbalanced array')\ndef parse_page(path):\n    text=path.read_text(); charts={}; counts={}\n    scripts=[m for m in re.finditer(r'<script\\b[^>]*>(.*?)</script>',text,re.S)if 'new Chart' in m.group(1)]\n    assert len(scripts)==13\n    for script in scripts:\n        js=script.group(1)\n        chart_id=json.loads(re.search(r'getElementById\\((\"(?:\\\\.|[^\"\\\\])*\")\\)',js).group(1))\n        if chart_id not in CHARTS:continue\n        metric=CHARTS[chart_id];assert metric not in charts\n        arr_start=js.index('[',js.index('datasets:')); body=array(js,arr_start)\n        labels=list(LABEL.finditer(body)); points=[];algorithms=[]\n        assert labels\n        for j,label in enumerate(labels):\n            algo=json.loads(label.group(1));algorithms.append(algo)\n            end=labels[j+1].start()if j+1<len(labels)else len(body)\n            section=body[label.end():end]; data_start=section.index('[',section.index('data:')); data=array(section,data_start)\n            assert re.sub(r'[\\s,]','',POINT.sub('',data))=='',str(path)+' unparsed point schema'\n            for point in POINT.finditer(data):\n                x,y=map(Decimal,point.group(1,2));assert x.is_finite()and y.is_finite()and 0<=x<=1 and y>=0\n                if metric=='qps':assert y>0\n                offset=script.start(1)+arr_start+1+label.end()+data_start+1+point.start()\n                points.append({'algorithm':algo,'recall':point.group(1),'value':point.group(2),'label':json.loads(point.group(3)),'line':text.count('\\n',0,offset)+1})\n        assert len(points)==len(POINT.findall(body))\n        charts[metric]=points;counts[metric]={'points':len(points),'algorithms':algorithms}\n    assert set(charts)==set(CHARTS.values())\n    return charts,counts\n\ndef extract(source_dir):\n    datasets=[]\n    for dataset,distance,file in DATASETS:\n        path=source_dir/file;charts,counts=parse_page(path); points=charts['qps']; selections=[]\n        for floor in ['0.95','0.99','1.0']:\n            qualifying=[p for p in points if Decimal(p['recall'])>=Decimal(floor)]\n            selections.append({'floor':floor,'qualifying_curve_points':len(qualifying),'winners':[]})\n            if not qualifying:continue\n            best=max(Decimal(p['value'])for p in qualifying)\n            for winner in [p for p in qualifying if Decimal(p['value'])==best]:\n                entry=dict(winner)\n                entry['twice_archived_qps']=str(2*Decimal(winner['value']))\n                entry['qps_points_sharing_label']=sum(p['algorithm']==winner['algorithm']and p['label']==winner['label']for p in points)\n                entry['auxiliary_metrics']={m:[p for p in ps if p['algorithm']==winner['algorithm']and p['label']==winner['label']and Decimal(p['recall'])==Decimal(winner['recall'])]for m,ps in charts.items()if m!='qps'}\n                selections[-1]['winners'].append(entry)\n        datasets.append({'dataset':dataset,'distance':distance,'k':10,'file':file,'source_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'source_url':f'https://ann-benchmarks.com/{dataset}_10_{distance}.html','curve_counts':counts,'max_published_curve_recall':str(max(Decimal(p['recall'])for p in points))if points else None,'selections':selections})\n    return datasets\n",
+    "command": "python3 - <<'PY'\nimport json,hashlib\nfrom pathlib import Path\np=Path('/Volumes/A/.hms-wt-mission-a/benchmarks/results/mission/A')\nd=json.loads((p/'ann-research-resolution.json').read_text())\nfor item in d['source_manifest']:\n assert hashlib.sha256((p/'ann-sources'/item['file']).read_bytes()).hexdigest()==item['sha256'],item['file']\nns={};exec(d['reproduction']['extraction_python'],ns)\nassert ns['extract'](p/'ann-sources')==d['datasets']\nprint('ANN source hashes and all27 archived selections reproduce')\nPY",
+    "requested_root_validation": "Run the above source-only extraction/integrity command; no benchmark/build/dependency install is required. Not executed as a validation suite by specialist."
+  },
+  "datasets": [
+    {
+      "dataset": "glove-100-angular",
+      "distance": "angular",
+      "k": 10,
+      "file": "site-glove.html",
+      "source_sha256": "7e9a22b8fac30d4e4ea6050e3b5d0214eb7944405161b4879582ad9be035f7bf",
+      "source_url": "https://ann-benchmarks.com/glove-100-angular_10_angular.html",
+      "curve_counts": {
+        "qps": {
+          "points": 694,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "build_seconds": {
+          "points": 121,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "index_size_kb": {
+          "points": 89,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "p99_ms": {
+          "points": 692,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        }
+      },
+      "max_published_curve_recall": "1.0",
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 140,
+          "winners": [
+            {
+              "algorithm": "qsgngt",
+              "recall": "0.9505699999999999",
+              "value": "3984.441475276452",
+              "label": "QSG-NGT(100, 64, 120, 96, 100, 60, 300, 400, 0, 1.04, 3.000)",
+              "line": 684,
+              "twice_archived_qps": "7968.882950552904",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "qsgngt",
+                    "recall": "0.9505699999999999",
+                    "value": "0.497581958770752",
+                    "label": "QSG-NGT(100, 64, 120, 96, 100, 60, 300, 400, 0, 1.04, 3.000)",
+                    "line": 8952
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 37,
+          "winners": [
+            {
+              "algorithm": "scann",
+              "recall": "0.9909100000000001",
+              "value": "991.24508540314",
+              "label": "scann n_leaves=2000 avq_threshold=0.20 dims_per_block=2",
+              "line": 768,
+              "twice_archived_qps": "1982.49017080628",
+              "qps_points_sharing_label": 25,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "scann",
+                    "recall": "0.9909100000000001",
+                    "value": "1.180415153503418",
+                    "label": "scann n_leaves=2000 avq_threshold=0.20 dims_per_block=2",
+                    "line": 9031
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 2,
+          "winners": [
+            {
+              "algorithm": "faiss-ivf",
+              "recall": "1.0",
+              "value": "21.164894583232112",
+              "label": "FaissIVF(n_list=64, n_probe=100)",
+              "line": 152,
+              "twice_archived_qps": "42.329789166464224",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "faiss-ivf",
+                    "recall": "1.0",
+                    "value": "48.66170883178711",
+                    "label": "FaissIVF(n_list=64, n_probe=100)",
+                    "line": 8416
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dataset": "glove-25-angular",
+      "distance": "angular",
+      "k": 10,
+      "file": "glove-25-angular.html",
+      "source_sha256": "e2e44584e6fbb7e82acbac23165cddea847010d68c8e06d39ee50dafa997c3b4",
+      "source_url": "https://ann-benchmarks.com/glove-25-angular_10_angular.html",
+      "curve_counts": {
+        "qps": {
+          "points": 805,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "faiss-ivf",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "build_seconds": {
+          "points": 115,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "faiss-ivf",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "index_size_kb": {
+          "points": 77,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "faiss-ivf",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "p99_ms": {
+          "points": 744,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "faiss-ivf",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        }
+      },
+      "max_published_curve_recall": "1.0",
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 421,
+          "winners": [
+            {
+              "algorithm": "glass",
+              "recall": "0.9531700000000001",
+              "value": "19431.253141598354",
+              "label": "glass_({'R': 64, 'level': 1, 'L': 200})",
+              "line": 196,
+              "twice_archived_qps": "38862.506283196708",
+              "qps_points_sharing_label": 7,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "glass",
+                    "recall": "0.9531700000000001",
+                    "value": "0.06961822509765625",
+                    "label": "glass_({'R': 64, 'level': 1, 'L': 200})",
+                    "line": 9226
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 246,
+          "winners": [
+            {
+              "algorithm": "qsgngt",
+              "recall": "0.9909700000000001",
+              "value": "11210.055712130385",
+              "label": "QSG-NGT(100, 64, 120, 96, 200, 89, 200, 400, 0, 1.04, 3.000)",
+              "line": 744,
+              "twice_archived_qps": "22420.111424260770",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": []
+              }
+            }
+          ]
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 12,
+          "winners": [
+            {
+              "algorithm": "glass",
+              "recall": "1.0",
+              "value": "1130.2397494832976",
+              "label": "glass_({'R': 48, 'level': 2, 'L': 200})",
+              "line": 226,
+              "twice_archived_qps": "2260.4794989665952",
+              "qps_points_sharing_label": 8,
+              "auxiliary_metrics": {
+                "build_seconds": [
+                  {
+                    "algorithm": "glass",
+                    "recall": "1.0",
+                    "value": "599.8912615776062",
+                    "label": "glass_({'R': 48, 'level': 2, 'L': 200})",
+                    "line": 1272
+                  }
+                ],
+                "index_size_kb": [
+                  {
+                    "algorithm": "glass",
+                    "recall": "1.0",
+                    "value": "524204.0",
+                    "label": "glass_({'R': 48, 'level': 2, 'L': 200})",
+                    "line": 1697
+                  }
+                ],
+                "p99_ms": [
+                  {
+                    "algorithm": "glass",
+                    "recall": "1.0",
+                    "value": "1.0573911666870117",
+                    "label": "glass_({'R': 48, 'level': 2, 'L': 200})",
+                    "line": 9252
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dataset": "nytimes-256-angular",
+      "distance": "angular",
+      "k": 10,
+      "file": "nytimes-256-angular.html",
+      "source_sha256": "a8b53a566f7605bc2514cd6b9d126cec8e84d3284c527d55a5a729c94ce743b0",
+      "source_url": "https://ann-benchmarks.com/nytimes-256-angular_10_angular.html",
+      "curve_counts": {
+        "qps": {
+          "points": 609,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "build_seconds": {
+          "points": 113,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "index_size_kb": {
+          "points": 87,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "p99_ms": {
+          "points": 606,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "puffinn",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        }
+      },
+      "max_published_curve_recall": "0.9991",
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 118,
+          "winners": [
+            {
+              "algorithm": "qsgngt",
+              "recall": "0.95755",
+              "value": "5253.133459871988",
+              "label": "QSG-NGT(100, 64, 120, 96, 200, 60, 200, 400, 0, 1.02, 3.000)",
+              "line": 671,
+              "twice_archived_qps": "10506.266919743976",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "qsgngt",
+                    "recall": "0.95755",
+                    "value": "0.4227232933044435",
+                    "label": "QSG-NGT(100, 64, 120, 96, 200, 60, 200, 400, 0, 1.02, 3.000)",
+                    "line": 7756
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 34,
+          "winners": [
+            {
+              "algorithm": "qsgngt",
+              "recall": "0.9914099999999999",
+              "value": "2086.7368875206957",
+              "label": "QSG-NGT(100, 64, 120, 96, 200, 60, 200, 400, 0, 1.04, 3.000)",
+              "line": 673,
+              "twice_archived_qps": "4173.4737750413914",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "qsgngt",
+                    "recall": "0.9914099999999999",
+                    "value": "1.788873672485352",
+                    "label": "QSG-NGT(100, 64, 120, 96, 200, 60, 200, 400, 0, 1.04, 3.000)",
+                    "line": 7759
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 0,
+          "winners": []
+        }
+      ]
+    },
+    {
+      "dataset": "fashion-mnist-784-euclidean",
+      "distance": "euclidean",
+      "k": 10,
+      "file": "fashion-mnist-784-euclidean.html",
+      "source_sha256": "73535369008c14d964e7e8bccf96400aca46f6aecfd774149af99ee1ed2b27ac",
+      "source_url": "https://ann-benchmarks.com/fashion-mnist-784-euclidean_10_euclidean.html",
+      "curve_counts": {
+        "qps": {
+          "points": 681,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "elastiknn-l2lsh",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "sptag",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "build_seconds": {
+          "points": 109,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "elastiknn-l2lsh",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "sptag",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "index_size_kb": {
+          "points": 68,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "elastiknn-l2lsh",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "sptag",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "p99_ms": {
+          "points": 628,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "ckdtree",
+            "elastiknn-l2lsh",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "kd",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "opensearchknn",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "sptag",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        }
+      },
+      "max_published_curve_recall": "1.0",
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 485,
+          "winners": [
+            {
+              "algorithm": "glass",
+              "recall": "0.95281",
+              "value": "19193.78228762869",
+              "label": "glass_({'R': 16, 'level': 3, 'L': 200})",
+              "line": 206,
+              "twice_archived_qps": "38387.56457525738",
+              "qps_points_sharing_label": 2,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": []
+              }
+            }
+          ]
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 351,
+          "winners": [
+            {
+              "algorithm": "glass",
+              "recall": "0.99285",
+              "value": "11783.593167921732",
+              "label": "glass_({'R': 48, 'level': 3, 'L': 200})",
+              "line": 215,
+              "twice_archived_qps": "23567.186335843464",
+              "qps_points_sharing_label": 9,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "glass",
+                    "recall": "0.99285",
+                    "value": "0.12731552124023438",
+                    "label": "glass_({'R': 48, 'level': 3, 'L': 200})",
+                    "line": 8433
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 10,
+          "winners": [
+            {
+              "algorithm": "pynndescent",
+              "recall": "1.0",
+              "value": "1709.9688770713626",
+              "label": "PyNNDescent(n_neighbors=60, pruning_mult=2.00, diversify_prob=0.000, epsilon=0.200, leaf_size=48)",
+              "line": 709,
+              "twice_archived_qps": "3419.9377541427252",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "1.0",
+                    "value": "621332.0",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=2.00, diversify_prob=0.000, epsilon=0.200, leaf_size=48)",
+                    "line": 1784
+                  }
+                ],
+                "p99_ms": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "1.0",
+                    "value": "2.2254419326782235",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=2.00, diversify_prob=0.000, epsilon=0.200, leaf_size=48)",
+                    "line": 8897
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dataset": "gist-960-euclidean",
+      "distance": "euclidean",
+      "k": 10,
+      "file": "gist-960-euclidean.html",
+      "source_sha256": "c1ed53a25e388487ce79081ff32215cc375087d42277160a98bd341bd728a0d8",
+      "source_url": "https://ann-benchmarks.com/gist-960-euclidean_10_euclidean.html",
+      "curve_counts": {
+        "qps": {
+          "points": 195,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "pgvector",
+            "pynndescent",
+            "scann",
+            "SW-graph(nmslib)",
+            "weaviate"
+          ]
+        },
+        "build_seconds": {
+          "points": 34,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "pgvector",
+            "pynndescent",
+            "scann",
+            "SW-graph(nmslib)",
+            "weaviate"
+          ]
+        },
+        "index_size_kb": {
+          "points": 27,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "pgvector",
+            "pynndescent",
+            "scann",
+            "SW-graph(nmslib)",
+            "weaviate"
+          ]
+        },
+        "p99_ms": {
+          "points": 191,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "Milvus(Knowhere)",
+            "pgvector",
+            "pynndescent",
+            "scann",
+            "SW-graph(nmslib)",
+            "weaviate"
+          ]
+        }
+      },
+      "max_published_curve_recall": "1.0",
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 54,
+          "winners": [
+            {
+              "algorithm": "glass",
+              "recall": "0.9675",
+              "value": "569.4872026735989",
+              "label": "glass_({'R': 32, 'level': 2, 'L': 200})",
+              "line": 182,
+              "twice_archived_qps": "1138.9744053471978",
+              "qps_points_sharing_label": 11,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "glass",
+                    "recall": "0.9675",
+                    "value": "2.1481871604919434",
+                    "label": "glass_({'R': 32, 'level': 2, 'L': 200})",
+                    "line": 3662
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 19,
+          "winners": [
+            {
+              "algorithm": "pynndescent",
+              "recall": "0.9904999999999999",
+              "value": "218.29439909349335",
+              "label": "PyNNDescent(n_neighbors=60, pruning_mult=3.00, diversify_prob=0.000, epsilon=0.080, leaf_size=48)",
+              "line": 306,
+              "twice_archived_qps": "436.58879818698670",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "0.9904999999999999",
+                    "value": "11.675131320953367",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=3.00, diversify_prob=0.000, epsilon=0.080, leaf_size=48)",
+                    "line": 3788
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 3,
+          "winners": [
+            {
+              "algorithm": "pynndescent",
+              "recall": "1.0",
+              "value": "59.79021967906184",
+              "label": "PyNNDescent(n_neighbors=60, pruning_mult=3.00, diversify_prob=0.000, epsilon=0.160, leaf_size=48)",
+              "line": 308,
+              "twice_archived_qps": "119.58043935812368",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "1.0",
+                    "value": "2589.465985059738",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=3.00, diversify_prob=0.000, epsilon=0.160, leaf_size=48)",
+                    "line": 581
+                  }
+                ],
+                "index_size_kb": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "1.0",
+                    "value": "11144232.0",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=3.00, diversify_prob=0.000, epsilon=0.160, leaf_size=48)",
+                    "line": 805
+                  }
+                ],
+                "p99_ms": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "1.0",
+                    "value": "50.771775245666504",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=3.00, diversify_prob=0.000, epsilon=0.160, leaf_size=48)",
+                    "line": 3790
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dataset": "sift-128-euclidean",
+      "distance": "euclidean",
+      "k": 10,
+      "file": "sift-128-euclidean.html",
+      "source_sha256": "6cbfa7286d6fcf801948888563bfca851dfecb864477ea3b89859039f7e840b8",
+      "source_url": "https://ann-benchmarks.com/sift-128-euclidean_10_euclidean.html",
+      "curve_counts": {
+        "qps": {
+          "points": 757,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "build_seconds": {
+          "points": 107,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "index_size_kb": {
+          "points": 76,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        },
+        "p99_ms": {
+          "points": 727,
+          "algorithms": [
+            "annoy",
+            "BallTree(nmslib)",
+            "bruteforce-blas",
+            "faiss-ivf",
+            "faiss-ivfpqfs",
+            "flann",
+            "glass",
+            "hnsw(faiss)",
+            "hnsw(nmslib)",
+            "hnsw(vespa)",
+            "hnswlib",
+            "luceneknn",
+            "Milvus(Knowhere)",
+            "mrpt",
+            "n2",
+            "NGT-onng",
+            "NGT-panng",
+            "NGT-qg",
+            "pgvector",
+            "pynndescent",
+            "qdrant",
+            "qsgngt",
+            "redisearch",
+            "scann",
+            "SW-graph(nmslib)",
+            "tinyknn",
+            "vald(NGT-anng)",
+            "vamana(diskann)",
+            "vearch",
+            "weaviate"
+          ]
+        }
+      },
+      "max_published_curve_recall": "1.0",
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 378,
+          "winners": [
+            {
+              "algorithm": "qsgngt",
+              "recall": "0.95564",
+              "value": "18098.399137001077",
+              "label": "QSG-NGT(100, 64, 120, 96, 100, 60, 300, 400, 0, 1.0, 2.000)",
+              "line": 757,
+              "twice_archived_qps": "36196.798274002154",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "qsgngt",
+                    "recall": "0.95564",
+                    "value": "0.07414817810058594",
+                    "label": "QSG-NGT(100, 64, 120, 96, 100, 60, 300, 400, 0, 1.0, 2.000)",
+                    "line": 8955
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 226,
+          "winners": [
+            {
+              "algorithm": "qsgngt",
+              "recall": "0.9917",
+              "value": "11162.940234159902",
+              "label": "QSG-NGT(100, 64, 120, 96, 100, 60, 300, 400, 0, 1.04, 2.000)",
+              "line": 761,
+              "twice_archived_qps": "22325.880468319804",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": []
+              }
+            }
+          ]
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 13,
+          "winners": [
+            {
+              "algorithm": "pynndescent",
+              "recall": "1.0",
+              "value": "835.882800347203",
+              "label": "PyNNDescent(n_neighbors=60, pruning_mult=2.00, diversify_prob=0.000, epsilon=0.320, leaf_size=48)",
+              "line": 718,
+              "twice_archived_qps": "1671.765600694406",
+              "qps_points_sharing_label": 1,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "1.0",
+                    "value": "2692656.0",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=2.00, diversify_prob=0.000, epsilon=0.320, leaf_size=48)",
+                    "line": 1752
+                  }
+                ],
+                "p99_ms": [
+                  {
+                    "algorithm": "pynndescent",
+                    "recall": "1.0",
+                    "value": "4.523656368255618",
+                    "label": "PyNNDescent(n_neighbors=60, pruning_mult=2.00, diversify_prob=0.000, epsilon=0.320, leaf_size=48)",
+                    "line": 8922
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dataset": "sift-256-hamming",
+      "distance": "hamming",
+      "k": 10,
+      "file": "sift-256-hamming.html",
+      "source_sha256": "f5adb3e03e64a2ecaf6991311f78c6dfbd083c4ad6bea14d91bd5690221324ab",
+      "source_url": "https://ann-benchmarks.com/sift-256-hamming_10_hamming.html",
+      "curve_counts": {
+        "qps": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        },
+        "build_seconds": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        },
+        "index_size_kb": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        },
+        "p99_ms": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        }
+      },
+      "max_published_curve_recall": null,
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 0,
+          "winners": []
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 0,
+          "winners": []
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 0,
+          "winners": []
+        }
+      ]
+    },
+    {
+      "dataset": "word2bits-800-hamming",
+      "distance": "hamming",
+      "k": 10,
+      "file": "word2bits-800-hamming.html",
+      "source_sha256": "9282abf6f5f987d4f95267ab185a4dcc6f05a587ebf33ba787eee51ae4bbff58",
+      "source_url": "https://ann-benchmarks.com/word2bits-800-hamming_10_hamming.html",
+      "curve_counts": {
+        "qps": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        },
+        "build_seconds": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        },
+        "index_size_kb": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        },
+        "p99_ms": {
+          "points": 0,
+          "algorithms": [
+            "annoy",
+            "faiss-ivf",
+            "hnsw(nmslib)",
+            "pynndescent"
+          ]
+        }
+      },
+      "max_published_curve_recall": null,
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 0,
+          "winners": []
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 0,
+          "winners": []
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 0,
+          "winners": []
+        }
+      ]
+    },
+    {
+      "dataset": "kosarak-jaccard",
+      "distance": "jaccard",
+      "k": 10,
+      "file": "kosarak-jaccard.html",
+      "source_sha256": "c2fe5b392e26d82f0a4381179369c218016a4db082d1762a53b9844aa15b0f5d",
+      "source_url": "https://ann-benchmarks.com/kosarak-jaccard_10_jaccard.html",
+      "curve_counts": {
+        "qps": {
+          "points": 117,
+          "algorithms": [
+            "BallTree(nmslib)",
+            "bf",
+            "datasketch",
+            "hnsw(nmslib)",
+            "puffinn",
+            "pynndescent",
+            "SW-graph(nmslib)"
+          ]
+        },
+        "build_seconds": {
+          "points": 32,
+          "algorithms": [
+            "BallTree(nmslib)",
+            "bf",
+            "datasketch",
+            "hnsw(nmslib)",
+            "puffinn",
+            "pynndescent",
+            "SW-graph(nmslib)"
+          ]
+        },
+        "index_size_kb": {
+          "points": 17,
+          "algorithms": [
+            "BallTree(nmslib)",
+            "bf",
+            "datasketch",
+            "hnsw(nmslib)",
+            "puffinn",
+            "pynndescent",
+            "SW-graph(nmslib)"
+          ]
+        },
+        "p99_ms": {
+          "points": 110,
+          "algorithms": [
+            "BallTree(nmslib)",
+            "bf",
+            "datasketch",
+            "hnsw(nmslib)",
+            "puffinn",
+            "pynndescent",
+            "SW-graph(nmslib)"
+          ]
+        }
+      },
+      "max_published_curve_recall": "1.0",
+      "selections": [
+        {
+          "floor": "0.95",
+          "qualifying_curve_points": 51,
+          "winners": [
+            {
+              "algorithm": "hnsw(nmslib)",
+              "recall": "0.9503999999999999",
+              "value": "1229.7891155425398",
+              "label": "Nmslib(method_name=hnsw, index_param=['M=20', 'post=0', 'efConstruction=800'])",
+              "line": 127,
+              "twice_archived_qps": "2459.5782310850796",
+              "qps_points_sharing_label": 8,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "hnsw(nmslib)",
+                    "recall": "0.9503999999999999",
+                    "value": "2.437400817871093",
+                    "label": "Nmslib(method_name=hnsw, index_param=['M=20', 'post=0', 'efConstruction=800'])",
+                    "line": 2252
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "0.99",
+          "qualifying_curve_points": 35,
+          "winners": [
+            {
+              "algorithm": "hnsw(nmslib)",
+              "recall": "0.9904",
+              "value": "608.4254874956881",
+              "label": "Nmslib(method_name=hnsw, index_param=['M=32', 'post=2', 'efConstruction=800'])",
+              "line": 133,
+              "twice_archived_qps": "1216.8509749913762",
+              "qps_points_sharing_label": 11,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "hnsw(nmslib)",
+                    "recall": "0.9904",
+                    "value": "4.642829895019531",
+                    "label": "Nmslib(method_name=hnsw, index_param=['M=32', 'post=2', 'efConstruction=800'])",
+                    "line": 2258
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "floor": "1.0",
+          "qualifying_curve_points": 2,
+          "winners": [
+            {
+              "algorithm": "hnsw(nmslib)",
+              "recall": "1.0",
+              "value": "157.46428346442266",
+              "label": "Nmslib(method_name=hnsw, index_param=['M=48', 'post=2', 'efConstruction=800'])",
+              "line": 143,
+              "twice_archived_qps": "314.92856692884532",
+              "qps_points_sharing_label": 5,
+              "auxiliary_metrics": {
+                "build_seconds": [],
+                "index_size_kb": [],
+                "p99_ms": [
+                  {
+                    "algorithm": "hnsw(nmslib)",
+                    "recall": "1.0",
+                    "value": "14.126880168914793",
+                    "label": "Nmslib(method_name=hnsw, index_param=['M=48', 'post=2', 'efConstruction=800'])",
+                    "line": 2268
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "source_manifest": [
+    {
+      "file": "2025-fashion-mnist-784-euclidean.png",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/results/fashion-mnist-784-euclidean.png",
+      "sha256": "ba5ded6914f25e9ec51d3836833d05b035e71bc13b7ea0e9fe08d0e4007f0858",
+      "bytes": 393518,
+      "status": 200,
+      "headers": {
+        "Content-Type": "image/png",
+        "ETag": "\"f112a4c470dcfe019e6b2242a6018876205cd543ad84c15d5c4520931cc3485c\""
+      }
+    },
+    {
+      "file": "2025-gist-960-euclidean.png",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/results/gist-960-euclidean.png",
+      "sha256": "2a48644d5189446719b02e4e172a691d7cf7f1781cdca3a2eb18d96283154609",
+      "bytes": 300799,
+      "status": 200,
+      "headers": {
+        "Content-Type": "image/png",
+        "ETag": "\"c11559ca110a3632dbd728f7598277258de1c0d2ad97fb39b5a5c7d41d42b75b\""
+      }
+    },
+    {
+      "file": "2025-glove-100-angular.png",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/results/glove-100-angular.png",
+      "sha256": "b44a472bade8374b87cb8d156c56f234717fbcc1f5088526d227fdb67b912a82",
+      "bytes": 359553,
+      "status": 200,
+      "headers": {
+        "Content-Type": "image/png",
+        "ETag": "\"e43e4aa5e49bfff5550474774aeea3bb23963d6aa6018543a714e4be7eeb55cb\""
+      }
+    },
+    {
+      "file": "2025-glove-25-angular.png",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/results/glove-25-angular.png",
+      "sha256": "2b0fa939861316df9356db35193aa95bb3369b41ffe1fa1c8a4874787056b3fd",
+      "bytes": 401601,
+      "status": 200,
+      "headers": {
+        "Content-Type": "image/png",
+        "ETag": "\"0052a2c6c6c0c5162b924e3ee50fb9a025b143332748c34ea2fe98ab0b3402fd\""
+      }
+    },
+    {
+      "file": "2025-mnist-784-euclidean.png",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/results/mnist-784-euclidean.png",
+      "sha256": "b51539ed6094492f2aef90c300bb6aeaab40411ec47f2b6352053a866a69d5d3",
+      "bytes": 126563,
+      "status": 200,
+      "headers": {
+        "Content-Type": "image/png",
+        "ETag": "\"6143d3be32ffe29e0150f105545f2aba0737071142ef08097c45eeb6f7e3a9ce\""
+      }
+    },
+    {
+      "file": "2025-nytimes-256-angular.png",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/results/nytimes-256-angular.png",
+      "sha256": "77f76e55e955108d5fddf5bd78b2a4cfbd0003d99fe4252c899cca22dd537f51",
+      "bytes": 295455,
+      "status": 200,
+      "headers": {
+        "Content-Type": "image/png",
+        "ETag": "\"e5ad6de194002b19a8259c81ede6ce37ba11d7418a922ec31d1e40c5ac6a01de\""
+      }
+    },
+    {
+      "file": "2025-results-commit.json",
+      "url": "https://api.github.com/repos/erikbern/ann-benchmarks/commits?path=results/glove-100-angular.png&per_page=1",
+      "sha256": "573b0c16528b443d14ca26040f5da5ef5dd12f67930049672e1908b43d18274f",
+      "bytes": 1444,
+      "status": 200
+    },
+    {
+      "file": "2025-sift-128-euclidean.png",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/results/sift-128-euclidean.png",
+      "sha256": "0f6ed941b4eaf524315ec2f07966e01c6f7cd5a84baf7343ab81f06ba1d5aa07",
+      "bytes": 381876,
+      "status": 200,
+      "headers": {
+        "Content-Type": "image/png",
+        "ETag": "\"4bea9490ff0a05906d021dc269908a72a0a56fcc0f13435fd25817b7dfdce569\""
+      }
+    },
+    {
+      "file": "2025-tree.json",
+      "url": "https://api.github.com/repos/erikbern/ann-benchmarks/git/trees/835e61b3526f2e0235e97cd7aeff0ab8276a974e?recursive=1",
+      "sha256": "03d6b6aba70b3789680cf2cb7b75a5a8c3669881bcee5c031e7680428eab4795",
+      "bytes": 66429,
+      "status": 200
+    },
+    {
+      "file": "README.md",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/README.md",
+      "sha256": "69269dd49a719f8d51b4d9dc72d832d44ebb03a652334a35451c243cdd022a1b",
+      "bytes": 17499,
+      "status": 200,
+      "headers": {
+        "ETag": "\"5f46df969c7d4e8553ff847fa85330d84f33dd71cf10766f23a4ff8d73567666\"",
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    },
+    {
+      "file": "archive-discovery-receipts.json",
+      "sha256": "3c3300d131c859e762ef25433e0ca75cc33a3284a212acd7a38c5e2a2c4da3e1",
+      "bytes": 939
+    },
+    {
+      "url": "https://api.github.com/repos/erikbern/ann-benchmarks/branches",
+      "file": "branches.json",
+      "sha256": "5bc62c221212b79af27178775ae28e12816fbcf60d0660cc69b6b5eff02354f6",
+      "bytes": 3039
+    },
+    {
+      "file": "chartjs.template",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/templates/chartjs.template",
+      "sha256": "4fe7080e2d8f8e2f11d4f613da342659d7257180eb907e93f32510b955eb029f",
+      "bytes": 4616,
+      "status": 200,
+      "headers": {
+        "Connection": "close",
+        "Content-Length": "4616",
+        "Cache-Control": "max-age=300",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "Content-Type": "text/plain; charset=utf-8",
+        "ETag": "\"b39532e3e366689c834642c28cb35d51a63c906f5ad53e50074a0dfe70b22f0a\"",
+        "Strict-Transport-Security": "max-age=31536000",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "deny",
+        "X-XSS-Protection": "1; mode=block",
+        "X-GitHub-Request-Id": "AC90:2BF198:350E5A:406C50:6AF2A099",
+        "x-github-edge-region": "sea",
+        "Accept-Ranges": "bytes",
+        "Date": "Tue, 10 Nov 2026 04:42:10 GMT",
+        "Via": "1.1 varnish",
+        "X-Served-By": "cache-lax-kwhp1940099-LAX",
+        "X-Cache": "MISS",
+        "X-Cache-Hits": "0",
+        "X-Timer": "S1794285730.046396,VS0,VE177",
+        "Vary": "Authorization,Accept-Encoding",
+        "Access-Control-Allow-Origin": "*",
+        "Cross-Origin-Resource-Policy": "cross-origin",
+        "X-Fastly-Request-ID": "7d8e7907f348767bf17cf63d24648498e23604eb",
+        "Expires": "Tue, 10 Nov 2026 04:47:10 GMT",
+        "Source-Age": "0"
+      }
+    },
+    {
+      "file": "create_website.py",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/create_website.py",
+      "sha256": "c6fb712f570e2c414cbebb6a9a374a46dc4aade4896f001c0a5d809e16da6bff",
+      "bytes": 8900,
+      "status": 200,
+      "headers": {
+        "ETag": "\"0d204dd5b50ae2e3402526c460aa98e3906a719164b1d5749ecf9af299936f41\"",
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    },
+    {
+      "file": "datasets.py",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/ann_benchmarks/datasets.py",
+      "sha256": "714e6e6eef50e9f2908f1c72048aa03680b08605ebc71909139fec9ee032785b",
+      "bytes": 24780,
+      "status": 200,
+      "headers": {
+        "Connection": "close",
+        "Content-Length": "24780",
+        "Cache-Control": "max-age=300",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "Content-Type": "text/plain; charset=utf-8",
+        "ETag": "\"4868d11d4e8d20a31ed46b79ff25a1604701ac2cfc482414f01505c208ac3012\"",
+        "Strict-Transport-Security": "max-age=31536000",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "deny",
+        "X-XSS-Protection": "1; mode=block",
+        "X-GitHub-Request-Id": "DF44:2DF34A:18758F:1D2FD2:6AF2A0A1",
+        "x-github-edge-region": "sea",
+        "Accept-Ranges": "bytes",
+        "Date": "Tue, 10 Nov 2026 04:42:10 GMT",
+        "Via": "1.1 varnish",
+        "X-Served-By": "cache-lax-kwhp1940065-LAX",
+        "X-Cache": "MISS",
+        "X-Cache-Hits": "0",
+        "X-Timer": "S1794285731.582584,VS0,VE157",
+        "Vary": "Authorization,Accept-Encoding",
+        "Access-Control-Allow-Origin": "*",
+        "Cross-Origin-Resource-Policy": "cross-origin",
+        "X-Fastly-Request-ID": "363b8688e410d3c4e0f4db570914a18871b48fd4",
+        "Expires": "Tue, 10 Nov 2026 04:47:10 GMT",
+        "Source-Age": "0"
+      }
+    },
+    {
+      "file": "detail_page.html",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/templates/detail_page.html",
+      "sha256": "67176435951da79b5471443c407447b70775993eb2c4c2682f70209d209942ed",
+      "bytes": 799,
+      "status": 200,
+      "headers": {
+        "Connection": "close",
+        "Content-Length": "799",
+        "Cache-Control": "max-age=300",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "Content-Type": "text/plain; charset=utf-8",
+        "ETag": "\"e17a0b0037136038d7224fd5f7e93815c1a3ad632594db021166caafc33b1dce\"",
+        "Strict-Transport-Security": "max-age=31536000",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "deny",
+        "X-XSS-Protection": "1; mode=block",
+        "X-GitHub-Request-Id": "7FD6:2C78FE:33FCEB:3F5A64:6AF2A0A1",
+        "x-github-edge-region": "sea",
+        "Accept-Ranges": "bytes",
+        "Date": "Tue, 10 Nov 2026 04:42:10 GMT",
+        "Via": "1.1 varnish",
+        "X-Served-By": "cache-lax-kwhp1940021-LAX",
+        "X-Cache": "MISS",
+        "X-Cache-Hits": "0",
+        "X-Timer": "S1794285730.361895,VS0,VE151",
+        "Vary": "Authorization,Accept-Encoding",
+        "Access-Control-Allow-Origin": "*",
+        "Cross-Origin-Resource-Policy": "cross-origin",
+        "X-Fastly-Request-ID": "3de8c9a239cdd45edd2082ff4eb30ad66c565d93",
+        "Expires": "Tue, 10 Nov 2026 04:47:10 GMT",
+        "Source-Age": "0"
+      }
+    },
+    {
+      "file": "fashion-mnist-784-euclidean.html",
+      "url": "https://ann-benchmarks.com/fashion-mnist-784-euclidean_10_euclidean.html",
+      "sha256": "73535369008c14d964e7e8bccf96400aca46f6aecfd774149af99ee1ed2b27ac",
+      "bytes": 1180168,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 01:17:08 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "gist-960-euclidean.html",
+      "url": "https://ann-benchmarks.com/gist-960-euclidean_10_euclidean.html",
+      "sha256": "c1ed53a25e388487ce79081ff32215cc375087d42277160a98bd341bd728a0d8",
+      "bytes": 413242,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 01:17:24 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "glove-25-angular.html",
+      "url": "https://ann-benchmarks.com/glove-25-angular_10_angular.html",
+      "sha256": "e2e44584e6fbb7e82acbac23165cddea847010d68c8e06d39ee50dafa997c3b4",
+      "bytes": 1402193,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 01:22:39 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "index.html",
+      "url": "https://ann-benchmarks.com/index.html",
+      "sha256": "29e32a7044314fe94b89b44ca5b65d05bae3b4cdcc82149d56774e4cfee21368",
+      "bytes": 34443,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 01:25:49 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "kosarak-jaccard.html",
+      "url": "https://ann-benchmarks.com/kosarak-jaccard_10_jaccard.html",
+      "sha256": "c2fe5b392e26d82f0a4381179369c218016a4db082d1762a53b9844aa15b0f5d",
+      "bytes": 271040,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 01:28:23 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "main.py",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/ann_benchmarks/main.py",
+      "sha256": "860efa26526ff466dd23be31f0f46e4f7d410b126a5caeb88d103dc95b1acb55",
+      "bytes": 13183,
+      "status": 200,
+      "headers": {
+        "Connection": "close",
+        "Content-Length": "13183",
+        "Cache-Control": "max-age=300",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "Content-Type": "text/plain; charset=utf-8",
+        "ETag": "\"755255f0e0ab0a0e121a98da19997b35c88d5d5d5087b1de5ad72df3143b0cc3\"",
+        "Strict-Transport-Security": "max-age=31536000",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "deny",
+        "X-XSS-Protection": "1; mode=block",
+        "X-GitHub-Request-Id": "2602:38201E:3391AB:3EEEE1:6AF2A0A2",
+        "x-github-edge-region": "sea",
+        "Accept-Ranges": "bytes",
+        "Date": "Tue, 10 Nov 2026 04:42:10 GMT",
+        "Via": "1.1 varnish",
+        "X-Served-By": "cache-lax-kwhp1940093-LAX",
+        "X-Cache": "MISS",
+        "X-Cache-Hits": "0",
+        "X-Timer": "S1794285731.799258,VS0,VE154",
+        "Vary": "Authorization,Accept-Encoding",
+        "Access-Control-Allow-Origin": "*",
+        "Cross-Origin-Resource-Policy": "cross-origin",
+        "X-Fastly-Request-ID": "75eb813493e473d86011a9e802b420055711883b",
+        "Expires": "Tue, 10 Nov 2026 04:47:10 GMT",
+        "Source-Age": "0"
+      }
+    },
+    {
+      "file": "metrics.py",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/ann_benchmarks/plotting/metrics.py",
+      "sha256": "7ede3c4d6770a654a063faa94ef41074cd64217f434788918d83c6b7119eb4f8",
+      "bytes": 6943,
+      "status": 200,
+      "headers": {
+        "ETag": "\"bb2317039314b598e783f81dec2e46cad40e7e7a8c06bd5d6e1f805d905db8d4\"",
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    },
+    {
+      "file": "nytimes-256-angular.html",
+      "url": "https://ann-benchmarks.com/nytimes-256-angular_10_angular.html",
+      "sha256": "a8b53a566f7605bc2514cd6b9d126cec8e84d3284c527d55a5a729c94ce743b0",
+      "bytes": 1039513,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 01:36:39 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "plotting-utils.py",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/ann_benchmarks/plotting/utils.py",
+      "sha256": "1765c71a01a56e7fe7f072202db8a3c01001d4077e2c6685a0ae9a656b40acea",
+      "bytes": 5267,
+      "status": 200,
+      "headers": {
+        "ETag": "\"071f53607d435d21fc0c96f6eda2a5cd2d43f656ab53bb9ddac2fbdd64dfcc6b\"",
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    },
+    {
+      "file": "published-plot-receipts.json",
+      "sha256": "88f3926454aafb903c37c9c6a2c7d210403299bc8ca9ef5ed1db9989a1cd4381",
+      "bytes": 3817
+    },
+    {
+      "file": "receipts.json",
+      "sha256": "34a8147e13964114ffc71b4419f578de1e197e29df05677d36bc643a91118d49",
+      "bytes": 5620
+    },
+    {
+      "file": "releases.json",
+      "url": "https://api.github.com/repos/erikbern/ann-benchmarks/releases?per_page=20",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "status": 200
+    },
+    {
+      "file": "results.py",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/ann_benchmarks/results.py",
+      "sha256": "05c8cd028cd57a06ca7557aeb70f08dc380f9ffbf14563ec45c5876a02fdbc78",
+      "bytes": 4274,
+      "status": 200,
+      "headers": {
+        "Connection": "close",
+        "Content-Length": "4274",
+        "Cache-Control": "max-age=300",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "Content-Type": "text/plain; charset=utf-8",
+        "ETag": "\"7b76b98fe51c6376299f10c9224abcb966d831eea2b9ead5de2b6259ce0f375e\"",
+        "Strict-Transport-Security": "max-age=31536000",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "deny",
+        "X-XSS-Protection": "1; mode=block",
+        "X-GitHub-Request-Id": "F01A:38201E:3391C0:3EEEFB:6AF2A0A2",
+        "x-github-edge-region": "sea",
+        "Accept-Ranges": "bytes",
+        "Date": "Tue, 10 Nov 2026 04:42:11 GMT",
+        "Via": "1.1 varnish",
+        "X-Served-By": "cache-lax-kwhp1940094-LAX",
+        "X-Cache": "MISS",
+        "X-Cache-Hits": "0",
+        "X-Timer": "S1794285731.005235,VS0,VE162",
+        "Vary": "Authorization,Accept-Encoding",
+        "Access-Control-Allow-Origin": "*",
+        "Cross-Origin-Resource-Policy": "cross-origin",
+        "X-Fastly-Request-ID": "915d0ef0753b0056eca3f74aa9fea664d67595dd",
+        "Expires": "Tue, 10 Nov 2026 04:47:11 GMT",
+        "Source-Age": "0"
+      }
+    },
+    {
+      "file": "runners.py",
+      "url": "https://raw.githubusercontent.com/erikbern/ann-benchmarks/2e081ad32c1eccab72dcb739ad886c310b90f715/ann_benchmarks/runner.py",
+      "sha256": "b82b0e379a590c2c6fb44e634e27d93b84a90a99cc153598d85f5485a032a5da",
+      "bytes": 14617,
+      "status": 200,
+      "headers": {
+        "ETag": "\"6c2c2bf7068cd79f2855aa30109368ec2798d89e12d767c719a307d261ed4fcf\"",
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    },
+    {
+      "file": "schema-source-receipts.json",
+      "sha256": "b22430eaa1ff20fea4048f4d14f6881681fad608a53ec2860c489da480969fa4",
+      "bytes": 7779
+    },
+    {
+      "file": "sift-128-euclidean.html",
+      "url": "https://ann-benchmarks.com/sift-128-euclidean_10_euclidean.html",
+      "sha256": "6cbfa7286d6fcf801948888563bfca851dfecb864477ea3b89859039f7e840b8",
+      "bytes": 1267050,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 03:36:02 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "sift-256-hamming.html",
+      "url": "https://ann-benchmarks.com/sift-256-hamming_10_hamming.html",
+      "sha256": "f5adb3e03e64a2ecaf6991311f78c6dfbd083c4ad6bea14d91bd5690221324ab",
+      "bytes": 79862,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 03:36:05 GMT",
+        "Content-Type": "text/html"
+      }
+    },
+    {
+      "file": "site-glove.html",
+      "url": "https://ann-benchmarks.com/glove-100-angular_10_angular.html",
+      "sha256": "7e9a22b8fac30d4e4ea6050e3b5d0214eb7944405161b4879582ad9be035f7bf",
+      "bytes": 1263431,
+      "status": 200
+    },
+    {
+      "url": "https://api.github.com/repos/erikbern/ann-benchmarks/git/trees/2e081ad32c1eccab72dcb739ad886c310b90f715?recursive=1",
+      "file": "tree.json",
+      "sha256": "63518738c1d1e5b8c3b28dc43a5ec82dedce45589d41e433539f91dbf2196bb2",
+      "bytes": 67466
+    },
+    {
+      "file": "word2bits-800-hamming.html",
+      "url": "https://ann-benchmarks.com/word2bits-800-hamming_10_hamming.html",
+      "sha256": "9282abf6f5f987d4f95267ab185a4dcc6f05a587ebf33ba787eee51ae4bbff58",
+      "bytes": 84665,
+      "status": 200,
+      "headers": {
+        "Last-Modified": "Mon, 09 Dec 2024 03:45:33 GMT",
+        "Content-Type": "text/html"
+      }
+    }
+  ],
+  "next_action_boundary": "Root may use archived coordinates to preserve published reference candidates, but current numeric matrix target, matched W/C ratio, runtime reproduction and H-A-4 implementation remain unestablished. Resolve actual raw2025 results/run receipts or use mission-authorised matched-condition competitor measurement when published conditions cannot be matched, once per configuration. No competitor run was performed or scheduled by this specialist.",
+  "limitations": [
+    "No exact2025 strongest competitor figures recovered from primary machine-readable public data searched.",
+    "No current comparator excluded because its receipts or query args are missing.",
+    "No fresh holdout, frozen confirmation, independent runtime reproduction, required gates or performance target has been satisfied.",
+    "ANN-specific constraints are not invented here; must be declared before experiments.",
+    "H-A-4 remains conditional/pending; no packet implementation."
+  ],
+  "spend_usd": 0,
+  "performance_runs": 0,
+  "builds": 0,
+  "tests": 0
+}

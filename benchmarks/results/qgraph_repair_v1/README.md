@@ -1,7 +1,7 @@
 # Query-reinforced edge repair (issue #165)
 
 **Verdict: park.** The repair does not win end to end on held-out queries on either dataset.
-The code stays on branch `issue/165-edge-repair` as an explicit, default-off build step
+The experimental code was merged in PR #388 and remains an explicit, default-off build step
 (`Graph::apply_query_repair`, `Graph::build_with_repair(.., None)` is the legacy build).
 
 Ship rule, fixed before any run: the repair (`full` arm) ships as a default-off option only if,

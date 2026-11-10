@@ -1,0 +1,36 @@
+{
+  "id": "E20",
+  "hypothesis": "H-B-5",
+  "row": "R68-development-proxy",
+  "question": "Does fixed non-oracle seeding transfer to harder exposed distribution within the same cost and parity gates?",
+  "prediction": "Same outputs as retrospective oracle;zero failures;mean additional<=2048,p99<=8192;otherwise reject seeding",
+  "configuration": "data_hard;minhash4096seeds;4096block;first16queries;unchanged policy",
+  "cwd": "/Volumes/A/.hms-wt-mission-b",
+  "script": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/seeded_certificate_counter.py",
+  "result": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/seeded-certificate-data-hard.json",
+  "argv": [
+    "uv",
+    "run",
+    "--no-project",
+    "--python",
+    "/Volumes/A/.hms-lb/bigann/venv/bin/python",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/seeded_certificate_counter.py",
+    "--base",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/base.npy",
+    "--queries",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/queries.npy",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/seeded-certificate-data-hard.json"
+  ],
+  "summary_fields": [
+    "mean_additional_exact_rows",
+    "sample_p99_additional_exact_rows",
+    "mean_total_exact_rows",
+    "false_prunes",
+    "bound_violations",
+    "top10_mismatches",
+    "signed_correction_mismatches"
+  ],
+  "source_commit": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "script_sha256": "8cff7bbab3b1ed96c938a80bbe99d66c8c8f34260638956077ee692ae0095a84"
+}

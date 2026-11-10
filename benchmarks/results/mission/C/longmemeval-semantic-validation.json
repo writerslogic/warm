@@ -1,0 +1,8 @@
+{
+  "hypothesis": "H-C-1",
+  "decision": "reject-reference-integrity",
+  "error_type": "ValueError",
+  "error": "harness commit metadata",
+  "semantic_acceptance": false,
+  "scoring_performed": false
+}

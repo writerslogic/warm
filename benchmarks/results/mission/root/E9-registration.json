@@ -1,0 +1,32 @@
+{
+  "id": "E9",
+  "hypothesis": "H-B-3",
+  "row": "R68-development-proxy",
+  "question": "Can conservative full/subspace partition covers certify exact retrieval within1000 mean row refinements?",
+  "prediction": "Reject if mean>1000 rows or p99>5000 or centers>5000 or any oracle violation; no native claim.",
+  "configuration": "fixed64x78 partition training8192base rows,3+1iterations;16queries;600s cap",
+  "cwd": "/Volumes/A/.hms-wt-mission-b",
+  "script": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/cover_counter.py",
+  "result": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/cover-bound-data.json",
+  "argv": [
+    "uv",
+    "run",
+    "--no-project",
+    "--python",
+    "/Volumes/A/.hms-lb/bigann/venv/bin/python",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/cover_counter.py",
+    "--base",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data/base.npy",
+    "--queries",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data/queries.npy",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/cover-bound-data.json"
+  ],
+  "summary_fields": [
+    "mean_surviving_rows",
+    "sample_p99_surviving_rows",
+    "leaf_centers",
+    "false_prunes",
+    "bound_violations"
+  ]
+}

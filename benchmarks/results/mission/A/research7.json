@@ -1,0 +1,132 @@
+{
+  "hypothesis": "H-A-7",
+  "status": "E44_cauchy_only_implementation_not_run",
+  "base": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "worktree": "/Volumes/A/.hms-wt-mission-a",
+  "question": "Can a signed coordinate-frontier component plus exact selective refinement replace graph candidate generation within the registered R51 accuracy/resource boundary?",
+  "prediction": "At least one exposed query will fail the very optimistic4096-advance threshold certificate; reject before implementing sorted-list search.",
+  "row": {
+    "id": "R51",
+    "matrix_source": "/Volumes/A/.hms-lb/mission/MATRIX.tsv:52",
+    "benchmark": "VIBE llama-128-ip",
+    "version": "7ac76c1f8320a411ce7c9cb3791bdd7f2349b30c",
+    "published_summary_sha256": "af92888b6873b984b777459c3b571974afe64e3add6fc1c2f473e3bd109b3b7e",
+    "k": 100,
+    "metric": "Official distance-tolerance recall@100; exact original-IP top100 is this mechanism's stronger correctness contract, not a replacement row metric.",
+    "required_recall": 0.9913,
+    "strongest_published_qps": 3222.32872772,
+    "target_qps": 6444.65745545,
+    "competitor": "mlann-rf,80trees,depth16,voting_thresh1.75e-05",
+    "boundary": "Embedded single-query index, one CPU core Intel Xeon Gold6230, Linux/Apptainer",
+    "constraints": {"total_rss_gib_max": 256, "full_build_job_hours_max": 20, "p99_max": "2x strongest eligible comparator p99 measured at rung5", "fresh_absolute_recall_gap_max": 0.005},
+    "matched_W_over_C": "UNMEASURED; Core Ultra185H development throughput must not be divided by Gold6230 published throughput."
+  },
+  "accounting_rebuilt_from_existing_evidence": {
+    "current_relevant_source": "benchmarks/results/query_aware_graph_v4/summary.json",
+    "summary_sha256": "8b1f04a6ee04a036011a28d29f8f6a88a70e1a2376d8026ea8c98cd69497330c",
+    "diagnostic_source": "benchmarks/results/query_aware_graph_v4/diagnostics/llama.json",
+    "diagnostic_sha256": "f58b519bc542fdbc6db116b95fe85e452f3b543e909827ff2433cd53f6a7c811",
+    "baseline": {
+      "direct_ip": true, "ef": 512, "rerank": 400, "reservoir": 0,
+      "queries": 256, "rows": 256921, "dimension": 128,
+      "strict_recall": 0.9966796875000004,
+      "oracle_evaluated_recall": 0.9968750000000003,
+      "mean_traversal_estimates": 16725.90625,
+      "mean_evaluated_unique": 16760.08203125,
+      "mean_expansions": 512.85546875,
+      "mean_rerank_evaluations": 400,
+      "primary_code_stride_bytes": 128,
+      "logical_primary_payload_bytes_per_query": 2140916,
+      "one_quarter_payload_bytes": 535229,
+      "reserved_validation_qps_median": 1972.99,
+      "timing_host": "writerslogic-02, Core Ultra9 185H, CPU0, one thread",
+      "limits": "Exposed development evidence and selected measured point. Logical payload bytes are neither DRAM transfers nor cache misses. This timing is not a mission comparison."
+    },
+    "ineligible_baseline": "Direct-IP ef256 recall .9905859375 is below R51 .9913. Earlier ef256 combined-phase profiles therefore cannot supply an eligible R51 timing baseline.",
+    "score_only_ceiling": "Old lifted v2 combined scoring/pool shares are37.69%/36.37%; even deleting those entire stages leaves adjacency/visited and all other work. They are generous old-layout ceilings, not direct-IP stall fractions. v4 high-effort float-oracle rerank improves recall by less than .0002, so precision-only or retention-only changes cannot recover dominant unencountered neighbors.",
+    "build_ceiling": "v4 diagnostic graph_seconds=.177990166 is a cache hit and cannot be claimed as a build saving. Projection_seconds=70.374623272 is one component, not a complete new-build timing. A coordinate-index build needs128 orderings of256921 values; existing graph generation and query-pair preparation are not automatically reusable or free. No build speedup is claimed."
+  },
+  "mechanism_boundary": {
+    "composition": "A corpus-only signed coordinate frontier generates candidates without the per-node graph walk; exact prefix/residual scoring refines encountered rows only as needed to establish the top100. The present task tests a necessary condition on the frontier component alone. It does not authorize a standalone TA/LEMP port.",
+    "signed_access": "Store one ascending list of(value,row-ID) pairs per original coordinate. Query sign chooses direction. Scores are original inner products, without normalization, learned coordinate selection or query-identity recognition.",
+    "certificate": "Unencountered rows are bounded by the sum of query-weighted current list-frontier values. Encountered rows must be fully scored or bounded rigorously; partial refinement cannot silently remove their bytes from the budget.",
+    "scope_exclusions": ["no entire-corpus int8 scan", "no synthetic100D transfer claim from lane B", "no graph-prefix stopping policy", "no completion-list size rescue", "no speculative window adjustment", "no direct-IP/reservoir reimplementation", "no low-rank IVF reimplementation"]
+  },
+  "existing_equivalence_checks": [
+    {"source": "src/core/qgraph/vertex.rs:1448,1793,1816", "finding": "Scalar quantized query encoding, row estimate and four-row batch already exist; these are not a new representation."},
+    {"source": "benchmarks/results/query_aware_graph_v4/README.md:9,22,44", "finding": "Direct128D IP storage and independent candidate reservoir already exist; high-effort discovery remains limiting."},
+    {"source": "src/core/qgraph/ivf.rs:116", "finding": "Existing per-block min/max quantized-coordinate envelope bounds code distance inside IVF; not original signed coordinate sorted-access candidate generation."},
+    {"source": "src/core/index/sparse_impact.rs:4-26,852", "finding": "Existing sparse IP index keeps largest positive document postings, clusters them and bounds with summaries. Nonnegative document restriction is explicit; this implementation is not copied or silently applied to signed dense rows."},
+    {"source": "src/core/qgraph/order_diagnostic.rs:4-42", "finding": "Existing BFS/cluster/Gorder work concerns vertex layout, not coordinate-value sorted lists."},
+    {"source": "benchmarks/results/ood_lowrank_v1/RESULTS.md:3-18", "finding": "Low-rank IVF selected points were .27118/.28953/.28465 of graph throughput at qualifying .95 recall; retain the rejection. Its follow-up spherical-routing proposal is not evidence of a win."},
+    {"source": "benchmarks/results/query_aware_graph_v3/README.md:3-21", "finding": "Byte-VNNI kernel failed its six-point criterion despite output parity; no unsupported scoring-throughput gain is imported."},
+    {"source": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/speculation-result.json", "finding": "Parent reports E37 rejected all four cells on R/U>.25, with zero integrity failures. Fixed8 is retired; this card neither changes its window nor adds a beam sweep."}
+  ],
+  "prior_art": [
+    {
+      "title": "Optimal Aggregation Algorithms for Middleware",
+      "authors": "Ronald Fagin, Amnon Lotem, Moni Naor",
+      "url": "https://www.wisdom.weizmann.ac.il/~naor/PAPERS/middle_agg.pdf",
+      "date": "PODS2001 extended abstract; JCSS2003",
+      "relevance": "Primary source for sorted access, random access and a monotone threshold certificate. No paper runtime or instance-optimality claim is transferred to WARM."
+    },
+    {
+      "title": "Exact and Approximate Maximum Inner Product Search with LEMP",
+      "url": "https://madoc.bib.uni-mannheim.de/42428/1/teflioudi16lemp-draft.pdf",
+      "date": "2016 author draft",
+      "relevance": "Primary source explicitly describes coordinate lists and reverse traversal for negative query coordinates, and warns that ordinary TA is usually used at low dimension. This makes the128D certificate a high-priority kill test, not a novelty or performance claim."
+    }
+  ],
+  "fixed_necessary_test": {
+    "data": "All256 already exposed reserved learn queries, full256921-row original128D Llama base, existing true top100. No new holdout or official-query look.",
+    "actual_sorted_access_cap_per_query": 4096,
+    "unattainable_relaxations": ["true100th-IP threshold known before any work", "every coordinate advanced4096 places even though total actual advances are capped4096", "all encountered candidate scoring and deduplication free", "all data already resident"],
+    "rank_definition": "After p sorted accesses the next unseen list entry has zero-based rank p. Use zero-based4096 (one-based4097), not4095. For q_j>=0 use the N-4097 element of ascending coordinate order; for q_j<0 use ascending zero-based4096; q_j=0 contributes zero.",
+    "proof": "Each feasible allocation has0<=p_j<=4096 and sum p_j<=4096. Signed contribution lists are descending, so g_j(p_j)>=g_j(4096). Therefore its unexplored threshold T(p)=sum g_j(p_j)>=L=sum g_j(4096). If L exceeds the actual100th score, no allocation in this fixed-budget threshold-certificate family can stop. Because4096<N, reading every row cannot bypass the certificate. This proof does not rule out other certificates, layouts or approximate methods.",
+    "smallest_counter": "E44 now uses the still cheaper Cauchy relaxation described below: extract two fixed coordinate order statistics and a certified corpus maximum squared norm, then evaluate256 exact signed frontier expressions. No gold threshold, sorted index, ANN search, parameter sweep or query/base dot scan. The original pinned-GT test remains separate if Cauchy is inconclusive.",
+    "numerics": "Validate finite f32 inputs, exact shape/byte lengths and all hashes. Use exact dyadic sums or outward arithmetic intervals for q-weighted frontier values. Recompute the gold boundary dot products from pinned original f32 rows/queries and verify agreement with scores.f64 and truth.u32, accounting for the original float64 reduction error. A certified lower endpoint greater than the threshold upper endpoint is a rejection witness. Equality/overlap is inconclusive, not a pass. Tie handling is descending score then ascending row ID.",
+    "rejection": "Any certified L>threshold rejects this exact4096-budget family. Still retain all256 query intervals, margins, source IDs and aggregate counts. No wider cursor budget, alternate coordinate rotation, subset selection or weakened precision/recall rescue.",
+    "non_rejection": "Cauchy non-rejection is explicitly inconclusive and leaves the original pinned-GT bound pending. A later non-rejection by that stronger bound only permits a separately registered actual candidate/work counter. Neither proves a feasible schedule.",
+    "next_gate_if_not_rejected": {"exact_returned_top100_required": true, "average_total_logical_bytes_max": 535229, "p99_total_logical_bytes_max": 1070458, "actual_sorted_accesses_per_query_max": 4096, "integrity_or_certificate_violations": 0},
+    "retained_work": "Report sorted accesses, frontier updates, unique candidate IDs, full/partial coordinates, exact multiply/add counts, heap operations, metadata/visited/cache reads+writes/resets, and total logical bytes independently. No floating-product/int8-product equivalence or bytes-to-QPS conversion."
+  },
+  "E44_numerical_proof": {
+    "supported_inputs": "Little-endian finite IEEE binary32 bit patterns only, dimension exactly128; production fixture N256921,Q256. Negative zero and subnormals are supported. NaN/infinity, wrong hash/size/dimension, unsupported binary64 format or integrity mismatch fail the experiment.",
+    "ordered_statistics": "Transform finite raw u32 bits b to (~b)&0xffffffff when negative, or b^0x80000000 otherwise. Unsigned integer order is exact numeric f32 order, with -0 before +0, whose values are equal. Partition uint32 keys at zero-based4096 and N-4097; invert selected keys exactly. Thus host float32 flush/rounding behavior cannot alter order statistics.",
+    "exact_query_arithmetic": "Decode sign/exponent/significand from raw bits to Fraction. L=sum q_j*frontier_j and Q=sum q_j² are exact rational values. Query sign selects the frontier; zero contributes zero. L²-Q*M is compared exactly, and L>0 is mandatory before squaring can prove anything.",
+    "exact_promotion": "For e=0, abs(x)=mantissa*2^-149; otherwise abs(x)=(2^23+mantissa)*2^(e-150). Convert the at-most24-bit nonnegative integer significand to binary64 exactly and apply an exact power-of-two scale. All nonzero promoted values are normal binary64, including source f32 subnormals. No hardware f32 arithmetic/conversion is required.",
+    "products": "Each finite binary32 square has at most48 significant bits, so binary64 multiplication is exact. Nonzero squares lie between2^-298 and less than2^256, safely inside normal binary64;128-term sums are below2^263. Therefore no underflow/overflow rounding term is omitted.",
+    "sum_error": "Compute every row norm using a separate binary64 square array and127 explicit np.add steps, starting with the first square. With u=2^-52, each correctly rounded normal binary64 addition has relative error magnitude<=u even under a directed IEEE rounding mode; this deliberately uses a looser u than round-to-nearest2^-53. gamma127=127*u/(1-127*u). Positive-sum analysis gives |s_hat-s|<=gamma127*s, hence s<=s_hat/(1-gamma127).",
+    "maximum_and_outward_step": "Selecting max(s_hat) is comparison only, with no arithmetic rounding. Convert that binary64 value to its exact Fraction and divide by exact(1-gamma127). This rational M bounds every true corpus row norm²; no rounded gamma, denominator, division, square root or final comparison enters the certificate. The encoded upper bound itself need not be binary64.",
+    "Cauchy_relaxation": "For every row x, q dot x <= ||q||*||x|| <= sqrt(Q*M). Therefore true100thIP <= sqrt(Q*M). If exact L>0 and exact L²>Q*M, then L>true100thIP. Replacing the true threshold with this larger ceiling can only remove rejection witnesses, never create a false witness.",
+    "interpretation": "Certified rejection concerns only the fixed4096-access threshold-certificate family. Nonpositive L, equality or nonpositive squared margin is inconclusive; it is never a feasibility, performance or recall pass.",
+    "retention": "Retain all256 query ordinals, exact L/Q/squared margin, positivity/rejection flags, selected frontier bit patterns, gamma and M fractions, maximum computed norm's hex value and row witness, source hashes and numerical environment.",
+    "runtime": "E44 main cap<=180s. All source arrays are hashed and byte/shape-checked; only base.f32 and validation.f32 are read. No labels, candidate search, official queries, full sorted index, full-query dot-product scan, build, install or paid call.",
+    "checker": "frontier_bound_check.py independently checks raw-f32 decoding/order/signs, fixed-rank off-by-one boundaries, exact Cauchy sign/equality boundaries and numerical norm enclosures against Fraction sums, including extreme finite/subnormal inputs. The main run requires a successful receipt matching both source hashes."
+  },
+  "gap_model": {
+    "count_headroom": "535229 bytes is exactly one quarter of the eligible baseline's2140916 primary-code payload bytes. Graph adjacency, visited and pool operations are also replaced but are not assigned fabricated savings. This is a necessary component budget, not an attained reduction.",
+    "budget_example_only": "4096 eight-byte(value,ID) accesses cost32768 bytes, leaving502461 for every other read/write.960 full128D f32 candidates cost491520 bytes, leaving10941 for other work. Partial scoring or deduplication overhead must fit the same total, not disappear.",
+    "half_gap_equation": "For matched eligible r=W/C and target2C, S_required=.5+1/r. If an affected-time fraction f is actually reduced4x and added overhead is h*T_old, require1-.75*f+h<=r/(1+.5*r).",
+    "limits": "f,h,r are unmeasured. A fourfold payload reduction does not imply a fourfold stage speedup. No numeric end-to-end speedup is forecast from old profile fractions or cross-host QPS. Native work requires independent support for this timing inequality.",
+    "build_storage": "One ascending128-column(value:f32,ID:u32) index plus original f32 forward rows uses12*N*D=394630656 bytes before summaries/workspace. Reverse scanning does not duplicate lists. Sorting128 columns hasO(D*N*logN) comparison work; neither its time nor RSS is measured. Preserve the row's20h/256GiB ceilings."
+  },
+  "dependencies": {
+    "receipt": {"path": "benchmarks/results/query_aware_graph_v4/logs/input-verification.json", "sha256": "ad1a241e29f89c9b3b039f01ffb400b9401ceceb1f6ac2d4911a53756b1b20d3"},
+    "frozen_run": {"path": "benchmarks/results/query_aware_graph_v4/runs/llama/frozen.json", "sha256": "a7ec43e767590691d3901ffb3159530d8bd18ce36d018b81adb97fbe85f95ae8"},
+    "owned_source_directory": "writerslogic-02:/home/davidcondrey/sol-qag/data/llama-full",
+    "files": {
+      "base.f32": "1040eaaf8568ce7244572177e95fcaf78f1cba2e3e8c3cec8ea29918c675cf60",
+      "validation.f32": "c3394098fe3ba8302bfee1e7f307bb49b76e255cae43c404ecf2ccc5b1209c15",
+      "truth.u32": "28c98c7d0439214f27000db677a87c696fa49211c2eb7a369b56eacc73d808db",
+      "scores.f64": "d461ec6ea2a2e3df162a90c50799339df7f85eaa09cc2899babd2b9e29a69496",
+      "validation_ids.u32": "ed221aa466fa7ce3a05145a3215531b0ea472e4125749dc99b440083d65f2191",
+      "construction_ids.u32": "a4252dac26601a48265eb631828755377c634022c4239acf59bfed78d84103c1"
+    },
+    "input_contract": "N256921,d128,256validation queries,k100; original IP, no normalization; truth float64 original inner product, descending score then ascending base ID. Validation IDs are default_rng(24301).permutation(255921)[:256]. Use existing arrays; do not regenerate a superficially similar split.",
+    "public_origin": {"file": "llama-128-ip.hdf5", "sha256": "43c6a366d1e7dfd9e331e712708a664f91f8dbda1928c9923ef730d6718a2f52", "bytes": 367071696, "role": "Provenance only; reading its official test arrays is not part of this counter."},
+    "local_availability": "Matching arrays were not found under the narrowly inspected .hms-bench-cache/vibe,.hms-lb/vibe or missing .sol-wt-qag directory. Owned remote availability is not revalidated. Root must stage/hash-check existing artifacts before implementation/execution; no new source download or remote access was performed by this task."
+  },
+  "validation": "Root selected the cheaper Cauchy relaxation before measurement. Added frontier_bound_counter.py and frontier_bound_check.py and amended this research/card; specialist performed no execution, tests, network, builds, package installs, paid calls or ledger writes. Root stages arrays under /Volumes/A/.hms-lb/mission/E44-input and executes E44-check then E44.",
+  "unresolved": ["E44 numerical checker and actual bound unexecuted", "Cauchy may be inconclusive, requiring separate original pinned-GT bound", "actual candidate and traffic budget unmeasured", "matched half-gap timing condition unproved", "fresh transfer and final row confirmation remain required"]
+}

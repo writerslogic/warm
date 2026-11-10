@@ -1,0 +1,20 @@
+{
+  "hypothesis": "H-A-3",
+  "parent_result": "H-A-2/E5 rejected; m3K128=.625625 and m10K256=.905625, as reported by orchestrator. No further K sweep.",
+  "primary_sources": [
+    {"url": "https://arxiv.org/abs/2201.13007", "finding": "Speed-ANN exploits multiple walkers and staged exploration with redundancy-aware synchronization; multi-core results are not evidence for single-core WARM."},
+    {"url": "https://arxiv.org/abs/2504.20461", "finding": "AverSearch uses asynchronous workload scheduling to reduce redundant processing. It does not establish the hit rate of exact discovery-parent adjacency subset certificates."}
+  ],
+  "existing_implementation": [
+    {"path": "src/core/qgraph/vertex/navigation.rs:22", "finding": "Verified production-equivalent navigation export already exists; no duplicate native tracer needed."},
+    {"path": "benchmarks/research/vector_topology/information-navigation.mjs:5", "finding": "Unseen-count and unseen-rarity shadow extension already exist; new experiment only counts exact skipped-work certificates from archived traces."},
+    {"path": "docs/research/milestones-20261102/RECALL.md:16", "finding": "All1308 known misses in four archived GloVe cells are before evaluation. Improving reranking cannot fix these misses. Rerank may still consume unnecessary time, bounded independently by existing phase profiles."},
+    {"path": "src/core/qgraph/vertex.rs:73", "finding": "QueryProfile exposes adjacency/visited/prefetch, scoring/pool and rerank/sort phases. Existing Yi/Llama profiles permit a free-rerank ceiling with no rerun."}
+  ],
+  "run_command": "uv run --no-project python benchmarks/results/mission/A/navigation_headroom.py --repo /Volumes/A/.hms-wt-mission-integrated --output /Volumes/A/.hms-lb/mission/artifacts/E_NUMBER.json --ledger /Volumes/A/.hms-lb/mission/LOG.tsv --experiment E_NUMBER",
+  "run_instructions": "Root replaces E_NUMBER with an allocated numeric ID, records the look and card before execution, redirects all stdout/stderr to a durable log, and inspects each complete cell. No new native run or build is needed. Script is stdlib-only, validates archived raw hashes, and appends one ledger line itself.",
+  "resources": "Stream two gzip archives totaling357MB compressed; at most one query record plus100k-node adjacency in memory; no network/API/cloud; no performance measurement.",
+  "conditional_ceiling": "1/(1-f) only under the explicit equal-expansion-cost, all-time-in-expansions assumption. Removing an event fraction is not a general wall-clock upper bound. Separate phase profiles are not multiplied with unrelated trace fractions.",
+  "bias_check": "Exact static subset certificates may be nearly absent in diversity-pruned graphs. Measure this disconfirming possibility before adding per-edge metadata.",
+  "validation_status": "Not executed by specialist; root validation required. Inventory and prior source artifacts unchanged."
+}

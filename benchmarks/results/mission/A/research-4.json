@@ -1,0 +1,45 @@
+{
+  "hypothesis": "H-A-4",
+  "claim": "rung1 conditional cost model only; no new measurement, parser or benchmark",
+  "prior_result": "Root E11 rejects H-A-3: zero certificates, <0.002 zero-discovery fraction in every frozen cell; no skip-threshold rescue.",
+  "evidence": {
+    "summary_path": "benchmarks/results/query_aware_graph_v2/summary.json",
+    "summary_limits": "Unpinned instrumented aggregate stages; no production QPS, cache, bandwidth or instruction inference. All256 profiles per dataset are summarized by this existing artifact; no new archive calculation was run.",
+    "llama": {"mean_us":389.36559375,"adjacency_percent":47.346943333061255,"scoring_pool_percent":37.691546561437804,"rerank_percent":11.076535637016592,"expansions":257.1875,"neighbors_read":23510.01953125,"traversal_evaluations":10410.796875,"rerank_evaluations":256,"recall":0.990703125},
+    "yi": {"mean_us":558.2368828125,"adjacency_percent":45.48267136986719,"scoring_pool_percent":36.3694331375705,"rerank_percent":13.454107275051987,"expansions":513.3046875,"neighbors_read":41782.765625,"traversal_evaluations":12063.31640625,"rerank_evaluations":400,"recall":0.9908984375}
+  },
+  "primitive_accounting": {
+    "llama": "~7.84ns instrumented adjacency phase per read edge;~14.10ns combined scoring/pool per unique scored row;257 serial expansion boundaries. Existing split cannot identify gather stalls versus branch/instruction work.",
+    "yi": "~6.08ns adjacency per read edge;~16.83ns combined scoring/pool per unique scored row;513 expansion boundaries. The previous125expansions×60ns model was inappropriate for these measured workloads.",
+    "new_unit": "Packet of8 distinct neighbor IDs: one8-lane visited-word gather, bit test, conflict mask, stable fresh-ID compaction and scatter; same-word collisions use unchanged scalar insertion. A whole expanded list then uses the already implemented score_fresh_batch and insert_batch.",
+    "query_independence": "Packetization uses only corpus adjacency/current query visited state; no adaptation to observed benchmark queries. No precomputed query outputs.",
+    "memory": "Retain existing N/8-byte visited bitset and touched-word reset, plus bounded packet scratch. Avoid4N-byte epoch array, which would increase scratch32x and change cache residency."
+  },
+  "prior_art": [
+    {"url":"https://www.intel.com/content/www/us/en/developer/articles/technical/improve-vectorization-performance-using-intel-advanced-vector-extensions-512.html","finding":"Intel describes gather/update/scatter dependency handling using conflict detection. Direct scatter of independently updated duplicate word addresses loses updates; scalar collision fallback is exact and must be counted."},
+    {"url":"https://cdrdv2-public.intel.com/814198/248966-Optimization-Reference-Manual-V1-049.pdf","finding":"Primary optimization manual documents indirect read/write loop conflicts. It does not establish WARM speedup or guarantee target-host gather performance."}
+  ],
+  "reuse_and_rejections": [
+    {"path":"src/core/qgraph/vertex.rs:2118","finding":"Existing Marks::insert already uses one-bit visited storage and touched-word reset; proposed difference is8-lane packet admission, not a new visited contract."},
+    {"path":"src/core/qgraph/vertex.rs:1636","finding":"experimental-neighbor-admission only specializes/inlines the same scalar path; it does not implement SIMD visited packets."},
+    {"path":"src/core/qgraph/vertex.rs:2228","finding":"Existing insert_batch retains worst-threshold filtering, scalar fallback for<8 candidates, sorted merge and expanded-flag preservation. Reuse it."},
+    {"path":"src/core/qgraph/vertex.rs:2524","finding":"Existing score_fresh_batch combines est4 with insert_batch; no new four-row scorer or second queue implementation."},
+    {"path":"benchmarks/results/qgraph_block4_untimed_x86_v1.json:5","finding":"Per-edge residual neighbor blocks were already negative0.76–0.79x and16x index memory in example; do not rediscover copied-neighbor quantization."},
+    {"path":"benchmarks/results/qgraph_pool_paired_m4_nytimes_v1.json:511","finding":"Earlier sorted-pool replacement versus heaps did not win on that host. This limits confidence in queue-only improvements; proposed composition must independently meet its cost budget."},
+    {"path":"docs/benchmarks/VIBE.md:336","finding":"Separate sampled Llama100k profile identifies memmove/Pool::insert and expansion closure, but categories overlap and this host/config differs. Do not sum those percentages into the Yi/Llama stage model."}
+  ],
+  "model": {
+    "formula": "T_new = T_old * (1 - A - S + A/3 + S/2) + 5us, where A and S are each dataset's existing phase shares",
+    "llama_projected_us_rounded":198,
+    "yi_projected_us_rounded":292,
+    "minimum_projected_speedup_rounded":1.91,
+    "assumptions": ["Packetization reduces measured adjacency-phase cost3x","Existing batch merge plus packet delivery reduces combined scoring/pool cost2x","All unmodified costs remain constant","Additional whole-query overhead<=5us","Pinned target-host execution does not invalidate measured phase proportions"],
+    "measured_vs_inferred": "Only original times/counts are measured. All new costs and speedups are conditional conjectures requiring rejection tests."
+  },
+  "gap_accounting": {
+    "formula":"For target2C and baselineW, closure=(G-1)W/(2C-W). G>=1.91 reaches0.5 only ifW/C>=.710.",
+    "status":"No matched W/C is established in the inspected artifacts. Archived instrumented recall also falls below some strongest published competitor points. A numerical mission gap-closure claim is unsupported.",
+    "next_decision":"Root must connect an already measured comparable baseline to this conditional model before scheduling a new parser or experiment; otherwise retain conditional card and prioritize another lane. This is a scope-limited evidence limitation, not a mission blocker."
+  },
+  "validation":"No new counter code, profiler, build, test or benchmark was written or run. Changes are limited to next-card-4.md and this research file."
+}

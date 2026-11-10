@@ -1,0 +1,293 @@
+diff --git a/src/core/qgraph/filter.rs b/src/core/qgraph/filter.rs
+index 082c035b..463c30f8 100644
+--- a/src/core/qgraph/filter.rs
++++ b/src/core/qgraph/filter.rs
+@@ -25,10 +25,14 @@ use std::sync::atomic::{AtomicU64, Ordering};
+ 
+ use rayon::prelude::*;
+ 
+-use super::kernels::{dot_i8_query, dot_i8_query_x4, dot_i8_query_x4_wide, prefetch_bytes};
++use super::kernels::{
++    dot_i8_query_bounded, dot_i8_query_x4_bounded, dot_i8_query_x4_wide_bounded, prefetch_bytes,
++    I8_DOT_MAX_DIMENSIONS,
++};
+ 
+ /// Largest row whose squared u8 Euclidean distance fits the returned `u32`.
+ pub const MAX_DIMENSIONS: usize = (u32::MAX / (255 * 255)) as usize;
++const _: () = assert!(MAX_DIMENSIONS.next_multiple_of(16) <= I8_DOT_MAX_DIMENSIONS);
+ /// Dense label tables are bounded independently of the number of input rows.
+ pub const MAX_LABELS: usize = 1 << 20;
+ 
+@@ -993,17 +997,18 @@ impl FilteredIndex {
+                 self.row(ch[3]),
+             ];
+             let d = if wide {
+-                dot_i8_query_x4_wide(q, rows, qsum)
++                dot_i8_query_x4_wide_bounded(q, rows, qsum)
+             } else {
+-                dot_i8_query_x4(q, rows, qsum)
++                dot_i8_query_x4_bounded(q, rows, qsum)
+             };
+             for j in 0..4 {
+-                let key = i64::from(self.norms[ch[j] as usize]) - 2 * d[j];
++                let key = i64::from(self.norms[ch[j] as usize]) - 2 * i64::from(d[j]);
+                 top.push(key, ch[j]);
+             }
+         }
+         for &id in tail {
+-            let key = i64::from(self.norms[id as usize]) - 2 * dot_i8_query(q, self.row(id), qsum);
++            let key = i64::from(self.norms[id as usize])
++                - 2 * i64::from(dot_i8_query_bounded(q, self.row(id), qsum));
+             top.push(key, id);
+         }
+     }
+@@ -1014,14 +1019,16 @@ impl FilteredIndex {
+         let row = |p: u32| &ivf.rows[p as usize * s..(p as usize + 1) * s];
+         let (chunks, tail) = pos.as_chunks::<4>();
+         for ch in chunks {
+-            let d = dot_i8_query_x4(q, [row(ch[0]), row(ch[1]), row(ch[2]), row(ch[3])], qsum);
++            let d =
++                dot_i8_query_x4_bounded(q, [row(ch[0]), row(ch[1]), row(ch[2]), row(ch[3])], qsum);
+             for (&p, &dot) in ch.iter().zip(&d) {
+-                let key = i64::from(ivf.norms[p as usize]) - 2 * dot;
++                let key = i64::from(ivf.norms[p as usize]) - 2 * i64::from(dot);
+                 top.push(key, ivf.members[p as usize]);
+             }
+         }
+         for &p in tail {
+-            let key = i64::from(ivf.norms[p as usize]) - 2 * dot_i8_query(q, row(p), qsum);
++            let key = i64::from(ivf.norms[p as usize])
++                - 2 * i64::from(dot_i8_query_bounded(q, row(p), qsum));
+             top.push(key, ivf.members[p as usize]);
+         }
+     }
+@@ -1046,7 +1053,7 @@ impl FilteredIndex {
+         let centroid = |c: usize| &ivf.centroids[c * self.stride..(c + 1) * self.stride];
+         let grouped = lists / 4 * 4;
+         for c in (0..grouped).step_by(4) {
+-            let dots = dot_i8_query_x4(
++            let dots = dot_i8_query_x4_bounded(
+                 q,
+                 [
+                     centroid(c),
+@@ -1057,12 +1064,13 @@ impl FilteredIndex {
+                 qsum,
+             );
+             for (j, dot) in dots.into_iter().enumerate() {
+-                let key = i64::from(ivf.centroid_norms[c + j]) - 2 * dot;
++                let key = i64::from(ivf.centroid_norms[c + j]) - 2 * i64::from(dot);
+                 order.push((key, (c + j) as u32));
+             }
+         }
+         for c in grouped..lists {
+-            let key = i64::from(ivf.centroid_norms[c]) - 2 * dot_i8_query(q, centroid(c), qsum);
++            let key = i64::from(ivf.centroid_norms[c])
++                - 2 * i64::from(dot_i8_query_bounded(q, centroid(c), qsum));
+             order.push((key, c as u32));
+         }
+         order.sort_unstable();
+@@ -1262,7 +1270,7 @@ fn train_label(
+         let qsum: i32 = x.iter().map(|&v| i32::from(v)).sum();
+         let mut best = (i64::MAX, 0u32);
+         for (c, cent) in centroids.chunks_exact(dim).enumerate() {
+-            let key = i64::from(cnorms[c]) - 2 * dot_i8_query(x, cent, qsum);
++            let key = i64::from(cnorms[c]) - 2 * i64::from(dot_i8_query_bounded(x, cent, qsum));
+             if key < best.0 {
+                 best = (key, c as u32);
+             }
+diff --git a/src/core/qgraph/kernels.rs b/src/core/qgraph/kernels.rs
+index 07c42551..0671b333 100644
+--- a/src/core/qgraph/kernels.rs
++++ b/src/core/qgraph/kernels.rs
+@@ -694,29 +694,52 @@ pub(crate) fn dot_i4_inline_x4(q: &[i8], rows: [&[i8]; 4]) -> [i32; 4] {
+     ]
+ }
+ 
+-/// [`dot_i8_inline`] for a traversal query `a` with `qsum == super::vnni::query_sum(a)`,
+-/// computed once per query: the VNNI tiers then spend one `vpdpbusd` per 32 coordinates.
+-/// The same integer on every tier, widening partial sums before a long row can overflow i32.
++/// Maximum padded length whose signed i8 dot product fits in i32 for every input.
++pub(crate) const I8_DOT_MAX_DIMENSIONS: usize = i32::MAX as usize / (128 * 128);
++
++/// Query dot product, widening partial sums before a long row can overflow i32.
+ #[must_use]
+ #[inline(always)]
+ pub(crate) fn dot_i8_query(a: &[i8], b: &[i8], qsum: i32) -> i64 {
+-    if a.len() > i32::MAX as usize / (128 * 128) {
+-        return dot_i8_long(a, b);
++    if a.len() > I8_DOT_MAX_DIMENSIONS {
++        dot_i8_long(a, b)
++    } else {
++        i64::from(dot_i8_query_bounded(a, b, qsum))
++    }
++}
++
++/// Four query dot products with the same overflow handling as [`dot_i8_query`].
++#[must_use]
++#[inline(always)]
++pub(crate) fn dot_i8_query_x4(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i64; 4] {
++    if a.len() > I8_DOT_MAX_DIMENSIONS {
++        rows.map(|row| dot_i8_long(a, row))
++    } else {
++        dot_i8_query_x4_bounded(a, rows, qsum).map(i64::from)
+     }
++}
++
++/// [`dot_i8_inline`] for a traversal query `a` with `qsum == super::vnni::query_sum(a)`,
++/// computed once per query: the VNNI tiers then spend one `vpdpbusd` per 32 coordinates.
++/// The caller must bound the padded row length by [`I8_DOT_MAX_DIMENSIONS`].
++#[must_use]
++#[inline(always)]
++pub(crate) fn dot_i8_query_bounded(a: &[i8], b: &[i8], qsum: i32) -> i32 {
++    debug_assert!(a.len() <= I8_DOT_MAX_DIMENSIONS);
+     #[cfg(target_arch = "x86_64")]
+     {
+         assert!(a.len() == b.len() && a.len().is_multiple_of(16));
+         match tier::get() {
+             // SAFETY: the tier is AVXVNNI only after detecting `avx2` and `avxvnni`, VNNI only
+             // after `avx2`, `avx512f`, `avx512vl` and `avx512vnni`; the lengths are checked.
+-            tier::AVXVNNI => return i64::from(unsafe { super::vnni::avx::dot_i8(a, b, qsum) }),
++            tier::AVXVNNI => return unsafe { super::vnni::avx::dot_i8(a, b, qsum) },
+             // SAFETY: as above.
+-            tier::VNNI => return i64::from(unsafe { super::vnni::evex::dot_i8(a, b, qsum) }),
++            tier::VNNI => return unsafe { super::vnni::evex::dot_i8(a, b, qsum) },
+             _ => {}
+         }
+     }
+     let _ = qsum;
+-    i64::from(dot_i8_inline(a, b))
++    dot_i8_inline(a, b)
+ }
+ 
+ #[cold]
+@@ -730,66 +753,58 @@ fn dot_i8_long(a: &[i8], b: &[i8]) -> i64 {
+         .sum()
+ }
+ 
+-/// [`dot_i8_query`] of one row `a` against four rows of its length: `a` is loaded once per
++/// [`dot_i8_query_bounded`] of one row `a` against four rows of its length: `a` is loaded once per
+ /// chunk for all four, and the four row loads are in flight together. The same integers as
+-/// four single calls, on every tier.
++/// four single calls, on every tier; the same padded-length bound applies.
+ #[must_use]
+ #[inline(always)]
+-pub(crate) fn dot_i8_query_x4(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i64; 4] {
++pub(crate) fn dot_i8_query_x4_bounded(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4] {
++    debug_assert!(a.len() <= I8_DOT_MAX_DIMENSIONS);
+     assert!(a.len().is_multiple_of(16) && rows.iter().all(|r| r.len() == a.len()));
+-    if a.len() > i32::MAX as usize / (128 * 128) {
+-        return rows.map(|row| dot_i8_long(a, row));
+-    }
+     #[cfg(all(target_arch = "aarch64", target_feature = "dotprod"))]
+     {
+         let _ = qsum;
+         // SAFETY: `dotprod` is enabled for the whole build; the lengths are checked above.
+-        unsafe { neon::sdot_x4(a, rows) }.map(i64::from)
++        unsafe { neon::sdot_x4(a, rows) }
+     }
+     #[cfg(not(all(target_arch = "aarch64", target_feature = "dotprod")))]
+     {
+         #[cfg(target_arch = "aarch64")]
+         if std::arch::is_aarch64_feature_detected!("dotprod") {
+             // SAFETY: `dotprod` was detected at runtime; the lengths are checked above.
+-            return unsafe { neon::sdot_x4(a, rows) }.map(i64::from);
++            return unsafe { neon::sdot_x4(a, rows) };
+         }
+         #[cfg(target_arch = "x86_64")]
+         match tier::get() {
+             // SAFETY: the tier is AVXVNNI only after detecting `avx2` and `avxvnni`; the
+             // lengths are checked above.
+-            tier::AVXVNNI => {
+-                return unsafe { super::vnni::avx::dot_i8_x4(a, rows, qsum) }.map(i64::from)
+-            }
++            tier::AVXVNNI => return unsafe { super::vnni::avx::dot_i8_x4(a, rows, qsum) },
+             // SAFETY: the tier is VNNI only after detecting `avx2`, `avx512f`, `avx512vl` and
+             // `avx512vnni`; the lengths are checked above.
+-            tier::VNNI => {
+-                return unsafe { super::vnni::evex::dot_i8_x4(a, rows, qsum) }.map(i64::from)
+-            }
++            tier::VNNI => return unsafe { super::vnni::evex::dot_i8_x4(a, rows, qsum) },
+             // SAFETY: the tier is AVX2 only after detecting `avx2`; the lengths are checked.
+-            tier::AVX2 => return unsafe { x86::dot_i8_avx2_x4(a, rows) }.map(i64::from),
++            tier::AVX2 => return unsafe { x86::dot_i8_avx2_x4(a, rows) },
+             _ => {}
+         }
+         let _ = qsum;
+-        rows.map(|r| i64::from(dot_i8_inline(a, r)))
++        rows.map(|r| dot_i8_inline(a, r))
+     }
+ }
+ 
+-/// [`dot_i8_query_x4`] with 512-bit `vpdpbusd` on the VNNI tier; the same integers on every
+-/// tier (other tiers run [`dot_i8_query_x4`]).
++/// [`dot_i8_query_x4_bounded`] with 512-bit `vpdpbusd` on the VNNI tier; the same integers on every
++/// tier, under the same padded-length bound (other tiers use the bounded four-row kernel).
+ #[must_use]
+ #[inline(always)]
+-pub(crate) fn dot_i8_query_x4_wide(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i64; 4] {
+-    if a.len() > i32::MAX as usize / (128 * 128) {
+-        return dot_i8_query_x4(a, rows, qsum);
+-    }
++pub(crate) fn dot_i8_query_x4_wide_bounded(a: &[i8], rows: [&[i8]; 4], qsum: i32) -> [i32; 4] {
++    debug_assert!(a.len() <= I8_DOT_MAX_DIMENSIONS);
+     #[cfg(target_arch = "x86_64")]
+     if tier::get() == tier::VNNI {
+         assert!(a.len().is_multiple_of(16) && rows.iter().all(|r| r.len() == a.len()));
+         // SAFETY: the tier is VNNI only after detecting `avx2`, `avx512f`, `avx512vl` and
+         // `avx512vnni`; the lengths are checked above.
+-        return unsafe { super::vnni::zmm::dot_i8_x4(a, rows, qsum) }.map(i64::from);
++        return unsafe { super::vnni::zmm::dot_i8_x4(a, rows, qsum) };
+     }
+-    dot_i8_query_x4(a, rows, qsum)
++    dot_i8_query_x4_bounded(a, rows, qsum)
+ }
+ 
+ /// [`dot_i4_inline`] with the query sum precomputed, as [`dot_i8_query`].
+@@ -1611,6 +1626,11 @@ mod tests {
+                 let want = four.map(|b| i64::from(dot_i8_scalar(&a, b)));
+                 let qsum = super::super::vnni::query_sum(&a);
+                 assert_eq!(dot_i8_query_x4(&a, four, qsum), want, "len {len}");
++                assert_eq!(dot_i8_query_x4_bounded(&a, four, qsum).map(i64::from), want);
++                assert_eq!(
++                    dot_i8_query_x4_wide_bounded(&a, four, qsum).map(i64::from),
++                    want
++                );
+                 assert_eq!(four.map(|b| dot_i8_query(&a, b, qsum)), want, "len {len}");
+             }
+         }
+@@ -1619,7 +1639,16 @@ mod tests {
+     #[test]
+     fn long_i8_dots_widen_before_accumulation_overflows() {
+         let limit = i32::MAX as usize / (128 * 128);
+-        for nonzero in [16, limit - 1, limit, limit + 1, 1 << 20] {
++        for nonzero in [
++            16,
++            66050,
++            66051,
++            66052,
++            limit - 1,
++            limit,
++            limit + 1,
++            1 << 20,
++        ] {
+             let len = nonzero.next_multiple_of(16);
+             let mut query = vec![-128i8; len];
+             query[nonzero..].fill(0);
+@@ -1635,7 +1664,16 @@ mod tests {
+             let sum = super::super::vnni::query_sum(&query);
+             assert_eq!(rows.map(|row| dot_i8_query(&query, row, sum)), expected);
+             assert_eq!(dot_i8_query_x4(&query, rows, sum), expected);
+-            assert_eq!(dot_i8_query_x4_wide(&query, rows, sum), expected);
++            if len <= I8_DOT_MAX_DIMENSIONS {
++                assert_eq!(
++                    dot_i8_query_x4_bounded(&query, rows, sum).map(i64::from),
++                    expected
++                );
++                assert_eq!(
++                    dot_i8_query_x4_wide_bounded(&query, rows, sum).map(i64::from),
++                    expected
++                );
++            }
+         }
+     }
+ 

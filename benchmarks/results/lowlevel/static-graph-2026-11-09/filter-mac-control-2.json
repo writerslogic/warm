@@ -1,0 +1,61 @@
+{
+  "module": "/Volumes/A/.hms-lb/vdbbench/pr898-perf/control-module/writerslogic_warm.abi3.so",
+  "results": [
+    {
+      "dim": 128,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": false,
+      "ns_per_query": [
+        56138.671875,
+        55798.5,
+        53887.046875,
+        55079.4296875,
+        54103.8359375
+      ],
+      "digest": "702314f2c09fd691372af214332d28c6b672d62c4991d99bf04807371aaee2c7"
+    },
+    {
+      "dim": 128,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": true,
+      "ns_per_query": [
+        73222.9765625,
+        74325.1953125,
+        73254.234375,
+        72992.1875,
+        72931.3125
+      ],
+      "digest": "67bba8b1812f9b4dcf07d678b5e1b5a5acfd4410767eff04fe360b8b889b2d53"
+    },
+    {
+      "dim": 784,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": false,
+      "ns_per_query": [
+        404284.5078125,
+        395750.9765625,
+        392115.5546875,
+        402362.953125,
+        394909.8359375
+      ],
+      "digest": "ea0c2f6d512b13bcc4f66d90c683410c057bac18d0c22b5aa8e4c757767dd387"
+    },
+    {
+      "dim": 784,
+      "rows": 32768,
+      "queries": 128,
+      "deleted": true,
+      "ns_per_query": [
+        368082.359375,
+        364809.2421875,
+        368321.2890625,
+        359511.390625,
+        358188.4765625
+      ],
+      "digest": "a4208d30726db06ca3fd578968f0e2557fd07e3d7adbca86339101cb9fbb0370"
+    }
+  ]
+}

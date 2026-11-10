@@ -1,0 +1,245 @@
+{
+  "status": "pass",
+  "method": "independent Cartesian-product enumeration of every feasible combination",
+  "optimizer_cases": [
+    {
+      "case": "nonconcave_unlock",
+      "missed_budget": 0,
+      "expected": [
+        221,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "case": "nonconcave_unlock",
+      "missed_budget": 1,
+      "expected": [
+        161,
+        1
+      ],
+      "passed": true
+    },
+    {
+      "case": "nonconcave_unlock",
+      "missed_budget": 2,
+      "expected": [
+        101,
+        2
+      ],
+      "passed": true
+    },
+    {
+      "case": "nonconcave_unlock",
+      "missed_budget": 3,
+      "expected": [
+        60,
+        3
+      ],
+      "passed": true
+    },
+    {
+      "case": "nonconcave_unlock",
+      "missed_budget": 4,
+      "expected": [
+        0,
+        4
+      ],
+      "passed": true
+    },
+    {
+      "case": "unattainable_perfect",
+      "missed_budget": 0,
+      "expected": null,
+      "passed": true
+    },
+    {
+      "case": "unattainable_perfect",
+      "missed_budget": 1,
+      "expected": [
+        10,
+        1
+      ],
+      "passed": true
+    },
+    {
+      "case": "unattainable_perfect",
+      "missed_budget": 2,
+      "expected": [
+        7,
+        2
+      ],
+      "passed": true
+    },
+    {
+      "case": "unattainable_perfect",
+      "missed_budget": 3,
+      "expected": [
+        5,
+        3
+      ],
+      "passed": true
+    },
+    {
+      "case": "unattainable_perfect",
+      "missed_budget": 4,
+      "expected": [
+        2,
+        4
+      ],
+      "passed": true
+    },
+    {
+      "case": "equal_cost_more_hits",
+      "missed_budget": 0,
+      "expected": [
+        0,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "case": "equal_cost_more_hits",
+      "missed_budget": 1,
+      "expected": [
+        0,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "case": "equal_cost_more_hits",
+      "missed_budget": 2,
+      "expected": [
+        0,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 0,
+      "expected": [
+        28,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 1,
+      "expected": [
+        21,
+        1
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 2,
+      "expected": [
+        21,
+        1
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 3,
+      "expected": [
+        15,
+        3
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 4,
+      "expected": [
+        13,
+        4
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 5,
+      "expected": [
+        11,
+        5
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 6,
+      "expected": [
+        7,
+        6
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 7,
+      "expected": [
+        7,
+        6
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 8,
+      "expected": [
+        3,
+        8
+      ],
+      "passed": true
+    },
+    {
+      "case": "skipped_hit_counts",
+      "missed_budget": 9,
+      "expected": [
+        3,
+        8
+      ],
+      "passed": true
+    },
+    {
+      "case": "duplicate_hits",
+      "missed_budget": 0,
+      "expected": [
+        8,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "case": "duplicate_hits",
+      "missed_budget": 1,
+      "expected": [
+        4,
+        1
+      ],
+      "passed": true
+    },
+    {
+      "case": "duplicate_hits",
+      "missed_budget": 2,
+      "expected": [
+        1,
+        2
+      ],
+      "passed": true
+    }
+  ],
+  "independent_objective_witness_check": true,
+  "exact_threefold_boundary_checks": 5,
+  "invalid_budget_checks": 2,
+  "source_hashes": {
+    "effort_allocation.py": "db8f68aa9647a6caf2a63433edba4210909f4b7b972b2f7527a9385fd1cb149d",
+    "effort_allocation_check.py": "f323c4b5dce6303f09889d2cfe1bcd94e0e497850d78d1a354cdb424cf580d55"
+  },
+  "scope": "Tiny synthetic optimizer verification only; no archive read, native run or classifier."
+}

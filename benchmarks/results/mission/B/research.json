@@ -1,0 +1,227 @@
+{
+  "hypothesis": "H-B-1",
+  "claim": "local source audit, not benchmark confirmation",
+  "versions": {
+    "bigann": "ec58203170e3636ba7da82154ce6322de9cb8b33",
+    "vectordbbench": "879a7638d33b391a1715c0b024353fc52df33dbc"
+  },
+  "inventory_rows": 52,
+  "streaming_runbook_files": 15,
+  "streaming_dataset_runbook_pairs": 21,
+  "sources": [
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/benchmark/dataset_io.py",
+      "sha256": "723acffb55712a0b1651347b322adabf2606b386c8c2a38504538fe02d49b0ab",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/dataset_io.py"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/benchmark/datasets.py",
+      "sha256": "3b5e2b5cc89d2b79f9054a819200fea34096bf11aca430eb12afb528395b6d49",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/datasets.py"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/benchmark/plotting/metrics.py",
+      "sha256": "288e0c6cf774bb7fa387c1686b673a5a17cc73a22cd1f5f6229a74dd9c80ed43",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/plotting/metrics.py"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/benchmark/streaming/compute_gt.py",
+      "sha256": "b47b9ca51a819e04a1e3913b89a32aaca50da0a6742617a9eebdf37785405637",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/streaming/compute_gt.py"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/benchmark/streaming/load_runbook.py",
+      "sha256": "f4b482600ee6c307bd715e1e0dbad6428d6333b78f382db47b7821be42969e50",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/benchmark/streaming/load_runbook.py"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/README.md",
+      "sha256": "d4b9f84925c182b036ca90971bc415009640cfd921078af970c2bcc14c24239d",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/README.md"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/leaderboard.md",
+      "sha256": "9076674e0aba46e4166e0ec7463875fa1af4a8b138eae055fce1f9ee3c243b29",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/leaderboard.md"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/ongoing_leaderboard/Azure_D8lds_v5_table.md",
+      "sha256": "fc45fce51ec05f0ef8ff7b49a825126636b4877d3ffbc977bc2e747dccf66490",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/ongoing_leaderboard/Azure_D8lds_v5_table.md"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/ongoing_leaderboard/filter/res_public_queries_AzureD8lds_v5.csv",
+      "sha256": "8ae5899bdf7d19ca67c42821ce06bfbe467055613f451dcde865cf608256bf99",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/ongoing_leaderboard/filter/res_public_queries_AzureD8lds_v5.csv"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/ongoing_leaderboard/leaderboard.md",
+      "sha256": "5292d8b114e500c72e0e5e57dd8909e1a8287587dcf32fd6fa8b300e0b322897",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/ongoing_leaderboard/leaderboard.md"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/ongoing_leaderboard/ood/res_public_queries_AzureD8lds_v5.csv",
+      "sha256": "47a9d88603cf2839af6c446f1142b10c0c5693617e8558be519b37c01d8ff610",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/ongoing_leaderboard/ood/res_public_queries_AzureD8lds_v5.csv"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/ongoing_leaderboard/sparse/res_public_queries_AzureD8lds_v5.csv",
+      "sha256": "d6721fb76683442cf08d0f7a8f0356321489f9114bf1993c83f298f1ab0b9927",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/ongoing_leaderboard/sparse/res_public_queries_AzureD8lds_v5.csv"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/ongoing_leaderboard/streaming/res_final_runbook_AzureD8lds_v5.csv",
+      "sha256": "077084cc20de515c52c55e5a39fc8d818a48b1107b2db82ca4b9db84bdfc2f1c",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/ongoing_leaderboard/streaming/res_final_runbook_AzureD8lds_v5.csv"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/clustered_replace_runbook.yaml",
+      "sha256": "31424135640373870547b8ec2dcee635d4a969a887db5a317b60c444c50b7db7",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/clustered_replace_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/clustered_runbook.yaml",
+      "sha256": "b65641b28646cdd779b1e9451e71920560d76072f285f3488ef2fea963d3e4e4",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/clustered_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/delete_runbook.yaml",
+      "sha256": "c146fb5cde1920c90a86e045d534f776d9541747669b0a2fe915eac4a50fb48e",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/delete_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/final_runbook.yaml",
+      "sha256": "92347aff3bdc378b3bead517df33311bec615be2a9c8af0f5b5e0a14e51865f2",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/final_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/msmarco-100M_expirationtime_runbook.yaml",
+      "sha256": "13bd5de6c8e3130011d1e0f7e4b584ed4cef87b843c7b45386254dff0db8fdbb",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/msmarco-100M_expirationtime_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/msturing-10M_slidingwindow_runbook.yaml",
+      "sha256": "039af38563c1f070944e7c1a173715c95a763e6f6750efe712ca2b1bea90d0bb",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/msturing-10M_slidingwindow_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/random_replace_runbook.yaml",
+      "sha256": "6476b340894f52d68c399bf31180a2ba7036bd4c46500bb326b6b30858b84ea2",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/random_replace_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/simple_replace_runbook.yaml",
+      "sha256": "366574620902f780966b4dfdc7612dea5cc10b7a8c07362a1b4c86c53de3e981",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/simple_replace_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/simple_runbook.yaml",
+      "sha256": "77fcfa0ba20134a2d23fb35eedb17de6011379e8885656f33377b1a05319406d",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/simple_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/wikipedia-1M_expiration_time_replace_delete_runbook.yaml",
+      "sha256": "c78710301de838dd7755f4d4788acb7d82ed73bd97a365ccff9ff40bd149b9c6",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/wikipedia-1M_expiration_time_replace_delete_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/wikipedia-1M_expiration_time_replace_only_runbook.yaml",
+      "sha256": "e70cb02bf63fe01325989d5e7ed38406102575f16306426de2461ba1d4da2691",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/wikipedia-1M_expiration_time_replace_only_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/wikipedia-1M_expiration_time_runbook.yaml",
+      "sha256": "0294e0d41b3f267e2dc96daa68177895afaeb29b4eabfe296917c89106a57490",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/wikipedia-1M_expiration_time_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/wikipedia-35M_expiration_time_replace_delete_runbook.yaml",
+      "sha256": "d4a389c164fa15f2efac40a3ea333a072d384411ae7cd5dbf66a9617c8eff06b",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/wikipedia-35M_expiration_time_replace_delete_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/wikipedia-35M_expiration_time_replace_only_runbook.yaml",
+      "sha256": "e8bc2cc498a5319b3a8e292d6c834c5fcf34c24fac88e05dd8f7ea6d9a900e17",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/wikipedia-35M_expiration_time_replace_only_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/runbooks/wikipedia-35M_expirationtime_runbook.yaml",
+      "sha256": "79fe722e62fa3bfb1145736149f4e974bc76b3d9373719aaf876db2f9aea2dd2",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/runbooks/wikipedia-35M_expirationtime_runbook.yaml"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/bigann/neurips23/streaming/res_final_runbook_AzureD8lds_v5.csv",
+      "sha256": "250955775b368bb58977cbbf510ef972839c6ca1a7b1c87094b5465bfa9e6787",
+      "source": "https://raw.githubusercontent.com/harsha-simhadri/big-ann-benchmarks/ec58203170e3636ba7da82154ce6322de9cb8b33/neurips23/streaming/res_final_runbook_AzureD8lds_v5.csv"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/vdbbench/vectordb_bench/backend/cases.py",
+      "sha256": "85764ade8f7c1df820dffd04a26d2ea8354951f8d14ae4cdb7967f0aee11e2aa",
+      "source": "https://raw.githubusercontent.com/zilliztech/VectorDBBench/879a7638d33b391a1715c0b024353fc52df33dbc/vectordb_bench/backend/cases.py"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/vdbbench/vectordb_bench/results/leaderboard_v2.json",
+      "sha256": "e16fa62fdbd42fbbb26fd289d6888ee43cf8107de9a420e07e01c170e08d7382",
+      "source": "https://raw.githubusercontent.com/zilliztech/VectorDBBench/879a7638d33b391a1715c0b024353fc52df33dbc/vectordb_bench/results/leaderboard_v2.json"
+    },
+    {
+      "path": "benchmarks/results/mission/B/sources/vdbbench/vectordb_bench/results/leaderboard_v2_streaming.json",
+      "sha256": "6d472cf138ffb2c3151057f84e432ade5d0472231e2feb59ba63f5013448af11",
+      "source": "https://raw.githubusercontent.com/zilliztech/VectorDBBench/879a7638d33b391a1715c0b024353fc52df33dbc/vectordb_bench/results/leaderboard_v2_streaming.json"
+    }
+  ],
+  "prior_art": [
+    {
+      "url": "https://www.vldb.org/conf/1998/p194.pdf",
+      "contribution": "VA-file exact search over conservative vector approximations; mechanism not novel"
+    },
+    {
+      "url": "https://arxiv.org/abs/2405.12497",
+      "contribution": "RaBitQ probabilistic quantization error guarantees; not sufficient alone for deterministic exactness"
+    },
+    {
+      "url": "https://vectordb-ntu.github.io/RaBitQ-Library/rabitq/core_api/",
+      "contribution": "core API explicitly says error factor is not a guaranteed deterministic lower bound"
+    },
+    {
+      "url": "https://steveomohundro.com/wp-content/uploads/2009/03/omohundro89_five_balltree_construction_algorithms.pdf",
+      "contribution": "Omohundro 1989 geometric balltree hierarchy; H-B-3 cover summaries are a composition, not a novelty claim"
+    }
+  ],
+  "conflicts": [
+    {
+      "topic": "streaming leader",
+      "prose": 0.99786,
+      "linked_csv_max": 0.9923721875000002,
+      "decision": "keep stronger advertised reference; request organiser reconciliation; target remains1"
+    },
+    {
+      "topic": "OOD leader",
+      "table": "Pinecone 38087.669026",
+      "csv": "hanns 46033.867231881486 at .900311; build .0000147819519s",
+      "decision": "eligibility/build accounting unresolved; do not silently freeze weaker table figure"
+    },
+    {
+      "topic": "streaming VDB recall",
+      "value": "not present in published result",
+      "decision": "equal-recall target cannot yet be evaluated"
+    }
+  ],
+  "competition": {
+    "name": "Big ANN ongoing",
+    "deadline": "rolling; no deadline announced in current rules",
+    "submission": "pull request with algorithm and short description; no CMT required",
+    "eligibility": "closed source permitted and marked; organiser hardware limits apply",
+    "hidden_test": "ongoing evaluates public queries only; mission requires additional untouched holdout",
+    "authorisation": "submission requires David; no submission made"
+  },
+  "unresolved_scope": [
+    "VectorDBBench custom StreamingCustomDataset and LabelFilterPerformanceCase/NewIntFilter arbitrary parameters are catalogued case families, not fully defined matrix rows; need published parameter sets or frozen general workload definition",
+    "Newer BigANN Wikipedia/MSMARCO streaming YAMLs publish workloads but not individual competitor standings/resource applicability",
+    "VDB filter snapshots do not pin concurrency/cost/recall policy; inspect full published run provenance before comparison freeze"
+  ],
+  "counter_status": {
+    "H-B-2": "rejected by root E4; 18.2080158125 code bytes versus1.5; refinement .000942875 versus.0003; no false prunes; no harder distribution run",
+    "next": "H-B-3 subspace-cover hierarchy; next-card-b3.md"
+  }
+}

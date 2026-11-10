@@ -4,8 +4,9 @@
 # Releasing WARM
 
 The engine and binding tags produce artefacts, provenance attestations and SBOMs. MCP launchers
-have their own version and release tag. Nothing publishes from a branch, a pull request or a manual
-run.
+have their own version and release tag. Pull requests do not publish. Manual runs default to
+builds and checks; explicit publish inputs enable protected crate-only recovery, npm publication
+on `main`, or publication from the Python release workflows. MCP manual runs do not publish.
 
 | Tag | Workflow | Produces |
 | --- | --- | --- |
@@ -15,9 +16,25 @@ run.
 | `sdk-vX.Y.Z` | `.github/workflows/warm-sdk-release.yml` | `warm-sdk` wheel and sdist, published to PyPI through Trusted Publishing |
 | `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
 
-Publish the model pack before the native wheel that offers it through `[embed]`. The Python
-distributions have separate release tags and Trusted Publisher workflows. For a full engine release,
-push both `vX.Y.Z` and `py-vX.Y.Z`; the native wheels build twice.
+Publish a new model pack before a native wheel that requires that new version through `[embed]`.
+The existing `warm-models==0.1.0` pin does not require another model release for engine 0.6.7.
+The Python distributions have separate release tags and Trusted Publisher workflows. For a full
+engine release, push both `vX.Y.Z` and `py-vX.Y.Z` at the same commit; the native wheels build twice.
+
+The npm native binding `warm-sdk` follows the engine version; the PyPI HTTP SDK also named
+`warm-sdk` has an independent version in `bindings/python/warm-sdk/pyproject.toml`. The engine
+version script does not bump that SDK or the MCP launchers. Framework adapters in `integrations/js`
+and `integrations/python`, and the two Claude memory-tool packages, have no publication workflow
+in this release pipeline. Their first publication is separate from the 0.6.7 maintenance release.
+
+## Python HTTP SDK release
+
+When the SDK changes, set a new version in `bindings/python/warm-sdk/pyproject.toml` and document
+compatibility changes, including removed adapters. Run **Python SDK release** on the candidate
+with `publish=false`. Its gate builds with `uv build`, tests against a real `warm-server`, and
+checks a clean wheel install, import and `py.typed` marker. Require the framework contract jobs
+in `ci.yml` as well. Publish a signed `sdk-vX.Y.Z` tag matching the SDK manifest; do not reuse
+an existing version or substitute the engine version.
 
 ## MCP launcher release
 
@@ -37,7 +54,11 @@ have publish access to `writerslogic-warm-mcp`.
 
 To check the pipeline without publishing, run **MCP launcher release** with `workflow_dispatch` or
 open a pull request touching its files. To publish, tag the commit containing the tested workflow
-with `mcp-vX.Y.Z` where X.Y.Z matches the three launcher version strings, and push the tag. The
+with `mcp-vX.Y.Z` where X.Y.Z matches `integrations/mcp/npm/package.json`,
+`integrations/mcp/pypi/pyproject.toml`, the Python launcher's `__version__`, and
+`integrations/mcp/server.json` (including both package entries), and push the signed tag.
+`python3 scripts/ci/mcp-release.py mcp-vX.Y.Z` checks those versions and registry metadata.
+A changed `warm-mcp` binary needs a new launcher release even when launcher source is unchanged. The
 workflow never replaces an existing release or registry version. If one publish job fails after the
 GitHub release exists, correct its credentials or publisher configuration and rerun that job only.
 
@@ -133,40 +154,61 @@ These cannot be committed; the publish jobs wait on them.
 ## Cut a release
 
 1. **Version.** `uv run python scripts/ci/bump-version.py X.Y.Z` sets Cargo.toml, Cargo.lock,
-   package.json with its `optionalDependencies`, and package-lock.json; `scripts/ci/check-versions.py`
+   package.json with its `optionalDependencies`, package-lock.json and `docs/server/openapi.json`;
+   `scripts/ci/check-versions.py`
    runs in every artefact job and again against the tag, so a mismatch fails the build.
-2. **Changelog.** `git cliff -c cliff.toml -o CHANGELOG.md`, committed as `chore: update changelog`.
-   Tag the commit before any `[skip ci]` commit (those run no workflows).
+2. **Changelog.** Use git-cliff 2.14.2, matching the pinned workflow; older versions can
+   assign merged branch commits to releases that never contained them. Run
+   `git cliff -c cliff.toml --tag vX.Y.Z -o CHANGELOG.md` and commit as
+   `chore: Update changelog`. The tag argument prepares the release heading without
+   creating a Git tag. Generate it on the intended UTC tag date and require the
+   changelog gate on the actual tag. Tag the commit before any `[skip ci]` commit
+   (those run no workflows).
 3. **Dry run.** Merge to `main`, then run Actions, Release and Python native release on `main`.
-   Run Python models release and Python SDK release when those packages change. The dry runs build
-   and test without publishing. The `Reproducible build` workflow must also be green on that commit.
+   Keep all publish inputs false. Run Python SDK release and MCP launcher release when those
+   distributions change; run Python models release only when a new pack is needed. The dry runs
+   build and test without publishing. The `Reproducible build` workflow must also be green on that commit.
 4. **Tag and push** (signed): `git tag -s vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`, and the same
    for `py-vX.Y.Z`. Publish `py-models-vX.Y.Z` first if the native `[embed]` extra needs a new model
-   pack. Publish `sdk-vX.Y.Z` when the SDK changes. Approve the `release`, `crates-io`, `npm` and
+   pack. Publish matching independent `sdk-vX.Y.Z` and `mcp-vX.Y.Z` tags when those distributions
+   change. Approve the `release`, `crates-io`, `npm` and
    `pypi` environments when asked.
 5. **GitHub release.** `release.yml` leaves a *draft* release holding every artefact, SBOM,
-   `SHA256SUMS` and the provenance bundle. Write the notes, then publish it. The data releases
+   `SHA256SUMS` and the provenance bundle. Prepare the notes, but keep it a draft until the registry
+   and artefact checks below pass, then publish it. The data releases
    (`evidence-v*`) use other tags and never trigger these workflows.
 6. **npm listing.** Verify the new root package and all eight platform packages are available:
 
    ```sh
-   npm view warm-sdk@X.Y.Z deprecated       # must print nothing
-   npm dist-tag ls warm-sdk                # latest must be X.Y.Z
+   version=X.Y.Z
+   for package in warm-sdk \
+     warm-sdk-darwin-arm64 warm-sdk-darwin-x64 \
+     warm-sdk-linux-arm64-gnu warm-sdk-linux-arm64-musl \
+     warm-sdk-linux-x64-gnu warm-sdk-linux-x64-musl \
+     warm-sdk-win32-arm64-msvc warm-sdk-win32-x64-msvc; do
+     test "$(npm view "${package}@${version}" version)" = "$version" || exit 1
+   done
+   npm view "warm-sdk@${version}" deprecated # must print nothing
+   npm dist-tag ls warm-sdk                  # latest must be X.Y.Z
    ```
 
    Confirm the latest registry page shows no deprecation banner, the README logo renders, and
    `npm install warm-sdk` resolves to X.Y.Z. npm can acknowledge a new package before
    its version is available; a [`0.0.0-stage` placeholder](https://docs.npmjs.com/staged-publishing/)
    alone is not a published binding.
-   The `verify-published` job waits for the root and every declared optional platform package
-   with a fresh npm cache, then installs the published package and runs a search.
+   Require the `verify-published` job to pass for this release: it waits for the root and every
+   declared optional platform package with a fresh npm cache, installs the published root package
+   in a clean consumer, verifies npm signatures, and runs a document search. Registry metadata or
+   a successful tarball build alone does not establish that consumers can use the release.
 7. **Verify** what was shipped (see below).
 
 ### First npm release under `warm-sdk`
 
-The 0.6.6 release is the first publish of `warm-sdk` and the eight platform packages. The
-source rename did not publish them or transfer ownership from `writerslogic-warm`, whose
-latest release is 0.6.4. Before release,
+The 0.6.6 release partially published the new npm names: seven platform packages succeeded,
+but npm rejected `warm-sdk-win32-x64-msvc` for package-name spam detection and the job stopped
+before publishing root `warm-sdk` ([failed job](https://github.com/writerslogic/warm/actions/runs/42557810040/job/128969748569)).
+The source rename did not publish the missing packages or transfer ownership from
+`writerslogic-warm`. Before release,
 confirm publishing authority for all nine names and configure `NPM_TOKEN` for them.
 Publish the platform tarballs first, then the root, through the existing protected
 release workflow. Require the cross-platform build/install gates, provenance checks,
@@ -174,9 +216,10 @@ and registry consumer smoke test before directing consumers to the new name.
 
 Consumers replace `writerslogic-warm` with `warm-sdk` in their package manifests and
 imports, including `/semantic` and `/memory`. Keep existing store directories and
-configuration. Framework adapters in `integrations/js` also need a coordinated release
-because their core peer dependency changes to `warm-sdk >=0.6.5`, which 0.6.6 satisfies. Until
-the new packages are available, released consumers continue using the existing published package.
+configuration. A future first publication of the framework adapters in `integrations/js` must
+coordinate their `warm-sdk >=0.6.5` peer dependency with a complete native binding release; those
+adapters are not published by the engine tag and are not a prerequisite for 0.6.7. Until the new
+native packages are available, released consumers continue using the existing published package.
 
 Retiring or deprecating `writerslogic-warm` requires a separate maintainer action after
 the replacement is verified. This rename leaves the MCP launcher, embedding-model
@@ -220,13 +263,20 @@ attestations, not compared).
 
 ## If something goes wrong
 
-- A publish job failed partway: fix the cause and re-run the failed job. The npm step skips any
-  package version the registry already has, `cargo publish` refuses an existing version, and PyPI
-  uses `skip-existing`. A re-run uses the workflow file at the tag, so a fix to the workflow applies
-  from the next tag.
+- A publish job failed partway: inspect its logs and the workflow at that tag before retrying.
+  Current npm release steps skip existing versions, `cargo publish` refuses an existing version,
+  and PyPI uses `skip-existing`. Historical tag workflows may lack current recovery guards; a
+  re-run uses the workflow file at the tag. Fixes on `main` apply from the next tag, not to the old run.
 - npm answered `E403 Package name triggered spam detection` for a new package name: ask npm
-  support to clear the name, then re-run the job. This stopped the first `warm-sdk` publish at 0.6.6
-  after 7 of the 8 platform packages.
+  support to clear that exact name and verify the resolution before another publish. For 0.6.6,
+  the rejected name was `warm-sdk-win32-x64-msvc`; seven platform packages had succeeded and the
+  root was not published. This error does not establish a credential or ownership failure, and
+  changing the version alone does not clear it. Preserve the signed 0.6.6 tags when releasing 0.6.7.
+- For npm-only recovery from the reviewed candidate on `main`, run
+  `gh workflow run npm-packages.yml --ref main -f publish_npm=true` after resolving the failure.
+  This protected path builds and verifies the packages, compares the integrity of any existing
+  versions before skipping them, and requires the published-package consumer gate. Confirm the
+  candidate's version and commit first; the normal full release uses the signed engine tag.
 - A tag's crate upload failed because the archive is too large: fix the `Cargo.toml` package
   contents on `main` and verify `cargo package --locked --no-default-features` reports less than
   9.5 MB compressed. The `crates-io` environment normally permits only `v*` tags; temporarily

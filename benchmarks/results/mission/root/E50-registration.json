@@ -1,0 +1,32 @@
+{
+  "id": "E50",
+  "hypothesis": "H-B-9",
+  "row": "R68-development",
+  "question": "Does the unchanged E43assembly pass all original gates under whole-opcode lexing and verified induction/store semantics?",
+  "prediction": "16complete comparison opcodes plusunchanged400VNNIdots/rounding/masks;resource/throughput remainsunresolved",
+  "configuration": "E43exactreceipt/assemblyhash;parseronly;no x86execution;180s",
+  "cwd": "/Volumes/A/.hms-wt-mission-integrated",
+  "script": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/run_packed_scan_audit.py",
+  "result": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E50/native/receipt.json",
+  "argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--locked",
+    "--project",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission",
+    "python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/run_packed_scan_audit.py",
+    "--existing-receipt",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E43/native/receipt.json",
+    "--output-dir",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E50/native"
+  ],
+  "summary_fields": [
+    "mode",
+    "failure_phase",
+    "failure_type",
+    "failure",
+    "resource_decision"
+  ]
+}

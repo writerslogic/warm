@@ -1,0 +1,31 @@
+{
+  "id": "E15",
+  "hypothesis": "H-B-4",
+  "row": "R68-development-proxy",
+  "question": "Does unchanged integer-certificate representation transfer to harder exposed synthetic distribution?",
+  "prediction": "Same mean<=64,p99<=256,zero false prunes/violations; otherwise reject transfer without tuning",
+  "configuration": "data_hard;1M100D;first16developmentqueries;unchanged8bit maxabs/127;600s cap",
+  "cwd": "/Volumes/A/.hms-wt-mission-b",
+  "script": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer_certificate_counter.py",
+  "result": "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer-certificate-data-hard.json",
+  "argv": [
+    "uv",
+    "run",
+    "--no-project",
+    "--python",
+    "/Volumes/A/.hms-lb/bigann/venv/bin/python",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer_certificate_counter.py",
+    "--base",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/base.npy",
+    "--queries",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/queries.npy",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-b/benchmarks/results/mission/B/integer-certificate-data-hard.json"
+  ],
+  "summary_fields": [
+    "mean_surviving_rows",
+    "sample_p99_surviving_rows",
+    "false_prunes",
+    "bound_violations"
+  ]
+}

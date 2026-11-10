@@ -1,0 +1,40 @@
+{
+  "id": "E42",
+  "hypothesis": "H-C-3",
+  "row": "LongMemEval-M-inventory",
+  "question": "Does physical M record zero exceed the predeclared126200 history-token gate under exact neutral upstream JSON/o200k serialization?",
+  "prediction": "First record exceeds126200;reject all500 fit under fixedlocalboundary;no score",
+  "configuration": "firstrecordonly;32MiBprefix;126200history;127200input;800output;tiktoken0.14.0",
+  "cwd": "/Volumes/A/.hms-wt-mission-integrated",
+  "script": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/C/c3_prefix_counter.py",
+  "result": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/C/c3-prefix-result-E42.json",
+  "argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--locked",
+    "--project",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission",
+    "python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/C/c3_prefix_counter.py",
+    "--prefix",
+    "/Volumes/A/.hms-lb/mission/E42-input/M-prefix.bin",
+    "--provenance",
+    "/Volumes/A/.hms-lb/mission/E42-input/fetch-receipt.json",
+    "--upstream-source",
+    "/Volumes/A/.hms-lb/mission/E42-input/run_generation.source",
+    "--tokenizer-artifact",
+    "/Volumes/A/.hms-lb/mission/E42-input/o200k_base.tiktoken",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/C/c3-prefix-result-E42.json"
+  ],
+  "summary_fields": [
+    "counterexample_to_all500_history_gate",
+    "coverage",
+    "serialization",
+    "error_type",
+    "error"
+  ],
+  "source_commit": "a818694973a26c8d8050371dae124abd3049cc4a",
+  "script_sha256": "656d8987aeccfe560111e8403e3a70a02bf6cc660333f01d1469e394ff1a2bc3"
+}

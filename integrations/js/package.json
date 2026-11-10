@@ -2,7 +2,9 @@
   "name": "writerslogic-warm-integrations",
   "private": true,
   "license": "Apache-2.0",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"
@@ -12,5 +14,10 @@
     "tsup": "^9.0.0",
     "typescript": "^5.9.3",
     "warm-sdk": "file:../.."
+  },
+  "overrides": {
+    "@llamaindex/node-parser": {
+      "html-to-text": "10.0.1"
+    }
   }
 }

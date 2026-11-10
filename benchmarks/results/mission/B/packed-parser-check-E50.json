@@ -1,0 +1,681 @@
+{
+  "hypothesis": "H-B-9",
+  "claim": "fixed parser state/flag/store fixtures only; no hardware claim",
+  "source_sha256": {
+    "run_packed_scan_audit.py": "ca448da3214cb44a3fb1173e528a3337579a34c6f43b9661fb0d47f93b2cd154",
+    "check_packed_scan_parser.py": "baf6ef26618432ba147f526a445f8f3017fd0119b19ccb6487c02d6d492c8899"
+  },
+  "oracle": "independent bounded enumeration of modulo2^width integer updates and equality; no reuse of the parser's division formula",
+  "checks": [
+    {
+      "name": "whole_opcode_vcmpgt_oqps",
+      "passed": true
+    },
+    {
+      "name": "whole_opcode_vcmpps",
+      "passed": true
+    },
+    {
+      "name": "whole_opcode_vmulps",
+      "passed": true
+    },
+    {
+      "name": "whole_opcode_kmovd",
+      "passed": true
+    },
+    {
+      "name": "whole_opcode_retq",
+      "passed": true
+    },
+    {
+      "name": "reject_missing_opcode_separator_vcmpgt_oqps%zmm26, %zmm21, %k0",
+      "passed": true
+    },
+    {
+      "name": "reject_missing_opcode_separator_kmovd%k0, (%rdx)",
+      "passed": true
+    },
+    {
+      "name": "reject_missing_opcode_separator_retq!",
+      "passed": true
+    },
+    {
+      "name": "negative_32_trip24",
+      "passed": true,
+      "expected_trips": 24,
+      "enumerated_trips": 24,
+      "induction": {
+        "form": "negative-to-zero-add-ZF",
+        "register": "rcx",
+        "width_bits": 32,
+        "initial": -96,
+        "step": 4,
+        "bound": 0,
+        "trips": 24,
+        "flag_producer_line": 2,
+        "proof": "s_j=initial+j*step stays signed-negative before the final update and equals0 there; same-width ADD produces ZF and the immediately following JNE tests it. Unsigned wrap at the final addition is defined; no signed-range overflow occurs."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "zero_32_trip24",
+      "passed": true,
+      "expected_trips": 24,
+      "enumerated_trips": 24,
+      "induction": {
+        "form": "zero-to-bound-compare-ZF",
+        "register": "rcx",
+        "width_bits": 32,
+        "initial": 0,
+        "step": 4,
+        "bound": 96,
+        "trips": 24,
+        "flag_producer_line": 2,
+        "proof": "s_j=j*step reaches bound for the first time without signed or unsigned wrap; the adjacent same-width CMP defines ZF consumed by JNE."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "negative_32_trip25",
+      "passed": true,
+      "expected_trips": 25,
+      "enumerated_trips": 25,
+      "induction": {
+        "form": "negative-to-zero-add-ZF",
+        "register": "rcx",
+        "width_bits": 32,
+        "initial": -100,
+        "step": 4,
+        "bound": 0,
+        "trips": 25,
+        "flag_producer_line": 2,
+        "proof": "s_j=initial+j*step stays signed-negative before the final update and equals0 there; same-width ADD produces ZF and the immediately following JNE tests it. Unsigned wrap at the final addition is defined; no signed-range overflow occurs."
+      },
+      "fixed25_gate_passes": true
+    },
+    {
+      "name": "zero_32_trip25",
+      "passed": true,
+      "expected_trips": 25,
+      "enumerated_trips": 25,
+      "induction": {
+        "form": "zero-to-bound-compare-ZF",
+        "register": "rcx",
+        "width_bits": 32,
+        "initial": 0,
+        "step": 4,
+        "bound": 100,
+        "trips": 25,
+        "flag_producer_line": 2,
+        "proof": "s_j=j*step reaches bound for the first time without signed or unsigned wrap; the adjacent same-width CMP defines ZF consumed by JNE."
+      },
+      "fixed25_gate_passes": true
+    },
+    {
+      "name": "negative_32_trip26",
+      "passed": true,
+      "expected_trips": 26,
+      "enumerated_trips": 26,
+      "induction": {
+        "form": "negative-to-zero-add-ZF",
+        "register": "rcx",
+        "width_bits": 32,
+        "initial": -104,
+        "step": 4,
+        "bound": 0,
+        "trips": 26,
+        "flag_producer_line": 2,
+        "proof": "s_j=initial+j*step stays signed-negative before the final update and equals0 there; same-width ADD produces ZF and the immediately following JNE tests it. Unsigned wrap at the final addition is defined; no signed-range overflow occurs."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "zero_32_trip26",
+      "passed": true,
+      "expected_trips": 26,
+      "enumerated_trips": 26,
+      "induction": {
+        "form": "zero-to-bound-compare-ZF",
+        "register": "rcx",
+        "width_bits": 32,
+        "initial": 0,
+        "step": 4,
+        "bound": 104,
+        "trips": 26,
+        "flag_producer_line": 2,
+        "proof": "s_j=j*step reaches bound for the first time without signed or unsigned wrap; the adjacent same-width CMP defines ZF consumed by JNE."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "negative_64_trip24",
+      "passed": true,
+      "expected_trips": 24,
+      "enumerated_trips": 24,
+      "induction": {
+        "form": "negative-to-zero-add-ZF",
+        "register": "rcx",
+        "width_bits": 64,
+        "initial": -96,
+        "step": 4,
+        "bound": 0,
+        "trips": 24,
+        "flag_producer_line": 2,
+        "proof": "s_j=initial+j*step stays signed-negative before the final update and equals0 there; same-width ADD produces ZF and the immediately following JNE tests it. Unsigned wrap at the final addition is defined; no signed-range overflow occurs."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "zero_64_trip24",
+      "passed": true,
+      "expected_trips": 24,
+      "enumerated_trips": 24,
+      "induction": {
+        "form": "zero-to-bound-compare-ZF",
+        "register": "rcx",
+        "width_bits": 64,
+        "initial": 0,
+        "step": 4,
+        "bound": 96,
+        "trips": 24,
+        "flag_producer_line": 2,
+        "proof": "s_j=j*step reaches bound for the first time without signed or unsigned wrap; the adjacent same-width CMP defines ZF consumed by JNE."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "negative_64_trip25",
+      "passed": true,
+      "expected_trips": 25,
+      "enumerated_trips": 25,
+      "induction": {
+        "form": "negative-to-zero-add-ZF",
+        "register": "rcx",
+        "width_bits": 64,
+        "initial": -100,
+        "step": 4,
+        "bound": 0,
+        "trips": 25,
+        "flag_producer_line": 2,
+        "proof": "s_j=initial+j*step stays signed-negative before the final update and equals0 there; same-width ADD produces ZF and the immediately following JNE tests it. Unsigned wrap at the final addition is defined; no signed-range overflow occurs."
+      },
+      "fixed25_gate_passes": true
+    },
+    {
+      "name": "zero_64_trip25",
+      "passed": true,
+      "expected_trips": 25,
+      "enumerated_trips": 25,
+      "induction": {
+        "form": "zero-to-bound-compare-ZF",
+        "register": "rcx",
+        "width_bits": 64,
+        "initial": 0,
+        "step": 4,
+        "bound": 100,
+        "trips": 25,
+        "flag_producer_line": 2,
+        "proof": "s_j=j*step reaches bound for the first time without signed or unsigned wrap; the adjacent same-width CMP defines ZF consumed by JNE."
+      },
+      "fixed25_gate_passes": true
+    },
+    {
+      "name": "negative_64_trip26",
+      "passed": true,
+      "expected_trips": 26,
+      "enumerated_trips": 26,
+      "induction": {
+        "form": "negative-to-zero-add-ZF",
+        "register": "rcx",
+        "width_bits": 64,
+        "initial": -104,
+        "step": 4,
+        "bound": 0,
+        "trips": 26,
+        "flag_producer_line": 2,
+        "proof": "s_j=initial+j*step stays signed-negative before the final update and equals0 there; same-width ADD produces ZF and the immediately following JNE tests it. Unsigned wrap at the final addition is defined; no signed-range overflow occurs."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "zero_64_trip26",
+      "passed": true,
+      "expected_trips": 26,
+      "enumerated_trips": 26,
+      "induction": {
+        "form": "zero-to-bound-compare-ZF",
+        "register": "rcx",
+        "width_bits": 64,
+        "initial": 0,
+        "step": 4,
+        "bound": 104,
+        "trips": 26,
+        "flag_producer_line": 2,
+        "proof": "s_j=j*step reaches bound for the first time without signed or unsigned wrap; the adjacent same-width CMP defines ZF consumed by JNE."
+      },
+      "fixed25_gate_passes": false
+    },
+    {
+      "name": "negative_flags_replaced_by_test",
+      "passed": true,
+      "rejection": "expected cmp immediate/full-register form"
+    },
+    {
+      "name": "negative_flags_replaced_by_pointer_subtract",
+      "passed": true,
+      "rejection": "expected cmp immediate/full-register form"
+    },
+    {
+      "name": "negative_intervening_counter_write",
+      "passed": true,
+      "rejection": "negative-to-zero induction has another counter write or no initialization"
+    },
+    {
+      "name": "negative_second_counter_increment",
+      "passed": true,
+      "rejection": "negative-to-zero induction has another counter write or no initialization"
+    },
+    {
+      "name": "negative_prefix_low_alias_write",
+      "passed": true,
+      "rejection": "expected mov immediate/full-register form"
+    },
+    {
+      "name": "negative_exchange_counter_write",
+      "passed": true,
+      "rejection": "unmodeled instruction in induction proof: xchgq"
+    },
+    {
+      "name": "negative_mixed_width_zero_extension",
+      "passed": true,
+      "rejection": "negative-to-zero state/width/step does not prove an exact finite trip count"
+    },
+    {
+      "name": "negative_nondivisible_initial",
+      "passed": true,
+      "rejection": "negative-to-zero state/width/step does not prove an exact finite trip count"
+    },
+    {
+      "name": "negative_positive_initial_would_require_wrap",
+      "passed": true,
+      "rejection": "negative-to-zero state/width/step does not prove an exact finite trip count"
+    },
+    {
+      "name": "negative_zero_step",
+      "passed": true,
+      "rejection": "negative-to-zero state/width/step does not prove an exact finite trip count"
+    },
+    {
+      "name": "negative_branch_predicate_changed",
+      "passed": true,
+      "rejection": "loop must end with JNE/JNZ consuming the preceding producer's ZF"
+    },
+    {
+      "name": "negative_prefix_branch_can_skip_initialization",
+      "passed": true,
+      "rejection": "induction proof requires straight-line initialization and one loop backedge"
+    },
+    {
+      "name": "zero_flags_replaced_by_test",
+      "passed": true,
+      "rejection": "expected cmp immediate/full-register form"
+    },
+    {
+      "name": "zero_flags_replaced_by_add",
+      "passed": true,
+      "rejection": "negative-to-zero induction has another counter write or no initialization"
+    },
+    {
+      "name": "zero_intervening_counter_write",
+      "passed": true,
+      "rejection": "zero-based induction requires one counter update and a known initializer"
+    },
+    {
+      "name": "zero_prefix_partial_register_write",
+      "passed": true,
+      "rejection": "expected mov immediate/full-register form"
+    },
+    {
+      "name": "zero_mixed_compare_width",
+      "passed": true,
+      "rejection": "zero-based state/width/step does not prove an exact finite trip count"
+    },
+    {
+      "name": "zero_suffix_operand_width_mismatch",
+      "passed": true,
+      "rejection": "instruction suffix and register width disagree"
+    },
+    {
+      "name": "zero_unknown_implicit_counter_effect",
+      "passed": true,
+      "rejection": "unmodeled instruction in induction proof: syscall"
+    },
+    {
+      "name": "kmovd_all_offsets_zero_implicit",
+      "passed": true,
+      "stores": [
+        {
+          "base": "%rdx",
+          "offset": 0,
+          "line": 0,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 4,
+          "line": 1,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 8,
+          "line": 2,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 12,
+          "line": 3,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 16,
+          "line": 4,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 20,
+          "line": 5,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 24,
+          "line": 6,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 28,
+          "line": 7,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        }
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "kmovd_all_offsets_zero_explicit",
+      "passed": true,
+      "stores": [
+        {
+          "base": "%rdx",
+          "offset": 0,
+          "line": 0,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 4,
+          "line": 1,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 8,
+          "line": 2,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 12,
+          "line": 3,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 16,
+          "line": 4,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 20,
+          "line": 5,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 24,
+          "line": 6,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 28,
+          "line": 7,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        }
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "movl_existing_form",
+      "passed": true,
+      "stores": [
+        {
+          "base": "%rdx",
+          "offset": 0,
+          "line": 0,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 4,
+          "line": 1,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 8,
+          "line": 2,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 12,
+          "line": 3,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 16,
+          "line": 4,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 20,
+          "line": 5,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 24,
+          "line": 6,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 28,
+          "line": 7,
+          "mnemonic": "movl",
+          "source": "%eax"
+        }
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "mixed32bit_store_forms",
+      "passed": true,
+      "stores": [
+        {
+          "base": "%rdx",
+          "offset": 0,
+          "line": 0,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 4,
+          "line": 1,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 8,
+          "line": 2,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 12,
+          "line": 3,
+          "mnemonic": "kmovd",
+          "source": "%k0"
+        },
+        {
+          "base": "%rdx",
+          "offset": 16,
+          "line": 4,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 20,
+          "line": 5,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 24,
+          "line": 6,
+          "mnemonic": "movl",
+          "source": "%eax"
+        },
+        {
+          "base": "%rdx",
+          "offset": 28,
+          "line": 7,
+          "mnemonic": "movl",
+          "source": "%eax"
+        }
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "missing_offset28",
+      "passed": true,
+      "rejection": "expected exactly eight32-bit output stores at offsets0,4,...,28 on one base",
+      "expected_valid": false
+    },
+    {
+      "name": "duplicate24_missing28",
+      "passed": true,
+      "rejection": "expected exactly eight32-bit output stores at offsets0,4,...,28 on one base",
+      "expected_valid": false
+    },
+    {
+      "name": "extra_offset32",
+      "passed": true,
+      "rejection": "expected exactly eight32-bit output stores at offsets0,4,...,28 on one base",
+      "expected_valid": false
+    },
+    {
+      "name": "offset_limit_plus_one",
+      "passed": true,
+      "rejection": "expected exactly eight32-bit output stores at offsets0,4,...,28 on one base",
+      "expected_valid": false
+    },
+    {
+      "name": "mixed_output_bases",
+      "passed": true,
+      "rejection": "expected exactly eight32-bit output stores at offsets0,4,...,28 on one base",
+      "expected_valid": false
+    },
+    {
+      "name": "output_base_reassigned",
+      "passed": true,
+      "rejection": "mask stores must retain the unchanged third-argument RDX output base",
+      "expected_valid": false
+    },
+    {
+      "name": "different_abi_output_base",
+      "passed": true,
+      "rejection": "mask stores must retain the unchanged third-argument RDX output base",
+      "expected_valid": false
+    },
+    {
+      "name": "wrong16bit_width",
+      "passed": true,
+      "rejection": "unmodeled memory destination or wrong-width mask store",
+      "expected_valid": false
+    },
+    {
+      "name": "wrong64bit_width",
+      "passed": true,
+      "rejection": "unmodeled memory destination or wrong-width mask store",
+      "expected_valid": false
+    },
+    {
+      "name": "invalid_mask_register",
+      "passed": true,
+      "rejection": "unmodeled memory destination or wrong-width mask store",
+      "expected_valid": false
+    },
+    {
+      "name": "indexed_output_destination",
+      "passed": true,
+      "rejection": "unmodeled indexed/non64-bit output store",
+      "expected_valid": false
+    },
+    {
+      "name": "extra_wrong_width_memory_write",
+      "passed": true,
+      "rejection": "unmodeled memory destination or wrong-width mask store",
+      "expected_valid": false
+    }
+  ],
+  "check_count": 55,
+  "failures": [],
+  "decision": "accept-parser-boundaries"
+}

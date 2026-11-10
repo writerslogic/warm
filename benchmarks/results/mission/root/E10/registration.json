@@ -1,0 +1,1 @@
+{"id":"E10","hypothesis":"H-A-3","question":"Does exact discovery-parent domination remove enough expansion events?","prediction":"zero-discovery>=.5,exact certificates>=1/3 every frozen cell; reject below1/3","scope":"hash-verified archived development; no engine run"}

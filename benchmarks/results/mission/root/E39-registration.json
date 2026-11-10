@@ -1,0 +1,40 @@
+{
+  "id": "E39",
+  "hypothesis": "H-B-8",
+  "row": "R68-development",
+  "question": "Can upper-only4096seeds retain exact top10 with all raw refinements mean<=2048,p99<=8192 and zero independent oracle/bound failures?",
+  "prediction": "Unchanged upper-seed gate also passes first16 harder queries; no native or throughput acceptance",
+  "configuration": "fixed4096SplitMix64seeds;4096blocks;16prefixqueries;600s;unchangedE36native",
+  "cwd": "/Volumes/A/.hms-wt-mission-integrated",
+  "script": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/upper_seed_counter.py",
+  "result": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/upper-seed-hard.json",
+  "argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--no-project",
+    "--python",
+    "/Volumes/A/.hms-lb/bigann/venv/bin/python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/upper_seed_counter.py",
+    "--base",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/base.npy",
+    "--queries",
+    "/Volumes/A/.hms-lb/bigann/l10-isolation/data_hard/queries.npy",
+    "--native-receipt",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E36/native/receipt.json",
+    "--distribution",
+    "hard",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/upper-seed-hard.json",
+    "--easy-result",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B/upper-seed-easy.json"
+  ],
+  "summary_fields": [
+    "mean_additional_exact_rows",
+    "sample_p99_additional_exact_rows",
+    "counts",
+    "failure_type",
+    "failure",
+    "stage"
+  ]
+}

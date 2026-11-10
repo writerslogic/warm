@@ -1,0 +1,10 @@
+{
+  "status": "stopped_at_user_request_before_first_vdbbench_workload",
+  "recorded_utc": "2026-11-10T01:31:43.996178+00:00",
+  "completed_vdbbench_runs": 0,
+  "frozen_runs_planned": 14,
+  "all_input_checksums_verified": true,
+  "image_loaded": true,
+  "results_available": false,
+  "resume_requires_new_vm_and_run_id": true
+}

@@ -1,0 +1,2136 @@
+{
+  "schema_version": 1,
+  "hypothesis": "H-C-1",
+  "source_file": "sources/locomo10.json",
+  "source_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+  "source_sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+  "external_audit_commit": "9493fb4b4af4256ed17a18e8fd0b3cfdeec29539",
+  "scope": "All 24 external ATTRIBUTION_ERROR claims; exposed development source. Full listed sessions reviewed; previously read sessions reused. Targeted cross-session searches supplied additional context. No exhaustive unflagged-label audit or semantic absence proof.",
+  "decision_counts": {
+    "citation_only_no_answer_correction": 1,
+    "propose_answer_and_attribution_qualification": 4,
+    "propose_answer_correction": 2,
+    "propose_capability_qualification": 1,
+    "propose_subject_and_modality_qualification": 2,
+    "propose_subject_qualification": 11,
+    "unresolved_emotional_scope": 1,
+    "unresolved_onset_scope": 1,
+    "unresolved_preference_scope": 1
+  },
+  "accepted_corrections": 0,
+  "official_score": null,
+  "audited_score": null,
+  "score_ceiling": null,
+  "applied_to_official_key": false,
+  "applied_to_system": false,
+  "H-C-2_status": "pending instrument audit",
+  "incidental_findings": [
+    {
+      "pointer": "/1/conversation/session_7/6",
+      "note": "Jon already refers to his students and dance classes in March, adding to the previously reviewed ambiguity about planned studio opening dates. Recorded only; no extension of temporal audit here."
+    },
+    {
+      "pointer": "/8/conversation/session_5/23",
+      "note": "Sam's closing line addresses Sam. Local transcript inconsistency is not used to swap the identity of the Canada narrative, whose preceding turn-taking explicitly identifies Evan."
+    }
+  ],
+  "reviewed": [
+    {
+      "id": "locomo_0_qa94",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/0/qa/94",
+      "official": {
+        "question": "What is Melanie's hand-painted bowl a reminder of?",
+        "answer": "art and self-expression",
+        "evidence": [
+          "D4:5"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D4:5"
+      ],
+      "external_correct_evidence": [
+        "D4:5"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "art and self-expression (but this is Caroline's bowl, not Melanie's)",
+      "proposed_audited_answer": "Caroline's bowl reminds her of art and self-expression; the cited bowl is not identified as Melanie's.",
+      "rationale": "D4:4 asks Caroline about treasured items; Caroline answers Melanie using my hand-painted bowl. The memory association is accurate for Caroline. Preserve the evaluated question and permit an explicit subject correction, rather than quietly changing its owner.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/0/conversation/session_4",
+          "date": "10:37 am on 27 June, 2023"
+        }
+      ],
+      "evidence": {
+        "D4:2": {
+          "pointer": "/0/conversation/session_4/1",
+          "session_date_pointer": "/0/conversation/session_4_date_time",
+          "session_date": "10:37 am on 27 June, 2023",
+          "speaker": "Melanie",
+          "text": "Hey, Caroline! Nice to hear from you! Love the necklace, any special meaning to it?"
+        },
+        "D4:3": {
+          "pointer": "/0/conversation/session_4/2",
+          "session_date_pointer": "/0/conversation/session_4_date_time",
+          "session_date": "10:37 am on 27 June, 2023",
+          "speaker": "Caroline",
+          "text": "Thanks, Melanie! This necklace is super special to me - a gift from my grandma in my home country, Sweden. She gave it to me when I was young, and it stands for love, faith and strength. It's like a reminder of my roots and all the love and support I get from my family."
+        },
+        "D4:4": {
+          "pointer": "/0/conversation/session_4/3",
+          "session_date_pointer": "/0/conversation/session_4_date_time",
+          "session_date": "10:37 am on 27 June, 2023",
+          "speaker": "Melanie",
+          "text": "That's gorgeous, Caroline! It's awesome what items can mean so much to us, right? Got any other objects that you treasure, like that necklace?",
+          "blip_caption": "a photo of a stack of bowls with different designs on them"
+        },
+        "D4:5": {
+          "pointer": "/0/conversation/session_4/4",
+          "session_date_pointer": "/0/conversation/session_4_date_time",
+          "session_date": "10:37 am on 27 June, 2023",
+          "speaker": "Caroline",
+          "text": "Yep, Melanie! I've got some other stuff with sentimental value, like my hand-painted bowl. A friend made it for my 18th birthday ten years ago. The pattern and colors are awesome-- it reminds me of art and self-expression."
+        },
+        "D4:6": {
+          "pointer": "/0/conversation/session_4/5",
+          "session_date_pointer": "/0/conversation/session_4_date_time",
+          "session_date": "10:37 am on 27 June, 2023",
+          "speaker": "Melanie",
+          "text": "That sounds great, Caroline! It's awesome having stuff around that make us think of good connections and times. Actually, I just took my fam camping in the mountains last week - it was a really nice time together!"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_0_qa138",
+      "decision": "propose_subject_and_modality_qualification",
+      "official_pointer": "/0/qa/138",
+      "official": {
+        "question": "What kind of painting did Caroline share with Melanie on October 13, 2023?",
+        "answer": "An abstract painting with blue streaks on a wall.",
+        "evidence": [
+          "D17:14"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D17:14"
+      ],
+      "external_correct_evidence": [
+        "D17:14",
+        "D17:21"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "A drawing of a woman in a dress (D17:21), a poster (D17:17), and a 'Trans Lives Matter' sign (D17:19)",
+      "proposed_audited_answer": "The blue abstract painting belongs to Melanie. Caroline shares a drawing connected to transgender identity and self-expression; no specific Caroline painting is established in that exchange.",
+      "rationale": "D17:14 and 16 are Melanie responding to Caroline and describing her own abstract painting and peaceful blue streaks. Caroline mentions experimenting with abstract work in D17:13 but that is not a shared image. D17:21-23 instead establishes her drawing; the caption describes a woman in a dress. Do not call all posters/signs/drawings paintings, or force the external three-image list as a unique answer.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/0/conversation/session_17",
+          "date": "10:31 am on 13 October, 2023"
+        }
+      ],
+      "evidence": {
+        "D17:12": {
+          "pointer": "/0/conversation/session_17/11",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Melanie",
+          "text": "Yeah, Here's one I did last week. It's inspired by the sunsets. The colors make me feel calm. What have you been up to lately, artistically?",
+          "blip_caption": "a photo of a painting of a sunset with a pink sky"
+        },
+        "D17:13": {
+          "pointer": "/0/conversation/session_17/12",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Caroline",
+          "text": "Wow Mel, that's stunning! Love the colors and the chilled-out sunset vibe. What made you paint it? I've been trying out abstract stuff recently. It's kinda freeing, just putting my feelings on the canvas without too much of a plan. It's like a cool form of self-expression."
+        },
+        "D17:14": {
+          "pointer": "/0/conversation/session_17/13",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Melanie",
+          "text": "Thanks, Caroline! I painted it because it was calming. I've done an abstract painting too, take a look! I love how art lets us get our emotions out.",
+          "blip_caption": "a photo of a painting on a wall with a blue background"
+        },
+        "D17:15": {
+          "pointer": "/0/conversation/session_17/14",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Caroline",
+          "text": "Wow, that looks great! The blue adds so much to it. What feelings were you hoping to portray?"
+        },
+        "D17:16": {
+          "pointer": "/0/conversation/session_17/15",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Melanie",
+          "text": "I wanted a peaceful blue streaks to show tranquility. Blue calms me, so I wanted the painting to have a serene vibe while still having lots of vibrant colors."
+        },
+        "D17:17": {
+          "pointer": "/0/conversation/session_17/16",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Caroline",
+          "text": "Yeah, it's very calming. It's awesome how art can show emotions. By the way, I went to a poetry reading last Fri - it was really powerful! Ever been to one?",
+          "blip_caption": "a photo of a poster on a wall in a classroom"
+        },
+        "D17:19": {
+          "pointer": "/0/conversation/session_17/18",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Caroline",
+          "text": "It was a transgender poetry reading where transgender people shared their stories through poetry. It was extra special 'cause it was a safe place for self-expression and it was really empowering to hear others share and celebrate their identities.",
+          "blip_caption": "a photography of a sign that says trans lives matter"
+        },
+        "D17:21": {
+          "pointer": "/0/conversation/session_17/20",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Caroline",
+          "text": "The room was electric with energy and support! The posters were amazing, so much pride and strength! It inspired me to make some art.",
+          "blip_caption": "a photo of a drawing of a woman in a dress"
+        },
+        "D17:22": {
+          "pointer": "/0/conversation/session_17/21",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Melanie",
+          "text": "That's awesome, Caroline! You drew it? What does it mean to you?"
+        },
+        "D17:23": {
+          "pointer": "/0/conversation/session_17/22",
+          "session_date_pointer": "/0/conversation/session_17_date_time",
+          "session_date": "10:31 am on 13 October, 2023",
+          "speaker": "Caroline",
+          "text": "Thanks, Melanie! Yeah, I drew it. It stands for freedom and being real. It's like a nudge to always stay true to myself and embrace my womanhood."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_0_qa144",
+      "decision": "unresolved_emotional_scope",
+      "official_pointer": "/0/qa/144",
+      "official": {
+        "question": "How did Melanie's son handle the accident?",
+        "answer": "He was scared but reassured by his family",
+        "evidence": [
+          "D18:6",
+          "D18:7"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D18:6",
+        "D18:7"
+      ],
+      "external_correct_evidence": [
+        "D18:1",
+        "D18:3"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "The son was in the accident and is OK (D18:1, D18:3); the evidence does not describe the son's emotional reaction directly",
+      "proposed_audited_answer": null,
+      "rationale": "D18:6 asks about the pictured kids, and D18:7 distinguishes them from their brother; family reassurance is explicitly about those siblings. D18:1 also says we were all freaked, whose scope could include the son. This supports family-wide fear but does not unambiguously describe the son being reassured. Do not strengthen the external lack-of-direct-support claim into a categorical assertion that the son was not scared. A qualified answer can say he was okay and the siblings were scared/reassured; do not treat that as a complete emotional reaction from him.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/0/conversation/session_18",
+          "date": "6:55 pm on 20 October, 2023"
+        }
+      ],
+      "evidence": {
+        "D18:1": {
+          "pointer": "/0/conversation/session_18/0",
+          "session_date_pointer": "/0/conversation/session_18_date_time",
+          "session_date": "6:55 pm on 20 October, 2023",
+          "speaker": "Melanie",
+          "text": "Hey Caroline, that roadtrip this past weekend was insane! We were all freaked when my son got into an accident. We were so lucky he was okay. It was a real scary experience. Thankfully it's over now. What's been up since we last talked?",
+          "blip_caption": "a photo of a car dashboard with a white cloth and a steering wheel"
+        },
+        "D18:2": {
+          "pointer": "/0/conversation/session_18/1",
+          "session_date_pointer": "/0/conversation/session_18_date_time",
+          "session_date": "6:55 pm on 20 October, 2023",
+          "speaker": "Caroline",
+          "text": "Oops, sorry 'bout the accident! Must have been traumatizing for you guys. Thank goodness your son's okay. Life sure can be a roller coaster."
+        },
+        "D18:3": {
+          "pointer": "/0/conversation/session_18/2",
+          "session_date_pointer": "/0/conversation/session_18_date_time",
+          "session_date": "6:55 pm on 20 October, 2023",
+          "speaker": "Melanie",
+          "text": "Yeah, our trip got off to a bad start. I was really scared when we got into the accident. Thankfully, my son's ok and that was a reminder that life is precious and to cherish our family."
+        },
+        "D18:5": {
+          "pointer": "/0/conversation/session_18/4",
+          "session_date_pointer": "/0/conversation/session_18_date_time",
+          "session_date": "6:55 pm on 20 October, 2023",
+          "speaker": "Melanie",
+          "text": "Yeah, you're right, Caroline. Family's super important to me. Especially after the accident, I've thought a lot about how much I need them. They mean the world to me and I'm so thankful to have them. Thankfully, they enjoyed the Grand Canyon a lot!",
+          "blip_caption": "a photo of two children standing on a rocky cliff overlooking a canyon"
+        },
+        "D18:6": {
+          "pointer": "/0/conversation/session_18/5",
+          "session_date_pointer": "/0/conversation/session_18_date_time",
+          "session_date": "6:55 pm on 20 October, 2023",
+          "speaker": "Caroline",
+          "text": "The kids look so cute, Mel! I bet they bring lots of joy. How did they handle the accident?"
+        },
+        "D18:7": {
+          "pointer": "/0/conversation/session_18/6",
+          "session_date_pointer": "/0/conversation/session_18_date_time",
+          "session_date": "6:55 pm on 20 October, 2023",
+          "speaker": "Melanie",
+          "text": "Thanks! They were scared but we reassured them and explained their brother would be OK. They're tough kids."
+        },
+        "D18:8": {
+          "pointer": "/0/conversation/session_18/7",
+          "session_date_pointer": "/0/conversation/session_18_date_time",
+          "session_date": "6:55 pm on 20 October, 2023",
+          "speaker": "Caroline",
+          "text": "Kids are amazingly resilient in tough situations. They have an amazing ability to bounce back."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_1_qa57",
+      "decision": "propose_answer_and_attribution_qualification",
+      "official_pointer": "/1/qa/57",
+      "official": {
+        "question": "What advice does Gina give to Jon about running a successful business?",
+        "answer": "build relationships with customers, create a strong brand image, stay positive",
+        "evidence": [
+          "D7:5"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D7:5"
+      ],
+      "external_correct_evidence": [
+        "D7:5"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "This advice ('build relationships with customers, create a strong brand image, stay positive') was given by JON to GINA in D7:5, not by Gina to Jon. The attribution is reversed.",
+      "proposed_audited_answer": "Gina advises Jon to keep his goals and progress in mind, seek support and industry contacts, and use social media or local collaborators to promote his studio. The specific brand/customer/positivity list in the cited turn was Jon advising Gina.",
+      "rationale": "D7:4 is Gina asking for advice; Jon replies in D7:5 and Gina explicitly thanks Jon in D7:6. The broad question still has source-supported answers from Gina in D10:6-10 and D18:5/13. Do not replace it solely with a refusal or imply Gina gives no business advice. An audited rubric must credit her own advice, with scope separated from Jon's three-part list.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/1/conversation/session_7",
+          "date": "7:28 pm on 23 March, 2023"
+        },
+        {
+          "pointer": "/1/conversation/session_10",
+          "date": "11:24 am on 25 April, 2023"
+        },
+        {
+          "pointer": "/1/conversation/session_18",
+          "date": "5:44 pm on 21 July, 2023"
+        }
+      ],
+      "evidence": {
+        "D7:4": {
+          "pointer": "/1/conversation/session_7/3",
+          "session_date_pointer": "/1/conversation/session_7_date_time",
+          "session_date": "7:28 pm on 23 March, 2023",
+          "speaker": "Gina",
+          "text": "Thanks! Appreciate your kind words. Store's going good, just been keeping up with fashion trends so I can offer the best pieces to customers. It's been a lot of work, but really enjoying it. Got any advice or tips on running a successful biz?"
+        },
+        "D7:5": {
+          "pointer": "/1/conversation/session_7/4",
+          "session_date_pointer": "/1/conversation/session_7_date_time",
+          "session_date": "7:28 pm on 23 March, 2023",
+          "speaker": "Jon",
+          "text": "Yeah, brand identity is key. Make sure yours stands out. Also be sure to build relationships with your customers \u2013 let them know you care. And don't forget to stay positive and motivate others. Your energy will be contagious!"
+        },
+        "D7:6": {
+          "pointer": "/1/conversation/session_7/5",
+          "session_date_pointer": "/1/conversation/session_7_date_time",
+          "session_date": "7:28 pm on 23 March, 2023",
+          "speaker": "Gina",
+          "text": "Thanks for the advice, Jon! Building relationships and creating a strong brand image for my store is something I'm always working on. You're right, staying positive is key. What helps you stay motivated with your dance studio business?"
+        },
+        "D7:14": {
+          "pointer": "/1/conversation/session_7/13",
+          "session_date_pointer": "/1/conversation/session_7_date_time",
+          "session_date": "7:28 pm on 23 March, 2023",
+          "speaker": "Gina",
+          "text": "Glad to cheer you on. Keep going and never give up!"
+        },
+        "D10:5": {
+          "pointer": "/1/conversation/session_10/4",
+          "session_date_pointer": "/1/conversation/session_10_date_time",
+          "session_date": "11:24 am on 25 April, 2023",
+          "speaker": "Jon",
+          "text": "Wow, you're awesome for going for it! Setbacks can help us reach our potential, right? I'm having trouble with my business project. Any advice on staying motivated even when times are tough?"
+        },
+        "D10:6": {
+          "pointer": "/1/conversation/session_10/5",
+          "session_date_pointer": "/1/conversation/session_10_date_time",
+          "session_date": "11:24 am on 25 April, 2023",
+          "speaker": "Gina",
+          "text": "Yeah Jon! Challenges are awesome for learning and growth. To stay motivated, I think of the big goal and why I'm doing it. I also get help from people who support me. And of course, I dance it out. Do you need advice on anything in particular?"
+        },
+        "D10:7": {
+          "pointer": "/1/conversation/session_10/6",
+          "session_date_pointer": "/1/conversation/session_10_date_time",
+          "session_date": "11:24 am on 25 April, 2023",
+          "speaker": "Jon",
+          "text": "I've been feeling kinda low on confidence lately. It's hard to run a business when you don't have faith in yourself. Any tips on how you stay confident in your business?"
+        },
+        "D10:8": {
+          "pointer": "/1/conversation/session_10/7",
+          "session_date_pointer": "/1/conversation/session_10_date_time",
+          "session_date": "11:24 am on 25 April, 2023",
+          "speaker": "Gina",
+          "text": "I get it, Jon. Confidence is important in business. I stay motivated by reminding myself of my successes and progress. It also helps to have a good support system. Just focus on why you started this \u2013 because you love it! Have faith in yourself, Jon. I do!"
+        },
+        "D10:10": {
+          "pointer": "/1/conversation/session_10/9",
+          "session_date_pointer": "/1/conversation/session_10_date_time",
+          "session_date": "11:24 am on 25 April, 2023",
+          "speaker": "Gina",
+          "text": "No worries, Jon! Sounds like what I said was helpful. You're incredibly talented and passionate about dance. Don't forget, believe in yourself and your abilities. Tackle any obstacle that comes your way and keep shining!"
+        },
+        "D18:4": {
+          "pointer": "/1/conversation/session_18/3",
+          "session_date_pointer": "/1/conversation/session_18_date_time",
+          "session_date": "5:44 pm on 21 July, 2023",
+          "speaker": "Jon",
+          "text": "Thanks for the support. Running a business isn't easy, but I'm determined to make it work. How have you tackled challenges in your business? Got any advice?"
+        },
+        "D18:5": {
+          "pointer": "/1/conversation/session_18/4",
+          "session_date_pointer": "/1/conversation/session_18_date_time",
+          "session_date": "5:44 pm on 21 July, 2023",
+          "speaker": "Gina",
+          "text": "I've had some tough times with my business, Jon. Sourcing trendy pieces for my store was a big hurdle. I had to do a lot of research and networking. My advice? Don't be scared to reach out to people in your field for help and contacts. Networking was a lifesaver for me and opened me up to amazing products that I might not have found otherwise."
+        },
+        "D18:6": {
+          "pointer": "/1/conversation/session_18/5",
+          "session_date_pointer": "/1/conversation/session_18_date_time",
+          "session_date": "5:44 pm on 21 July, 2023",
+          "speaker": "Jon",
+          "text": "Awesome advice! Lately I've been networking and it's gotten me some good stuff. Really can't beat what connections can do. Check this pic I got from the last networking event!",
+          "blip_caption": "a photography of a group of people standing in a room"
+        },
+        "D18:12": {
+          "pointer": "/1/conversation/session_18/11",
+          "session_date_pointer": "/1/conversation/session_18_date_time",
+          "session_date": "5:44 pm on 21 July, 2023",
+          "speaker": "Jon",
+          "text": "Thanks, Gina! Appreciate the offer. Need help with marketing strategies - any advice on reaching my target audience and raising awareness for the dance studio?"
+        },
+        "D18:13": {
+          "pointer": "/1/conversation/session_18/12",
+          "session_date_pointer": "/1/conversation/session_18_date_time",
+          "session_date": "5:44 pm on 21 July, 2023",
+          "speaker": "Gina",
+          "text": "Yeah Jon, marketing is key for getting your dance studio noticed. Instagram and TikTok can help you reach a younger crowd. Posting dance clips or content related to dance can help. You could also collaborate with local influencers or dance communities. I could help you with making content or even managing your accounts if you want."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_2_qa129",
+      "decision": "citation_only_no_answer_correction",
+      "official_pointer": "/2/qa/129",
+      "official": {
+        "question": "What does John think about trying new classes at the yoga studio?",
+        "answer": "Trying new classes is a fun way to switch up the exercise routine.",
+        "evidence": [
+          "D25:14"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D25:14"
+      ],
+      "external_correct_evidence": [
+        "D25:15"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Trying new stuff is a great way to push yourself and mix things up (from D25:15, John's actual words)",
+      "proposed_audited_answer": null,
+      "rationale": "The official citation D25:14 is Maria's wording, but John immediately agrees in D25:15 and restates that trying new things pushes oneself and mixes things up. D25:13 says varied classes keep things interesting, and D25:19 says it has been great for him. The gold paraphrase about fun variety is consistent with John's expressed view. Correct the evidence reference to D25:13/15/19; do not classify the answer as score-corrupting merely because Maria used similar words first.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/2/conversation/session_25",
+          "date": "6:21 pm on 22 July, 2023"
+        }
+      ],
+      "evidence": {
+        "D25:11": {
+          "pointer": "/2/conversation/session_25/10",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "John",
+          "text": "Yup, it's a yoga studio I go to often. The vibe is really chill and the instructors are awesome."
+        },
+        "D25:12": {
+          "pointer": "/2/conversation/session_25/11",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "Maria",
+          "text": "Cool, John! That definitely makes the workout experience more enjoyable. Do they offer a variety of classes?"
+        },
+        "D25:13": {
+          "pointer": "/2/conversation/session_25/12",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "John",
+          "text": "Yeah, they offer a a bunch, like yoga, kickboxing, and circuit training. It keeps things interesting!"
+        },
+        "D25:14": {
+          "pointer": "/2/conversation/session_25/13",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "Maria",
+          "text": "Cool, John! Trying new classes sounds like a fun way to switch up your exercise routine - I should give it a go!"
+        },
+        "D25:15": {
+          "pointer": "/2/conversation/session_25/14",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "John",
+          "text": "Yeah, Maria! Trying new stuff is a great way to push yourself and mix things up. Let me know if you need any suggestions!",
+          "blip_caption": "a photo of a group of people doing yoga in a gym"
+        },
+        "D25:17": {
+          "pointer": "/2/conversation/session_25/16",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "John",
+          "text": "I've done weight training so far too. It was challenging but peaceful, kinda like yoga."
+        },
+        "D25:18": {
+          "pointer": "/2/conversation/session_25/17",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "Maria",
+          "text": "Wow, John! That's great. Yoga is a great way to relax and concentrate, and joining a new class might be a good option."
+        },
+        "D25:19": {
+          "pointer": "/2/conversation/session_25/18",
+          "session_date_pointer": "/2/conversation/session_25_date_time",
+          "session_date": "6:21 pm on 22 July, 2023",
+          "speaker": "John",
+          "text": "Yeah, it's been great for me. Let me know if you need any advice to get started."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_3_qa119",
+      "decision": "propose_answer_and_attribution_qualification",
+      "official_pointer": "/3/qa/119",
+      "official": {
+        "question": "What does Nate feel he could do when out in cool places like Whispering Falls?",
+        "answer": "write a whole movie",
+        "evidence": [
+          "D11:13"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D11:13"
+      ],
+      "external_correct_evidence": [
+        "D11:13"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "This is Joanna's statement, not Nate's. Joanna feels she could write a whole movie when out in cool places like Whispering Falls.",
+      "proposed_audited_answer": "Nate says such places make him think deeply about life or new recipes; Joanna is the one who says she could write a whole movie. Nate only speculates that a future shared hike might inspire his own drama.",
+      "rationale": "D11:12 addresses Jo, D11:13 gives Joanna's movie claim, and Nate explicitly contrasts for me in D11:14. D11:16 contains a hypothetical future screenplay, not an established present feeling that he could write a whole movie. Preserve this distinction while answering the unchanged Nate question.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/3/conversation/session_11",
+          "date": "3:35 pm on 12 May, 2022"
+        }
+      ],
+      "evidence": {
+        "D11:7": {
+          "pointer": "/3/conversation/session_11/6",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Joanna",
+          "text": "Thanks! I took this photo at a beautiful location called Whispering Falls. It was really peaceful and serene."
+        },
+        "D11:8": {
+          "pointer": "/3/conversation/session_11/7",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Nate",
+          "text": "I wish I could have been there! Your hikes sound like a blast."
+        },
+        "D11:11": {
+          "pointer": "/3/conversation/session_11/10",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Joanna",
+          "text": "Nature totally inspires me and it's so calming to be surrounded by its beauty. Hiking has opened up a whole new world for me and I feel like a different person now."
+        },
+        "D11:12": {
+          "pointer": "/3/conversation/session_11/11",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Nate",
+          "text": "Wow, Jo, that's really cool! It's great to have something that gets those creative juices flowing."
+        },
+        "D11:13": {
+          "pointer": "/3/conversation/session_11/12",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Joanna",
+          "text": "I always feel like I could write a whole movie when I'm out there in cool places like that!"
+        },
+        "D11:14": {
+          "pointer": "/3/conversation/session_11/13",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Nate",
+          "text": "Wow! That's really cool that it inspires you that much! For me I just get deep in thought and think about my life or new recipes."
+        },
+        "D11:15": {
+          "pointer": "/3/conversation/session_11/14",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Joanna",
+          "text": "I think about my life too sometimes when I'm out and about, but there was something special about these trails that made me feel like writing a drama."
+        },
+        "D11:16": {
+          "pointer": "/3/conversation/session_11/15",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Nate",
+          "text": "Hey, we should go together sometime, don't you think? Maybe I'll start to think of a drama myself and publish my own screenplay."
+        },
+        "D11:17": {
+          "pointer": "/3/conversation/session_11/16",
+          "session_date_pointer": "/3/conversation/session_11_date_time",
+          "session_date": "3:35 pm on 12 May, 2022",
+          "speaker": "Joanna",
+          "text": "Haha, now that would be something! Sure, you should come down and join me on the trails sometime!"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_4_qa74",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/4/qa/74",
+      "official": {
+        "question": "What aspects of the Harry Potter universe will be discussed in John's fan project collaborations?",
+        "answer": "characters, spells, magical creatures",
+        "evidence": [
+          "D1:16"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D1:16"
+      ],
+      "external_correct_evidence": [
+        "D1:16"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "characters, spells, magical creatures (but this is Tim's fan project, not John's)",
+      "proposed_audited_answer": "Characters, spells and magical creatures are planned topics for Tim's fan project; the source does not identify it as John's project.",
+      "rationale": "Tim addresses John in D1:2 and describes his own project. John asks about your fan project in D1:13/15; Tim supplies the topics in D1:16. The contents are correct for Tim; the question ownership requires qualification. Mere shared enthusiasm does not transfer project ownership.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/4/conversation/session_1",
+          "date": "7:48 pm on 21 May, 2023"
+        }
+      ],
+      "evidence": {
+        "D1:1": {
+          "pointer": "/4/conversation/session_1/0",
+          "session_date_pointer": "/4/conversation/session_1_date_time",
+          "session_date": "7:48 pm on 21 May, 2023",
+          "speaker": "John",
+          "text": "Hey Tim, nice to meet you! What's up? Anything new happening?"
+        },
+        "D1:2": {
+          "pointer": "/4/conversation/session_1/1",
+          "session_date_pointer": "/4/conversation/session_1_date_time",
+          "session_date": "7:48 pm on 21 May, 2023",
+          "speaker": "Tim",
+          "text": "Hey John! Great to meet you. Been discussing collaborations for a Harry Potter fan project I am working on - super excited! Anything interesting happening for you?"
+        },
+        "D1:13": {
+          "pointer": "/4/conversation/session_1/12",
+          "session_date_pointer": "/4/conversation/session_1_date_time",
+          "session_date": "7:48 pm on 21 May, 2023",
+          "speaker": "John",
+          "text": "Things are going well! The team has been really nice and I'm having fun. How's your fan project coming along?",
+          "blip_caption": "a photo of a bench in a locker with several lockers behind it"
+        },
+        "D1:14": {
+          "pointer": "/4/conversation/session_1/13",
+          "session_date_pointer": "/4/conversation/session_1_date_time",
+          "session_date": "7:48 pm on 21 May, 2023",
+          "speaker": "Tim",
+          "text": "It's been going well! Last week I talked to my friend who is a fan of Harry Potter and we're figuring out ideas, so it's been great to get lost in that magical world!",
+          "blip_caption": "a photo of a table with a bunch of books on it"
+        },
+        "D1:15": {
+          "pointer": "/4/conversation/session_1/14",
+          "session_date_pointer": "/4/conversation/session_1_date_time",
+          "session_date": "7:48 pm on 21 May, 2023",
+          "speaker": "John",
+          "text": "That's great! Loving it when people are passionate about their work. What kind of collaborations are you involved in for the fan project? I love talking to people about my sneaker collection.",
+          "blip_caption": "a photo of a circle of shoes on the floor in a room"
+        },
+        "D1:16": {
+          "pointer": "/4/conversation/session_1/15",
+          "session_date_pointer": "/4/conversation/session_1_date_time",
+          "session_date": "7:48 pm on 21 May, 2023",
+          "speaker": "Tim",
+          "text": "Thanks! We'll be discussing various aspects of the Harry Potter universe, like characters, spells, and magical creatures. It's great to see fans coming together for this."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_4_qa86",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/4/qa/86",
+      "official": {
+        "question": "What did John share with the person he skyped about?",
+        "answer": "Characters from Harry Potter",
+        "evidence": [
+          "D5:1"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D5:1"
+      ],
+      "external_correct_evidence": [
+        "D5:1"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Characters from Harry Potter (but it was Tim who skyped, not John)",
+      "proposed_audited_answer": "Tim, addressing John, says he discussed Harry Potter characters and possible collaboration over Skype.",
+      "rationale": "D5:1 explicitly addresses John while describing the speaker's recent Skype call; John replies to Tim that he is glad he could reconnect in D5:2. This establishes Tim as the participant independently of a bare speaker label. No alternate John Skype event is established by these sources; do not silently rename the evaluated subject.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/4/conversation/session_5",
+          "date": "10:29 am on 9 August, 2023"
+        }
+      ],
+      "evidence": {
+        "D5:1": {
+          "pointer": "/4/conversation/session_5/0",
+          "session_date_pointer": "/4/conversation/session_5_date_time",
+          "session_date": "10:29 am on 9 August, 2023",
+          "speaker": "Tim",
+          "text": "Hey John! Long time no see! Been super busy lately. Guess what? Just skyped with that Harry Potter fan I met in CA and had a great time. We talked characters and maybe collab-ing - so cool to talk to someone who gets it. You? Anything new going on?"
+        },
+        "D5:2": {
+          "pointer": "/4/conversation/session_5/1",
+          "session_date_pointer": "/4/conversation/session_5_date_time",
+          "session_date": "10:29 am on 9 August, 2023",
+          "speaker": "John",
+          "text": "Hi Tim! Nice to hear from you. Glad you could reconnect. As for me, lots of stuff happened since we last talked. Last week I had a crazy game - crazy intense! We won it by a tight score. Scoring that last basket and hearing the crowd cheer was awesome!",
+          "blip_caption": "a photo of a basketball game being played in a large arena"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_4_qa135",
+      "decision": "propose_answer_correction",
+      "official_pointer": "/4/qa/135",
+      "official": {
+        "question": "How does Tim stay motivated during difficult study sessions?",
+        "answer": "Visualizing goals and success",
+        "evidence": [
+          "D18:6"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D18:6"
+      ],
+      "external_correct_evidence": [
+        "D18:7"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Breaking study into smaller parts: 25 minutes on, then 5 minutes off (Pomodoro technique)",
+      "proposed_audited_answer": "Tim breaks studying into smaller parts: 25 minutes of work, then a 5-minute enjoyable break.",
+      "rationale": "Tim asks John about motivation at D18:5; John gives visualization at D18:6 and asks for Tim's tricks. Tim then states his 25/5 pattern at D18:7. That directly answers the unchanged Tim question. No claim is needed that Tim never visualizes goals; the source-supported specified technique is the timed-break routine.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/4/conversation/session_18",
+          "date": "3:59 pm on 16 November, 2023"
+        }
+      ],
+      "evidence": {
+        "D18:3": {
+          "pointer": "/4/conversation/session_18/2",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "Tim",
+          "text": "Ouch, bummer about the injury. Hang tight. This week has been swamped with exams for me but I'm plowing through."
+        },
+        "D18:5": {
+          "pointer": "/4/conversation/session_18/4",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "Tim",
+          "text": "Exams can be challenging, but I'm putting in my best effort. Feeling optimistic and working diligently! How do you stay motivated during difficult study sessions?"
+        },
+        "D18:6": {
+          "pointer": "/4/conversation/session_18/5",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "John",
+          "text": "I visualize my goals and success for focus and motivation. It really helps me stay motivated during tough studying. Do you have any study tricks?",
+          "blip_caption": "a photo of a soccer game with a player on the field"
+        },
+        "D18:7": {
+          "pointer": "/4/conversation/session_18/6",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "Tim",
+          "text": "That's cool! I like breaking up my studying into smaller parts. 25 minutes on, then 5 minutes off for something fun. It's less overwhelming and keeps me on track."
+        },
+        "D18:8": {
+          "pointer": "/4/conversation/session_18/7",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "John",
+          "text": "Nice work! Breaking it down into smaller parts is definitely a smart move. I wish you all the best on your exams!"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_4_qa136",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/4/qa/136",
+      "official": {
+        "question": "What did Tim say about his injury on 16 November, 2023?",
+        "answer": "The doctor said it's not too serious",
+        "evidence": [
+          "D18:10"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D18:10"
+      ],
+      "external_correct_evidence": [
+        "D18:2",
+        "D18:9",
+        "D18:10"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Tim did not have an injury. It was John's injury. John (not Tim) said the doctor said it's not too serious.",
+      "proposed_audited_answer": "The injury was John's: he said the doctor considered it not too serious. Tim wished John a quick recovery.",
+      "rationale": "D18:2/4 puts injury in John's first-person account. Tim wishes your injury heals soon at D18:9, and John addresses Tim before reporting the doctor at D18:10. Tim's hypothetical inability to read at D18:13 is not a real injury. Do not make a blanket claim that Tim never had any injury; only this incident's ownership is established.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/4/conversation/session_18",
+          "date": "3:59 pm on 16 November, 2023"
+        }
+      ],
+      "evidence": {
+        "D18:2": {
+          "pointer": "/4/conversation/session_18/1",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "John",
+          "text": "Hey Tim! That's awesome! Yeah, it was really cool. Oh man, it's been a tough week for me with this injury. But I'm staying positive. How about you? How's your week been?",
+          "blip_caption": "a photo of a person with a bandage on their leg"
+        },
+        "D18:3": {
+          "pointer": "/4/conversation/session_18/2",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "Tim",
+          "text": "Ouch, bummer about the injury. Hang tight. This week has been swamped with exams for me but I'm plowing through."
+        },
+        "D18:4": {
+          "pointer": "/4/conversation/session_18/3",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "John",
+          "text": "Cheers, Tim. Injury's been rough, but I'm staying positive. How's the exam prep coming? Confident?",
+          "blip_caption": "a photo of a notebook with a bunch of notes on it"
+        },
+        "D18:9": {
+          "pointer": "/4/conversation/session_18/8",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "Tim",
+          "text": "Thanks! Appreciate your support. I hope your injury heals soon."
+        },
+        "D18:10": {
+          "pointer": "/4/conversation/session_18/9",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "John",
+          "text": "Sure thing, Tim! Got your back. I hope so too. The doctor said it's not too serious."
+        },
+        "D18:12": {
+          "pointer": "/4/conversation/session_18/11",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "John",
+          "text": "I hate not being on the court."
+        },
+        "D18:13": {
+          "pointer": "/4/conversation/session_18/12",
+          "session_date_pointer": "/4/conversation/session_18_date_time",
+          "session_date": "3:59 pm on 16 November, 2023",
+          "speaker": "Tim",
+          "text": "I bet. It's like if I couldn't read due to an injury."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_4_qa164",
+      "decision": "propose_capability_qualification",
+      "official_pointer": "/4/qa/164",
+      "official": {
+        "question": "What language does Tim know besides German?",
+        "answer": "Spanish",
+        "evidence": [
+          "D27:6"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D27:6"
+      ],
+      "external_correct_evidence": [
+        "D27:7"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "French (Tim took French in high school, per D27:7)",
+      "proposed_audited_answer": "French: Tim says he took it in high school; the source does not establish current fluency. Spanish is John's language study.",
+      "rationale": "Tim asks about other languages at D27:5. John reports German/Spanish at D27:6; Tim responds with his own prior French study and asks why John learned Spanish at D27:7. This supports French as educational background, while preserving the difference between past study and current proficiency. Never infer fluent knowledge from attendance alone.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/4/conversation/session_27",
+          "date": "5:26 pm on 2 January, 2024"
+        }
+      ],
+      "evidence": {
+        "D27:5": {
+          "pointer": "/4/conversation/session_27/4",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "Tim",
+          "text": "Wow, traveling is amazing, isn't it? I'm learning German now - tough but fun. Do you know any other languages?"
+        },
+        "D27:6": {
+          "pointer": "/4/conversation/session_27/5",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "John",
+          "text": "Wow! Impressive you're learning German. I know a bit of it myself and Spanish, it makes travel so much easier. How's it going with your language studies?\n",
+          "blip_caption": "a photo of a book with a red cover and white title"
+        },
+        "D27:7": {
+          "pointer": "/4/conversation/session_27/6",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "Tim",
+          "text": "Learning German has been tough but worth it. I like the structure of the language, it's much easier when I took French in high school. What made you decide to learn Spanish?",
+          "blip_caption": "a photo of a book sitting on a table next to a wall"
+        },
+        "D27:8": {
+          "pointer": "/4/conversation/session_27/7",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "John",
+          "text": "I've always wanted to learn Spanish. I just stared with it. It's such a useful language with many personal and professional opportunities!"
+        },
+        "D27:9": {
+          "pointer": "/4/conversation/session_27/8",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "Tim",
+          "text": "Yeah, knowing another language opens up a lot of opportunities. Have you come across any good resources for learning Spanish? I've been using this app.",
+          "blip_caption": "a photo of a cell phone sitting on a notebook with a smiley face app"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_4_qa165",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/4/qa/165",
+      "official": {
+        "question": "What book did Tim get in Italy that inspired him to cook?",
+        "answer": "a cooking book",
+        "evidence": [
+          "D27:4"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D27:4"
+      ],
+      "external_correct_evidence": [
+        "D27:4"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "John (not Tim) got a cooking book in Italy",
+      "proposed_audited_answer": "John brought back a book from Italy that inspired cooking; Tim says Italy is on his list to visit.",
+      "rationale": "D27:2 identifies John's trip and asks Tim whether he has been; Tim asks John about that trip at D27:3. John describes the book at D27:4. Its content inspires cooking, but the precise title or genre is not explicitly given. Correct ownership without asserting that Tim has never visited Italy at any point.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/4/conversation/session_27",
+          "date": "5:26 pm on 2 January, 2024"
+        }
+      ],
+      "evidence": {
+        "D27:2": {
+          "pointer": "/4/conversation/session_27/1",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "John",
+          "text": "Hey Tim! Cool to hear about your globetrotting group! Must be great connecting with other traveling buffs. By the way, have you been to Italy? I had a blast there last month."
+        },
+        "D27:3": {
+          "pointer": "/4/conversation/session_27/2",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "Tim",
+          "text": "It's been awesome chatting with fellow travel enthusiasts. Italy is definitely on my list of places to visit. How was your trip there last month?",
+          "blip_caption": "a photo of a book with a tag on it"
+        },
+        "D27:4": {
+          "pointer": "/4/conversation/session_27/3",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "John",
+          "text": "Italy was awesome! Everything from the food to the history and architecture was amazing. I even got this awesome book while I was there and it's been giving me some cooking inspiration."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_4_qa166",
+      "decision": "unresolved_preference_scope",
+      "official_pointer": "/4/qa/166",
+      "official": {
+        "question": "What is John's favorite book series?",
+        "answer": "Harry Potter",
+        "evidence": [
+          "D27:19"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D27:19"
+      ],
+      "external_correct_evidence": [
+        "D27:19"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "The evidence does not support Harry Potter as John's favorite. John explicitly calls The Hobbit 'one of my favorites' (D20:20).",
+      "proposed_audited_answer": null,
+      "rationale": "D27:18 asks Tim which book he likes best and D27:19 names Harry Potter; John acknowledges Tim's enjoyment in D27:20. D19:14/15 likewise assigns Harry Potter/GoT to Tim. John calls The Hobbit one of his favorites at D20:20 and an unnamed other popular fantasy series a favorite at D20:22. Neither a unique favorite series nor the unnamed series' identity is established; do not replace Harry Potter with a fabricated unique favorite. The positive Harry Potter attribution to John is unsupported by these excerpts, not disproved as an inaccessible preference.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/4/conversation/session_19",
+          "date": "10:22 am on 21 November, 2023"
+        },
+        {
+          "pointer": "/4/conversation/session_20",
+          "date": "9:52 am on 1 December, 2023"
+        },
+        {
+          "pointer": "/4/conversation/session_27",
+          "date": "5:26 pm on 2 January, 2024"
+        }
+      ],
+      "evidence": {
+        "D19:14": {
+          "pointer": "/4/conversation/session_19/13",
+          "session_date_pointer": "/4/conversation/session_19_date_time",
+          "session_date": "10:22 am on 21 November, 2023",
+          "speaker": "John",
+          "text": "Fantasy books always fuel my creativity, both in and outside of my hobbies. Are Harry Potter and GoT still your favorites?"
+        },
+        "D19:15": {
+          "pointer": "/4/conversation/session_19/14",
+          "session_date_pointer": "/4/conversation/session_19_date_time",
+          "session_date": "10:22 am on 21 November, 2023",
+          "speaker": "Tim",
+          "text": "Yes, they are still my favorites - I love how they take me to other places. What other books do you like?"
+        },
+        "D20:18": {
+          "pointer": "/4/conversation/session_20/17",
+          "session_date_pointer": "/4/conversation/session_20_date_time",
+          "session_date": "9:52 am on 1 December, 2023",
+          "speaker": "John",
+          "text": "Cool! Can I take a closer peek at it? What are some of your favorites?"
+        },
+        "D20:19": {
+          "pointer": "/4/conversation/session_20/18",
+          "session_date_pointer": "/4/conversation/session_20_date_time",
+          "session_date": "9:52 am on 1 December, 2023",
+          "speaker": "Tim",
+          "text": "Yeah, check it out - here's my bookshelf! I have some of my favorites on there, like these ones. It's an amazing journey!",
+          "blip_caption": "a photo of a book shelf with a lot of books on it"
+        },
+        "D20:20": {
+          "pointer": "/4/conversation/session_20/19",
+          "session_date_pointer": "/4/conversation/session_20_date_time",
+          "session_date": "9:52 am on 1 December, 2023",
+          "speaker": "John",
+          "text": "That bookshelf is awesome! The Hobbit is one of my favorites too. What an amazing journey!"
+        },
+        "D20:21": {
+          "pointer": "/4/conversation/session_20/20",
+          "session_date_pointer": "/4/conversation/session_20_date_time",
+          "session_date": "9:52 am on 1 December, 2023",
+          "speaker": "Tim",
+          "text": "Glad you like it! The Hobbit is great, but have you read that other popular fantasy series? It's also awesome!"
+        },
+        "D20:22": {
+          "pointer": "/4/conversation/session_20/21",
+          "session_date_pointer": "/4/conversation/session_20_date_time",
+          "session_date": "9:52 am on 1 December, 2023",
+          "speaker": "John",
+          "text": "Yeah, I've read that other popular fantasy series too! It's one of my favorites. It has such a cool story!"
+        },
+        "D27:18": {
+          "pointer": "/4/conversation/session_27/17",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "John",
+          "text": "That's awesome! I totally understand why reading means so much to you. It's amazing how much playing a game can help us grow. Thanks for showing us your collection! Which one do you like best that takes you to another world?"
+        },
+        "D27:19": {
+          "pointer": "/4/conversation/session_27/18",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "Tim",
+          "text": "Harry Potter is my favorite book. It's so immersive!",
+          "blip_caption": "a photo of a collection of movies and dvds on a carpet"
+        },
+        "D27:20": {
+          "pointer": "/4/conversation/session_27/19",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "John",
+          "text": "Cool! Glad you're enjoying that book! Do you have any favorite fantasy movies as well? These are mine.",
+          "blip_caption": "a photo of a collection of star wars movies on a table"
+        },
+        "D27:22": {
+          "pointer": "/4/conversation/session_27/21",
+          "session_date_pointer": "/4/conversation/session_27_date_time",
+          "session_date": "5:26 pm on 2 January, 2024",
+          "speaker": "John",
+          "text": "I'm a huge fan of Lord of the Rings! The adventure, the world, and the characters are awesome.",
+          "blip_caption": "a photo of a shelf with a lot of books on it"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_6_qa37",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/6/qa/37",
+      "official": {
+        "question": "When did John spend time with his sister and dogs?",
+        "answer": "July 21, 2022",
+        "evidence": [
+          "D17:28"
+        ],
+        "category": 2
+      },
+      "external_cited_evidence": [
+        "D17:28"
+      ],
+      "external_correct_evidence": [
+        "D17:28"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "The question should ask about JAMES, not John. James spent time with his sister and dogs on July 21, 2022.",
+      "proposed_audited_answer": "James, not the John asked about, says he spent time with his sister and dogs on 21 July 2022.",
+      "rationale": "D17:27 asks James who is pictured; James replies my sister and my dogs/yesterday at D17:28, and John explicitly responds your sister at D17:29. Session date 22 July resolves yesterday. D17:21 says John currently has no pets; it does not prove he could never spend time with relatives' dogs. The scoped evidence identifies James, rather than proving a universal negative about John.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/6/conversation/session_17",
+          "date": "9:49 am on 22 July, 2022"
+        }
+      ],
+      "evidence": {
+        "D17:21": {
+          "pointer": "/6/conversation/session_17/20",
+          "session_date_pointer": "/6/conversation/session_17_date_time",
+          "session_date": "9:49 am on 22 July, 2022",
+          "speaker": "John",
+          "text": "Yeah, the bond between us and our pets is amazing. They bring a lot of joy and love. It\u2019s a pity that I don\u2019t have pets, I\u2019ll definitely get one someday. By the way, how was your trip?",
+          "blip_caption": "a photo of a cat laying on a bed with a stuffed animal"
+        },
+        "D17:26": {
+          "pointer": "/6/conversation/session_17/25",
+          "session_date_pointer": "/6/conversation/session_17_date_time",
+          "session_date": "9:49 am on 22 July, 2022",
+          "speaker": "James",
+          "text": "You're welcome! By the way, look who came to see me!",
+          "blip_caption": "a photo of a woman and two dogs on a couch"
+        },
+        "D17:27": {
+          "pointer": "/6/conversation/session_17/26",
+          "session_date_pointer": "/6/conversation/session_17_date_time",
+          "session_date": "9:49 am on 22 July, 2022",
+          "speaker": "John",
+          "text": "Nice pic, James! Who are they?"
+        },
+        "D17:28": {
+          "pointer": "/6/conversation/session_17/27",
+          "session_date_pointer": "/6/conversation/session_17_date_time",
+          "session_date": "9:49 am on 22 July, 2022",
+          "speaker": "James",
+          "text": "That's my sister and my dogs. We were just chilling together yesterday, and they bring so much happiness to my life."
+        },
+        "D17:29": {
+          "pointer": "/6/conversation/session_17/28",
+          "session_date_pointer": "/6/conversation/session_17_date_time",
+          "session_date": "9:49 am on 22 July, 2022",
+          "speaker": "John",
+          "text": "Wow, they look so happy! It's awesome that you get to spend time with your sister and your furry friends. The bond you have with them is really strong."
+        },
+        "D17:30": {
+          "pointer": "/6/conversation/session_17/29",
+          "session_date_pointer": "/6/conversation/session_17_date_time",
+          "session_date": "9:49 am on 22 July, 2022",
+          "speaker": "James",
+          "text": "I'm blessed to have a close bond with my sister and our furry friends. We have a great time together, like a family!"
+        },
+        "D17:31": {
+          "pointer": "/6/conversation/session_17/30",
+          "session_date_pointer": "/6/conversation/session_17_date_time",
+          "session_date": "9:49 am on 22 July, 2022",
+          "speaker": "John",
+          "text": "Family and friends are really amazing, James. They show us so much love and joy. I'm grateful for the connection I have with my siblings. Things can be tough sometimes, but their support means everything to me."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_7_qa116",
+      "decision": "propose_answer_and_attribution_qualification",
+      "official_pointer": "/7/qa/116",
+      "official": {
+        "question": "According to Jolene, what does exercise help her to feel?",
+        "answer": "connected to her body",
+        "evidence": [
+          "D7:20"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D7:20"
+      ],
+      "external_correct_evidence": [
+        "D7:20"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "This is Deborah's statement, not Jolene's. Deborah said exercise makes her feel connected to her body.",
+      "proposed_audited_answer": "Jolene says yoga helps her feel calmer, clearer, more alert and motivated. Deborah is the person who says exercise makes her feel connected to her body.",
+      "rationale": "Jolene asks Deborah about her routine at D7:17; Deborah explains jogging at D7:18 and gives the body-connection rationale at D7:20. Jolene's own first-person benefits appear at D7:1/3/13. Her agreement that Deborah's routine is healthy at D7:21 does not state the identical personal feeling. Preserve exercise-versus-yoga scope in a corrected rubric.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/7/conversation/session_7",
+          "date": "4:50 pm on 25 February, 2023"
+        }
+      ],
+      "evidence": {
+        "D7:1": {
+          "pointer": "/7/conversation/session_7/0",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Jolene",
+          "text": "Hi Deborah, it's been a while! Since we last talked, so much has happened. Balancing engineering school with my partner's video games is quite a feat. But I'm also setting aside time for myself, doing yoga and meditation. It helps give me calm amidst the craziness."
+        },
+        "D7:3": {
+          "pointer": "/7/conversation/session_7/2",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Jolene",
+          "text": "They seriously saved me. I chill out and gain perspective when I do yoga. Afterward, I'm more alert and motivated. Here is my last photo.",
+          "blip_caption": "a photo of a woman sitting on a yoga mat doing a yoga pose"
+        },
+        "D7:12": {
+          "pointer": "/7/conversation/session_7/11",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Deborah",
+          "text": "Have yoga or meditation helped with any stress?"
+        },
+        "D7:13": {
+          "pointer": "/7/conversation/session_7/12",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Jolene",
+          "text": "Whenever I'm overwhelmed, I just take a break and do some breathing or meditate. It really helps me feel calmer and clearer, so I'm able to handle challenges more easily."
+        },
+        "D7:17": {
+          "pointer": "/7/conversation/session_7/16",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Jolene",
+          "text": " I'm curious, what does your daily routine look like?"
+        },
+        "D7:18": {
+          "pointer": "/7/conversation/session_7/17",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Deborah",
+          "text": "In the morning, I meditate, do yoga, and teach classes. And yesterday I went for a morning jog for the first time in a nearby park. I will now incorporate this into my daily routine. And in the evenings, I spend time with loved ones."
+        },
+        "D7:19": {
+          "pointer": "/7/conversation/session_7/18",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Jolene",
+          "text": "Why did you decide that?"
+        },
+        "D7:20": {
+          "pointer": "/7/conversation/session_7/19",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Deborah",
+          "text": "Exercise is key for me - it makes me feel connected to my body. "
+        },
+        "D7:21": {
+          "pointer": "/7/conversation/session_7/20",
+          "session_date_pointer": "/7/conversation/session_7_date_time",
+          "session_date": "4:50 pm on 25 February, 2023",
+          "speaker": "Jolene",
+          "text": "This is a great healthy habit!"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_7_qa123",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/7/qa/123",
+      "official": {
+        "question": "What did Jolene and Anna discuss while watching the sunset by the sea?",
+        "answer": "They realized they inspire each other",
+        "evidence": [
+          "D10:17"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D10:17"
+      ],
+      "external_correct_evidence": [
+        "D10:17"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Deborah and Anna (not Jolene) realized they inspire each other while watching the sunset by the sea.",
+      "proposed_audited_answer": "Deborah and Anna realized they inspire each other while watching the sunset; this is Deborah reporting to Jolene.",
+      "rationale": "D10:17 is an account of Anna and I by the speaker advising Jolene. Jolene replies at D10:18 about wanting to learn to surf, and Deborah addresses Jolene at D10:19. The reported pair is Deborah/Anna. The passage does not prove Jolene was absent from every seaside gathering; do not import that stronger external claim.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/7/conversation/session_10",
+          "date": "5:35 pm on 22 March, 2023"
+        }
+      ],
+      "evidence": {
+        "D10:15": {
+          "pointer": "/7/conversation/session_10/14",
+          "session_date_pointer": "/7/conversation/session_10_date_time",
+          "session_date": "5:35 pm on 22 March, 2023",
+          "speaker": "Deborah",
+          "text": "I am glad, it was helpful. Let's give it a try and see if it helps you stay focused and less stressed. "
+        },
+        "D10:16": {
+          "pointer": "/7/conversation/session_10/15",
+          "session_date_pointer": "/7/conversation/session_10_date_time",
+          "session_date": "5:35 pm on 22 March, 2023",
+          "speaker": "Jolene",
+          "text": "Yeah, I'll give it a go. Fingers crossed it'll help me. Thanks for the help!"
+        },
+        "D10:17": {
+          "pointer": "/7/conversation/session_10/16",
+          "session_date_pointer": "/7/conversation/session_10_date_time",
+          "session_date": "5:35 pm on 22 March, 2023",
+          "speaker": "Deborah",
+          "text": "Don't forget to take it easy and look after yourself. Wishing you all the best! Recently, Anna and I were sitting by the sea, watching the sunset and talking about each other. And we realized that we inspire each other. What thoughts does the sea in this photo make you think of?",
+          "blip_caption": "a photo of a person walking on the beach with a surfboard"
+        },
+        "D10:18": {
+          "pointer": "/7/conversation/session_10/17",
+          "session_date_pointer": "/7/conversation/session_10_date_time",
+          "session_date": "5:35 pm on 22 March, 2023",
+          "speaker": "Jolene",
+          "text": "This gets me thinking of when I'll learn to surf. Gotta find that spare time!"
+        },
+        "D10:19": {
+          "pointer": "/7/conversation/session_10/18",
+          "session_date_pointer": "/7/conversation/session_10_date_time",
+          "session_date": "5:35 pm on 22 March, 2023",
+          "speaker": "Deborah",
+          "text": "Surfing, huh Jolene? Chase your dreams, don't be daunted. Have you thought about the steps you can take?"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_7_qa174",
+      "decision": "propose_answer_correction",
+      "official_pointer": "/7/qa/174",
+      "official": {
+        "question": "Why did Jolene have to reschedule their meeting with Deborah on September 8, 2023?",
+        "answer": "Jolene already had plans",
+        "evidence": [
+          "D26:15"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D26:15"
+      ],
+      "external_correct_evidence": [
+        "D26:15",
+        "D26:16"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Deborah (not Jolene) already had plans for that day, causing the reschedule.",
+      "proposed_audited_answer": "They had to reschedule because Deborah already had plans for the proposed day.",
+      "rationale": "Deborah states I already have plans at D26:15; Jolene then searches her availability at D26:16/18, and Deborah accepts at D26:19. It is reasonable that Jolene helps reschedule; the erroneous part of the official answer is whose prior commitment caused it. Preserve the unchanged question and correct the causal subject.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/7/conversation/session_26",
+          "date": "7:39 pm on 8 September, 2023"
+        }
+      ],
+      "evidence": {
+        "D26:9": {
+          "pointer": "/7/conversation/session_26/8",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Deborah",
+          "text": "Sounds great! Let's set up a coffee date and talk about it!"
+        },
+        "D26:10": {
+          "pointer": "/7/conversation/session_26/9",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Jolene",
+          "text": "Wanna meet up at that cafe next Monday? Let's try fresh pastries.",
+          "blip_caption": "a photo of a coffee shop with a bunch of coffee machines"
+        },
+        "D26:11": {
+          "pointer": "/7/conversation/session_26/10",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Deborah",
+          "text": "Sounds good, Jolene! When did you have in mind? That cafe rocks."
+        },
+        "D26:12": {
+          "pointer": "/7/conversation/session_26/11",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Jolene",
+          "text": "How about Wednesday at 4? Can't wait to catch up over coffee!",
+          "blip_caption": "a photo of a person holding a cup of coffee in front of a bunch of flowers"
+        },
+        "D26:14": {
+          "pointer": "/7/conversation/session_26/13",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Jolene",
+          "text": "Tell me more about it when we meet, maybe next time we\u2019ll be there."
+        },
+        "D26:15": {
+          "pointer": "/7/conversation/session_26/14",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Deborah",
+          "text": "Sorry, I remembered that I already have plans for this day."
+        },
+        "D26:16": {
+          "pointer": "/7/conversation/session_26/15",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Jolene",
+          "text": "Now I'll see when it's more convenient for me."
+        },
+        "D26:17": {
+          "pointer": "/7/conversation/session_26/16",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Deborah",
+          "text": "Thank you for your understanding, I'm waiting."
+        },
+        "D26:18": {
+          "pointer": "/7/conversation/session_26/17",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Jolene",
+          "text": "How about Friday at 5? I will need to sort out the books from this bookcase and I will be free.",
+          "blip_caption": "a photo of a room with a book shelf and a ceiling fan"
+        },
+        "D26:19": {
+          "pointer": "/7/conversation/session_26/18",
+          "session_date_pointer": "/7/conversation/session_26_date_time",
+          "session_date": "7:39 pm on 8 September, 2023",
+          "speaker": "Deborah",
+          "text": "Absolutely, let's do that! Can't wait for our coffee date next week. See you then. Stay safe!"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_7_qa179",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/7/qa/179",
+      "official": {
+        "question": "What did Jolene recently play that she described to Deb?",
+        "answer": "a card game about cats",
+        "evidence": [
+          "D27:12"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D27:12"
+      ],
+      "external_correct_evidence": [
+        "D27:12"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Deborah (not Jolene) recently played a card game about cats.",
+      "proposed_audited_answer": "Deborah describes recently playing a card game about cats; Jolene looks forward to playing it together.",
+      "rationale": "D27:12 is Deborah's first-person recent-game report and invitation to play with Jolene. Jolene responds with anticipation at D27:13. That does not prove Jolene has never played it before; it only fails to establish the recent play and description attributed to her by the question.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/7/conversation/session_27",
+          "date": "2:18 pm on 12 September, 2023"
+        }
+      ],
+      "evidence": {
+        "D27:10": {
+          "pointer": "/7/conversation/session_27/9",
+          "session_date_pointer": "/7/conversation/session_27_date_time",
+          "session_date": "2:18 pm on 12 September, 2023",
+          "speaker": "Deborah",
+          "text": " It's wonderful to see your progress, and I'm excited to be on this journey with you!"
+        },
+        "D27:11": {
+          "pointer": "/7/conversation/session_27/10",
+          "session_date_pointer": "/7/conversation/session_27_date_time",
+          "session_date": "2:18 pm on 12 September, 2023",
+          "speaker": "Jolene",
+          "text": "Thanks, Deb! Appreciate your support. It's great that we can do this together."
+        },
+        "D27:12": {
+          "pointer": "/7/conversation/session_27/11",
+          "session_date_pointer": "/7/conversation/session_27_date_time",
+          "session_date": "2:18 pm on 12 September, 2023",
+          "speaker": "Deborah",
+          "text": "Having a supportive community definitely helps. We can motivate and encourage each other! By the way, I recently played a game. I don't remember what it's called. This is a card game about cats, where you take cards one by one from a deck, and then you can attack your opponent with them. We'll definitely play it with you!",
+          "blip_caption": "a photo of two children standing on yoga mats in a room"
+        },
+        "D27:13": {
+          "pointer": "/7/conversation/session_27/12",
+          "session_date_pointer": "/7/conversation/session_27_date_time",
+          "session_date": "2:18 pm on 12 September, 2023",
+          "speaker": "Jolene",
+          "text": "I look forward to meeting you and playing this game!"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_8_qa24",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/8/qa/24",
+      "official": {
+        "question": "What significant event happened in Sam's life towards the end of summer 2023?",
+        "answer": "He fell in love with a Canadian woman",
+        "evidence": [
+          "D5:1"
+        ],
+        "category": 2
+      },
+      "external_cited_evidence": [
+        "D5:1"
+      ],
+      "external_correct_evidence": [
+        "D5:1"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "This event happened to Evan, not Sam. No comparable significant event for Sam is documented at end of summer 2023 beyond his ongoing health journey.",
+      "proposed_audited_answer": "Evan describes meeting and becoming attached to a Canadian woman; the cited account is not Sam's life event.",
+      "rationale": "D5:1 addresses Sam while describing the speaker's Canada experience. Sam replies Congrats Evan in D5:2, confirming the referent independently of the speaker field. A significant event for Sam is a broad question; do not invent a substitute from unrelated health history or infer that no other event could exist.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/8/conversation/session_5",
+          "date": "7:52 pm on 7 August, 2023"
+        }
+      ],
+      "evidence": {
+        "D5:1": {
+          "pointer": "/8/conversation/session_5/0",
+          "session_date_pointer": "/8/conversation/session_5_date_time",
+          "session_date": "7:52 pm on 7 August, 2023",
+          "speaker": "Evan",
+          "text": "Hey Sam, how's it going? Last week I went on a trip to Canada and something unreal happened - I met this awesome Canadian woman and it was like something out of a movie. She's incredible and being with her makes me feel alive.",
+          "blip_caption": "a photography of a couple walking through the snow holding hands"
+        },
+        "D5:2": {
+          "pointer": "/8/conversation/session_5/1",
+          "session_date_pointer": "/8/conversation/session_5_date_time",
+          "session_date": "7:52 pm on 7 August, 2023",
+          "speaker": "Sam",
+          "text": "Congrats Evan! She must be something special! Being with someone who makes you feel alive is amazing. I'm sorry to hear that you're dealing with health issues lately, it can be really tough. It's hard to fully enjoy things sometimes.",
+          "blip_caption": "a photo of a person walking on the beach with a surfboard"
+        },
+        "D5:3": {
+          "pointer": "/8/conversation/session_5/2",
+          "session_date_pointer": "/8/conversation/session_5_date_time",
+          "session_date": "7:52 pm on 7 August, 2023",
+          "speaker": "Evan",
+          "text": "Woah. such a nice view! Thanks, Sam! She's definitely great. Every moment with her is really fun and energizing. It's a nice change, especially after dealing with health issues. But you never know what life's gonna throw at you. Btw look what life has thrown for me right now haha.",
+          "blip_caption": "a photo of a container of cookies on a counter"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_8_qa144",
+      "decision": "propose_subject_and_modality_qualification",
+      "official_pointer": "/8/qa/144",
+      "official": {
+        "question": "What did Evan share with Sam after their hiking trip?",
+        "answer": "a photo of a man standing on a rock looking out over a valley",
+        "evidence": [
+          "D22:1"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D22:1"
+      ],
+      "external_correct_evidence": [
+        "D22:1"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Sam (not Evan) shared the photo after Sam's own hiking trip.",
+      "proposed_audited_answer": "Sam shares the captioned valley photograph after taking friends hiking; Evan describes a separate drive to the mountains and shares other images.",
+      "rationale": "D22:1 addresses Evan and describes Sam's hike, with the man-on-rock caption. Evan replies Hey Sam at D22:2 and switches to his own mountain drive. The source does not establish a joint hike or Evan sharing that particular photograph. Later Evan shares snacks at D22:10-16, but those should not be substituted as a unique answer about an unspecified hiking event.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/8/conversation/session_22",
+          "date": "11:00 am on 31 December, 2023"
+        }
+      ],
+      "evidence": {
+        "D22:1": {
+          "pointer": "/8/conversation/session_22/0",
+          "session_date_pointer": "/8/conversation/session_22_date_time",
+          "session_date": "11:00 am on 31 December, 2023",
+          "speaker": "Sam",
+          "text": "Hey Evan! I\u2019m really getting into this healthier lifestyle\u2014just took my friends on an epic hiking trip last Friday!",
+          "blip_caption": "a photography of a man standing on a rock looking out over a valley"
+        },
+        "D22:2": {
+          "pointer": "/8/conversation/session_22/1",
+          "session_date_pointer": "/8/conversation/session_22_date_time",
+          "session_date": "11:00 am on 31 December, 2023",
+          "speaker": "Evan",
+          "text": "Hey Sam! That\u2019s fantastic\u2014nothing like a good hike to feel alive. We took the Prius for a long drive to the mountains last weekend. It was perfect until we got into a little scrape on the way back.",
+          "blip_caption": "a photo of a small stream running through a lush green forest"
+        },
+        "D22:3": {
+          "pointer": "/8/conversation/session_22/2",
+          "session_date_pointer": "/8/conversation/session_22_date_time",
+          "session_date": "11:00 am on 31 December, 2023",
+          "speaker": "Sam",
+          "text": "Oh no, were you guys okay after the accident?"
+        },
+        "D22:4": {
+          "pointer": "/8/conversation/session_22/3",
+          "session_date_pointer": "/8/conversation/session_22_date_time",
+          "session_date": "11:00 am on 31 December, 2023",
+          "speaker": "Evan",
+          "text": "Yeah, we were fine, thanks. Just a minor accident, but it put a bit of a damper on telling my work friends about getting married. They\u2019ve been a great support, though."
+        },
+        "D22:10": {
+          "pointer": "/8/conversation/session_22/9",
+          "session_date_pointer": "/8/conversation/session_22_date_time",
+          "session_date": "11:00 am on 31 December, 2023",
+          "speaker": "Evan",
+          "text": "For sure, and nature has been a great healer. Speaking of which, I\u2019ve got to share some of these new healthy snacks I\u2019ve been trying.",
+          "blip_caption": "a photo of a woman sitting at a table with plates and glasses"
+        },
+        "D22:12": {
+          "pointer": "/8/conversation/session_22/11",
+          "session_date_pointer": "/8/conversation/session_22_date_time",
+          "session_date": "11:00 am on 31 December, 2023",
+          "speaker": "Evan",
+          "text": "Exactly! They\u2019re packed with nutrients and really easy to make. You also need to try these cookies, they are awesome! I\u2019ll send you the recipes.",
+          "blip_caption": "a photo of a bunch of cookies on a cooling rack"
+        },
+        "D22:14": {
+          "pointer": "/8/conversation/session_22/13",
+          "session_date_pointer": "/8/conversation/session_22_date_time",
+          "session_date": "11:00 am on 31 December, 2023",
+          "speaker": "Evan",
+          "text": "Yeah, I've been trying to eat healthier too. Check out this cool recipe I discovered for these energy balls.",
+          "blip_caption": "a photo of a bowl of coconut balls and a bowl of oats"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_9_qa88",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/9/qa/88",
+      "official": {
+        "question": "What did Calvin and his friends arrange for in the park?",
+        "answer": "regular walks together",
+        "evidence": [
+          "D10:3"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D10:3"
+      ],
+      "external_correct_evidence": [
+        "D10:3"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "This was Dave and his friends, not Calvin. Dave arranged regular walks together in the park with his friends.",
+      "proposed_audited_answer": "Dave arranged regular park walks with his friends; Calvin responds approvingly.",
+      "rationale": "Calvin asks Dave how he has been at D10:2; Dave gives his own arrangements at D10:3. Calvin's that sounds like a great plan and question about Dave's favorite spot at D10:4 maintain the distinct actor. Agreement does not establish Calvin co-organized the walks.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/9/conversation/session_10",
+          "date": "7:56 pm on 7 July, 2023"
+        }
+      ],
+      "evidence": {
+        "D10:1": {
+          "pointer": "/9/conversation/session_10/0",
+          "session_date_pointer": "/9/conversation/session_10_date_time",
+          "session_date": "7:56 pm on 7 July, 2023",
+          "speaker": "Dave",
+          "text": "Hey Calvin, how's the car doing after the crash? You were stoked to get back on the road, right?"
+        },
+        "D10:2": {
+          "pointer": "/9/conversation/session_10/1",
+          "session_date_pointer": "/9/conversation/session_10_date_time",
+          "session_date": "7:56 pm on 7 July, 2023",
+          "speaker": "Calvin",
+          "text": "Hey Dave! Thanks for checking in. It's all good now, the car's fixed and going strong. Nothing better than cruising around - it's the best! Look at how my car looks right now. How've you been? Anything new?",
+          "blip_caption": "a photography of a red sports car parked on the side of the road"
+        },
+        "D10:3": {
+          "pointer": "/9/conversation/session_10/2",
+          "session_date_pointer": "/9/conversation/session_10_date_time",
+          "session_date": "7:56 pm on 7 July, 2023",
+          "speaker": "Dave",
+          "text": "Glad to hear your car's fixed and going strong! I've been good too. Just been hanging out with friends at parks lately. I arranged with friends for regular walks together in the park."
+        },
+        "D10:4": {
+          "pointer": "/9/conversation/session_10/3",
+          "session_date_pointer": "/9/conversation/session_10_date_time",
+          "session_date": "7:56 pm on 7 July, 2023",
+          "speaker": "Calvin",
+          "text": "\nThat sounds like a great plan! Regular walks with friends can be a wonderful way to spend time together and stay active. Fresh air and buddies can do wonders. Do you have a favorite spot for hanging out?"
+        },
+        "D10:5": {
+          "pointer": "/9/conversation/session_10/4",
+          "session_date_pointer": "/9/conversation/session_10_date_time",
+          "session_date": "7:56 pm on 7 July, 2023",
+          "speaker": "Dave",
+          "text": "Yeah, today we are going to that spot. Look at that lovely photo.",
+          "blip_caption": "a photo of a city skyline with a river and boats in the water"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_9_qa137",
+      "decision": "unresolved_onset_scope",
+      "official_pointer": "/9/qa/137",
+      "official": {
+        "question": "When did Calvin first get interested in cars?",
+        "answer": "at an early age",
+        "evidence": [
+          "D26:6"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D26:6"
+      ],
+      "external_correct_evidence": [
+        "D26:6"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Cannot be determined from transcript; the 'early age' answer is about Dave, not Calvin",
+      "proposed_audited_answer": null,
+      "rationale": "Calvin asks Dave what got him into car engineering at D26:5. Dave addresses Calvin and reports his father's car-show visit at age 10 in D26:6; Calvin congratulates Dave at D26:7. Calvin's own interest is explicit at D26:5, but its onset is not. Do not convert Dave's age into Calvin's or pretend an exact first-interest date can be determined.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/9/conversation/session_26",
+          "date": "8:25 pm on 25 October, 2023"
+        }
+      ],
+      "evidence": {
+        "D26:4": {
+          "pointer": "/9/conversation/session_26/3",
+          "session_date_pointer": "/9/conversation/session_26_date_time",
+          "session_date": "8:25 pm on 25 October, 2023",
+          "speaker": "Dave",
+          "text": "Glad you enjoyed Boston! It's got some great architecture and history. Working on this takes me out of my head and calms me down. Here's a pic of my latest car project.",
+          "blip_caption": "a photography of a group of people washing a car in a garage"
+        },
+        "D26:5": {
+          "pointer": "/9/conversation/session_26/4",
+          "session_date_pointer": "/9/conversation/session_26_date_time",
+          "session_date": "8:25 pm on 25 October, 2023",
+          "speaker": "Calvin",
+          "text": "Dave, that car looks awesome! What got you into engineering cars? I'm totally into cars too and love making new and powerful models."
+        },
+        "D26:6": {
+          "pointer": "/9/conversation/session_26/5",
+          "session_date_pointer": "/9/conversation/session_26_date_time",
+          "session_date": "8:25 pm on 25 October, 2023",
+          "speaker": "Dave",
+          "text": "Thanks, Calvin! It's always been my thing. My dad took me to my first car show when I was 10, and I was wow-ed! I was hooked and wanted to learn more. Now I'm an automotive engineer and it's crazy to think that something so powerful and cool can be made from small parts."
+        },
+        "D26:7": {
+          "pointer": "/9/conversation/session_26/6",
+          "session_date_pointer": "/9/conversation/session_26_date_time",
+          "session_date": "8:25 pm on 25 October, 2023",
+          "speaker": "Calvin",
+          "text": "That's awesome, Dave! So happy you followed your dreams and became an engineer. Seeing you work on cars is inspiring - it makes me want to keep pushing my music. Check this out - a pic of me performing with someone I admire! So amazing!",
+          "blip_caption": "a photo of a dj in a nightclub with a dj table"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_9_qa147",
+      "decision": "propose_answer_and_attribution_qualification",
+      "official_pointer": "/9/qa/147",
+      "official": {
+        "question": "What tools does Calvin use to boost his motivation for music?",
+        "answer": "Writing lyrics and notes",
+        "evidence": [
+          "D28:34"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D28:34"
+      ],
+      "external_correct_evidence": [
+        "D28:34"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Cannot be reliably determined; the 'writing lyrics and notes' answer is about Dave's motivation, not Calvin's",
+      "proposed_audited_answer": "Calvin identifies watching music videos, concerts and artist documentaries as sources of inspiration. The lyric-writing notebook statement belongs to Dave.",
+      "rationale": "D28:27-31 establishes Calvin's studio/relaxation setup and first-person inspiration from music-related viewing. Dave supplies the notebook at D28:32, Calvin asks whether it helps you at D28:33, and Dave addresses Calvin while describing my motivation at D28:34. Calvin's encouraging reply about helping you stay focused at D28:35 does not make that Dave statement autobiographical. A corrected rubric can use Calvin's explicit sources rather than assert no evidence exists.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/9/conversation/session_28",
+          "date": "5:46 pm on 2 November, 2023"
+        }
+      ],
+      "evidence": {
+        "D28:27": {
+          "pointer": "/9/conversation/session_28/26",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Calvin",
+          "text": "Yup, it's that connection I'm aiming for with my music. Take a loot at my studio setup, that's look awesome, isn't it?",
+          "blip_caption": "a photography of a recording studio with a monitor, keyboard, and monitor"
+        },
+        "D28:28": {
+          "pointer": "/9/conversation/session_28/27",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Dave",
+          "text": "Wow, your studio looks stunning! How do you like hanging out here? Do you watch much TV?"
+        },
+        "D28:29": {
+          "pointer": "/9/conversation/session_28/28",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Calvin",
+          "text": "I only work in the studio. I have another room for relaxation with a TV, just take a look that room is cozy and relaxing. And yeah, It's a great way to unwind and get inspired.",
+          "blip_caption": "a photo of a living room with a couch, chair, television and a table"
+        },
+        "D28:30": {
+          "pointer": "/9/conversation/session_28/29",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Dave",
+          "text": "Wow, nice setup! What do you usually watch on it?"
+        },
+        "D28:31": {
+          "pointer": "/9/conversation/session_28/30",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Calvin",
+          "text": "Thanks, Dave! I usually watch music videos, concerts, and documentaries about artists and their creative process. It's cool to learn more about the industry and see what others do. Plus, it's a source of inspiration for me."
+        },
+        "D28:32": {
+          "pointer": "/9/conversation/session_28/31",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Dave",
+          "text": "Wow, Calvin, that's awesome! Keep up the great work! Take a look at the photo!",
+          "blip_caption": "a photo of a notebook with a pen and a notepad on it"
+        },
+        "D28:33": {
+          "pointer": "/9/conversation/session_28/32",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Calvin",
+          "text": "Thanks, Dave! Appreciate the support! Does this notebook help you stay connected to the creative process?"
+        },
+        "D28:34": {
+          "pointer": "/9/conversation/session_28/33",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Dave",
+          "text": "Yes, Calvin, writing lyrics and notes - that's awesome! It will boost my motivation! Writing lyrics boosts my motivation to grow!",
+          "blip_caption": "a photo of a pink floyd headphone sitting on a shelf"
+        },
+        "D28:35": {
+          "pointer": "/9/conversation/session_28/34",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Calvin",
+          "text": "Cool, Dave! These really help you stay focused when making music."
+        },
+        "D28:36": {
+          "pointer": "/9/conversation/session_28/35",
+          "session_date_pointer": "/9/conversation/session_28_date_time",
+          "session_date": "5:46 pm on 2 November, 2023",
+          "speaker": "Dave",
+          "text": "Cool, Calvin! Music really helps me focus and be productive. When I'm doing my car stuff, I listen to vinyl to relax and stay on track."
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    },
+    {
+      "id": "locomo_9_qa151",
+      "decision": "propose_subject_qualification",
+      "official_pointer": "/9/qa/151",
+      "official": {
+        "question": "What hobby did Calvin take up recently?",
+        "answer": "Photography",
+        "evidence": [
+          "D30:1"
+        ],
+        "category": 4
+      },
+      "external_cited_evidence": [
+        "D30:1"
+      ],
+      "external_correct_evidence": [
+        "D30:1"
+      ],
+      "missing_source_references": [],
+      "external_proposal": "Photography is Dave's new hobby, not Calvin's. Calvin has not mentioned taking up a new hobby in the recent sessions.",
+      "proposed_audited_answer": "Dave explicitly says he recently took up photography. Calvin also takes photographs, but these sources do not establish when he adopted it as a hobby.",
+      "rationale": "Dave addresses Calvin and reports his new hobby at D30:1; Calvin asks Dave about his camera at D30:6 and photographs at D30:8. D27:2/8/9 independently attributes recently taking up photography to Dave. Counterevidence D30:16 has Calvin describing a photograph he shot, so do not assert Calvin never practices photography. The unsupported component is its recent adoption by Calvin.",
+      "full_sessions_reviewed": [
+        {
+          "pointer": "/9/conversation/session_27",
+          "date": "10:49 am on 29 October, 2023"
+        },
+        {
+          "pointer": "/9/conversation/session_30",
+          "date": "10:54 am on 17 November, 2023"
+        }
+      ],
+      "evidence": {
+        "D27:1": {
+          "pointer": "/9/conversation/session_27/0",
+          "session_date_pointer": "/9/conversation/session_27_date_time",
+          "session_date": "10:49 am on 29 October, 2023",
+          "speaker": "Calvin",
+          "text": "Hey Dave! Since we last talked, I went to a networking event to meet more artists. So cool! The people I met will help me build up my fan base. Super excited about what it could lead to. You? Anything new since we last spoke?"
+        },
+        "D27:2": {
+          "pointer": "/9/conversation/session_27/1",
+          "session_date_pointer": "/9/conversation/session_27_date_time",
+          "session_date": "10:49 am on 29 October, 2023",
+          "speaker": "Dave",
+          "text": "Hey Calvin! That's cool that you've been networking with other artists. Nice! I've been getting into photography recently. I've seen some amazing places and taken some great shots. Would you like to see them?"
+        },
+        "D27:8": {
+          "pointer": "/9/conversation/session_27/7",
+          "session_date_pointer": "/9/conversation/session_27_date_time",
+          "session_date": "10:49 am on 29 October, 2023",
+          "speaker": "Dave",
+          "text": "Thanks, Calvin! Your kind words mean a lot. Yep, that's the clock tower in the last photo. I snapped it at sunset and the colors were stunning. Photography helps me capture and appreciate the beauty of nature. It's been an awesome creative outlet and I'm loving it."
+        },
+        "D27:9": {
+          "pointer": "/9/conversation/session_27/8",
+          "session_date_pointer": "/9/conversation/session_27_date_time",
+          "session_date": "10:49 am on 29 October, 2023",
+          "speaker": "Calvin",
+          "text": "Wow, Dave! Sounds like you're having a blast with your photography. Hope it's bringing you lots of joy. By the way, how is your car project going?"
+        },
+        "D30:1": {
+          "pointer": "/9/conversation/session_30/0",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Dave",
+          "text": "Hey Calvin, long time no talk! A lot has happened. I've taken up photography and it's been great - been taking pics of the scenery around here which is really cool."
+        },
+        "D30:2": {
+          "pointer": "/9/conversation/session_30/1",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Calvin",
+          "text": "Hey Dave, it's great to hear from you! Can't wait to see your pics. I went to a fancy gala in Boston yesterday and met some interesting people. Check out this pic of me and the crew!",
+          "blip_caption": "a photography of a group of men sitting on a rock next to a river"
+        },
+        "D30:5": {
+          "pointer": "/9/conversation/session_30/4",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Dave",
+          "text": "That's amazing, Calvin! Music really does bring people together and foster creativity. Glad to hear you had such an inspiring conversation! Take a look at my new vintage camera that I bought this month, which takes awesome photos!",
+          "blip_caption": "a photo of a camera sitting on a table next to a plant"
+        },
+        "D30:6": {
+          "pointer": "/9/conversation/session_30/5",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Calvin",
+          "text": "Hey Dave, music really brings people together, huh? Do you use this camera for photos? They always turn out so good!"
+        },
+        "D30:7": {
+          "pointer": "/9/conversation/session_30/6",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Dave",
+          "text": "Yes, Calvin, this camera is very good, it helps me capture those special moments really clearly."
+        },
+        "D30:8": {
+          "pointer": "/9/conversation/session_30/7",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Calvin",
+          "text": "Having a good camera is key for capturing those special moments. What do you like to take photos of?",
+          "blip_caption": "a photo of a sunset with a wave crashing on rocks"
+        },
+        "D30:9": {
+          "pointer": "/9/conversation/session_30/8",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Dave",
+          "text": "Yeah, being able to take good pics is key. I love capturing the beauty of nature - sunsets, beaches, waves. Just got this one recently, check this out!",
+          "blip_caption": "a photo of a sunset with a wave crashing on rocks"
+        },
+        "D30:16": {
+          "pointer": "/9/conversation/session_30/15",
+          "session_date_pointer": "/9/conversation/session_30_date_time",
+          "session_date": "10:54 am on 17 November, 2023",
+          "speaker": "Calvin",
+          "text": "Wow, that sounds like such a peaceful and serene spot. Can't wait to check it out myself sometime. Check out this beautiful picture that I shot in a Japanese garden, that's wild!",
+          "blip_caption": "a photo of a bench under a tree with pink flowers"
+        }
+      },
+      "identity_rule": "Use first-person utterances, addressees, question/answer turns and explicit ownership; speaker metadata is checked against this context, not treated as sole proof.",
+      "reviewer": "Codex lane C source review",
+      "user_review": "pending",
+      "scored": false
+    }
+  ]
+}

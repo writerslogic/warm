@@ -1,0 +1,14 @@
+--- benchmark/runner.py
++++ benchmark/runner.py
+@@ -288,7 +288,10 @@
+                     {'bind': '/home/app/neurips23', 'mode': 'ro'},
+             },
+             cpuset_cpus=cpu_limit,
+-            mem_limit=mem_limit,
++            mem_limit=16 * 1024**3,
++            memswap_limit=16 * 1024**3,
++            entrypoint=['/usr/bin/time', '-v', '-o', '/home/app/results/resource-usage.txt',
++                        'python3', '-u', 'run_algorithm.py'],
+             detach=True)
+  
+     # set/override container timeout based on competition flag

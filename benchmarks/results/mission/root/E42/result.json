@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "hypothesis": "H-C-3",
+  "decision": "reject-C3-fixed-serialization-budget",
+  "scope": "one fixed first physical record; infrastructure feasibility only; no model or scores",
+  "counterexample_to_all500_history_gate": true,
+  "all500_gate_passed": false,
+  "limits": {
+    "prefix_bytes": 33554432,
+    "history_tokens": 126200,
+    "aggregate_input_tokens": 127200,
+    "aggregate_output_tokens": 800
+  },
+  "inputs": {
+    "prefix": {
+      "path": "/Volumes/A/.hms-lb/mission/E42-input/M-prefix.bin",
+      "bytes": 33554432,
+      "sha256": "403a95bba581e07d1651bbf8780e28451460feb5dacbec2931350ae580cd8956"
+    },
+    "response_provenance": {
+      "path": "/Volumes/A/.hms-lb/mission/E42-input/fetch-receipt.json",
+      "bytes": 1764,
+      "sha256": "b9c608097b4537a7e99fb2d81ed372bfecd0579ce8f20beb3bad753b4e3b4017"
+    },
+    "upstream_source": {
+      "path": "/Volumes/A/.hms-lb/mission/E42-input/run_generation.source",
+      "bytes": 21608,
+      "sha256": "4f1eb3c69d7ad40f04065b9c0bc86f6582441018fc6ff751d162d66c95baf672"
+    },
+    "counter_sha256": "656d8987aeccfe560111e8403e3a70a02bf6cc660333f01d1469e394ff1a2bc3"
+  },
+  "source_identity": {
+    "dataset_url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_m_cleaned.json",
+    "revision": "98d7416c24c778c2fee6e6f3006e7a073259d48f",
+    "expected_full_bytes": 2737100077,
+    "expected_full_sha256_metadata_only": "9d79e5524794a2e6900a3aa9cb7d9152c5a3e8319c9a87c25494ba1eacee495f",
+    "full_file_sha256_verified": false,
+    "authentication": "pinned HTTPS range provenance and local prefix digest; not independent full-object verification",
+    "http_status": 206,
+    "content_range": "bytes 0-33554431/2737100077",
+    "retrieved_at_utc": "2026-11-10T06:19:28.143339+00:00"
+  },
+  "record": {
+    "ordinal": 0,
+    "begin_byte_inclusive": 6,
+    "end_byte_exclusive": 5742221,
+    "bytes": 5742215,
+    "sha256": "2bf7d1217158a540cfe875c0aafead67abaf9aa890f5358d57c2db3a8ce79d74"
+  },
+  "coverage": {
+    "sessions": 482,
+    "turns": 5057,
+    "serialized_sessions": 482,
+    "serialized_turns": 5057,
+    "physical_coverage": 1.0,
+    "identity_date_role_text_losses": 0,
+    "source_session_id_duplicates_preserved": 0,
+    "occurrence_payload_sha256": "92c24a1dd22797822a6df8941d7c2d40c7bf661dcb90a597eec0a5f1807eccca",
+    "ordering": "stable sort by original date string"
+  },
+  "tokenizer": {
+    "package": "tiktoken",
+    "version": "0.14.0",
+    "encoding": "o200k_base",
+    "artifact": {
+      "path": "/Volumes/A/.hms-lb/mission/E42-input/o200k_base.tiktoken",
+      "bytes": 3613922,
+      "sha256": "446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d"
+    },
+    "pattern_sha256": "2d1b8dc11e89af71459b36004f698ab3693f59fd84f63e8ec2b49564ab857420",
+    "special_tokens": {
+      "<|endoftext|>": 199999,
+      "<|endofprompt|>": 200018
+    },
+    "construction": "local validated BPE bytes and Encoding constructor; no get_encoding or network loader",
+    "encode_options": {
+      "allowed_special": [
+        "<|endoftext|>"
+      ],
+      "disallowed_special": "all except allowed"
+    },
+    "core_source_sha256": "3c136f06b05992855dc329216dfa1fa5b6718cccd3d79f658262de8f871f45f0",
+    "native_extension_sha256": "9ea6c251d25437f0f1e9f44dfe0310bf095bf663d1c33e8edbf84e867e13229d"
+  },
+  "serialization": {
+    "upstream_commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+    "options": "orig-session/json/cot=true/useronly=false/con=false/merge=none; all physical sessions; no truncation",
+    "history_bytes": 5362852,
+    "history_sha256": "8de4faee26c8f15afffda448b6186a3087f8352655d5f4316cb0055c689b5c23",
+    "history_tokens": 1173401,
+    "untruncated_prompt_text_tokens": 1173510,
+    "prompt_text_sha256": "35a696ab5ba7c2aef39eb9ebfa67a8a08b072f6ad695f0ee3448e531d4107810",
+    "prompt_text_exceeds_aggregate_input_cap": true,
+    "provider_chat_envelope_tokens_counted": false,
+    "prompt_count_is_complete_user_text_only": true
+  },
+  "claim_limits": [
+    "Counterexample applies only to the fixed serialization and encoding, not every lossless encoding or query-conditioned method.",
+    "Partitioning or repeated calls cannot lower an additive history accounting total that must charge this serialized history at least once; no arbitrary repartition-tokenization bound is claimed.",
+    "A fitting first record cannot establish all500 coverage or the full cost envelope; provider framing and further system work remain uncounted.",
+    "No key, judge, accuracy, semantic completeness, global competitor or fresh holdout claim."
+  ],
+  "paid_calls": 0,
+  "model_calls": 0,
+  "final_answers_generated_or_replayed": false
+}
