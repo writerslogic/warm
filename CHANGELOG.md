@@ -29,6 +29,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Mark the filter operating point in the pinned-run table
 
 ### Fixed
+- Defer documentation search loading until requested
 - Render documentation styles and version notice before paint
 - Harden release dependencies and benchmark tooling
 - Widen quantized dot products before integer overflow
