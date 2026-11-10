@@ -55,6 +55,8 @@ jobs:
         run: |
           uv run --no-project --python 3.12 python scripts/ci/check-versions.py
           uv run --no-project --python 3.12 python -m unittest scripts/ci/test_versions.py
+      - name: Campaign integrity regressions
+        run: uv run --no-project --python 3.12 --with numpy==2.5.4 python -m unittest discover -s benchmarks/ann-benchmarks/campaign -p test_campaign_integrity.py
       - run: cargo fmt -- --check
       - name: Clippy, all features
         run: cargo clippy --locked --all-targets --all-features -- -D warnings

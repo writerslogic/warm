@@ -305,6 +305,9 @@ network, run `cargo run --example demo-offline-agent`.
 Every capability above except document search and the vector index is behind a Cargo feature or
 runtime option that is off by default; [Cargo features](docs/reference/features.md) lists them all.
 
+The [compatibility policy](docs/STABILITY.md) defines API stability, deprecation windows and
+storage-format migration rules.
+
 ## Architecture
 
 ```mermaid

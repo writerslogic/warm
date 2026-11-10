@@ -28,10 +28,12 @@ for dim in (128, 784):
     for deleted in (False, True):
         if deleted:
             for row in range(0, n, 17):
-                assert index.delete(row)
+                deleted_ok = index.delete(row)
+                if not deleted_ok:
+                    raise RuntimeError(f"failed to delete row {row}")
         expected = index.search(queries, qp, ql, 10)
         times = []
-        for rep in range(5):
+        for _ in range(5):
             start = time.perf_counter_ns()
             actual = index.search(queries, qp, ql, 10)
             times.append((time.perf_counter_ns() - start) / nq)

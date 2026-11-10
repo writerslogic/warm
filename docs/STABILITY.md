@@ -40,23 +40,23 @@ and say so in the changelog.
    old one untouched.
 3. **Forward:** an older reader meeting a version it does not know (arena manifest, `store.json`
    schema, journal magic) refuses to open and says "newer than supported"; it does not
-   guess. A newer release only produces such a store when a feature that needs it is used, and
-   documents which. Exception, 0.7.0: new stores are created with `store.json` schema 3, whose
-   journal frames are binary (`HMS-TXN-3`, [file-format/MUTATIONS.md](file-format/MUTATIONS.md));
-   0.6.x refuses them. Schema 2 stores keep writing `HMS-TXN-2` JSON frames, and 0.7 reads both.
-   Stores created by 0.7.0 are schema 4: schema 3 plus document checkpoints, which replace the
-   journal frames before them ([file-format/CHECKPOINT.md](file-format/CHECKPOINT.md)); a
-   release that predates checkpoints refuses schema 4 rather than opening it without its
-   checkpointed documents. Schema 2 and 3 stores open, replay their frames and never get a
-   checkpoint. Schema 5 additionally permits namespace-scoped durable meaning maintenance;
-   schema 6 adds durable audit intents and acknowledgements. The current development writer
-   creates new schema 6 stores. Schemas 2, 3, 4 and 5 remain readable and writable in their
-   original format; governance that needs scoped mutations or durable audit effects returns
-   an upgrade error when the opened schema cannot carry them. Run
-   `warm-format upgrade <source> <destination>` explicitly to enable the current schema in a
-   new copy. Schema-only upgrades retain the existing arena and checkpoints unchanged; old
-   readers refuse unknown newer schemas rather than misreading scoped deletions or audit
-   delivery records.
+   guess. Current readers support `store.json` schemas 2–7; these are storage schema numbers,
+   separate from package versions. Schema 2 writes `HMS-TXN-2` JSON frames; schemas 3–7 write
+   `HMS-TXN-3` binary frames, and readers accept both forms
+   ([file-format/MUTATIONS.md](file-format/MUTATIONS.md)). Schema 4 adds document checkpoint
+   support ([file-format/CHECKPOINT.md](file-format/CHECKPOINT.md)); schemas 2 and 3 never get
+   a checkpoint. Schema 5 permits namespace-scoped durable meaning maintenance, schema 6 adds
+   durable audit intents and acknowledgements, and schema 7 adds explicit native vector records.
+   Ordinary new stores use schema 6. Creating a store with `vectorRecords: true`
+   (`WarmConfig::vector_records` in Rust) selects schema 7. Existing stores retain their schema
+   on ordinary open; requesting vector records on schemas 2–6 fails with an upgrade instruction.
+   Other features that require a newer schema also fail rather than silently upgrading the store.
+   Run `warm-format upgrade <source> <destination>` explicitly to copy, verify and atomically
+   publish a schema 7 store at a new destination, leaving the source unchanged. Schema-only
+   upgrades retain the existing arena and checkpoints unchanged. A schema 7 store reopens
+   without the vector-record flag when its persisted configuration matches; older readers
+   refuse schemas they do not support. See [file-format/LAYOUT.md](file-format/LAYOUT.md#storejson)
+   for the creation and reopen checks.
 4. **Breaking the format** happens only in a major release, with the old format still readable
    or an `warm-format upgrade` step, and a golden store for each side.
 5. **Caches** (`documents.text`, `indices.json`, NSG/IVF files, `shard_meta.json` aside) may

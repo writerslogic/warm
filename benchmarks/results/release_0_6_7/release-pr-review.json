@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "task": "Release review of WARM PR395 and PR408",
+  "reviewer_lane": "A",
+  "worktree": "/Volumes/A/.hms-wt-mission-a",
+  "source_base": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "scope": "Connected GitHub and pinned local Git review, followed by root-authorized PR408 fixes in run_gen.py, ga.py, warm_module_campaign.py, one scoped offline regression file and ANN-BENCHMARKS.md. No builds, tests, benchmark runs, installs, cloud calls, fetches, credentials, comments, merges or pushes.",
+  "comparison_pins": {
+    "main": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+    "pr425": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b"
+  },
+  "pull_requests": [
+    {
+      "number": 395,
+      "url": "https://github.com/writerslogic/warm/pull/395",
+      "title": "bench: Record the pinned-commit big-ann filter and streaming runs",
+      "head": "42e53e516a2bf442e3c23a2de75bf2ecd3fc3cc3",
+      "base_at_review": "af8d4017c6157688359dc2e31cc461fb3f28fa8e",
+      "state": "open",
+      "draft": false,
+      "mergeable": false,
+      "updated_at": "2026-11-06T21:55:47Z",
+      "commits": 4,
+      "files": [
+        "benchmarks/results/bigann_filter_yfcc10m_pinned_v1.json",
+        "benchmarks/results/bigann_streaming_final_runbook_v1.json",
+        "docs/benchmarks/BIG-ANN-FILTER.md",
+        "docs/benchmarks/BIG-ANN-STREAMING.md"
+      ]
+    },
+    {
+      "number": 408,
+      "url": "https://github.com/writerslogic/warm/pull/408",
+      "title": "bench: Re-measure the ann-benchmarks entry and add the held-out candidate search tooling (partial)",
+      "head": "5b3564a18c05ef4039ad55a35736c8e0e65b3097",
+      "base_at_review": "0b4c5322e81771a7de8d73fc1a5159bdee7a6e1f",
+      "state": "open",
+      "draft": true,
+      "mergeable": true,
+      "updated_at": "2026-11-09T05:37:22Z",
+      "commits": 3,
+      "files": [
+        "benchmarks/ann-benchmarks/campaign/ga.py",
+        "benchmarks/ann-benchmarks/campaign/gen_heldout.py",
+        "benchmarks/ann-benchmarks/campaign/mkdefs.py",
+        "benchmarks/ann-benchmarks/campaign/mkdefs_ivf.py",
+        "benchmarks/ann-benchmarks/campaign/mkreport.py",
+        "benchmarks/ann-benchmarks/campaign/plans/b1-sift.json",
+        "benchmarks/ann-benchmarks/campaign/plans/b2-glove.json",
+        "benchmarks/ann-benchmarks/campaign/plans/g1-sift.json",
+        "benchmarks/ann-benchmarks/campaign/prebuild.py",
+        "benchmarks/ann-benchmarks/campaign/prof.sh",
+        "benchmarks/ann-benchmarks/campaign/profq.py",
+        "benchmarks/ann-benchmarks/campaign/run_gen.py",
+        "benchmarks/ann-benchmarks/campaign/summ.py",
+        "benchmarks/ann-benchmarks/campaign/warm_module_campaign.py",
+        "benchmarks/ann-benchmarks/campaign/warmivf_module.py",
+        "benchmarks/results/ann_benchmarks_v3_wl02/g0-sift-ctrl.json",
+        "benchmarks/results/ann_benchmarks_v3_wl02/g0-sift/ctrl_r0.csv",
+        "benchmarks/results/ann_benchmarks_v3_wl02/g0-sift/ctrl_r1.csv",
+        "benchmarks/results/ann_benchmarks_v3_wl02/profiles/glove-ef240.run.txt",
+        "benchmarks/results/ann_benchmarks_v3_wl02/profiles/glove-ef240.txt",
+        "benchmarks/results/ann_benchmarks_v3_wl02/profiles/sift-heldout-ef30.run.txt",
+        "benchmarks/results/ann_benchmarks_v3_wl02/profiles/sift-heldout-ef30.txt",
+        "docs/benchmarks/ANN-BENCHMARKS.md"
+      ]
+    }
+  ],
+  "inclusion": {
+    "pr395": "Neither new JSON result file exists at pinned main or PR425. Both documentation files have newer, distinct content; the PR's historical sections are absent. These are not duplicate changes.",
+    "pr408": "All 22 added files are absent from pinned main and PR425. ANN-BENCHMARKS.md at main and PR425 is the pre-PR document (blob 23a08b68dd0ffbfa2439aa81a4dccb1422cb0e7d). The three PR commits remain right-only under git log --cherry-mark.",
+    "pr425_relationship": "PR425 adds the Frozen Azure confirmation section to BIG-ANN-FILTER.md. Preserve it together with main's Ice Lake section when integrating PR395. PR425 does not supply or supersede PR408's campaign files.",
+    "conflict_check": "Legacy read-only git merge-tree with each verified merge base finds conflict markers only in BIG-ANN-FILTER.md for PR395. BIG-ANN-STREAMING.md merges without markers, and PR408 merges without markers against pinned main. Connected GitHub independently reports PR395 unmergeable and PR408 mergeable.",
+    "commands": [
+      "git diff --name-status 42e53e516a2bf442e3c23a2de75bf2ecd3fc3cc3 74bb9fa84b85a9bf1f58f89e5d35762f728ed17b -- benchmarks/results/bigann_filter_yfcc10m_pinned_v1.json benchmarks/results/bigann_streaming_final_runbook_v1.json docs/benchmarks/BIG-ANN-FILTER.md docs/benchmarks/BIG-ANN-STREAMING.md",
+      "git diff --name-status 5b3564a18c05ef4039ad55a35736c8e0e65b3097 74bb9fa84b85a9bf1f58f89e5d35762f728ed17b -- benchmarks/ann-benchmarks/campaign benchmarks/results/ann_benchmarks_v3_wl02 docs/benchmarks/ANN-BENCHMARKS.md",
+      "git merge-tree af8d4017c6157688359dc2e31cc461fb3f28fa8e 431722cfba78b02666d1d1ce6004621e23fc71a2 42e53e516a2bf442e3c23a2de75bf2ecd3fc3cc3",
+      "git merge-tree 0b4c5322e81771a7de8d73fc1a5159bdee7a6e1f 431722cfba78b02666d1d1ce6004621e23fc71a2 5b3564a18c05ef4039ad55a35736c8e0e65b3097"
+    ]
+  },
+  "exact_changes": {
+    "pr395": "Four files: two new historical JSON summaries and two documentation edits. Six filter operating points at af8d4017; best eligible local point 33622.83 QPS at recall .90445. Two completed streaming runs at the same pin: .87684 recall, 6175.1s at 16GiB and 10959.2s at 8GiB. Both exceed one hour; neither is an official standing. No engine changes.",
+    "pr408": "23 files: 11 Python campaign utilities/adapters, one shell profiler driver, three plan JSONs, one two-round SIFT summary, two CSV exports, four profile reports/logs, and a 62-line documentation addition. No Rust/production engine change. CSV-backed SIFT medians are 17665.702627206312 QPS at recall>=.95 and 9140.541933890203 at recall>=.99; observed selected recalls are .95556 and .99125. The committed set contains no matched competitor rerun, full GloVe harness result, evolutionary result, final-elite confirmation or factorial ablation.",
+    "measured_limits": "Profile logs are attribution evidence, not matched timing. Historical CSV build=0.21176791191101074 seconds is consistent with cache load, not a fresh graph build; no fresh build-time claim is justified. The summary values were inspected, not recomputed by a new benchmark or report run."
+  },
+  "findings": [
+    {
+      "id": "A-REL-395-1",
+      "priority": "required metadata correction",
+      "evidence": [
+        "PR395 body via connected GitHub",
+        "42e53e51:benchmarks/results/bigann_streaming_final_runbook_v1.json:13-62"
+      ],
+      "finding": "PR body says the 16GiB host is Intel, reports 7.69GiB/5.4GiB, and says the 8GiB run remains in progress. The committed result says AMD EPYC Zen4; 7691.3MiB summed RSS and 5405.7MiB cgroup usage; the 8GiB Zen2 run finished with exit0 and pending=[].",
+      "edit": "Rewrite PR body from the committed result: Zen4, 7.51GiB summed RSS/5.28GiB cgroup, and completed Zen2 8GiB run at 10959.2s. Retain both one-hour failures and different-host caveat.",
+      "validation": "Read the amended body against the two run records; no rerun needed."
+    },
+    {
+      "id": "A-REL-395-2",
+      "priority": "required conflict resolution",
+      "evidence": [
+        "main:docs/benchmarks/BIG-ANN-FILTER.md:91-213",
+        "PR425:docs/benchmarks/BIG-ANN-FILTER.md:216-234",
+        "42e53e51:docs/benchmarks/BIG-ANN-FILTER.md:91-113",
+        "read-only merge-tree conflict at insertion before Not done"
+      ],
+      "finding": "Choosing either entire side of the filter conflict would discard valid historical or newer evidence. PR395's new opening 'one pinned-commit harness run exists' also becomes stale after integration.",
+      "edit": "Insert the dated 2026-11-06 Modal section before the existing 2026-11-09 Ice Lake section; preserve Ice Lake and PR425 Azure sections. Use a plural historical/development status with no official-standing claim. Preserve main's later streaming partition-tier and memory sections.",
+      "validation": "Ensure exactly one Modal, Ice Lake, and Frozen Azure section, both new JSON links resolve, and git diff --check has no conflict markers or whitespace errors."
+    },
+    {
+      "id": "A-REL-395-3",
+      "priority": "required claim qualification",
+      "evidence": [
+        "42e53e51:docs/benchmarks/BIG-ANN-FILTER.md:108-112",
+        "42e53e51:docs/benchmarks/BIG-ANN-STREAMING.md:164-174",
+        "42e53e51:benchmarks/results/bigann_filter_yfcc10m_pinned_v1.json:154-157"
+      ],
+      "finding": "Human-facing text calculates hypothetical cross-host placements and infers compliance with an official Docker limit from a different Modal runtime. Raw summaries already disclose differing hosts and unfinished eligibility.",
+      "edit": "Remove hypothetical placement and halved-throughput rankings from current prose. Describe the 8GiB result as completion under the recorded Modal memory cap, not proof of official Docker/resource eligibility. Preserve raw historical numbers and label any retained placement fields as unsupported historical projections; do not rewrite the observations.",
+      "validation": "Release notes must not promote these runs to official standings, equal-resource comparisons, or a current matrix target."
+    },
+    {
+      "id": "A-REL-408-1",
+      "priority": "required correctness fix before executable reuse",
+      "evidence": [
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/run_gen.py:20-21,37-44",
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/ga.py:46-58,80-92",
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/mkreport.py:21-35"
+      ],
+      "finding": "The runner ignores run.py/export failure, writes GEN_DONE/.done anyway, and resumes solely from export.csv existence. GA ignores runner status, skips missing rounds, and can select from incomplete observations.",
+      "edit": "Require successful child and export exits plus expected nonempty result coverage before atomically publishing a success receipt. Resume only from a receipt bound to plan/arm/dataset/wheel hashes. Propagate failure to GA; require all registered rounds or mark the arm incomplete without fitness. Emit partial failure evidence separately and never write a success marker on failure.",
+      "validation": "Add offline fixtures for failing run, failing export, empty/truncated CSV, stale CSV with changed plan, missing one round, and successful complete receipt; failures must return nonzero and produce no success marker or selectable fitness."
+    },
+    {
+      "id": "A-REL-408-2",
+      "priority": "required correctness fix",
+      "evidence": [
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/ga.py:10-15,22-26",
+        "f21de886:src/core/qgraph/vertex.rs:190-196"
+      ],
+      "finding": "norm() removes every env value equal to any of (0,1.0,'auto'). Python compares integer1 equal to1.0, so BATCH_EST=1, PREFETCH=1 and RERANK_Z=1 are silently discarded even though their actual defaults are0.",
+      "edit": "Use a per-key defaults mapping (PREFETCH0,BATCH_EST0,FRONTIER1.0,RERANK_Z0,KERNEL'auto') or preserve all explicit env values. Do not use one shared value set for every key.",
+      "validation": "Independent fixtures must retain the three explicit integer1 settings while removing only each key's actual default; verify distinct genomes stay distinct."
+    },
+    {
+      "id": "A-REL-408-3",
+      "priority": "required data-integrity correction",
+      "evidence": [
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/warm_module_campaign.py:13-17,41-48",
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/plans/b1-sift.json:22-64",
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/ga.py:76"
+      ],
+      "finding": "Cache identity samples roughly997 input rows and uses a mutable shared buildtag; two datasets differing only at an unsampled row collide. Variant wheels reuse f21de886 as buildtag without a recorded graph-equivalence proof. A fixed .tmp path can also collide across concurrent writers.",
+      "edit": "Bind cache keys to the full dataset content/shape/dtype/metric and actual wheel/build-configuration digest (or an explicitly verified shared build identity). Use unique temporary files and atomic publication with per-key synchronization. Record cache hit/load separately from full build time.",
+      "validation": "Two equal-shaped datasets differing at one previously unsampled row must have different keys; changed wheel/build configuration must not reuse a cache without a verified equivalence receipt; concurrent publishers must not leave a corrupt artifact."
+    },
+    {
+      "id": "A-REL-408-4",
+      "priority": "required claim correction; certification required before future gold use",
+      "evidence": [
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/gen_heldout.py:16-32",
+        "5b3564a1:docs/benchmarks/ANN-BENCHMARKS.md:118"
+      ],
+      "finding": "The generator ranks in float32: angular normalization/dots or rounded f32 norms minus2*f32dot, then recomputes distances only for selected IDs. This does not certify exact top100 membership at near ties. No wrong label was established by this review.",
+      "edit": "Change historical prose to 'brute-force floating-point generated ground truth; exact ordering not independently certified.' Preserve historical artifacts. Before reusing this generator for exact mission gold, add an independent certified/high-precision boundary oracle covering all potentially displaced candidates and ties; merely refining selected100 is insufficient.",
+      "validation": "Tiny adversarial cancellation/near-tie datasets must match an independent exact or certified oracle on membership and tie semantics; no paid or full benchmark run is needed for this correctness test."
+    },
+    {
+      "id": "A-REL-408-5",
+      "priority": "required stale-scope correction",
+      "evidence": [
+        "PR408 body",
+        "5b3564a1:docs/benchmarks/ANN-BENCHMARKS.md:68,83-85,109-126",
+        "5b3564a1:benchmarks/ann-benchmarks/campaign/plans directory"
+      ],
+      "finding": "Queue time and 'pending/queued' statements are historical, not current process state. g1-glove is referenced but not committed; plans reference external absolute definitions/wheel/harness paths. The documentation calls all measured work official-runner output despite separate profiler/smoke drivers.",
+      "edit": "Reframe the PR and section as a dated partial development record plus tooling. Say unrecorded/not completed in this artifact set instead of currently queued. Remove the nonexistent g1-glove plan claim or recover its exact historical artifact with provenance. State external setup prerequisites and separate harness controls, profiler attribution and smoke measurements. Do not launch old plans simply to make the PR complete.",
+      "validation": "All referenced committed plans must exist; every numerical claim must point to a committed artifact or be marked an unverified historical report; no active-job claim without a current receipt."
+    },
+    {
+      "id": "A-REL-408-6",
+      "priority": "required benchmark-claim correction",
+      "evidence": [
+        "5b3564a1:docs/benchmarks/ANN-BENCHMARKS.md:76-85,118,126",
+        "5b3564a1:benchmarks/results/ann_benchmarks_v3_wl02/g0-sift-ctrl.json:217-235"
+      ],
+      "finding": "The SIFT numbers are local two-round development controls. No matched competitor rerun or complete final confirmation exists in this PR. Official queries have already been inspected; the statement that they serve only as final confirmation is not a fresh-holdout guarantee. A gap above timing spread alone does not establish overfitting; the splits also differ in corpus size.",
+      "edit": "Retain the measured medians/operating recalls and full CSVs. Remove the unused4.7x/4.8x arithmetic from prose, retain the cross-host/day incomparability. Mark both inspected splits exposed development evidence. Replace the automatic overfitting conclusion with an unresolved generalisation assessment requiring a fresh declared holdout. Date the Docker revision suggestion instead of calling f21de886 current main, and qualify the smaller-grid runtime prediction as unmeasured.",
+      "validation": "No release claim of first place,2x matched gain, exact fresh confirmation, or completed candidate search may derive from these artifacts."
+    }
+  ],
+  "review_threads": {
+    "pr395": "No inline threads returned.",
+    "pr408": "12 inline threads returned, all resolved and outdated. They concerned file closure/one unused import; they do not cover the defects above."
+  },
+  "integration_recommendation": "Integrate both PRs as historical evidence and experimental tooling after the listed corrections. Keep production benchmark standings and mission acceptance unchanged. Resolve PR395 conflict by retaining all dated evidence sections, not by taking one side wholesale. Root owns edits, tests, metadata updates and merging.",
+  "requested_validation": {
+    "specialist_performed": "Read-only source/metadata inspection, pinned-tree inclusion comparison and legacy merge-tree conflict analysis. No checker or benchmark executed.",
+    "root_before_merge": [
+      "Apply correctness fixes and add focused offline regression coverage for failure propagation/completeness, per-key normalization and cache identity; ensure importing any extracted helpers does not start campaigns.",
+      "Parse the committed JSON/CSV records and verify the two SIFT medians and threshold-selected recalls; keep every point and repeat.",
+      "Review amended PR bodies and dated documentation against source pins; preserve historical input/result bytes.",
+      "Run the repository's required integrated security/release gates separately under root ownership."
+    ],
+    "exact_safe_source_commands": [
+      "git diff --check",
+      "rg -n '^(<<<<<<<|=======|>>>>>>>)' docs/benchmarks/BIG-ANN-FILTER.md docs/benchmarks/BIG-ANN-STREAMING.md docs/benchmarks/ANN-BENCHMARKS.md",
+      "PYTHONDONTWRITEBYTECODE=1 UV_PYTHON_DOWNLOADS=never uv run --offline --no-project --python /Volumes/A/.hms-lb/vibe/venv/bin/python python -m unittest discover -s benchmarks/ann-benchmarks/campaign -p 'test_campaign_integrity.py'"
+    ],
+    "command_limit": "The unittest command targets the new owned regression file, which has not been executed by the specialist. rg must find no conflict markers (exit1). Do not execute campaign entrypoints or historical plans as a release smoke test."
+  },
+  "implementation_followup": {
+    "original_source": "origin/pr-408 at 5b3564a18c05ef4039ad55a35736c8e0e65b3097; copies only, no worktree switch/reset",
+    "changed_files_absolute": [
+      "/Volumes/A/.hms-wt-mission-a/benchmarks/ann-benchmarks/campaign/run_gen.py",
+      "/Volumes/A/.hms-wt-mission-a/benchmarks/ann-benchmarks/campaign/ga.py",
+      "/Volumes/A/.hms-wt-mission-a/benchmarks/ann-benchmarks/campaign/warm_module_campaign.py",
+      "/Volumes/A/.hms-wt-mission-a/benchmarks/ann-benchmarks/campaign/test_campaign_integrity.py",
+      "/Volumes/A/.hms-wt-mission-a/docs/benchmarks/ANN-BENCHMARKS.md"
+    ],
+    "implemented": "Checked runner/export exits, explicit expected configuration counts, atomic success receipts bound to plan/input/code/wheel/export hashes, fail-closed legacy/stale resume, all-round fitness, per-key defaults, full-data/native cache identity and atomic no-overwrite cache publication. A racing builder loads the published winner; no cache lock is held across build or I/O. Scripts are import-safe. Documentation is dated and qualifies historical float32 ground truth, exposed queries, missing arms and unverified smoke evidence.",
+    "plan_migration": "Archived plans and results are unchanged. A new registered plan must add positive expected_rows per arm/dataset, derived from its complete definitions. The evolutionary single-build driver derives expected_rows from its ef grid. Installed competitor environments without a pinned wheel cannot resume historical results.",
+    "limits": "No benchmark measurements or native behavior were revalidated. Synthetic tests exercise orchestration and cache publication with tiny subprocess/file fixtures; root executes them. Historical generator and result bytes remain unchanged. PR395 source/metadata corrections remain root-owned."
+  },
+  "blockers": "No authorization blocker. Root must resolve the documented conflict and correctness/claim defects before treating the new tooling as reusable. Security and full release gate status were outside this review."
+}

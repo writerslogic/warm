@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "observed_utc": "2026-11-09",
+  "repository_base": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "alert_snapshot": "/Volumes/A/.hms-lb/mission/release-current/dependabot-open.json",
+  "status": "Research plus source-only Chroma reader hardening; tests not executed by this lane.",
+  "priority_order": [
+    "SEC-MINIMATCH",
+    "SEC-DEEPMERGE",
+    "SEC-CHROMA",
+    "SEC-DISKCACHE"
+  ],
+  "primary_source_pins": [
+    {
+      "name": "minimatch_manifest",
+      "url": "https://github.com/isaacs/minimatch/blob/v11.0.1/package.json",
+      "blob_sha": "f3061da0eacbad8e5035dad55b2644c37ccdfd45"
+    },
+    {
+      "name": "minimatch_source",
+      "url": "https://github.com/isaacs/minimatch/blob/v11.0.1/src/index.ts",
+      "blob_sha": "7e7c2964357abb54ff2325fb999de06b3676e27b"
+    },
+    {
+      "name": "typedoc_paths",
+      "url": "https://github.com/TypeStrong/typedoc/blob/v0.28.20/src/lib/utils/paths.ts",
+      "blob_sha": "9b84431269356cbe5b88ab563ced6e95de96a0d5"
+    },
+    {
+      "name": "chroma_model",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/models/CollectionCommon.py",
+      "blob_sha": "466f133dfb1365a58fbd9feec8100a8635d5ec34"
+    },
+    {
+      "name": "chroma_client",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/client.py",
+      "blob_sha": "71a22bdeeae40631e3dc7bf1f3d05c0fdcbafb62"
+    },
+    {
+      "name": "chroma_types",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/types.py",
+      "blob_sha": "be48337e314f9f4666b98e635569e792ef50a262"
+    },
+    {
+      "name": "chroma_http",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/fastapi.py",
+      "blob_sha": "0a41b2b0bb25203df24d4f5dbe33c04baf1cc6f4"
+    },
+    {
+      "name": "dspy_init",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/__init__.py",
+      "blob_sha": "1813f9c2b2245855d1628984815f39451671dc27"
+    },
+    {
+      "name": "dspy_cache",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/clients/cache.py",
+      "blob_sha": "5057cd92fca1313ffb2cb3aea79cd08e53c39f2b"
+    },
+    {
+      "name": "dspy_cache_config",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/clients/__init__.py",
+      "blob_sha": "0be5e9a73225305e81d97477278d631b1e168500"
+    },
+    {
+      "name": "dspy_restricted_disk",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/clients/disk_serialization.py",
+      "blob_sha": "f5776493353f050d72a49a7a113ffdeaf2f1dd17"
+    },
+    {
+      "name": "diskcache_key_decode",
+      "url": "https://github.com/grantjenks/python-diskcache/blob/v5.6.3/diskcache/core.py",
+      "blob_sha": "c7c84860ea853fe9232e8ee52eaaa053b00a3a87"
+    },
+    {
+      "name": "deepmerge",
+      "url": "https://github.com/TehShrike/deepmerge/blob/5b87756a5671635679001cbac72aa42f23472c81/index.js",
+      "blob_sha": "77968aed5d456cccc294f60912ef381fa1e52a7b"
+    },
+    {
+      "name": "html_to_text_10_0_1",
+      "url": "https://github.com/html-to-text/node-html-to-text/blob/10.0.1/packages/html-to-text/package.json",
+      "blob_sha": "0be3d43ecaab89aa6ce50752b0855e8efe4ca27c"
+    },
+    {
+      "name": "html_to_text_9_0_5",
+      "url": "https://github.com/html-to-text/node-html-to-text/blob/9.0.5/packages/html-to-text/src/html-to-text.js",
+      "blob_sha": "b5a88b895bac88422e28b50dafadd5907da5eaa6"
+    }
+  ],
+  "findings": [
+    {
+      "id": "SEC-MINIMATCH",
+      "alerts": [
+        241
+      ],
+      "advisories": [
+        "GHSA-g3hv-75wg-m249"
+      ],
+      "installed": "minimatch 10.2.6",
+      "chain": "scripts/docs-api -> typedoc 0.28.20 -> minimatch ^10.2.5",
+      "primary_advisory": "https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249",
+      "reachability": "TypeDoc consumes controlled entry-point paths from package exports. Inspected TypeDoc glob and path helpers construct Minimatch without optimizationLevel=2; advisory requires >=2. This limits demonstrated reachability but does not remove the installed vulnerability.",
+      "remedy": {
+        "kind": "dependency_override",
+        "proposal": "Set scripts/docs-api package override for minimatch to exactly 11.0.1, regenerate lock with npm, retain TypeDoc and generated API surface.",
+        "evidence": "11.0.1 primary manifest requires Node18 ||20 ||>=22 and preserves CommonJS/ESM. Inspected source retains Minimatch.set, globParts, match and default optimizationLevel1 used by TypeDoc. Its first-phase expansion is bounded and second-phase quadratic pass skips >1000 entries.",
+        "risk": "Major override outside TypeDoc declared range; matching and normalized-path behavior still need actual docs-generation validation.",
+        "acceptance": [
+          "All resolved minimatch copies in docs-api are >=11.0.1.",
+          "Existing API generation and internal-link checks pass; no symbols or pages silently dropped.",
+          "An isolated bounded advisory regression terminates without amplification while ordinary glob fixtures preserve expected results."
+        ]
+      },
+      "local_evidence": [
+        "scripts/docs-api/package.json:8",
+        "scripts/docs-api/package-lock.json:186",
+        "scripts/docs_api.py:84",
+        "scripts/docs_api.py:113"
+      ],
+      "validation_commands": [
+        "npm install --prefix scripts/docs-api --package-lock-only --ignore-scripts",
+        "npm ci --prefix scripts/docs-api --ignore-scripts",
+        "npm ls --prefix scripts/docs-api minimatch",
+        "WARM_BUILD_RUSTDOC=1 WARM_DOCS_REQUIRE_API=1 bash scripts/build-docs-site.sh _site",
+        "lychee --offline --no-progress --include-fragments --index-files index.html --exclude-path _site/dev/404.html --exclude-path _site/latest/404.html --exclude '/assets/fonts/' --exclude-path 'api/rust/doc' --root-dir \"$PWD/_site\" '_site/dev/**/*.html' '_site/latest/**/*.html'"
+      ],
+      "qualification": "Link check matches .github/workflows/docs.yml:64 and requires an already available lychee executable."
+    },
+    {
+      "id": "SEC-DEEPMERGE",
+      "alerts": [
+        31
+      ],
+      "advisories": [
+        "GHSA-gcqx-w48m-w2h4"
+      ],
+      "installed": "deepmerge 4.3.1",
+      "chain": "integrations/js packages/llamaindex dev dependency llamaindex0.12.1 -> @llamaindex/node-parser2.0.22 -> html-to-text9.0.5 -> deepmerge4.3.1",
+      "primary_advisory": "https://github.com/TehShrike/deepmerge/issues/273",
+      "reachability": "HTML conversion options are merged, not raw HTML text. LlamaIndex HTMLNodeParser forwards caller-supplied htmlToTextOptions. WARM's current vector/KV tests and quickstart use Document/TextNode with controlled options; no remote untrusted options entry was established. Dependency is required by existing real framework tests/example, so removing llamaindex would erase coverage.",
+      "remedy": {
+        "kind": "replace_vulnerable_transitive_via_supported_package",
+        "proposal": "Target html-to-text exactly10.0.1 in integrations/js overrides; keep llamaindex adapter/test/example functionality and regenerate lock.",
+        "source": "https://github.com/html-to-text/node-html-to-text/blob/10.0.1/packages/html-to-text/package.json",
+        "tag_object_sha": "ba5dcc4b7fbec18d4d58839d5e772351c2871a2d",
+        "rationale": "10.x replaces deepmerge with deepmerge-ts;10.0.1 specifically upgrades deepmerge-ts7.1.5→8.0.1 to fix its own security defect. Do not choose10.0.0. CommonJS/ESM and htmlToText/convert/compile are retained.",
+        "risk": "Requires Node>=20.19.0 and ES2022; htmlparser2/entity/textarea/xmp semantics and selector normalization change. Outside original ^9 dependency range, so acceptance is conditional.",
+        "acceptance": [
+          "No deepmerge package remains in resolved integrations/js graph.",
+          "All workspace builds, LlamaIndex vector/KV tests and offline quickstart pass.",
+          "Independent HTML fixtures cover entity decoding, textarea/xmp, custom selectors, nested/null-prototype options and poison keys; no attacker-controlled inherited property accepted.",
+          "Documented/runtime Node floor remains compatible; don't silently raise public peer contract based only on dev CI."
+        ]
+      },
+      "local_evidence": [
+        "integrations/js/package-lock.json:2855",
+        "integrations/js/packages/llamaindex/package.json:34",
+        "integrations/js/packages/llamaindex/test/vectorstore.test.mjs:8",
+        "integrations/js/packages/llamaindex/examples/quickstart.mjs:8"
+      ],
+      "validation_commands": [
+        "npm install --prefix integrations/js --package-lock-only --ignore-scripts",
+        "npm ci --prefix integrations/js --ignore-scripts",
+        "npm ls --prefix integrations/js deepmerge html-to-text deepmerge-ts",
+        "npm run build --prefix integrations/js",
+        "npm run test --prefix integrations/js --workspace @writerslogic/warm-llamaindex",
+        "node integrations/js/packages/llamaindex/examples/quickstart.mjs"
+      ],
+      "notes": "npm ls deepmerge alone may exit1 when absent; check graph absence explicitly instead of treating expected absence as failed security evidence."
+    },
+    {
+      "id": "SEC-CHROMA",
+      "alerts": [
+        75,
+        103,
+        104,
+        105
+      ],
+      "advisories": [
+        "GHSA-f4j7-r4q5-qw2c",
+        "GHSA-2wm9-hf6c-p5cr",
+        "GHSA-xph7-9rjv-w5fr",
+        "GHSA-36p7-vc44-83pf"
+      ],
+      "installed": "chromadb1.5.9",
+      "latest_release_verified": "https://github.com/chroma-core/chroma/releases/tag/1.5.9",
+      "patch_status": "No patched release identified; current alert snapshot says first_patched_version=null. Referenced PR7602 could not be read (404), so do not cite it as a fix.",
+      "consumer": "Optional import-chroma extra plus importers-test group; public persistent-directory and HTTP migration functionality.",
+      "reachability": {
+        "server_rce": "Published create/update configuration RCE is in upstream Python FastAPI server. WARM importer does not start a Chroma server or create/update collections; it lists, gets, counts and reads existing records.",
+        "authorization": "External Chroma resource authorization remains external: WARM cannot repair an upstream server's cross-tenant authorization by passing tenant/database arguments. Source .tenant/.database mismatches should fail closed before records are imported, but this is containment rather than an upstream fix.",
+        "client_rce": "Upstream issue6717 also documents client-side configuration-instantiation. Inspected1.5.9 get_collection constructs a Collection around opaque configuration_json; get requests validate IDs/filters/includes and return existing arrays. WARM never calls _embed, configuration or schema in this path; get include omits data so URI data_loader is not invoked. This is source-level evidence for the constrained reader, not a guarantee for arbitrary chromadb use."
+      },
+      "primary_sources": [
+        "https://www.hiddenlayer.com/research/chromatoast-served-pre-auth",
+        "https://www.hiddenlayer.com/sai-security-advisory/2026-06-chromadb-5",
+        "https://www.hiddenlayer.com/sai-security-advisory/2026-06-chromadb-3",
+        "https://www.hiddenlayer.com/sai-security-advisory/2026-06-chromadb",
+        "https://github.com/chroma-core/chroma/issues/6717"
+      ],
+      "remedy": {
+        "kind": "reader_hardening_plus_unresolved_upstream_package",
+        "implemented_unvalidated": "get_collection now passes embedding_function=None. Existing test_vectordbs_a1.py adds a real persistent-store regression with poisoned returned embedding configuration, traps for constructors/configuration/schema/embedding/mutations, exact row coverage and approximate f32 vector/text/metadata parity at page sizes39/40/41. No server, model or network embedding is used. No tests were run by this lane.",
+        "remaining_validation": "Root runs the new regression and existing Chroma roundtrip/resume. HTTP config/tenant mismatch coverage and returned-scope enforcement were not implemented in this minimal patch; any such behavior change needs its own review.",
+        "not_a_fix": "None alone does not disable every upstream configuration loader and does not patch the server CVEs. Do not label alerts fixed or dismiss them on this basis.",
+        "complete_package_resolution": "Requires an audited patched upstream release or a maintained source-pinned patched distribution with all four vulnerability regressions; no such distribution was verified in this review. Avoid downgrade below1.0 because older releases remain affected by the other three CVEs. Preserve Chroma migration API and do not remove its tests or dependency solely to clear alerts.",
+        "tests": [
+          "Local malicious config must not construct any embedding function when listing/counting/getting records.",
+          "HTTP fake server returns malformed/mismatched tenant/database/config and duplicate/missing IDs; reader rejects invalid scope without model construction.",
+          "Existing real persistent Chroma roundtrip and resume pass with zero skipped cases when server/deps are provided.",
+          "If upstream fork is selected: unauthorized create/update must fail before any model constructor; UUID access and RBAC must enforce tenant/database/collection scope across every operation."
+        ]
+      },
+      "local_evidence": [
+        "bindings/python/warm-sdk/pyproject.toml:30",
+        "bindings/python/warm-sdk/pyproject.toml:68",
+        "bindings/python/warm-sdk/writerslogic_warm_sdk/importers/sources/chroma.py:69",
+        "bindings/python/warm-sdk/writerslogic_warm_sdk/importers/sources/chroma.py:90",
+        "bindings/python/warm-sdk/tests/importers/test_vectordbs_a1.py:38"
+      ],
+      "validation_commands": [
+        {
+          "cwd": "bindings/python/warm-sdk",
+          "command": "uv run --locked --group importers-test pytest -q -rs tests/importers/test_vectordbs_a1.py -k chroma",
+          "precondition": "WARM_SERVER_BIN points to root-built integrated warm-server; passing through skips is unacceptable."
+        }
+      ]
+    },
+    {
+      "id": "SEC-DISKCACHE",
+      "alerts": [
+        45
+      ],
+      "advisories": [
+        "GHSA-w8v5-vhqr-4h9v"
+      ],
+      "installed": "diskcache5.6.3",
+      "chain": "bindings/python/warm-sdk optional dspy extra -> dspy3.4.1 -> diskcache5.6.3; separate integrations/python DSPy extra also requires3.4.1",
+      "primary_advisory": "https://github.com/EthanKim88/ethan-cve-disclosures/blob/main/CVE-2025-69872-DiskCache-Pickle-Deserialization.md",
+      "reachability": "Attack requires writable cache files. DSPy default cache is lazy and disk-enabled. WARM retrieval forward methods call HTTP client/embedder and construct Prediction, without direct diskcache calls. User-provided embedder/LM and application cache settings can activate diskcache.",
+      "existing_mitigation": "Already present: memory-only cache configuration before first use in integrations/python/examples/dspy_rag.py, README and DSPy docs, plus fresh-process import-denial/cache-roundtrip regression. Reuse this; do not implement duplicate mitigation or silently change process-global library cache policy.",
+      "additional_finding": "DSPy3.4.1 restrict_pickle=True substitutes RestrictedDisk.fetch for values, but does not override Disk.get for serialized keys. Disk.get(raw=False) still unpickles; therefore this option alone is not a comprehensive package fix under arbitrary cache-file write access.",
+      "remedy": {
+        "kind": "preserve_existing_containment_upstream_fix_unresolved",
+        "next_action": "Run existing guard and integration tests on integrated candidate; add a guard for any newly introduced owned LM/embedding example before first cache use. Do not silently remove diskcache from DSPy's declared dependency graph.",
+        "complete_package_resolution": "A safe upstream/fork resolution must address both key and value deserialization, cache-file provenance, allowable object types and bypasses. No patched release was identified. Memory-only documented profile remains an application mitigation and alert remains open.",
+        "acceptance": [
+          "No diskcache import in the documented offline DSPy workflow, including a cache miss and memory write/read.",
+          "Retrieval, DummyLM RAG, async/tool/deepcopy behavior and legacy RM remain functional.",
+          "Any proposed persistent-cache replacement preserves needed value semantics and fails closed on untrusted key/value payloads; do not equate successful default tests with this proof."
+        ]
+      },
+      "local_evidence": [
+        "bindings/python/warm-sdk/writerslogic_warm_sdk/dspy/retriever.py:26",
+        "integrations/python/src/writerslogic_warm_integrations/dspy/retriever.py:45",
+        "integrations/python/examples/dspy_rag.py:20",
+        "integrations/python/tests/dspy/test_cache_isolation.py:12",
+        "docs/integrations/frameworks/dspy.md:49",
+        "bindings/python/warm-sdk/README.md:65"
+      ],
+      "validation_commands": [
+        {
+          "cwd": "repository root",
+          "command": "uv run --no-project --python 3.12 --with './bindings/python/warm-sdk' --with './integrations/python[dspy]' --with 'dspy==3.4.1' --with 'litellm==1.103.10' --with 'filelock==4.2.6' --with pytest --with pytest-asyncio pytest -q -rs integrations/python/tests/dspy",
+          "precondition": "Existing integrated warm-server via WARM_SERVER_BIN; isolated local/free environment, no paid LM calls."
+        },
+        {
+          "cwd": "bindings/python/warm-sdk",
+          "command": "uv run --locked --extra dspy pytest -q -rs tests/test_dspy_live.py",
+          "precondition": "WARM_SERVER_BIN provided; no skips accepted."
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    "No external alert dismissed or dependency removed. Additional authorized edits are limited to bindings/python/warm-sdk/writerslogic_warm_sdk/importers/sources/chroma.py and bindings/python/warm-sdk/tests/importers/test_vectordbs_a1.py.",
+    "No install/build/test/benchmark/cloud run performed.",
+    "Primary-source availability failures retained: Chroma PR7602 and VulnCheck deepmerge advisory URL returned404; used researcher issue273 and pinned source instead.",
+    "LlamaIndex HTMLNodeParser inspected at current main blob e478eac3c2a73e9d2fd7ccaa2b6c59dcba70dbd4, not claimed as exact2.0.22 source; compatibility must be checked against installed locked package.",
+    "Security fixes and evidence do not satisfy outstanding benchmark targets."
+  ],
+  "unresolved": [
+    "Minimatch and html-to-text major transitive overrides need integrated compatibility validation.",
+    "Five Python advisory alerts lack a verified patched upstream version; current reader/cache containment cannot honestly be called package remediation.",
+    "Complete release gates and alert requery are parent-owned; no release readiness claim."
+  ]
+}
