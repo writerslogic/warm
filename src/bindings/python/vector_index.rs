@@ -711,9 +711,27 @@ impl PyVectorIndex {
     /// Replaces the index with one written by `save` from a `VectorIndex` of the same metric
     /// and `direct_ip` setting, read into memory. Restores the serialized code widths;
     /// subsequent `fit` calls reuse those widths.
-    fn load(&mut self, py: Python<'_>, path: std::path::PathBuf) -> PyResult<()> {
+    /// `shared=True` maps a Linux memfd protected by write, shrink and grow seals.
+    #[pyo3(signature = (path, *, shared=false))]
+    fn load(&mut self, py: Python<'_>, path: std::path::PathBuf, shared: bool) -> PyResult<()> {
         let graph = py
-            .detach(|| VGraph::open(&path, Residency::Heap))
+            .detach(|| {
+                if shared {
+                    #[cfg(target_os = "linux")]
+                    {
+                        VGraph::open_sealed(&path)
+                    }
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        Err(std::io::Error::new(
+                            std::io::ErrorKind::Unsupported,
+                            "shared indexes require a sealed Linux memfd",
+                        ))
+                    }
+                } else {
+                    VGraph::open(&path, Residency::Heap)
+                }
+            })
             .map_err(|e| PyRuntimeError::new_err(format!("load {}: {e}", path.display())))?;
         let lifted = self.metric == Distance::InnerProduct && !self.direct_ip;
         let dim = graph.dim() - usize::from(lifted);
