@@ -45,6 +45,20 @@ class BrandingTests(unittest.TestCase):
 
 
 class ThemeStylesTests(unittest.TestCase):
+    def test_generated_api_css_keeps_cascade_without_a_blocking_request(self):
+        import docs_site
+        from jinja2 import Environment
+
+        with tempfile.TemporaryDirectory() as tmp:
+            asset = Path(tmp, "assets/_mkdocstrings.css")
+            asset.parent.mkdir()
+            asset.write_text(".doc { color: red; }")
+            config = {"site_dir": tmp, "extra_css": ["assets/_mkdocstrings.css", "custom.css"],
+                      "extra": {"warm": {"inline_css": ".doc{color:blue}"}}}
+            docs_site.on_env(Environment(), config, [])
+            self.assertEqual(config["extra_css"], ["custom.css"])
+            self.assertEqual(config["extra"]["warm"]["inline_css"], ".doc{color:red}\n.doc{color:blue}")
+
     def environment(self, css):
         import docs_site
         from jinja2 import DictLoader, Environment

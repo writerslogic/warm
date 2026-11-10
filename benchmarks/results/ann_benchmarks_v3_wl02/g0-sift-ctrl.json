@@ -1,0 +1,241 @@
+{
+ "generations": {
+  "g0-sift": {
+   "sift-128-euclidean": {
+    "ctrl": {
+     "rounds": {
+      "r0": {
+       "0.95": {
+        "hc": 17908.235696972257,
+        "interp": 18554.192234952927
+       },
+       "0.99": {
+        "hc": 9195.522451540653,
+        "interp": 9579.644501842353
+       },
+       "max_recall": 0.9999,
+       "points": [
+        {
+         "recall": 0.7648699999999999,
+         "qps": 39033.48409551995,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=10, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.95556,
+         "qps": 17908.235696972257,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=40, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.84329,
+         "qps": 32784.18719242626,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=15, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99971,
+         "qps": 3109.1624616822014,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=400, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9973599999999999,
+         "qps": 7238.640007483183,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=170, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9998699999999999,
+         "qps": 2354.664992060178,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=550, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9128399999999999,
+         "qps": 24222.297682820623,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=25, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.97728,
+         "qps": 13320.003709260065,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=60, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9309799999999999,
+         "qps": 21423.17406727329,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=30, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99513,
+         "qps": 7526.271854931844,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=130, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9993700000000001,
+         "qps": 3862.2430215321474,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=300, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.98669,
+         "qps": 10676.090675540874,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=80, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99868,
+         "qps": 5335.435127006972,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=220, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9449500000000001,
+         "qps": 19161.067386882976,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=35, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.8848499999999999,
+         "qps": 27252.23316968451,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=20, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9999,
+         "qps": 1726.520102292812,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=800, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99125,
+         "qps": 9195.522451540653,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=100, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.96868,
+         "qps": 14910.631569143132,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=50, rerank=64, patience=0, reservoir=0)"
+        }
+       ]
+      },
+      "r1": {
+       "0.95": {
+        "hc": 17423.169557440367,
+        "interp": 18636.0582393526
+       },
+       "0.99": {
+        "hc": 9085.561416239752,
+        "interp": 9429.493805553102
+       },
+       "max_recall": 0.9999,
+       "points": [
+        {
+         "recall": 0.7648699999999999,
+         "qps": 38401.78133263018,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=10, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.95556,
+         "qps": 17423.169557440367,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=40, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.84329,
+         "qps": 32958.30848280972,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=15, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99971,
+         "qps": 3154.5472466010033,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=400, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9973599999999999,
+         "qps": 6202.15489298879,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=170, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9998699999999999,
+         "qps": 2919.2327581826903,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=550, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9128399999999999,
+         "qps": 23820.891690950593,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=25, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.97728,
+         "qps": 13157.717411285956,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=60, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9309799999999999,
+         "qps": 21750.277822288113,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=30, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99513,
+         "qps": 7377.916123712036,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=130, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9993700000000001,
+         "qps": 4020.8586336360227,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=300, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.98669,
+         "qps": 10404.426000844896,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=80, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99868,
+         "qps": 5184.177612823396,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=220, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9449500000000001,
+         "qps": 19810.71136742569,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=35, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.8848499999999999,
+         "qps": 27513.303036345886,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=20, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.9999,
+         "qps": 1921.179718557952,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=800, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.99125,
+         "qps": 9085.561416239752,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=100, rerank=64, patience=0, reservoir=0)"
+        },
+        {
+         "recall": 0.96868,
+         "qps": 14510.44631437506,
+         "parameters": "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=50, rerank=64, patience=0, reservoir=0)"
+        }
+       ]
+      }
+     },
+     "params": [
+      "warm[ctrl-sift](degree=32, build_ef=500, code_bits=8, residual_bits=8, compact=False, ef=10, rerank=64, patience=0, reservoir=0)"
+     ],
+     "median": {
+      "0.95": {
+       "hc": 17665.702627206312,
+       "interp": 18595.125237152763
+      },
+      "0.99": {
+       "hc": 9140.541933890203,
+       "interp": 9504.569153697728
+      }
+     },
+     "spread": {
+      "0.95": {
+       "hc": 1.0278402926593082,
+       "interp": 1.0044122645363913
+      },
+      "0.99": {
+       "hc": 1.0121028333047593,
+       "interp": 1.0159235160853306
+      }
+     }
+    }
+   }
+  }
+ }
+}

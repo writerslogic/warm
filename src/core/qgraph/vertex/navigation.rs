@@ -37,7 +37,7 @@ impl VGraph {
         let profile = searcher.profile_search(query, k, params, &mut production)?;
         let scratch = &mut searcher.scratch;
         let sq = self.encode_query(
-            &scratch.qf,
+            &mut scratch.qf,
             &mut scratch.qc,
             &mut scratch.qtmp,
             &mut scratch.qrot,
