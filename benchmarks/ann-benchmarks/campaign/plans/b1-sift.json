@@ -1,0 +1,122 @@
+{
+"gen": "b1-sift",
+"rounds": 2,
+"cpu": 4,
+"datasets": [
+"sift-128-euclidean",
+"sift-128-euclidean-heldout"
+],
+"arms": {
+"ctrl": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {}
+},
+"faiss": {
+"algo": "faiss-ivfpqfs",
+"wheel": null,
+"python": "/home/davidcondrey/ab-a/venv-comp/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs-comp/faiss",
+"datasets": [
+"sift-128-euclidean"
+]
+},
+"xbp": {
+"algo": "warm",
+"wheel": "xbp",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+},
+"xna": {
+"algo": "warm",
+"wheel": "xna",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+},
+"xq4": {
+"algo": "warm",
+"wheel": "xq4",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+},
+"pf3": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_PREFETCH": 3
+},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+},
+"be1": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_BATCH_EST": 1
+},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+},
+"kavx2": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_KERNEL": "avx2"
+},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+},
+"rr": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-rr",
+"env": {},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+},
+"pat": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-pat",
+"env": {},
+"datasets": [
+"sift-128-euclidean-heldout"
+]
+}
+}
+}
