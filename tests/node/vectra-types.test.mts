@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-import { VectraMigrationIndex, importVectraItems, importVectraIndex, type VectraSource, type StoredVectraItem } from 'warm-sdk/vectra'
+import { VectraMigrationIndex, importVectraItems, importVectraIndex, type VectraSource, type StoredVectraItem } from 'writerslogic-warm/vectra'
 
 const options = { path: './types-only-new-store', embeddingSpace: { model: 'fixture', revision: '1', dimensions: 3 } }
 const index = await VectraMigrationIndex.create(options)

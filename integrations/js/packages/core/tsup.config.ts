@@ -8,5 +8,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   shims: true,
-  external: ['warm-sdk', 'warm-sdk/semantic'],
+  external: ['writerslogic-warm', 'writerslogic-warm/semantic'],
 })
