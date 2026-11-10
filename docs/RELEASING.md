@@ -10,10 +10,10 @@ on `main`, or publication from the Python release workflows. MCP manual runs do 
 
 | Tag | Workflow | Produces |
 | --- | --- | --- |
-| `vX.Y.Z` | `.github/workflows/release.yml` | the crate, 8 npm native packages and the root npm package, Python wheels and sdist (as release assets), SBOMs, SLSA provenance, a draft GitHub release; then publishes the crate and the npm packages |
+| `vX.Y.Z` | `.github/workflows/release.yml` | the crate, 8 `writerslogic-warm-*` native packages and root `writerslogic-warm`, Python wheels and sdist (as release assets), SBOMs, SLSA provenance, a draft GitHub release; then publishes the crate and native npm packages |
 | `py-models-vX.Y.Z` | `.github/workflows/warm-models-release.yml` | the pinned default offline `warm-models` pack, published to PyPI through Trusted Publishing |
 | `py-vX.Y.Z` | `.github/workflows/warm-py-release.yml` | `warm-python` wheels and sdist, published to PyPI through Trusted Publishing |
-| `sdk-vX.Y.Z` | `.github/workflows/warm-sdk-release.yml` | `warm-sdk` wheel and sdist, published to PyPI through Trusted Publishing |
+| `sdk-vX.Y.Z` | `.github/workflows/warm-sdk-release.yml` and `.github/workflows/warm-js-sdk-release.yml` | portable `warm-sdk` clients: Python wheel/sdist on PyPI and JavaScript/TypeScript package on npm |
 | `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
 
 Publish a new model pack before a native wheel that requires that new version through `[embed]`.
@@ -21,20 +21,32 @@ The existing `warm-models==0.1.0` pin does not require another model release for
 The Python distributions have separate release tags and Trusted Publisher workflows. For a full
 engine release, push both `vX.Y.Z` and `py-vX.Y.Z` at the same commit; the native wheels build twice.
 
-The npm native binding `warm-sdk` follows the engine version; the PyPI HTTP SDK also named
-`warm-sdk` has an independent version in `bindings/python/warm-sdk/pyproject.toml`. The engine
-version script does not bump that SDK or the MCP launchers. Framework adapters in `integrations/js`
+The npm native binding `writerslogic-warm` follows the engine version, currently 0.6.7.
+The JavaScript and Python HTTP clients share SDK version 0.2.0 and the `sdk-v0.2.0` tag;
+their manifests are `bindings/js/warm-sdk/package.json` and
+`bindings/python/warm-sdk/pyproject.toml`. The engine version script does not bump the SDKs
+or MCP launchers. Framework adapters in `integrations/js`
 and `integrations/python`, and the two Claude memory-tool packages, have no publication workflow
 in this release pipeline. Their first publication is separate from the 0.6.7 maintenance release.
 
-## Python HTTP SDK release
+## Portable HTTP SDK release
 
-When the SDK changes, set a new version in `bindings/python/warm-sdk/pyproject.toml` and document
-compatibility changes, including removed adapters. Run **Python SDK release** on the candidate
+Keep both SDK manifests and their lockfiles at the shared SDK version, and document compatibility
+changes, including removed adapters. Run **Python SDK release** on the candidate
 with `publish=false`. Its gate builds with `uv build`, tests against a real `warm-server`, and
 checks a clean wheel install, import and `py.typed` marker. Require the framework contract jobs
-in `ci.yml` as well. Publish a signed `sdk-vX.Y.Z` tag matching the SDK manifest; do not reuse
-an existing version or substitute the engine version.
+in `ci.yml` as well.
+
+The JavaScript client lives in `bindings/js/warm-sdk`, not the repository-root npm package.
+Require the build-only `.github/workflows/js-sdk.yml` checks before
+`.github/workflows/warm-js-sdk-release.yml` publishes: type checking, client tests, clean packed
+CommonJS/ESM consumers, a real server memory round trip, and absence of native/runtime
+dependencies. Importing the client must not load the embedded engine. Keep provenance,
+registry signature verification and the published-consumer check in the release gate.
+
+Publish one signed `sdk-vX.Y.Z` tag matching both clients. It triggers their separate registry
+workflows. Do not reuse an existing version, substitute the engine version, or mark the shared
+SDK release available until both registry installs have been verified.
 
 ## MCP launcher release
 
@@ -114,9 +126,9 @@ version, which is independent of the launcher version.
   installed into an empty virtualenv with no source tree and no network, then a real associative
   search and a resonator factorization run through it (`scripts/ci/smoke_python.py`). Linux wheels
   are additionally installed in a Debian 11 (glibc 2.31, Python 3.9) or Alpine container.
-- **npm** (`npm-packages.yml`): `warm-sdk-{darwin-arm64, darwin-x64, linux-arm64-gnu,
+- **Embedded npm** (`npm-packages.yml`): `writerslogic-warm-{darwin-arm64, darwin-x64, linux-arm64-gnu,
   linux-arm64-musl, linux-x64-gnu, linux-x64-musl, win32-arm64-msvc, win32-x64-msvc}` plus the
-  JavaScript-only root `warm-sdk`, whose `optionalDependencies` select the binding by
+  JavaScript-only loader package `writerslogic-warm`, whose `optionalDependencies` select the binding by
   os, cpu and libc. glibc bindings are linked against glibc 2.17, musl bindings with zig. The
   tarballs are installed into an empty project on a machine of every target (Alpine containers for
   musl, Debian 11 for glibc) with the root's optional dependencies pointed at the local tarballs,
@@ -124,6 +136,9 @@ version, which is independent of the launcher version.
   (`scripts/ci/smoke-node.cjs`). The root `package.json` (`napi.targets`) is the single list of
   platforms and `scripts/ci/npm-platform-packages.cjs` refuses to pack if it disagrees with
   `optionalDependencies` or any binding is missing.
+- **Portable npm client** (`js-sdk.yml`): `warm-sdk` from `bindings/js/warm-sdk`, with
+  CommonJS, ESM and TypeScript declarations. It has no platform packages or native dependency;
+  its server runs separately. Publication uses the SDK tag and `warm-js-sdk-release.yml`.
 - **Crate**: `cargo package --locked`, which also builds the packaged tarball.
 - **SBOM**: a CycloneDX 1.5 JSON per artefact (`cargo-cyclonedx`, `npm sbom`), named
   `<artefact>.cdx.json` and paired by `scripts/ci/pair-sboms.py`, which refuses a release where any
@@ -140,9 +155,9 @@ These cannot be committed; the publish jobs wait on them.
    `npm`, `pypi`.
 2. crates.io: add this repository's `release.yml` and environment `crates-io` as a Trusted Publisher
    for `warm-rust`. The job uses `rust-lang/crates-io-auth-action` and holds no token.
-3. npm: provide an automation token for the `warm-sdk` and
-   eight `warm-sdk-*` platform names as `NPM_TOKEN` (a repository or `npm` environment secret).
-   The first publish of the eight platform package names needs a token. Publishing uses
+3. npm: configure publishing authority for `writerslogic-warm`, its eight
+   `writerslogic-warm-*` platform names, and the separate portable `warm-sdk` package through
+   `NPM_TOKEN` (a repository or `npm` environment secret). Publishing uses
    `--provenance`. Legacy package retirement runs separately through `retire-legacy-npm.yml`; registry policy and interactive two-factor authentication can restrict permanent deletion.
 4. PyPI: add pending Trusted Publishers under owner `writerslogic`, repository
    `warm`, environment `pypi`: `warm-models` uses
@@ -165,7 +180,7 @@ These cannot be committed; the publish jobs wait on them.
    changelog gate on the actual tag. Tag the commit before any `[skip ci]` commit
    (those run no workflows).
 3. **Dry run.** Merge to `main`, then run Actions, Release and Python native release on `main`.
-   Keep all publish inputs false. Run Python SDK release and MCP launcher release when those
+   Keep all publish inputs false. Run both SDK build/check workflows and MCP launcher release when those
    distributions change; run Python models release only when a new pack is needed. The dry runs
    build and test without publishing. The `Reproducible build` workflow must also be green on that commit.
 4. **Tag and push** (signed): `git tag -s vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`, and the same
@@ -177,23 +192,23 @@ These cannot be committed; the publish jobs wait on them.
    `SHA256SUMS` and the provenance bundle. Prepare the notes, but keep it a draft until the registry
    and artefact checks below pass, then publish it. The data releases
    (`evidence-v*`) use other tags and never trigger these workflows.
-6. **npm listing.** Verify the new root package and all eight platform packages are available:
+6. **Native npm listing.** Verify the root package and all eight platform packages are available:
 
    ```sh
    version=X.Y.Z
-   for package in warm-sdk \
-     warm-sdk-darwin-arm64 warm-sdk-darwin-x64 \
-     warm-sdk-linux-arm64-gnu warm-sdk-linux-arm64-musl \
-     warm-sdk-linux-x64-gnu warm-sdk-linux-x64-musl \
-     warm-sdk-win32-arm64-msvc warm-sdk-win32-x64-msvc; do
+   for package in writerslogic-warm \
+     writerslogic-warm-darwin-arm64 writerslogic-warm-darwin-x64 \
+     writerslogic-warm-linux-arm64-gnu writerslogic-warm-linux-arm64-musl \
+     writerslogic-warm-linux-x64-gnu writerslogic-warm-linux-x64-musl \
+     writerslogic-warm-win32-arm64-msvc writerslogic-warm-win32-x64-msvc; do
      test "$(npm view "${package}@${version}" version)" = "$version" || exit 1
    done
-   npm view "warm-sdk@${version}" deprecated # must print nothing
-   npm dist-tag ls warm-sdk                  # latest must be X.Y.Z
+   npm view "writerslogic-warm@${version}" deprecated # must print nothing
+   npm dist-tag ls writerslogic-warm                  # latest must be X.Y.Z
    ```
 
    Confirm the latest registry page shows no deprecation banner, the README logo renders, and
-   `npm install warm-sdk` resolves to X.Y.Z. npm can acknowledge a new package before
+   `npm install writerslogic-warm` resolves to X.Y.Z. npm can acknowledge a new package before
    its version is available; a [`0.0.0-stage` placeholder](https://docs.npmjs.com/staged-publishing/)
    alone is not a published binding.
    Require the `verify-published` job to pass for this release: it waits for the root and every
@@ -202,37 +217,44 @@ These cannot be committed; the publish jobs wait on them.
    a successful tarball build alone does not establish that consumers can use the release.
 7. **Verify** what was shipped (see below).
 
-### First npm release under `warm-sdk`
+<a id="first-npm-release-under-warm-sdk"></a>
+
+### JavaScript package availability
+
+The prepared releases are portable `warm-sdk` 0.2.0 and embedded `writerslogic-warm` 0.6.7.
+Neither prepared version is claimed published here. Use the [source installation](get-started/install.md)
+until the respective registry consumer gate passes. The existing native `writerslogic-warm`
+family is retained; it is not deprecated or replaced by the client.
+
+For the SDK, verify `npm view warm-sdk@0.2.0 version`, install that exact version in a clean
+consumer, verify signatures, and run an authenticated memory round trip against the supported
+server. Verify the Python client independently under the same SDK tag. Keep native platform
+build/install gates, provenance and registry consumer checks for the embedded package.
 
 The 0.6.6 release partially published the new npm names: seven platform packages succeeded,
 but npm rejected `warm-sdk-win32-x64-msvc` for package-name spam detection and the job stopped
 before publishing root `warm-sdk` ([failed job](https://github.com/writerslogic/warm/actions/runs/42557810040/job/128969748569)).
-The source rename did not publish the missing packages or transfer ownership from
-`writerslogic-warm`. Before release,
-confirm publishing authority for all nine names and configure `NPM_TOKEN` for them.
-Publish the platform tarballs first, then the root, through the existing protected
-release workflow. Require the cross-platform build/install gates, provenance checks,
-and registry consumer smoke test before directing consumers to the new name.
+That historical failure does not block either current package: the embedded release uses the
+existing `writerslogic-warm-*` names, and the portable client has no native helpers. Do not
+retry or require clearance of `warm-sdk-win32-x64-msvc` for these releases. Preserve the
+historical tags and receipts.
 
-Consumers replace `writerslogic-warm` with `warm-sdk` in their package manifests and
-imports, including `/semantic` and `/memory`. Keep existing store directories and
-configuration. A future first publication of the framework adapters in `integrations/js` must
-coordinate their `warm-sdk >=0.6.5` peer dependency with a complete native binding release; those
-adapters are not published by the engine tag and are not a prerequisite for 0.6.7. Until the new
-native packages are available, released consumers continue using the existing published package.
+Existing embedded consumers retain `writerslogic-warm` imports, including `/semantic`,
+`/memory` and `/vectra`, and their existing store directories and configuration. Adopting the
+portable `WarmClient` requires an HTTP server and an explicit API migration; it is not a rename
+of `WarmMemorySystem`. There is no `warm-sdk/embedded` export.
 
-Retiring or deprecating `writerslogic-warm` requires a separate maintainer action after
-the replacement is verified. This rename leaves the MCP launcher, embedding-model
-packages, WebAssembly package, Rust crate, and Python distributions unchanged; npm and
-PyPI can independently use the name `warm-sdk`.
+The framework adapters in `integrations/js` remain explicit native integrations with a
+`writerslogic-warm >=0.6.5` peer. Their separate publication is not part of the SDK or engine
+release. MCP, embedding-model packages, WebAssembly and Rust keep their existing identities.
 
 ## Verify an artefact
 
 ```sh
 gh attestation verify warm_python-X.Y.Z-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
   --repo writerslogic/warm
-gh attestation verify warm-sdk-linux-x64-gnu-X.Y.Z.tgz --repo writerslogic/warm
-npm audit signatures            # in a project that depends on warm-sdk
+gh attestation verify writerslogic-warm-linux-x64-gnu-X.Y.Z.tgz --repo writerslogic/warm
+npm audit signatures            # in a clean consumer of the package being released
 sha256sum -c SHA256SUMS         # next to the downloaded release assets
 ```
 
@@ -271,7 +293,9 @@ attestations, not compared).
   support to clear that exact name and verify the resolution before another publish. For 0.6.6,
   the rejected name was `warm-sdk-win32-x64-msvc`; seven platform packages had succeeded and the
   root was not published. This error does not establish a credential or ownership failure, and
-  changing the version alone does not clear it. Preserve the signed 0.6.6 tags when releasing 0.6.7.
+  changing the version alone does not clear it. The current native family uses
+  `writerslogic-warm-*`; clearance of the abandoned helper name is not a release prerequisite.
+  Preserve the signed 0.6.6 tags when releasing 0.6.7.
 - For npm-only recovery from the reviewed candidate on `main`, run
   `gh workflow run npm-packages.yml --ref main -f publish_npm=true` after resolving the failure.
   This protected path builds and verifies the packages, compares the integrity of any existing
@@ -291,7 +315,7 @@ attestations, not compared).
   readers can distinguish the published crate from the original oversized release asset. Never
   move the signed release tag.
 - Published a bad version: crates.io `cargo yank --version X.Y.Z`; npm `npm deprecate
-  warm-sdk@X.Y.Z "reason"` (unpublish only within 72 hours); PyPI yank in the web UI (no
+  <affected-package>@X.Y.Z "reason"` (unpublish only within 72 hours); PyPI yank in the web UI (no
   API). Then release X.Y.(Z+1); never re-tag.
 - A tag pushed by mistake: delete the draft release first, then the tag, before approving any
   environment.

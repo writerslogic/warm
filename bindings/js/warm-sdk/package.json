@@ -1,0 +1,38 @@
+{
+  "name": "warm-sdk",
+  "version": "0.2.0",
+  "description": "Portable HTTP client for WARM document search and temporal agent memory",
+  "license": "Apache-2.0",
+  "author": "WritersLogic, Inc. <david@writerslogic.com>",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+    }
+  },
+  "files": ["dist", "README.md"],
+  "sideEffects": false,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "test:package": "node --test test/packed-consumer.test.mjs"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/writerslogic/warm.git",
+    "directory": "bindings/js/warm-sdk"
+  },
+  "homepage": "https://writerslogic.com/warm",
+  "bugs": { "url": "https://github.com/writerslogic/warm/issues" },
+  "keywords": ["memory", "agents", "search", "http", "typescript", "warm"]
+}

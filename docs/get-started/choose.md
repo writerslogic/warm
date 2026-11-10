@@ -1,5 +1,5 @@
 ---
-description: Choose between the Rust library, Node module, Python HTTP client and MCP server for editor memory.
+description: Choose between portable HTTP clients, the embedded Rust or Node engine, and MCP for editor memory.
 search:
   boost: 2
 ---
@@ -12,9 +12,18 @@ Start with where your application runs and who should own the store.
 |---|---|---|
 | Give an editor or coding agent persistent memory | [MCP and editor setup](../integrations/editors/README.md) | A local `warm-mcp` process, or a shared MCP HTTP server |
 | Embed document search in a Rust application | [Rust quickstart](../quickstart/index.md) | Inside your application |
-| Add search to a Node application | [Node installation](install.md) | A native Rust module inside Node |
+| Add memory to JavaScript or TypeScript | [Portable `warm-sdk` client](install.md) | A separately running HTTP server |
+| Embed document search in Node | [Optional `writerslogic-warm` engine](install.md) | A native Rust module inside Node |
 | Access a store from Python or several processes | [Python SDK and HTTP server](../SERVER.md) | A server you run; Python is the client |
 | Search vectors or experiment with phase hypervectors in Python | [Python runtime](../api/python/vsa.md) | The `warm-python` extension |
+
+## Which JavaScript package?
+
+`warm-sdk` 0.2.0 exports `WarmClient`. It uses HTTP, Fetch and Web Streams, has no native
+dependencies, and does not start the server. `writerslogic-warm` 0.6.7 exports
+`WarmMemorySystem` and the `/semantic`, `/memory` and `/vectra` embedded APIs. Install it
+explicitly when the engine should run inside Node. These are separate packages, not subpaths
+of one SDK. See [source installation and publication status](install.md).
 
 ## Which Python package?
 

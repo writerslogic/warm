@@ -21,15 +21,29 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
-## Node.js
+## JavaScript and TypeScript client
 
-```sh
-npm install warm-sdk
+`warm-sdk` 0.2.0 is the portable HTTP client. Its npm release is pending; use the
+[source installation](get-started/install.md), then connect to a separately running server:
+
+```js
+import { WarmClient } from 'warm-sdk'
+
+const warm = new WarmClient({ url: 'http://127.0.0.1:8080', apiKey: 'change-me', tenantId: 'demo' })
+await warm.memory.remember('The project stores verified backups.', { subject: 'project/backups' })
+const hits = await warm.memory.recall('verified backups')
 ```
 
-`warm-sdk` is first published with the 0.6.6 release; earlier releases are `writerslogic-warm`. CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when
+The client uses Fetch and Web Streams and has no native or runtime dependencies. Server
+configuration controls storage, authentication, policies and available model stages.
+
+## Optional embedded Node.js engine
+
+`writerslogic-warm` 0.6.7 embeds the Rust engine. Build from this checkout with
+`npm ci --omit=optional && npm run build`; see [registry availability](RELEASING.md#javascript-package-availability)
+before installing the prepared version. CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when
 work is scheduled off the event loop. For documents, import `DocumentMemory` from
-`warm-sdk/semantic`; it serializes model work, bounds its queue, and supports async
+`writerslogic-warm/semantic`; it serializes model work, bounds its queue, and supports async
 iterable ingestion. The default document search is lexical BM25. Add an embedder for cosine
 semantic candidates and optional reranking. See [the example](../examples/local-documents.mjs)
 and the README for the complete setup.

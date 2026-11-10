@@ -35,7 +35,9 @@ const packageDir = path.join(output, 'package'), source = path.join(output, 'sou
 await fs.mkdir(packageDir); await fs.mkdir(source); await fs.mkdir(driver)
 for (const name of ['index.js', 'index.mjs', 'vectra.js', 'vectra-selector.js', 'package.json'])
   await fs.copyFile(path.join(sourceRoot, name), path.join(packageDir, name), fs.constants.COPYFILE_EXCL)
-const addon = path.join(packageDir, 'warm-sdk.darwin-arm64.node')
+const binaryName = (await readJson(path.join(sourceRoot, 'package.json'))).napi.binaryName
+assert.ok(['writerslogic-warm', 'warm-sdk'].includes(binaryName), 'unsupported source addon name')
+const addon = path.join(packageDir, `${binaryName}.darwin-arm64.node`)
 assert.equal(process.platform, 'darwin'); assert.equal(process.arch, 'arm64')
 await fs.copyFile(binary, addon, fs.constants.COPYFILE_EXCL)
 for (const name of ['src', 'Cargo.toml', 'Cargo.lock', 'build.rs'])

@@ -15,6 +15,28 @@ open (see [PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
 
 ## Quick start
 
+Portable JavaScript/TypeScript (`warm-sdk`, against a separately running `warm-server`):
+
+```js
+import { WarmClient } from 'warm-sdk'
+
+const memory = new WarmClient({
+  url: 'http://127.0.0.1:8080', apiKey: 'change-me', tenantId: 'demo',
+}).memory
+await memory.remember('Alice lives in Paris', {
+  id: 'home-1', subject: 'alice/city', validFrom: 1577836800000,
+})
+await memory.remember('Alice lives in Berlin', {
+  id: 'home-2', subject: 'alice/city', validFrom: 1735689600000, supersedes: ['home-1'],
+})
+const current = await memory.recall('where does Alice live')
+const previous = await memory.recall('where does Alice live', { asOf: 1622505600000 })
+```
+
+Use the [source installation](../get-started/install.md) while npm 0.2.0 publication is pending.
+Lexical memory needs no model. The client accepts safe integer Unix milliseconds for times;
+policies are configured on the server. It does not open a local store or load native bindings.
+
 Rust:
 
 ```rust
@@ -48,11 +70,11 @@ let why = memory.explain("where does Alice live", "home-1", &RecallOptions::defa
 memory.forget(&ForgetScope::Subject { subject: "alice/city".into() }, &ForgetOptions::default())?;
 ```
 
-Node (`warm-sdk/memory`):
+Optional embedded Node (`writerslogic-warm/memory`):
 
 ```js
-const { WarmMemorySystem } = require('warm-sdk')
-const { Memory } = require('warm-sdk/memory')
+const { WarmMemorySystem } = require('writerslogic-warm')
+const { Memory } = require('writerslogic-warm/memory')
 
 const memory = new Memory(new WarmMemorySystem(4096, './store'), { supersession: 'latest-by-subject' })
 await memory.remember('Alice lives in Paris', { id: 'home-1', subject: 'alice/city', validFrom: new Date('2020-01-01') })
@@ -339,8 +361,10 @@ body limits as the document routes. Errors: 422 `invalid_request`, 404 `not_foun
 lexical-only. Policies for every tenant come from `--memory-config <file.json>` (or
 `WARM_MEMORY_CONFIG`), a `MemoryConfig` in JSON, validated at startup.
 
-Node: `new Memory(system, config)` from `warm-sdk/memory`; times are `Date` or integer
-milliseconds, results carry milliseconds, errors are `MemoryError` with `code`. Python:
+Portable JavaScript: `new WarmClient(options).memory` from `warm-sdk`; times are safe integer
+Unix milliseconds, and errors are `WarmError` with `code` and optional `status`.
+Embedded Node: `new Memory(system, config)` from `writerslogic-warm/memory`; times are `Date`
+or integer milliseconds, results carry milliseconds, errors are `MemoryError` with `code`. Python:
 `WarmClient(...).memory` / `AsyncWarmClient(...).memory` (or `MemoryClient`),
 fully typed with a `memory.pyi` stub; times are `datetime` or integer milliseconds;
 `MemoryError` carries `code` and `status`. The client-side vector mask applies to embeddings
