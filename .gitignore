@@ -55,6 +55,9 @@ benchmarks/public/*.py.lock
 /benchmarks/results/longmemeval_dev_answers_v2.json
 /benchmarks/results/longmemeval_dev_answers_v2b.json
 
+# Exploratory mission evidence is retained privately.
+/benchmarks/results/mission/
+
 # Golden stores are committed test data.
 !tests/golden/**/vectors_data.bin/
 !tests/fixtures/**/vectors_data.bin/

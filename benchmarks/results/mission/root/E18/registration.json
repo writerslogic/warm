@@ -1,7 +1,0 @@
-{
-  "id": "E18",
-  "hypothesis": "H-B-1",
-  "question": "Does packaged generator reproduce harder E15 input hashes?",
-  "prediction": "Both hashes match; no new benchmark measurement",
-  "configuration": "samePCG64seed1,noise1.5,numpy2.4.6,1M100D"
-}

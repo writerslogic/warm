@@ -1,4 +1,4 @@
-FROM warm-az1-streaming-control
+FROM warm-az1-streaming-control@sha256:ee4fd2a1b821af91813f9cf87b8d79811ac384057382b3c593ab8f7f931fe823
 COPY python/ /root/.local/share/uv/python/cpython-3.11.18-linux-x86_64-gnu/
 COPY venv/ /opt/warm-pr898/venv/
 RUN ln -sfn /root/.local/share/uv/python/cpython-3.11.18-linux-x86_64-gnu/bin/python3.11 /opt/warm-pr898/venv/bin/python

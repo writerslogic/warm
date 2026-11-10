@@ -1,8 +1,0 @@
-{
-  "experiment": "E41",
-  "question": "Are E32-E40 research artifacts parseable, complete under registered script identities, and ready for committed reproduction?",
-  "prediction": "All syntax/JSON/provenance pass; no engine or benchmark target claim",
-  "script": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/package_evidence.py",
-  "script_sha256": "0a733f40d52ccdd3f6d3827491827b55b6309c304049b5a0e65d63682d1aa65b",
-  "scope": "research package; unchanged dependency lock already verified E30"
-}

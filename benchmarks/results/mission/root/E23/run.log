@@ -1,1 +1,0 @@
-{"audited_score": null, "claims": 156, "decision": "accept-structural-only", "existing_root_corrections": 2, "index_sha256": "5076dc7ed7f729c7f206ab664a5741251c0bf1f42ca02801d95f0b850b4bddcb", "new_semantic_acceptances": 0, "official_score": null, "rejected_mutations": ["duplicate", "missing", "wrong_pointer"], "source_references": 1069, "whole_key_audited": false}

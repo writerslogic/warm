@@ -1,8 +1,0 @@
-{
-  "id": "E21",
-  "hypothesis": "H-A-4",
-  "question": "Does fixed8 packet eligibility preserve90percent eligible edges in all4frozen cells?",
-  "prediction": "at least one10k cell fails; matched W/C remainsunproved",
-  "script_sha256": "59501edf635f15aa98f6836c82438f6e79533a159871d620886ea5de7f67394f",
-  "threshold": "exact10*eligible>=9*allEdges; no sweep"
-}

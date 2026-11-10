@@ -1,2 +1,0 @@
-warning: `VIRTUAL_ENV=/Volumes/A/.hms-lb/bigann/venv` does not match the project environment path `benchmarks/results/mission/.venv` and will be ignored; use `--active` to target the active environment instead
-{"hypothesis": "H-B-9", "decision": "failed-cross-assembly-gate", "receipt": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E43/native/receipt.json"}

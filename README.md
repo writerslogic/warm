@@ -2,11 +2,11 @@
 
 # WARM
 
-**WritersLogic Adaptive Retention & Memory.**
+**Local memory for AI agents and applications.**
 
-**Hybrid search, graph indexing, and vector-symbolic memory.**
-
-**Local memory for agents and apps: full-text and vector search, a memory API and a vector-symbolic fact store in one embeddable Rust engine that makes no network calls.**
+WARM (WritersLogic Adaptive Retention & Memory) gives agents persistent memory, full-text and
+vector search, and source provenance in one embeddable Rust engine. Use it inside your application,
+through HTTP, or from an MCP client, with storage on infrastructure you control.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/writerslogic/warm/ci.yml?branch=main&label=CI)](https://github.com/writerslogic/warm/actions/workflows/ci.yml)
 ![MSRV 1.89](https://img.shields.io/badge/MSRV-1.89-informational.svg)
@@ -15,15 +15,12 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](#license)
 [![WARM MCP server: quality and maintenance score on Glama](https://glama.ai/mcp/servers/writerslogic/warm/badges/score.svg)](https://glama.ai/mcp/servers/writerslogic/warm)
 
-[![Bemula forgetting score, DeepSeek backbone](https://img.shields.io/badge/Bemula%20forgetting%2C%20DeepSeek%20backbone-32.2%20vs%2031.0%20best%20published-blue)](benchmarks/results/bemula_v1.json)
-[![LongMemEval dev, gpt-4o reader and judge](https://img.shields.io/badge/LongMemEval%20dev%2C%20gpt--4o%20reader-89.75%25%20mean%20of%204%20runs-blue)](benchmarks/results/longmemeval_official_dev_summary.json)
-[![VIBE llama-128-ip max recall@100, one thread](https://img.shields.io/badge/VIBE%20llama--128--ip%20max%20recall%40100%2C%201%20thread-0.997-blue)](benchmarks/results/query_aware_graph_v1/README.md)
 
 [Website](https://writerslogic.com/warm) ·
 [Docs](https://writerslogic.com/warm/docs/) ·
 [Get started](#get-started) ·
 [Standards and provenance](docs/reference/standards.md) ·
-[Results](#headline-results) ·
+[Evaluation](#evaluation) ·
 [Capabilities](#what-ships-today) ·
 [Limits](#limits) ·
 [Contribute](CONTRIBUTING.md)
@@ -53,98 +50,20 @@ telemetry and no model downloads unless you turn on a feature that asks for one.
 | An agent or assistant that needs memory | A memory API with forgetting that removes facts from the store, and an MCP server for editors and agent hosts |
 | A local-first or offline app | Embedded search and storage in one directory, with no server process and optional encryption |
 | A service that needs vector or text search | `warm-server` over HTTP with tenants and scoped keys, or the library in-process |
-| Research on vector-symbolic memory | The bind/bundle algebra, meaning memory and capacity experiments with their result files |
-
-## Headline results
-
-Every row links to the committed file it comes from. These are single machines and stated
-protocols, not a substitute for testing your own data.
-
-| Result | Conditions | Source file |
-|--------|------------|-------------|
-| Bemula forgetting score 0.322; best published row 0.310 (LangMem) | Full split: 50 dialogues, 135 forget requests. Agent and judge both `deepseek-v4-flash-0731` through OpenRouter pinned to DeepSeek, temperature 0; the judge snapshot is inferred from the authors' run metadata. Recall k=5 hybrid with `text-embedding-3-small`. Compared with the paper's published DeepSeek rows; a same-day rerun of the suite's naive RAG baseline scored 0.075. One run. | [`bemula_v1.json`](benchmarks/results/bemula_v1.json) |
-| LongMemEval dev 89.75 of 100 correct (mean of 4 runs, range 87 to 93) | Official generation and judge prompts, `gpt-4o-2024-08-06` as reader and judge, top 10 context. Retrieval is the reference turn ranking over cached Qwen3 scores, not native conversation-memory recall. k was chosen on dev; there is no held-out result. | [`longmemeval_official_dev_summary.json`](benchmarks/results/longmemeval_official_dev_summary.json) |
-| VIBE llama-128-ip strict recall@100 up to 0.99687 at 1,457 QPS | Official test queries, one thread, query-aware graph (ef=512). Neither frozen RoarGraph configuration reached 0.99. Behind at 0.95 and 0.99 QPS (see below). | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
-| VIBE yi-128-ip at recall 0.95: 3,214 QPS against 1,953 (MLANN RF80) | Same protocol; compared only with the frozen RoarGraph and MLANN configurations measured there. Recall 0.99 was not reached. | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
-| SIFT-1M at recall@10 0.95: 23,918 QPS against hnswlib 8,125 (2.94x, interval 2.75 to 3.01); 3.09x at 0.99, 1.40x faster build, 1.83x less serving RSS, 3.74x faster cold start | Core Ultra 9 185H at `4b7a849f`, 10,000 queries issued one at a time from one client thread, index built with 8 threads; WARM through the Rust API, hnswlib through its Python binding; Bonferroni-adjusted bootstrap intervals | [`heavy-ann-sift-...-185h-22c-27g.json`](benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json), [COMPARISON.md](docs/benchmarks/COMPARISON.md) (ratios and intervals) |
-| big-ann-benchmarks streaming final runbook (msturing-30M-clustered): mean recall@10 **0.9942** in 2,722 s (45:23 elapsed) at 6.53 GiB peak RSS, inside the one-hour limit. The `neurips23/README.md` DiskANN baseline is 0.883. | `run.py --nodocker`, all 1,280 steps, on a GCP Ice Lake VM (n2-custom-8, Xeon 2.6 GHz, 4 cores / 8 threads), the evaluation VM's class but not the Azure VM itself, so this is not a board result. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks, pinned at `f21de886`. Partition tier at nprobe 650, reorder 1000, with the fused AVX-512 VNNI scan (8 queries per block). Wall time on the Azure VM is unmeasured. | [`BIG-ANN-STREAMING.md`](docs/benchmarks/BIG-ANN-STREAMING.md), [`il_s2e_np650_ro1000/report.txt`](benchmarks/research/l22_partition/results/il_s2e_np650_ro1000/report.txt) |
-| BM25 search on SciFact, NFCorpus and the memory corpus: 1.66x to 2.00x the single-thread QPS of the fastest of tantivy 0.27, Lucene 10.6 and SQLite FTS5, with 1.69x to 2.91x less serving memory and 3.1x to 5.7x faster cold start, at tied nDCG@10 | Two machines (Core Ultra 9 185H at `4b7a849f`, Modal 8 vCPU at `7ba2d4fe`, same engine source), 5 and 3 interleaved serve rounds, Bonferroni-adjusted bootstrap intervals exclude parity for every win. Lexical only, one chunk per document | [COMPARISON.md](docs/benchmarks/COMPARISON.md), [`standard-text-beir-scifact-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json) |
-| SciFact nDCG@10 hybrid 0.729, above its own BM25 (0.688) and dense (0.645) | 5,183 documents, 300 queries, MiniLM embeddings supplied by the harness. NFCorpus: 0.355 against 0.323 and 0.317. Apple M4, engine 0.6.1 (the last AGPL release). | [`public_scifact.json`](benchmarks/results/public_scifact.json), [`public_nfcorpus.json`](benchmarks/results/public_nfcorpus.json) |
-
-### Where it's behind
-
-| Result | Conditions | Source file |
-|--------|------------|-------------|
-| ann-benchmarks at recall 0.95: sift 2,819 QPS against faiss-ivfpqfs 3,788 (0.74x); glove 1,019 against ScaNN 1,535 (0.66x) | Official ann-benchmarks runner, each run pinned to one CPU, AVX2 host | [`ann_benchmarks_harness_wl02_v1.json`](benchmarks/results/ann_benchmarks_harness_wl02_v1.json) |
-| VIBE llama-128-ip QPS: 24.6% behind RoarGraph at recall 0.95, 54.8% behind MLANN RF80 at 0.99 | One thread, official test queries | [`query_aware_graph_v1/README.md`](benchmarks/results/query_aware_graph_v1/README.md) |
-| SIFT-1M index file 1,389 MiB against hnswlib's 752 (0.54x, no interval); peak build RSS 0.94x of hnswlib's | Same run as the SIFT-1M row above | [COMPARISON.md](docs/benchmarks/COMPARISON.md) (index size), [`GAPS.md`](docs/benchmarks/GAPS.md) (build RSS) |
-| BEIR FiQA (57,600 documents) single-thread BM25 QPS: 1,269 against Lucene 10.6's 1,625 (0.78x); p50 and p99 latency also behind | Core Ultra 9 185H at `4b7a849f`, 5 interleaved serve rounds; serving memory (1.26x less than SQLite FTS5) and cold start (2.37x faster than tantivy) still win | [`standard-text-beir-fiqa-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json), [COMPARISON.md](docs/benchmarks/COMPARISON.md) |
-| Text ingest: peak build memory 1.1x to 2.1x SQLite FTS5's on every corpus; ingest time behind SQLite FTS5 on SciFact, NFCorpus and memory (0.46x to 0.97x), tied on FiQA | Same runs, both machines | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
-| glove-100-angular with the sparse vector path: recall@10 0.252 at 33.7 QPS against FAISS HNSW 0.832 at 4,111 QPS | One thread, Apple M4; the sparse path is experimental | [`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json) |
-
-Method, intervals and every loss: [docs/benchmarks](docs/benchmarks/README.md) and the
-[benchmarks pages](https://writerslogic.com/warm/docs/latest/benchmarks/).
-
-<!-- BENCH:START -->
-
-_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead, - = no verdict (unpinned source revision, no interval, or not comparable). Rows are compared only within one machine._
-
-| Dataset | Machine | Metric | WARM | Best other | Advantage | |
-|---|---|---|---|---|---|---|
-| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS @ recall@10 >= 0.95 (QPS) | 23,918 | hnswlib 8,125 | 2.94x | W |
-| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency @ 0.95 (us) | 97 | hnswlib 251 | 2.60x | W |
-| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Build time (s) | 121.44 | hnswlib 170.02 | 1.40x | W |
-| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | RSS, serving (MiB) | 490 | hnswlib 898 | 1.83x | W |
-| sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Index size (MiB) | 1,389.1 | hnswlib 751.8 | 0.54x | - |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x | T |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 1,269 | Apache Lucene 10.6.0 (JVM) 1,625 | 0.78x | L |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 1,828 | Apache Lucene 10.6.0 (JVM) 1,486 | 0.81x | L |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 1.55 | SQLite FTS5 1.44 | 0.93x | T |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 31 | SQLite FTS5 39 | 1.26x | W |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 9.7 | Apache Lucene 10.6.0 (JVM) 12.1 | 1.25x | W |
-| memory | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x | T |
-| memory | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 4,138 | tantivy 2,185 | 1.89x | W |
-| memory | `modal-x86_64-8vcpu-32g` | p99 latency (us) | 533 | tantivy 798 | 1.50x | W |
-| memory | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 1.91 | SQLite FTS5 1.75 | 0.92x | L |
-| memory | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 17 | SQLite FTS5 41 | 2.42x | W |
-| memory | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 3.5 | Apache Lucene 10.6.0 (JVM) 10.3 | 2.92x | W |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x | T |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 8,417 | tantivy 4,962 | 1.70x | W |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 284 | tantivy 482 | 1.70x | W |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.87 | SQLite FTS5 0.84 | 0.97x | L |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 14 | SQLite FTS5 24 | 1.69x | W |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 3.5 | Apache Lucene 10.6.0 (JVM) 10.3 | 2.92x | W |
-| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x | T |
-| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 12,373 | tantivy 7,333 | 1.69x | W |
-| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | p99 latency (us) | 164 | tantivy 280 | 1.71x | W |
-| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 0.44 | SQLite FTS5 0.20 | 0.46x | L |
-| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 15 | SQLite FTS5 45 | 2.91x | W |
-| beir:nfcorpus | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 1.0 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.55x | W |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x | T |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 23,585 | tantivy 14,207 | 1.66x | W |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 153 | tantivy 245 | 1.60x | W |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.15 | SQLite FTS5 0.14 | 0.94x | L |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 13 | SQLite FTS5 28 | 2.22x | W |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 1.0 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.55x | W |
-| beir:scifact | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
-| beir:scifact | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 5,534 | tantivy 3,106 | 1.78x | W |
-| beir:scifact | `modal-x86_64-8vcpu-32g` | p99 latency (us) | 236 | tantivy 474 | 2.01x | W |
-| beir:scifact | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 0.58 | SQLite FTS5 0.30 | 0.52x | L |
-| beir:scifact | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 31 | SQLite FTS5 70 | 2.23x | W |
-| beir:scifact | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.53x | W |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 12,254 | tantivy 6,133 | 2.00x | W |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 220 | tantivy 402 | 1.83x | W |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.22 | SQLite FTS5 0.20 | 0.91x | L |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 29 | SQLite FTS5 53 | 1.84x | W |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.53x | W |
-
-<!-- BENCH:END -->
 
 ## Get started
 
-Clone once: `git clone https://github.com/writerslogic/warm && cd warm`.
-Run the offline agent-memory demo with `cargo run --release --example demo-offline-agent`.
+For an editor or agent host, start with the [MCP integration](docs/integrations/mcp/README.md).
+For an application, choose the Rust library or HTTP server below. WARM runs locally or on your
+own infrastructure; this repository does not provide a managed cloud service.
+
+To try the offline memory demo from source:
+
+```sh
+git clone https://github.com/writerslogic/warm
+cd warm
+cargo run --release --example demo-offline-agent
+```
 
 <details open>
 <summary><strong>Rust</strong></summary>
@@ -189,15 +108,16 @@ entire checkpoint or hold store locks during text I/O.
 <details>
 <summary><strong>Node.js</strong></summary>
 
-Install the Node.js package and its platform-specific native binary:
+The native Node.js SDK is available from source while publication of the complete `warm-sdk`
+package family is pending. From the cloned repository, with Rust installed:
 
 ```sh
-npm install warm-sdk
+npm ci --omit=optional
+npm run build
 ```
 
-`warm-sdk` is first published with the 0.6.6 release. Earlier releases (up to 0.6.4) are on npm as `writerslogic-warm`.
-
-To build from source, run `npm ci --omit=optional && npm run build` with Rust installed.
+Earlier published releases (up to 0.6.4) use the npm name `writerslogic-warm`.
+See [release availability](docs/RELEASING.md#first-npm-release-under-warm-sdk) before adopting the new name.
 `listDocuments` supports scoped pruning. See the
 [integration guide](docs/integrations/organizational-knowledge.md) for source
 provenance, namespace isolation, dry runs and deletion limits.
@@ -277,6 +197,16 @@ walks through ingest, search, a SQLite FTS5 comparison and encryption in Rust, P
 and CI runs that code on every pull request. For a whole agent memory with no embeddings and no
 network, run `cargo run --example demo-offline-agent`.
 
+<a id="headline-results"></a>
+<a id="where-its-behind"></a>
+
+## Evaluation
+
+[Recorded results and limitations](docs/benchmarks/EVALUATION.md) cover memory quality, text
+retrieval and vector search. Each result retains its workload, hardware, model, source revision
+and known losses. The [full comparison and reproduction protocol](docs/benchmarks/README.md)
+provide the evidence for evaluating WARM on your own workload.
+
 ## What ships today
 
 | Capability | Status | Documented limit |
@@ -291,13 +221,13 @@ network, run `cargo run --example demo-offline-agent`.
 | Conversation memory (`conversation-memory`) | Ships | Bounded context with exact source provenance; native recall not yet benchmarked on LongMemEval end to end |
 | Meaning memory: triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on synthetic and 2,120-fact sets ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
 | Union-bundle membership (`experimental`) | Research | At D = 16,384: positive gap to N = 500 (4% false positives), tested to 2,500 ([`benchmark_scaling_results.json`](benchmarks/results/benchmark_scaling_results.json)) |
-| Sparse vector index (`memorize_vector`) | Experimental | Not competitive with HNSW ([results](#where-its-behind)) |
+| Sparse vector index (`memorize_vector`) | Experimental | Not competitive with HNSW ([results](docs/benchmarks/EVALUATION.md#where-its-behind)) |
 | Encrypted stores (`security`) | Ships | AES-256-GCM, Argon2id; covers the log, index caches and the text segment. Metadata, file names and sizes are not encrypted |
 | Signed audit log, credential-gated access, COSE/SCITT/C2PA (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented |
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |
-| Node.js bindings | Ships from source; `warm-sdk` on npm from 0.6.6 | Native binaries are selected by platform at install time |
+| Node.js bindings | Ships from source; complete `warm-sdk` npm publication pending | Native binaries are selected by platform at install time |
 | C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
 | Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | No in-process document search |
 | Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |
@@ -369,7 +299,7 @@ Module map: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Capacity numbers are points, not guarantees**, and are stated only over the tested range
   ([capacity](https://writerslogic.com/warm/docs/latest/concepts/capacity/)).
 - **Benchmark results are single machines.** Conditions are in each results file; the single-core
-  ann-benchmarks run and the VIBE high-recall points are losses (see [Where it's behind](#where-its-behind)).
+  ann-benchmarks run and the VIBE high-recall points are losses (see [Where it's behind](docs/benchmarks/EVALUATION.md#where-its-behind)).
 - **Masking is obfuscation.** Client-side vector masking preserves every pairwise similarity.
 - A store is a directory and `WarmCore::new(.., None, ..)` uses the current directory.
 

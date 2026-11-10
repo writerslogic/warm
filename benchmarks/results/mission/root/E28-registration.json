@@ -1,6 +1,0 @@
-{
-  "experiment": "E28",
-  "question": "Are integrated research artifacts parseable, registered script hashes unchanged, and canonical ledger within its size cap?",
-  "prediction": "All validations pass; no production-gate or confirmation claim",
-  "scope": "local/free research snapshot; source archives separately byte-verified; uv lock --check --offline passed"
-}

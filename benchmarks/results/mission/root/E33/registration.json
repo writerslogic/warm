@@ -1,9 +1,0 @@
-{
-  "experiment": "E33",
-  "hypothesis": "H-C-1",
-  "question": "Do the full source sessions and counterevidence support correcting jogging elapsed weeks and charitable funds totals without matching a known-wrong label?",
-  "prediction": "370a8ff4 source anchors yield81days rather15weeks;d851d5ba source includes omitted completed fundraising; accept only explicit source-supported scope, preserve ambiguity and exact lower bounds",
-  "source": "/Users/davidcondrey/.cache/warm-bench/downloads/longmemeval_s_cleaned.json",
-  "source_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
-  "scope": "Two exposed development questions; independent root semantic review, no model calls or score claim"
-}

@@ -8,6 +8,7 @@ a generated reference fails loudly on input it does not understand, and canonica
 point at a page that does not exist.
 """
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -86,6 +87,53 @@ class ThemeStylesTests(unittest.TestCase):
                 self.environment(css).filters["warm_inline_theme_styles"](link)
         with self.assertRaises(TemplateNotFound):
             self.environment("").filters["warm_inline_theme_styles"](link.replace("main.hash", "renamed"))
+
+
+class SearchInitializationTests(unittest.TestCase):
+    def source(self):
+        import docs_site
+        import material
+
+        return (Path(material.__file__).parent / "templates/assets/javascripts" / docs_site.SEARCH_BUNDLE).read_bytes()
+
+    def test_only_pinned_search_trigger_changes_and_stale_source_map_is_removed(self):
+        import docs_site
+        from mkdocs.exceptions import PluginError
+
+        source = self.source()
+        patched = docs_site.deferred_search_bundle(source, "9.7.7")
+        self.assertNotIn(b"sourceMappingURL", patched)
+        deferred = (b'zi=document.forms.namedItem("search")?L(Je("search"),Kt.pipe(Q(we()),'
+                    b'm(e=>!!e.searchParams.get("h")))).pipe(Re(e=>e),b(()=>ks()),Z(1)):tt')
+        restored = patched.replace(deferred, b'zi=document.forms.namedItem("search")?ks():tt')
+        self.assertEqual(restored.rstrip(), source.split(b"//# sourceMappingURL=")[0].rstrip())
+        for changed, version in ((source + b" ", "9.7.7"), (source, "9.7.8"), (b"", "9.7.7")):
+            with self.assertRaises(PluginError):
+                docs_site.deferred_search_bundle(changed, version)
+
+    def test_scripts_keep_versioned_urls_and_order_with_a_separate_hashed_asset(self):
+        import docs_site
+        from jinja2 import DictLoader, Environment
+        from mkdocs.exceptions import PluginError
+
+        source = self.source()
+        with tempfile.TemporaryDirectory() as tmp:
+            env = Environment(loader=DictLoader({"assets/javascripts/" + docs_site.SEARCH_BUNDLE: source.decode()}), autoescape=True)
+            docs_site.on_env(env, {"site_dir": tmp}, [])
+            render = env.from_string("{{ scripts | warm_defer_search }}").render
+            for prefix in ("", "../../", "/dev/", "/latest/"):
+                old = f'<script src="{prefix}assets/javascripts/{docs_site.SEARCH_BUNDLE}"></script>'
+                before, after = '<script>before()</script>', '<script src="custom.js"></script>'
+                output = render(scripts=before + old + after)
+                assets = list(Path(tmp, "assets/javascripts").glob("*.js"))
+                self.assertEqual(len(assets), 1)
+                asset = assets[0]
+                self.assertEqual(asset.name, "bundle.warm-search." + hashlib.sha256(asset.read_bytes()).hexdigest()[:16] + ".min.js")
+                self.assertEqual(output, before + old.replace(docs_site.SEARCH_BUNDLE, asset.name) + after)
+                for invalid in (before + after, old + old):
+                    with self.assertRaises(PluginError):
+                        render(scripts=invalid)
+        self.assertEqual(self.source(), source)
 
 
 class VectorChartTests(unittest.TestCase):
