@@ -48,6 +48,7 @@
   {% if config.extra.warm.is_dev %}
     This is the development version of the documentation, built from <code>main</code>. It can describe work that is not in a release.
     <a href="{{ '../' ~ base_url }}"><strong>Go to the latest release.</strong></a>
+    <script>document.querySelector("[data-md-component=outdated]").hidden=false</script>
   {% else %}
     This is the documentation for <strong>{{ config.extra.warm.ref }}</strong>, not the latest release.
     <a href="{{ '../' ~ base_url }}"><strong>Go to the latest release.</strong></a>
