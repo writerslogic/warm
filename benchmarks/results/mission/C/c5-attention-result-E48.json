@@ -1,0 +1,50 @@
+{
+  "experiment": "E48",
+  "decision": "accept-scalar-source-only",
+  "checks": [
+    {
+      "name": "group_length_boundaries_and_tied_mass",
+      "passed": true
+    },
+    {
+      "name": "independent_scalar_softmax_and_global_control",
+      "passed": true
+    },
+    {
+      "name": "physical_source_unicode_and_boundary_ownership",
+      "passed": true
+    },
+    {
+      "name": "split_prefill_decode_offsets_and_future_exclusion",
+      "passed": true
+    },
+    {
+      "name": "stale_ownership_cursor_and_output_boundaries",
+      "passed": true
+    },
+    {
+      "name": "exact_world_cluster_sign_flip",
+      "passed": true
+    },
+    {
+      "name": "independent_world_truth_and_renderer_separation",
+      "passed": true
+    },
+    {
+      "name": "all_32_worlds_four_variants_and_long_decisive_conservation",
+      "passed": true
+    }
+  ],
+  "failures": 0,
+  "benchmark_items": 0,
+  "model_calls": 0,
+  "attention_sha256": "bbf6a05eed0fbffa6305779856065ef4a6cbe6f59b0d59071cfbcf6b7771d976",
+  "generator_sha256": "6a318204630c91d4ce6ffc7f4729a7fed71df4c5e2edbefed80b514565dae4e5",
+  "checker_sha256": "1f7ed0a0b85ecd44a3936d219cb2be3dd3bb8cd2e4cdf5139539a30cbf079e89",
+  "limits": [
+    "Scalar arithmetic and closed-grammar generated sources only; no reader-quality result.",
+    "Character offsets and whitespace measurement are independent test instruments, not native Qwen tokenization.",
+    "Native tokenizer/chat-template ownership and equal-token controls remain prerequisites before inference.",
+    "Sign-flip inference requires independent worlds and conditional sign symmetry/exchangeability under the null."
+  ]
+}

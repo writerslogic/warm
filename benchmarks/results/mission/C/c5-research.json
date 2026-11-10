@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "hypothesis": "H-C-5",
+  "status": "E48_scalar_source_gate_prepared_not_executed_by_specialist_no_model_acquisition",
+  "question": "Does per-observation attention normalization reduce reader errors caused by verbose competing sources when every required source fact is already supplied?",
+  "mechanism": {
+    "name": "Centered source-turn attention normalization",
+    "operation": "For each physical source turn g with n_g tokenizer positions, let nbar=N/G over all source turns. For question and generated-answer query positions only, add b_i=log(nbar)-log(n_g) to attention logits of source key i in g; other keys receive0. Apply coefficient1 at all36 layers, with unchanged causal mask, RoPE, weights, source tokens and output decoding.",
+    "physical_group": "An original role/content/date occurrence, not a deduplicated entity, semantic event or extracted fact. All physical occurrences remain present. Parse group boundaries from the source serializer; no question-type, answer, gold marker or dataset identifier enters this path.",
+    "no_new_extraction_premise": "Only token-to-original-turn ownership is needed. No program must extract all events, resolve all entities or certify semantic absence. Correctness of the answer remains empirical, not guaranteed by attention normalization.",
+    "scope": "One forward/decode trajectory with unchanged prompt, reader weights, generation allowance and evidence. This is neither a prompt rewrite, verifier call, ensemble, answer vote nor retrieval policy.",
+    "implementation_outline": "Use a normal history prefill, then question prefill/decode with an additive per-key source bias and correct causal/cache offsets. The baseline uses the identical prefill split with zero bias. No arbitrary attention-head search or layer sweep.",
+    "algebraic_premise": "If source-key logits are tied, each source group's unnormalized mass is nbar*exp(score), independent of its own token length, while total source mass remains N*exp(score). This is an exact tied-logit statement only; real hidden states/logits may change with verbosity, and semantics are not certified.",
+    "specific_contribution_to_test": "Remove the per-source token-multiplicity prior while retaining all raw observations and preserving total tied-logit source mass. Evaluate whether this changes source use at identical model token work.",
+    "novelty": "No field-originality claim. Attention calibration and length-aware softmax are established prior art; the bounded pass did not establish priority for this precise centered physical-turn formulation."
+  },
+  "existing_equivalent_audit": [
+    {
+      "path": "benchmarks/public/longmemeval_verifier.py",
+      "lines": [
+        38,
+        117,
+        122,
+        146
+      ],
+      "finding": "Existing independent source-only reader uses four prior citation sets, counterevidence selection, extensive reasoning rules, stronger reader and4096 output. It changes reader/prompt/context and already covers verification-style proposals; do not duplicate it."
+    },
+    {
+      "path": "benchmarks/public/longmemeval_full_history.py",
+      "lines": [
+        31,
+        67
+      ],
+      "finding": "Existing reasoning prompts distinguish relation/event/observation dates, plans versus actions, bounds and qualifiers."
+    },
+    {
+      "path": "benchmarks/public/longmemeval_complete_history.py",
+      "lines": [
+        28,
+        68
+      ],
+      "finding": "Existing prompt already requests source-linked bookkeeping, entity/scope alignment, deduplication, uncertainty and exact role/quote discipline; another ledger prompt is not H-C-5."
+    },
+    {
+      "path": "benchmarks/public/longmemeval_local_reader.py",
+      "lines": [
+        1,
+        18,
+        38,
+        66,
+        116,
+        128
+      ],
+      "finding": "The historical local_qwen30b row actually dispatches to Modal and paid judging. It is not a free owned-M4 execution path and must not be invoked for this falsifier."
+    },
+    {
+      "path": "benchmarks/public/longmemeval_local_modal.py",
+      "lines": [
+        25,
+        59
+      ],
+      "finding": "Historical vLLM generation fixes ordinary temperature0/single-reader settings; no per-source attention intervention."
+    },
+    {
+      "path": "benchmarks/public/longmemeval_weak_reader.py",
+      "lines": [
+        69,
+        94
+      ],
+      "finding": "Existing weak-reader request/settings checks provide provenance patterns, not an attention hook."
+    }
+  ],
+  "primary_sources": [
+    {
+      "url": "https://arxiv.org/html/2611.04169v1",
+      "location": "abstract;sections4.1–4.4",
+      "finding": "Small-open-model retrieval study contrasts visible neutral filler with competing statements and reports evidence-attention correlation. This supports a falsifiable interference hypothesis, not a LongMemEval causal proof or predicted score."
+    },
+    {
+      "url": "https://arxiv.org/html/2607.01538v1",
+      "location": "section5.1",
+      "finding": "BlockSearch uses learned additive sinks, global log-N score rescaling and top-B document routing. These are close prior art; their tuned/trained/sparse variants differ from fixed source-turn balancing that retains all sources."
+    },
+    {
+      "url": "https://aclanthology.org/2023.findings-emnlp.773/",
+      "location": "abstract",
+      "finding": "Length-normalized attention for document translation predates this proposal; no novelty claim for length normalization."
+    },
+    {
+      "url": "https://aclanthology.org/2024.findings-acl.890/",
+      "location": "abstract",
+      "finding": "Positional attention calibration is established prior art; this proposal does not learn a position-dependent correction or reorder contexts."
+    },
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507",
+      "location": "Model Overview",
+      "finding": "Official post-trained Apache2.0 model,4.0B parameters,36layers,32query/8KVheads,262144 native context, non-thinking generation. This is a currently available small open model, not asserted to be the newest release."
+    },
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/raw/cdbee75f17c01a7cc42f958dc650907174af0554/config.json",
+      "location": "model configuration",
+      "finding": "Pinned revision config confirms head_dim128,36layers,8KVheads,bfloat16 weights and dense attention. Weight/tokenizer file checksums still require acquisition and validation before a run."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/ml-explore/mlx-lm/main/mlx_lm/models/qwen3.py",
+      "location": "Attention.__call__:63–90;Qwen3Model.__call__:138–156",
+      "finding": "Official MLX-LM Qwen3 implementation passes masks into scaled_dot_product_attention and retains RoPE/cache handling. Main source is mutable and must be pinned by root before implementation."
+    },
+    {
+      "url": "https://ml-explore.github.io/mlx/build/html/python/_autosummary/mlx.core.fast.scaled_dot_product_attention.html",
+      "location": "MLX0.32.4 API parameters",
+      "finding": "Official MLX supports GQA and broadcast additive masks; softmax usesfloat32. Exact package versions and source bytes must be frozen before executing the new hook."
+    }
+  ],
+  "reader_compute_boundary": {
+    "purpose": "Free local development falsifier only, not the frozenGPT4o comparison or a mission confirmation.",
+    "host": "Owned AppleM4/32GiB, one serial process; no cloud/API/server spend.",
+    "reader": "Qwen/Qwen3-4B-Instruct-2507",
+    "model_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+    "weights": "Same pinned weights converted toFP16 for all arms; no quantization, training or adapters.",
+    "tokenizer": "The same model revision's own tokenizer/chat template; record file hashes. o200k counts are not substituted.",
+    "decoding": "Greedy, non-thinking, max64 new tokens; one generation per arm per item, no retries, resampling, answer cache or semantic repair.",
+    "input_cap_tokens": 4096,
+    "output_cap_tokens": 64,
+    "batch_size": 1,
+    "peak_live_allocation_cap_GiB": 20,
+    "whole_falsifier_wall_deadline_minutes": 90,
+    "max_items": 128,
+    "arms": 3,
+    "maximum_generated_answers": 384,
+    "maximum_prefill_token_evaluations": 1572864,
+    "maximum_decode_token_steps": 24576,
+    "primitive_comparison": "Candidate and baseline evaluate identical input token IDs and same output cap. Same Q/K/V products and cached source positions; candidate adds one scalar bias per source score during question/answer attention, with O(P) source-bias storage. Record actual token steps, score additions, prefill/cache bytes, peak memory and duration separately.",
+    "failure_policy": "Any memory/time/input/decoding cap breach rejects this configured feasibility test. No larger model, context, budget, coefficient or extra head/layer tuning may rescue the same card."
+  },
+  "M4_feasibility": {
+    "answer": "Yes in principle for the bounded generated-source question; not yet demonstrated on this host.",
+    "weight_storage_projection_bytes": 8000000000,
+    "KV_projection_formula": "36layers *2(K,V)*8KVheads*128head_dim*4160positions*2bytes =613416960bytes",
+    "KV_projection_bytes": 613416960,
+    "interpretation": "Approximately8.03GiB combined rounded parameter storage plus KV before activations/workspace/runtime. This is a storage projection, not a measured memory upper bound; the20GiB live-allocation gate remains necessary.",
+    "runtime_gap": "Root reports Ollama installed but no useful generative checkpoint cached. An ordinary Ollama endpoint alone does not supply this source-position attention hook; an instrumentable local MLX path and pinned weights are required. No installation/download was performed by this specialist.",
+    "why_4B_not_largest": "The controlled source facts and exact oracle test source interference, not broad world knowledge. A4B dense attention reader is enough to falsify the local mechanism's prediction if it exhibits baseline errors; a pass cannot establish strong-reader transfer."
+  },
+  "independent_falsification_gate": {
+    "precondition": "Root freezes source serializer, generator code/seed, model/tokenizer/MLX hashes, coefficient1, all-layer hook, three arms and all thresholds before any generated answer. No benchmark questions or known answers are used in generator construction.",
+    "generator": "32new synthetic worlds from four orthogonal families (speaker attribution, later explicit update, relation/date scope, two-source combination), each rendered in four variants =128items: short competing turn, semantically equivalent verbose competing turn, equally long visible neutral filler, and long decisive-evidence control. Dates, entities and values come from an independent structured world oracle; the reader sees ordinary raw dialogue only.",
+    "truth": "An independent simulator computes exact requested value/role/date or explicit unknown from complete generated world state. A separately reviewed renderer must not change the answer across nuisance variants. Contradictions use an explicit generated precedence rule, not a known-wrong benchmark gold label.",
+    "blinding": "Generator truth/proof fields stay outside reader inputs and attention groups. Names/values/seeds are fresh. This first set is development after any inspection; later transfer uses a new sealed seed and different rendering grammar with aggregate-only results.",
+    "arms_definition": {
+      "baseline": "Unmodified reader, identical split prefill and source tokenization.",
+      "global_only_control": "For source keys only, apply a single constant mean_g(log(nbar)-log(n_g)); this controls a uniform source-vs-instruction mass shift without per-group length normalization.",
+      "candidate": "Centered per-source b_i=log(nbar)-log(n_g), coefficient1 at every layer."
+    },
+    "rung2_first": "Before model generation, test grouped-softmax algebra, equal-size zero-bias equivalence, causal exclusion, physical source-boundary alignment and cache-offset conservation against an independent scalar reference. No source may disappear or change role/date/content. Any mismatch rejects before inference.",
+    "model_gate": "All128 items/3arms once, identical prompts and caps. Empty/truncated/malformed answers count wrong. No LLM judge or post-hoc output repair.",
+    "numeric_thresholds": {
+      "baseline_errors_minimum": 12,
+      "candidate_error_bound": "E_candidate<=floor(E_baseline/2) and E_candidate<=E_global_only; otherwise reject.",
+      "paired_significance": "Exact two-sided world-cluster paired sign-flip p<=0.05 versus baseline. For each of32 worlds, d_w=baseline total errors minus candidate total errors over all four variants; flip the whole d_w together. Statistic abs(sum(d_w)); include ties in the two-sided tail. All128 items remain included; no variant selection.",
+      "sign_flip_exact_computation": "Dynamic programming over integer sums of32 differences in[-4,4]. Start count(0)=1; for each d, add count(s) to both s+d and s-d, including doubled multiplicity when d=0. Tail numerator sums counts with abs(s)>=abs(observed sum); denominator2^32. Use20*tail<=2^32 for exact p<=0.05. At most257 sum states, no4-billion assignment enumeration.",
+      "sign_flip_assumptions": "The32 generated worlds are independent sampling units; the four renderings within each world need not be independent. Exact null calibration requires conditional sign symmetry of independent world-level differences, equivalently exchangeability of the paired arm totals at the whole-world level. Deterministic arm evaluation does not itself establish that assumption. This is a declared inferential assumption, not proof of universal validity from32 pseudorandom seeds.",
+      "control_regression": "Zero additional errors versus baseline on visible-neutral and long-decisive-evidence controls.",
+      "integrity_failures": 0
+    },
+    "insufficient_headroom": "If baseline has fewer12errors, record insufficient signal and do not claim a mechanism win or tune this frozen set. A different test needs a new card/registration.",
+    "pass_meaning": "Necessary support for this local interference mechanism only. Does not prove source truth, absence, all natural-language coverage, LongMemEval score, GPT4o transfer or first place."
+  },
+  "numeric_half_gap_premise": {
+    "generated_gate": "The falsifier directly demands at least50percent fewer errors on its complete fixed128-item set.",
+    "row_hypothesis": "For an audited all500 reader baseline with E errors, let h be the fraction caused by unequal-turn competition despite available evidence and r the fraction fixed without regression; half-row closure requires h*r>=0.5. Predicted stress-test r>=0.5; actual LongMemEval h and r are unknown and must not be inferred from this test.",
+    "promotion_requirement": "A synthetic pass alone cannot promote a half-row claim. A later frozen open-reader development comparison must demonstrate E_candidate<=E_baseline/2 across all scoped rows under unchanged caps; full1.0confirmation and overfitting tests remain the mission target.",
+    "closed_reader_limit": "Internal attention modification is not available through the existingGPT4o API path. The local reader is a distinct system; never substitute its score for GPT4o, quietly change the comparison, or claim matched superiority. Root must separately resolve an eligible open-reader comparison boundary or a transferable mechanism before benchmark promotion."
+  },
+  "risks": [
+    "Length can carry additional useful facts, so balancing may underweight a long decisive turn; dedicated negative control is mandatory.",
+    "Short false or stale assertions may be overweighted; provenance dates/roles remain necessary and untouched.",
+    "Prompt-prefill/source-token boundaries and cache mask offsets are correctness hazards; test them before inference.",
+    "The effect may be limited to synthetic verbosity and fail natural dialogue/stronger readers.",
+    "Close attention-normalization prior art means the contribution is an empirical scoped composition, not presumed novelty."
+  ],
+  "E48_source_gate": {
+    "execution_owner": "Root only; no specialist execution.",
+    "files": ["C/c5_attention.py", "C/c5_attention_check.py", "C/c5-world-generator.py"],
+    "state": "Immutable physical source metadata/spans, complete token-to-source ownership, prompt fingerprint and cached-token cursor. Source groups include each rendered date/role/content block and its trailing separator. Instructions, question and output positions have no source owner.",
+    "transition": "Append exact history tokens, then query tokens, then at most64 decode tokens at the current cursor. Split history/query/decode batches must conserve token IDs, ownership and attention rows. Bias is enabled only for query/output positions; the causal mask always takes precedence.",
+    "adversarial_boundary": "Reject stale ownership fingerprints, rewritten cached prefixes, invalid types/ranges, skipped/replayed cursors, phase crossings, zero-length groups, token spans crossing source boundaries, omitted spans and future-key access.",
+    "synthesis": "One fixed per-turn scalar attention intervention; baseline and uniform-source control remain separate predefined arms. No MLX hook, model import, installation or inference.",
+    "independent_checks": "Eight bounded groups: tied-mass and limit boundaries; scalar softmax/global control; Unicode/physical source alignment; split prefill/decode and causal exclusion; stale cache/ownership; exact world-cluster DP versus16-assignment reference; independent structured truth; all32 worlds/four renderings interpreted by a separate closed-grammar text parser with long-decisive conservation.",
+    "generator_separation": "The structured truth function never parses rendered prompts. The renderer never calls the truth function and outputs only sources(role/date/content) plus question. Dataset reader and oracle records are separate; only the payload may reach the reader/attention path. Physical ownership does not receive truth, proof, family, variant or world IDs.",
+    "neutral_length_matching": "Freeze ordinary repetition grammar at24 repeated assertions. The visible-neutral control retains the original assertion and appends an explicitly neutral filler phrase, then0..2048 literal filler words. Choose the first exact match to the verbose-competing rendering's native full-input count and all per-source token lengths. No exact match rejects this grammar. This is deterministic token matching, never output-dependent tuning.",
+    "native_alignment_prerequisite": "The E48 checker uses character offsets and a whitespace counter solely as independent synthetic instruments. Neither establishes Qwen tokenization. Before inference, the pinned tokenizer/template must prove exact full-text source ownership and equal native token counts; crossing boundary tokens reject rather than being silently assigned, independently retokenized, or truncated.",
+    "development_exposure": "E48 fixture seed a6 repeated32 times is exposed synthetic development only. It does not freeze a future inference/holdout seed. The32 worlds are all answerable by construction; unknown/contradiction cases test the closed structured oracle separately and imply no natural-language absence certificate.",
+    "acceptance": "Zero failures accepts only scalar/source integrity for this specification. All model gates, original caps, arms and row comparison unknowns remain unchanged."
+  },
+  "decision": "Root selected only E48 scalar/source-boundary gate before any model acquisition. Source is prepared for review; no hook or model execution is authorized by this artifact.",
+  "validation": "Static preparation only; root must execute the exact checker once after source review. No passing result is claimed.",
+  "downloads": 0,
+  "installs": 0,
+  "model_calls": 0,
+  "paid_calls": 0,
+  "new_scores": false
+}

@@ -7,4 +7,5 @@ requires-python = ">=3.11,<3.12"
 dependencies = [
     "numpy==2.4.6",
     "pyarrow==26.0.1",
+    "tiktoken==0.14.0",
 ]

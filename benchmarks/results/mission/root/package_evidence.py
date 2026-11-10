@@ -30,7 +30,8 @@ def package(args):
                 current = root / relative
                 if not relative or not current.is_file() or hashlib.sha256(current.read_bytes()).hexdigest() != value['script_sha256']:
                     matches = [script for script in root.rglob('*.py')
-                               if hashlib.sha256(script.read_bytes()).hexdigest() == value['script_sha256']]
+                               if '__pycache__' not in script.parts and '.venv' not in script.parts
+                               and hashlib.sha256(script.read_bytes()).hexdigest() == value['script_sha256']]
                 else:
                     matches = [current]
                 if not matches:

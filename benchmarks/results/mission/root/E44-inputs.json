@@ -1,0 +1,18 @@
+{
+  "experiment": "E44-staging",
+  "source": "writerslogic-02:/home/davidcondrey/sol-qag/data/llama-full",
+  "scope": "Existing exposed development arrays; no new query selection or GT read",
+  "decision": "accept-pinned-input-staging",
+  "files": {
+    "base.f32": {
+      "path": "/Volumes/A/.hms-lb/mission/E44-input/base.f32",
+      "bytes": 131543552,
+      "sha256": "1040eaaf8568ce7244572177e95fcaf78f1cba2e3e8c3cec8ea29918c675cf60"
+    },
+    "validation.f32": {
+      "path": "/Volumes/A/.hms-lb/mission/E44-input/validation.f32",
+      "bytes": 131072,
+      "sha256": "c3394098fe3ba8302bfee1e7f307bb49b76e255cae43c404ecf2ccc5b1209c15"
+    }
+  }
+}

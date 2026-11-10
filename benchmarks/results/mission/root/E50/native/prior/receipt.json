@@ -1,0 +1,138 @@
+{
+  "hypothesis": "H-B-9",
+  "claim": "one compile-only fixed8x32 K100 gate; no x86 execution or performance timing",
+  "seconds_cap": 180,
+  "source_directory": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/B",
+  "platform": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "release": "27.0.0"
+  },
+  "python": {
+    "executable": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/.venv/bin/python3",
+    "version": "3.11.14 (main, Nov 19 2025, 23:12:58) [Clang 21.1.4 ]"
+  },
+  "flags": [
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-fno-fast-math",
+    "-ffp-model=strict",
+    "-ffp-contract=off",
+    "-ffreestanding",
+    "-fno-vectorize",
+    "-fno-slp-vectorize",
+    "-masm=att",
+    "-S",
+    "-target",
+    "x86_64-unknown-linux-gnu",
+    "-march=icelake-server"
+  ],
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/clang",
+        "--version"
+      ],
+      "log": "compiler-identity.log",
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/clang",
+        "-print-resource-dir"
+      ],
+      "log": "compiler-resource-dir.log",
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "log": "source-head.log",
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=all",
+        "--",
+        "packed_scan_tile.c",
+        "run_packed_scan_audit.py",
+        "next-card-b9.md",
+        "b9-cost.json",
+        "native_interval.c"
+      ],
+      "log": "source-status.log",
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/clang",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fno-fast-math",
+        "-ffp-model=strict",
+        "-ffp-contract=off",
+        "-ffreestanding",
+        "-fno-vectorize",
+        "-fno-slp-vectorize",
+        "-masm=att",
+        "-S",
+        "-target",
+        "x86_64-unknown-linux-gnu",
+        "-march=icelake-server",
+        "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E43/native/source/packed_scan_tile.c",
+        "-o",
+        "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/root/E43/native/packed_scan_tile.s"
+      ],
+      "log": "compiler.log",
+      "status": "passed",
+      "returncode": 0
+    }
+  ],
+  "decision": "failed-cross-assembly-gate",
+  "compilation_qualification": "-ffreestanding uses clang resource intrinsic/stdint headers without a Linux libc/sysroot or mm_malloc. No malloc stub, link, object execution or dependency installation is performed. Lack of cross-target support is a toolchain result, not an algorithm limit.",
+  "validation_boundary": "ABI size/alignment/overlap, metadata ranges, masks and codes are checked outside the hot function. Certificate provenance and kth-threshold validity remain explicit controller preconditions; this is not a production serving proof.",
+  "unmatched_host": "Owned M4 can compile but cannot execute VNNI. Core Ultra185H availability does not establish an equivalent IceLake Xeon target; no host connection is made.",
+  "source_sha256": {
+    "packed_scan_tile.c": "e4ce15da9e0aaf2164f89d749a86b68e3a107ab7185bed1937928d2ede655adf",
+    "run_packed_scan_audit.py": "44e5baa3f0525fe81b804c1ea52215c3ee5ca0f2b44f42dcccdad408ee749221",
+    "next-card-b9.md": "7f969176bb5d08dd7040bf8abb7531b84dba00f1c06701eb61084ef82de78aac",
+    "b9-cost.json": "b22e9bb05203b7615a8b3bb5c8b8cd0892aa6da2f59bbd11cfd8cee8eab7507c",
+    "native_interval.c": "928437a162b85e0b0af4719b547d6cbcfcf29157bb95aabc124bf01e89cf13a0"
+  },
+  "compiler": "/usr/bin/clang",
+  "failure_phase": "auditing-assembly",
+  "failure_type": "ValueError",
+  "failure": "expected one independently recognized zero-based add/compare loop counter",
+  "artifact_sha256": {
+    "compiler-identity.log": "b8a2569d699eec50baaf1719096d0801d16fb28fbcb2df7ffd0a07cd26d9fd47",
+    "compiler-resource-dir.log": "22f1c7b7c5fcf82e1d69fbca0850e97fa884c299d215c90d4b33dc1f6afd43e9",
+    "compiler.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "failure.log": "9873c8a809471b3317f669110448f4d65ec2a14843c9cd3e799b171d7acb0522",
+    "hot-function.s": "fefd46c83e15a700900e27f9c7fcd45297c0b1842221baabbad039a3bf31167f",
+    "packed_scan_tile.s": "642c997cf44ea888f98c36802ca6dc700cfd1c615d25006932312dba6117505c",
+    "source/b9-cost.json": "b22e9bb05203b7615a8b3bb5c8b8cd0892aa6da2f59bbd11cfd8cee8eab7507c",
+    "source/native_interval.c": "928437a162b85e0b0af4719b547d6cbcfcf29157bb95aabc124bf01e89cf13a0",
+    "source/next-card-b9.md": "7f969176bb5d08dd7040bf8abb7531b84dba00f1c06701eb61084ef82de78aac",
+    "source/packed_scan_tile.c": "e4ce15da9e0aaf2164f89d749a86b68e3a107ab7185bed1937928d2ede655adf",
+    "source/run_packed_scan_audit.py": "44e5baa3f0525fe81b804c1ea52215c3ee5ca0f2b44f42dcccdad408ee749221",
+    "source-head.log": "21fc0218800e8de00a4927c93b02c17a4b6da97608c5c72e0c8b7beeb163145d",
+    "source-status.log": "51a5588d56fc5739f88bd8a717b31ca03dec61ed6ad2f80de4be9d71c17dba3f",
+    "static-instruction-counts.json": "4d6ee1a8a16d1c133bc369b19b2aba8056587bf72d70768431e915264b9237ed"
+  }
+}

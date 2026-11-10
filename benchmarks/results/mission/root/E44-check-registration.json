@@ -1,0 +1,31 @@
+{
+  "id": "E44-check",
+  "hypothesis": "H-A-7",
+  "row": "R51-development",
+  "question": "Do exact dyadic decoding,rank selection,Cauchy decisions and corpus norm enclosures match independent finite fixtures?",
+  "prediction": "14decodes,8decision-boundaries,6normrows andinvalidinputs pass beforedata counter",
+  "configuration": "fixed128D/4096frontier;synthetic boundaryfixtures;noGT",
+  "cwd": "/Volumes/A/.hms-wt-mission-integrated",
+  "script": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier_bound_check.py",
+  "result": "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier-bound-check-result-E44.json",
+  "argv": [
+    "uv",
+    "run",
+    "--offline",
+    "--locked",
+    "--project",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission",
+    "python",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier_bound_check.py",
+    "--output",
+    "/Volumes/A/.hms-wt-mission-integrated/benchmarks/results/mission/A/frontier-bound-check-result-E44.json"
+  ],
+  "summary_fields": [
+    "status",
+    "decoding_patterns",
+    "invalid_input_checks",
+    "fixed_rank_boundary_checks",
+    "exact_decision_boundary_checks",
+    "norm_rows_checked"
+  ]
+}
