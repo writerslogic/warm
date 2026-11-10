@@ -3,6 +3,7 @@
 {% extends "base.html" %}
 
 {% block styles %}{{ super() | warm_inline_theme_styles }}{% endblock %}
+{% block scripts %}{{ super() | warm_defer_search }}{% endblock %}
 
 {% block site_meta %}
   {{ super() }}
