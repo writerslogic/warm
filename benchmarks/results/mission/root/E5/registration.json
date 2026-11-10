@@ -1,0 +1,10 @@
+{
+  "id": "E5",
+  "hypothesis": "H-A-2",
+  "question": "Can one-round base-neighbor completion contain99percent of top100 even with oracle seeds?",
+  "prediction": "m3K128>=.99; reject if m10K256<.99; full32grid retained",
+  "rows": 100000,
+  "queries": 32,
+  "script_sha256": "e66030bcb95b3cadc3b1ddf97e0c5c5616987609348ba3f5996406c645a97452",
+  "claim": "local development necessary-condition counter only"
+}

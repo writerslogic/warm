@@ -1,0 +1,313 @@
+{
+  "experiment": "E5",
+  "hypothesis": "H-A-2",
+  "rung": 2,
+  "claim": "local",
+  "question": "Can one unpruned base-neighbor completion round contain 99% of top100 even with oracle seeds?",
+  "prediction": "coverage >=0.99 with m=3 and width=128; conditional threefold search gain remains unmeasured",
+  "decision": "reject",
+  "rows": 100000,
+  "queries": 32,
+  "dimensions": 768,
+  "scope": "first source rows and exposed public queries; development-only subset; oracle seeds are forbidden at serving",
+  "metric": "strict ID coverage, float64 normalized dot, deterministic row-ID ties",
+  "source_path": "/Volumes/A/.hms-lb/vdbbench/dataset/cohere/cohere_medium_1m",
+  "commit": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "selected_normalized_base_sha256": "63b87abd0984b572b66a5dfe70602eeb644c22d26da456cd192572a6e7f22a1b",
+  "selected_normalized_queries_sha256": "58b372908e9d0f9fa2447b111f3ff5569f623f1acf98cbe5bade114c24c2b2c4",
+  "script_sha256": "e66030bcb95b3cadc3b1ddf97e0c5c5616987609348ba3f5996406c645a97452",
+  "exact_seed_rows": 317,
+  "exact_dot_products": 34900000,
+  "acceptance": "m3/K128 coverage>=.99 necessary-condition pass only; needs independent OOD transfer and implementable seeds",
+  "rejection": "m10/K256 coverage<.99 rejects base-neighbor-only completion for this workload/size",
+  "grid": [
+    {
+      "k": 10,
+      "oracle_seeds": 1,
+      "width": 32,
+      "coverage": 0.553125,
+      "perfect_queries": 3,
+      "mean_candidates": 33.0,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 1,
+      "width": 64,
+      "coverage": 0.64375,
+      "perfect_queries": 5,
+      "mean_candidates": 65.0,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 1,
+      "width": 128,
+      "coverage": 0.715625,
+      "perfect_queries": 7,
+      "mean_candidates": 129.0,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 1,
+      "width": 256,
+      "coverage": 0.778125,
+      "perfect_queries": 11,
+      "mean_candidates": 257.0,
+      "id_only_index_bytes": 102400000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 3,
+      "width": 32,
+      "coverage": 0.746875,
+      "perfect_queries": 9,
+      "mean_candidates": 78.03125,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 3,
+      "width": 64,
+      "coverage": 0.834375,
+      "perfect_queries": 13,
+      "mean_candidates": 151.9375,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 3,
+      "width": 128,
+      "coverage": 0.878125,
+      "perfect_queries": 16,
+      "mean_candidates": 294.125,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 3,
+      "width": 256,
+      "coverage": 0.90625,
+      "perfect_queries": 20,
+      "mean_candidates": 569.3125,
+      "id_only_index_bytes": 102400000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 5,
+      "width": 32,
+      "coverage": 0.865625,
+      "perfect_queries": 12,
+      "mean_candidates": 118.28125,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 5,
+      "width": 64,
+      "coverage": 0.903125,
+      "perfect_queries": 15,
+      "mean_candidates": 226.71875,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 5,
+      "width": 128,
+      "coverage": 0.925,
+      "perfect_queries": 18,
+      "mean_candidates": 431.65625,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 5,
+      "width": 256,
+      "coverage": 0.940625,
+      "perfect_queries": 21,
+      "mean_candidates": 815.5,
+      "id_only_index_bytes": 102400000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 10,
+      "width": 32,
+      "coverage": 1.0,
+      "perfect_queries": 32,
+      "mean_candidates": 205.875,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 10,
+      "width": 64,
+      "coverage": 1.0,
+      "perfect_queries": 32,
+      "mean_candidates": 382.28125,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 10,
+      "width": 128,
+      "coverage": 1.0,
+      "perfect_queries": 32,
+      "mean_candidates": 702.375,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 10,
+      "oracle_seeds": 10,
+      "width": 256,
+      "coverage": 1.0,
+      "perfect_queries": 32,
+      "mean_candidates": 1289.125,
+      "id_only_index_bytes": 102400000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 1,
+      "width": 32,
+      "coverage": 0.1803125,
+      "perfect_queries": 0,
+      "mean_candidates": 33.0,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 1,
+      "width": 64,
+      "coverage": 0.2771875,
+      "perfect_queries": 0,
+      "mean_candidates": 65.0,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 1,
+      "width": 128,
+      "coverage": 0.4025,
+      "perfect_queries": 0,
+      "mean_candidates": 129.0,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 1,
+      "width": 256,
+      "coverage": 0.5328125,
+      "perfect_queries": 1,
+      "mean_candidates": 257.0,
+      "id_only_index_bytes": 102400000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 3,
+      "width": 32,
+      "coverage": 0.329375,
+      "perfect_queries": 0,
+      "mean_candidates": 78.03125,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 3,
+      "width": 64,
+      "coverage": 0.4815625,
+      "perfect_queries": 0,
+      "mean_candidates": 151.9375,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 3,
+      "width": 128,
+      "coverage": 0.625625,
+      "perfect_queries": 0,
+      "mean_candidates": 294.125,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 3,
+      "width": 256,
+      "coverage": 0.7540625,
+      "perfect_queries": 1,
+      "mean_candidates": 569.3125,
+      "id_only_index_bytes": 102400000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 5,
+      "width": 32,
+      "coverage": 0.426875,
+      "perfect_queries": 0,
+      "mean_candidates": 118.28125,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 5,
+      "width": 64,
+      "coverage": 0.58875,
+      "perfect_queries": 0,
+      "mean_candidates": 226.71875,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 5,
+      "width": 128,
+      "coverage": 0.7203125,
+      "perfect_queries": 0,
+      "mean_candidates": 431.65625,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 5,
+      "width": 256,
+      "coverage": 0.8259375,
+      "perfect_queries": 1,
+      "mean_candidates": 815.5,
+      "id_only_index_bytes": 102400000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 10,
+      "width": 32,
+      "coverage": 0.5678125,
+      "perfect_queries": 0,
+      "mean_candidates": 205.875,
+      "id_only_index_bytes": 12800000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 10,
+      "width": 64,
+      "coverage": 0.7184375,
+      "perfect_queries": 0,
+      "mean_candidates": 382.28125,
+      "id_only_index_bytes": 25600000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 10,
+      "width": 128,
+      "coverage": 0.821875,
+      "perfect_queries": 0,
+      "mean_candidates": 702.375,
+      "id_only_index_bytes": 51200000
+    },
+    {
+      "k": 100,
+      "oracle_seeds": 10,
+      "width": 256,
+      "coverage": 0.905625,
+      "perfect_queries": 2,
+      "mean_candidates": 1289.125,
+      "id_only_index_bytes": 102400000
+    }
+  ]
+}

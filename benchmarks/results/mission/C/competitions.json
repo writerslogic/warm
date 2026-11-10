@@ -1,0 +1,40 @@
+[
+  {
+    "name": "Agent Memory Challenge 2026 Cycle2",
+    "state": "closed submissions; ongoing adjudication",
+    "material_deadline": "2026-10-31T23:59:00+08:00",
+    "evaluation_deadline": "2026-11-04T23:59:00+08:00",
+    "results_expected": "2026-11-19",
+    "tracks": [
+      "textual",
+      "coding",
+      "multimodal"
+    ],
+    "eligibility": "open-source or commercial separate tables; self-hosted public Add/Search required for both; no repository-only deployment",
+    "entry": "participant API endpoint plus fixed commit/config; key then Smoke then Full",
+    "hidden_policy": "private test data; participant Search must not generate final answers; no query hardcoding or cross-sample state",
+    "source": "https://agentmemoryleaderboard.ai/competition/",
+    "next_cycle": "not announced in inspected source; do not infer deadline"
+  },
+  {
+    "name": "TREC RAG2026",
+    "state": "deadline passed",
+    "deadline": "2026-08-08",
+    "entry": "TREC registration then Evalbase, at most10 runs/task, priority on submission form",
+    "source": "https://trec-rag.github.io/",
+    "next_cycle": "TREC2027 call exists; task release/deadline not established"
+  },
+  {
+    "name": "LiveRAG",
+    "state": "only SIGIR2025 challenge verified; no open2026 edition established",
+    "constraints": "Falcon3-10B-instruct generator; intermediate LLMs <=10B; teams <=5; no fine tuning",
+    "entry": "SIGIR2025 Easychair application; historical only",
+    "source": "https://liverag.tii.ae/terms-conditions.php"
+  },
+  {
+    "name": "CLEF",
+    "state": "2026 conference ended; 2027 conference Sep14-17 announced; applicable retrieval task deadlines not established",
+    "source": "https://clef-initiative.eu/",
+    "next_action": "inventory specific2027 labs once tasks and submission dates are published; not a claim no open lab exists"
+  }
+]

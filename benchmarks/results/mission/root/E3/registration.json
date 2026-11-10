@@ -1,0 +1,12 @@
+{
+  "id": "E3",
+  "hypothesis": "H-C-1",
+  "rung": 2,
+  "question": "Do externally proposed LoCoMo audit corrections link to the pinned original questions and source turns?",
+  "prediction": "156 external issues; all mismatches rejected for correction use; zero semantic corrections accepted by structural checks.",
+  "acceptance": "Report all issues and mismatches; advance only source-matched packets to independent semantic review.",
+  "source_commit": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "script_sha256": "10f92904b78c29699702a07f0fa720174e085de28aa17865cb6bb1eae6eb367b",
+  "sources_manifest_sha256": "81b3121454c86174d4bd29293c25ce0a7c85d62acaa0898afa2906685b22b412",
+  "claim": "local; development audit only"
+}
