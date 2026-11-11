@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
-## [0.6.7] - 2026-11-10
+## [0.6.7] - 2026-11-11
 
 ### Added
 - Add portable JavaScript client and retain optional embedded engine
@@ -13,6 +13,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Measure and repair bottom-layer reachability, and expose the build options to the VIBE adapter
 
 ### Documentation
+- Lead JavaScript installation with registry packages
 - Focus the public repository on product usage
 - Integrate historical Big ANN evidence with qualified comparisons
 - Record the requested benchmark stopping point
