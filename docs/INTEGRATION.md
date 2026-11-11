@@ -23,8 +23,8 @@ fn main() -> anyhow::Result<()> {
 
 ## JavaScript and TypeScript client
 
-`warm-sdk` 0.2.0 is the portable HTTP client. For a published release, install with
-`npm install warm-sdk@0.2.0`; check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions)
+`warm-sdk` 0.2.1 is the portable HTTP client. For a published release, install with
+`npm install warm-sdk@0.2.1`; check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions)
 or use the [source installation](get-started/install.md). Connect to a separately running server:
 
 ```js
@@ -40,8 +40,8 @@ configuration controls storage, authentication, policies and available model sta
 
 ## Optional embedded Node.js engine
 
-`writerslogic-warm` 0.6.7 embeds the Rust engine. For a published release, install explicitly
-with `npm install writerslogic-warm@0.6.7`, keeping npm's optional dependencies enabled.
+`writerslogic-warm` 0.6.8 embeds the Rust engine. For a published release, install explicitly
+with `npm install writerslogic-warm@0.6.8`, keeping npm's optional dependencies enabled.
 Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions),
 or build from this checkout with Rust installed using `npm ci --omit=optional && npm run build`.
 CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when

@@ -19,8 +19,8 @@ Start with where your application runs and who should own the store.
 
 ## Which JavaScript package?
 
-`warm-sdk` 0.2.0 exports `WarmClient`. It uses HTTP, Fetch and Web Streams, has no native
-dependencies, and does not start the server. `writerslogic-warm` 0.6.7 exports
+`warm-sdk` 0.2.1 exports `WarmClient`. It uses HTTP, Fetch and Web Streams, has no native
+dependencies, and does not start the server. `writerslogic-warm` 0.6.8 exports
 `WarmMemorySystem` and the `/semantic`, `/memory` and `/vectra` embedded APIs. Install it
 explicitly when the engine should run inside Node. These are separate packages, not subpaths
 of one SDK. See the [installation options](install.md).

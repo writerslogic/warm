@@ -70,10 +70,10 @@ For Python, create and activate a virtual environment first: `uv venv`, then
 
 === "JavaScript client"
 
-    `warm-sdk` 0.2.0 has no runtime dependencies or native binaries. For a published release:
+    `warm-sdk` 0.2.1 has no runtime dependencies or native binaries. For a published release:
 
     ```sh
-    npm install warm-sdk@0.2.0
+    npm install warm-sdk@0.2.1
     ```
 
     Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
@@ -96,7 +96,7 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     your OS, CPU and libc. For a published engine release, keep optional dependencies enabled:
 
     ```sh
-    npm install writerslogic-warm@0.6.7
+    npm install writerslogic-warm@0.6.8
     ```
 
     Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).

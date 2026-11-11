@@ -17,17 +17,18 @@ on `main`, or publication from the Python release workflows. MCP manual runs do 
 | `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
 
 Publish a new model pack before a native wheel that requires that new version through `[embed]`.
-The existing `warm-models==0.1.0` pin does not require another model release for engine 0.6.7.
+The existing `warm-models==0.1.0` pin does not require another model release for engine 0.6.8.
 The Python distributions have separate release tags and Trusted Publisher workflows. For a full
 engine release, push both `vX.Y.Z` and `py-vX.Y.Z` at the same commit; the native wheels build twice.
 
-The npm native binding `writerslogic-warm` follows the engine version, currently 0.6.7.
-The JavaScript and Python HTTP clients share SDK version 0.2.0 and the `sdk-v0.2.0` tag;
+The npm native binding `writerslogic-warm` follows the engine version, currently 0.6.8.
+The JavaScript and Python HTTP clients share SDK version 0.2.1 and the `sdk-v0.2.1` tag;
 their manifests are `bindings/js/warm-sdk/package.json` and
 `bindings/python/warm-sdk/pyproject.toml`. The engine version script does not bump the SDKs
-or MCP launchers. Framework adapters in `integrations/js`
+or MCP launchers. The MCP launchers use version 0.1.7 and the `mcp-v0.1.7` tag.
+Framework adapters in `integrations/js`
 and `integrations/python`, and the two Claude memory-tool packages, have no publication workflow
-in this release pipeline. Their first publication is separate from the 0.6.7 maintenance release.
+in this release pipeline. Their first publication is separate from the 0.6.8 maintenance release.
 
 ## Portable HTTP SDK release
 
@@ -183,10 +184,11 @@ These cannot be committed; the publish jobs wait on them.
    Keep all publish inputs false. Run both SDK build/check workflows and MCP launcher release when those
    distributions change; run Python models release only when a new pack is needed. The dry runs
    build and test without publishing. The `Reproducible build` workflow must also be green on that commit.
-4. **Tag and push** (signed): `git tag -s vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`, and the same
+4. **Tag and push** (signed): `git tag -s vX.Y.Z -m vX.Y.Z && git push --no-follow-tags origin refs/tags/vX.Y.Z`, and the same
    for `py-vX.Y.Z`. Publish `py-models-vX.Y.Z` first if the native `[embed]` extra needs a new model
    pack. Publish matching independent `sdk-vX.Y.Z` and `mcp-vX.Y.Z` tags when those distributions
-   change. Approve the `release`, `crates-io`, `npm` and
+   change. Use `--no-follow-tags` on every branch and tag push, naming only the intended refs.
+   Approve the `release`, `crates-io`, `npm` and
    `pypi` environments when asked.
 5. **GitHub release.** `release.yml` leaves a *draft* release holding every artefact, SBOM,
    `SHA256SUMS` and the provenance bundle. Prepare the notes, but keep it a draft until the registry
@@ -221,14 +223,14 @@ These cannot be committed; the publish jobs wait on them.
 
 ### JavaScript package availability
 
-The JavaScript packages are portable `warm-sdk` 0.2.0 and embedded `writerslogic-warm` 0.6.7.
+The JavaScript packages are portable `warm-sdk` 0.2.1 and embedded `writerslogic-warm` 0.6.8.
 Check available npm versions for [the client](https://www.npmjs.com/package/warm-sdk?activeTab=versions)
 and [the embedded engine](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions)
 before choosing a registry release. The [installation guide](get-started/install.md) also covers
 source builds. The existing native `writerslogic-warm` family is retained; it is not deprecated
 or replaced by the client.
 
-For the SDK, verify `npm view warm-sdk@0.2.0 version`, install that exact version in a clean
+For the SDK, verify `npm view warm-sdk@0.2.1 version`, install that exact version in a clean
 consumer, verify signatures, and run an authenticated memory round trip against the supported
 server. Verify the Python client independently under the same SDK tag. Keep native platform
 build/install gates, provenance and registry consumer checks for the embedded package.
@@ -297,7 +299,8 @@ attestations, not compared).
   root was not published. This error does not establish a credential or ownership failure, and
   changing the version alone does not clear it. The current native family uses
   `writerslogic-warm-*`; clearance of the abandoned helper name is not a release prerequisite.
-  Preserve the signed 0.6.6 tags when releasing 0.6.7.
+  Preserve the signed 0.6.6 tags and the existing `v0.6.7`, `py-v0.6.7`, `sdk-v0.2.0`
+  and `mcp-v0.1.6` tags when preparing the new releases. Do not move or reuse them.
 - For npm-only recovery from the reviewed candidate on `main`, run
   `gh workflow run npm-packages.yml --ref main -f publish_npm=true` after resolving the failure.
   This protected path builds and verifies the packages, compares the integrity of any existing
@@ -319,5 +322,5 @@ attestations, not compared).
 - Published a bad version: crates.io `cargo yank --version X.Y.Z`; npm `npm deprecate
   <affected-package>@X.Y.Z "reason"` (unpublish only within 72 hours); PyPI yank in the web UI (no
   API). Then release X.Y.(Z+1); never re-tag.
-- A tag pushed by mistake: delete the draft release first, then the tag, before approving any
-  environment.
+- A signed release tag pushed by mistake: cancel its workflows and leave the tag unchanged.
+  Keep any draft unpublished and prepare a new version before approving publication.

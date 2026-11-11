@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [0.6.8] - 2026-11-11
+
+### Fixed
+- Reject tenant admission during exclusive maintenance
+- Publish the JavaScript SDK from an explicit local path
 ## [0.6.7] - 2026-11-11
 
 ### Added

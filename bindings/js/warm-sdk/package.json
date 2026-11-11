@@ -1,6 +1,6 @@
 {
   "name": "warm-sdk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Portable HTTP client for WARM document search and temporal agent memory",
   "license": "Apache-2.0",
   "author": "WritersLogic, Inc. <david@writerslogic.com>",
