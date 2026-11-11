@@ -48,7 +48,7 @@ const invalidMetadata: JsonValue = { value: 1n }
 `
 
 test('installed ESM and CommonJS exports expose strict portable TypeScript contracts', { timeout: 180000 }, async t => {
-  const compiler = await realpath(join(packageRoot, 'node_modules', 'typescript', 'bin', 'tsc'))
+  const compiler = await realpath(join(packageRoot, 'node_modules', 'typescript', 'bin', 'tsc6'))
   const { consumer } = await installConsumer(t)
   await writeFile(join(consumer, 'consumer.mts'), `import { WarmClient } from 'warm-sdk'
 // @ts-expect-error Native embedded memory is a separate package.
