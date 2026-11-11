@@ -8,6 +8,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [0.6.8] - 2026-11-11
 
 ### Fixed
+- Prepare the release with nonblocking tenant admission (#432)
 - Reject tenant admission during exclusive maintenance
 - Publish the JavaScript SDK from an explicit local path
 ## [0.6.7] - 2026-11-11
