@@ -109,13 +109,13 @@ entire checkpoint or hold store locks during text I/O.
 <details>
 <summary><strong>JavaScript and TypeScript: portable client</strong></summary>
 
-`warm-sdk` 0.2.0 is the portable HTTP client for a separately running `warm-server`.
+`warm-sdk` 0.2.1 is the portable HTTP client for a separately running `warm-server`.
 It has no native binaries or runtime dependencies and uses standard Fetch and Web Streams APIs
 (Node 18 or newer). Installing or importing it does not load the embedded engine or download models.
 For a published release, install the client in your application:
 
 ```sh
-npm install warm-sdk@0.2.0
+npm install warm-sdk@0.2.1
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
@@ -172,7 +172,7 @@ Browser deployments must permit the application's origin at the HTTP service bou
 install it explicitly with npm's optional dependencies enabled:
 
 ```sh
-npm install writerslogic-warm@0.6.7
+npm install writerslogic-warm@0.6.8
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
@@ -293,8 +293,8 @@ provide the evidence for evaluating WARM on your own workload.
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |
-| JavaScript/TypeScript client (`warm-sdk` 0.2.0) | Source and release builds | Portable HTTP client; requires a separately running server |
-| Embedded Node.js (`writerslogic-warm` 0.6.7) | Source and release builds | Eight optional native platform packages; separate from the client |
+| JavaScript/TypeScript client (`warm-sdk` 0.2.1) | Source and release builds | Portable HTTP client; requires a separately running server |
+| Embedded Node.js (`writerslogic-warm` 0.6.8) | Source and release builds | Eight optional native platform packages; separate from the client |
 | C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
 | Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | No in-process document search |
 | Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |

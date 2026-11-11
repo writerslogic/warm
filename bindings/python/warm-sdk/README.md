@@ -14,7 +14,8 @@ stores vectors you supply and exposes document and query endpoints. See the
 
 ## Installation
 
-Version 0.2.0 requires Python 3.11 or newer and removes the legacy `embedchain`,
+Version 0.2.1 requires Python 3.11 or newer and retains the API removals introduced
+in 0.2.0. Version 0.2.0 removed the legacy `embedchain`,
 `phidata` and `semantic_kernel` modules and their extras, including the old
 `all` extra. These retired integrations were not maintained through a published
 six-month deprecation period. Install individual supported extras and update

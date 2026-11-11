@@ -1,6 +1,6 @@
 [project]
 name = "warm-sdk"
-version = "0.2.0"
+version = "0.2.1"
 description = "HTTP client and agent-framework adapters for a WritersLogic Adaptive Retention & Memory service"
 authors = [
     {name = "WritersLogic", email = "david@writerslogic.com"},
