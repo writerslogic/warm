@@ -17,7 +17,7 @@ The type gate uses the SDK's locally installed TypeScript compiler on external `
 The packed test uses `npm pack --ignore-scripts`, then installs the tarball into a temporary project outside the source tree with install scripts disabled. Its ESM and CommonJS consumers each exercise the real HTTP server. To verify an already-published candidate instead:
 
 ```sh
-WARM_SERVER_BIN="$PWD/target/debug/warm-server" WARM_SDK_PACKAGE=warm-sdk@0.2.0 npm --prefix bindings/js/warm-sdk run test:package
+WARM_SERVER_BIN="$PWD/target/debug/warm-server" WARM_SDK_PACKAGE=warm-sdk@0.2.1 npm --prefix bindings/js/warm-sdk run test:package
 ```
 
 Registry mode requires the exact local manifest version, installs with `--ignore-scripts --save-exact --no-audit --no-fund`, then runs `npm audit signatures` and compares installed lock integrity against the registry's `dist.integrity`. It needs no local SDK build or dev dependencies. Both modes reject runtime, optional and peer dependencies and inspect the installed dependency tree. Temporary npm configuration avoids reading the user's registry credentials.

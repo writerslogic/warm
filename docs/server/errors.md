@@ -140,8 +140,9 @@ scope can be retried to finish it. Reads return a coherent revision or this erro
 503. `--max-tenants` stores are open and none is idle enough to close.
 
 ### tenant_busy
-503. A snapshot or restore holds the tenant store exclusively, or erasure is invalidating
-its retry receipts. Requests receive `Retry-After`; other tenants are unaffected.
+503. A snapshot, restore, or maintenance operation holds the tenant store exclusively, or
+erasure is invalidating its retry receipts. Requests receive `Retry-After`; other tenants
+are unaffected.
 
 ### idempotency_storage_unavailable
 503. Durable retry protection could not reserve, invalidate, or clean up its records.

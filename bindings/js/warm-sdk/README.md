@@ -5,7 +5,7 @@ The portable JavaScript and TypeScript HTTP client for WARM. Connect to a separa
 For a published release, install the portable client in your application:
 
 ```sh
-npm install warm-sdk@0.2.0
+npm install warm-sdk@0.2.1
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
@@ -130,7 +130,7 @@ Local invalid inputs throw `TypeError` or `RangeError`. `WarmError` carries `cod
 Applications that need a local native store can install the separate `writerslogic-warm` package explicitly. It has its own engine version and platform binaries. It is not a dependency or optional dependency of this HTTP client. For a published engine release, keep npm's optional dependencies enabled:
 
 ```sh
-npm install writerslogic-warm@0.6.7
+npm install writerslogic-warm@0.6.8
 ```
 
 Check the [available native package versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
