@@ -23,7 +23,7 @@ Start with where your application runs and who should own the store.
 dependencies, and does not start the server. `writerslogic-warm` 0.6.7 exports
 `WarmMemorySystem` and the `/semantic`, `/memory` and `/vectra` embedded APIs. Install it
 explicitly when the engine should run inside Node. These are separate packages, not subpaths
-of one SDK. See [source installation and publication status](install.md).
+of one SDK. See the [installation options](install.md).
 
 ## Which Python package?
 

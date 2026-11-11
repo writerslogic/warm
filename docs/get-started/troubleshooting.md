@@ -25,8 +25,9 @@ The SDK is an HTTP client; a successful import does not mean the server is runni
 
 The portable `warm-sdk` exports `WarmClient` and calls a separately running server.
 `WarmMemorySystem`, `DocumentMemory` and the native subpaths belong to `writerslogic-warm`.
-There is no `warm-sdk/embedded` export. Until npm client 0.2.0 is published and verified,
-use the [source installation](install.md).
+There is no `warm-sdk/embedded` export. For a published portable client release, use
+`npm install warm-sdk@0.2.0`; check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
+The [installation guide](install.md) also covers source builds and the optional embedded engine.
 
 ## Embedded Node cannot load the native module
 

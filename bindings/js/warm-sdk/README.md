@@ -2,7 +2,14 @@
 
 The portable JavaScript and TypeScript HTTP client for WARM. Connect to a separately running WARM server from Node.js 18+, browsers, Bun, Deno, or a worker runtime with the standard Fetch and Web Streams APIs. The package has no runtime dependencies, native binaries, Node built-in imports, or model downloads.
 
-Version 0.2.0 is prepared for publication. Until [release availability](https://github.com/writerslogic/warm/blob/main/docs/RELEASING.md) confirms publication, build it from a repository checkout:
+For a published release, install the portable client in your application:
+
+```sh
+npm install warm-sdk@0.2.0
+```
+
+Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
+To build from a repository checkout:
 
 ```sh
 npm --prefix bindings/js/warm-sdk ci
@@ -14,8 +21,6 @@ Then, from your application's directory:
 ```sh
 npm install /absolute/path/to/warm/bindings/js/warm-sdk
 ```
-
-After publication is verified, the registry install is `npm install warm-sdk@0.2.0`.
 
 ```ts
 import { WarmClient } from 'warm-sdk'
@@ -122,10 +127,12 @@ Local invalid inputs throw `TypeError` or `RangeError`. `WarmError` carries `cod
 
 ## Optional embedded engine
 
-Applications that need a local native store can install the separate `writerslogic-warm` package explicitly. It has its own engine version and platform binaries. It is not a dependency or optional dependency of this HTTP client.
+Applications that need a local native store can install the separate `writerslogic-warm` package explicitly. It has its own engine version and platform binaries. It is not a dependency or optional dependency of this HTTP client. For a published engine release, keep npm's optional dependencies enabled:
 
 ```sh
-npm install writerslogic-warm
+npm install writerslogic-warm@0.6.7
 ```
+
+Check the [available native package versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
 
 See the [embedded engine package](https://www.npmjs.com/package/writerslogic-warm) for its distinct API and supported platforms.

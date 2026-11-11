@@ -33,7 +33,9 @@ const current = await memory.recall('where does Alice live')
 const previous = await memory.recall('where does Alice live', { asOf: 1622505600000 })
 ```
 
-Use the [source installation](../get-started/install.md) while npm 0.2.0 publication is pending.
+For a published release, install with `npm install warm-sdk@0.2.0`; check the
+[available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions), or use the
+[source installation](../get-started/install.md).
 Lexical memory needs no model. The client accepts safe integer Unix milliseconds for times;
 policies are configured on the server. It does not open a local store or load native bindings.
 

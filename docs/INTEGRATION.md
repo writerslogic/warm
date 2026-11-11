@@ -23,8 +23,9 @@ fn main() -> anyhow::Result<()> {
 
 ## JavaScript and TypeScript client
 
-`warm-sdk` 0.2.0 is the portable HTTP client. Its npm release is pending; use the
-[source installation](get-started/install.md), then connect to a separately running server:
+`warm-sdk` 0.2.0 is the portable HTTP client. For a published release, install with
+`npm install warm-sdk@0.2.0`; check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions)
+or use the [source installation](get-started/install.md). Connect to a separately running server:
 
 ```js
 import { WarmClient } from 'warm-sdk'
@@ -39,9 +40,11 @@ configuration controls storage, authentication, policies and available model sta
 
 ## Optional embedded Node.js engine
 
-`writerslogic-warm` 0.6.7 embeds the Rust engine. Build from this checkout with
-`npm ci --omit=optional && npm run build`; see [registry availability](RELEASING.md#javascript-package-availability)
-before installing the prepared version. CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when
+`writerslogic-warm` 0.6.7 embeds the Rust engine. For a published release, install explicitly
+with `npm install writerslogic-warm@0.6.7`, keeping npm's optional dependencies enabled.
+Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions),
+or build from this checkout with Rust installed using `npm ci --omit=optional && npm run build`.
+CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when
 work is scheduled off the event loop. For documents, import `DocumentMemory` from
 `writerslogic-warm/semantic`; it serializes model work, bounds its queue, and supports async
 iterable ingestion. The default document search is lexical BM25. Add an embedder for cosine
