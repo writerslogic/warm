@@ -11,7 +11,7 @@ The primary JavaScript client is the separate portable `warm-sdk` HTTP package. 
 release, install it explicitly:
 
 ```sh
-npm install writerslogic-warm@0.6.7
+npm install writerslogic-warm@0.6.8
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
