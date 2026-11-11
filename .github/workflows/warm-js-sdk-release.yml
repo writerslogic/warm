@@ -51,7 +51,8 @@ jobs:
           SDK_VERSION: ${{ needs.build.outputs.version }}
         run: |
           set -euo pipefail
-          archive="dist/warm-sdk-${SDK_VERSION}.tgz"
+          archive="./dist/warm-sdk-${SDK_VERSION}.tgz"
+          test -f "$archive"
           if npm view "warm-sdk@${SDK_VERSION}" dist.integrity --json > existing-integrity.json; then
             node - "$archive" <<'JS'
           const fs = require('node:fs');
