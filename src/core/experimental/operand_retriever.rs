@@ -648,10 +648,15 @@ pub fn retrieve_prepared(prepared: &Prepared<'_>) -> Result<Retrieval> {
             covered.extend(coverage[i].iter().cloned());
         }
     }
-    for i in 0..request.candidates.len() {
-        if !selected.contains(&i) && used + prepared.costs[i] <= request.budget {
+    for (i, &cost) in prepared
+        .costs
+        .iter()
+        .enumerate()
+        .take(request.candidates.len())
+    {
+        if !selected.contains(&i) && used + cost <= request.budget {
             selected.push(i);
-            used += prepared.costs[i];
+            used += cost;
         }
     }
     selected.sort_unstable();
