@@ -1109,8 +1109,8 @@ impl FilteredIndex {
                 order.push((key, (c + j) as u32));
             }
         }
-        for c in grouped..lists {
-            let key = i64::from(ivf.centroid_norms[c]) - 2 * dot_i8_query(q, centroid(c), qsum);
+        for (c, &norm) in ivf.centroid_norms[..lists].iter().enumerate().skip(grouped) {
+            let key = i64::from(norm) - 2 * dot_i8_query(q, centroid(c), qsum);
             order.push((key, c as u32));
         }
     }
