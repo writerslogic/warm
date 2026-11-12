@@ -126,7 +126,7 @@ fn deterministic_streaming_model_survives_generations_and_replay_twice() {
                 let actual = if let Some(&slot) = state.delta.live.get(&id) {
                     state.delta.row(slot, 4)
                 } else {
-                    state.base.rows.row(state.base_slot(id).unwrap()).unwrap()
+                    &state.base.rows.row(state.base_slot(id).unwrap()).unwrap()
                 };
                 assert_eq!(actual, row);
             }
