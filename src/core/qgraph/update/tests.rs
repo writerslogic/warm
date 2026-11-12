@@ -766,7 +766,7 @@ fn vector_format_golden_and_drift_gate() {
             index.consolidate().unwrap();
         }
         let golden = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/golden/vector-updates-v1")
+            .join("tests/golden/vector-updates-v1-u8-rows")
             .join(phase);
         let state = index.state.read();
         let manifest = state.manifest.clone();
@@ -797,16 +797,21 @@ fn vector_format_golden_and_drift_gate() {
             [0, 3, 1, 8]
         );
     }
-    let golden =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden/vector-updates-v1/consolidated");
-    let copy = root.path().join("consolidated-4-byte-ids");
-    copy_store(&golden, &copy);
-    let reader = UpdatableVGraph::open(&copy).unwrap();
-    assert_eq!(reader.state.read().manifest.encoding.id_bytes, 4);
-    assert_eq!(
-        reader.search(&[0., 1.], 10, search_params()).unwrap(),
-        [0, 3, 1, 8]
-    );
+    for phase in ["logged", "consolidated-3-byte-ids", "consolidated"] {
+        let golden = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/golden/vector-updates-v1")
+            .join(phase);
+        let copy = root.path().join(format!("f32-rows-{phase}"));
+        copy_store(&golden, &copy);
+        let reader = UpdatableVGraph::open(&copy).unwrap();
+        if phase == "consolidated" {
+            assert_eq!(reader.state.read().manifest.encoding.id_bytes, 4);
+        }
+        assert_eq!(
+            reader.search(&[0., 1.], 10, search_params()).unwrap(),
+            [0, 3, 1, 8]
+        );
+    }
 }
 
 #[test]
@@ -822,7 +827,7 @@ fn untrusted_headers_and_rows_are_rejected() {
             let copy = dir.path().join(format!("future-{name}-{len}"));
             copy_store(&source, &copy);
             let mut bytes = original.clone();
-            bytes[7] = b'2';
+            bytes[7] = b'3';
             bytes.resize(len, 0);
             std::fs::write(copy.join(name), bytes).unwrap();
             assert!(matches!(
@@ -1144,7 +1149,7 @@ fn incomplete_streamed_rows_preserve_the_previous_file() {
     let rows_path = manifest.rows_path(&path);
     let before = std::fs::read(&rows_path).unwrap();
     for count in [2, 3, 4] {
-        let mut writer = BaseRowsWriter::new(&rows_path, &manifest, &[0, 1, 2]).unwrap();
+        let mut writer = BaseRowsWriter::new(&rows_path, &manifest, &[0, 1, 2], false).unwrap();
         let append = writer.append(&vec![1.; count * 4]);
         if count == 4 {
             assert!(append.is_err());

@@ -1090,7 +1090,12 @@ impl UpdatableVGraph {
         checkpoint(6)?;
         let delta_rows = self.state.read().delta.vectors.clone();
         let t = super::prof::start();
-        let mut output = BaseRowsWriter::new(&manifest.rows_path(&self.dir), manifest, ids)?;
+        let mut output = BaseRowsWriter::new(
+            &manifest.rows_path(&self.dir),
+            manifest,
+            ids,
+            base.rows.is_narrow() && format::byte_valued(&delta_rows),
+        )?;
         let mut prepared = PreparedRows::new(ids.len(), manifest.dim)?;
         let chunk_rows = ((4 << 20) / 4 / manifest.dim).max(1);
         let mut rows = Vec::new();
