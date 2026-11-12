@@ -141,9 +141,10 @@ impl PyFilteredIndex {
     /// batch's queries grouped by their rarest label; `block_filter` tests the other labels of a
     /// query a block of ids at a time; `skip_tombstones` skips the delete probe while nothing is
     /// deleted; `cache_intersections` reuses the matches of a repeated label set; `prefetch` is
-    /// the row prefetch distance; `wide` uses 512-bit VNNI. `target_mid`/`target_large` replace
-    /// `target` for rarest labels above `edge_mid`/`edge_large` members (0 keeps it).
-    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, target_mid=0, target_large=0, edge_mid=50_000, edge_large=200_000, rerank=0))]
+    /// the row prefetch distance; `wide` uses 512-bit VNNI. `targets`/`reranks` (8
+    /// values, single-label bands first, then multi-label; 0 keeps `target`/`rerank`) replace them by
+    /// rarest-label size band, the bands starting above the 3 `edges`.
+    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, rerank=0, edges=None, targets=None, reranks=None))]
     #[allow(clippy::too_many_arguments)]
     fn set_search(
         &mut self,
@@ -157,12 +158,16 @@ impl PyFilteredIndex {
         skip_tombstones: bool,
         block_filter: bool,
         cache_intersections: bool,
-        target_mid: usize,
-        target_large: usize,
-        edge_mid: usize,
-        edge_large: usize,
         rerank: usize,
+        edges: Option<[usize; 3]>,
+        targets: Option<[usize; 8]>,
+        reranks: Option<[usize; 8]>,
     ) {
+        let (targets, reranks) = (targets.unwrap_or([0; 8]), reranks.unwrap_or([0; 8]));
+        let mut class_params = [[(0, 0); 4]; 2];
+        for (i, c) in class_params.iter_mut().flatten().enumerate() {
+            *c = (targets[i], reranks[i]);
+        }
         self.index.set_tuning(FilterTuning {
             sort_queries,
             prefetch,
@@ -170,8 +175,8 @@ impl PyFilteredIndex {
             skip_tombstones,
             block_filter,
             cache_intersections,
-            target_bands: [target_mid, target_large],
-            band_edges: [edge_mid, edge_large],
+            class_params,
+            class_edges: edges.unwrap_or([20_000, 50_000, 200_000]),
         });
         self.params = FilterSearchParams {
             brute_max,

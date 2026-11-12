@@ -161,12 +161,12 @@ pub struct FilterTuning {
     /// Keep the matches of the last multi-label query's labels, so a query with the same
     /// labels right after it (see `sort_queries`) skips the intersection.
     pub cache_intersections: bool,
-    /// Inverted-file `target` by the rarest label's size: `[mid, large]` replace `target` for
-    /// labels above `band_edges[0]` and `band_edges[1]` members (0 keeps `target`). Unlike the
-    /// other fields this changes results: it moves the recall-time trade-off.
-    pub target_bands: [usize; 2],
-    /// Label sizes at which `target_bands` start.
-    pub band_edges: [usize; 2],
+    /// `(target, rerank)` by query class, `[multi-label][band]`, replacing the search
+    /// parameters (0 keeps them). Unlike the other fields this changes results: it moves the
+    /// recall-time trade-off per class.
+    pub class_params: [[(usize, usize); 4]; 2],
+    /// Rarest-label sizes at which bands 1, 2 and 3 of `class_params` start.
+    pub class_edges: [usize; 3],
 }
 
 impl FilterTuning {
@@ -180,8 +180,8 @@ impl FilterTuning {
             skip_tombstones: false,
             block_filter: false,
             cache_intersections: false,
-            target_bands: [0, 0],
-            band_edges: [50_000, 200_000],
+            class_params: [[(0, 0); 4]; 2],
+            class_edges: [20_000, 50_000, 200_000],
         }
     }
 }
@@ -807,18 +807,7 @@ impl FilteredIndex {
                 matches.len()
             } else {
                 self.ivf_queries.fetch_add(1, Ordering::Relaxed);
-                let t = &self.tuning;
-                let banded = if n_rare > t.band_edges[1] {
-                    t.target_bands[1]
-                } else if n_rare > t.band_edges[0] {
-                    t.target_bands[0]
-                } else {
-                    0
-                };
-                let params = &FilterSearchParams {
-                    target: if banded == 0 { params.target } else { banded },
-                    ..*params
-                };
+                let params = &self.classed(params, n_rare, !others.is_empty());
                 self.search_ivf(
                     &self.ivfs[ivf as usize],
                     (q, qsum),
@@ -1126,6 +1115,23 @@ impl FilteredIndex {
         }
     }
 
+    /// `params` with the `(target, rerank)` of the query's class.
+    fn classed(
+        &self,
+        params: &FilterSearchParams,
+        n_rare: usize,
+        multi: bool,
+    ) -> FilterSearchParams {
+        let t = &self.tuning;
+        let band = t.class_edges.iter().filter(|&&e| n_rare > e).count();
+        let (target, rerank) = t.class_params[usize::from(multi)][band];
+        FilterSearchParams {
+            target: if target == 0 { params.target } else { target },
+            rerank: if rerank == 0 { params.rerank } else { rerank },
+            ..*params
+        }
+    }
+
     /// The 4-bit screen route of a label with codes, when `params.rerank` asks for it.
     fn fs_route(
         &self,
@@ -1139,18 +1145,7 @@ impl FilteredIndex {
         if params.rerank == 0 || ivf.codes.is_empty() {
             return None;
         }
-        let t = &self.tuning;
-        let banded = if n_rare > t.band_edges[1] {
-            t.target_bands[1]
-        } else if n_rare > t.band_edges[0] {
-            t.target_bands[0]
-        } else {
-            0
-        };
-        let params = &FilterSearchParams {
-            target: if banded == 0 { params.target } else { banded },
-            ..*params
-        };
+        let params = &self.classed(params, n_rare, !others.is_empty());
         self.search_fs(ivf, query, others, params, n_rare, top, scratch)
     }
 
@@ -1843,8 +1838,7 @@ mod tests {
                     }
                     // Bands that restate `target` leave every result as it was.
                     idx.set_tuning(FilterTuning {
-                        target_bands: [p.target, p.target],
-                        band_edges: [0, 0],
+                        class_params: [[(p.target, 0); 4]; 2],
                         ..FilterTuning::plain()
                     });
                     let mut got = vec![0i64; qs.len() * k];

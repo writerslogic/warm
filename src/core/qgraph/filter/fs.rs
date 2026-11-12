@@ -18,6 +18,9 @@ pub(super) struct Pq {
     dsub: usize,
     /// `m * 16 * dsub` centroid coordinates.
     centroids: Vec<f32>,
+    /// `m * dsub * 16`: coordinate-major copy of `centroids`, so one query coordinate meets the
+    /// 16 centroids of its sub-space in a single vector operation.
+    lanes: Vec<f32>,
 }
 
 impl Pq {
@@ -82,7 +85,13 @@ impl Pq {
                     }
                 }
             });
-        Ok(Self { m, dsub, centroids })
+        let lanes = Self::lanes(&centroids, m, dsub);
+        Ok(Self {
+            m,
+            dsub,
+            centroids,
+            lanes,
+        })
     }
 
     /// Code of every row: one nibble per byte, `m` per row.
@@ -109,21 +118,37 @@ impl Pq {
         Ok(out)
     }
 
+    fn lanes(centroids: &[f32], m: usize, dsub: usize) -> Vec<f32> {
+        let mut lanes = vec![0f32; centroids.len()];
+        for j in 0..m {
+            for v in 0..16 {
+                for d in 0..dsub {
+                    lanes[(j * dsub + d) * 16 + v] = centroids[(j * 16 + v) * dsub + d];
+                }
+            }
+        }
+        lanes
+    }
+
     /// Squared distance of each query sub-vector to each centroid, `16 * m` entries.
     fn table(&self, q: &[i8], t: &mut [f32]) {
-        for j in 0..self.m {
-            let qs = &q[j * self.dsub..(j + 1) * self.dsub];
-            for v in 0..16 {
-                let c = &self.centroids[(j * 16 + v) * self.dsub..(j * 16 + v + 1) * self.dsub];
-                t[j * 16 + v] = qs
-                    .iter()
-                    .zip(c)
-                    .map(|(&a, &b)| {
-                        let d = f32::from(a) - b;
-                        d * d
-                    })
-                    .sum();
+        for (j, out) in t
+            .as_chunks_mut::<16>()
+            .0
+            .iter_mut()
+            .enumerate()
+            .take(self.m)
+        {
+            let mut acc = [0f32; 16];
+            for d in 0..self.dsub {
+                let x = f32::from(q[j * self.dsub + d]);
+                let c = &self.lanes[(j * self.dsub + d) * 16..][..16];
+                for v in 0..16 {
+                    let diff = x - c[v];
+                    acc[v] += diff * diff;
+                }
             }
+            *out = acc;
         }
     }
 
@@ -249,7 +274,8 @@ impl FilteredIndex {
         let mut need_ids = usize::MAX;
         let mut sums = [0u32; BLOCK];
         let mut cut = u32::MAX;
-        const CALIBRATE: usize = 2;
+        let probe = self.probe(others);
+        const CALIBRATE: usize = 1;
         let can_fall_back = !others.is_empty() && n_rare <= params.intersect_max;
         for probed in 0..lists {
             if probed == sorted_to {
@@ -279,14 +305,17 @@ impl FilteredIndex {
             for blk in b0..b1 {
                 let ids = &ivf.bids[blk * BLOCK..(blk + 1) * BLOCK];
                 let codes = &ivf.codes[blk * e..(blk + 1) * e];
-                let valid = ids
-                    .iter()
-                    .enumerate()
-                    .fold(0u32, |mk, (i, &id)| mk | (u32::from(id != u32::MAX) << i));
+                let valid = if blk + 1 < b1 {
+                    u32::MAX
+                } else {
+                    ids.iter()
+                        .enumerate()
+                        .fold(0u32, |mk, (i, &id)| mk | (u32::from(id != u32::MAX) << i))
+                };
                 ids_seen += valid.count_ones() as usize;
                 let mut pass = valid;
                 if calibrating {
-                    pass = self.pass_mask(ids, valid, others, check_deleted, &mut s.cursors);
+                    pass = self.pass_mask(ids, valid, &probe, check_deleted, &mut s.cursors);
                     matches_seen += pass.count_ones() as usize;
                     if pass == 0 {
                         continue;
@@ -297,7 +326,7 @@ impl FilteredIndex {
                     continue;
                 }
                 if !calibrating {
-                    mask = self.pass_mask(ids, mask, others, check_deleted, &mut s.cursors);
+                    mask = self.pass_mask(ids, mask, &probe, check_deleted, &mut s.cursors);
                     matches_seen += mask.count_ones() as usize;
                 }
                 while mask != 0 {
@@ -330,10 +359,22 @@ impl FilteredIndex {
         &self,
         ids: &[u32],
         mut mask: u32,
-        others: &[u32],
+        probe: &Probe,
         check_deleted: bool,
         cursors: &mut [usize],
     ) -> u32 {
+        if mask == 0 {
+            return 0;
+        }
+        let sets = &probe.sets[..probe.nsets];
+        for set in sets {
+            let mut m = mask;
+            while m != 0 {
+                let i = m.trailing_zeros() as usize;
+                m &= m - 1;
+                prefetch_word(&set[(ids[i] >> 6) as usize]);
+            }
+        }
         let mut pass = 0u32;
         while mask != 0 {
             let i = mask.trailing_zeros() as usize;
@@ -342,10 +383,58 @@ impl FilteredIndex {
             if check_deleted && self.is_deleted(id) {
                 continue;
             }
-            if others.is_empty() || self.holds(id, others, cursors) {
-                pass |= 1 << i;
+            if probe.generic {
+                if !self.holds(id, probe.others, cursors) {
+                    continue;
+                }
+            } else {
+                if !sets.iter().all(|set| bit(set, id)) {
+                    continue;
+                }
+                if !probe.rest[..probe.nrest].iter().all(|&k| {
+                    let k = usize::from(k);
+                    self.holds(id, &probe.others[k..=k], &mut cursors[k..=k])
+                }) {
+                    continue;
+                }
             }
+            pass |= 1 << i;
         }
         pass
+    }
+}
+
+/// The other labels of a query, split once into bitsets and posting lists.
+struct Probe<'a> {
+    others: &'a [u32],
+    sets: [&'a [u64]; 4],
+    nsets: usize,
+    rest: [u8; 4],
+    nrest: usize,
+    generic: bool,
+}
+
+impl FilteredIndex {
+    fn probe<'a>(&'a self, others: &'a [u32]) -> Probe<'a> {
+        let mut p = Probe {
+            others,
+            sets: [&[]; 4],
+            nsets: 0,
+            rest: [0; 4],
+            nrest: 0,
+            generic: others.len() > 4,
+        };
+        if !p.generic {
+            for (j, &l) in others.iter().enumerate() {
+                if let Some(set) = self.bitset(l) {
+                    p.sets[p.nsets] = set;
+                    p.nsets += 1;
+                } else {
+                    p.rest[p.nrest] = j as u8;
+                    p.nrest += 1;
+                }
+            }
+        }
+        p
     }
 }
