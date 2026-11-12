@@ -39,7 +39,7 @@ mod vnni;
 #[cfg(not(target_arch = "wasm32"))]
 pub use repair::{RepairParams, RepairStats};
 pub use update::{
-    Consolidation, ConsolidationMode, ConsolidationPolicy, UpdatableVGraph, UpdateError,
+    Consolidation, ConsolidationMode, ConsolidationPolicy, RowStore, UpdatableVGraph, UpdateError,
 };
 
 #[cfg(feature = "experimental")]
@@ -1454,6 +1454,15 @@ impl Graph {
             }
         }
         h.finish()
+    }
+
+    /// Frees the topology (lists, upper layers) once the graph is encoded, keeping the rows
+    /// and build parameters that a persisted base still needs. The graph can no longer be
+    /// searched, saved or repaired.
+    pub fn release_structure(&mut self) {
+        self.adj = Adjacency::default();
+        self.upper_ids = Vec::new();
+        self.layers = Vec::new();
     }
 
     /// Build over `data` (row-major, `dim` floats per vector). Angular rows are normalized;
