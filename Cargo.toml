@@ -113,8 +113,11 @@ candle-core = { version = "0.11.1", features = ["metal"], optional = true }
 candle-nn = { version = "0.11.1", features = ["metal"], optional = true }
 candle-transformers = { version = "0.11.1", features = ["metal"], optional = true }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+secret-service = { version = "5.2", default-features = false, features = ["rt-async-io-crypto-rust"], optional = true }
+
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_Security_Cryptography", "Win32_System_Memory"] }
 
 # CUDA for the Modal image only, enabled from outside the crate with RUSTFLAGS="--cfg warm_cuda",
 # so `--all-features` never needs nvcc.
@@ -186,7 +189,7 @@ node-api = ["napi", "napi-derive", "tokio", "tokio/rt", "napi-build", "dep:ts-rs
 # .github/workflows/publish-pypi.yml and dormant until a `py-v*` tag is pushed.
 python = ["pyo3", "dep:numpy"]
 # macOS login keychain for the master key (other platforms use the key file).
-keychain = ["security", "dep:security-framework"]
+keychain = ["security", "dep:security-framework", "dep:secret-service"]
 security = ["ed25519-dalek", "zeroize", "aes-gcm", "aes-gcm/zeroize", "argon2", "sha2", "subtle"]
 provenance = ["security", "dep:parking_lot", "coset", "ciborium", "bs58", "multibase", "dep:serde_json_canonicalizer", "dep:flate2", "dep:http"]
 provenance-scitt = ["provenance", "ureq"]
@@ -217,6 +220,10 @@ server = ["dep:parking_lot", "tokio", "tokio/rt-multi-thread", "tokio/macros", "
 # MCP server over stdio and streamable HTTP (`warm-mcp` binary). Encryption at rest needs `security`;
 # semantic recall needs `local-models`.
 mcp = ["dep:parking_lot", "dep:rmcp", "dep:tokio-util", "tokio", "tokio/rt-multi-thread", "tokio/macros", "tokio/net", "tokio/time", "tokio/sync", "tokio/signal", "cli", "axum", "subtle", "dep:hyper", "dep:hyper-util", "dep:tower-service", "dep:futures-util", "tokio/io-util", "ureq"]
+
+[[example]]
+name = "sealed_keyprobe"
+required-features = ["keychain"]
 
 [[bin]]
 name = "warm-embed"

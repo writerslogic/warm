@@ -229,7 +229,7 @@ The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores 
 supply. (`warm-python`, imported as `writerslogic_warm`, provides native vector indexes and phase vectors, but no document search.)
 
 ```sh
-cargo build --release --features server --bin warm-server
+cargo build --release --features server,security --bin warm-server
 WARM_API_KEY=change-me target/release/warm-server --input-dim 384 &
 uv pip install warm-sdk
 ```

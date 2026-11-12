@@ -55,7 +55,7 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     ```sh
     git clone https://github.com/writerslogic/warm
     cd warm
-    cargo build --release --features server --bin warm-server
+    cargo build --release --features server,security --bin warm-server
     WARM_API_KEY=change-me target/release/warm-server --input-dim 384
     ```
 

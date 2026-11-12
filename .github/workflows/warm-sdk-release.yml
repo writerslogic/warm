@@ -45,7 +45,7 @@ jobs:
         with:
           toolchain: stable
       - name: Build warm-server for the live tests
-        run: cargo build --locked --features server --bin warm-server
+        run: cargo build --locked --features server,security --bin warm-server
       - name: Test SDK against the real server
         working-directory: bindings/python/warm-sdk
         env:

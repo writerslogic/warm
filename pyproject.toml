@@ -38,7 +38,7 @@ Repository = "https://github.com/writerslogic/warm"
 # The import name is `writerslogic_warm` (matches the #[pymodule] in src/bindings/python/mod.rs);
 # the PyPI distribution name is `warm-python` (the crate name is taken on PyPI).
 module-name = "writerslogic_warm"
-features = ["python", "local-embed-download"]
+features = ["python", "security", "local-embed-download"]
 exclude = [
     { path = "benchmarks/results/**/*", format = "sdist" },
     { path = "assets/**/*", format = "sdist" },

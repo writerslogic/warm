@@ -28,7 +28,7 @@ echo "rustc: $(rustc --version --verbose | tr '\n' ' ')"
 echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH root=$root"
 
 # 1. Command line tools.
-cargo build --locked --release --features server --bin warm-eval --bin warm-server
+cargo build --locked --release --features server,security --bin warm-eval --bin warm-server
 cp target/release/warm-eval target/release/warm-server "$out/"
 
 # 2. The napi cdylib (what becomes the .node binding), without the Node loader step.

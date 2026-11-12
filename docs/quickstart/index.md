@@ -34,7 +34,7 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     ```sh
     git clone https://github.com/writerslogic/warm
     cd warm
-    cargo build --release --features server --bin warm-server
+    cargo build --release --features server,security --bin warm-server
     WARM_API_KEY=quickstart target/release/warm-server --input-dim 384 &
     WARM_API_KEY=quickstart uv run --with bindings/python/warm-sdk \
         python examples/quickstart/python/quickstart.py

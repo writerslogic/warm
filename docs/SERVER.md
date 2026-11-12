@@ -21,7 +21,7 @@ search:
 ## Build and run
 
 ```sh
-cargo build --release --features server --bin warm-server
+cargo build --release --features server,security --bin warm-server
 
 # One key valid for every tenant (the original setup):
 WARM_API_KEY="$(openssl rand -hex 32)" ./target/release/warm-server --input-dim 384
