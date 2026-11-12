@@ -874,12 +874,14 @@ impl LexicalScratch {
                         {
                             let mut kept_slots = Vec::with_capacity(length);
                             let mut kept_weights = Vec::with_capacity(length);
-                            list.for_each(|slot, frequency| {
-                                let weight = bm25.weight(idf, f64::from(frequency), norms[slot]);
-                                scores[slot] += weight;
-                                kept_slots.push(slot as u32);
-                                kept_weights.push(weight);
-                            });
+                            accumulate(
+                                list,
+                                bm25,
+                                idf,
+                                norms,
+                                scores,
+                                Some((&mut kept_slots, &mut kept_weights)),
+                            );
                             self.hot.postings += kept_slots.len();
                             self.hot.lists[form].insert(
                                 word.to_owned(),
@@ -889,9 +891,7 @@ impl LexicalScratch {
                                 }),
                             );
                         } else {
-                            list.for_each(|slot, frequency| {
-                                scores[slot] += bm25.weight(idf, f64::from(frequency), norms[slot]);
-                            });
+                            accumulate(list, bm25, idf, norms, scores, None);
                         }
                     }
                 }
@@ -901,6 +901,7 @@ impl LexicalScratch {
             let (norms, norm_epochs, touched) =
                 (&mut self.norms, &mut self.norm_epochs, &mut self.touched);
             let (epoch, complete) = (self.epoch, self.complete);
+            let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
             let mut reached = 0;
             for listed in &lists {
                 match listed {
@@ -924,7 +925,9 @@ impl LexicalScratch {
                         let score = scores[slot];
                         touched[reached] = slot as u32;
                         reached += usize::from(score == 0.0);
-                        scores[slot] = score + bm25.weight(idf, f64::from(frequency), norms[slot]);
+                        let weight =
+                            weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
+                        scores[slot] = score + weight;
                     }),
                 }
             }
@@ -943,8 +946,9 @@ impl LexicalScratch {
         // floor. One unsigned range test admits positive scores (infinity included) at or
         // above it and turns away zero, NaN and the scores below it without branching on each.
         const INFINITY: u64 = 0x7FF0_0000_0000_0000;
-        let mut floor = 1u64;
+        let floor_cell = std::cell::Cell::new(1u64);
         let mut consider = |slot: u32, score: f64| {
+            let floor = floor_cell.get();
             let bits = score.to_bits();
             if bits.wrapping_sub(floor) > INFINITY - floor {
                 return;
@@ -958,13 +962,22 @@ impl LexicalScratch {
                 return;
             }
             if best.len() == limit {
-                floor = best.peek().expect("full heap").0;
+                floor_cell.set(best.peek().expect("full heap").0);
             }
         };
         if dense {
-            for (slot, score) in scores.iter_mut().enumerate() {
-                let value = std::mem::replace(score, 0.0);
-                consider(slot as u32, value);
+            const SCAN: usize = 8;
+            for (index, chunk) in scores.chunks_mut(SCAN).enumerate() {
+                let floor = floor_cell.get();
+                let admitted = chunk.iter().fold(false, |any, score| {
+                    any | (score.to_bits().wrapping_sub(floor) <= INFINITY - floor)
+                });
+                if admitted {
+                    for (offset, score) in chunk.iter().enumerate() {
+                        consider((index * SCAN + offset) as u32, *score);
+                    }
+                }
+                chunk.fill(0.0);
             }
         } else {
             for &slot in &self.touched {
@@ -987,6 +1000,173 @@ impl LexicalScratch {
         self.dirty = false;
         candidates.clone()
     }
+}
+
+const WEIGH_BLOCK: usize = 128;
+
+/// One posting's weight: `Bm25::weight`, with its parameter test hoisted into `simple`.
+#[inline(always)]
+fn weigh_one(simple: bool, bm25: Bm25, idf: f64, tf: f64, norm: f64) -> f64 {
+    if !simple {
+        bm25.weight(idf, tf, norm)
+    } else if tf == 0.0 {
+        0.0
+    } else {
+        idf * tf * bm25.k1_plus_one / (tf + bm25.k1 * norm)
+    }
+}
+
+/// Adds each posting's BM25 weight to its slot's score, in posting order, and appends the slots
+/// and weights to `keep` when given. Postings are weighed a block at a time; every weight is
+/// the `Bm25::weight` expression evaluated on the same operands, and each slot appears once per
+/// list, so the scores are those of a posting-by-posting loop.
+fn accumulate(
+    list: &impl PostingSet,
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    scores: &mut [f64],
+    mut keep: Option<(&mut Vec<u32>, &mut Vec<f64>)>,
+) {
+    assert!(norms.len() == scores.len() && norms.len() <= i32::MAX as usize);
+    let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
+    if list.len() < WEIGH_BLOCK / 4 {
+        list.for_each(|slot, frequency| {
+            let weight = weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
+            scores[slot] += weight;
+            if let Some((kept_slots, kept_weights)) = keep.as_mut() {
+                kept_slots.push(slot as u32);
+                kept_weights.push(weight);
+            }
+        });
+        return;
+    }
+    let mut slots = [0u32; WEIGH_BLOCK];
+    let mut tfs = [0f64; WEIGH_BLOCK];
+    let mut weights = [0f64; WEIGH_BLOCK];
+    let mut filled = 0usize;
+    let mut flush = |slots: &[u32], tfs: &[f64], weights: &mut [f64]| {
+        let count = slots.len();
+        let highest = slots.iter().copied().max().unwrap_or(0) as usize;
+        assert!(
+            count == 0 || highest < norms.len(),
+            "posting slot past the store"
+        );
+        if simple {
+            // SAFETY: every slot is below `norms.len()`, checked above.
+            unsafe { weigh_simple(bm25, idf, norms, slots, tfs, weights) };
+        } else {
+            for index in 0..count {
+                weights[index] = bm25.weight(idf, tfs[index], norms[slots[index] as usize]);
+            }
+        }
+        for (&slot, &weight) in slots.iter().zip(&weights[..count]) {
+            scores[slot as usize] += weight;
+        }
+        if let Some((kept_slots, kept_weights)) = keep.as_mut() {
+            kept_slots.extend_from_slice(slots);
+            kept_weights.extend_from_slice(&weights[..count]);
+        }
+    };
+    list.for_each(|slot, frequency| {
+        slots[filled] = slot as u32;
+        tfs[filled] = f64::from(frequency);
+        filled += 1;
+        if filled == WEIGH_BLOCK {
+            flush(&slots, &tfs, &mut weights);
+            filled = 0;
+        }
+    });
+    if filled > 0 {
+        flush(&slots[..filled], &tfs[..filled], &mut weights);
+    }
+}
+
+/// `weights[i] = bm25.weight(idf, tfs[i], norms[slots[i]])` for the default saturation form
+/// `idf * tf * (k1 + 1) / (tf + k1 * norm)`, with 0 where `tf` is 0.
+///
+/// # Safety
+/// Every slot must index `norms`.
+#[inline]
+unsafe fn weigh_simple(
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    slots: &[u32],
+    tfs: &[f64],
+    weights: &mut [f64],
+) {
+    #[cfg(target_arch = "x86_64")]
+    if is_x86_feature_detected!("avx2") {
+        // SAFETY: the feature is present; the slot invariant is the caller's.
+        return unsafe { weigh_simple_avx2(bm25, idf, norms, slots, tfs, weights) };
+    }
+    // SAFETY: the slot invariant is the caller's.
+    unsafe { weigh_simple_generic(bm25, idf, norms, slots, tfs, weights) }
+}
+
+#[inline(always)]
+unsafe fn weigh_simple_generic(
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    slots: &[u32],
+    tfs: &[f64],
+    weights: &mut [f64],
+) {
+    for index in 0..slots.len() {
+        let tf = tfs[index];
+        // SAFETY: the caller guarantees the slot indexes `norms`.
+        let norm = unsafe { *norms.get_unchecked(slots[index] as usize) };
+        let weight = idf * tf * bm25.k1_plus_one / (tf + bm25.k1 * norm);
+        weights[index] = f64::from_bits(weight.to_bits() & u64::from(tf != 0.0).wrapping_neg());
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn weigh_simple_avx2(
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    slots: &[u32],
+    tfs: &[f64],
+    weights: &mut [f64],
+) {
+    use std::arch::x86_64::*;
+    let count = slots.len();
+    let (idf_v, k1p1_v, k1_v) = (
+        _mm256_set1_pd(idf),
+        _mm256_set1_pd(bm25.k1_plus_one),
+        _mm256_set1_pd(bm25.k1),
+    );
+    let zero = _mm256_setzero_pd();
+    let mut index = 0;
+    while index + 4 <= count {
+        // SAFETY: four slots, tfs and weights are in range; the slots index `norms`.
+        unsafe {
+            let at = _mm_loadu_si128(slots.as_ptr().add(index).cast());
+            let norm = _mm256_i32gather_pd::<8>(norms.as_ptr(), at);
+            let tf = _mm256_loadu_pd(tfs.as_ptr().add(index));
+            let numerator = _mm256_mul_pd(_mm256_mul_pd(idf_v, tf), k1p1_v);
+            let denominator = _mm256_add_pd(tf, _mm256_mul_pd(k1_v, norm));
+            let weight = _mm256_div_pd(numerator, denominator);
+            let weight = _mm256_and_pd(weight, _mm256_cmp_pd::<_CMP_NEQ_OQ>(tf, zero));
+            _mm256_storeu_pd(weights.as_mut_ptr().add(index), weight);
+        }
+        index += 4;
+    }
+    // SAFETY: the slot invariant is the caller's.
+    unsafe {
+        weigh_simple_generic(
+            bm25,
+            idf,
+            norms,
+            &slots[index..],
+            &tfs[index..],
+            &mut weights[index..],
+        )
+    };
 }
 
 struct FilteredPostings<'a> {
