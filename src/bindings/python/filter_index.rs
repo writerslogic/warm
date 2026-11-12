@@ -73,7 +73,7 @@ impl PyFilteredIndex {
     /// `bitset_min` members a membership bitset; labels with an inverted file and at least
     /// `copy_min` members keep their rows copied in list order. `threads` bounds build and search (0 = all).
     #[new]
-    #[pyo3(signature = (data, indptr, indices, labels=0, ivf_min=20_000, cluster_size=1_000, max_lists=1_024, bitset_min=20_000, kmeans_iters=6, train_per_list=48, copy_min=usize::MAX, threads=0))]
+    #[pyo3(signature = (data, indptr, indices, labels=0, ivf_min=20_000, cluster_size=1_000, max_lists=1_024, bitset_min=20_000, kmeans_iters=6, train_per_list=48, copy_min=usize::MAX, pq_m=0, pq_sample=100_000, pq_iters=8, threads=0))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         py: Python<'_>,
@@ -88,6 +88,9 @@ impl PyFilteredIndex {
         kmeans_iters: usize,
         train_per_list: usize,
         copy_min: usize,
+        pq_m: usize,
+        pq_sample: usize,
+        pq_iters: usize,
         threads: usize,
     ) -> PyResult<Self> {
         let (rows, n, dim) = u8_rows(&data);
@@ -109,6 +112,9 @@ impl PyFilteredIndex {
             kmeans_iters,
             train_per_list,
             copy_min,
+            pq_m,
+            pq_sample,
+            pq_iters,
             ..FilterBuildParams::default()
         };
         let build = || FilteredIndex::build(&rows, dim, &ptr, &ids, labels, &params);
@@ -137,7 +143,7 @@ impl PyFilteredIndex {
     /// deleted; `cache_intersections` reuses the matches of a repeated label set; `prefetch` is
     /// the row prefetch distance; `wide` uses 512-bit VNNI. `target_mid`/`target_large` replace
     /// `target` for rarest labels above `edge_mid`/`edge_large` members (0 keeps it).
-    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, target_mid=0, target_large=0, edge_mid=50_000, edge_large=200_000))]
+    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, target_mid=0, target_large=0, edge_mid=50_000, edge_large=200_000, rerank=0))]
     #[allow(clippy::too_many_arguments)]
     fn set_search(
         &mut self,
@@ -155,6 +161,7 @@ impl PyFilteredIndex {
         target_large: usize,
         edge_mid: usize,
         edge_large: usize,
+        rerank: usize,
     ) {
         self.index.set_tuning(FilterTuning {
             sort_queries,
@@ -171,6 +178,7 @@ impl PyFilteredIndex {
             target,
             min_lists,
             intersect_max,
+            rerank,
         };
     }
 
