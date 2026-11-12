@@ -11,6 +11,7 @@ can change in any release.
 | Feature | What it turns on | Status | Network code | Docs |
 |---|---|---|---|---|
 | `security` | AES-256-GCM encrypted stores, Argon2 passphrase keys, Ed25519-signed audit logs | stable | no | [Security](../SECURITY.md), [Encryption format](../file-format/ENCRYPTION.md) |
+| `keychain` | macOS login-keychain provider for the sealed container master key; implies `security` | experimental | no | `core::sealed` |
 | `provenance` | COSE_Sign1 signed statements and DID identities; implies `security` | experimental | no | [Privacy](../PRIVACY.md) |
 | `provenance-scitt` | Experimental statement submission returning unverified receipt bytes; no VDS inclusion/trust verification; implies `provenance` | experimental | yes (`ureq`), only when you call it | [FAQ](faq.md) |
 | `server` | `warm-server`, a self-hosted HTTP service for the Python SDK and multi-process access | stable | listens only on the address you give it | [Server](../SERVER.md) |

@@ -3,6 +3,7 @@
 """`warm-bench` command line."""
 
 import argparse
+import os
 import sys
 
 from . import envs, registry, runner, server_registry, server_runner, table
@@ -22,6 +23,7 @@ def main(argv=None):
     run.add_argument("--datasets", nargs="*", help="restrict to these dataset names")
     run.add_argument("--builds", nargs="*", metavar="SYSTEM:BUILD",
                      help="ANN only: restrict a comparator to these builds (systems not named keep all builds)")
+    run.add_argument("--encryption", choices=["default", "on", "off"], help="encryption at rest for the WARM store (sets WARM_ENCRYPTION; recorded in the result JSON)")
     run.add_argument("--rounds", type=int)
     run.add_argument("--build-repeats", type=int)
     run.add_argument("--mode", choices=["embedded", "server", "all"], default=None,
@@ -47,6 +49,8 @@ def main(argv=None):
         for key, why in registry.NOT_RUN.items():
             print(f"not run: {key}: {why}")
     elif a.cmd == "run":
+        if a.encryption:
+            os.environ["WARM_ENCRYPTION"] = a.encryption
         spec = {**runner.SUITES[a.suite], "name": a.suite}
         if a.rounds:
             spec["rounds"] = a.rounds

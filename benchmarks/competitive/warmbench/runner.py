@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 from . import SCHEMA_VERSION, data, envs, jars, registry, textdata
-from .common import CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, pass_summary, run_measured, write_json
+from .common import CACHE, RESULTS, ROOT, commit, dir_bytes, encryption, hardware, log, pass_summary, run_measured, write_json
 
 WORK = Path(os.environ.get("WARM_BENCH_WORK", CACHE / "competitive" / "work"))
 WORKER_DIR = Path(__file__).resolve().parent
@@ -56,9 +56,10 @@ WARM_PROFILE = "dist"
 def warm_binary(name, example=False):
     target = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "target"))
     path = target / WARM_PROFILE / ("examples" if example else "") / name
-    if not path.exists():
+    secure = encryption()["switch"] == "on"
+    if secure or not path.exists():
         log(f"building {name}")
-        cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc", "--example" if example else "--bin", name]
+        cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc,security" if secure else "cli,mimalloc", "--example" if example else "--bin", name]
         subprocess.run(cmd, check=True, cwd=ROOT)
     return path
 
@@ -110,7 +111,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
     threads = spec["threads"]
     hw = hardware()
     results = {"schema_version": SCHEMA_VERSION, "kind": "ann", "suite": spec["name"], "commit": commit(), "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-               "hardware": hw, "dataset": {k: meta[k] for k in ("name", "metric", "n_train", "n_test", "dim") if k in meta} | {
+               "hardware": hw, "encryption": encryption(), "dataset": {k: meta[k] for k in ("name", "metric", "n_train", "n_test", "dim") if k in meta} | {
                    "subset_of": meta.get("subset_of"), "train_sha256": meta.get("train_sha256"), "test_sha256": meta.get("test_sha256")},
                "protocol": {"k": 10, "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "build_threads": threads,
                             "search_threads": 1, "queries": meta["n_test"],
@@ -340,7 +341,7 @@ def run_text(dataset, spec, systems, out_path=None):
     meta = json.loads((folder / "meta.json").read_text())
     hw = hardware()
     results = {"schema_version": SCHEMA_VERSION, "kind": "text", "suite": spec["name"], "commit": commit(), "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-               "hardware": hw, "dataset": meta | {"id": dataset},
+               "hardware": hw, "encryption": encryption(), "dataset": meta | {"id": dataset},
                "protocol": {"measurement_version": 2, "resampling_unit": "independent process-round summaries", "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied", "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "k": 100, "passes_per_round": 3,
                             "retrieval": "lexical only, OR over the lowercase alphanumeric query word set, top 100; each system's own analyzer and default BM25",
                             "timing": "one query at a time, single client thread; WARM timed inside its process, Python systems inside their worker",

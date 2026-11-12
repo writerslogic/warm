@@ -67,6 +67,21 @@ def hardware():
     }
 
 
+ENCRYPTION_CHOICES = ("default", "on", "off")
+
+
+def encryption():
+    """Encryption at rest of the WARM store for this run, from the WARM_ENCRYPTION switch.
+
+    `on` builds WARM with the `security` feature and encrypts; `off` stores plaintext;
+    `default` builds as before (no `security`), which is plaintext for the benchmark binaries.
+    """
+    switch = os.environ.get("WARM_ENCRYPTION", "default").strip().lower() or "default"
+    if switch not in ENCRYPTION_CHOICES:
+        raise SystemExit(f"WARM_ENCRYPTION must be one of {ENCRYPTION_CHOICES}, got {switch!r}")
+    return {"switch": switch, "effective": "aes-256-gcm" if switch == "on" else "plaintext"}
+
+
 def commit():
     if os.environ.get("WARM_BENCH_COMMIT"):  # a shipped source tree has no .git
         return os.environ["WARM_BENCH_COMMIT"]

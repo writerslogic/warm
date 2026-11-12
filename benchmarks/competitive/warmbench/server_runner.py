@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 from . import SCHEMA_VERSION, data, envs, registry, server_proc, servers, textdata
-from .common import CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, run_measured, write_json
+from .common import CACHE, RESULTS, ROOT, commit, dir_bytes, encryption, hardware, log, run_measured, write_json
 from .runner import WORK, _parse_result, _quality, _rotate
 from .server_registry import DURABILITY, DURABILITY_CLASS, ENV, WARM_SERVER
 
@@ -108,7 +108,7 @@ def _provenance(results):
 
 def _base(kind, spec, hw, dataset_meta):
     return {"schema_version": SCHEMA_VERSION, "kind": kind, "mode": "server", "reference": WARM_SERVER, "suite": spec["name"], "commit": commit(),
-            "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "hardware": hw, "dataset": dataset_meta,
+            "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "hardware": hw, "encryption": encryption(), "dataset": dataset_meta,
             "facts": registry.FACTS, "timing_boundary": registry.TIMING_BOUNDARY, "not_run": registry.NOT_RUN, "systems": {}, "skipped": {},
             "platform": f"{platform.system()} {platform.machine()}"}
 

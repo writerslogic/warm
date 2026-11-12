@@ -108,6 +108,7 @@ tokio-util = { version = "0.7", optional = true }
 libm = { version = "0.2", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+security-framework = { version = "3", default-features = false, optional = true }
 candle-core = { version = "0.11.1", features = ["metal"], optional = true }
 candle-nn = { version = "0.11.1", features = ["metal"], optional = true }
 candle-transformers = { version = "0.11.1", features = ["metal"], optional = true }
@@ -184,7 +185,9 @@ node-api = ["napi", "napi-derive", "tokio", "tokio/rt", "napi-build", "dep:ts-rs
 # wheels with `maturin build --features python`; publishing is wired in
 # .github/workflows/publish-pypi.yml and dormant until a `py-v*` tag is pushed.
 python = ["pyo3", "dep:numpy"]
-security = ["ed25519-dalek", "zeroize", "aes-gcm", "aes-gcm/zeroize", "argon2", "sha2"]
+# macOS login keychain for the master key (other platforms use the key file).
+keychain = ["security", "dep:security-framework"]
+security = ["ed25519-dalek", "zeroize", "aes-gcm", "aes-gcm/zeroize", "argon2", "sha2", "subtle"]
 provenance = ["security", "dep:parking_lot", "coset", "ciborium", "bs58", "multibase", "dep:serde_json_canonicalizer", "dep:flate2", "dep:http"]
 provenance-scitt = ["provenance", "ureq"]
 # Experimental VSA research modules (algebraic_codebook, block_codes, bloom_memory,

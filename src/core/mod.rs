@@ -79,6 +79,8 @@ pub(crate) mod role;
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod rules;
 #[cfg(not(target_arch = "wasm32"))]
+pub mod sealed;
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod security;
 #[cfg(not(target_arch = "wasm32"))]
 pub use index::sparse_impact;
