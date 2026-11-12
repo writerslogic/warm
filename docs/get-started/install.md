@@ -59,8 +59,10 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     WARM_API_KEY=change-me target/release/warm-server --input-dim 384
     ```
 
-    The `warm-python` wheel provides native vector search and phase vectors,
-    imported as `writerslogic_warm`. It does not include document search.
+    The `warm-python` wheel runs the engine in-process, imported as `writerslogic_warm`: `Warm`
+    provides document search (`memorize_document`, `search_documents`), the memory API
+    (`remember`, `recall`, `forget`, `explain`) and vector search, next to the native vector
+    indexes and phase vectors.
 
     ```sh
     uv pip install warm-python
