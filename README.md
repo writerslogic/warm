@@ -80,7 +80,7 @@ protocols, not a substitute for testing your own data.
 | SIFT-1M index file 1,389 MiB against hnswlib's 752 (0.54x, no interval); peak build RSS 0.94x of hnswlib's | Same run as the SIFT-1M row above | [COMPARISON.md](docs/benchmarks/COMPARISON.md) (index size), [`GAPS.md`](docs/benchmarks/GAPS.md) (build RSS) |
 | BEIR FiQA (57,600 documents) single-thread BM25 QPS: 1,269 against Lucene 10.6's 1,625 (0.78x); p50 and p99 latency also behind | Core Ultra 9 185H at `4b7a849f`, 5 interleaved serve rounds; serving memory (1.26x less than SQLite FTS5) and cold start (2.37x faster than tantivy) still win | [`standard-text-beir-fiqa-...-185h-22c-27g.json`](benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json), [COMPARISON.md](docs/benchmarks/COMPARISON.md) |
 | Text ingest: peak build memory 1.1x to 2.1x SQLite FTS5's on every corpus; ingest time behind SQLite FTS5 on SciFact, NFCorpus and memory (0.46x to 0.97x), tied on FiQA | Same runs, both machines | [`docs/benchmarks/GAPS.md`](docs/benchmarks/GAPS.md) |
-| glove-100-angular with the sparse vector path: recall@10 0.252 at 33.7 QPS against FAISS HNSW 0.832 at 4,111 QPS | One thread, Apple M4; the sparse path is experimental | [`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json) |
+| glove-100-angular through `memorize_vector` / `query_vector` (vertex graph, fixed ef 128): recall@10 0.859 at 2,092 QPS, against hnswlib 0.831 at 3,368 QPS and FAISS HNSW 0.832 at 4,111 QPS (higher recall, lower QPS) | One thread, Apple M4; one operating point, no sweep; includes exact-cosine scoring of the returned ids | [`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json) |
 
 Method, intervals and every loss: [docs/benchmarks](docs/benchmarks/README.md) and the
 [benchmarks pages](https://writerslogic.com/warm/docs/latest/benchmarks/).
@@ -226,7 +226,9 @@ main().catch(error => { console.error(error); process.exit(1) })
 <summary><strong>Server and Python</strong></summary>
 
 The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores vectors you
-supply. (`warm-python`, imported as `writerslogic_warm`, provides native vector indexes and phase vectors, but no document search.)
+supply. For in-process use without a server, `warm-python` (imported as `writerslogic_warm`)
+provides `Warm`: document search, the memory API (`remember`, `recall`, `forget`, `explain`) and
+vector search, next to the native vector indexes and phase vectors.
 
 ```sh
 cargo build --release --features server --bin warm-server
@@ -291,7 +293,7 @@ network, run `cargo run --example demo-offline-agent`.
 | Conversation memory (`conversation-memory`) | Ships | Bounded context with exact source provenance; native recall not yet benchmarked on LongMemEval end to end |
 | Meaning memory: triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on synthetic and 2,120-fact sets ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
 | Union-bundle membership (`experimental`) | Research | At D = 16,384: positive gap to N = 500 (4% false positives), tested to 2,500 ([`benchmark_scaling_results.json`](benchmarks/results/benchmark_scaling_results.json)) |
-| Sparse vector index (`memorize_vector`) | Experimental | Not competitive with HNSW ([results](#where-its-behind)) |
+| Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS, below hnswlib's QPS ([results](#where-its-behind)). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
 | Encrypted stores (`security`) | Ships | AES-256-GCM, Argon2id; covers the log, index caches and the text segment. Metadata, file names and sizes are not encrypted |
 | Signed audit log, credential-gated access, COSE/SCITT/C2PA (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented |
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |

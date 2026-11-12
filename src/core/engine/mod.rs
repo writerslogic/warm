@@ -9,6 +9,7 @@ pub use background_compaction::{
 };
 mod compaction;
 pub(crate) mod concepts;
+mod dense_vectors;
 mod document_api;
 mod document_batch;
 #[cfg(feature = "local-embed")]
@@ -127,6 +128,7 @@ pub struct WarmCore {
     image: image::ImageState,
     /// Snapshot answering unfiltered vector queries (`search_vectors`); built by maintenance.
     vector_index: super::documents::VectorIndexSlot,
+    dense: dense_vectors::DenseVectors,
     #[cfg(feature = "local-models")]
     model_stages: RwLock<Option<Arc<crate::core::models::ModelStages>>>,
     #[cfg(feature = "local-embed")]
@@ -201,6 +203,7 @@ impl WarmCore {
 
         let store_lock = StoreLock::acquire(&base_path)?;
         let (schema, analyzer) = super::schema::validate_store(&base_path, dim, &config)?;
+        let dense = dense_vectors::DenseVectors::open(&base_path)?;
 
         let arena = PersistentArena::new(base_path.join("vectors_data.bin"))?;
 
@@ -329,6 +332,7 @@ impl WarmCore {
             documents: RwLock::new(super::documents::DocumentStore::opened()),
             image: image::ImageState::default(),
             vector_index: super::documents::VectorIndexSlot::default(),
+            dense,
             #[cfg(feature = "local-models")]
             model_stages: RwLock::new(None),
             #[cfg(feature = "local-embed")]
@@ -945,13 +949,6 @@ impl WarmCore {
         self.revision
             .fetch_add(1, std::sync::atomic::Ordering::Release);
         self.persist_indices(&self.shards.read())
-    }
-
-    /// Convert a dense f32 vector to sparse and memorize it.
-    pub fn memorize_vector(&self, id: String, dense: &[f32]) -> Result<()> {
-        self.validate_dense(dense)?;
-        let vector = EntangledHVec::from_dense(dense, self.dimensions);
-        self.memorize(id, vector)
     }
 
     /// Encode a bounded scalar value as a hypervector and memorize it.

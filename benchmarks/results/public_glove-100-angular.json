@@ -270,52 +270,34 @@
   "hms": [
     {
       "build": {
-        "encode_secs_parallel": 265.150847125,
-        "insert_secs": 31.1669335,
-        "rss_bytes_after_build": 2535211008
-      },
-      "environment": {
-        "arch": "aarch64",
-        "cpu": "Apple M4",
-        "hms_version": "0.6.1",
-        "load_average": "{ 5.47 10.83 15.60 }",
-        "os": "macos",
-        "rayon_threads": 10
-      },
-      "experimental_prefilter": {
-        "candidates": 100,
-        "note": "fraction of the true top-10 inside the sparse top-100; an exact re-rank of those candidates would return this recall. Not a shipped path.",
-        "recall_at_10": 0.53583
+        "build_secs": 478.189187125,
+        "rss_bytes_after_build": 2894364672
       },
       "k": 10,
       "n_queries": 10000,
-      "path": "raw sparse vector: EntangledHVec::from_dense + HmsCore::query (inverted index)",
-      "qps_single_thread": 33.66407564267377,
-      "query_encode": {
-        "mean_us": 1096.4548886999964,
-        "p50_us": 1010.0,
-        "p95_us": 1299.458,
-        "p99_us": 2609.583
-      },
-      "query_search": {
-        "mean_us": 28608.80155780005,
-        "p50_us": 25743.584,
-        "p95_us": 53912.334,
-        "p99_us": 94184.708
-      },
+      "path": "WarmCore::memorize_vectors / query_vector (vertex graph index, exact-cosine scores)",
+      "qps_single_thread": 2091.9833992205427,
       "query_total": {
-        "mean_us": 29705.256446499985,
-        "p50_us": 26762.624999999996,
-        "p95_us": 55528.75,
-        "p99_us": 96115.58300000001
+        "mean_us": 478.01526550000085,
+        "p50_us": 267.209,
+        "p95_us": 1414.4579999999999,
+        "p99_us": 4122.625
       },
-      "recall_at_10": 0.25213,
-      "sparse_dim": 16384
+      "recall_at_10": 0.85938,
+      "sparse_dim": 16384,
+      "environment": {
+        "arch": "aarch64",
+        "cpu": "Apple M4",
+        "load_average": "{ 46.87 31.20 17.87 }",
+        "os": "macos",
+        "rayon_threads": 10,
+        "warm_version": "0.6.6"
+      }
     }
   ],
   "notes": [
     "Queries run single-threaded one at a time for every system; builds use all cores.",
-    "HMS takes dense input through its sparse encoder; its latency includes encoding (query_total).",
-    "hnswlib index_bytes is an estimate (vectors + level-0 links); FAISS sizes are serialized bytes."
+    "hnswlib index_bytes is an estimate (vectors + level-0 links); FAISS sizes are serialized bytes.",
+    "WARM runs memorize_vectors / query_vector (vertex graph, ef 128, rerank 64, degree 32, build_ef 200); its latency is one query_vector call on dense input. Re-measured on the same machine class; competitor rows are from the earlier run."
   ]
 }
