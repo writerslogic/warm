@@ -20,9 +20,9 @@ const modes = [{ name: 'default', source: path.join(prior, 'fixtures/glove-10000
 const identity = tree => tree.files.filter(file => path.basename(file.path) !== '.hms.lock').map(({ path, bytes, sha256 }) => ({ path, bytes, sha256 }))
 await fs.mkdir(root)
 const packagePath = path.join(root, 'package'); await fs.mkdir(packagePath)
-for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'warm-sdk.node']) await fs.copyFile(path.join(repo, name), path.join(packagePath, name), fs.constants.COPYFILE_EXCL)
-const addon = path.join(packagePath, 'warm-sdk.node'), packageHashes = {}
-for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'warm-sdk.node']) packageHashes[name] = await sha256(path.join(packagePath, name))
+for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'writerslogic-warm.node']) await fs.copyFile(path.join(repo, name), path.join(packagePath, name), fs.constants.COPYFILE_EXCL)
+const addon = path.join(packagePath, 'writerslogic-warm.node'), packageHashes = {}
+for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'writerslogic-warm.node']) packageHashes[name] = await sha256(path.join(packagePath, name))
 const artifacts = [['UPDATE-PLAN.md', 'UPDATE-PLAN.md'], ['update-run.mjs', 'update-run.mjs'], ['update-worker.mjs', 'update-worker.mjs'], ['update-test.mjs', 'update-test.mjs'], ['../../public/vectra_comparison/vector-worker.mjs', 'harness/vector-worker.mjs'], ['../../public/vectra_comparison/oracle-vector.mjs', 'harness/oracle-vector.mjs'], ['../../public/vectra_comparison/vector-receipts.mjs', 'harness/vector-receipts.mjs']]
 const sourceHashes = {}
 for (const [source, name] of artifacts) { const target = path.join(root, name); await fs.mkdir(path.dirname(target), { recursive: true }); await fs.copyFile(path.join(here, source), target, fs.constants.COPYFILE_EXCL); sourceHashes[name] = await sha256(target) }

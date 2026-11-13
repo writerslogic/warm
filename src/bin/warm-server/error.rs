@@ -76,11 +76,7 @@ pub const CODES: &[(&str, u16, &str)] = &[
         "Concurrent mutation; retry required",
     ),
     ("tenant_limit", 503, "Too many open tenants"),
-    (
-        "tenant_busy",
-        503,
-        "Tenant store is being snapshotted or restored",
-    ),
+    ("tenant_busy", 503, "Tenant store is temporarily busy"),
     ("shutting_down", 503, "Server shutting down"),
     ("not_implemented", 501, "Not implemented"),
 ];

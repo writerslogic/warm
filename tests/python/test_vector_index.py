@@ -5,12 +5,83 @@
 Run against an installed build of the extension:
     maturin develop --release && pytest tests/python
 """
+import sys
+
 import numpy as np
 import pytest
 
 import writerslogic_warm as hm
 
 N, DIM, K = 4000, 48, 10
+
+
+@pytest.mark.parametrize("bits", [4, 8])
+@pytest.mark.parametrize("scale", [np.finfo(np.float32).max, 1e30, 1e-30, 1e-40])
+def test_cosine_query_scaling_preserves_complete_ranking(bits, scale):
+    base = np.eye(16, dtype=np.float32)
+    index = hm.VectorIndex("angular", degree=4, build_ef=32, threads=1, code_bits=bits)
+    index.fit(base)
+    index.set_query_arguments(ef=16, rerank=16)
+    query = np.arange(1, 17, dtype=np.float32) / 16 * np.float32(scale)
+    assert np.isfinite(query).all()
+    expected = np.argsort(-query.astype(np.float64), kind="stable")
+    np.testing.assert_array_equal(index.query(query, 16), expected)
+    np.testing.assert_array_equal(index.batch_query_array(query[None], 16)[0], expected)
+
+
+@pytest.mark.parametrize("k", [15, 16, 17, sys.maxsize])
+def test_requested_count_larger_than_index_does_not_overallocate(k):
+    rows = np.random.default_rng(898).normal(size=(16, 16)).astype(np.float32)
+    index = hm.VectorIndex("euclidean", degree=4, build_ef=16, threads=1)
+    index.fit(rows)
+    index.set_query_arguments(ef=16, rerank=16)
+    expected = index.query(rows[0], min(k, len(rows)))
+    np.testing.assert_array_equal(index.query(rows[0], k), expected)
+    np.testing.assert_array_equal(index.batch_query(rows[:1], k)[0], expected)
+
+
+@pytest.mark.parametrize("rows", [0, 1, 2, 3])
+@pytest.mark.parametrize("offset", [-1, 0, 1])
+def test_batch_result_byte_size_overflow_is_rejected(rows, offset):
+    index = hm.VectorIndex("euclidean", degree=2, build_ef=4, threads=1)
+    base = np.eye(4, dtype=np.float32)
+    index.fit(base)
+    k = sys.maxsize // 8 + offset
+    if rows == 0 and offset <= 0:
+        assert index.batch_query_array(base[:rows], k).shape == (0, k)
+        return
+    if k <= sys.maxsize // 8 and rows * k <= sys.maxsize // 8:
+        # This shape fits in usize but still cannot be allocated; reserve must fail without a panic.
+        expected = MemoryError
+    else:
+        expected = ValueError
+    with pytest.raises(expected):
+        index.batch_query_array(base[:rows], k)
+
+
+@pytest.mark.parametrize("offset", [-1, 0, 1])
+def test_updatable_result_byte_size_overflow_is_rejected(tmp_path, offset):
+    index = hm.UpdatableIndex.create(tmp_path / "index", 4, degree=2, build_ef=4, threads=1)
+    k = sys.maxsize // 8 + offset
+    expected = MemoryError if offset <= 0 else ValueError
+    with pytest.raises(expected):
+        index.search(np.ones((1, 4), dtype=np.float32), k)
+
+
+@pytest.mark.parametrize("dim", [133143, 133144, 133145, 262144])
+def test_wide_eight_bit_search_does_not_reverse_cosine_order(dim):
+    rows = np.ones((4, dim), dtype=np.float32)
+    rows[1, 1::2] = -1
+    rows[2] = -rows[0]
+    rows[3] = -rows[1]
+    index = hm.VectorIndex("angular", degree=2, build_ef=4, threads=1, code_bits=8)
+    index.fit(rows)
+    index.set_query_arguments(ef=4, rerank=0)
+    result = index.query(rows[0], 4)
+    assert result[0] == 0
+    assert result[-1] == 2
+    index.set_query_arguments(ef=1, rerank=1)
+    np.testing.assert_array_equal(index.query(rows[0], 1), [0])
 
 
 @pytest.mark.parametrize("metric", ["angular", "euclidean", "ip"])

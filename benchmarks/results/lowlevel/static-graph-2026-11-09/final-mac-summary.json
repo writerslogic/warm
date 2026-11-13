@@ -1,0 +1,110 @@
+[
+  {
+    "ef": 120,
+    "median_us": {
+      "candidate-b0": 116.4275625,
+      "control-b0": 119.0623125,
+      "integrated-b0": 112.5425625,
+      "integrated-b1": 108.879208,
+      "prefetch-only-b0": 117.33752100000001
+    },
+    "speedups": {
+      "candidate-b0": 1.0226299507043275,
+      "control-b0": 1.0,
+      "integrated-b0": 1.0579314159476332,
+      "integrated-b1": 1.0935266217219362,
+      "prefetch-only-b0": 1.0146994029301164
+    },
+    "all_digest_match": true
+  },
+  {
+    "ef": 150,
+    "median_us": {
+      "candidate-b0": 144.013104,
+      "control-b0": 148.3827915,
+      "integrated-b0": 137.75804200000002,
+      "integrated-b1": 137.0147295,
+      "prefetch-only-b0": 143.877375
+    },
+    "speedups": {
+      "candidate-b0": 1.0303422909348583,
+      "control-b0": 1.0,
+      "integrated-b0": 1.0771261651642812,
+      "integrated-b1": 1.0829696342976032,
+      "prefetch-only-b0": 1.0313142806504496
+    },
+    "all_digest_match": true
+  },
+  {
+    "ef": 200,
+    "median_us": {
+      "candidate-b0": 185.14012549999998,
+      "control-b0": 188.261146,
+      "integrated-b0": 179.358229,
+      "integrated-b1": 175.56743799999998,
+      "prefetch-only-b0": 187.91345850000002
+    },
+    "speedups": {
+      "candidate-b0": 1.0168576125330542,
+      "control-b0": 1.0,
+      "integrated-b0": 1.0496376277221158,
+      "integrated-b1": 1.0723010379635431,
+      "prefetch-only-b0": 1.0018502533175397
+    },
+    "all_digest_match": true
+  },
+  {
+    "ef": 400,
+    "median_us": {
+      "candidate-b0": 357.4019375,
+      "control-b0": 353.849229,
+      "integrated-b0": 352.00027099999994,
+      "integrated-b1": 338.98575,
+      "prefetch-only-b0": 358.65045799999996
+    },
+    "speedups": {
+      "candidate-b0": 0.9900596271949421,
+      "control-b0": 1.0,
+      "integrated-b0": 1.0052527175469137,
+      "integrated-b1": 1.043846913918948,
+      "prefetch-only-b0": 0.9866130688169928
+    },
+    "all_digest_match": true
+  },
+  {
+    "ef": 600,
+    "median_us": {
+      "candidate-b0": 521.8126875,
+      "control-b0": 521.203312,
+      "integrated-b0": 518.8751665,
+      "integrated-b1": 494.653875,
+      "prefetch-only-b0": 510.0955
+    },
+    "speedups": {
+      "candidate-b0": 0.9988321949339339,
+      "control-b0": 1.0,
+      "integrated-b0": 1.0044869087023458,
+      "integrated-b1": 1.0536727565310187,
+      "prefetch-only-b0": 1.0217759458768014
+    },
+    "all_digest_match": true
+  },
+  {
+    "ef": 800,
+    "median_us": {
+      "candidate-b0": 721.3308334999999,
+      "control-b0": 696.6745834999999,
+      "integrated-b0": 690.219292,
+      "integrated-b1": 642.9786459999999,
+      "prefetch-only-b0": 675.0552084999999
+    },
+    "speedups": {
+      "candidate-b0": 0.9658183889348465,
+      "control-b0": 1.0,
+      "integrated-b0": 1.0093525225603226,
+      "integrated-b1": 1.0835112298581686,
+      "prefetch-only-b0": 1.032026084278409
+    },
+    "all_digest_match": true
+  }
+]

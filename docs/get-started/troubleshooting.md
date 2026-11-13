@@ -21,7 +21,17 @@ uv run --with warm-sdk python -c "from writerslogic_warm_sdk import WarmClient; 
 If this works but your application fails, compare the interpreter and environment used to run it.
 The SDK is an HTTP client; a successful import does not mean the server is running.
 
-## Node cannot load the native module
+## JavaScript package or API mismatch
+
+The portable `warm-sdk` exports `WarmClient` and calls a separately running server.
+`WarmMemorySystem`, `DocumentMemory` and the native subpaths belong to `writerslogic-warm`.
+There is no `warm-sdk/embedded` export. For a published portable client release, use
+`npm install warm-sdk@0.2.1`; check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
+The [installation guide](install.md) also covers source builds and the optional embedded engine.
+
+## Embedded Node cannot load the native module
+
+This applies to `writerslogic-warm`; the portable client loads no native module.
 
 Build from the repository root with a Rust toolchain installed:
 
@@ -37,7 +47,7 @@ The quickstart also uses `node:sqlite`, so run it with Node 24 or newer.
 ## Connection refused or authentication rejected
 
 1. Confirm `warm-server` is running and that the client URL matches its listening address.
-2. Use the same API key in `WARM_API_KEY` on the server and `api_key` in the client.
+2. Use the same API key in `WARM_API_KEY` on the server and `apiKey` (JavaScript) or `api_key` (Python).
 3. Confirm the tenant ID is the same for ingestion and querying.
 
 Do not paste API keys into issue reports. For authorization rules and tenant isolation, use the

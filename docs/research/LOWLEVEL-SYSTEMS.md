@@ -124,3 +124,208 @@ The killed arms' code is not on main. Build commit `46740d6a` to rerun them. It 
 - the replay driver's `--place` flag.
 
 The read-only `PartitionIndex.centres()` and `lists_of()` diagnostics stay, because `audit.py` needs them. The read-ahead arm is a patch to the big-ann fork's `streaming_io.py` (`scripts/lowlevel/fork-streaming-io-readahead.patch`). It is not applied, because its full-run gain (-0.5%, n=1) cannot move the submitted nprobe.
+
+## Static graph follow-up: 2026-11-09
+
+This investigation accompanies [VectorDBBench PR 898](https://github.com/zilliztech/VectorDBBench/pull/898).
+It examines memory traffic, integer width, floating-point scaling, persisted
+identity and Python allocation boundaries. Control is `431722cf`; final native
+source is `4299b539`, with the snapshot publisher protocol at `699c480e`.
+The released adapter is `dcondrey/VectorDBBench:4c6bdb5`, pinned to
+`warm-python==0.6.4`. New core features are unreleased. Streaming and filter Azure
+runs retain their independent frozen pins.
+
+### Protocol and scope
+
+Development and compilation use owned Apple M4 and Intel Core Ultra 9 185H hosts.
+Paid cloud resources execute frozen full live benchmarks only. Full harness runs
+use Cohere 1M × 768D cosine, all 1,000 queries, k=100, nq=1, M=16 (degree 32),
+build_ef=300, ef=rerank=150 and concurrency 1/5/10 for 30 seconds each.
+Source patches, input hashes, raw results and reproduction scripts are in
+[`benchmarks/results/lowlevel/static-graph-2026-11-09/`](../../benchmarks/results/lowlevel/static-graph-2026-11-09/).
+The source-commit map records a DCO/signature rewrite: each measured old commit
+and its replacement have exactly the same Git tree.
+
+Historical Cohere public queries were already exposed. Seed 898 divides them
+into 500 development and 500 confirmation queries, but does **not** make either
+partition an untouched holdout. No quality settings from this investigation
+are adopted: ef=150 remains the existing setting. Speed transformations retain
+score arithmetic and are checked against complete ordered-ID digests, including
+ties. Synthetic and extreme-input tests use independent exact or float64
+oracles. These checks establish specified behavior, not universal generalization.
+
+### Changes and counterexamples
+
+- Paired 4-bit primary/8-bit residual reranking shares float-query loads while
+  retaining sixteen accumulation lanes, separate multiply/add and reduction
+  order. NEON and AVX2 differential tests compare exact float bits.
+- Rerank prefetch formerly requested every candidate row before scoring any.
+  The candidate keeps a lead of 1–8 rows bounded by an 8 KiB row footprint.
+  Scores and search effort are unchanged.
+- Scalar/list Python queries reserved k elements even for a tiny index. Padded
+  results multiplied nq×k unchecked. Huge k reproducibly panicked or aborted;
+  an empty batch also segfaulted because zero elements hid an overflowing row
+  stride. Unpadded buffers now cap at the vertex count. Padded results validate
+  byte length and stride, then reserve fallibly. This covers VectorIndex,
+  UpdatableIndex, FilteredIndex and experimental PartitionIndex. It cannot
+  promise survival of system OOM.
+- Finite extreme cosine queries broke scale invariance. Against 16 identity
+  rows, an ascending query scaled by f32::MAX returned 2,3,...,15,0,1 instead
+  of 15..0 despite examining every row. Extreme angular queries are rescaled;
+  ordinary arithmetic is unchanged. Tests cover 4/8-bit codes, overflow and
+  underflow magnitudes, and SIMD-width boundaries.
+- Eight-bit query dot products accumulated in i32 across accepted dimensions.
+  A four-row angular case reverses order at 133145 dimensions; at 262144 it
+  returns the negative vector first. Long rows now accumulate bounded chunks
+  into i64. Scalar/AVX2/AVX-VNNI tests use an i64 oracle up to the supported
+  one-million-dimensional limit. Ordinary bounded rows keep their fast path.
+- Persisted original IDs were range-checked but need not form a permutation.
+  A modified 16-row index loaded and returned ID 0 sixteen times. Loading now
+  rejects duplicates with a fallibly allocated n/8-byte bitmap, tested across
+  mapped, prefaulted and heap residency. The file format is unchanged.
+- The adapter formerly sorted an assembled matrix with advanced indexing,
+  copying all 3.072 GB for 1M × 768D. It now validates chunk shapes and assembles
+  rows directly in sorted-ID order. Old/new index SHA256 is identical on the
+  local full build. Removing that copy is structural evidence; measured overall
+  build time and peak RSS did not establish a corresponding gain.
+
+### Full-harness local throughput
+
+Intel Core Ultra 9 185H, 22 logical CPUs, WSL Ubuntu 24.04, Python 3.11.18;
+no other benchmark or compiler ran on this host during timing. Every row below
+has recall@100=.9406 and nDCG=.9496. These tables show concurrency-10 QPS;
+complete concurrency-1/5/10 results and latency quantiles are retained in JSON.
+Historical shared-M4 figures in PR 898 are superseded as throughput evidence.
+
+The first ablation order was control/paired/prefetch/combined and its reverse,
+with published-SDK controls around it:
+
+| Source/arm | Run 1 QPS | Run 2 QPS |
+|---|---:|---:|
+| Main `431722cf` | 20,018.48 | 20,539.26 |
+| Paired rerank alone | 20,437.23 | 19,142.87 |
+| Bounded prefetch alone | 20,924.31 | 21,171.46 |
+| Paired + prefetch + extreme-query guard | 21,089.17 | 21,470.67 |
+
+The combined mean is 4.94% above the main-control mean. Paired-only run 2 is
+slower and remains in the record. Two runs do not establish a precise universal
+speedup. Published 0.6.4 outer runs were 19,292.20 (fresh), 20,325.02 and 20,937.43.
+
+A second frozen comparison uses the integrated correctness fixes and new
+adapter. Existing `WARM_QGRAPH_BATCH_EST=1` groups four candidate vectors within
+**one query**; nq remains 1. It is not enabled by default by these changes.
+
+| Source | Candidate grouping | Run 1 QPS | Run 2 QPS |
+|---|---|---:|---:|
+| Published 0.6.4 | Off | 20,524.32 | 19,749.77 |
+| Integrated `90a55d81` | Off | 21,027.44 | 20,542.81 |
+| Integrated `90a55d81` | On | 22,283.90 | 22,127.41 |
+| Published 0.6.4 | On | 22,789.51 | 22,830.50 |
+
+Integrated default improves 3.22% over the contemporaneous released-default
+mean. Grouping improves the integrated mean 6.83%; however, released grouped
+is 2.72% faster than integrated grouped. A fresh released grouped run gave
+21,970.45 QPS, insert 35.62 seconds, optimize 211.37 seconds. This is modest
+throughput progress, not a demonstrated 2× gain.
+
+### Sharing immutable index memory
+
+Private index copies cost memory for every worker. `VectorIndex.load(path,
+shared=True)` now accepts a Linux memfd with irreversible WRITE, SHRINK and GROW
+seals, verified on the exact opened file before mapping. Ordinary mutable files
+and FUTURE_WRITE alone are rejected; the existing parser still validates all
+index structure. Private loading remains the default. A mapping stays valid
+after the publisher closes its descriptor. All workers must open the same inode
+for physical pages to be shared.
+
+The benchmark publisher copies and hashes the index once, seals it, and records
+setup and total wall time. A bounded binding identifies both the source file
+and the sealed snapshot. Workers validate that binding without rereading every
+vector. This is a private parent/worker protocol, not authentication for an
+untrusted publisher. Publisher and workers are inside the same measured cgroup.
+
+Full official runs below use the same Intel host restricted to 8 logical CPUs,
+16 GiB, no swap, grouping enabled, and heap/shared/shared/heap order. Recall is
+.9406 throughout. QPS is the harness maximum across the three reported levels;
+all levels and memory receipts are preserved.
+The local sequence did not clear the host page cache between containers;
+the registered Azure sequence clears it before every run.
+
+| Load mode | Run 1 QPS | Run 2 QPS | Peak GiB, run 1 / 2 |
+|---|---:|---:|---:|
+| Private heap | 18,689.16 | 18,519.60 | 14.6165 / 13.8040 |
+| Shared sealed snapshot | 18,048.95 | 18,156.31 | 3.2196 / 3.2205 |
+
+Mean peak cgroup memory falls 77.34%, while mean maximum QPS falls 2.70%.
+This is a memory/throughput tradeoff, not a throughput improvement.
+
+The initial shared implementation hashed both complete files again per worker.
+Its retained full ABBA results were heap 17,713.88/18,902.60 maximum QPS versus
+shared 16,298.74/16,651.12, with respective peak memory 14.9764/13.8047 and
+3.2167/3.2157 GiB. Inspection confirmed the official throughput timer includes
+worker initialization. The binding protocol removes redundant validation reads;
+the official timer and query loop remain unchanged. Snapshot setup is reported
+separately because it happens before that timer.
+
+### Query replay, separate from harness QPS
+
+A quiet M4 ABBA comparison initially measured 1.85–3.61% combined throughput
+gains across ef=120/150/200/400/600/800. A later five-arm mirrored comparison
+(two runs per arm, five randomized full-query orders per run) measured these
+median microseconds/query. Every arm's ordered-ID SHA256 matched at all six
+efforts. Timing includes Python calls and output assignment.
+
+| ef | Main | Paired only | Prefetch only | Integrated | Integrated grouped |
+|---:|---:|---:|---:|---:|---:|
+| 120 | 119.06 | 116.43 | 117.34 | 112.54 | 108.88 |
+| 150 | 148.38 | 144.01 | 143.88 | 137.76 | 137.01 |
+| 200 | 188.26 | 185.14 | 187.91 | 179.36 | 175.57 |
+| 400 | 353.85 | 357.40 | 358.65 | 352.00 | 338.99 |
+| 600 | 521.20 | 521.81 | 510.10 | 518.88 | 494.65 |
+| 800 | 696.67 | 721.33 | 675.06 | 690.22 | 642.98 |
+
+Paired-only regresses at high effort. Between-session variation exceeds some
+component effects, so these are workload/host measurements, not isolated causal
+estimates for every CPU. On Intel, grouping's ABBA query-loop gain was 9–12%
+across these six efforts with identical IDs; full-harness limits appear above.
+
+### Rejected ideas
+
+An untimed safe-pruning probe on all 500 development queries at ef=150/400/800
+could skip **zero** rerank candidates, even with an optimistic oracle final
+cutoff. It used actual primary/residual norms and query-quantization error;
+a tighter bound after the complete primary dot also skipped zero residual
+reads. All 1,500 records are retained. This is a negative feasibility result on
+an exposed dataset, not a general impossibility theorem.
+
+A narrower filter-only dot-product prototype exploited that filter dimensions
+are already bounded below the i32 overflow threshold. Intel results ranged from
+−2.2% to +3.7%, and Mac results were around ±1%, with identical IDs. There was no
+consistent benefit; the prototype is not integrated. Its patch and raw results
+are retained. Partial sorting was deferred because diagnostic consumers require
+the complete sorted rescored pool. The existing visited set already uses a
+bitset and touched-word reset.
+
+### Validation and comparison limits
+
+At final native source `4299b539`, default Rust suites passed 1,018 tests
+(19 ignored), all-features passed 1,667 (22 ignored); default/python/all-features
+clippy, rustfmt and MSRV 1.89 passed. Linux Python tests passed 164 with 3
+feature-dependent skips; Mac passed 131 with 36 Linux-only skips. The publisher
+binding tests passed 24 on Linux; the adapter and UI passed 63. Sealed-file tests
+cover required seals, existing writable mappings, publisher lifetime, corrupt
+files and failed-load preservation. Validation receipts accompany the artifacts.
+
+Mac modules use identical `-C strip=none` and dynamic-Python linking flags because
+this macOS 27 host encounters Rust issue 157750's stripped-Mach-O LINKEDIT problem.
+This is a build workaround, not a performance change.
+
+Azure VDBBench full runs are registered after the independent ANN live chain:
+8 vCPUs, 16 GiB/no-swap containers, unchanged query settings and 14 mirrored
+released/main/integrated/shared arms. At the user's stop request, input checks and
+image loading had completed, but no VDBBench workload had started. The service
+was stopped; no Azure VDBBench result is available. Frozen inputs and the stop
+receipt are retained. Local figures cannot establish a win against Zilliz Cloud: an embedded index and a managed service
+have different deployment costs and boundaries. The published comparison point
+is [13,316.23 QPS at recall@100=.9383 on the $1000/month tier](https://zilliz.com/vdbbench-leaderboard).
+No matched-service or official leaderboard standing is claimed.

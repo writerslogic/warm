@@ -13,7 +13,7 @@ test('update diagnostic validates a synthetic graph across mutation and separate
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'warm-update-diagnostic-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
   const packagePath = path.join(root, 'package'); await fs.mkdir(packagePath)
-  for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'warm-sdk.node']) await fs.copyFile(path.join(repo, name), path.join(packagePath, name))
+  for (const name of ['index.js', 'vectra.js', 'vectra-selector.js', 'writerslogic-warm.node']) await fs.copyFile(path.join(repo, name), path.join(packagePath, name))
   const rows = 4096, dimensions = 100, queryCount = 3, corpus = path.join(root, 'corpus.f32'), queries = path.join(root, 'queries.f32')
   const bytes = Buffer.alloc(rows * dimensions * 4)
   for (let i = 0; i < rows * dimensions; i++) bytes.writeFloatLE(Math.sin((Math.floor(i / dimensions) + 1) * (i % dimensions + 1)) * .5, i * 4)
@@ -27,7 +27,7 @@ test('update diagnostic validates a synthetic graph across mutation and separate
   const dataset = { name: 'synthetic', rows, dimensions, queryCount, corpus, queries }
   for (const action of ['update', 'reopen']) {
     const stem = path.join(root, action), output = `${stem}.ndjson`
-    const receipt = await runMonitored({ worker: path.join(here, 'update-worker.mjs'), job: { development: true, action, package: packagePath, addon: path.join(packagePath, 'warm-sdk.node'), store, dataset, ef: 128, degree: 64, buildEf: 256, output }, jobFile: `${stem}-job.json`, receipt: `${stem}-receipt.json`, hostFile: `${stem}-host.ndjson`, deadline: Date.now() + 90000 })
+    const receipt = await runMonitored({ worker: path.join(here, 'update-worker.mjs'), job: { development: true, action, package: packagePath, addon: path.join(packagePath, 'writerslogic-warm.node'), store, dataset, ef: 128, degree: 64, buildEf: 256, output }, jobFile: `${stem}-job.json`, receipt: `${stem}-receipt.json`, hostFile: `${stem}-host.ndjson`, deadline: Date.now() + 90000 })
     if (!receipt.complete) throw new Error(`${JSON.stringify(receipt)}\n${await fs.readFile(`${stem}-receipt.json.stderr.log`, 'utf8')}\n${await fs.readFile(output, 'utf8')}`)
     const lines = (await fs.readFile(output, 'utf8')).trim().split('\n').map(JSON.parse)
     assert.deepEqual(lines.at(-1), { type: 'complete', action })

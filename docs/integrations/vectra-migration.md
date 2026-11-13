@@ -1,6 +1,6 @@
 # Migrate Vectra vectors to WARM
 
-`warm-sdk/vectra` imports existing vectors into a new, owned WARM store. It retains stable IDs, original finite JavaScript doubles, and original JSON metadata. Records remain explicitly vector-only: the adapter does not invent text, run an embedding model, or add document history.
+`writerslogic-warm/vectra`, part of the optional embedded Node engine, imports existing vectors into a new, owned WARM store. It retains stable IDs, original finite JavaScript doubles, and original JSON metadata. Records remain explicitly vector-only: the adapter does not invent text, run an embedding model, or add document history. This API is separate from the portable `warm-sdk` HTTP client; see [source installation](../get-started/install.md).
 
 This is a migration profile, not a drop-in `LocalIndex` implementation. The selector compatibility target is Vectra 0.15.0 at [`dec2dadc`](https://github.com/Stevenic/vectra/tree/dec2dadc3bb158b06ac72fa9097bee729429a271). WARM searches normalized f32 embeddings and returns the preserved original f64 vector with each hit. Scores and tied-result order need not be bit-identical to Vectra. Hybrid/BM25 ranking, Vectra codecs and filesystem layouts as a destination, browser storage, automatic IDs, and uncommitted reads are outside this profile.
 
@@ -10,7 +10,7 @@ Keep the source index read-only for the entire import. Supply the actual model i
 
 ```js
 const { LocalIndex } = require('vectra') // the source application uses Vectra 0.15.0
-const { importVectraIndex } = require('warm-sdk/vectra')
+const { importVectraIndex } = require('writerslogic-warm/vectra')
 
 async function migrate() {
   const source = new LocalIndex('./vectra-source')
@@ -39,7 +39,7 @@ Imports use bounded atomic batches. A later failure can leave earlier batches in
 This complete example uses synthetic vectors and no model:
 
 ```js
-const { VectraMigrationIndex } = require('warm-sdk/vectra')
+const { VectraMigrationIndex } = require('writerslogic-warm/vectra')
 
 async function example() {
   const index = await VectraMigrationIndex.create({

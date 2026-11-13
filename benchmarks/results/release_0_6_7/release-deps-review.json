@@ -1,0 +1,489 @@
+{
+  "schema_version": 1,
+  "observed_utc": "2026-11-09",
+  "scope": "Read-only dependency review; no builds, tests, installs, merges or remote execution by lane B.",
+  "local_base": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "repository": "writerslogic/warm",
+  "findings": [
+    {
+      "id": "D1",
+      "severity": "medium",
+      "prs": [
+        421,
+        423
+      ],
+      "finding": "Docs browser-checks fail: mobile /concepts/holographic/ performance 84 against required 85; all other reported categories 99-100. Core CI succeeds. No evidence establishes dependency causation; retain gate and validate integrated docs once rather than treating failed checks as green.",
+      "evidence": [
+        "https://github.com/writerslogic/warm/actions/runs/42632901670/job/129213459570",
+        "https://github.com/writerslogic/warm/actions/runs/42633862026/job/129216767068",
+        ".github/workflows/docs.yml:136"
+      ]
+    },
+    {
+      "id": "D2",
+      "severity": "medium",
+      "prs": [
+        422
+      ],
+      "finding": "CLI 3.10.12 changes cross-toolchain wrapper 1.0.3 to 1.0.5 and its optional platform peer range to ^1.0.5. Workflow explicitly installs platform 1.0.3, but observed successful Linux x64 job subsequently downloads 1.0.5 at build time. Align both GNU platform pins to 1.0.5 during integration and record resolved packages; current passing CI does not demonstrate the declared 1.0.3 toolchain was used.",
+      "evidence": [
+        ".github/workflows/npm-packages.yml:59",
+        "https://github.com/writerslogic/warm/actions/runs/42633252996/job/129214792063"
+      ],
+      "receipt": "CROSS=@napi-rs/cross-toolchain-x64-target-x86_64@1.0.3; later npm notice package/version @napi-rs/cross-toolchain-x64-target-x86_64@1.0.5. Eight target builds and ten install/search jobs succeeded."
+    },
+    {
+      "id": "D3",
+      "severity": "medium",
+      "prs": [
+        421
+      ],
+      "finding": "cosign-installer 4.1.3 changes its unconfigured default cosign binary from 3.0.6 to 3.1.4. WARM's MCP Registry publisher signature verification uses this default; protected publish branch is not certified by successful PR build workflow. Review command compatibility at release preflight, preserving identity/issuer verification.",
+      "evidence": [
+        ".github/workflows/warm-mcp-release.yml:260",
+        "https://github.com/sigstore/cosign-installer/blob/756fe2d284c7292c4e9b62c8a28f1e5629c59532/action.yml",
+        "https://github.com/sigstore/cosign-installer/blob/6f9f17788090df1f26f669e9d70d6ae9567deba6/action.yml"
+      ]
+    },
+    {
+      "id": "D4",
+      "severity": "info",
+      "prs": [
+        423
+      ],
+      "finding": "All changed Rust dependencies support WARM's Rust 1.89: crc32fast 1.63, flate2 1.67.0, ureq and ureq-proto 1.85. ureq-proto 0.6.5 to 0.7.1 is an internal transitive pre-1.0 minor transition selected by ureq 3.5.1; no direct WARM dependency found. Existing MSRV CI covers no-default-features only.",
+      "evidence": [
+        "Cargo.toml:5",
+        "Cargo.toml:55",
+        "Cargo.toml:58",
+        "Cargo.toml:80",
+        ".github/workflows/ci.yml:205"
+      ]
+    },
+    {
+      "id": "D5",
+      "severity": "info",
+      "prs": [
+        422
+      ],
+      "finding": "Update includes optional WASI build dependencies @emnapi/{core,runtime} 2.0.0-beta.3 and @inquirer/core 12.0.6, not merely three CLI patch releases. WARM publishes eight native targets and no WASI target. CLI needs Node ^20.17.0 || ^22.13.0 || >=23.5.0; optional wasm-tools/tar WASI dependencies require ^20.19.0 || ^22.13.0 || >=23.5.0. Hosted Node 22 builds succeeded; this does not change published WARM runtime dependencies.",
+      "evidence": [
+        "package.json:54",
+        "package.json:77",
+        ".github/workflows/npm-packages.yml:75",
+        "https://github.com/napi-rs/napi-rs/blob/@napi-rs/cli@3.10.12/cli/package.json"
+      ]
+    },
+    {
+      "id": "D6",
+      "severity": "info",
+      "prs": [
+        421
+      ],
+      "finding": "Changes preserve action commit pins and workflow inputs. setup-java, setup-dotnet and upload-sarif use Node24; hosted jobs succeeded. taiki-e tool names remain unversioned, so updating installer also changes bundled latest-tool resolution. Coverage, scorecard and protected publishing behavior are not established by the listed PR-triggered first-page runs.",
+      "evidence": [
+        ".github/workflows/ci.yml:136",
+        ".github/workflows/coverage.yml:36",
+        ".github/workflows/scorecard.yml:32"
+      ]
+    }
+  ],
+  "prs": [
+    {
+      "number": 421,
+      "url": "https://github.com/writerslogic/warm/pull/421",
+      "title": "ci(deps)(deps): bump the github-actions group with 5 updates",
+      "head_sha": "8746b45c53c2aa3c6bab9ef6f9461e8387f3763c",
+      "base_sha": "d2e5d73339eec7be2463ee742e43347368b5e1fc",
+      "mergeable_at_observation": false,
+      "changed_files": [
+        ".github/workflows/bindings.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/coverage.yml",
+        ".github/workflows/npm-packages.yml",
+        ".github/workflows/python-wheels.yml",
+        ".github/workflows/release.yml",
+        ".github/workflows/scorecard.yml",
+        ".github/workflows/warm-mcp-release.yml"
+      ],
+      "ci": [
+        {
+          "id": 42632901736,
+          "name": "MCP launcher release",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901736"
+        },
+        {
+          "id": 42632901752,
+          "name": "CI",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901752"
+        },
+        {
+          "id": 42632901670,
+          "name": "Docs",
+          "conclusion": "failure",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901670"
+        },
+        {
+          "id": 42632901908,
+          "name": "Python native release",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901908"
+        },
+        {
+          "id": 42632901919,
+          "name": "Bindings",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901919"
+        },
+        {
+          "id": 42632901717,
+          "name": "Release",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901717"
+        },
+        {
+          "id": 42632901516,
+          "name": "DCO",
+          "conclusion": "skipped",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901516"
+        },
+        {
+          "id": 42632901892,
+          "name": "Format drift",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901892"
+        },
+        {
+          "id": 42632901621,
+          "name": "Dependency Review",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901621"
+        },
+        {
+          "id": 42632901864,
+          "name": "Examples",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901864"
+        },
+        {
+          "id": 42632901658,
+          "name": "npm packages",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42632901658"
+        }
+      ],
+      "combined_statuses": []
+    },
+    {
+      "number": 422,
+      "url": "https://github.com/writerslogic/warm/pull/422",
+      "title": "deps(npm)(deps-dev): bump @napi-rs/cli from 3.10.9 to 3.10.12 in the npm-minor-patch group",
+      "head_sha": "9dd38be85bd7f9ea4fba3e484afceda77afb4bd6",
+      "base_sha": "d2e5d73339eec7be2463ee742e43347368b5e1fc",
+      "mergeable_at_observation": false,
+      "changed_files": [
+        "package-lock.json",
+        "package.json"
+      ],
+      "ci": [
+        {
+          "id": 42633252597,
+          "name": "CI",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633252597"
+        },
+        {
+          "id": 42633252996,
+          "name": "npm packages",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633252996"
+        },
+        {
+          "id": 42633252625,
+          "name": "Docs",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633252625"
+        },
+        {
+          "id": 42633252734,
+          "name": "Examples",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633252734"
+        },
+        {
+          "id": 42633253019,
+          "name": "DCO",
+          "conclusion": "skipped",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633253019"
+        },
+        {
+          "id": 42633253023,
+          "name": "Dependency Review",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633253023"
+        },
+        {
+          "id": 42633252753,
+          "name": "Format drift",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633252753"
+        }
+      ],
+      "combined_statuses": []
+    },
+    {
+      "number": 423,
+      "url": "https://github.com/writerslogic/warm/pull/423",
+      "title": "deps(rust)(deps): bump the rust-minor-patch group across 1 directory with 3 updates",
+      "head_sha": "5bb138371c6d5610bb2f3eeab17c111d094a415b",
+      "base_sha": "d2e5d73339eec7be2463ee742e43347368b5e1fc",
+      "mergeable_at_observation": false,
+      "changed_files": [
+        "Cargo.lock"
+      ],
+      "ci": [
+        {
+          "id": 42633862108,
+          "name": "CI",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862108"
+        },
+        {
+          "id": 42633862113,
+          "name": "Examples",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862113"
+        },
+        {
+          "id": 42633862037,
+          "name": "Python models release",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862037"
+        },
+        {
+          "id": 42633862012,
+          "name": "npm packages",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862012"
+        },
+        {
+          "id": 42633862001,
+          "name": "MCP container",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862001"
+        },
+        {
+          "id": 42633862141,
+          "name": "Fuzz",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862141"
+        },
+        {
+          "id": 42633862026,
+          "name": "Docs",
+          "conclusion": "failure",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862026"
+        },
+        {
+          "id": 42633861937,
+          "name": "Reproducible build",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633861937"
+        },
+        {
+          "id": 42633862044,
+          "name": "Python native release",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862044"
+        },
+        {
+          "id": 42633861980,
+          "name": "DCO",
+          "conclusion": "skipped",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633861980"
+        },
+        {
+          "id": 42633862006,
+          "name": "Dependency Review",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862006"
+        },
+        {
+          "id": 42633862054,
+          "name": "Format drift",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862054"
+        },
+        {
+          "id": 42633862025,
+          "name": "Standards interop",
+          "conclusion": "success",
+          "url": "https://github.com/writerslogic/warm/actions/runs/42633862025"
+        }
+      ],
+      "combined_statuses": []
+    }
+  ],
+  "rust_updates": [
+    {
+      "name": "crc32fast",
+      "from": "1.5.3",
+      "to": "1.5.4",
+      "msrv": "1.63"
+    },
+    {
+      "name": "flate2",
+      "from": "1.1.10",
+      "to": "1.1.11",
+      "msrv": "1.67.0"
+    },
+    {
+      "name": "ureq",
+      "from": "3.5.0",
+      "to": "3.5.1",
+      "msrv": "1.85"
+    },
+    {
+      "name": "ureq-proto",
+      "from": "0.6.5",
+      "to": "0.7.1",
+      "msrv": "1.85"
+    }
+  ],
+  "upstream_manifests": [
+    {
+      "key": "crc32",
+      "url": "https://github.com/srijs/rust-crc32fast/blob/v1.5.4/Cargo.toml",
+      "blob_sha": "51fbb074aeb82ced6547832acb91fc795b539448"
+    },
+    {
+      "key": "flate2",
+      "url": "https://github.com/rust-lang/flate2-rs/blob/v1.1.11/Cargo.toml",
+      "blob_sha": "9cdd4b9d6eb3426079cb70805e0eca8faa5b0bc4"
+    },
+    {
+      "key": "ureq",
+      "url": "https://github.com/algesten/ureq/blob/3.5.1/Cargo.toml",
+      "blob_sha": "bc760504d92249161bf97d7e52fb7cbd4dfa92c5"
+    },
+    {
+      "key": "napi",
+      "url": "https://github.com/napi-rs/napi-rs/blob/@napi-rs/cli@3.10.12/cli/package.json",
+      "blob_sha": "e783b7ee019f317cfb917161d7e5107b91daf664"
+    },
+    {
+      "key": "java",
+      "url": "https://github.com/actions/setup-java/blob/77dd5b2ce225ea11469928ac317850245a74ae78/action.yml",
+      "blob_sha": "335debec2e9e5ada8affcebb9b3d024363d6f6f5"
+    },
+    {
+      "key": "dotnet",
+      "url": "https://github.com/actions/setup-dotnet/blob/0f4a354dd5547a28c70b7853dbd95d5b67886e73/action.yml",
+      "blob_sha": "3a55f282966e7c8262ef8a45ddecf414a51dd062"
+    },
+    {
+      "key": "ureq-proto",
+      "url": "https://github.com/algesten/ureq-proto/blob/0.7.1/Cargo.toml",
+      "blob_sha": "fce7543215d39f32a20e6f23d3049878a9ba3701"
+    }
+  ],
+  "consumer_risks": [
+    {
+      "dependency": "crc32fast",
+      "boundary": "Persistent storage/checkpoint/index integrity; architecture SIMD paths change.",
+      "evidence": [
+        "src/core/storage.rs:6",
+        "src/core/qgraph/update/format.rs:49",
+        "tests/format_golden.rs:287",
+        "tests/document_checkpoint.rs:713"
+      ]
+    },
+    {
+      "dependency": "flate2",
+      "boundary": "Bounded signed status-list gzip decoding and automatic HTTP gzip responses.",
+      "evidence": [
+        "src/core/provenance/status_list.rs:206",
+        "src/core/provenance/status_list.rs:257"
+      ]
+    },
+    {
+      "dependency": "ureq",
+      "boundary": "SCITT origin/timeout policy, OAuth introspection redirects/body limits, pinned model downloads.",
+      "evidence": [
+        "src/core/provenance/scitt.rs:133",
+        "src/bin/warm-mcp/oauth.rs:110",
+        "src/core/embed/fetch.rs:25"
+      ]
+    }
+  ],
+  "validation_commands": [
+    {
+      "cwd": "repository root",
+      "command": "cargo +1.89 check --locked --no-default-features",
+      "purpose": "Existing advertised core MSRV gate."
+    },
+    {
+      "cwd": "repository root",
+      "command": "cargo +1.89 check --locked --lib --features provenance-scitt,local-embed-download",
+      "purpose": "Additional affected optional-dependency MSRV coverage; requires already available toolchain."
+    },
+    {
+      "cwd": "repository root",
+      "command": "cargo test --locked --lib --features provenance-scitt status_list",
+      "purpose": "Existing gzip, allocation, signature and expiry checks."
+    },
+    {
+      "cwd": "repository root",
+      "command": "cargo test --locked --lib --features provenance-scitt scitt",
+      "purpose": "Existing HTTP origin/timeouts and receipt handling."
+    },
+    {
+      "cwd": "repository root",
+      "command": "cargo test --locked --bin warm-mcp --features mcp oauth",
+      "purpose": "Existing HTTP auth transport limits and failure paths."
+    },
+    {
+      "cwd": "repository root",
+      "command": "cargo test --locked --features experimental --test format_golden --test document_checkpoint --test quantized_ivf",
+      "purpose": "Persistent CRC consumers."
+    },
+    {
+      "cwd": "repository root, Node >=22.13",
+      "command": "npm ci --ignore-scripts",
+      "purpose": "Install frozen build dependencies; root only."
+    },
+    {
+      "cwd": "repository root",
+      "command": "npm run build:debug",
+      "purpose": "Generate native binding through unchanged wrapper and new CLI."
+    },
+    {
+      "cwd": "repository root",
+      "command": "npm test",
+      "purpose": "Existing Node API regressions."
+    },
+    {
+      "cwd": "repository root",
+      "command": "npm run test:types",
+      "purpose": "Published type declarations."
+    },
+    {
+      "cwd": "repository root",
+      "command": "npm run test:package",
+      "purpose": "Packed CJS/ESM/native/vector importer API validation."
+    },
+    {
+      "cwd": "repository root with built _site and existing docs tools",
+      "command": "VERSION=latest PERF_THRESHOLD=85 REPORT_DIR=docs-qa-output/lighthouse node scripts/docs-qa/lighthouse.mjs _site",
+      "purpose": "Retain current Docs threshold on integrated candidate."
+    }
+  ],
+  "recommendation": "Integrate dependency intent with current target, fixing explicit cross-toolchain pins and preserving later unrelated versions. All three report mergeable=false at observation; exact conflict hunks were not produced by a merge attempt. Run focused affected checks plus repository required integrated gates; no release-readiness claim from this read-only review.",
+  "limits": [
+    "Read-only GitHub workflow wrapper returns first page of PR-triggered runs; combined status endpoint empty is not a successful check.",
+    "No current-target merge trial or local validation performed.",
+    "No paid resource or workflow dispatched."
+  ]
+}

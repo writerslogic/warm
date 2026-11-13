@@ -1,0 +1,29 @@
+{
+  "run": "streaming-e2a-2",
+  "track": "streaming",
+  "result_files": 1,
+  "step_seconds": 2870.7640335559845,
+  "operation_seconds": {
+    "insert": 264.39424538612366,
+    "search": 2573.19305229187,
+    "delete": 33.17673587799072
+  },
+  "max_rss_kib": 6831744,
+  "elapsed_seconds": 2871.94,
+  "rss_limit_gib": 8,
+  "official_results": [
+    {
+      "algorithm": "warm",
+      "parameters": "warm(partition_l5000_np650_ro1000, {'nprobe': 650})",
+      "dataset": "msturing-30M-clustered(final_runbook.yaml)",
+      "count": "10",
+      "distcomps": "0.0",
+      "build": "0.000576019287109375",
+      "indexsize": "580.0",
+      "mean_ssd_ios": "0.0",
+      "mean_latency": "0.0",
+      "track": "streaming",
+      "recall/ap": "0.9965711875000001"
+    }
+  ]
+}

@@ -33,7 +33,7 @@ def _coerce_embedder(embedder: Optional[EmbedderLike], dim: Optional[int]) -> Op
     call = embedder
 
     def documents(texts: Sequence[str]) -> List[List[float]]:
-        out = call(list(texts))
+        out = call(list(texts), caching=False) if isinstance(call, dspy.Embedder) else call(list(texts))
         return out.tolist() if hasattr(out, "tolist") else [list(r) for r in out]
 
     if dim is None:

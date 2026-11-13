@@ -131,7 +131,7 @@ def node_pages() -> list[str]:
             if rel.name in seen:
                 raise SystemExit(f"docs_api: two Node symbols are both named {rel.name}: {seen[rel.name]} and {rel}")
             seen[rel.name] = rel
-        label = {"index": "warm-sdk"}
+        label = {"index": "writerslogic-warm"}
         for md in sorted(out.rglob("*.md")):
             rel = md.relative_to(out)
             if len(rel.parts) < 3:
@@ -143,17 +143,18 @@ def node_pages() -> list[str]:
             name = heading.group(1).rstrip("()") if heading else md.stem
             text = f"# {name}\n" + rest
             text = re.sub(r"\]\(((?:\.\./|\./)*)(?:[\w-]+/)*([\w.-]+\.md)", r"](\2", text)
-            module_name = label.get(rel.parts[0], f"warm-sdk/{rel.parts[0]}")
+            module_name = label.get(rel.parts[0], f"writerslogic-warm/{rel.parts[0]}")
             desc = f"{kind.replace('-', ' ').rstrip('s').capitalize()} `{name}` from `{module_name}`."
             target = f"api/node/{md.stem}.md"
             write(target, front(desc, 0.5) + text, None)
             pages.append(target)
-        lines = [front("The Node and TypeScript API of the warm-sdk package, generated from its type declarations.").rstrip(), "",
-                 "# Node and TypeScript API", "",
+        lines = [front("The embedded Node and TypeScript API of writerslogic-warm, generated from its type declarations.").rstrip(), "",
+                 "# Embedded Node and TypeScript API", "",
                  "Generated from the package's `.d.ts` files, one page per exported symbol. "
-                 + "The package is built from source with a Rust toolchain; the [quickstart](../../quickstart/index.md) shows how.", ""]
+                 + "The optional embedded engine is separate from the portable `warm-sdk` HTTP client. "
+                 + "See [installation](../../get-started/install.md) for both packages and their publication status.", ""]
         for module, listing in modules.items():
-            lines += [f"## `{label.get(module, 'warm-sdk/' + module)}`", ""]
+            lines += [f"## `{label.get(module, 'writerslogic-warm/' + module)}`", ""]
             for line in listing.splitlines():
                 if line.startswith("## "):
                     lines += ["", f"### {line[3:]}", ""]
@@ -213,7 +214,7 @@ def c_pages() -> list[str]:
 def overview(pages: list[str]) -> None:
     rows = {
         "api/rust/index.md": ("Rust", "The `warm-rust` crate: the engine itself."),
-        "api/node/index.md": ("Node and TypeScript", "The `warm-sdk` npm package."),
+        "api/node/index.md": ("Embedded Node and TypeScript", "The optional `writerslogic-warm` engine package."),
         "api/http.md": ("HTTP", "The `warm-server` endpoints, from its OpenAPI document."),
         "api/c.md": ("C", "The stable C ABI that the Go, Java and .NET bindings sit on."),
     }
@@ -222,6 +223,8 @@ def overview(pages: list[str]) -> None:
              "Every page in this section is generated at build time from the source of the version you are reading: "
              + "rustdoc for Rust, typedoc for Node and TypeScript, mkdocstrings for Python, the server's OpenAPI document for HTTP and the "
              + "shipped header for C. Nothing here is written by hand, so a signature in the docs is a signature in the code.", "",
+             "The Node reference covers the optional embedded engine. For the portable `warm-sdk` HTTP client, "
+             + "see [installation](../get-started/install.md) and the [memory examples](../memory-api/README.md#quick-start).", "",
              "| Surface | What it covers |", "| --- | --- |"]
     for page, (name, text) in rows.items():
         if page in pages:

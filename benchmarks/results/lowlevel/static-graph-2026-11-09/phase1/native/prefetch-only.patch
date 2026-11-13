@@ -1,0 +1,28 @@
+diff --git a/src/core/qgraph/vertex.rs b/src/core/qgraph/vertex.rs
+index 3dc922be..3f51ce33 100644
+--- a/src/core/qgraph/vertex.rs
++++ b/src/core/qgraph/vertex.rs
+@@ -3123,14 +3145,19 @@ impl SearchScratch {
+             if PROFILE {
+                 profile.rerank_evaluations = take;
+             }
+-            for &c in &self.keys[..take] {
++            let lead = (8192 / (g.stride + g.res_stride)).clamp(1, 8);
++            for &c in &self.keys[..take.min(lead)] {
+                 g.prefetch_rerank_rows(key_id(c));
+             }
+             // Ties (duplicate vectors) break by the original id, independent of the layout.
+-            self.results.extend(self.keys[..take].iter().map(|&c| {
++            self.results.reserve(take);
++            for (position, &c) in self.keys[..take].iter().enumerate() {
++                if position + lead < take {
++                    g.prefetch_rerank_rows(key_id(self.keys[position + lead]));
++                }
+                 let id = key_id(c);
+-                (g.fine(&self.qf, id), g.original(id))
+-            }));
++                self.results.push((g.fine(&self.qf, id), g.original(id)));
++            }
+             evals += take;
+             self.results
+                 .sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));

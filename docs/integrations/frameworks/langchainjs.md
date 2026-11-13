@@ -2,9 +2,9 @@
 
 A `VectorStore`, retriever support, and a chat message history for LangChain.js, running the native engine in process through [`@writerslogic/warm-core`](js-core.md). ESM and CJS, typed.
 
-```sh
-npm install @writerslogic/warm-langchain @langchain/core warm-sdk
-```
+Use the [source workspace setup](js-core.md#source-setup). This adapter depends on the
+embedded `writerslogic-warm` engine and `@langchain/core`; it is separate from the portable
+`warm-sdk` HTTP client and is not published by the SDK release.
 
 ## Quickstart
 

@@ -79,7 +79,7 @@ class ChromaSource(Source):
         if self.database:
             kw["database"] = self.database
         if self.path:
-            self._client = chromadb.PersistentClient(path=self.path, **kw)
+            self._client = chromadb.RustClient(path=str(self.path), **kw)
         else:
             headers = {"X-Chroma-Token": self.api_key} if self.api_key else None
             self._client = chromadb.HttpClient(host=self.host, port=self.port, ssl=self.ssl, headers=headers, **kw)
@@ -87,8 +87,28 @@ class ChromaSource(Source):
 
     def _collections(self) -> List[Any]:
         client = self._connect()
-        names = self.collections or sorted(getattr(c, "name", c) for c in client.list_collections())
-        return [client.get_collection(n) for n in names]
+
+        def valid_name(name):
+            if not isinstance(name, str) or not name or name in (".", "..") or any(c in name for c in "/\\?#%"):
+                raise ImporterError("Chroma returned an invalid collection name")
+            return name
+
+        def checked_name(collection, expected=None):
+            if collection.tenant != client.tenant or collection.database != client.database:
+                raise ImporterError("Chroma returned a collection outside the requested tenant/database")
+            name = valid_name(collection.name)
+            if expected is not None and name != expected:
+                raise ImporterError("Chroma returned a different collection than requested")
+            return name
+
+        names = self.collections or sorted(checked_name(c) for c in client.list_collections())
+        collections = []
+        for name in names:
+            valid_name(name)
+            collection = client.get_collection(name, embedding_function=None)
+            checked_name(collection, name)
+            collections.append(collection)
+        return collections
 
     def count(self) -> Optional[int]:
         return sum(c.count() for c in self._collections())

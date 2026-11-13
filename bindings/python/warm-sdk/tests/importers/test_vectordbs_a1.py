@@ -3,8 +3,8 @@
 """chroma, sqlite-vec, lancedb and qdrant sources.
 
 Verified against REAL local instances (real client libraries writing real stores) except
-`test_qdrant_mock_*`, which drives the real qdrant-client against the REST mock for the
-server code path.
+`test_qdrant_mock_*` and `test_chroma_http_mock_*`, which drive the real client libraries
+against HTTP response fixtures for the server code paths.
 """
 
 import sqlite3
@@ -79,6 +79,198 @@ def test_chroma_requires_exactly_one_location(tmp_path):
 
     with pytest.raises(ImporterError):
         ChromaSource()
+
+
+@pytest.mark.parametrize("page_size", [N - 1, N, N + 1])
+def test_chroma_real_reads_never_execute_collection_configuration(tmp_path, monkeypatch, page_size):
+    pytest.importorskip("chromadb")
+    from chromadb.api.models.Collection import Collection
+    from chromadb.utils.embedding_functions import known_embedding_functions
+
+    from writerslogic_warm_sdk.importers.sources.chroma import ChromaSource
+
+    path = make_chroma(tmp_path / "chroma")
+    source = ChromaSource(path=path, page_size=page_size)
+    client = source._connect()
+    get_collection = client._server.get_collection
+    attempts = []
+
+    def forbidden(*args, **kwargs):
+        attempts.append("configuration, embedding or mutation")
+        raise AssertionError("a read-only import must not execute collection configuration")
+
+    class ForbiddenEmbedding:
+        build_from_config = staticmethod(forbidden)
+
+    def poisoned_collection(*args, **kwargs):
+        model = get_collection(*args, **kwargs)
+        model.configuration_json = {
+            **model.configuration_json,
+            "embedding_function": {
+                "type": "known",
+                "name": "warm-import-forbidden",
+                "config": {"model_name": "forbidden-import-fixture", "kwargs": {"trust_remote_code": True}},
+            },
+        }
+        return model
+
+    monkeypatch.setitem(known_embedding_functions, "warm-import-forbidden", ForbiddenEmbedding)
+    monkeypatch.setattr(client._server, "get_collection", poisoned_collection)
+    monkeypatch.setattr(Collection, "configuration", property(forbidden))
+    monkeypatch.setattr(Collection, "schema", property(forbidden))
+    for method in ("_embed", "add", "delete", "update", "upsert", "modify", "query"):
+        monkeypatch.setattr(Collection, method, forbidden)
+
+    try:
+        assert all(collection._embedding_function is None for collection in source._collections())
+        assert source.count() == N + 1
+        records = {(record.namespace, record.id): record for record in source.records()}
+        assert len(records) == N + 1
+        for i in range(N):
+            record = records[("docs", f"d{i}")]
+            assert record.vector == pytest.approx(vec(i))
+            assert record.text == f"chroma document {i}"
+            assert record.metadata["tag"] == i % 3
+            assert record.metadata["flag"] is bool(i % 2)
+        assert records[("other", "x")].vector == pytest.approx(vec(500))
+        assert records[("other", "x")].text == "lives elsewhere"
+        assert not attempts
+    finally:
+        source.close()
+
+
+@pytest.mark.parametrize("backend", ["chromadb.api.segment.SegmentAPI", "untrusted.module.Backend"])
+def test_chroma_local_backend_ignores_untrusted_environment(tmp_path, monkeypatch, backend):
+    chromadb = pytest.importorskip("chromadb")
+    from chromadb.api.segment import SegmentAPI
+    from chromadb.config import Settings
+
+    from writerslogic_warm_sdk.importers.sources.chroma import ChromaSource
+
+    make_chroma(tmp_path / "chroma")
+    monkeypatch.setenv("CHROMA_API_IMPL", backend)
+    assert Settings().chroma_api_impl == backend
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("the importer must not construct the legacy configuration-loading backend")
+
+    monkeypatch.setattr(SegmentAPI, "__init__", forbidden)
+    source = ChromaSource(path=tmp_path / "chroma")
+    try:
+        assert source._connect().get_settings().chroma_api_impl == "chromadb.api.rust.RustBindingsAPI"
+        assert source.count() == N + 1
+        assert len(list(source.records())) == N + 1
+    finally:
+        source.close()
+
+
+@pytest.mark.parametrize("field,named", [
+    (None, False), (None, True), ("tenant", False), ("tenant", True),
+    ("database", False), ("database", True), ("name", True),
+    ("path", False), ("path", True), ("escaped_path", False), ("requested_path", True),
+])
+def test_chroma_http_mock_checks_scope_before_reads(monkeypatch, field, named):
+    pytest.importorskip("chromadb")
+    import json
+
+    import httpx
+    from chromadb.api.models.Collection import Collection
+    from chromadb.utils.embedding_functions import known_embedding_functions
+
+    from writerslogic_warm_sdk.importers.model import ImporterError
+    from writerslogic_warm_sdk.importers.sources.chroma import ChromaSource
+
+    tenant, database = "tenant-a", "database-a"
+    prefix = f"/api/v2/tenants/{tenant}/databases/{database}"
+    collection_id = "00000000-0000-0000-0000-000000000001"
+    model = {
+        "id": collection_id, "name": "docs", "tenant": tenant, "database": database,
+        "configuration_json": {"embedding_function": {
+            "type": "known", "name": "warm-import-forbidden",
+            "config": {"model_name": "forbidden-import-fixture", "kwargs": {"trust_remote_code": True}},
+        }},
+        "schema": {"embedding_function": "must remain opaque"},
+        "metadata": None, "dimension": DIM, "version": 0, "log_position": 0,
+    }
+    if field in ("path", "escaped_path"):
+        model["name"] = "../other" if field == "path" else "%2Fother"
+    elif field and field != "requested_path":
+        model[field] = "wrong-scope"
+    attempts, requests, sessions = [], [], []
+
+    def forbidden(*args, **kwargs):
+        attempts.append("configuration or embedding")
+        raise AssertionError("HTTP collection configuration must remain opaque")
+
+    class ForbiddenEmbedding:
+        build_from_config = staticmethod(forbidden)
+
+    def respond(request):
+        assert request.url.host == "chroma.invalid"
+        assert request.headers["X-Chroma-Token"] == "fixture-token"
+        path = request.url.path
+        requests.append((request.method, path))
+        if request.method == "GET" and path == "/api/v2/auth/identity":
+            body = {"user_id": "fixture", "tenant": tenant, "databases": [database]}
+        elif request.method == "GET" and path == f"/api/v2/tenants/{tenant}":
+            body = {"name": tenant}
+        elif request.method == "GET" and path == prefix:
+            body = {"id": "00000000-0000-0000-0000-000000000002", "name": database, "tenant": tenant}
+        elif request.method == "GET" and path == prefix + "/collections":
+            body = [model]
+        elif request.method == "GET" and path == prefix + "/collections/docs":
+            body = model
+        elif request.method == "GET" and path == prefix + f"/collections/{collection_id}/count":
+            assert field is None
+            body = 1
+        elif request.method == "POST" and path == prefix + f"/collections/{collection_id}/get":
+            assert field is None
+            query = json.loads(request.content)
+            assert query["include"] == ["documents", "metadatas", "embeddings", "uris"]
+            present = query["offset"] == 0
+            body = {"ids": ["one"] if present else [], "documents": ["stored text"] if present else [],
+                    "metadatas": [{"tag": "stored"}] if present else [],
+                    "embeddings": [vec(0)] if present else [], "uris": ["https://never-fetch.invalid/item"] if present else []}
+        else:
+            raise AssertionError(f"unexpected Chroma request: {request.method} {path}")
+        return httpx.Response(200, json=body)
+
+    real_client = httpx.Client
+
+    def transport_client(*args, **kwargs):
+        kwargs["transport"] = httpx.MockTransport(respond)
+        client = real_client(*args, **kwargs)
+        sessions.append(client)
+        return client
+
+    monkeypatch.setenv("ANONYMIZED_TELEMETRY", "False")
+    monkeypatch.setattr(httpx, "Client", transport_client)
+    monkeypatch.setitem(known_embedding_functions, "warm-import-forbidden", ForbiddenEmbedding)
+    monkeypatch.setattr(Collection, "configuration", property(forbidden))
+    monkeypatch.setattr(Collection, "schema", property(forbidden))
+    monkeypatch.setattr(Collection, "_embed", forbidden)
+    names = ["../other" if field == "requested_path" else "docs"] if named else None
+    source = ChromaSource(host="chroma.invalid", api_key="fixture-token", tenant=tenant, database=database,
+                          collections=names, page_size=1)
+    try:
+        if field:
+            with pytest.raises(ImporterError, match="Chroma returned"):
+                source.count()
+            with pytest.raises(ImporterError, match="Chroma returned"):
+                list(source.records())
+            assert not any(path.endswith(("/count", "/get")) for _, path in requests)
+        else:
+            assert source.count() == 1
+            records = list(source.records())
+            assert len(records) == 1
+            assert (records[0].id, records[0].namespace, records[0].text) == ("one", "docs", "stored text")
+            assert records[0].vector == pytest.approx(vec(0))
+            assert records[0].metadata == {"tag": "stored", "chroma_uri": "https://never-fetch.invalid/item"}
+        assert not attempts
+    finally:
+        source.close()
+        for session in sessions:
+            session.close()
 
 
 # ---- sqlite-vec ---------------------------------------------------------------------

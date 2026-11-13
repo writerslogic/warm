@@ -1,0 +1,33 @@
+--- a/vectordb_bench/backend/clients/warm/warm.py
++++ b/vectordb_bench/backend/clients/warm/warm.py
+@@ -7,8 +7,10 @@
+ ascending id order and `ids.npy` maps a row back to the dataset id.
+ """
+ 
++import hashlib
+ import json
+ import logging
++import os
+ import shutil
+ import uuid
+ from contextlib import contextmanager
+@@ -111,7 +113,18 @@
+         try:
+             if self._read_manifest()["built"]:
+                 self._index = self._new_index()
+-                self._index.load(self.root / INDEX_FILE)
++                snapshot = os.getenv("WARM_SHARED_INDEX_PATH")
++                if snapshot:
++                    with Path(snapshot).open("rb") as shared, (self.root / INDEX_FILE).open("rb") as source:
++                        self._index.load(f"/proc/self/fd/{shared.fileno()}", shared=True)
++                        if (
++                            hashlib.file_digest(shared, "sha256").digest()
++                            != hashlib.file_digest(source, "sha256").digest()
++                        ):
++                            msg = "shared WARM snapshot differs from the manifest-validated index"
++                            raise ValueError(msg)
++                else:
++                    self._index.load(self.root / INDEX_FILE)
+                 self._ids = np.load(self.root / IDS_FILE, allow_pickle=False)
+             self._k = None
+             yield
