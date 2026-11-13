@@ -15,7 +15,7 @@ use crate::core::qgraph::kernels::{dot, prefetch_bytes};
 const ORDER: u64 = 0x0102_0304_0506_0708;
 use crate::core::format::{
     VECTOR_LOG_MAGIC as LOG_MAGIC, VECTOR_MANIFEST_MAGIC as MANIFEST_MAGIC,
-    VECTOR_ROWS_MAGIC as ROW_MAGIC,
+    VECTOR_ROWS_MAGIC as ROW_MAGIC, VECTOR_ROWS_U8_MAGIC as ROW_U8_MAGIC,
 };
 pub(super) const LOG_HEADER: u64 = 60;
 const FRAME_HEADER: usize = 24;
@@ -188,12 +188,138 @@ impl Manifest {
 }
 
 pub(super) struct BaseRows {
-    map: memmap2::Mmap,
+    source: RowSource,
     pub(super) ids: Vec<u32>,
     dim: usize,
     row_at: usize,
     metric: Metric,
+    /// Bytes per stored coordinate: 4 (`f32`) or 1 (an integer value 0..=255).
+    width: usize,
 }
+enum RowSource {
+    Mapped(memmap2::Mmap),
+    Blocks(BlockReader),
+}
+
+/// Bytes per block of the rows file the block reader fetches and caches.
+pub(super) const ROW_BLOCK: usize = 64 << 10;
+const CACHE_SHARDS: usize = 8;
+
+type Shard = std::collections::HashMap<u64, (std::sync::Arc<[u8]>, u64)>;
+
+/// Reads the rows file as independent [`ROW_BLOCK`]-byte blocks through [`Self::block`], the
+/// only place the file is read, behind a cache bounded to `capacity` blocks.
+pub(super) struct BlockReader {
+    file: File,
+    len: u64,
+    per_shard: usize,
+    shards: Vec<std::sync::Mutex<(Shard, u64)>>,
+}
+impl BlockReader {
+    fn new(file: File, len: u64, capacity: usize) -> Self {
+        Self {
+            file,
+            len,
+            per_shard: capacity.div_ceil(CACHE_SHARDS).max(1),
+            shards: (0..CACHE_SHARDS)
+                .map(|_| std::sync::Mutex::new((Shard::new(), 0)))
+                .collect(),
+        }
+    }
+    fn block(&self, index: u64) -> Result<std::sync::Arc<[u8]>, UpdateError> {
+        let shard = &self.shards[(index % CACHE_SHARDS as u64) as usize];
+        {
+            let mut guard = shard.lock().unwrap_or_else(|e| e.into_inner());
+            guard.1 += 1;
+            let tick = guard.1;
+            if let Some(entry) = guard.0.get_mut(&index) {
+                entry.1 = tick;
+                return Ok(entry.0.clone());
+            }
+        }
+        let start = index * ROW_BLOCK as u64;
+        let size = (self.len.saturating_sub(start)).min(ROW_BLOCK as u64) as usize;
+        let mut bytes = vec![0u8; size];
+        read_exact_at(&self.file, &mut bytes, start)?;
+        let block: std::sync::Arc<[u8]> = bytes.into();
+        let mut guard = shard.lock().unwrap_or_else(|e| e.into_inner());
+        if guard.0.len() >= self.per_shard {
+            if let Some(oldest) = guard.0.iter().min_by_key(|(_, v)| v.1).map(|(&k, _)| k) {
+                guard.0.remove(&oldest);
+            }
+        }
+        let tick = guard.1;
+        guard.0.insert(index, (block.clone(), tick));
+        Ok(block)
+    }
+    /// Fills `out` with the file bytes at `at`, across block boundaries.
+    fn read(&self, at: usize, out: &mut [u8]) -> Result<(), UpdateError> {
+        let end = at.checked_add(out.len()).ok_or(UpdateError::Capacity)?;
+        if end as u64 > self.len {
+            return Err(bad("row outside the rows file"));
+        }
+        let mut pos = at;
+        let mut done = 0;
+        while pos < end {
+            let block = self.block((pos / ROW_BLOCK) as u64)?;
+            let from = pos % ROW_BLOCK;
+            let take = (block.len() - from).min(end - pos);
+            out[done..done + take].copy_from_slice(&block[from..from + take]);
+            pos += take;
+            done += take;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(unix)]
+fn read_exact_at(file: &File, buf: &mut [u8], at: u64) -> std::io::Result<()> {
+    std::os::unix::fs::FileExt::read_exact_at(file, buf, at)
+}
+#[cfg(windows)]
+fn read_exact_at(file: &File, mut buf: &mut [u8], mut at: u64) -> std::io::Result<()> {
+    use std::os::windows::fs::FileExt;
+    while !buf.is_empty() {
+        match file.seek_read(buf, at) {
+            Ok(0) => return Err(std::io::ErrorKind::UnexpectedEof.into()),
+            Ok(n) => {
+                buf = &mut buf[n..];
+                at += n as u64;
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(())
+}
+#[cfg(not(any(unix, windows)))]
+fn read_exact_at(_: &File, _: &mut [u8], _: u64) -> std::io::Result<()> {
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "block-addressed rows need a unix or windows target",
+    ))
+}
+
+thread_local! {
+    static ROW_SCRATCH: std::cell::RefCell<Vec<f32>> = const { std::cell::RefCell::new(Vec::new()) };
+    static BYTE_SCRATCH: std::cell::RefCell<Vec<u8>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+fn is_byte(x: f32) -> bool {
+    f32::from(x as u8).to_bits() == x.to_bits()
+}
+
+/// Whether every coordinate is exactly an integer in 0..=255, so a one-byte row form loses
+/// nothing.
+pub(super) fn byte_valued(vectors: &[f32]) -> bool {
+    vectors.iter().all(|&x| is_byte(x))
+}
+
+fn widen(bytes: &[u8], out: &mut Vec<f32>) {
+    out.clear();
+    out.extend(bytes.iter().map(|&b| f32::from(b)));
+}
+
 pub(super) struct BaseRowsWriter {
     writer: std::io::BufWriter<tempfile::NamedTempFile>,
     path: std::path::PathBuf,
@@ -202,6 +328,7 @@ pub(super) struct BaseRowsWriter {
     written: usize,
     metric: Metric,
     bytes: Vec<u8>,
+    narrow: bool,
 }
 fn row_offset(count: usize) -> Result<usize, UpdateError> {
     count
@@ -217,22 +344,27 @@ impl BaseRows {
         ids: &[u32],
         vectors: &[f32],
     ) -> Result<(), UpdateError> {
-        let mut writer = BaseRowsWriter::new(path, manifest, ids)?;
+        let mut writer = BaseRowsWriter::new(path, manifest, ids, byte_valued(vectors))?;
         writer.append(vectors)?;
         writer.finish()
     }
 
     pub(super) fn release_pages(&self) -> Result<(), UpdateError> {
         #[cfg(target_os = "linux")]
-        // SAFETY: this shared read-only generation never changes while a reader exists,
-        // so discarding its pages cannot change any value observed by concurrent searches.
-        unsafe {
-            self.map
-                .unchecked_advise(memmap2::UncheckedAdvice::DontNeed)?;
+        if let RowSource::Mapped(map) = &self.source {
+            // SAFETY: this shared read-only generation never changes while a reader exists,
+            // so discarding its pages cannot change any value observed by concurrent searches.
+            unsafe {
+                map.unchecked_advise(memmap2::UncheckedAdvice::DontNeed)?;
+            }
         }
         Ok(())
     }
-    pub(super) fn open(path: &Path, manifest: &Manifest) -> Result<Self, UpdateError> {
+    pub(super) fn open(
+        path: &Path,
+        manifest: &Manifest,
+        store: super::RowStore,
+    ) -> Result<Self, UpdateError> {
         let mut file = File::open(path)?;
         let len = file.metadata()?.len();
         if len < 8 {
@@ -240,14 +372,19 @@ impl BaseRows {
         }
         let mut magic = [0u8; 8];
         file.read_exact(&mut magic)?;
-        known_magic(&magic, ROW_MAGIC)?;
+        let (row_magic, width) = if magic == *ROW_U8_MAGIC {
+            (ROW_U8_MAGIC, 1)
+        } else {
+            (ROW_MAGIC, 4)
+        };
+        known_magic(&magic, row_magic)?;
         if len < 64 {
             return Err(bad("short rows file"));
         }
         // SAFETY: immutable generation files are only replaced by rename, never modified or
         // truncated while a mapping exists. The directory's exclusive lock excludes writers.
         let map = unsafe { memmap2::Mmap::map(&file)? };
-        check(&map[..60], ROW_MAGIC)?;
+        check(&map[..60], row_magic)?;
         let dim = word(&map[16..24]);
         let count = word(&map[24..32]);
         if dim != manifest.dim as u64
@@ -261,7 +398,7 @@ impl BaseRows {
         let row_at = row_offset(count)?;
         let stride = manifest
             .dim
-            .checked_mul(4)
+            .checked_mul(width)
             .and_then(|v| v.checked_add(4))
             .ok_or(UpdateError::Capacity)?;
         let end = count
@@ -287,43 +424,108 @@ impl BaseRows {
         if ids.last() == Some(&u32::MAX) || ids.windows(2).any(|p| p[0] >= p[1]) {
             return Err(bad("rows ids not strictly ordered"));
         }
+        let source = match store {
+            super::RowStore::Mapped => RowSource::Mapped(map),
+            super::RowStore::Blocks { cache_blocks } => {
+                let len = map.len() as u64;
+                drop(map);
+                RowSource::Blocks(BlockReader::new(file, len, cache_blocks))
+            }
+        };
         Ok(Self {
-            map,
+            source,
             ids,
             dim: manifest.dim,
             row_at,
             metric: manifest.build.metric,
+            width,
         })
     }
-    pub(super) fn row(&self, slot: usize) -> Result<&[f32], UpdateError> {
-        let row = self.checked_row(slot)?;
-        validate_vector(row, self.dim, self.metric)?;
+    pub(super) fn is_narrow(&self) -> bool {
+        self.width == 1
+    }
+    pub(super) fn row(&self, slot: usize) -> Result<std::borrow::Cow<'_, [f32]>, UpdateError> {
+        let row = match &self.source {
+            RowSource::Mapped(map) => {
+                let bytes = self.mapped_row(map, slot)?;
+                if self.width == 1 {
+                    let mut owned = Vec::with_capacity(self.dim);
+                    widen(bytes, &mut owned);
+                    std::borrow::Cow::Owned(owned)
+                } else {
+                    std::borrow::Cow::Borrowed(
+                        bytemuck::try_cast_slice(bytes)
+                            .map_err(|_| bad(format!("row {slot} is not f32 aligned")))?,
+                    )
+                }
+            }
+            RowSource::Blocks(blocks) => {
+                let mut owned = Vec::new();
+                self.fetch_row(blocks, slot, &mut owned)?;
+                owned.truncate(self.dim);
+                std::borrow::Cow::Owned(owned)
+            }
+        };
+        validate_vector(&row, self.dim, self.metric)?;
         Ok(row)
     }
-    /// The row's coordinates after the bounds, checksum and alignment checks, before the
+    /// The row's stored bytes after the bounds and checksum checks, before the
     /// coordinate checks of [`validate_vector`].
-    fn checked_row(&self, slot: usize) -> Result<&[f32], UpdateError> {
-        let len = self.dim * 4;
+    fn mapped_row<'a>(&self, map: &'a memmap2::Mmap, slot: usize) -> Result<&'a [u8], UpdateError> {
+        let len = self.dim * self.width;
         let at = self.row_at + slot * (len + 4);
-        let (Some(bytes), Some(crc)) = (
-            self.map.get(at..at + len),
-            self.map.get(at + len..at + len + 4),
-        ) else {
+        let (Some(bytes), Some(crc)) = (map.get(at..at + len), map.get(at + len..at + len + 4))
+        else {
             return Err(bad(format!("row {slot} outside the rows file")));
         };
         if crc32fast::hash(bytes) != small(crc) {
             return Err(bad(format!("row {slot} checksum")));
         }
-        // Row starts align to f32 within the mapping, and check() rejects big-endian targets.
-        bytemuck::try_cast_slice(bytes).map_err(|_| bad(format!("row {slot} is not f32 aligned")))
+        Ok(bytes)
+    }
+    /// Reads the stored row (coordinates then checksum) into `buf` as `dim + 1` words after the
+    /// bounds and checksum checks.
+    fn fetch_row(
+        &self,
+        blocks: &BlockReader,
+        slot: usize,
+        buf: &mut Vec<f32>,
+    ) -> Result<(), UpdateError> {
+        let len = self.dim * self.width;
+        let at = slot
+            .checked_mul(len + 4)
+            .and_then(|v| v.checked_add(self.row_at))
+            .ok_or_else(|| bad(format!("row {slot} outside the rows file")))?;
+        if self.width == 1 {
+            return BYTE_SCRATCH.with(|scratch| {
+                let mut bytes = scratch.borrow_mut();
+                bytes.resize(len + 4, 0);
+                blocks.read(at, &mut bytes)?;
+                if crc32fast::hash(&bytes[..len]) != small(&bytes[len..]) {
+                    return Err(bad(format!("row {slot} checksum")));
+                }
+                widen(&bytes[..len], buf);
+                Ok(())
+            });
+        }
+        buf.resize(self.dim + 1, 0.0);
+        let bytes: &mut [u8] = bytemuck::cast_slice_mut(buf.as_mut_slice());
+        blocks.read(at, bytes)?;
+        if crc32fast::hash(&bytes[..len]) != small(&bytes[len..]) {
+            return Err(bad(format!("row {slot} checksum")));
+        }
+        Ok(())
     }
     /// Hints that [`Self::distance`] will read `slot` soon. A slot outside the file is ignored.
     pub(super) fn prefetch(&self, slot: usize) {
-        let len = self.dim * 4 + 4;
+        let RowSource::Mapped(map) = &self.source else {
+            return;
+        };
+        let len = self.dim * self.width + 4;
         if let Some(bytes) = slot
             .checked_mul(len)
             .and_then(|v| v.checked_add(self.row_at))
-            .and_then(|at| self.map.get(at..at.checked_add(len)?))
+            .and_then(|at| map.get(at..at.checked_add(len)?))
         {
             prefetch_bytes(bytemuck::cast_slice(bytes));
         }
@@ -337,7 +539,29 @@ impl BaseRows {
         query: &[f32],
         metric: Metric,
     ) -> Result<f32, UpdateError> {
-        let row = self.checked_row(slot)?;
+        match &self.source {
+            RowSource::Mapped(map) => {
+                let bytes = self.mapped_row(map, slot)?;
+                if self.width == 1 {
+                    ROW_SCRATCH.with(|scratch| {
+                        let mut buf = scratch.borrow_mut();
+                        widen(bytes, &mut buf);
+                        self.score(&buf, query, metric)
+                    })
+                } else {
+                    let row = bytemuck::try_cast_slice(bytes)
+                        .map_err(|_| bad(format!("row {slot} is not f32 aligned")))?;
+                    self.score(row, query, metric)
+                }
+            }
+            RowSource::Blocks(blocks) => ROW_SCRATCH.with(|scratch| {
+                let mut buf = scratch.borrow_mut();
+                self.fetch_row(blocks, slot, &mut buf)?;
+                self.score(&buf[..self.dim], query, metric)
+            }),
+        }
+    }
+    fn score(&self, row: &[f32], query: &[f32], metric: Metric) -> Result<f32, UpdateError> {
         let norm = dot(row, row);
         // Squares are non-negative, so a NaN or infinite coordinate makes the norm non-finite,
         // and a positive norm needs a nonzero coordinate. Anything else takes the full check.
@@ -352,12 +576,17 @@ impl BaseRows {
 }
 
 impl BaseRowsWriter {
-    pub(super) fn new(path: &Path, manifest: &Manifest, ids: &[u32]) -> Result<Self, UpdateError> {
+    pub(super) fn new(
+        path: &Path,
+        manifest: &Manifest,
+        ids: &[u32],
+        narrow: bool,
+    ) -> Result<Self, UpdateError> {
         if manifest.dim == 0 || manifest.dim > MAX_DIM || ids.len() >= u32::MAX as usize {
             return Err(UpdateError::Capacity);
         }
         let row_at = row_offset(ids.len())?;
-        let mut header = ROW_MAGIC.to_vec();
+        let mut header = if narrow { ROW_U8_MAGIC } else { ROW_MAGIC }.to_vec();
         words(
             &mut header,
             &[
@@ -391,6 +620,7 @@ impl BaseRowsWriter {
             written: 0,
             metric: manifest.build.metric,
             bytes: Vec::new(),
+            narrow,
         })
     }
 
@@ -406,7 +636,14 @@ impl BaseRowsWriter {
         for row in vectors.chunks_exact(self.dim) {
             validate_vector(row, self.dim, self.metric)?;
             self.bytes.clear();
-            floats(&mut self.bytes, row);
+            if self.narrow {
+                if !byte_valued(row) {
+                    return Err(bad("row is not byte valued"));
+                }
+                self.bytes.extend(row.iter().map(|&x| x as u8));
+            } else {
+                floats(&mut self.bytes, row);
+            }
             self.writer.write_all(&self.bytes)?;
             self.writer
                 .write_all(&crc32fast::hash(&self.bytes).to_le_bytes())?;
@@ -612,6 +849,95 @@ mod tests {
     use crate::core::qgraph::BuildParams;
 
     #[test]
+    fn block_reads_match_mapped_reads_across_block_boundaries() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("rows.bin");
+        let (dim, count) = (100usize, 500usize);
+        let manifest = Manifest {
+            identity: [9; 16],
+            dim,
+            sequence: 1,
+            build: BuildParams::default(),
+            encoding: Encoding::default(),
+        };
+        let ids: Vec<u32> = (0..count as u32).collect();
+        let flat: Vec<f32> = (0..count * dim)
+            .map(|i| ((i * 7919) % 1013) as f32 / 97.0 - 5.0)
+            .collect();
+        BaseRows::write(&path, &manifest, &ids, &flat).unwrap();
+        let mapped = BaseRows::open(&path, &manifest, super::super::RowStore::Mapped).unwrap();
+        let blocks = BaseRows::open(
+            &path,
+            &manifest,
+            super::super::RowStore::Blocks { cache_blocks: 1 },
+        )
+        .unwrap();
+        assert!(count * (dim * 4 + 4) > 3 * ROW_BLOCK);
+        let query: Vec<f32> = (0..dim).map(|i| i as f32 * 0.01).collect();
+        for slot in (0..count).rev() {
+            let metric = manifest.build.metric;
+            assert_eq!(
+                mapped.distance(slot, &query, metric).unwrap().to_bits(),
+                blocks.distance(slot, &query, metric).unwrap().to_bits()
+            );
+            assert_eq!(*mapped.row(slot).unwrap(), *blocks.row(slot).unwrap());
+        }
+        assert!(blocks.row(count).is_err());
+    }
+
+    #[test]
+    fn byte_valued_rows_store_one_byte_and_read_back_exactly() {
+        let dir = tempfile::tempdir().unwrap();
+        let (dim, count) = (100usize, 500usize);
+        let manifest = Manifest {
+            identity: [5; 16],
+            dim,
+            sequence: 1,
+            build: BuildParams::default(),
+            encoding: Encoding::default(),
+        };
+        let ids: Vec<u32> = (0..count as u32).collect();
+        let flat: Vec<f32> = (0..count * dim).map(|i| ((i * 31) % 256) as f32).collect();
+        let narrow = dir.path().join("narrow.bin");
+        BaseRows::write(&narrow, &manifest, &ids, &flat).unwrap();
+        let mut wide_flat = flat.clone();
+        wide_flat[7] = 0.5;
+        let wide = dir.path().join("wide.bin");
+        BaseRows::write(&wide, &manifest, &ids, &wide_flat).unwrap();
+        assert!(
+            std::fs::metadata(&narrow).unwrap().len() * 3 < std::fs::metadata(&wide).unwrap().len()
+        );
+        let query: Vec<f32> = (0..dim).map(|i| i as f32 * 0.01).collect();
+        for store in [
+            super::super::RowStore::Mapped,
+            super::super::RowStore::Blocks { cache_blocks: 1 },
+        ] {
+            let rows = BaseRows::open(&narrow, &manifest, store).unwrap();
+            assert!(rows.is_narrow());
+            for slot in 0..count {
+                assert_eq!(*rows.row(slot).unwrap(), flat[slot * dim..(slot + 1) * dim]);
+                let want = -dot(&query, &flat[slot * dim..(slot + 1) * dim])
+                    + dot(
+                        &flat[slot * dim..(slot + 1) * dim],
+                        &flat[slot * dim..(slot + 1) * dim],
+                    ) * 0.5;
+                assert_eq!(
+                    rows.distance(slot, &query, Metric::Euclidean)
+                        .unwrap()
+                        .to_bits(),
+                    want.to_bits()
+                );
+            }
+            assert!(rows.row(count).is_err());
+        }
+        assert!(
+            !BaseRows::open(&wide, &manifest, super::super::RowStore::Mapped)
+                .unwrap()
+                .is_narrow()
+        );
+    }
+
+    #[test]
     fn rows_past_the_last_slot_are_errors() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("rows.bin");
@@ -623,7 +949,7 @@ mod tests {
             encoding: Encoding::default(),
         };
         BaseRows::write(&path, &manifest, &[3, 5], &[1.0, 2.0, 3.0, 4.0]).unwrap();
-        let rows = BaseRows::open(&path, &manifest).unwrap();
+        let rows = BaseRows::open(&path, &manifest, super::super::RowStore::Mapped).unwrap();
         assert_eq!(rows.ids, [3, 5]);
         for (slot, want) in [
             (0, Some(&[1.0f32, 2.0][..])),
@@ -666,10 +992,10 @@ mod tests {
             };
             let path = dir.path().join(format!("rows-{}.bin", metric.code()));
             BaseRows::write(&path, &manifest, &ids, &flat).unwrap();
-            let rows = BaseRows::open(&path, &manifest).unwrap();
+            let rows = BaseRows::open(&path, &manifest, super::super::RowStore::Mapped).unwrap();
             for slot in 0..ids.len() {
                 rows.prefetch(slot);
-                let want = super::super::distance(&q, rows.row(slot).unwrap(), metric);
+                let want = super::super::distance(&q, &rows.row(slot).unwrap(), metric);
                 let got = rows.distance(slot, &q, metric).unwrap();
                 assert_eq!(got.to_bits(), want.to_bits(), "{metric:?} slot {slot}");
             }

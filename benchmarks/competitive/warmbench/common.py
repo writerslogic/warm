@@ -237,6 +237,9 @@ def timing_lock():
     with path.open("a") as handle:
         fcntl.flock(handle, fcntl.LOCK_EX)
         try:
+            deadline = time.monotonic() + float(os.environ.get("WARM_BENCH_LOAD_WAIT_S", "0"))
+            while os.getloadavg()[0] >= 2 and time.monotonic() < deadline:
+                time.sleep(5)
             yield
         finally:
             fcntl.flock(handle, fcntl.LOCK_UN)

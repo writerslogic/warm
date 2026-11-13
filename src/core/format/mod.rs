@@ -27,6 +27,8 @@ pub const VECTOR_UPDATE_FORMAT_VERSION: u32 = 1;
 pub const VECTOR_MANIFEST_MAGIC: &[u8; 8] = b"HMSVUP01";
 /// Full-precision vector row magic.
 pub const VECTOR_ROWS_MAGIC: &[u8; 8] = b"HMSVRW01";
+/// Vector row magic for rows stored as one byte per coordinate (integer values 0..=255).
+pub const VECTOR_ROWS_U8_MAGIC: &[u8; 8] = b"HMSVRW02";
 /// Vector update log magic.
 pub const VECTOR_LOG_MAGIC: &[u8; 8] = b"HMSVLG01";
 
