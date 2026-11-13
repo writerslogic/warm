@@ -276,11 +276,27 @@ impl BlockReader {
 fn read_exact_at(file: &File, buf: &mut [u8], at: u64) -> std::io::Result<()> {
     std::os::unix::fs::FileExt::read_exact_at(file, buf, at)
 }
-#[cfg(not(unix))]
+#[cfg(windows)]
+fn read_exact_at(file: &File, mut buf: &mut [u8], mut at: u64) -> std::io::Result<()> {
+    use std::os::windows::fs::FileExt;
+    while !buf.is_empty() {
+        match file.seek_read(buf, at) {
+            Ok(0) => return Err(std::io::ErrorKind::UnexpectedEof.into()),
+            Ok(n) => {
+                buf = &mut buf[n..];
+                at += n as u64;
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(())
+}
+#[cfg(not(any(unix, windows)))]
 fn read_exact_at(_: &File, _: &mut [u8], _: u64) -> std::io::Result<()> {
     Err(std::io::Error::new(
         std::io::ErrorKind::Unsupported,
-        "block-addressed rows need a unix target",
+        "block-addressed rows need a unix or windows target",
     ))
 }
 
