@@ -56,7 +56,9 @@ jobs:
           npm ci --prefix scripts/docs-api
 
       - name: Unit-test the docs generators
-        run: python -m unittest scripts/test_docs_hooks.py scripts/test_docs_site.py
+        run: |
+          python -m unittest scripts/test_docs_hooks.py scripts/test_docs_site.py
+          npm test --prefix scripts/docs-api
 
       - name: Build every version (strict, any warning fails)
         run: bash scripts/build-docs-site.sh _site
@@ -98,6 +100,7 @@ jobs:
   # and other categories at least 95 on the landing page and a documentation page, and every query in
   # scripts/docs-qa/queries.txt finds its page in the first five.
   browser-checks:
+    # Gate the checked-out candidate; /latest is rebuilt from an immutable older tag.
     if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
@@ -132,27 +135,29 @@ jobs:
       - name: axe (serious and critical violations fail)
         run: node scripts/docs-qa/axe.mjs _site
         env:
-          VERSION: latest
+          VERSION: dev
 
       - name: Lighthouse (performance at least 85, other categories at least 95)
         run: node scripts/docs-qa/lighthouse.mjs _site
         env:
-          VERSION: latest
+          VERSION: dev
           REPORT_DIR: docs-qa-output/lighthouse
           # Hosted runners are slower than a workstation (the same page scores 98 to 99 locally): the
           # performance floor is 85 there (the doc page scored 89 to 91 on a runner), and the other three categories stay at 95.
           PERF_THRESHOLD: 85
 
       - name: Search (real queries)
-        run: node scripts/docs-qa/search.mjs _site
+        run: |
+          node scripts/docs-qa/search-init.mjs _site
+          node scripts/docs-qa/search.mjs _site
         env:
-          VERSION: latest
+          VERSION: dev
 
       - name: Screenshots at desktop, tablet and phone, light and dark
         if: ${{ always() }}
         run: node scripts/docs-qa/shots.mjs _site docs-qa-output/screenshots / /quickstart/ /concepts/holographic/ /api/
         env:
-          VERSION: latest
+          VERSION: dev
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ always() }}

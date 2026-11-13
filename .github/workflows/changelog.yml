@@ -19,6 +19,7 @@ jobs:
       - name: Generate changelog
         uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
         with:
+          version: v2.14.2
           config: cliff.toml
           args: --verbose
         env:
@@ -31,5 +32,5 @@ jobs:
         run: |
           set -euo pipefail
           if git diff --exit-code -- CHANGELOG.md; then exit 0; fi
-          echo "::warning::CHANGELOG.md is stale; run git cliff -c cliff.toml -o CHANGELOG.md and commit it as chore: update changelog"
+          echo "::warning::CHANGELOG.md is stale; follow docs/RELEASING.md with git-cliff 2.14.2 and commit it as chore: Update changelog"
           [ "$REF_TYPE" != "tag" ]

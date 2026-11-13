@@ -13,6 +13,7 @@ Environment, set by scripts/build-docs-site.sh:
   WARM_IS_LATEST        "1" while building the `latest` site (no outdated-version banner)
 """
 
+import hashlib
 import html
 import json
 import os
@@ -21,10 +22,12 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from importlib.metadata import version
 
 import yaml
 from urllib.parse import quote_from_bytes, urlsplit
 from mkdocs.exceptions import PluginError
+from mkdocs.plugins import event_priority
 from markupsafe import Markup
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -86,7 +89,7 @@ def highlight(code, lang):
     return md.convert(f"```{lang}\n{code}\n```")
 
 
-LANGS = {"rust": "rust", "python": "python", "node": "js", "go": "go", "java": "java",
+LANGS = {"rust": "rust", "python": "python", "node": "js", "node-embedded": "js", "go": "go", "java": "java",
          "dotnet": "csharp", "swift": "swift", "kotlin": "kotlin", "wasm": "js"}
 
 
@@ -202,17 +205,50 @@ def on_config(config):
     return config
 
 
+def _validate_inline_css(css, asset):
+    if "</style" in css.lower() or "@import" in css.lower():
+        raise PluginError(f"Cannot inline stylesheet: {asset}")
+    for url in re.finditer(r"\burl\(\s*(?:\"([^\"]*)\"|'([^']*)'|([^)]*))\s*\)", css):
+        value = next(group for group in url.groups() if group is not None).strip()
+        if not value.startswith(("data:", "#")):
+            raise PluginError(f"Stylesheet needs asset URL rewriting: {asset}")
+
+
+SEARCH_BUNDLE = "bundle.d7400e89.min.js"
+SEARCH_BUNDLE_SHA256 = "f288ab99e197c406766aea4581ba6e902d7d0e28c013bdd3cd3fab6cc77fb7c8"
+
+
+def deferred_search_bundle(source, material_version):
+    # Both the worker and content highlighter subscribe, so gate their shared index source.
+    eager = 'zi=document.forms.namedItem("search")?ks():tt'
+    deferred = ('zi=document.forms.namedItem("search")?L(Je("search"),Kt.pipe(Q(we()),'
+                'm(e=>!!e.searchParams.get("h")))).pipe(Re(e=>e),b(()=>ks()),Z(1)):tt')
+    mapping = f"//# sourceMappingURL={SEARCH_BUNDLE}.map"
+    if (material_version != "9.7.7" or len(source) != 114286
+            or hashlib.sha256(source).hexdigest() != SEARCH_BUNDLE_SHA256):
+        raise PluginError("Material search bundle changed; review the deferred-search compatibility patch")
+    text = source.decode("utf-8")
+    if text.count(eager) != 1 or text.count(mapping) != 1 or not text.rstrip().endswith(mapping):
+        raise PluginError("Material search initialization or source map is ambiguous")
+    return text.replace(eager, deferred).rstrip().removesuffix(mapping).encode("utf-8")
+
+
+@event_priority(-50)  # mkdocstrings writes its stylesheet at priority -20.
 def on_env(env, config, files):
+    api_css = "assets/_mkdocstrings.css"
+    if api_css in config.get("extra_css", []):
+        from csscompressor import compress
+
+        css = (Path(config["site_dir"]) / api_css).read_text(encoding="utf-8")
+        _validate_inline_css(css, api_css)
+        config["extra"]["warm"]["inline_css"] = compress(css) + "\n" + config["extra"]["warm"]["inline_css"]
+        config["extra_css"].remove(api_css)
+
     def inline_theme_styles(markup):
         def replace(match):
             asset = "assets/stylesheets/" + match["name"]
             css = env.loader.get_source(env, asset)[0]
-            if "</style" in css.lower() or "@import" in css.lower():
-                raise PluginError(f"Cannot inline theme stylesheet: {asset}")
-            for url in re.finditer(r"\burl\(\s*(?:\"([^\"]*)\"|'([^']*)'|([^)]*))\s*\)", css):
-                value = next(group for group in url.groups() if group is not None).strip()
-                if not value.startswith(("data:", "#")):
-                    raise PluginError(f"Theme stylesheet needs asset URL rewriting: {asset}")
+            _validate_inline_css(css, asset)
             return f'<style data-warm-theme="{match["name"]}">{css}</style>'
 
         return Markup(re.sub(
@@ -221,6 +257,24 @@ def on_env(env, config, files):
         ))
 
     env.filters["warm_inline_theme_styles"] = inline_theme_styles
+
+    search_asset = None
+
+    def defer_search(markup):
+        nonlocal search_asset
+        pattern = r'(<script src="[^"]*assets/javascripts/)' + re.escape(SEARCH_BUNDLE) + r'("></script>)'
+        if len(re.findall(pattern, str(markup))) != 1:
+            raise PluginError("Expected exactly one Material search bundle script")
+        if search_asset is None:
+            source = env.loader.get_source(env, "assets/javascripts/" + SEARCH_BUNDLE)[0].encode("utf-8")
+            patched = deferred_search_bundle(source, version("mkdocs-material"))
+            search_asset = "bundle.warm-search." + hashlib.sha256(patched).hexdigest()[:16] + ".min.js"
+            target = Path(config["site_dir"]) / "assets" / "javascripts" / search_asset
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(patched)
+        return Markup(re.sub(pattern, lambda match: match[1] + search_asset + match[2], str(markup)))
+
+    env.filters["warm_defer_search"] = defer_search
     return env
 
 

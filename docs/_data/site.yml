@@ -21,7 +21,8 @@ tagline: Search and memory that run entirely on your machine.
 lede: >-
   WARM is a local-first document search engine and a vector-symbolic associative memory in one
   store. Hybrid BM25 and exact-cosine retrieval, byte-offset hits, crash-safe persistence, and
-  superposed memory you can bind, bundle and query. No service calls and no telemetry.
+  superposed memory you can bind, bundle and query. Embed the engine or connect portable
+  clients to your own HTTP server. The engine sends no telemetry.
 license: Apache-2.0
 
 # The announcement bar. Leave `text` empty to hide it.
@@ -49,14 +50,27 @@ runtimes:
       - examples/quickstart/python/quickstart.py:hit
     note: An HTTP client for warm-server. The warm-python wheel provides native vector search and phase vectors.
   - id: node
-    name: Node
+    name: JavaScript
     status: available
-    install: npm install warm-sdk
+    install: |-
+      npm ci --prefix bindings/js/warm-sdk
+      npm run build --prefix bindings/js/warm-sdk
+    requires: [bindings/js/warm-sdk/package.json, bindings/js/warm-sdk/src/client.ts, bindings/js/warm-sdk/src/types.ts, examples/quickstart/js-client/quickstart.mjs]
+    snippets:
+      - examples/quickstart/js-client/quickstart.mjs:ingest
+      - examples/quickstart/js-client/quickstart.mjs:hit
+    note: Portable warm-sdk 0.2.1 HTTP client. Run warm-server separately and set WARM_URL and WARM_API_KEY. No native or runtime dependencies. The relative import above is for this checkout.
+  - id: node-embedded
+    name: Embedded Node
+    status: available
+    install: |-
+      npm ci --omit=optional
+      npm run build
     requires: [index.d.ts, examples/quickstart/node/quickstart.mjs]
     snippets:
       - examples/quickstart/node/quickstart.mjs:ingest
       - examples/quickstart/node/quickstart.mjs:hit
-    note: The npm package installs a native binary for your platform. Building from source requires Rust.
+    note: Optional writerslogic-warm 0.6.8 engine. Source builds require Rust; native npm releases select one of eight platform binaries.
 
 features:
   - title: Hybrid search

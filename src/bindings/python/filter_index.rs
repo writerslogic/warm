@@ -11,6 +11,7 @@ use numpy::{PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
+use super::vector_index::result_array;
 use crate::core::qgraph::filter::{
     FilterBuildParams, FilterSearchParams, FilterTuning, FilteredIndex,
 };
@@ -72,7 +73,7 @@ impl PyFilteredIndex {
     /// `bitset_min` members a membership bitset; labels with an inverted file and at least
     /// `copy_min` members keep their rows copied in list order. `threads` bounds build and search (0 = all).
     #[new]
-    #[pyo3(signature = (data, indptr, indices, labels=0, ivf_min=20_000, cluster_size=1_000, max_lists=1_024, bitset_min=20_000, kmeans_iters=6, train_per_list=48, copy_min=usize::MAX, threads=0))]
+    #[pyo3(signature = (data, indptr, indices, labels=0, ivf_min=20_000, cluster_size=1_000, max_lists=1_024, bitset_min=20_000, kmeans_iters=6, train_per_list=48, copy_min=usize::MAX, pq_m=0, pq_sample=100_000, pq_iters=8, threads=0))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         py: Python<'_>,
@@ -87,6 +88,9 @@ impl PyFilteredIndex {
         kmeans_iters: usize,
         train_per_list: usize,
         copy_min: usize,
+        pq_m: usize,
+        pq_sample: usize,
+        pq_iters: usize,
         threads: usize,
     ) -> PyResult<Self> {
         let (rows, n, dim) = u8_rows(&data);
@@ -108,6 +112,9 @@ impl PyFilteredIndex {
             kmeans_iters,
             train_per_list,
             copy_min,
+            pq_m,
+            pq_sample,
+            pq_iters,
             ..FilterBuildParams::default()
         };
         let build = || FilteredIndex::build(&rows, dim, &ptr, &ids, labels, &params);
@@ -134,9 +141,10 @@ impl PyFilteredIndex {
     /// batch's queries grouped by their rarest label; `block_filter` tests the other labels of a
     /// query a block of ids at a time; `skip_tombstones` skips the delete probe while nothing is
     /// deleted; `cache_intersections` reuses the matches of a repeated label set; `prefetch` is
-    /// the row prefetch distance; `wide` uses 512-bit VNNI. `target_mid`/`target_large` replace
-    /// `target` for rarest labels above `edge_mid`/`edge_large` members (0 keeps it).
-    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, target_mid=0, target_large=0, edge_mid=50_000, edge_large=200_000))]
+    /// the row prefetch distance; `wide` uses 512-bit VNNI. `targets`/`reranks` (8
+    /// values, single-label bands first, then multi-label; 0 keeps `target`/`rerank`) replace them by
+    /// rarest-label size band, the bands starting above the 3 `edges`.
+    #[pyo3(signature = (brute_max=20_000, target=5_000, min_lists=1, intersect_max=200_000, sort_queries=true, prefetch=24, wide=false, skip_tombstones=true, block_filter=true, cache_intersections=true, rerank=0, edges=None, targets=None, reranks=None))]
     #[allow(clippy::too_many_arguments)]
     fn set_search(
         &mut self,
@@ -150,11 +158,16 @@ impl PyFilteredIndex {
         skip_tombstones: bool,
         block_filter: bool,
         cache_intersections: bool,
-        target_mid: usize,
-        target_large: usize,
-        edge_mid: usize,
-        edge_large: usize,
+        rerank: usize,
+        edges: Option<[usize; 3]>,
+        targets: Option<[usize; 8]>,
+        reranks: Option<[usize; 8]>,
     ) {
+        let (targets, reranks) = (targets.unwrap_or([0; 8]), reranks.unwrap_or([0; 8]));
+        let mut class_params = [[(0, 0); 4]; 2];
+        for (i, c) in class_params.iter_mut().flatten().enumerate() {
+            *c = (targets[i], reranks[i]);
+        }
         self.index.set_tuning(FilterTuning {
             sort_queries,
             prefetch,
@@ -162,14 +175,15 @@ impl PyFilteredIndex {
             skip_tombstones,
             block_filter,
             cache_intersections,
-            target_bands: [target_mid, target_large],
-            band_edges: [edge_mid, edge_large],
+            class_params,
+            class_edges: edges.unwrap_or([20_000, 50_000, 200_000]),
         });
         self.params = FilterSearchParams {
             brute_max,
             target,
             min_lists,
             intersect_max,
+            rerank,
         };
     }
 
@@ -194,7 +208,7 @@ impl PyFilteredIndex {
             )));
         }
         let (ptr, ids) = csr(&indptr, &indices, nq)?;
-        let mut out = vec![-1i64; nq * k];
+        let mut out = result_array(nq, k)?;
         let mut search = || {
             self.index
                 .search_batch(&rows, &ptr, &ids, k, &self.params, &mut out)

@@ -1,0 +1,142 @@
+{
+"gen": "g1-sift",
+"rounds": 2,
+"cpu": 4,
+"datasets": [
+"sift-128-euclidean-heldout"
+],
+"arms": {
+"ctrl": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {}
+},
+"xbp": {
+"algo": "warm",
+"wheel": "xbp",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {}
+},
+"xna": {
+"algo": "warm",
+"wheel": "xna",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {}
+},
+"xq4": {
+"algo": "warm",
+"wheel": "xq4",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {}
+},
+"pf1": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_PREFETCH": 1
+}
+},
+"pf3": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_PREFETCH": 3
+}
+},
+"be1": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_BATCH_EST": 1
+}
+},
+"fr85": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_FRONTIER": 0.85
+}
+},
+"rz2": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_RERANK_Z": 2
+}
+},
+"rr": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-rr",
+"env": {}
+},
+"pat": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-pat",
+"env": {}
+},
+"d48": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-d48",
+"env": {}
+},
+"d64": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-d64",
+"env": {}
+},
+"cb4": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-cb4",
+"env": {}
+},
+"kavx2": {
+"algo": "warm",
+"wheel": "f21de886",
+"buildtag": "f21de886",
+"python": "/home/davidcondrey/ab-hms/venv/bin/python",
+"defs": "/home/davidcondrey/ab-a/defs/s-base",
+"env": {
+"WARM_QGRAPH_KERNEL": "avx2"
+}
+}
+}
+}

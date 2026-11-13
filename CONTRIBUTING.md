@@ -68,8 +68,9 @@ Also:
   [`benchmarks/results/`](benchmarks/results). Never write a figure from memory. If your change
   moves a number, regenerate the results file and say so. Report where WARM loses as plainly as
   where it wins. Capacity and scaling claims state the tested range; they do not extrapolate.
-  The block between `<!-- BENCH:START -->` and `<!-- BENCH:END -->` in the README is generated;
-  do not edit it by hand.
+  The comparison and `benchmarks/competitive/README-block.md` are generated; do not edit
+  them by hand. Keep detailed measurements in the benchmark documentation so the main
+  README stays focused on installation, integration and supported use cases.
 - **Style.** Follow `cargo fmt` and fix every clippy warning. Add comments only for a constraint
   or a reason that is not obvious from the code. JavaScript uses two-space indentation.
 - **Security features.** With the `security` feature in scope: zeroize key material after cipher
@@ -119,6 +120,11 @@ squash-merge, so your commits do not need a GPG or SSH signature.
   Historical benchmark inputs are listed in
   [the evidence archive guide](benchmarks/evidence/README.md), with their original revisions
   and checksums. Restore them locally instead of adding copied build trees or raw caches.
+  Keep exploratory experiment logs, raw model outputs, local build products and research
+  planning records outside the public repository. Promote reusable harnesses with their tests
+  when they support maintained functionality. A published performance claim must include
+  its complete protocol, pinned inputs, aggregate results, limits and a durable path to the
+  evidence needed for independent reproduction; retain negative results in that evidence.
 
 ## Release process
 
