@@ -29,6 +29,7 @@
 
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 
 use rayon::prelude::*;
 
@@ -157,6 +158,9 @@ pub struct SparseBuildParams {
     /// Summary columns kept per list (the coordinates with the largest summed block maxima);
     /// `usize::MAX` keeps every coordinate.
     pub summary_coords: usize,
+    /// Entries of the per-document sketch (its largest values, scored first to reject
+    /// candidates before their full rows are read); 0 builds none.
+    pub sketch_len: usize,
     /// Postings transposed at once during the build (bounds the build's working memory).
     pub transpose_budget: usize,
     /// Seed of the centroid sample.
@@ -180,6 +184,7 @@ impl Default for SparseBuildParams {
             postings_per_term: 4000,
             block_fraction: 0.1,
             summary_coords: 192,
+            sketch_len: 0,
             transpose_budget: 1 << 26,
             seed: 0x5eed,
         }
@@ -198,6 +203,18 @@ pub struct SparseSearchParams {
     /// (Cauchy-Schwarz), times this factor. 1 keeps the bound an upper bound; 0 ignores those
     /// coordinates.
     pub residual: f32,
+    /// A candidate whose sketch score plus `tail` times (norm of its entries outside the
+    /// sketch, times the query norm) is below the k-th best score is dropped without reading
+    /// its row; negative scores every candidate.
+    pub tail: f32,
+    /// Blocks per walked list with the largest bounds, scored before the rest to raise the
+    /// threshold early.
+    pub seed: usize,
+    /// Summary columns whose weighted scale is below this fraction of the list's largest are
+    /// left out of the block bounds.
+    pub col_cut: f32,
+    /// Candidates fetched ahead of scoring.
+    pub batch: usize,
 }
 
 impl SparseSearchParams {
@@ -206,6 +223,10 @@ impl SparseSearchParams {
             query_cut: usize::MAX,
             heap_factor: 1.0,
             residual: 1.0,
+            tail: -1.0,
+            seed: 0,
+            col_cut: 0.0,
+            batch: SCORE_BATCH,
         }
     }
 }
@@ -220,6 +241,11 @@ pub struct SparseImpactIndex {
     /// half a step, `max / 510`, and a stored value is never zero).
     fwd_offsets: Vec<u64>,
     fwd: Vec<u8>,
+    /// Sketches, `sk_stride` bytes per document: `f32` norm of the entries outside the sketch,
+    /// then the sketch as a forward row (scale, `sk_len` ids, `sk_len` codes). Empty without one.
+    sk: Vec<u8>,
+    sk_stride: usize,
+    sk_len: usize,
     /// Blocks of coordinate `t`: `term_blocks[t]..term_blocks[t + 1]`.
     term_blocks: Vec<u32>,
     /// Documents of block `b`: `block_docs[block_doc_offsets[b]..block_doc_offsets[b + 1]]`.
@@ -333,6 +359,9 @@ impl SparseImpactIndex {
             n_docs,
             fwd_offsets,
             fwd,
+            sk: Vec::new(),
+            sk_stride: 0,
+            sk_len: 0,
             term_blocks: Vec::with_capacity(n_dims + 1),
             block_doc_offsets: vec![0],
             block_docs: Vec::new(),
@@ -345,6 +374,7 @@ impl SparseImpactIndex {
             n_blocks: 0,
         };
         index.term_blocks.push(0);
+        index.build_sketches(params.sketch_len);
 
         // Transpose a range of coordinates at a time, then cluster each list in parallel.
         let budget = params.transpose_budget.max(1) as u64;
@@ -398,6 +428,63 @@ impl SparseImpactIndex {
             lo = hi;
         }
         Ok(index)
+    }
+
+    fn build_sketches(&mut self, m: usize) {
+        if m == 0 {
+            return;
+        }
+        let stride = (8 + 3 * m).div_ceil(64) * 64;
+        let mut sk = vec![0u8; self.n_docs * stride];
+        advise_huge_pages(&sk);
+        let (offsets, fwd) = (&self.fwd_offsets, &self.fwd);
+        sk.par_chunks_mut(stride).enumerate().for_each(|(d, out)| {
+            let row = &fwd[offsets[d] as usize..offsets[d + 1] as usize];
+            let n = row.len().saturating_sub(4) / 3;
+            let (ids, codes) = (&row[4..4 + 2 * n], &row[4 + 2 * n..]);
+            let mut order: Vec<usize> = (0..n).collect();
+            order.sort_unstable_by(|&a, &b| codes[b].cmp(&codes[a]).then(a.cmp(&b)));
+            let keep = n.min(m);
+            let scale = f32::from_le_bytes([row[0], row[1], row[2], row[3]]);
+            let tail_sq: f32 = order[keep..]
+                .iter()
+                .map(|&i| (f32::from(codes[i]) * scale).powi(2))
+                .sum();
+            order[..keep].sort_unstable();
+            out[0..4].copy_from_slice(&tail_sq.sqrt().to_le_bytes());
+            out[4..8].copy_from_slice(&scale.to_le_bytes());
+            for (j, &i) in order[..keep].iter().enumerate() {
+                out[8 + 2 * j..10 + 2 * j].copy_from_slice(&ids[2 * i..2 * i + 2]);
+                out[8 + 2 * m + j] = codes[i];
+            }
+        });
+        self.sk = sk;
+        self.sk_stride = stride;
+        self.sk_len = m;
+    }
+
+    /// Sketch score and tail norm of document `d`.
+    #[inline]
+    fn sketch(&self, d: u32, dense: &[f32]) -> (f32, f32) {
+        let off = d as usize * self.sk_stride;
+        let tail = f32::from_le_bytes([
+            self.sk[off],
+            self.sk[off + 1],
+            self.sk[off + 2],
+            self.sk[off + 3],
+        ]);
+        (
+            dot_row(&self.sk[off + 4..off + 8 + 3 * self.sk_len], dense),
+            tail,
+        )
+    }
+
+    #[inline]
+    fn prefetch_sketch(&self, d: u32) {
+        prefetch(
+            self.sk[d as usize * self.sk_stride..].as_ptr().cast(),
+            8 + 3 * self.sk_len,
+        );
     }
 
     /// Coordinates and stored values of document `d`.
@@ -743,6 +830,7 @@ impl SparseImpactIndex {
     pub fn memory_bytes(&self) -> usize {
         self.fwd_offsets.len() * 8
             + self.fwd.len()
+            + self.sk.len()
             + self.term_blocks.len() * 4
             + self.block_doc_offsets.len() * 8
             + self.block_docs.len() * 4
@@ -770,9 +858,19 @@ impl SparseImpactIndex {
             heap: BinaryHeap::new(),
             pending: Vec::new(),
             ready: Vec::new(),
+            rows_pending: Vec::new(),
+            rows_ready: Vec::new(),
             bounds: Vec::new(),
+            bounds_all: Vec::new(),
+            lists: Vec::new(),
             matched: Vec::new(),
+            use_sketch: false,
+            tail_scale: 0.0,
+            batch: SCORE_BATCH,
             skipped_blocks: 0,
+            n_blocks_scored: 0,
+            n_sketched: 0,
+            n_rows: 0,
         }
     }
 
@@ -1010,6 +1108,15 @@ fn into_sorted(heap: BinaryHeap<Hit>) -> Vec<(u32, f32)> {
         .collect()
 }
 
+/// Work done by all searches so far: queries, blocks scored, candidates reaching the sketch
+/// test and candidates whose full row was scored.
+pub static COUNTERS: [AtomicU64; 4] = [
+    AtomicU64::new(0),
+    AtomicU64::new(0),
+    AtomicU64::new(0),
+    AtomicU64::new(0),
+];
+
 /// Per-thread search state.
 pub struct SparseSearcher<'a> {
     index: &'a SparseImpactIndex,
@@ -1020,30 +1127,91 @@ pub struct SparseSearcher<'a> {
     heap: BinaryHeap<Hit>,
     pending: Vec<u32>,
     ready: Vec<u32>,
+    rows_pending: Vec<u32>,
+    rows_ready: Vec<u32>,
     bounds: Vec<f32>,
+    bounds_all: Vec<f32>,
+    lists: Vec<(usize, usize, usize)>,
     matched: Vec<(u32, f32)>,
+    use_sketch: bool,
+    tail_scale: f32,
+    batch: usize,
     /// Blocks passed over by the summary test, over the searcher's lifetime.
     skipped_blocks: u64,
+    n_blocks_scored: u64,
+    n_sketched: u64,
+    n_rows: u64,
 }
 
 /// Candidates gathered before their rows are fetched, and scored one batch later.
 const SCORE_BATCH: usize = 16;
 
 impl SparseSearcher<'_> {
-    /// Fetches the rows of the pending batch while scoring the one fetched last time.
+    /// Moves every candidate one stage on: pending sketches are fetched, fetched sketches are
+    /// tested, survivors' rows are fetched, and fetched rows are scored.
     fn rotate(&mut self, k: usize) {
         let index = self.index;
-        for &d in &self.pending {
+        for &d in &self.rows_pending {
             index.prefetch_row(d);
         }
-        for &d in &self.ready {
+        for &d in &self.rows_ready {
+            self.n_rows += 1;
             let s = index.score(d, &self.dense);
             if s > 0.0 {
                 offer(&mut self.heap, k, Hit { score: s, doc: d });
             }
         }
+        self.rows_ready.clear();
+        std::mem::swap(&mut self.rows_ready, &mut self.rows_pending);
+        let theta = if self.heap.len() == k {
+            self.heap.peek().map_or(f32::MIN, |h| h.score)
+        } else {
+            f32::MIN
+        };
+        for &d in &self.ready {
+            self.n_sketched += 1;
+            if self.use_sketch {
+                let (s, tail) = index.sketch(d, &self.dense);
+                if s + self.tail_scale * tail < theta {
+                    continue;
+                }
+                index.prefetch_offsets(d);
+            }
+            self.rows_pending.push(d);
+        }
         self.ready.clear();
+        if self.use_sketch {
+            for &d in &self.pending {
+                index.prefetch_sketch(d);
+            }
+        }
         std::mem::swap(&mut self.ready, &mut self.pending);
+    }
+
+    fn scan_block(&mut self, b: usize, k: usize) {
+        let index = self.index;
+        self.n_blocks_scored += 1;
+        let (d0, d1) = (
+            index.block_doc_offsets[b] as usize,
+            index.block_doc_offsets[b + 1] as usize,
+        );
+        for &d in &index.block_docs[d0..d1] {
+            let (w, bit) = ((d >> 6) as usize, 1u64 << (d & 63));
+            if self.visited[w] & bit != 0 {
+                continue;
+            }
+            if self.visited[w] == 0 {
+                self.touched.push(w as u32);
+            }
+            self.visited[w] |= bit;
+            if !self.use_sketch {
+                index.prefetch_offsets(d);
+            }
+            self.pending.push(d);
+            if self.pending.len() >= self.batch {
+                self.rotate(k);
+            }
+        }
     }
 
     /// The top `k` documents by inner product with the query `(ids, vals)`, best first, as
@@ -1080,8 +1248,13 @@ impl SparseSearcher<'_> {
             .iter()
             .take(params.query_cut)
             .take_while(|t| t.1 > 0.0);
+        self.use_sketch = index.sk_len > 0 && params.tail >= 0.0;
+        self.tail_scale = params.tail * l2sq.sqrt();
+        self.batch = params.batch.max(1);
 
         self.heap.clear();
+        self.bounds_all.clear();
+        self.lists.clear();
         for &(t, _) in walked {
             let blocks =
                 index.term_blocks[t as usize] as usize..index.term_blocks[t as usize + 1] as usize;
@@ -1106,6 +1279,10 @@ impl SparseSearcher<'_> {
                     self.matched.push((j as u32, w * scale));
                 }
             }
+            if params.col_cut > 0.0 {
+                let top = self.matched.iter().fold(0f32, |m, x| m.max(x.1));
+                self.matched.retain(|x| x.1 >= params.col_cut * top);
+            }
             let res_w =
                 params.residual * (l2sq - kept_sq).max(0.0).sqrt() * index.res_scales[t as usize];
             if res_w > 0.0 {
@@ -1121,38 +1298,46 @@ impl SparseSearcher<'_> {
                 stride,
                 &self.matched,
             );
-            let first = blocks.start;
-            for b in blocks {
+            self.lists
+                .push((blocks.start, self.bounds_all.len(), blocks.len()));
+            self.bounds_all
+                .extend_from_slice(&self.bounds[..blocks.len()]);
+        }
+        for li in 0..self.lists.len() {
+            let (first, at, len) = self.lists[li];
+            for _ in 0..params.seed.min(len) {
+                let (bi, bv) = self.bounds_all[at..at + len]
+                    .iter()
+                    .copied()
+                    .enumerate()
+                    .fold((0, -1.0f32), |m, x| if x.1 > m.1 { x } else { m });
+                if bv < 0.0 {
+                    break;
+                }
+                self.bounds_all[at + bi] = -1.0;
+                self.scan_block(first + bi, k);
+            }
+        }
+        for li in 0..self.lists.len() {
+            let (first, at, len) = self.lists[li];
+            for i in 0..len {
+                let bound = self.bounds_all[at + i];
+                if bound < 0.0 {
+                    continue;
+                }
                 if self.heap.len() == k {
                     let threshold = self.heap.peek().map_or(f32::MIN, |h| h.score);
-                    if self.bounds[b - first] * params.heap_factor < threshold {
+                    if bound * params.heap_factor < threshold {
                         self.skipped_blocks += 1;
                         continue;
                     }
                 }
-                let (d0, d1) = (
-                    index.block_doc_offsets[b] as usize,
-                    index.block_doc_offsets[b + 1] as usize,
-                );
-                for &d in &index.block_docs[d0..d1] {
-                    let (w, bit) = ((d >> 6) as usize, 1u64 << (d & 63));
-                    if self.visited[w] & bit != 0 {
-                        continue;
-                    }
-                    if self.visited[w] == 0 {
-                        self.touched.push(w as u32);
-                    }
-                    self.visited[w] |= bit;
-                    index.prefetch_offsets(d);
-                    self.pending.push(d);
-                    if self.pending.len() >= SCORE_BATCH {
-                        self.rotate(k);
-                    }
-                }
+                self.scan_block(first + i, k);
             }
         }
-        self.rotate(k);
-        self.rotate(k);
+        for _ in 0..4 {
+            self.rotate(k);
+        }
         for &w in &self.touched {
             self.visited[w as usize] = 0;
         }
@@ -1161,6 +1346,16 @@ impl SparseSearcher<'_> {
             self.dense[t.0 as usize] = 0.0;
             self.dense_pos[t.0 as usize] = 0.0;
         }
+        COUNTERS[0].fetch_add(1, AtomicOrdering::Relaxed);
+        COUNTERS[1].fetch_add(
+            std::mem::take(&mut self.n_blocks_scored),
+            AtomicOrdering::Relaxed,
+        );
+        COUNTERS[2].fetch_add(
+            std::mem::take(&mut self.n_sketched),
+            AtomicOrdering::Relaxed,
+        );
+        COUNTERS[3].fetch_add(std::mem::take(&mut self.n_rows), AtomicOrdering::Relaxed);
         into_sorted(std::mem::take(&mut self.heap))
     }
 }
@@ -1270,8 +1465,23 @@ mod tests {
                 ..SparseBuildParams::exact()
             };
             let index = SparseImpactIndex::build(docs.view(), params).unwrap();
+            let sketched = SparseImpactIndex::build(
+                docs.view(),
+                SparseBuildParams {
+                    sketch_len: 8,
+                    ..params
+                },
+            )
+            .unwrap();
+            let sketch_params = SparseSearchParams {
+                tail: 1e3,
+                seed: 2,
+                batch: 4,
+                ..SparseSearchParams::exact()
+            };
             let queries = random_csr(80, n_dims + 4, 12, &mut state);
             let mut searcher = index.searcher();
+            let mut sketch_searcher = sketched.searcher();
             for q in 0..80 {
                 let (a, b) = (queries.indptr[q] as usize, queries.indptr[q + 1] as usize);
                 let ids: Vec<u32> = queries.indices[a..b].iter().map(|&c| c as u32).collect();
@@ -1283,11 +1493,13 @@ mod tests {
                     let want = index.brute_force(&ids, &vals, k);
                     let got = searcher.search(&ids, &vals, k, SparseSearchParams::exact());
                     assert_eq!(got, want, "rows {rows} query {q} k {k}");
+                    let got = sketch_searcher.search(&ids, &vals, k, sketch_params);
+                    assert_eq!(got, want, "sketch rows {rows} query {q} k {k}");
                 }
             }
             // The bound must actually prune, or this compares brute force with itself.
             assert!(
-                searcher.skipped_blocks > 0,
+                searcher.skipped_blocks + sketch_searcher.skipped_blocks > 0,
                 "rows {rows}: no block was skipped"
             );
         }
@@ -1337,6 +1549,10 @@ mod tests {
             query_cut: 5,
             heap_factor: 0.8,
             residual: 0.5,
+            tail: -1.0,
+            seed: 0,
+            col_cut: 0.0,
+            batch: SCORE_BATCH,
         };
         let mut searcher = index.searcher();
         let (ids, vals) = ([3u32, 40, 41, 150], [1.0f32, 0.5, 0.75, 2.0]);
