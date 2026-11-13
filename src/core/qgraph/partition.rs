@@ -323,49 +323,147 @@ fn gemm_nt(a: &[f32], m: usize, b: &[f32], n: usize, k: usize, c: &mut [f32]) {
     if m == 0 || n == 0 {
         return;
     }
-    // SAFETY: the asserts bound every access: A is m x k row-major (rsa = k, csa = 1), B^T is
-    // read from b as k x n with rsb = 1, csb = k, C is m x n row-major.
+    // SAFETY: the asserts bound every access: A is m x k row-major, B^T is read from b as k x n
+    // with row stride 1 and column stride k, C is m x n row-major and overwritten.
     unsafe {
-        matrixmultiply::sgemm(
+        gemm::gemm(
             m,
-            k,
             n,
-            1.0,
-            a.as_ptr(),
-            k as isize,
-            1,
-            b.as_ptr(),
-            1,
-            k as isize,
-            0.0,
+            k,
             c.as_mut_ptr(),
-            n as isize,
             1,
+            n as isize,
+            false,
+            a.as_ptr(),
+            1,
+            k as isize,
+            b.as_ptr(),
+            k as isize,
+            1,
+            0.0f32,
+            1.0f32,
+            false,
+            false,
+            false,
+            gemm::Parallelism::None,
         );
     }
 }
 
 /// The `k` smallest `(value, index)` of `vals` (unordered), by a running worst-of-k filter.
+#[cfg(test)]
 fn smallest_k(vals: &[f32], k: usize, out: &mut Vec<(f32, u32)>) {
+    smallest_k_by(vals.len(), k, |i| vals[i], out);
+}
+
+fn smallest_k_by(n: usize, k: usize, val: impl Fn(usize) -> f32, out: &mut Vec<(f32, u32)>) {
     out.clear();
-    let k = k.min(vals.len());
+    let k = k.min(n);
     if k == 0 {
         return;
     }
-    out.extend(vals[..k].iter().enumerate().map(|(i, &v)| (v, i as u32)));
-    let worst = |o: &[(f32, u32)]| {
-        o.iter()
-            .enumerate()
-            .max_by(|a, b| a.1 .0.total_cmp(&b.1 .0))
-            .map(|(i, x)| (i, x.0))
-            .unwrap()
-    };
-    let (mut wi, mut wv) = worst(out);
-    for (i, &v) in vals.iter().enumerate().skip(k) {
+    out.extend((0..k).map(|i| (val(i), i as u32)));
+    let (mut wi, mut wv) = worst_of(out);
+    for i in k..n {
+        let v = val(i);
         if v < wv {
             out[wi] = (v, i as u32);
-            (wi, wv) = worst(out);
+            (wi, wv) = worst_of(out);
         }
+    }
+}
+
+fn worst_of(o: &[(f32, u32)]) -> (usize, f32) {
+    o.iter()
+        .enumerate()
+        .max_by(|a, b| a.1 .0.total_cmp(&b.1 .0))
+        .map(|(i, x)| (i, x.0))
+        .unwrap()
+}
+
+/// The `k` smallest `(c2[i] - 2 row[i], i)`, identical to [`smallest_k`] over those values (same
+/// members in the same slots); eight values at a time are compared with the running worst and
+/// only the chunks that hold a candidate take the scalar path.
+fn smallest_k_centres(row: &[f32], c2: &[f32], k: usize, out: &mut Vec<(f32, u32)>) {
+    debug_assert_eq!(row.len(), c2.len());
+    #[cfg(target_arch = "x86_64")]
+    if k > 0 && k <= row.len() && std::is_x86_feature_detected!("avx2") {
+        // SAFETY: AVX2 detected; `row` and `c2` have equal length.
+        unsafe { smallest_k_centres_avx2(row, c2, k, out) };
+        return;
+    }
+    smallest_k_by(row.len(), k, |i| c2[i] - 2.0 * row[i], out);
+}
+
+/// Index of the last maximum of the 32 lanes in `v` (padding lanes are `-inf`) and its value, as
+/// [`worst_of`] picks them; `None` when the maximum is zero or not finite, where `total_cmp`
+/// and float equality disagree.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn worst32(v: &[f32; 32]) -> Option<(usize, f32)> {
+    use std::arch::x86_64::*;
+    let p = v.as_ptr();
+    let (a, b, c, d) = (
+        _mm256_loadu_ps(p),
+        _mm256_loadu_ps(p.add(8)),
+        _mm256_loadu_ps(p.add(16)),
+        _mm256_loadu_ps(p.add(24)),
+    );
+    let m = _mm256_max_ps(_mm256_max_ps(a, b), _mm256_max_ps(c, d));
+    let m = _mm256_max_ps(m, _mm256_permute2f128_ps::<1>(m, m));
+    let m = _mm256_max_ps(m, _mm256_shuffle_ps::<0b01_00_11_10>(m, m));
+    let m = _mm256_max_ps(m, _mm256_shuffle_ps::<0b10_11_00_01>(m, m));
+    let mx = _mm256_cvtss_f32(m);
+    if mx == 0.0 || !mx.is_finite() {
+        return None;
+    }
+    let mm = |x| _mm256_movemask_ps(_mm256_cmp_ps::<_CMP_EQ_OQ>(x, m)) as u32;
+    let mask = mm(a) | (mm(b) << 8) | (mm(c) << 16) | (mm(d) << 24);
+    Some((31 - mask.leading_zeros() as usize, mx))
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn smallest_k_centres_avx2(row: &[f32], c2: &[f32], k: usize, out: &mut Vec<(f32, u32)>) {
+    use std::arch::x86_64::*;
+    if k > 32 {
+        smallest_k_by(row.len(), k, |i| c2[i] - 2.0 * row[i], out);
+        return;
+    }
+    let val = |i: usize| c2[i] - 2.0 * row[i];
+    out.clear();
+    out.extend((0..k).map(|i| (val(i), i as u32)));
+    let mut vals = [f32::NEG_INFINITY; 32];
+    for (slot, o) in vals.iter_mut().zip(out.iter()) {
+        *slot = o.0;
+    }
+    let worst =
+        |out: &[(f32, u32)], vals: &[f32; 32]| worst32(vals).unwrap_or_else(|| worst_of(out));
+    let (mut wi, mut wv) = worst(out, &vals);
+    let n = row.len();
+    let two = _mm256_set1_ps(2.0);
+    let mut i = k;
+    while i < n {
+        if i + 8 <= n {
+            let v = _mm256_sub_ps(
+                _mm256_loadu_ps(c2.as_ptr().add(i)),
+                _mm256_mul_ps(two, _mm256_loadu_ps(row.as_ptr().add(i))),
+            );
+            let lt = _mm256_cmp_ps::<_CMP_LT_OQ>(v, _mm256_set1_ps(wv));
+            if _mm256_movemask_ps(lt) == 0 {
+                i += 8;
+                continue;
+            }
+        }
+        for j in i..(i + 8).min(n) {
+            let v = val(j);
+            if v < wv {
+                out[wi] = (v, j as u32);
+                vals[wi] = v;
+                (wi, wv) = worst(out, &vals);
+            }
+        }
+        i += 8;
     }
 }
 
@@ -717,14 +815,10 @@ impl Trained {
                 let b = o.len();
                 let mut xc = vec![0f32; b * l];
                 gemm_nt(xb, b, &self.centres, l, dim, &mut xc);
-                let mut d = vec![0f32; l];
                 let mut cand = Vec::with_capacity(k);
                 for (i, oi) in o.iter_mut().enumerate() {
                     let row = &xc[i * l..(i + 1) * l];
-                    for ((dv, &v), &cc) in d.iter_mut().zip(row).zip(&self.c2) {
-                        *dv = cc - 2.0 * v;
-                    }
-                    smallest_k(&d, k, &mut cand);
+                    smallest_k_centres(row, &self.c2, k, &mut cand);
                     let c1 = cand
                         .iter()
                         .min_by(|a, b| a.0.total_cmp(&b.0))
@@ -929,21 +1023,34 @@ impl PartitionTier {
                 })
                 .collect()
         };
+        let dists: Vec<[f32; 2]> = {
+            let t = &*t;
+            asg.par_iter()
+                .enumerate()
+                .map(|(i, &(a1, a2))| {
+                    let x = &vectors[i * dim..(i + 1) * dim];
+                    let d = |a: u32| {
+                        let a = a as usize;
+                        sq(x, &t.centres[a * dim..(a + 1) * dim]).sqrt()
+                    };
+                    [d(a1), if a2 != u32::MAX { d(a2) } else { 0.0 }]
+                })
+                .collect()
+        };
         if t.loc.len() < self.slot_id.len() {
             t.loc.resize(self.slot_id.len(), [(u32::MAX, u32::MAX); 2]);
         }
         for (i, (&slot, &(a1, a2))) in slots.iter().zip(&asg).enumerate() {
-            let x = &vectors[i * dim..(i + 1) * dim];
             let p1 = t.lists[a1 as usize].append(sh, &codes[2 * i * m..(2 * i + 1) * m], slot);
             let mut p2 = u32::MAX;
             if a2 != u32::MAX {
                 p2 =
                     t.lists[a2 as usize].append(sh, &codes[(2 * i + 1) * m..(2 * i + 2) * m], slot);
             }
-            for a in [a1, a2].into_iter().filter(|&a| a != u32::MAX) {
-                let a = a as usize;
-                let d = sq(x, &t.centres[a * dim..(a + 1) * dim]).sqrt();
-                t.lists[a].track(d, 1.0);
+            for (a, d) in [a1, a2].into_iter().zip(dists[i]) {
+                if a != u32::MAX {
+                    t.lists[a as usize].track(d, 1.0);
+                }
             }
             t.loc[slot as usize] = [(a1, p1), (a2, p2)];
         }
@@ -1944,6 +2051,70 @@ mod tests {
     /// The quad layout (AVX-512 VBMI/VNNI) and the LUT16 layout give the same results, blocks
     /// and admissions through deletes and reinserts, with a reorder small enough that the
     /// running threshold prunes and an `m` that pads the last quad.
+    #[test]
+    fn fused_smallest_k_equals_scalar() {
+        let mut rng = SplitMix(11);
+        let (mut a, mut b) = (Vec::new(), Vec::new());
+        for n in [1usize, 5, 31, 32, 33, 39, 40, 41, 100, 997, 5000] {
+            for k in [1usize, 7, 32, 64] {
+                for quant in [0.0f32, 8.0] {
+                    let row: Vec<f32> = (0..n)
+                        .map(|_| (rng.next() >> 40) as f32 / (1u64 << 24) as f32)
+                        .collect();
+                    let c2: Vec<f32> = (0..n)
+                        .map(|_| (rng.next() >> 40) as f32 / (1u64 << 23) as f32)
+                        .collect();
+                    let q = |x: f32| {
+                        if quant > 0.0 {
+                            (x * quant).round() / quant
+                        } else {
+                            x
+                        }
+                    };
+                    let (row, c2): (Vec<f32>, Vec<f32>) = (
+                        row.into_iter().map(q).collect(),
+                        c2.into_iter().map(q).collect(),
+                    );
+                    let d: Vec<f32> = c2.iter().zip(&row).map(|(c, v)| c - 2.0 * v).collect();
+                    smallest_k(&d, k, &mut a);
+                    smallest_k_centres(&row, &c2, k, &mut b);
+                    assert_eq!(a, b, "n {n} k {k}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn gemm_nt_matches_reference() {
+        let mut rng = SplitMix(9);
+        for (m, n, k) in [
+            (1usize, 1usize, 1usize),
+            (7, 33, 100),
+            (130, 257, 100),
+            (64, 70, 17),
+        ] {
+            let a: Vec<f32> = (0..m * k)
+                .map(|_| (rng.next() >> 40) as f32 / (1u64 << 24) as f32 - 0.5)
+                .collect();
+            let b: Vec<f32> = (0..n * k)
+                .map(|_| (rng.next() >> 40) as f32 / (1u64 << 24) as f32 - 0.5)
+                .collect();
+            let mut c = vec![f32::NAN; m * n];
+            gemm_nt(&a, m, &b, n, k, &mut c);
+            for i in 0..m {
+                for j in 0..n {
+                    let want: f64 = (0..k)
+                        .map(|t| f64::from(a[i * k + t]) * f64::from(b[j * k + t]))
+                        .sum();
+                    assert!(
+                        (f64::from(c[i * n + j]) - want).abs() < 1e-4,
+                        "{m}x{n}x{k} at {i},{j}"
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn slot_set_agrees_with_a_hash_set() {
         let mut rng = SplitMix(9);

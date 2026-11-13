@@ -69,6 +69,7 @@ clap = { version = "4.4", features = ["derive", "env"], optional = true }
 foldhash = "0.2"
 nalgebra = { version = "0.35", features = ["serde-serialize"] }
 matrixmultiply = "0.3"
+gemm = { version = "0.19", default-features = false, features = ["std"], optional = true }
 ed25519-dalek = { version = "3", features = ["rand_core"], optional = true }
 zeroize = { version = "1", features = ["derive"], optional = true }
 aes-gcm = { version = "0.11", optional = true }
@@ -193,7 +194,7 @@ provenance-scitt = ["provenance", "ureq"]
 # diagnostics, projection_diagnostic and quantized IVF modules, the capped-union
 # text encoder and the experiment binaries that exercise them. Off by default so
 # they are not part of the published public API.
-experimental = []
+experimental = ["dep:gemm"]
 experimental-batch-pool = ["experimental"]
 experimental-neighbor-admission = ["experimental"]
 experimental-query-x4 = ["experimental"]

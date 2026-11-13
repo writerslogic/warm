@@ -27,6 +27,9 @@ use rayon::prelude::*;
 
 use super::kernels::{dot_i8_query, dot_i8_query_x4, dot_i8_query_x4_wide, prefetch_bytes};
 
+mod fs;
+use fs::{FsScratch, Pq};
+
 /// Largest row whose squared u8 Euclidean distance fits the returned `u32`.
 pub const MAX_DIMENSIONS: usize = (u32::MAX / (255 * 255)) as usize;
 /// Dense label tables are bounded independently of the number of input rows.
@@ -83,6 +86,13 @@ pub struct FilterBuildParams {
     pub copy_min: usize,
     /// Seed of the k-means sampling.
     pub seed: u64,
+    /// Sub-spaces of the 4-bit product quantiser kept for every inverted-file member (0 = none;
+    /// otherwise it divides the padded dimension into at most 16 coordinates).
+    pub pq_m: usize,
+    /// Rows sampled to train the quantiser.
+    pub pq_sample: usize,
+    /// Lloyd iterations of the quantiser.
+    pub pq_iters: usize,
 }
 
 impl Default for FilterBuildParams {
@@ -96,6 +106,9 @@ impl Default for FilterBuildParams {
             train_per_list: 48,
             copy_min: usize::MAX,
             seed: 0x5eed,
+            pq_m: 0,
+            pq_sample: 100_000,
+            pq_iters: 8,
         }
     }
 }
@@ -113,6 +126,9 @@ pub struct FilterSearchParams {
     /// Multi-label queries whose rarest label has at most this many members are intersected
     /// first; when the matches number at most `brute_max` they are all scored exactly.
     pub intersect_max: usize,
+    /// Candidates the 4-bit screen of an inverted file keeps for the exact re-rank (0 = no
+    /// screen: lists are scored exactly).
+    pub rerank: usize,
 }
 
 impl Default for FilterSearchParams {
@@ -122,6 +138,7 @@ impl Default for FilterSearchParams {
             target: 5_000,
             min_lists: 1,
             intersect_max: 200_000,
+            rerank: 0,
         }
     }
 }
@@ -144,12 +161,12 @@ pub struct FilterTuning {
     /// Keep the matches of the last multi-label query's labels, so a query with the same
     /// labels right after it (see `sort_queries`) skips the intersection.
     pub cache_intersections: bool,
-    /// Inverted-file `target` by the rarest label's size: `[mid, large]` replace `target` for
-    /// labels above `band_edges[0]` and `band_edges[1]` members (0 keeps `target`). Unlike the
-    /// other fields this changes results: it moves the recall-time trade-off.
-    pub target_bands: [usize; 2],
-    /// Label sizes at which `target_bands` start.
-    pub band_edges: [usize; 2],
+    /// `(target, rerank)` by query class, `[multi-label][band]`, replacing the search
+    /// parameters (0 keeps them). Unlike the other fields this changes results: it moves the
+    /// recall-time trade-off per class.
+    pub class_params: [[(usize, usize); 4]; 2],
+    /// Rarest-label sizes at which bands 1, 2 and 3 of `class_params` start.
+    pub class_edges: [usize; 3],
 }
 
 impl FilterTuning {
@@ -163,8 +180,8 @@ impl FilterTuning {
             skip_tombstones: false,
             block_filter: false,
             cache_intersections: false,
-            target_bands: [0, 0],
-            band_edges: [50_000, 200_000],
+            class_params: [[(0, 0); 4]; 2],
+            class_edges: [20_000, 50_000, 200_000],
         }
     }
 }
@@ -190,6 +207,7 @@ impl FilterSearchParams {
             target: usize::MAX,
             min_lists: usize::MAX,
             intersect_max: usize::MAX,
+            rerank: usize::MAX,
         }
     }
 }
@@ -208,6 +226,12 @@ struct LabelIvf {
     rows: Vec<i8>,
     /// `|x'|^2` in `members` order, or empty.
     norms: Vec<i32>,
+    /// 4-bit codes in 32-code blocks (empty without a quantiser); `members` is then empty.
+    codes: Vec<u8>,
+    /// Member ids per block, `u32::MAX` in the padding of a list's last block.
+    bids: Vec<u32>,
+    /// `lists + 1` first-block indices.
+    blocks: Vec<u32>,
 }
 
 /// Which path a query took, counted for diagnostics.
@@ -242,6 +266,7 @@ pub struct FilteredIndex {
     /// Inverted file per label (`u32::MAX` = none), index into `ivfs`.
     ivf_slot: Vec<u32>,
     ivfs: Vec<LabelIvf>,
+    pq: Option<Pq>,
     deleted: Vec<AtomicU64>,
     live: usize,
     tuning: FilterTuning,
@@ -331,6 +356,7 @@ struct SearchScratch {
     matches_for: Vec<u32>,
     cursors: Vec<usize>,
     ivf: IvfScratch,
+    fs: FsScratch,
 }
 
 /// Splitmix64, for deterministic k-means sampling.
@@ -391,6 +417,9 @@ impl FilteredIndex {
                 "label id {} is out of range for {labels} labels",
                 max_label - 1
             )));
+        }
+        if params.pq_m != 0 && params.pq_sample == 0 {
+            return Err(FilterError::Invalid("pq_sample must be positive".into()));
         }
         if params.cluster_size == 0 || params.max_lists == 0 || params.train_per_list == 0 {
             return Err(FilterError::Invalid(
@@ -480,11 +509,36 @@ impl FilteredIndex {
             .collect();
         // Largest first so the long trainings start early.
         big.sort_by_key(|&l| std::cmp::Reverse(label_offsets[l + 1] - label_offsets[l]));
+        let pq = if params.pq_m != 0 && !big.is_empty() {
+            Some(Pq::train(
+                &rows,
+                n,
+                stride,
+                params.pq_m,
+                params.pq_sample,
+                params.pq_iters,
+                params.seed,
+            )?)
+        } else {
+            None
+        };
+        let point_codes = match &pq {
+            Some(pq) => pq.encode_all(&rows, stride, n)?,
+            None => Vec::new(),
+        };
         let ivfs: Vec<LabelIvf> = big
             .par_iter()
             .map(|&l| {
                 let (a, b) = (label_offsets[l] as usize, label_offsets[l + 1] as usize);
-                train_label(&rows, &norms, stride, &postings[a..b], params, l as u64)
+                train_label(
+                    &rows,
+                    &norms,
+                    stride,
+                    &postings[a..b],
+                    params,
+                    l as u64,
+                    pq.as_ref().map(|p| (p, point_codes.as_slice())),
+                )
             })
             .collect::<Result<_, _>>()?;
         for (slot, &l) in big.iter().enumerate() {
@@ -503,6 +557,7 @@ impl FilteredIndex {
             bitsets,
             ivf_slot,
             ivfs,
+            pq,
             deleted: (0..words).map(|_| AtomicU64::new(0)).collect(),
             live: n,
             tuning: FilterTuning::default(),
@@ -582,8 +637,12 @@ impl FilteredIndex {
                         + v.members.len() * 4
                         + v.rows.len()
                         + v.norms.len() * 4
+                        + v.codes.len()
+                        + v.bids.len() * 4
+                        + v.blocks.len() * 4
                 })
                 .sum::<usize>()
+            + self.pq.as_ref().map_or(0, Pq::bytes)
     }
 
     /// Marks `id` deleted; it is skipped by every search from now on. Returns whether it was
@@ -687,6 +746,7 @@ impl FilteredIndex {
             matches_for,
             cursors,
             ivf: ivf_scratch,
+            fs: fs_scratch,
         } = scratch;
         order.clear();
         order.extend_from_slice(labels);
@@ -720,6 +780,16 @@ impl FilteredIndex {
             } else {
                 self.score_intersection((q, qsum), rarest, others, top, cursors)
             }
+        } else if let Some(scored) = self.fs_route(
+            &self.ivfs[ivf as usize],
+            (q, qsum),
+            others,
+            (params, n_rare),
+            top,
+            fs_scratch,
+        ) {
+            self.ivf_queries.fetch_add(1, Ordering::Relaxed);
+            scored
         } else {
             let intersected = !others.is_empty() && n_rare <= params.intersect_max;
             if intersected {
@@ -729,24 +799,15 @@ impl FilteredIndex {
                     self.intersect(rarest, others, matches, cursors);
                 }
             }
-            if intersected && matches.len() <= params.brute_max {
+            if intersected
+                && (matches.len() <= params.brute_max || self.ivfs[ivf as usize].members.is_empty())
+            {
                 self.brute_queries.fetch_add(1, Ordering::Relaxed);
                 self.score_ids(q, qsum, matches, top);
                 matches.len()
             } else {
                 self.ivf_queries.fetch_add(1, Ordering::Relaxed);
-                let t = &self.tuning;
-                let banded = if n_rare > t.band_edges[1] {
-                    t.target_bands[1]
-                } else if n_rare > t.band_edges[0] {
-                    t.target_bands[0]
-                } else {
-                    0
-                };
-                let params = &FilterSearchParams {
-                    target: if banded == 0 { params.target } else { banded },
-                    ..*params
-                };
+                let params = &self.classed(params, n_rare, !others.is_empty());
                 self.search_ivf(
                     &self.ivfs[ivf as usize],
                     (q, qsum),
@@ -1026,22 +1087,9 @@ impl FilteredIndex {
         }
     }
 
-    fn search_ivf(
-        &self,
-        ivf: &LabelIvf,
-        query: (&[i8], i32),
-        others: &[u32],
-        params: &FilterSearchParams,
-        top: &mut TopK,
-        scratch: &mut IvfScratch,
-    ) -> usize {
-        let (q, qsum) = query;
+    /// Appends to `order` every list of `ivf` as `(centroid key, list)`, unsorted.
+    fn rank_lists(&self, ivf: &LabelIvf, q: &[i8], qsum: i32, order: &mut Vec<(i64, u32)>) {
         let lists = ivf.centroid_norms.len();
-        let IvfScratch {
-            order,
-            batch,
-            cursors,
-        } = scratch;
         order.clear();
         let centroid = |c: usize| &ivf.centroids[c * self.stride..(c + 1) * self.stride];
         let grouped = lists / 4 * 4;
@@ -1061,10 +1109,62 @@ impl FilteredIndex {
                 order.push((key, (c + j) as u32));
             }
         }
-        for c in grouped..lists {
-            let key = i64::from(ivf.centroid_norms[c]) - 2 * dot_i8_query(q, centroid(c), qsum);
+        for (c, &norm) in ivf.centroid_norms[..lists].iter().enumerate().skip(grouped) {
+            let key = i64::from(norm) - 2 * dot_i8_query(q, centroid(c), qsum);
             order.push((key, c as u32));
         }
+    }
+
+    /// `params` with the `(target, rerank)` of the query's class.
+    fn classed(
+        &self,
+        params: &FilterSearchParams,
+        n_rare: usize,
+        multi: bool,
+    ) -> FilterSearchParams {
+        let t = &self.tuning;
+        let band = t.class_edges.iter().filter(|&&e| n_rare > e).count();
+        let (target, rerank) = t.class_params[usize::from(multi)][band];
+        FilterSearchParams {
+            target: if target == 0 { params.target } else { target },
+            rerank: if rerank == 0 { params.rerank } else { rerank },
+            ..*params
+        }
+    }
+
+    /// The 4-bit screen route of a label with codes, when `params.rerank` asks for it.
+    fn fs_route(
+        &self,
+        ivf: &LabelIvf,
+        query: (&[i8], i32),
+        others: &[u32],
+        (params, n_rare): (&FilterSearchParams, usize),
+        top: &mut TopK,
+        scratch: &mut FsScratch,
+    ) -> Option<usize> {
+        if params.rerank == 0 || ivf.codes.is_empty() {
+            return None;
+        }
+        let params = &self.classed(params, n_rare, !others.is_empty());
+        self.search_fs(ivf, query, others, params, n_rare, top, scratch)
+    }
+
+    fn search_ivf(
+        &self,
+        ivf: &LabelIvf,
+        query: (&[i8], i32),
+        others: &[u32],
+        params: &FilterSearchParams,
+        top: &mut TopK,
+        scratch: &mut IvfScratch,
+    ) -> usize {
+        let (q, qsum) = query;
+        let IvfScratch {
+            order,
+            batch,
+            cursors,
+        } = scratch;
+        self.rank_lists(ivf, q, qsum, order);
         order.sort_unstable();
         let mut scored = 0usize;
         if batch.capacity() == 0 {
@@ -1235,6 +1335,7 @@ fn train_label(
     members: &[u32],
     params: &FilterBuildParams,
     salt: u64,
+    coded: Option<(&Pq, &[u8])>,
 ) -> Result<LabelIvf, FilterError> {
     let lists = members
         .len()
@@ -1325,6 +1426,20 @@ fn train_label(
         grouped[fill[c as usize] as usize] = id;
         fill[c as usize] += 1;
     }
+    if let Some((pq, point_codes)) = coded {
+        let packed = fs::pack_lists(&grouped, &offsets, point_codes, pq.m())?;
+        return Ok(LabelIvf {
+            centroids,
+            centroid_norms: cnorms,
+            offsets,
+            members: Vec::new(),
+            rows: Vec::new(),
+            norms: Vec::new(),
+            codes: packed.codes,
+            bids: packed.ids,
+            blocks: packed.blocks,
+        });
+    }
     let (copy_rows, copy_norms) = if members.len() >= params.copy_min {
         let mut r = allocation(product(grouped.len(), dim)?, 0i8)?;
         for (target, &id) in r.chunks_exact_mut(dim).zip(&grouped) {
@@ -1341,6 +1456,9 @@ fn train_label(
         members: grouped,
         rows: copy_rows,
         norms: copy_norms,
+        codes: Vec::new(),
+        bids: Vec::new(),
+        blocks: Vec::new(),
     })
 }
 
@@ -1535,7 +1653,32 @@ mod tests {
             train_per_list: 16,
             copy_min: 400,
             seed: 7,
+            pq_m: 0,
+            pq_sample: 1_000,
+            pq_iters: 4,
         }
+    }
+
+    #[test]
+    fn screen_with_full_rerank_equals_filtered_brute_force() {
+        let labels = 40;
+        let f = fixture(4_000, 32, labels, 1);
+        let build = FilterBuildParams {
+            pq_m: 8,
+            ..small_params()
+        };
+        let idx = FilteredIndex::build(&f.data, f.dim, &f.indptr, &f.ids, 0, &build).unwrap();
+        let deleted = vec![false; 4_000];
+        let p = FilterSearchParams {
+            brute_max: 0,
+            ..FilterSearchParams::exact()
+        };
+        let mut out = Vec::new();
+        for (q, ls) in queries(&f, 300, labels, 2) {
+            idx.search(&q, &ls, 10, &p, &mut out).unwrap();
+            assert_eq!(out, brute(&f, &deleted, &q, &ls, 10), "labels {ls:?}");
+        }
+        assert!(idx.stats().ivf > 0);
     }
 
     #[test]
@@ -1695,8 +1838,7 @@ mod tests {
                     }
                     // Bands that restate `target` leave every result as it was.
                     idx.set_tuning(FilterTuning {
-                        target_bands: [p.target, p.target],
-                        band_edges: [0, 0],
+                        class_params: [[(p.target, 0); 4]; 2],
                         ..FilterTuning::plain()
                     });
                     let mut got = vec![0i64; qs.len() * k];
@@ -1749,6 +1891,7 @@ mod tests {
                             FilterSearchParams {
                                 brute_max: 0,
                                 intersect_max: 0,
+                                rerank: 0,
                                 target: 80,
                                 min_lists: 2,
                             },
@@ -1940,6 +2083,9 @@ mod tests {
                         } else {
                             Vec::new()
                         },
+                        codes: Vec::new(),
+                        bids: Vec::new(),
+                        blocks: Vec::new(),
                         norms: if copied {
                             members.iter().map(|&id| idx.norms[id as usize]).collect()
                         } else {
@@ -2096,6 +2242,7 @@ mod tests {
                     target: usize::MAX,
                     min_lists: 1,
                     intersect_max: usize::MAX,
+                    rerank: 0,
                 },
                 &mut out,
             )
@@ -2123,6 +2270,7 @@ mod tests {
             target: 128,
             min_lists: 1,
             intersect_max: 1000,
+            rerank: 0,
         };
         let mut expected = Vec::new();
         let mut found = Vec::new();

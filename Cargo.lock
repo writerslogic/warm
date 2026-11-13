@@ -3941,6 +3941,7 @@ dependencies = [
  "flate2",
  "foldhash",
  "futures-util",
+ "gemm",
  "http",
  "http-body-util",
  "hyper",
