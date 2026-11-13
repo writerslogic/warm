@@ -936,12 +936,6 @@ impl WarmCore {
         self.commit(&mutations)
     }
 
-    pub fn query_vector(&self, dense: &[f32], k: u32) -> Result<Vec<crate::RetrievalResult>> {
-        self.validate_dense(dense)?;
-        let vector = crate::EntangledHVec::from_dense(dense, self.dimensions);
-        self.query(&vector, k)
-    }
-
     pub(super) fn validate_dense(&self, dense: &[f32]) -> Result<()> {
         ensure!(
             !dense.is_empty()

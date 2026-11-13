@@ -27,7 +27,9 @@ of one SDK. See the [installation options](install.md).
 
 ## Which Python package?
 
-`warm-sdk` imports as `writerslogic_warm_sdk`. It is an HTTP client for `warm-server`.
+`warm-sdk` imports as `writerslogic_warm_sdk`. It is an HTTP client for `warm-server`. For
+in-process document search and memory without a server, install `warm-python` and use
+`writerslogic_warm.Warm`.
 The server must be running, and client and server must use the same API key, tenant and
 embedding dimensions. Installing the SDK does not start a server or download an embedding model.
 

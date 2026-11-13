@@ -90,9 +90,28 @@ total phase elements per operation. Resonators additionally allow at most 64 fac
 `(3 * entries + factors**2) * max(dimensions, 1) * (iterations + 1)` before cloning codebooks
 or allocating the resonator index.
 
+## Document search and memory
+
+`Warm` is the in-process engine: a persistent store with hybrid BM25 and exact-cosine document
+search, the memory API and vector search. Requests and results are dicts and lists with the
+camelCase fields of the Node binding. One process may write a store at a time.
+
+```python
+from writerslogic_warm import Warm
+
+store = Warm(16384, "./warm-data")
+store.memorize_document({"id": "a", "text": "The harbor opens at six in the morning."})
+print(store.search_documents("when does the harbor open", {"k": 3})[0]["documentId"])
+
+store.remember({"text": "Ada prefers tea", "subject": "ada"})
+print(store.recall("what does Ada drink")["results"][0]["text"])
+```
+
+`memorize_vector(id, vector)` and `query_vector(vector, k)` use the vertex graph index;
+`query_vector` returns `(id, cosine)` pairs.
+
 ## Choosing the right Python package
 
-This native binding runs vector search and phase-vector operations in your Python process. It does
-not expose the persistent document-search and agent-memory APIs. For an HTTP client to `warm-server`,
-use [`warm-sdk`](https://pypi.org/project/warm-sdk/). The Rust and Node.js
-packages expose the full embedded engine.
+This native binding runs the engine in your Python process: document search, the memory API,
+vector search and phase-vector operations. For an HTTP client to `warm-server`, use
+[`warm-sdk`](https://pypi.org/project/warm-sdk/).

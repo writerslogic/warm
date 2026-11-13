@@ -5,9 +5,9 @@
 //! writes machine-readable results; benchmarks/public/evaluate.py scores them and runs
 //! the comparison libraries on the same data.
 //!
-//! `ann`:  ann-benchmarks sets (dense vectors + shipped ground truth). Measures the raw
-//!         sparse-vector path (`from_dense` + inverted index): recall@10, encode and
-//!         search latency per query, build time, resident memory.
+//! `ann`:  ann-benchmarks sets (dense vectors + shipped ground truth). Measures the engine's
+//!         `memorize_vectors` / `query_vector` path (vertex graph): recall@10, search latency
+//!         per query, build time, resident memory.
 //! `ann-qgraph`: the same sets through the quantized graph index (`core::qgraph`). Builds on
 //!         all cores, then times single-threaded queries one at a time over an `ef` x
 //!         `max-exact` sweep, each configuration repeated and gated on the 1-minute load.
@@ -546,72 +546,51 @@ fn ann(data: &Path, dim: u32, queries: Option<usize>, out: &Path) -> Result<()> 
         test.truncate(q);
     }
     const K: usize = 10;
-    const PREFILTER: usize = 100;
-
-    let t = Instant::now();
-    let codes: Vec<EntangledHVec> = train
-        .par_iter()
-        .map(|v| EntangledHVec::from_dense(v, dim as usize))
-        .collect();
-    let encode_secs = t.elapsed().as_secs_f64();
-    drop(train);
 
     let store = TempStore::new("ann")?;
     let core = WarmCore::new(dim, Some(store.0.display().to_string()), None)?;
     let t = Instant::now();
-    for (i, code) in codes.into_iter().enumerate() {
-        core.memorize(i.to_string(), code)?;
-    }
-    let insert_secs = t.elapsed().as_secs_f64();
+    let items: Vec<(String, Vec<f32>)> = train
+        .into_iter()
+        .enumerate()
+        .map(|(i, v)| (i.to_string(), v))
+        .collect();
+    core.memorize_vectors(items)?;
+    let build_secs = t.elapsed().as_secs_f64();
     let rss = rss_bytes();
 
     // Single-threaded queries, as in ann-benchmarks.
-    let (mut enc_us, mut search_us) = (Vec::new(), Vec::new());
-    let (mut hits, mut prefilter_hits) = (0usize, 0usize);
+    let mut total_us = Vec::new();
+    let mut hits = 0usize;
     for (q, t_ids) in test.iter().zip(&truth) {
         let gold: Vec<String> = t_ids[..K].iter().map(|i| i.to_string()).collect();
         let t0 = Instant::now();
-        let code = EntangledHVec::from_dense(q, dim as usize);
-        let t1 = Instant::now();
-        let res = core.query(&code, K as u32)?;
-        let t2 = Instant::now();
-        enc_us.push((t1 - t0).as_secs_f64() * 1e6);
-        search_us.push((t2 - t1).as_secs_f64() * 1e6);
+        let res = core.query_vector(q, K as u32)?;
+        total_us.push(t0.elapsed().as_secs_f64() * 1e6);
         hits += res.iter().filter(|r| gold.contains(&r.id)).count();
-        let wide = core.query(&code, PREFILTER as u32)?;
-        prefilter_hits += wide.iter().filter(|r| gold.contains(&r.id)).count();
     }
     let n = test.len();
-    let total_us: Vec<f64> = enc_us.iter().zip(&search_us).map(|(a, b)| a + b).collect();
     let mean_total = total_us.iter().sum::<f64>() / n as f64;
     let report = json!({
         "dataset": m,
         "environment": environment(),
-        "path": "raw sparse vector: EntangledHVec::from_dense + WarmCore::query (inverted index)",
+        "path": "WarmCore::memorize_vectors / query_vector (vertex graph index, exact-cosine scores)",
         "sparse_dim": dim,
         "k": K,
         "n_queries": n,
         "recall_at_10": hits as f64 / (n * K) as f64,
-        "experimental_prefilter": {
-            "note": "fraction of the true top-10 inside the sparse top-100; an exact re-rank of those candidates would return this recall. Not a shipped path.",
-            "candidates": PREFILTER,
-            "recall_at_10": prefilter_hits as f64 / (n * K) as f64,
-        },
-        "build": {"encode_secs_parallel": encode_secs, "insert_secs": insert_secs, "rss_bytes_after_build": rss},
-        "query_encode": latency_summary(enc_us),
-        "query_search": latency_summary(search_us),
+        "build": {"build_secs": build_secs, "rss_bytes_after_build": rss},
         "query_total": latency_summary(total_us),
         "qps_single_thread": 1e6 / mean_total,
     });
     fs::write(out, serde_json::to_string_pretty(&report)?)?;
     println!(
         "{}",
-        json!({"recall_at_10": report["recall_at_10"], "qps": report["qps_single_thread"], "prefilter": report["experimental_prefilter"]["recall_at_10"]})
+        json!({"recall_at_10": report["recall_at_10"], "qps": report["qps_single_thread"]})
     );
     Ok(())
 }
 
-/// Truncate to the engine's single-chunk limits (4096 words, 64 KiB) on a char boundary.
 fn load_1m() -> Option<f64> {
     if cfg!(target_os = "linux") {
         return fs::read_to_string("/proc/loadavg")

@@ -584,6 +584,21 @@ impl UpdatableVGraph {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+    pub fn contains(&self, id: u32) -> bool {
+        self.state.read().contains(id)
+    }
+    /// The stored row of a live id as the index holds it: unit length under the angular metric.
+    pub fn vector(&self, id: u32) -> Result<Option<Vec<f32>>, UpdateError> {
+        let s = self.state.read();
+        let dim = s.manifest.dim;
+        if let Some(&slot) = s.delta.live.get(&id) {
+            return Ok(Some(s.delta.row(slot, dim).to_vec()));
+        }
+        match s.base_slot(id) {
+            Some(slot) => Ok(Some(s.base.rows.row(slot)?.to_vec())),
+            None => Ok(None),
+        }
+    }
     pub fn dim(&self) -> usize {
         self.state.read().manifest.dim
     }
