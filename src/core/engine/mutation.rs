@@ -320,6 +320,7 @@ impl WarmCore {
         // Lookups, clones and the chunk diff of every mutation are prepared while readers are
         // still served and before this writer queues; the exclusive window only installs them
         // (a document replaced by another writer in between is re-diffed there).
+        let submitted = mutations;
         let mutations = &self.prepare_mutations(mutations);
         let transaction = self.mutation_gate.begin_write();
         if revision.is_some_and(|expected| expected != self.revision()) {
@@ -363,6 +364,11 @@ impl WarmCore {
         let cleaned = segment
             .as_ref()
             .map_or(Ok(()), |segment| segment.drain_scrubs());
+        for mutation in submitted {
+            if let Mutation::Vector { id, .. } | Mutation::Delete { id } = mutation {
+                self.forget_dense(id);
+            }
+        }
         crate::core::error::after_commit("live publication", applied)?;
         crate::core::error::after_commit("retained-text cleanup", cleaned)?;
         Ok(Some((next_revision, checked)))

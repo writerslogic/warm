@@ -212,7 +212,9 @@ main().catch(error => { console.error(error); process.exit(1) })
 <summary><strong>Server and Python</strong></summary>
 
 The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores vectors you
-supply. (`warm-python`, imported as `writerslogic_warm`, provides native vector indexes and phase vectors, but no document search.)
+supply. For in-process use without a server, `warm-python` (imported as `writerslogic_warm`)
+provides `Warm`: document search, the memory API (`remember`, `recall`, `forget`, `explain`) and
+vector search, next to the native vector indexes and phase vectors.
 
 ```sh
 cargo build --release --features server --bin warm-server
@@ -287,7 +289,7 @@ provide the evidence for evaluating WARM on your own workload.
 | Conversation memory (`conversation-memory`) | Ships | Bounded context with exact source provenance; native recall not yet benchmarked on LongMemEval end to end |
 | Meaning memory: triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on synthetic and 2,120-fact sets ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
 | Union-bundle membership (`experimental`) | Research | At D = 16,384: positive gap to N = 500 (4% false positives), tested to 2,500 ([`benchmark_scaling_results.json`](benchmarks/results/benchmark_scaling_results.json)) |
-| Sparse vector index (`memorize_vector`) | Experimental | Not competitive with HNSW ([results](docs/benchmarks/EVALUATION.md#where-its-behind)) |
+| Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS, below hnswlib's QPS ([results](docs/benchmarks/EVALUATION.md#where-its-behind)). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
 | Encrypted stores (`security`) | Ships | AES-256-GCM, Argon2id; covers the log, index caches and the text segment. Metadata, file names and sizes are not encrypted |
 | Signed audit log, credential-gated access, COSE/SCITT/C2PA (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented |
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |

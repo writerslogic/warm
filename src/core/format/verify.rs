@@ -1016,7 +1016,9 @@ fn check_indices(store: &Path, arena: &ArenaState, report: &mut Report) {
 }
 
 fn check_ancillary(store: &Path, schema: &Schema, report: &mut Report) {
-    const KNOWN: [&str; 18] = [
+    const KNOWN: [&str; 20] = [
+        "dense-vectors",
+        "dense-ids.log",
         "store.json",
         "store.json.crc32",
         "indices.json",

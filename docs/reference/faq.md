@@ -27,8 +27,9 @@ paraphrases. The [quickstart](../quickstart/index.md) runs both ways.
 `warm-sdk` on npm and PyPI provides HTTP clients for `warm-server`. The server wraps one store
 per tenant and owns the engine; client processes do not load it. For an embedded Node engine,
 use the separate `writerslogic-warm` package. The
-`warm-python` wheel on PyPI provides native vector search and phase vectors, and
-does not include document search. See the [server page](../SERVER.md).
+`warm-python` wheel on PyPI runs the engine in-process instead (`writerslogic_warm.Warm`:
+document search, the memory API and vector search, one writer per store). See the
+[server page](../SERVER.md).
 
 ## Does it send anything over the network?
 
