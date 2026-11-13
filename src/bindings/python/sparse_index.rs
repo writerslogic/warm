@@ -62,13 +62,14 @@ impl PySparseIndex {
 #[pymethods]
 impl PySparseIndex {
     #[new]
-    #[pyo3(signature = (postings_per_term=4000, block_fraction=0.1, summary_coords=192, threads=0, seed=0x5eed))]
+    #[pyo3(signature = (postings_per_term=4000, block_fraction=0.1, summary_coords=192, threads=0, seed=0x5eed, sketch_len=0))]
     fn new(
         postings_per_term: usize,
         block_fraction: f32,
         summary_coords: usize,
         threads: usize,
         seed: u64,
+        sketch_len: usize,
     ) -> PyResult<Self> {
         if !(block_fraction > 0.0 && block_fraction <= 1.0) {
             return Err(value_err("block_fraction must be in (0, 1]"));
@@ -87,6 +88,7 @@ impl PySparseIndex {
                     summary_coords
                 },
                 seed,
+                sketch_len,
                 ..SparseBuildParams::default()
             },
             index: None,
@@ -94,6 +96,10 @@ impl PySparseIndex {
                 query_cut: 4,
                 heap_factor: 1.1,
                 residual: 0.0,
+                tail: -1.0,
+                seed: 0,
+                col_cut: 0.0,
+                batch: 16,
             },
             pool: thread_pool(threads)?,
         })
@@ -115,8 +121,18 @@ impl PySparseIndex {
     }
 
     /// Query coordinates walked per query (`0` walks all) and the block threshold factor.
-    #[pyo3(signature = (query_cut=4, heap_factor=1.1, residual=0.0))]
-    fn set_search(&mut self, query_cut: usize, heap_factor: f32, residual: f32) -> PyResult<()> {
+    #[pyo3(signature = (query_cut=4, heap_factor=1.1, residual=0.0, tail=-1.0, seed=0, col_cut=0.0, batch=16))]
+    #[allow(clippy::too_many_arguments)]
+    fn set_search(
+        &mut self,
+        query_cut: usize,
+        heap_factor: f32,
+        residual: f32,
+        tail: f32,
+        seed: usize,
+        col_cut: f32,
+        batch: usize,
+    ) -> PyResult<()> {
         if !(residual >= 0.0 && residual.is_finite()) {
             return Err(value_err("residual must be non-negative"));
         }
@@ -131,6 +147,10 @@ impl PySparseIndex {
             },
             heap_factor,
             residual,
+            tail,
+            seed,
+            col_cut,
+            batch,
         };
         Ok(())
     }
@@ -165,6 +185,15 @@ impl PySparseIndex {
         numpy::ndarray::Array2::from_shape_vec((nq, k), out)
             .map(|a| a.into_pyarray(py))
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))
+    }
+
+    /// Queries, blocks scored, sketches tested and rows scored since the last call.
+    #[staticmethod]
+    fn counters() -> Vec<u64> {
+        crate::core::index::sparse_impact::COUNTERS
+            .iter()
+            .map(|c| c.swap(0, std::sync::atomic::Ordering::Relaxed))
+            .collect()
     }
 
     /// Bytes held by the index, and its block and kept-posting counts.
