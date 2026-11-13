@@ -31,10 +31,10 @@ fn thread_pool(threads: usize) -> PyResult<Option<rayon::ThreadPool>> {
 
 /// Top-k inner-product search over non-negative learned sparse vectors.
 ///
-/// `SparseIndex(postings_per_term, block_fraction, summary_energy, threads)` then
+/// `SparseIndex(postings_per_term, block_fraction, summary_coords, threads)` then
 /// `build_from_spmat(path)`; `search(indptr, indices, data, k)` takes query rows in CSR form
 /// and returns an (n, k) int64 array of document rows, best first, -1 padded.
-/// `postings_per_term=0` keeps every posting; with `summary_energy=1`, `query_cut=0` and
+/// `postings_per_term=0` keeps every posting; with `summary_coords=0`, `query_cut=0` and
 /// `heap_factor=1` the search is exact.
 #[pyclass(name = "SparseIndex")]
 struct PySparseIndex {
@@ -62,19 +62,16 @@ impl PySparseIndex {
 #[pymethods]
 impl PySparseIndex {
     #[new]
-    #[pyo3(signature = (postings_per_term=4000, block_fraction=0.1, summary_energy=0.4, threads=0, seed=0x5eed))]
+    #[pyo3(signature = (postings_per_term=4000, block_fraction=0.1, summary_coords=192, threads=0, seed=0x5eed))]
     fn new(
         postings_per_term: usize,
         block_fraction: f32,
-        summary_energy: f32,
+        summary_coords: usize,
         threads: usize,
         seed: u64,
     ) -> PyResult<Self> {
         if !(block_fraction > 0.0 && block_fraction <= 1.0) {
             return Err(value_err("block_fraction must be in (0, 1]"));
-        }
-        if !(summary_energy > 0.0 && summary_energy <= 1.0) {
-            return Err(value_err("summary_energy must be in (0, 1]"));
         }
         Ok(Self {
             params: SparseBuildParams {
@@ -84,7 +81,11 @@ impl PySparseIndex {
                     postings_per_term
                 },
                 block_fraction,
-                summary_energy,
+                summary_coords: if summary_coords == 0 {
+                    usize::MAX
+                } else {
+                    summary_coords
+                },
                 seed,
                 ..SparseBuildParams::default()
             },
@@ -92,6 +93,7 @@ impl PySparseIndex {
             search: SparseSearchParams {
                 query_cut: 4,
                 heap_factor: 1.1,
+                residual: 0.0,
             },
             pool: thread_pool(threads)?,
         })
@@ -113,8 +115,11 @@ impl PySparseIndex {
     }
 
     /// Query coordinates walked per query (`0` walks all) and the block threshold factor.
-    #[pyo3(signature = (query_cut=4, heap_factor=1.1))]
-    fn set_search(&mut self, query_cut: usize, heap_factor: f32) -> PyResult<()> {
+    #[pyo3(signature = (query_cut=4, heap_factor=1.1, residual=0.0))]
+    fn set_search(&mut self, query_cut: usize, heap_factor: f32, residual: f32) -> PyResult<()> {
+        if !(residual >= 0.0 && residual.is_finite()) {
+            return Err(value_err("residual must be non-negative"));
+        }
         if !(heap_factor > 0.0 && heap_factor.is_finite()) {
             return Err(value_err("heap_factor must be positive"));
         }
@@ -125,6 +130,7 @@ impl PySparseIndex {
                 query_cut
             },
             heap_factor,
+            residual,
         };
         Ok(())
     }
