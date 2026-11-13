@@ -526,17 +526,20 @@ impl AppState {
 
     /// The open engine for `name`, opening it if needed, held for reading until dropped.
     pub fn core(&self, name: &str) -> Result<CoreGuard, ApiError> {
+        let busy = || {
+            ApiError::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "tenant_busy",
+                "the tenant's store is temporarily unavailable for maintenance; retry shortly",
+            )
+            .retry_after(1)
+        };
         for _ in 0..16 {
             let tenant = self.slot(name)?;
             if tenant.quiesced.load(Ordering::Acquire) {
-                return Err(ApiError::new(
-                    StatusCode::SERVICE_UNAVAILABLE,
-                    "tenant_busy",
-                    "the tenant's store is being snapshotted or restored; retry shortly",
-                )
-                .retry_after(1));
+                return Err(busy());
             }
-            let guard = tenant.core.read_arc();
+            let guard = tenant.core.try_read_arc().ok_or_else(busy)?;
             if guard.is_some() {
                 tenant.last_used_ms.store(self.now_ms(), Ordering::Relaxed);
                 return Ok(CoreGuard { guard, tenant });
@@ -1048,6 +1051,37 @@ pub fn dir_size(path: &Path) -> u64 {
 mod tests {
     use super::*;
     use std::sync::mpsc;
+
+    #[test]
+    fn tenant_admission_does_not_wait_for_a_writer_with_a_clear_pause_flag() {
+        let directory = tempfile::tempdir().unwrap();
+        let state = crate::tests::state_with(directory.path(), 2, &[]);
+        let tenant = state.core("busy").unwrap().tenant.clone();
+        drop(state.core("other").unwrap());
+        let held = tenant.core.write_arc();
+        let paused = tenant.quiesced.load(Ordering::Acquire);
+        let (sent, received) = mpsc::channel();
+        let worker = {
+            let state = state.clone();
+            std::thread::spawn(move || sent.send(state.core("busy").map(drop)))
+        };
+        let other = state.core("other").map(drop);
+        let observed = received.recv_timeout(Duration::from_secs(5));
+        drop(held);
+        let joined = worker.join();
+        let resumed = state.core("busy").map(drop);
+
+        assert!(!paused, "the writer must be held without a pause flag");
+        joined.unwrap().unwrap();
+        assert!(other.is_ok(), "another tenant was blocked: {other:?}");
+        assert!(resumed.is_ok(), "tenant did not resume: {resumed:?}");
+        let busy = observed
+            .expect("tenant admission waited for the writer to be released")
+            .expect_err("a request entered a tenant with its writer held");
+        assert_eq!(busy.status, StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(busy.code, "tenant_busy");
+        assert_eq!(busy.retry_after, Some(1));
+    }
 
     #[test]
     fn snapshot_deletion_cannot_remove_a_pending_restore_backup() {

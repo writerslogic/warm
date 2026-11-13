@@ -1,7 +1,46 @@
 # Quickstart
 
 Five minutes, one small public corpus: **ingest** documents, **search** them,
-**compare** with SQLite FTS5, **encrypt** the store, and **remember** facts that change. Pick Rust, Python or Node.
+**compare** with SQLite FTS5, **encrypt** the store, and **remember** facts that change. Pick Rust, Python or embedded Node.
+
+The portable JavaScript quickstart below uses `warm-sdk` over HTTP. The corpus comparison
+uses Rust, Python or the optional embedded `writerslogic-warm` Node engine.
+
+## Portable JavaScript client
+
+The npm client release is pending. From a checkout, build the client and server:
+
+```sh
+npm ci --prefix bindings/js/warm-sdk
+npm run build --prefix bindings/js/warm-sdk
+cargo build --release --features server --bin warm-server
+WARM_API_KEY=quickstart target/release/warm-server --input-dim 384
+```
+
+Leave the server running. In another terminal, from the same checkout:
+
+```sh
+WARM_URL=http://127.0.0.1:8080 WARM_API_KEY=quickstart \
+  node examples/quickstart/js-client/quickstart.mjs
+```
+
+The example needs Node 18 or newer and uses the built client directly. It creates a fresh
+tenant by default; `WARM_TENANT_ID` can select an authorized tenant instead. Unique record IDs
+and an exact metadata filter isolate each run. It remembers one fact, checks recall and get,
+then purges only that fact and checks its absence. It needs no native addon or embedding model.
+
+```js
+--8<-- "examples/quickstart/js-client/quickstart.mjs:ingest"
+--8<-- "examples/quickstart/js-client/quickstart.mjs:hit"
+--8<-- "examples/quickstart/js-client/quickstart.mjs:forget"
+```
+
+Expected final line: `JavaScript client quickstart passed: remember, recall, get, forget`.
+In an application that installed the package, import `WarmClient` from `warm-sdk` instead of
+the checkout's relative path. See the [exact client API](https://github.com/writerslogic/warm/blob/main/bindings/js/warm-sdk/README.md)
+and [source installation](../get-started/install.md).
+
+## Corpus comparison with the engine
 
 The corpus is the 30 articles of the Universal Declaration of Human Rights, a United Nations
 document in the public domain (`examples/quickstart/corpus.jsonl`). The queries are eight
@@ -45,7 +84,7 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     search. The `warm-python` wheel runs the engine in-process (`writerslogic_warm.Warm`:
     `memorize_document`, `search_documents`, `remember`, `recall`) without a server.
 
-=== "Node"
+=== "Embedded Node"
 
     ```sh
     git clone https://github.com/writerslogic/warm
@@ -54,7 +93,7 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     node examples/quickstart/node/quickstart.mjs
     ```
 
-    The native module is built from source (Rust toolchain required). The script uses
+    The `writerslogic-warm` native module is built from source (Rust toolchain required). The script uses
     `node:sqlite`, so it needs Node 24 or newer.
 
 ## 1. Ingest
@@ -75,7 +114,7 @@ an ID, its text, a source URI, and optional metadata and embeddings. Text is spl
     --8<-- "examples/quickstart/python/quickstart.py:ingest"
     ```
 
-=== "Node"
+=== "Embedded Node"
 
     ```js
     --8<-- "examples/quickstart/node/quickstart.mjs:ingest"
@@ -99,7 +138,7 @@ baseline ORs the words.
     --8<-- "examples/quickstart/python/quickstart.py:compare"
     ```
 
-=== "Node"
+=== "Embedded Node"
 
     ```js
     --8<-- "examples/quickstart/node/quickstart.mjs:compare"
@@ -140,7 +179,7 @@ show a snippet and link back to the source:
     --8<-- "examples/quickstart/python/quickstart.py:hit"
     ```
 
-=== "Node"
+=== "Embedded Node"
 
     ```js
     --8<-- "examples/quickstart/node/quickstart.mjs:hit"
@@ -160,7 +199,7 @@ show a snippet and link back to the source:
     --8<-- "examples/quickstart/python/quickstart.py:encrypt"
     ```
 
-=== "Node"
+=== "Embedded Node"
 
     ```js
     --8<-- "examples/quickstart/node/quickstart.mjs:encrypt"

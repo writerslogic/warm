@@ -22,15 +22,20 @@ No. Text search works from the text alone, with stemmed BM25. Supply an embeddin
 WARM also scores exact cosine and blends the two, which is where it can beat a lexical engine on
 paraphrases. The [quickstart](../quickstart/index.md) runs both ways.
 
-## Why does the Python package need a server?
+## Why does the SDK need a server?
 
-`warm-sdk` is an HTTP client for `warm-server`. The server wraps one store per tenant and
-holds the engine, so the Python process stays small and the store has one writer. The
+`warm-sdk` on npm and PyPI provides HTTP clients for `warm-server`. The server wraps one store
+per tenant and owns the engine; client processes do not load it. For an embedded Node engine,
+use the separate `writerslogic-warm` package. The
 `warm-python` wheel on PyPI runs the engine in-process instead (`writerslogic_warm.Warm`:
 document search, the memory API and vector search, one writer per store). See the
 [server page](../SERVER.md).
 
 ## Does it send anything over the network?
+
+The HTTP clients send requests to the server URL you configure. They do not start a server
+or download models. A remote deployment needs the authentication and transport controls in
+the [server guide](../SERVER.md).
 
 The library makes no network calls and sends no telemetry. Two opt-in Cargo features touch a
 network: `server` listens for HTTP requests, and `provenance-scitt` uses an HTTP client to submit

@@ -1,0 +1,207 @@
+{
+  "kind": "single-process query replay including Python calls and result-array assignment",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "module_sha256": "3d044bcb2e9b61471c596791054416c52fb841605931782a389772067a49351f",
+  "index_sha256": "b556fbd0f7397115ece9341074ae5b78a1f2ca9fb09cd756572fcb49d857aec5",
+  "queries_sha256": "a2ec76c907da22e5533ce31c1105e4fd4d3c4597915a7771d5e41897a95ecbed",
+  "query_array_sha256": "03139cf22783b7bac9278264cfc515682a268ca14162e0c850618eebfb811ab3",
+  "shape": [
+    1000,
+    768
+  ],
+  "metric": "angular",
+  "k": 100,
+  "seed": 898,
+  "environment": {
+    "WARM_QGRAPH_BATCH_EST": "0",
+    "WARM_QGRAPH_PREFETCH": null,
+    "WARM_QGRAPH_KERNEL": null,
+    "WARM_QGRAPH_FRONTIER": null,
+    "WARM_QGRAPH_RERANK_Z": null,
+    "RAYON_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "results": [
+    {
+      "ef": 120,
+      "rep": 0,
+      "ns_per_query": 111347.791,
+      "digest": "8084b49b7607df3c06b8d742541cf64721caefe3382f8cbf5afea439d063766b"
+    },
+    {
+      "ef": 120,
+      "rep": 1,
+      "ns_per_query": 110767.209,
+      "digest": "8084b49b7607df3c06b8d742541cf64721caefe3382f8cbf5afea439d063766b"
+    },
+    {
+      "ef": 120,
+      "rep": 2,
+      "ns_per_query": 110825.75,
+      "digest": "8084b49b7607df3c06b8d742541cf64721caefe3382f8cbf5afea439d063766b"
+    },
+    {
+      "ef": 120,
+      "rep": 3,
+      "ns_per_query": 111999.333,
+      "digest": "8084b49b7607df3c06b8d742541cf64721caefe3382f8cbf5afea439d063766b"
+    },
+    {
+      "ef": 120,
+      "rep": 4,
+      "ns_per_query": 112995.125,
+      "digest": "8084b49b7607df3c06b8d742541cf64721caefe3382f8cbf5afea439d063766b"
+    },
+    {
+      "ef": 150,
+      "rep": 0,
+      "ns_per_query": 138016.458,
+      "digest": "294194f598d66f0c108966e8f797a4ead954ae7d53959d6662ff6e8824a088b3"
+    },
+    {
+      "ef": 150,
+      "rep": 1,
+      "ns_per_query": 137572.125,
+      "digest": "294194f598d66f0c108966e8f797a4ead954ae7d53959d6662ff6e8824a088b3"
+    },
+    {
+      "ef": 150,
+      "rep": 2,
+      "ns_per_query": 144140.709,
+      "digest": "294194f598d66f0c108966e8f797a4ead954ae7d53959d6662ff6e8824a088b3"
+    },
+    {
+      "ef": 150,
+      "rep": 3,
+      "ns_per_query": 140234.083,
+      "digest": "294194f598d66f0c108966e8f797a4ead954ae7d53959d6662ff6e8824a088b3"
+    },
+    {
+      "ef": 150,
+      "rep": 4,
+      "ns_per_query": 140271.25,
+      "digest": "294194f598d66f0c108966e8f797a4ead954ae7d53959d6662ff6e8824a088b3"
+    },
+    {
+      "ef": 200,
+      "rep": 0,
+      "ns_per_query": 187577.375,
+      "digest": "916f4766dc6f8a95604d4ce9dab72f72eabf436dd26f3ea9353e3a9bd80d6cdf"
+    },
+    {
+      "ef": 200,
+      "rep": 1,
+      "ns_per_query": 181371.083,
+      "digest": "916f4766dc6f8a95604d4ce9dab72f72eabf436dd26f3ea9353e3a9bd80d6cdf"
+    },
+    {
+      "ef": 200,
+      "rep": 2,
+      "ns_per_query": 176791.917,
+      "digest": "916f4766dc6f8a95604d4ce9dab72f72eabf436dd26f3ea9353e3a9bd80d6cdf"
+    },
+    {
+      "ef": 200,
+      "rep": 3,
+      "ns_per_query": 177170.5,
+      "digest": "916f4766dc6f8a95604d4ce9dab72f72eabf436dd26f3ea9353e3a9bd80d6cdf"
+    },
+    {
+      "ef": 200,
+      "rep": 4,
+      "ns_per_query": 177119.875,
+      "digest": "916f4766dc6f8a95604d4ce9dab72f72eabf436dd26f3ea9353e3a9bd80d6cdf"
+    },
+    {
+      "ef": 400,
+      "rep": 0,
+      "ns_per_query": 347494.584,
+      "digest": "43afca84ccf2eb806f991a70a4b1f0e9364d8764a104cff4b8ad195dcea1f3a9"
+    },
+    {
+      "ef": 400,
+      "rep": 1,
+      "ns_per_query": 337876.833,
+      "digest": "43afca84ccf2eb806f991a70a4b1f0e9364d8764a104cff4b8ad195dcea1f3a9"
+    },
+    {
+      "ef": 400,
+      "rep": 2,
+      "ns_per_query": 336383.333,
+      "digest": "43afca84ccf2eb806f991a70a4b1f0e9364d8764a104cff4b8ad195dcea1f3a9"
+    },
+    {
+      "ef": 400,
+      "rep": 3,
+      "ns_per_query": 341115.333,
+      "digest": "43afca84ccf2eb806f991a70a4b1f0e9364d8764a104cff4b8ad195dcea1f3a9"
+    },
+    {
+      "ef": 400,
+      "rep": 4,
+      "ns_per_query": 346459.0,
+      "digest": "43afca84ccf2eb806f991a70a4b1f0e9364d8764a104cff4b8ad195dcea1f3a9"
+    },
+    {
+      "ef": 600,
+      "rep": 0,
+      "ns_per_query": 495247.5,
+      "digest": "bb15128d48dcc7eedaf6abda4a245ec80c363e598b3a87ef6f42f2795f818039"
+    },
+    {
+      "ef": 600,
+      "rep": 1,
+      "ns_per_query": 494944.125,
+      "digest": "bb15128d48dcc7eedaf6abda4a245ec80c363e598b3a87ef6f42f2795f818039"
+    },
+    {
+      "ef": 600,
+      "rep": 2,
+      "ns_per_query": 495731.667,
+      "digest": "bb15128d48dcc7eedaf6abda4a245ec80c363e598b3a87ef6f42f2795f818039"
+    },
+    {
+      "ef": 600,
+      "rep": 3,
+      "ns_per_query": 506619.0,
+      "digest": "bb15128d48dcc7eedaf6abda4a245ec80c363e598b3a87ef6f42f2795f818039"
+    },
+    {
+      "ef": 600,
+      "rep": 4,
+      "ns_per_query": 511188.083,
+      "digest": "bb15128d48dcc7eedaf6abda4a245ec80c363e598b3a87ef6f42f2795f818039"
+    },
+    {
+      "ef": 800,
+      "rep": 0,
+      "ns_per_query": 664539.875,
+      "digest": "5d1ac51a12899bb32bb443aaa03862f13fbeb0e8e19f5a619a4894aa57548b97"
+    },
+    {
+      "ef": 800,
+      "rep": 1,
+      "ns_per_query": 677035.959,
+      "digest": "5d1ac51a12899bb32bb443aaa03862f13fbeb0e8e19f5a619a4894aa57548b97"
+    },
+    {
+      "ef": 800,
+      "rep": 2,
+      "ns_per_query": 665034.334,
+      "digest": "5d1ac51a12899bb32bb443aaa03862f13fbeb0e8e19f5a619a4894aa57548b97"
+    },
+    {
+      "ef": 800,
+      "rep": 3,
+      "ns_per_query": 667702.042,
+      "digest": "5d1ac51a12899bb32bb443aaa03862f13fbeb0e8e19f5a619a4894aa57548b97"
+    },
+    {
+      "ef": 800,
+      "rep": 4,
+      "ns_per_query": 657194.084,
+      "digest": "5d1ac51a12899bb32bb443aaa03862f13fbeb0e8e19f5a619a4894aa57548b97"
+    }
+  ]
+}

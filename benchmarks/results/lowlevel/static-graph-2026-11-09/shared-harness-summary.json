@@ -1,0 +1,352 @@
+[
+  {
+    "label": "local-bound-heap-r1",
+    "raw": "local-bound-heap-r1/results/Warm/result_20261110_local-bound-heap-r1_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 18689.163,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      4412.1679,
+      17398.5071,
+      18689.163
+    ],
+    "peak_cgroup_bytes": 15694348288,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:36:37Z",
+    "finished_utc": "2026-11-10T00:38:44Z"
+  },
+  {
+    "label": "local-bound-heap-r2",
+    "raw": "local-bound-heap-r2/results/Warm/result_20261110_local-bound-heap-r2_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 18519.6041,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      4463.4812,
+      17748.7285,
+      18519.6041
+    ],
+    "peak_cgroup_bytes": 14821941248,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:43:00Z",
+    "finished_utc": "2026-11-10T00:45:09Z"
+  },
+  {
+    "label": "local-bound-map-r1",
+    "raw": "local-bound-map-r1/results/Warm/result_20261110_local-bound-map-r1_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 18048.9537,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      3732.214,
+      15230.4327,
+      18048.9537
+    ],
+    "peak_cgroup_bytes": 3457028096,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:38:45Z",
+    "finished_utc": "2026-11-10T00:40:49Z",
+    "snapshot": {
+      "kind": "sealed immutable index snapshot",
+      "source": "/opt/warm-pr898/index/vector_bench_test/index.warm",
+      "bytes": 1263453136,
+      "sha256": "b556fbd0f7397115ece9341074ae5b78a1f2ca9fb09cd756572fcb49d857aec5",
+      "seals": 15,
+      "snapshot_seconds": 0.8962501490022987,
+      "command": [
+        "/opt/warm-pr898/venv/bin/vectordbbench",
+        "warm",
+        "--case-type",
+        "Performance768D1M",
+        "--task-label",
+        "local-bound-map-r1",
+        "--db-label",
+        "shared-b1",
+        "--path",
+        "/opt/warm-pr898/index",
+        "--num-concurrency",
+        "1,5,10",
+        "--k",
+        "100",
+        "--ef-search",
+        "150",
+        "--m",
+        "16",
+        "--ef-construction",
+        "300",
+        "--insert-batch-size",
+        "1000",
+        "--skip-drop-old",
+        "--skip-load"
+      ],
+      "binding": {
+        "version": 1,
+        "source": [
+          2096,
+          590801,
+          1263453136,
+          1794268048788885449,
+          1794268048985989268
+        ],
+        "snapshot": [
+          1,
+          21508,
+          1263453136
+        ]
+      },
+      "exit_code": 0,
+      "total_seconds": 114.80286273598904
+    }
+  },
+  {
+    "label": "local-bound-map-r2",
+    "raw": "local-bound-map-r2/results/Warm/result_20261110_local-bound-map-r2_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 18156.3084,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      3861.2858,
+      15322.9482,
+      18156.3084
+    ],
+    "peak_cgroup_bytes": 3457974272,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:40:50Z",
+    "finished_utc": "2026-11-10T00:43:00Z",
+    "snapshot": {
+      "kind": "sealed immutable index snapshot",
+      "source": "/opt/warm-pr898/index/vector_bench_test/index.warm",
+      "bytes": 1263453136,
+      "sha256": "b556fbd0f7397115ece9341074ae5b78a1f2ca9fb09cd756572fcb49d857aec5",
+      "seals": 15,
+      "snapshot_seconds": 0.9064910000015516,
+      "command": [
+        "/opt/warm-pr898/venv/bin/vectordbbench",
+        "warm",
+        "--case-type",
+        "Performance768D1M",
+        "--task-label",
+        "local-bound-map-r2",
+        "--db-label",
+        "shared-b1",
+        "--path",
+        "/opt/warm-pr898/index",
+        "--num-concurrency",
+        "1,5,10",
+        "--k",
+        "100",
+        "--ef-search",
+        "150",
+        "--m",
+        "16",
+        "--ef-construction",
+        "300",
+        "--insert-batch-size",
+        "1000",
+        "--skip-drop-old",
+        "--skip-load"
+      ],
+      "binding": {
+        "version": 1,
+        "source": [
+          2096,
+          590801,
+          1263453136,
+          1794268048788885449,
+          1794268048985989268
+        ],
+        "snapshot": [
+          1,
+          1093,
+          1263453136
+        ]
+      },
+      "exit_code": 0,
+      "total_seconds": 114.80731420399388
+    }
+  },
+  {
+    "label": "local-shared-heap-r1",
+    "raw": "local-shared-heap-r1/results/Warm/result_20261110_local-shared-heap-r1_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 17713.878,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      4464.6558,
+      17713.878,
+      16929.3783
+    ],
+    "peak_cgroup_bytes": 16080789504,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:18:28Z",
+    "finished_utc": "2026-11-10T00:20:44Z"
+  },
+  {
+    "label": "local-shared-heap-r2",
+    "raw": "local-shared-heap-r2/results/Warm/result_20261110_local-shared-heap-r2_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 18902.5957,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      4432.7609,
+      17602.4263,
+      18902.5957
+    ],
+    "peak_cgroup_bytes": 14822633472,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:25:12Z",
+    "finished_utc": "2026-11-10T00:27:24Z"
+  },
+  {
+    "label": "local-shared-map-r1",
+    "raw": "local-shared-map-r1/results/Warm/result_20261110_local-shared-map-r1_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 16298.7354,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      3707.6103,
+      14572.2393,
+      16298.7354
+    ],
+    "peak_cgroup_bytes": 3453874176,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:20:44Z",
+    "finished_utc": "2026-11-10T00:22:56Z",
+    "snapshot": {
+      "kind": "sealed immutable index snapshot",
+      "source": "/opt/warm-pr898/index/vector_bench_test/index.warm",
+      "bytes": 1263453136,
+      "sha256": "b556fbd0f7397115ece9341074ae5b78a1f2ca9fb09cd756572fcb49d857aec5",
+      "seals": 15,
+      "snapshot_seconds": 1.0064032039954327,
+      "command": [
+        "/opt/warm-pr898/venv/bin/vectordbbench",
+        "warm",
+        "--case-type",
+        "Performance768D1M",
+        "--task-label",
+        "local-shared-map-r1",
+        "--db-label",
+        "shared-b1",
+        "--path",
+        "/opt/warm-pr898/index",
+        "--num-concurrency",
+        "1,5,10",
+        "--k",
+        "100",
+        "--ef-search",
+        "150",
+        "--m",
+        "16",
+        "--ef-construction",
+        "300",
+        "--insert-batch-size",
+        "1000",
+        "--skip-drop-old",
+        "--skip-load"
+      ],
+      "exit_code": 0,
+      "total_seconds": 122.13646524000796
+    }
+  },
+  {
+    "label": "local-shared-map-r2",
+    "raw": "local-shared-map-r2/results/Warm/result_20261110_local-shared-map-r2_warm.json",
+    "recall_at_100": 0.9406,
+    "ndcg": 0.9496,
+    "max_qps": 16651.1168,
+    "concurrency": [
+      1,
+      5,
+      10
+    ],
+    "qps": [
+      3750.6293,
+      14126.4219,
+      16651.1168
+    ],
+    "peak_cgroup_bytes": 3452805120,
+    "insert_seconds": 0.0,
+    "optimize_seconds": 0.0,
+    "started_utc": "2026-11-10T00:22:57Z",
+    "finished_utc": "2026-11-10T00:25:12Z",
+    "snapshot": {
+      "kind": "sealed immutable index snapshot",
+      "source": "/opt/warm-pr898/index/vector_bench_test/index.warm",
+      "bytes": 1263453136,
+      "sha256": "b556fbd0f7397115ece9341074ae5b78a1f2ca9fb09cd756572fcb49d857aec5",
+      "seals": 15,
+      "snapshot_seconds": 0.9637632009980734,
+      "command": [
+        "/opt/warm-pr898/venv/bin/vectordbbench",
+        "warm",
+        "--case-type",
+        "Performance768D1M",
+        "--task-label",
+        "local-shared-map-r2",
+        "--db-label",
+        "shared-b1",
+        "--path",
+        "/opt/warm-pr898/index",
+        "--num-concurrency",
+        "1,5,10",
+        "--k",
+        "100",
+        "--ef-search",
+        "150",
+        "--m",
+        "16",
+        "--ef-construction",
+        "300",
+        "--insert-batch-size",
+        "1000",
+        "--skip-drop-old",
+        "--skip-load"
+      ],
+      "exit_code": 0,
+      "total_seconds": 121.86514691199409
+    }
+  }
+]

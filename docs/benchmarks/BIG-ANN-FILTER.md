@@ -1,7 +1,8 @@
 # big-ann-benchmarks filtered track (YFCC-10M): development results
 
-Status: development measurements only. No standings run has been made; the leaderboard is run
-by the track maintainers on Azure D8lds_v5 (8 vCPU Xeon Platinum 8370C).
+Status: dated development and pinned-commit harness runs are recorded below. The track
+maintainers evaluate the leaderboard on Azure D8lds_v5 (8 vCPU Xeon Platinum 8370C);
+none of these different-host measurements establishes an official standing.
 
 ## Task
 
@@ -60,9 +61,8 @@ Index size reported by the harness: run 1 10.6 GB, run 2 9.8 GB (bitsets 3.4 GB 
 Build 167-179 s. Run-to-run noise on this shared host is large (e.g. target 3000 measured faster
 than target 2500 in run 2); treat differences under ~15% as noise.
 
-Development QPS at recall@10 >= 0.90: about 16k on 4 hyperthreaded P-cores. That sits between
-puck (19,193) and hwtl_sdu_anns_filter / wm_filter (~15k), below parlayivf (37,902) and the
-closed entries. The estimate is uncalibrated: no other entry was run on this host.
+Development QPS at recall@10 >= 0.90 was about 16k on 4 hyperthreaded P-cores.
+No other entry was run on this host, so these measurements do not establish a matched comparison.
 
 ## Parameter sweeps (private queries, tuning)
 
@@ -87,6 +87,28 @@ average in brackets. QPS per band times that band's queries as one batch.
 | r3 | | 2500:3500 | 0.9308 | 9,289 | 1.0, 0.996, 0.932, 0.838, 0.772 |
 
 r3 ran at load average up to 29 and is not comparable for QPS; its recall column stands.
+
+## Pinned run (af8d4017, Modal 8 vCPU, 16 GiB, 2026-11-06)
+
+The submission image (`neurips23/filter/warm`, PR harsha-simhadri/big-ann-benchmarks#356, harness
+68b8ba5, `ARG WARM_COMMIT=af8d4017`) was run with `run.py --nodocker
+--neurips23track filter --algorithm warm --dataset yfcc-10M`, on a Modal function with
+`cpu=(8,8) memory=(16384,16384)`: AMD EPYC Zen 3, 8 logical CPUs, no AVX-512, gVisor. Build
+136.0 s, index 9.81 GB as reported by the harness, `run.py` 257 s, public queries.
+Results: `benchmarks/results/bigann_filter_yfcc10m_pinned_v1.json`.
+
+| brute_max:target | recall@10 | QPS |
+|---|---|---|
+| **5000:2500** | **0.9044** | **33,623** |
+| 10000:3000 | 0.9208 | 32,724 |
+| 5000:4000 | 0.9397 | 31,276 |
+| 10000:2500 | 0.9067 | 30,875 |
+| 5000:3000 | 0.9194 | 23,410 |
+| 20000:2500 | 0.9106 | 19,639 |
+
+The CPU model, AVX-512 availability, runtime and core/thread mapping differ from the
+evaluation VM. The raw summary retains historical placement projections; those projections
+are unsupported as rankings under matched conditions and are not current standings.
 
 ## Ice Lake tuning (2026-11-09): held-out selection, ablation, official protocol
 
@@ -213,6 +235,25 @@ set, and any run-to-run spread beyond two elite runs.
 
 
 
+## Frozen Azure confirmation, 2026-11-09–10
+
+On Azure E8bds_v5 (Xeon Platinum 8370C, 4 cores / 8 threads), the same frozen
+`6091c519` entry and headline `brute_max=5000, target=1750` measured **54,721.70
+and 53,972.75 QPS**, both at recall@10 **.906415**. Each official Docker run
+covered all 100,000 public queries and retained the complete submitted six-point
+grid; the headline was not reselected from that grid.
+
+The container limit was 16 GiB with no swap. Peak process RSS was 14.3841 and
+14.3846 GiB; this is GNU-time RSS, not cgroup memory.peak. Complete workload wall
+time was 456.23 / 456.39 seconds. The host page cache was dropped before each run.
+[Raw exports, frozen protocol and archive receipt](../../benchmarks/results/azure/az1-2026-11-09/)
+retain both runs and every configuration.
+
+E8bds_v5 has 64 GiB host RAM and different storage limits from the official
+D8lds_v5. These results therefore confirm the entry on an Azure Ice Lake host,
+but do not establish official placement or a private-query result. They remain
+below the previously reported leading filter-board throughput.
+
 ## Not done
 
 - Graph search with a tag predicate for the common tags (filtered-Vamana / ACORN style) and
@@ -231,3 +272,28 @@ python data_export.py --out res.csv
 
 with `neurips23/filter/warm` from the fork branch `filter/warm`, whose Dockerfile pins the WARM
 commit.
+
+## Per-class tuning (2026-11-12): fast-scan probe path and class table
+
+Same hardware and protocol as above (GCP Ice Lake clone, unchanged `run.py`, 100,000 public queries, 5 runs per
+configuration, cold cache). Changes over the fast-scan entry (`881ef32f`, 84.3-88.2k QPS):
+the other-label bitsets are resolved once per query and prefetched before the probes, calibration
+reads one list instead of two, the PQ table is built with coordinate-major centroids, labels of
+1,500 members and more get an inverted file (`ivf_min 1500`), and `(target, rerank)` is set per
+class (single or multi-label query, rarest-label band with edges 5k/30k/150k) from the per-class
+time-recall fronts on the selection split.
+
+Profile before the change (selection split, 8 threads): other-label probes 24.4% of the time, 4-bit scan 14.4%,
+exact re-rank and exact routes 24.7%, PQ table 5.8%. Multi-label queries were 50% of the time at
+recall 0.97 while rarest labels above 150k members sat at 0.76-0.83.
+
+Official runs, qps at recall (run 1 / run 2); build 462 s, index 5.42e6 KB:
+
+| targets (single bands, multi bands) | reranks | recall | QPS |
+|---|---|---|---|
+| 2800 2800 5000 3600, 1200 450 800 800 | 64 64 64 96, 48 x4 | 0.9039 | 117,572 / 115,792 |
+| 2800 2800 5000 3600, 1200 450 600 600 | 64 64 64 96, 48 x4 | 0.9026 | 117,302 / 117,523 |
+| 2800 2800 3600 3600, 1200 600 600 600 | 64 64 64 96, 48 x4 | 0.9022 | 117,823 / 117,757 |
+| 2800 2800 5000 3600, 1200 450 600 600 | 64 64 96 96, 48 x4 | 0.9077 | 115,334 / 115,548 |
+
+Peak container memory (cgroup `memory.peak`, includes page cache): 11.6 GiB of 16 GiB in run 2. Run-to-run spread inside one process is about 3%.

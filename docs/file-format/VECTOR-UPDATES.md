@@ -111,7 +111,7 @@ squared norms that overflow f32 are rejected. Checked arithmetic bounds lengths.
 * `rows-<sequence>.bin`: `HMSVRW01`, order, dimension, count, metric, sequence,
   row offset (all u64), header CRC32 (u32), id-table CRC32 (u32): 64 bytes.
   Sorted external ids (`count` u32) follow. Rows start at the next 64-byte boundary;
-  each is `dimension` f32 values followed by its CRC32. The header and id ordering
+  each is `dimension` f32 values followed by its CRC32. `HMSVRW02` is the same layout with one byte per coordinate, written when every value is an integer in 0..=255. The header and id ordering
   and id-table checksum are validated at open; row checksums and finite values
   are validated on access.
 * `updates.log`: `HMSVLG01`, order, identity (16 bytes), dimension, metric,

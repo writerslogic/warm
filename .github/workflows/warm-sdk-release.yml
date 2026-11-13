@@ -15,6 +15,9 @@ on:
     paths:
       - .github/workflows/warm-sdk-release.yml
       - bindings/python/warm-sdk/**
+      - bindings/js/warm-sdk/package.json
+      - bindings/js/warm-sdk/package-lock.json
+      - scripts/ci/check-sdk-versions.py
       - src/bin/warm-server/**
       - src/bin/warm-server.rs
 
@@ -35,8 +38,9 @@ jobs:
       - name: Check release version
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            version=$(sed -n 's/^version = "\(.*\)"$/\1/p' bindings/python/warm-sdk/pyproject.toml | head -n 1)
-            test "$GITHUB_REF_NAME" = "sdk-v$version"
+            uv run --no-project --python 3.12 python scripts/ci/check-sdk-versions.py --tag "$GITHUB_REF_NAME"
+          else
+            uv run --no-project --python 3.12 python scripts/ci/check-sdk-versions.py
           fi
       - name: Build SDK
         working-directory: bindings/python/warm-sdk

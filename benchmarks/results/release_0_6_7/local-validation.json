@@ -1,0 +1,94 @@
+{
+  "scope": "Local development regression gates; no mission confirmation or performance win. Full integrated CI and release dry runs remain required.",
+  "host": "macOS-27.0-arm64-arm-64bit",
+  "engine": "0.6.7",
+  "sdk": "0.2.0",
+  "mcp": "0.1.6",
+  "results": {
+    "campaign": {
+      "passed": 12
+    },
+    "typedoc_minimatch": {
+      "passed": 4
+    },
+    "html_node_parser": {
+      "passed": 2
+    },
+    "chroma": {
+      "passed": 19,
+      "deselected": 15,
+      "skipped": 0
+    },
+    "dspy": {
+      "passed": 12,
+      "skipped": 0
+    },
+    "axe": {
+      "page_views": 36,
+      "serious_or_critical": 0
+    },
+    "docs_search": {
+      "queries": 46,
+      "failed": 0
+    },
+    "version": {
+      "problems": 0,
+      "tests_passed": 3
+    },
+    "mcp_version": {
+      "tests_passed": 2
+    }
+  },
+  "limitations": [
+    "Docs local build omitted Rustdoc; full docs and link gate remains in CI.",
+    "Lighthouse must run on CI; this host had another unrelated build active.",
+    "No upstream Chroma or DiskCache package patch is claimed.",
+    "No alert dismissed; no release or tag published."
+  ],
+  "receipts": [
+    {
+      "path": "validation/campaign-integrity.log",
+      "sha256": "f397bb5c57eeec033277677b08ff48166f0581b1fc1629ad6d93041e9d720a22"
+    },
+    {
+      "path": "validation/docs-api-regressions.log",
+      "sha256": "ee602a960668903fd39dac2be2de5fa1d380b8947c05a60c9fea3ea1b5a11271"
+    },
+    {
+      "path": "validation/html-parser-regressions.log",
+      "sha256": "0924a5b19ef7180542cce312a648ec71e3aa00ac152a7b14b3bb5efeee001ba2"
+    },
+    {
+      "path": "validation/chroma-final.log",
+      "sha256": "ec4830b3c0448ef9dd4aed62d563558f50a4d1a0bd406769fa8f0c5496016d10"
+    },
+    {
+      "path": "validation/dspy-security-final.log",
+      "sha256": "bee64493780d9b11a739dd9fac428d191f5ed5e45d6a51d9131707ae23576fe9"
+    },
+    {
+      "path": "validation/docs-axe-ready.log",
+      "sha256": "10b8e6bf02693fd91ee72da568b0392984d6b0347ef9c00327b8b9a83422b34e"
+    },
+    {
+      "path": "validation/docs-search-ready.log",
+      "sha256": "9f2a87728118039a08baec8d813a9058c82e0be002aa24cec9e1fdf53bb04036"
+    },
+    {
+      "path": "validation/version-check.log",
+      "sha256": "1c7b86efb32155bb19b5ded4c78ac0035b8aed066afc987201cc8f4f0da4dc6b"
+    },
+    {
+      "path": "validation/version-tests.log",
+      "sha256": "c53c679142676a4e3fa83e66ec2a9bbe7441e580deb819bed7c0aecd97c070f1"
+    },
+    {
+      "path": "validation/mcp-release-unit.log",
+      "sha256": "8c0c710a9cad36089f960746fc1afcfeb546ed537958a35e6fe4ae372d08815c"
+    },
+    {
+      "path": "validation/server-version.log",
+      "sha256": "f270c960649596ee2a88a173015eea7d2645f2884a218a5d563b8a9b7f8103db"
+    }
+  ]
+}

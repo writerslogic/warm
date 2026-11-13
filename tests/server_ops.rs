@@ -809,19 +809,38 @@ fn a_snapshot_pauses_only_its_own_tenant_and_never_hangs_requests() {
         "--max-queue",
         "16",
     ]));
+    let recent_events = || s.log_lines().into_iter().rev().take(10).collect::<Vec<_>>();
     let docs: Vec<_> = (0..200).map(|i| doc(&format!("d{i}"), i)).collect();
-    s.req("POST", "/api/v1/documents/batch")
+    let r = s
+        .req("POST", "/api/v1/documents/batch")
         .tenant("big")
         .json(&json!(docs))
         .send();
-    s.req("POST", "/api/v1/documents")
+    assert_eq!(
+        r.status,
+        200,
+        "big setup: {}; {:?}",
+        r.text(),
+        recent_events()
+    );
+    let r = s
+        .req("POST", "/api/v1/documents")
         .tenant("calm")
         .json(&doc("c", 1))
         .send();
+    assert_eq!(
+        r.status,
+        200,
+        "calm setup: {}; {:?}",
+        r.text(),
+        recent_events()
+    );
     let query = json!({"query_vector": embedding(1)});
     let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let (ready, ready_rx) = std::sync::mpsc::channel();
     let hammer = |tenant: &'static str| {
         let (s, stop, query) = (s.clone(), stop.clone(), query.clone());
+        let ready = ready.clone();
         std::thread::spawn(move || {
             let mut seen = Vec::new();
             while !stop.load(std::sync::atomic::Ordering::Relaxed) {
@@ -833,32 +852,75 @@ fn a_snapshot_pauses_only_its_own_tenant_and_never_hangs_requests() {
                     .send();
                 let code = r.json()["code"].as_str().unwrap_or("").to_string();
                 seen.push((r.status, code, started.elapsed()));
+                if seen.len() == 1 && ready.send(tenant).is_err() {
+                    break;
+                }
             }
             seen
         })
     };
     let big = hammer("big");
     let calm = hammer("calm");
+    drop(ready);
+    let started = (
+        ready_rx.recv_timeout(Duration::from_secs(5)),
+        ready_rx.recv_timeout(Duration::from_secs(5)),
+    );
+    if started.0.is_err() || started.1.is_err() {
+        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        let (big, calm) = (big.join(), calm.join());
+        panic!(
+            "query streams did not start: {started:?}; big: {:?}; calm: {:?}; recent events: {:?}",
+            big.as_ref().map(Vec::len),
+            calm.as_ref().map(Vec::len),
+            recent_events()
+        );
+    }
+    let mut snapshots = Vec::new();
     for _ in 0..6 {
-        let r = s.req("POST", "/api/v1/snapshots").tenant("big").send();
-        assert_eq!(r.status, 201, "{}", r.text());
+        let r = s.req("POST", "/api/v1/snapshots").tenant("big").try_send();
+        let created = r.as_ref().is_some_and(|r| r.status == 201);
+        snapshots.push(r.map(|r| (r.status, r.text())));
+        if !created {
+            break;
+        }
     }
     stop.store(true, std::sync::atomic::Ordering::Relaxed);
-    let (big, calm) = (big.join().unwrap(), calm.join().unwrap());
+    let (big, calm) = (big.join(), calm.join());
+    let (big, calm) = (big.unwrap(), calm.unwrap());
+    assert!(
+        snapshots.len() == 6
+            && snapshots
+                .iter()
+                .all(|response| response.as_ref().is_some_and(|(status, _)| *status == 201)),
+        "snapshots: {snapshots:?}; recent events: {:?}",
+        recent_events()
+    );
     assert!(
         big.iter()
             .all(|(st, code, _)| *st == 200 || (*st == 503 && code == "tenant_busy")),
-        "{big:?}"
+        "big: {big:?}; recent events: {:?}",
+        recent_events()
     );
     assert!(
         calm.iter().all(|(st, _, _)| *st == 200),
-        "another tenant was disturbed: {calm:?}"
+        "another tenant was disturbed: {calm:?}; recent events: {:?}",
+        recent_events()
     );
     assert!(
         big.iter()
             .chain(calm.iter())
             .all(|(_, _, t)| *t < Duration::from_secs(5)),
-        "a request hung"
+        "a request hung; slow big: {:?}; slow calm: {:?}; recent events: {:?}",
+        big.iter()
+            .filter(|(_, _, t)| *t >= Duration::from_secs(5))
+            .take(10)
+            .collect::<Vec<_>>(),
+        calm.iter()
+            .filter(|(_, _, t)| *t >= Duration::from_secs(5))
+            .take(10)
+            .collect::<Vec<_>>(),
+        recent_events()
     );
     assert_eq!(
         s.req("POST", "/api/v1/query")

@@ -270,7 +270,9 @@ test('spontaneous worker exit cleans its residual process group and cannot quali
 test('actual engines pass tiny oracle, filter, churn, separate-process reopen and controlled interruption checks', { timeout: 120000 }, async t => {
   const root = await temporary(t), packagePath = path.join(root, 'warm-package'); await fs.mkdir(packagePath)
   for (const file of ['index.js', 'vectra.js', 'vectra-selector.js']) await fs.copyFile(path.join(sources.warmPath, file), path.join(packagePath, file))
-  const nativeAddon = path.join(packagePath, 'warm-sdk.node'); await fs.copyFile(sources.nativeAddon, nativeAddon)
+  const binaryName = (await readJson(path.join(sources.warmPath, 'package.json'))).napi.binaryName
+  assert.ok(['writerslogic-warm', 'warm-sdk'].includes(binaryName), 'unsupported source addon name')
+  const nativeAddon = path.join(packagePath, `${binaryName}.node`); await fs.copyFile(sources.nativeAddon, nativeAddon)
   const config = path.join(root, 'config.json'); await writeOnce(config, { ...sources, warmPath: packagePath, nativeAddon, inputIdentity: 'synthetic-development-only' })
   const count = 24, dimensions = 3, queryCount = 3
   const vectors = Array.from({ length: count }, (_, i) => [i % 2 ? -1 : 1, i === 0 ? -0 : i / 10, .5]), queries = [[1, 0, .1], [-1, 0, .1], [.1, 1, .1]]

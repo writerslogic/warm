@@ -39,7 +39,7 @@ mod vnni;
 #[cfg(not(target_arch = "wasm32"))]
 pub use repair::{RepairParams, RepairStats};
 pub use update::{
-    Consolidation, ConsolidationMode, ConsolidationPolicy, UpdatableVGraph, UpdateError,
+    Consolidation, ConsolidationMode, ConsolidationPolicy, RowStore, UpdatableVGraph, UpdateError,
 };
 
 #[cfg(feature = "experimental")]
@@ -490,7 +490,7 @@ impl BuildCodes {
 
     /// The integer dot product of the codes of rows `p` and `u`.
     #[inline]
-    fn raw(&self, p: u32, u: u32) -> i32 {
+    fn raw(&self, p: u32, u: u32) -> i64 {
         dot_i8_query(self.code(p), self.code(u), self.sums[p as usize])
     }
 
@@ -509,7 +509,7 @@ impl BuildCodes {
     }
 
     #[inline]
-    fn est_from_raw(&self, p: u32, u: u32, raw: i32) -> f32 {
+    fn est_from_raw(&self, p: u32, u: u32, raw: i64) -> f32 {
         let raw = raw as f32;
         let (mp, mu) = (&self.meta[p as usize], &self.meta[u as usize]);
         if self.euclidean {
@@ -1454,6 +1454,15 @@ impl Graph {
             }
         }
         h.finish()
+    }
+
+    /// Frees the topology (lists, upper layers) once the graph is encoded, keeping the rows
+    /// and build parameters that a persisted base still needs. The graph can no longer be
+    /// searched, saved or repaired.
+    pub fn release_structure(&mut self) {
+        self.adj = Adjacency::default();
+        self.upper_ids = Vec::new();
+        self.layers = Vec::new();
     }
 
     /// Build over `data` (row-major, `dim` floats per vector). Angular rows are normalized;

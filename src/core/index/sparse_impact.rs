@@ -9,8 +9,10 @@
 //! - every coordinate keeps its `postings_per_term` largest postings (static pruning);
 //! - each kept list is split into blocks by assigning every document to the most similar of a
 //!   random sample of the list's documents (shallow clustering);
-//! - every block stores a summary: the coordinate-wise maximum of its documents, pruned to the
-//!   coordinates that carry `summary_energy` of its mass and quantized to one byte;
+//! - every list stores its block summaries column-wise: for the `summary_coords` coordinates
+//!   with the largest summed block maxima, one byte per block (the block's coordinate-wise
+//!   maximum, quantized upward against a per-column scale), so the bounds of all of a list's
+//!   blocks come out of a few vectorized passes over contiguous bytes;
 //! - a forward index holds every document in full, so a candidate's score is its exact inner
 //!   product with the query.
 //!
@@ -27,6 +29,7 @@
 
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 
 use rayon::prelude::*;
 
@@ -152,15 +155,16 @@ pub struct SparseBuildParams {
     pub postings_per_term: usize,
     /// Blocks per kept list as a fraction of its length (at least one block).
     pub block_fraction: f32,
-    /// Fraction of a summary's mass its kept coordinates must carry; 1 keeps all of them.
-    pub summary_energy: f32,
+    /// Summary columns kept per list (the coordinates with the largest summed block maxima);
+    /// `usize::MAX` keeps every coordinate.
+    pub summary_coords: usize,
+    /// Entries of the per-document sketch (its largest values, scored first to reject
+    /// candidates before their full rows are read); 0 builds none.
+    pub sketch_len: usize,
     /// Postings transposed at once during the build (bounds the build's working memory).
     pub transpose_budget: usize,
     /// Seed of the centroid sample.
     pub seed: u64,
-    /// Store forward values as half floats (2 bytes, relative error below 2^-11); scores are
-    /// then exact inner products with the rounded values.
-    pub half_values: bool,
 }
 
 impl SparseBuildParams {
@@ -168,8 +172,7 @@ impl SparseBuildParams {
     pub fn exact() -> Self {
         Self {
             postings_per_term: usize::MAX,
-            summary_energy: 1.0,
-            half_values: false,
+            summary_coords: usize::MAX,
             ..Self::default()
         }
     }
@@ -180,10 +183,10 @@ impl Default for SparseBuildParams {
         Self {
             postings_per_term: 4000,
             block_fraction: 0.1,
-            summary_energy: 0.4,
+            summary_coords: 192,
+            sketch_len: 0,
             transpose_budget: 1 << 26,
             seed: 0x5eed,
-            half_values: true,
         }
     }
 }
@@ -195,6 +198,23 @@ pub struct SparseSearchParams {
     pub query_cut: usize,
     /// A block is scored when `summary score * heap_factor` reaches the k-th best score.
     pub heap_factor: f32,
+    /// Share of the bound's slack for coordinates a list keeps no column for: the largest
+    /// norm of a block document outside the columns times the norm of the query outside them
+    /// (Cauchy-Schwarz), times this factor. 1 keeps the bound an upper bound; 0 ignores those
+    /// coordinates.
+    pub residual: f32,
+    /// A candidate whose sketch score plus `tail` times (norm of its entries outside the
+    /// sketch, times the query norm) is below the k-th best score is dropped without reading
+    /// its row; negative scores every candidate.
+    pub tail: f32,
+    /// Blocks per walked list with the largest bounds, scored before the rest to raise the
+    /// threshold early.
+    pub seed: usize,
+    /// Summary columns whose weighted scale is below this fraction of the list's largest are
+    /// left out of the block bounds.
+    pub col_cut: f32,
+    /// Candidates fetched ahead of scoring.
+    pub batch: usize,
 }
 
 impl SparseSearchParams {
@@ -202,6 +222,11 @@ impl SparseSearchParams {
         Self {
             query_cut: usize::MAX,
             heap_factor: 1.0,
+            residual: 1.0,
+            tail: -1.0,
+            seed: 0,
+            col_cut: 0.0,
+            batch: SCORE_BATCH,
         }
     }
 }
@@ -210,34 +235,51 @@ impl SparseSearchParams {
 pub struct SparseImpactIndex {
     n_dims: usize,
     n_docs: usize,
-    /// Forward index: document `d` is `fwd_ids/fwd_vals[fwd_offsets[d]..fwd_offsets[d + 1]]`.
+    /// Forward index: document `d` is the byte row `fwd[fwd_offsets[d]..fwd_offsets[d + 1]]`:
+    /// a little-endian `f32` scale, `n` little-endian `u16` coordinates, then `n` `u8` codes,
+    /// so a row is `4 + 3n` bytes and a value is `code * scale` (absolute error at most
+    /// half a step, `max / 510`, and a stored value is never zero).
     fwd_offsets: Vec<u64>,
-    fwd_ids: Vec<u16>,
-    fwd_vals: Vec<f32>,
-    /// The forward values as IEEE half floats when [`SparseBuildParams::half_values`] is set
-    /// (`fwd_vals` is then empty).
-    fwd_half: Vec<u16>,
+    fwd: Vec<u8>,
+    /// Sketches, `sk_stride` bytes per document: `f32` norm of the entries outside the sketch,
+    /// then the sketch as a forward row (scale, `sk_len` ids, `sk_len` codes). Empty without one.
+    sk: Vec<u8>,
+    sk_stride: usize,
+    sk_len: usize,
     /// Blocks of coordinate `t`: `term_blocks[t]..term_blocks[t + 1]`.
     term_blocks: Vec<u32>,
     /// Documents of block `b`: `block_docs[block_doc_offsets[b]..block_doc_offsets[b + 1]]`.
     block_doc_offsets: Vec<u64>,
     block_docs: Vec<u32>,
-    /// Summary of block `b`: `sum_ids/sum_codes[block_sum_offsets[b]..block_sum_offsets[b + 1]]`,
-    /// a coordinate's maximum being at most `sum_codes * block_scales[b]`.
-    block_sum_offsets: Vec<u64>,
-    sum_ids: Vec<u16>,
-    sum_codes: Vec<u8>,
-    block_scales: Vec<f32>,
+    /// Summary columns of coordinate `t`'s list: `col_ids/col_scales[term_cols[t]..term_cols[t + 1]]`
+    /// (ids ascending). Column `j` holds one code per block, at
+    /// `col_codes[term_code_off[t] + (j - term_cols[t]) * stride ..][..blocks]` with
+    /// `stride = pad(blocks)`; a block's maximum of that coordinate is at most `code * scale`.
+    term_cols: Vec<u64>,
+    n_blocks: usize,
+    col_ids: Vec<u16>,
+    col_scales: Vec<f32>,
+    /// Scale of the residual column of each coordinate's list: the extra column after its
+    /// summary columns holds, per block, the largest norm of a document's part outside the columns.
+    res_scales: Vec<f32>,
+    term_code_off: Vec<u64>,
+    col_codes: Vec<u8>,
+}
+
+/// Column length for `blocks` blocks: a multiple of 32 so vector passes need no tail.
+#[inline]
+fn pad(blocks: usize) -> usize {
+    blocks.div_ceil(32) * 32
 }
 
 /// One kept list after clustering: its blocks' documents and summaries.
 struct TermBlocks {
     doc_counts: Vec<u32>,
     docs: Vec<u32>,
-    sum_counts: Vec<u32>,
-    sum_ids: Vec<u16>,
-    sum_codes: Vec<u8>,
-    scales: Vec<f32>,
+    col_ids: Vec<u16>,
+    col_scales: Vec<f32>,
+    res_scale: f32,
+    codes: Vec<u8>,
 }
 
 fn splitmix(state: &mut u64) -> u64 {
@@ -291,46 +333,48 @@ impl SparseImpactIndex {
         let mut fwd_offsets = Vec::with_capacity(n_docs + 1);
         fwd_offsets.push(0u64);
         let nnz = csr.data.iter().filter(|&&v| v > 0.0).count();
-        let mut fwd_ids = Vec::with_capacity(nnz);
-        // Exactly one of the value arrays is filled: half floats never pass through f32 storage.
-        let (mut fwd_vals, mut fwd_half) = if params.half_values {
-            (Vec::new(), Vec::with_capacity(nnz))
-        } else {
-            (Vec::with_capacity(nnz), Vec::new())
-        };
+        let mut fwd: Vec<u8> = Vec::with_capacity(nnz * 3 + 4 * n_docs);
+        advise_huge_pages(&fwd);
         let mut df = vec![0u64; n_dims];
         for r in 0..n_docs {
             let (ids, vals) = csr.row(r);
+            let scale = vals.iter().fold(0f32, |m, &v| m.max(v)) / 255.0;
+            fwd.extend_from_slice(&scale.to_le_bytes());
             for (&c, &v) in ids.iter().zip(vals) {
                 if v > 0.0 {
-                    fwd_ids.push(c as u16);
-                    if params.half_values {
-                        fwd_half.push(f16_bits(v));
-                    } else {
-                        fwd_vals.push(v);
-                    }
+                    fwd.extend_from_slice(&(c as u16).to_le_bytes());
                     df[c as usize] += 1;
                 }
             }
-            fwd_offsets.push(fwd_ids.len() as u64);
+            for &v in vals {
+                if v > 0.0 {
+                    fwd.push(((v / scale).round().clamp(1.0, 255.0)) as u8);
+                }
+            }
+            fwd_offsets.push(fwd.len() as u64);
         }
 
         let mut index = Self {
             n_dims,
             n_docs,
             fwd_offsets,
-            fwd_ids,
-            fwd_vals,
-            fwd_half,
+            fwd,
+            sk: Vec::new(),
+            sk_stride: 0,
+            sk_len: 0,
             term_blocks: Vec::with_capacity(n_dims + 1),
             block_doc_offsets: vec![0],
             block_docs: Vec::new(),
-            block_sum_offsets: vec![0],
-            sum_ids: Vec::new(),
-            sum_codes: Vec::new(),
-            block_scales: Vec::new(),
+            term_cols: vec![0],
+            col_ids: Vec::new(),
+            col_scales: Vec::new(),
+            res_scales: Vec::new(),
+            term_code_off: vec![0],
+            col_codes: Vec::new(),
+            n_blocks: 0,
         };
         index.term_blocks.push(0);
+        index.build_sketches(params.sketch_len);
 
         // Transpose a range of coordinates at a time, then cluster each list in parallel.
         let budget = params.transpose_budget.max(1) as u64;
@@ -386,20 +430,75 @@ impl SparseImpactIndex {
         Ok(index)
     }
 
+    fn build_sketches(&mut self, m: usize) {
+        if m == 0 {
+            return;
+        }
+        let stride = (8 + 3 * m).div_ceil(64) * 64;
+        let mut sk = vec![0u8; self.n_docs * stride];
+        advise_huge_pages(&sk);
+        let (offsets, fwd) = (&self.fwd_offsets, &self.fwd);
+        sk.par_chunks_mut(stride).enumerate().for_each(|(d, out)| {
+            let row = &fwd[offsets[d] as usize..offsets[d + 1] as usize];
+            let n = row.len().saturating_sub(4) / 3;
+            let (ids, codes) = (&row[4..4 + 2 * n], &row[4 + 2 * n..]);
+            let mut order: Vec<usize> = (0..n).collect();
+            order.sort_unstable_by(|&a, &b| codes[b].cmp(&codes[a]).then(a.cmp(&b)));
+            let keep = n.min(m);
+            let scale = f32::from_le_bytes([row[0], row[1], row[2], row[3]]);
+            let tail_sq: f32 = order[keep..]
+                .iter()
+                .map(|&i| (f32::from(codes[i]) * scale).powi(2))
+                .sum();
+            order[..keep].sort_unstable();
+            out[0..4].copy_from_slice(&tail_sq.sqrt().to_le_bytes());
+            out[4..8].copy_from_slice(&scale.to_le_bytes());
+            for (j, &i) in order[..keep].iter().enumerate() {
+                out[8 + 2 * j..10 + 2 * j].copy_from_slice(&ids[2 * i..2 * i + 2]);
+                out[8 + 2 * m + j] = codes[i];
+            }
+        });
+        self.sk = sk;
+        self.sk_stride = stride;
+        self.sk_len = m;
+    }
+
+    /// Sketch score and tail norm of document `d`.
+    #[inline]
+    fn sketch(&self, d: u32, dense: &[f32]) -> (f32, f32) {
+        let off = d as usize * self.sk_stride;
+        let tail = f32::from_le_bytes([
+            self.sk[off],
+            self.sk[off + 1],
+            self.sk[off + 2],
+            self.sk[off + 3],
+        ]);
+        (
+            dot_row(&self.sk[off + 4..off + 8 + 3 * self.sk_len], dense),
+            tail,
+        )
+    }
+
+    #[inline]
+    fn prefetch_sketch(&self, d: u32) {
+        prefetch(
+            self.sk[d as usize * self.sk_stride..].as_ptr().cast(),
+            8 + 3 * self.sk_len,
+        );
+    }
+
     /// Coordinates and stored values of document `d`.
     fn entries(&self, d: u32) -> impl Iterator<Item = (u16, f32)> + '_ {
         let (a, b) = (
             self.fwd_offsets[d as usize] as usize,
             self.fwd_offsets[d as usize + 1] as usize,
         );
-        let half = !self.fwd_half.is_empty();
-        (a..b).map(move |i| {
-            let v = if half {
-                f16_value(self.fwd_half[i])
-            } else {
-                self.fwd_vals[i]
-            };
-            (self.fwd_ids[i], v)
+        let row = &self.fwd[a..b];
+        let n = (row.len().saturating_sub(4)) / 3;
+        let scale = f32::from_le_bytes([row[0], row[1], row[2], row[3]]);
+        (0..n).map(move |i| {
+            let id = u16::from_le_bytes([row[4 + 2 * i], row[5 + 2 * i]]);
+            (id, f32::from(row[4 + 2 * n + i]) * scale)
         })
     }
 
@@ -410,11 +509,13 @@ impl SparseImpactIndex {
             self.fwd_offsets[d as usize] as usize,
             self.fwd_offsets[d as usize + 1] as usize,
         );
-        if self.fwd_half.is_empty() {
-            dot(&self.fwd_ids[a..b], &self.fwd_vals[a..b], dense)
-        } else {
-            dot_half(&self.fwd_ids[a..b], &self.fwd_half[a..b], dense)
-        }
+        dot_row(&self.fwd[a..b], dense)
+    }
+
+    /// Hint the cache to load the offsets of document `d`.
+    #[inline]
+    fn prefetch_offsets(&self, d: u32) {
+        prefetch(self.fwd_offsets[d as usize..].as_ptr().cast(), 16);
     }
 
     /// Hint the cache to load the forward row of document `d`.
@@ -424,33 +525,26 @@ impl SparseImpactIndex {
             self.fwd_offsets[d as usize] as usize,
             self.fwd_offsets[d as usize + 1] as usize,
         );
-        prefetch(self.fwd_ids[a..].as_ptr().cast(), (b - a) * 2);
-        if self.fwd_half.is_empty() {
-            prefetch(self.fwd_vals[a..].as_ptr().cast(), (b - a) * 4);
-        } else {
-            prefetch(self.fwd_half[a..].as_ptr().cast(), (b - a) * 2);
-        }
+        prefetch(self.fwd[a..].as_ptr().cast(), b - a);
     }
 
     fn append(&mut self, tb: TermBlocks) {
         let mut doc_at = 0usize;
-        let mut sum_at = 0usize;
-        for ((&dc, &sc), &scale) in tb.doc_counts.iter().zip(&tb.sum_counts).zip(&tb.scales) {
-            let (dc, sc) = (dc as usize, sc as usize);
+        for &dc in &tb.doc_counts {
+            let dc = dc as usize;
             self.block_docs
                 .extend_from_slice(&tb.docs[doc_at..doc_at + dc]);
             self.block_doc_offsets.push(self.block_docs.len() as u64);
-            self.sum_ids
-                .extend_from_slice(&tb.sum_ids[sum_at..sum_at + sc]);
-            self.sum_codes
-                .extend_from_slice(&tb.sum_codes[sum_at..sum_at + sc]);
-            self.block_sum_offsets.push(self.sum_ids.len() as u64);
-            self.block_scales.push(scale);
             doc_at += dc;
-            sum_at += sc;
         }
-        let blocks = self.block_scales.len() as u32;
-        self.term_blocks.push(blocks);
+        self.n_blocks += tb.doc_counts.len();
+        self.col_ids.extend_from_slice(&tb.col_ids);
+        self.col_scales.extend_from_slice(&tb.col_scales);
+        self.res_scales.push(tb.res_scale);
+        self.col_codes.extend_from_slice(&tb.codes);
+        self.term_cols.push(self.col_ids.len() as u64);
+        self.term_code_off.push(self.col_codes.len() as u64);
+        self.term_blocks.push(self.n_blocks as u32);
     }
 
     /// Prunes, clusters and summarizes the list of coordinate `term`.
@@ -464,10 +558,10 @@ impl SparseImpactIndex {
         let mut out = TermBlocks {
             doc_counts: Vec::new(),
             docs: Vec::new(),
-            sum_counts: Vec::new(),
-            sum_ids: Vec::new(),
-            sum_codes: Vec::new(),
-            scales: Vec::new(),
+            col_ids: Vec::new(),
+            col_scales: Vec::new(),
+            res_scale: 0.0,
+            codes: Vec::new(),
         };
         if list.is_empty() {
             return out;
@@ -488,6 +582,8 @@ impl SparseImpactIndex {
             .min(keep);
         let assign: Vec<u32> = if n_blocks == 1 {
             vec![0; keep]
+        } else if n_blocks == keep {
+            (0..keep as u32).collect()
         } else {
             self.assign_to_centroids(term, list, n_blocks, params.seed, scratch)
         };
@@ -511,18 +607,22 @@ impl SparseImpactIndex {
         // Blocks with the largest value of this coordinate first: the threshold rises early.
         groups.sort_by(|a, b| b.0.total_cmp(&a.0));
 
+        let mut maxima: Vec<Vec<(u16, f32)>> = Vec::with_capacity(groups.len());
+        let mut members_of: Vec<Vec<u32>> = Vec::with_capacity(groups.len());
         for (_, members) in groups {
-            for &i in members {
-                out.docs.push(list[i as usize].0);
-            }
-            out.doc_counts.push(members.len() as u32);
-            self.summarize(
-                members.iter().map(|&i| list[i as usize].0),
-                params.summary_energy,
-                scratch,
-                &mut out,
-            );
+            let docs: Vec<u32> = members.iter().map(|&i| list[i as usize].0).collect();
+            out.docs.extend_from_slice(&docs);
+            out.doc_counts.push(docs.len() as u32);
+            maxima.push(self.block_maxima(docs.iter().copied(), scratch));
+            members_of.push(docs);
         }
+        self.pack_columns(
+            &maxima,
+            &members_of,
+            params.summary_coords,
+            scratch,
+            &mut out,
+        );
         out
     }
 
@@ -588,15 +688,12 @@ impl SparseImpactIndex {
         assign
     }
 
-    /// Appends the summary of `docs`: coordinate maxima pruned to `energy` of their mass,
-    /// quantized upward to one byte.
-    fn summarize(
+    /// Coordinate-wise maxima of `docs`, ascending by coordinate.
+    fn block_maxima(
         &self,
         docs: impl Iterator<Item = u32>,
-        energy: f32,
         scratch: &mut BuildScratch,
-        out: &mut TermBlocks,
-    ) {
+    ) -> Vec<(u16, f32)> {
         let BuildScratch { dense, touched, .. } = scratch;
         for d in docs {
             for (t, v) in self.entries(d) {
@@ -607,41 +704,118 @@ impl SparseImpactIndex {
                 *slot = slot.max(v);
             }
         }
+        touched.sort_unstable();
+        let coords = touched.iter().map(|&t| (t, dense[t as usize])).collect();
+        for &t in touched.iter() {
+            dense[t as usize] = 0.0;
+        }
+        touched.clear();
+        coords
+    }
+
+    /// Writes the summary columns of a list: the `keep` coordinates with the largest summed
+    /// block maxima, each quantized upward to one byte per block against its own maximum.
+    fn pack_columns(
+        &self,
+        blocks: &[Vec<(u16, f32)>],
+        members: &[Vec<u32>],
+        keep: usize,
+        scratch: &mut BuildScratch,
+        out: &mut TermBlocks,
+    ) {
+        let BuildScratch {
+            dense,
+            touched,
+            starts,
+        } = scratch;
+        for &(t, v) in blocks.iter().flatten() {
+            let slot = &mut dense[t as usize];
+            if *slot == 0.0 {
+                touched.push(t);
+            }
+            *slot += v;
+        }
         let mut coords: Vec<(u16, f32)> = touched.iter().map(|&t| (t, dense[t as usize])).collect();
         for &t in touched.iter() {
             dense[t as usize] = 0.0;
         }
         touched.clear();
-        if energy < 1.0 {
-            coords.sort_unstable_by(|a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
-            let total: f64 = coords.iter().map(|c| f64::from(c.1)).sum();
-            let target = total * f64::from(energy.max(0.0));
-            let mut acc = 0f64;
-            let mut keep = 0;
-            while keep < coords.len() && (keep == 0 || acc < target) {
-                acc += f64::from(coords[keep].1);
-                keep += 1;
-            }
+        if keep == 0 {
+            coords.clear();
+        } else if coords.len() > keep {
+            coords.select_nth_unstable_by(keep - 1, |a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
             coords.truncate(keep);
         }
         coords.sort_unstable_by_key(|c| c.0);
-        let max = coords.iter().fold(0f32, |m, c| m.max(c.1));
+        let stride = pad(blocks.len());
+        for (j, &(t, _)) in coords.iter().enumerate() {
+            starts[t as usize] = j as u32;
+        }
+        let mut maxima = vec![0f32; coords.len()];
+        for &(t, v) in blocks.iter().flatten() {
+            let j = starts[t as usize];
+            if j != u32::MAX {
+                let m = &mut maxima[j as usize];
+                *m = m.max(v);
+            }
+        }
         // Above max / 255 so that the bound survives rounding in the summed inner products.
-        let scale = if max > 0.0 {
-            max / 255.0 * (1.0 + 1e-4)
-        } else {
-            1.0
-        };
-        for &(t, v) in &coords {
+        let scales: Vec<f32> = maxima
+            .iter()
+            .map(|&m| {
+                if m > 0.0 {
+                    m / 255.0 * (1.0 + 1e-4)
+                } else {
+                    1.0
+                }
+            })
+            .collect();
+        let quantize = |v: f32, scale: f32| {
             let mut code = (v / scale).ceil().min(255.0) as u8;
             while code < 255 && f32::from(code) * scale < v {
                 code += 1;
             }
-            out.sum_ids.push(t);
-            out.sum_codes.push(code);
+            code
+        };
+        // Per block: the largest norm, over its documents, of the part outside the columns.
+        let residual: Vec<f32> = members
+            .iter()
+            .map(|docs| {
+                docs.iter()
+                    .map(|&d| {
+                        self.entries(d)
+                            .filter(|&(t, _)| starts[t as usize] == u32::MAX)
+                            .map(|(_, v)| v * v)
+                            .sum::<f32>()
+                    })
+                    .fold(0f32, f32::max)
+                    .sqrt()
+            })
+            .collect();
+        let res_max = residual.iter().fold(0f32, |m, &v| m.max(v));
+        let res_scale = if res_max > 0.0 {
+            res_max / 255.0 * (1.0 + 1e-4)
+        } else {
+            1.0
+        };
+        out.res_scale = res_scale;
+        out.codes.resize((coords.len() + 1) * stride, 0);
+        for (b, blk) in blocks.iter().enumerate() {
+            for &(t, v) in blk {
+                let j = starts[t as usize];
+                if j != u32::MAX {
+                    out.codes[j as usize * stride + b] = quantize(v, scales[j as usize]);
+                }
+            }
+            if residual[b] > 0.0 {
+                out.codes[coords.len() * stride + b] = quantize(residual[b], res_scale);
+            }
         }
-        out.sum_counts.push(coords.len() as u32);
-        out.scales.push(scale);
+        for &(t, _) in &coords {
+            starts[t as usize] = u32::MAX;
+        }
+        out.col_ids.extend(coords.iter().map(|c| c.0));
+        out.col_scales.extend(scales);
     }
 
     pub fn n_docs(&self) -> usize {
@@ -655,21 +829,22 @@ impl SparseImpactIndex {
     /// Bytes held by the index arrays.
     pub fn memory_bytes(&self) -> usize {
         self.fwd_offsets.len() * 8
-            + self.fwd_ids.len() * 2
-            + self.fwd_vals.len() * 4
-            + self.fwd_half.len() * 2
+            + self.fwd.len()
+            + self.sk.len()
             + self.term_blocks.len() * 4
             + self.block_doc_offsets.len() * 8
             + self.block_docs.len() * 4
-            + self.block_sum_offsets.len() * 8
-            + self.sum_ids.len() * 2
-            + self.sum_codes.len()
-            + self.block_scales.len() * 4
+            + self.term_cols.len() * 8
+            + self.col_ids.len() * 2
+            + self.col_scales.len() * 4
+            + self.res_scales.len() * 4
+            + self.term_code_off.len() * 8
+            + self.col_codes.len()
     }
 
     /// Number of blocks and kept postings.
     pub fn block_stats(&self) -> (usize, usize) {
-        (self.block_scales.len(), self.block_docs.len())
+        (self.n_blocks, self.block_docs.len())
     }
 
     /// Scratch for [`SparseSearcher::search`]; one per thread.
@@ -681,7 +856,21 @@ impl SparseImpactIndex {
             visited: vec![0; self.n_docs.div_ceil(64)],
             touched: Vec::new(),
             heap: BinaryHeap::new(),
+            pending: Vec::new(),
+            ready: Vec::new(),
+            rows_pending: Vec::new(),
+            rows_ready: Vec::new(),
+            bounds: Vec::new(),
+            bounds_all: Vec::new(),
+            lists: Vec::new(),
+            matched: Vec::new(),
+            use_sketch: false,
+            tail_scale: 0.0,
+            batch: SCORE_BATCH,
             skipped_blocks: 0,
+            n_blocks_scored: 0,
+            n_sketched: 0,
+            n_rows: 0,
         }
     }
 
@@ -702,23 +891,6 @@ impl SparseImpactIndex {
         }
         into_sorted(heap)
     }
-}
-
-#[inline]
-fn dot(ids: &[u16], vals: &[f32], dense: &[f32]) -> f32 {
-    let mut acc = [0f32; 4];
-    let (id4, id_rest) = ids.as_chunks::<4>();
-    let (v4, v_rest) = vals.as_chunks::<4>();
-    for (i, v) in id4.iter().zip(v4) {
-        for j in 0..4 {
-            acc[j] += dense[i[j] as usize] * v[j];
-        }
-    }
-    let mut tail = 0f32;
-    for (&i, &v) in id_rest.iter().zip(v_rest) {
-        tail += dense[i as usize] * v;
-    }
-    (acc[0] + acc[1]) + (acc[2] + acc[3]) + tail
 }
 
 /// Hint the cache to load `bytes` bytes at `ptr`. A no-op where no prefetch is wired up.
@@ -749,46 +921,149 @@ fn prefetch(ptr: *const u8, bytes: usize) {
     }
 }
 
-/// IEEE binary16 bits of a non-negative finite `v`, rounded to nearest; values below the
-/// smallest normal half become that normal (`v > 0`) or zero, values above the largest
-/// become the largest.
-fn f16_bits(v: f32) -> u16 {
-    const MIN_NORMAL: f32 = 6.103_515_6e-5;
-    if v <= 0.0 {
-        return 0;
+#[inline]
+fn dot_row(row: &[u8], dense: &[f32]) -> f32 {
+    let n = (row.len() - 4) / 3;
+    #[cfg(target_arch = "x86_64")]
+    if n >= 8 && simd::available() {
+        // SAFETY: the features were detected; the row holds `n` ids and codes after its scale,
+        // and every id is below `dense.len()` (they are validated build coordinates and
+        // `dense` has one slot per coordinate).
+        return unsafe { simd::dot_row(row, n, dense) };
     }
-    let v = v.clamp(MIN_NORMAL, 65504.0);
-    let bits = v.to_bits() - ((127 - 15) << 23);
-    let rounded = bits + 0x0fff + ((bits >> 13) & 1);
-    ((rounded >> 13).min(0x7bff)) as u16
+    let scale = f32::from_le_bytes([row[0], row[1], row[2], row[3]]);
+    let mut sum = 0f32;
+    for i in 0..n {
+        let id = u16::from_le_bytes([row[4 + 2 * i], row[5 + 2 * i]]);
+        sum += dense[id as usize] * f32::from(row[4 + 2 * n + i]);
+    }
+    sum * scale
 }
 
-/// Value of half bits produced by [`f16_bits`] (zero or normal).
-#[inline]
-fn f16_value(h: u16) -> f32 {
-    let bits = (u32::from(h) << 13) + ((127 - 15) << 23);
-    if h == 0 {
-        0.0
-    } else {
-        f32::from_bits(bits)
-    }
-}
-
-#[inline]
-fn dot_half(ids: &[u16], vals: &[u16], dense: &[f32]) -> f32 {
-    let mut acc = [0f32; 4];
-    let (id4, id_rest) = ids.as_chunks::<4>();
-    let (v4, v_rest) = vals.as_chunks::<4>();
-    for (i, v) in id4.iter().zip(v4) {
-        for j in 0..4 {
-            acc[j] += dense[i[j] as usize] * f16_value(v[j]);
+/// Asks for transparent huge pages on the allocation of `v`: the forward index is read at
+/// random, so 4 KiB pages make every row a TLB miss.
+fn advise_huge_pages<T>(v: &Vec<T>) {
+    #[cfg(target_os = "linux")]
+    {
+        const HUGE: usize = 2 << 20;
+        let start = (v.as_ptr() as usize + HUGE - 1) & !(HUGE - 1);
+        let end = (v.as_ptr() as usize + v.capacity() * std::mem::size_of::<T>()) & !(HUGE - 1);
+        if end > start {
+            // SAFETY: the range lies inside the live allocation of `v`; MADV_HUGEPAGE only
+            // changes how the kernel backs it and never its contents.
+            unsafe {
+                libc::madvise(start as *mut libc::c_void, end - start, libc::MADV_HUGEPAGE);
+            }
         }
     }
-    let mut tail = 0f32;
-    for (&i, &v) in id_rest.iter().zip(v_rest) {
-        tail += dense[i as usize] * f16_value(v);
+    #[cfg(not(target_os = "linux"))]
+    let _ = v;
+}
+
+/// `bounds[b] += w * codes[j * stride + b]` for every `(j, w)` in `matched` and every block `b`
+/// below `stride`, which is a multiple of 32.
+#[inline]
+fn accumulate_columns(bounds: &mut [f32], codes: &[u8], stride: usize, matched: &[(u32, f32)]) {
+    debug_assert!(stride & 31 == 0 && bounds.len() >= stride);
+    #[cfg(target_arch = "x86_64")]
+    if simd::available() {
+        // SAFETY: the features were detected; callers pass `bounds.len() >= stride` and every
+        // `j` in `matched` has a column of `stride` bytes in `codes` (checked below).
+        assert!(matched
+            .iter()
+            .all(|&(j, _)| (j as usize + 1) * stride <= codes.len()));
+        unsafe { simd::accumulate_columns(bounds, codes, stride, matched) };
+        return;
     }
-    (acc[0] + acc[1]) + (acc[2] + acc[3]) + tail
+    for &(j, w) in matched {
+        let col = &codes[j as usize * stride..][..stride];
+        for (acc, &c) in bounds[..stride].iter_mut().zip(col) {
+            *acc += w * f32::from(c);
+        }
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+mod simd {
+    use std::arch::x86_64::*;
+
+    #[inline]
+    pub fn available() -> bool {
+        std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("fma")
+    }
+
+    #[inline]
+    #[target_feature(enable = "avx2,fma")]
+    unsafe fn hsum(v: __m256) -> f32 {
+        let s = _mm_add_ps(_mm256_castps256_ps128(v), _mm256_extractf128_ps::<1>(v));
+        let s = _mm_add_ps(s, _mm_movehl_ps(s, s));
+        _mm_cvtss_f32(_mm_add_ss(s, _mm_shuffle_ps::<1>(s, s)))
+    }
+
+    /// # Safety
+    /// AVX2 and FMA must be available, `row.len() == 4 + 3 * n` and every coordinate in the row
+    /// must be below `dense.len()`.
+    #[target_feature(enable = "avx2,fma")]
+    pub unsafe fn dot_row(row: &[u8], n: usize, dense: &[f32]) -> f32 {
+        debug_assert_eq!(row.len(), 4 + 3 * n);
+        let scale = f32::from_le_bytes([row[0], row[1], row[2], row[3]]);
+        let ids = row.as_ptr().add(4);
+        let codes = row.as_ptr().add(4 + 2 * n);
+        let term = |i: usize, acc: __m256| {
+            let idx = _mm256_cvtepu16_epi32(_mm_loadu_si128(ids.add(2 * i).cast()));
+            let c = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64(codes.add(i).cast())));
+            _mm256_fmadd_ps(_mm256_i32gather_ps::<4>(dense.as_ptr(), idx), c, acc)
+        };
+        let (mut a0, mut a1) = (_mm256_setzero_ps(), _mm256_setzero_ps());
+        let mut i = 0;
+        while i + 16 <= n {
+            a0 = term(i, a0);
+            a1 = term(i + 8, a1);
+            i += 16;
+        }
+        if i + 8 <= n {
+            a0 = term(i, a0);
+            i += 8;
+        }
+        let mut sum = hsum(_mm256_add_ps(a0, a1));
+        while i < n {
+            let id = u16::from_le_bytes([row[4 + 2 * i], row[5 + 2 * i]]);
+            sum += dense[id as usize] * f32::from(row[4 + 2 * n + i]);
+            i += 1;
+        }
+        sum * scale
+    }
+
+    /// # Safety
+    /// AVX2 and FMA must be available; `stride` is a multiple of 32, `bounds.len() >= stride`
+    /// and every `(j, _)` satisfies `(j + 1) * stride <= codes.len()`.
+    #[target_feature(enable = "avx2,fma")]
+    pub unsafe fn accumulate_columns(
+        bounds: &mut [f32],
+        codes: &[u8],
+        stride: usize,
+        matched: &[(u32, f32)],
+    ) {
+        let mut b = 0;
+        while b < stride {
+            let mut acc = [_mm256_setzero_ps(); 4];
+            for &(j, w) in matched {
+                let wv = _mm256_set1_ps(w);
+                let base = codes.as_ptr().add(j as usize * stride + b);
+                for (l, a) in acc.iter_mut().enumerate() {
+                    let c = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_loadl_epi64(
+                        base.add(l * 8).cast(),
+                    )));
+                    *a = _mm256_fmadd_ps(c, wv, *a);
+                }
+            }
+            for (l, a) in acc.iter().enumerate() {
+                let p = bounds.as_mut_ptr().add(b + l * 8);
+                _mm256_storeu_ps(p, _mm256_add_ps(_mm256_loadu_ps(p), *a));
+            }
+            b += 32;
+        }
+    }
 }
 
 /// A scored document; `Ord` puts the worst result (lowest score, then highest id) on top of
@@ -833,6 +1108,15 @@ fn into_sorted(heap: BinaryHeap<Hit>) -> Vec<(u32, f32)> {
         .collect()
 }
 
+/// Work done by all searches so far: queries, blocks scored, candidates reaching the sketch
+/// test and candidates whose full row was scored.
+pub static COUNTERS: [AtomicU64; 4] = [
+    AtomicU64::new(0),
+    AtomicU64::new(0),
+    AtomicU64::new(0),
+    AtomicU64::new(0),
+];
+
 /// Per-thread search state.
 pub struct SparseSearcher<'a> {
     index: &'a SparseImpactIndex,
@@ -841,11 +1125,95 @@ pub struct SparseSearcher<'a> {
     visited: Vec<u64>,
     touched: Vec<u32>,
     heap: BinaryHeap<Hit>,
+    pending: Vec<u32>,
+    ready: Vec<u32>,
+    rows_pending: Vec<u32>,
+    rows_ready: Vec<u32>,
+    bounds: Vec<f32>,
+    bounds_all: Vec<f32>,
+    lists: Vec<(usize, usize, usize)>,
+    matched: Vec<(u32, f32)>,
+    use_sketch: bool,
+    tail_scale: f32,
+    batch: usize,
     /// Blocks passed over by the summary test, over the searcher's lifetime.
     skipped_blocks: u64,
+    n_blocks_scored: u64,
+    n_sketched: u64,
+    n_rows: u64,
 }
 
+/// Candidates gathered before their rows are fetched, and scored one batch later.
+const SCORE_BATCH: usize = 16;
+
 impl SparseSearcher<'_> {
+    /// Moves every candidate one stage on: pending sketches are fetched, fetched sketches are
+    /// tested, survivors' rows are fetched, and fetched rows are scored.
+    fn rotate(&mut self, k: usize) {
+        let index = self.index;
+        for &d in &self.rows_pending {
+            index.prefetch_row(d);
+        }
+        for &d in &self.rows_ready {
+            self.n_rows += 1;
+            let s = index.score(d, &self.dense);
+            if s > 0.0 {
+                offer(&mut self.heap, k, Hit { score: s, doc: d });
+            }
+        }
+        self.rows_ready.clear();
+        std::mem::swap(&mut self.rows_ready, &mut self.rows_pending);
+        let theta = if self.heap.len() == k {
+            self.heap.peek().map_or(f32::MIN, |h| h.score)
+        } else {
+            f32::MIN
+        };
+        for &d in &self.ready {
+            self.n_sketched += 1;
+            if self.use_sketch {
+                let (s, tail) = index.sketch(d, &self.dense);
+                if s + self.tail_scale * tail < theta {
+                    continue;
+                }
+                index.prefetch_offsets(d);
+            }
+            self.rows_pending.push(d);
+        }
+        self.ready.clear();
+        if self.use_sketch {
+            for &d in &self.pending {
+                index.prefetch_sketch(d);
+            }
+        }
+        std::mem::swap(&mut self.ready, &mut self.pending);
+    }
+
+    fn scan_block(&mut self, b: usize, k: usize) {
+        let index = self.index;
+        self.n_blocks_scored += 1;
+        let (d0, d1) = (
+            index.block_doc_offsets[b] as usize,
+            index.block_doc_offsets[b + 1] as usize,
+        );
+        for &d in &index.block_docs[d0..d1] {
+            let (w, bit) = ((d >> 6) as usize, 1u64 << (d & 63));
+            if self.visited[w] & bit != 0 {
+                continue;
+            }
+            if self.visited[w] == 0 {
+                self.touched.push(w as u32);
+            }
+            self.visited[w] |= bit;
+            if !self.use_sketch {
+                index.prefetch_offsets(d);
+            }
+            self.pending.push(d);
+            if self.pending.len() >= self.batch {
+                self.rotate(k);
+            }
+        }
+    }
+
     /// The top `k` documents by inner product with the query `(ids, vals)`, best first, as
     /// `(doc, score)`; documents scoring zero or less are never returned. Duplicate query
     /// coordinates add up; coordinates outside the index are ignored.
@@ -875,59 +1243,100 @@ impl SparseSearcher<'_> {
             self.dense_pos[t.0 as usize] = w.max(0.0);
         }
         terms.sort_unstable_by(|a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
+        let l2sq: f32 = terms.iter().map(|t| t.1.max(0.0) * t.1.max(0.0)).sum();
         let walked = terms
             .iter()
             .take(params.query_cut)
             .take_while(|t| t.1 > 0.0);
+        self.use_sketch = index.sk_len > 0 && params.tail >= 0.0;
+        self.tail_scale = params.tail * l2sq.sqrt();
+        self.batch = params.batch.max(1);
 
-        let heap = &mut self.heap;
-        heap.clear();
+        self.heap.clear();
+        self.bounds_all.clear();
+        self.lists.clear();
         for &(t, _) in walked {
             let blocks =
                 index.term_blocks[t as usize] as usize..index.term_blocks[t as usize + 1] as usize;
-            for b in blocks {
-                if heap.len() == k {
-                    let (s0, s1) = (
-                        index.block_sum_offsets[b] as usize,
-                        index.block_sum_offsets[b + 1] as usize,
-                    );
-                    let mut bound = 0f32;
-                    for (&c, &code) in index.sum_ids[s0..s1].iter().zip(&index.sum_codes[s0..s1]) {
-                        bound += self.dense_pos[c as usize] * f32::from(code);
-                    }
-                    bound *= index.block_scales[b];
-                    let threshold = heap.peek().map_or(f32::MIN, |h| h.score);
+            if blocks.is_empty() {
+                continue;
+            }
+            let stride = pad(blocks.len());
+            let (c0, c1) = (
+                index.term_cols[t as usize] as usize,
+                index.term_cols[t as usize + 1] as usize,
+            );
+            self.matched.clear();
+            let mut kept_sq = 0f32;
+            for (j, (&c, &scale)) in index.col_ids[c0..c1]
+                .iter()
+                .zip(&index.col_scales[c0..c1])
+                .enumerate()
+            {
+                let w = self.dense_pos[c as usize];
+                if w > 0.0 {
+                    kept_sq += w * w;
+                    self.matched.push((j as u32, w * scale));
+                }
+            }
+            if params.col_cut > 0.0 {
+                let top = self.matched.iter().fold(0f32, |m, x| m.max(x.1));
+                self.matched.retain(|x| x.1 >= params.col_cut * top);
+            }
+            let res_w =
+                params.residual * (l2sq - kept_sq).max(0.0).sqrt() * index.res_scales[t as usize];
+            if res_w > 0.0 {
+                self.matched.push(((c1 - c0) as u32, res_w));
+            }
+            self.bounds.clear();
+            self.bounds.resize(stride, 0.0);
+            let code_base = index.term_code_off[t as usize] as usize;
+            let code_end = index.term_code_off[t as usize + 1] as usize;
+            accumulate_columns(
+                &mut self.bounds,
+                &index.col_codes[code_base..code_end],
+                stride,
+                &self.matched,
+            );
+            self.lists
+                .push((blocks.start, self.bounds_all.len(), blocks.len()));
+            self.bounds_all
+                .extend_from_slice(&self.bounds[..blocks.len()]);
+        }
+        for li in 0..self.lists.len() {
+            let (first, at, len) = self.lists[li];
+            for _ in 0..params.seed.min(len) {
+                let (bi, bv) = self.bounds_all[at..at + len]
+                    .iter()
+                    .copied()
+                    .enumerate()
+                    .fold((0, -1.0f32), |m, x| if x.1 > m.1 { x } else { m });
+                if bv < 0.0 {
+                    break;
+                }
+                self.bounds_all[at + bi] = -1.0;
+                self.scan_block(first + bi, k);
+            }
+        }
+        for li in 0..self.lists.len() {
+            let (first, at, len) = self.lists[li];
+            for i in 0..len {
+                let bound = self.bounds_all[at + i];
+                if bound < 0.0 {
+                    continue;
+                }
+                if self.heap.len() == k {
+                    let threshold = self.heap.peek().map_or(f32::MIN, |h| h.score);
                     if bound * params.heap_factor < threshold {
                         self.skipped_blocks += 1;
                         continue;
                     }
                 }
-                let (d0, d1) = (
-                    index.block_doc_offsets[b] as usize,
-                    index.block_doc_offsets[b + 1] as usize,
-                );
-                let docs = &index.block_docs[d0..d1];
-                if let Some(&first) = docs.first() {
-                    index.prefetch_row(first);
-                }
-                for (i, &d) in docs.iter().enumerate() {
-                    if let Some(&next) = docs.get(i + 1) {
-                        index.prefetch_row(next);
-                    }
-                    let (w, bit) = ((d >> 6) as usize, 1u64 << (d & 63));
-                    if self.visited[w] & bit != 0 {
-                        continue;
-                    }
-                    if self.visited[w] == 0 {
-                        self.touched.push(w as u32);
-                    }
-                    self.visited[w] |= bit;
-                    let s = index.score(d, &self.dense);
-                    if s > 0.0 {
-                        offer(heap, k, Hit { score: s, doc: d });
-                    }
-                }
+                self.scan_block(first + i, k);
             }
+        }
+        for _ in 0..4 {
+            self.rotate(k);
         }
         for &w in &self.touched {
             self.visited[w as usize] = 0;
@@ -937,7 +1346,17 @@ impl SparseSearcher<'_> {
             self.dense[t.0 as usize] = 0.0;
             self.dense_pos[t.0 as usize] = 0.0;
         }
-        into_sorted(std::mem::take(heap))
+        COUNTERS[0].fetch_add(1, AtomicOrdering::Relaxed);
+        COUNTERS[1].fetch_add(
+            std::mem::take(&mut self.n_blocks_scored),
+            AtomicOrdering::Relaxed,
+        );
+        COUNTERS[2].fetch_add(
+            std::mem::take(&mut self.n_sketched),
+            AtomicOrdering::Relaxed,
+        );
+        COUNTERS[3].fetch_add(std::mem::take(&mut self.n_rows), AtomicOrdering::Relaxed);
+        into_sorted(std::mem::take(&mut self.heap))
     }
 }
 
@@ -1046,8 +1465,23 @@ mod tests {
                 ..SparseBuildParams::exact()
             };
             let index = SparseImpactIndex::build(docs.view(), params).unwrap();
+            let sketched = SparseImpactIndex::build(
+                docs.view(),
+                SparseBuildParams {
+                    sketch_len: 8,
+                    ..params
+                },
+            )
+            .unwrap();
+            let sketch_params = SparseSearchParams {
+                tail: 1e3,
+                seed: 2,
+                batch: 4,
+                ..SparseSearchParams::exact()
+            };
             let queries = random_csr(80, n_dims + 4, 12, &mut state);
             let mut searcher = index.searcher();
+            let mut sketch_searcher = sketched.searcher();
             for q in 0..80 {
                 let (a, b) = (queries.indptr[q] as usize, queries.indptr[q + 1] as usize);
                 let ids: Vec<u32> = queries.indices[a..b].iter().map(|&c| c as u32).collect();
@@ -1059,13 +1493,43 @@ mod tests {
                     let want = index.brute_force(&ids, &vals, k);
                     let got = searcher.search(&ids, &vals, k, SparseSearchParams::exact());
                     assert_eq!(got, want, "rows {rows} query {q} k {k}");
+                    let got = sketch_searcher.search(&ids, &vals, k, sketch_params);
+                    assert_eq!(got, want, "sketch rows {rows} query {q} k {k}");
                 }
             }
             // The bound must actually prune, or this compares brute force with itself.
             assert!(
-                searcher.skipped_blocks > 0,
+                searcher.skipped_blocks + sketch_searcher.skipped_blocks > 0,
                 "rows {rows}: no block was skipped"
             );
+        }
+    }
+
+    #[test]
+    fn truncated_columns_with_full_residual_stay_exact() {
+        let mut state = 11u64;
+        for (rows, n_dims, frac, coords) in [
+            (800, 64, 0.1f32, 6usize),
+            (1500, 200, 0.25, 12),
+            (300, 32, 1.0, 3),
+        ] {
+            let docs = random_csr(rows, n_dims, 24, &mut state);
+            let params = SparseBuildParams {
+                block_fraction: frac,
+                summary_coords: coords,
+                ..SparseBuildParams::exact()
+            };
+            let index = SparseImpactIndex::build(docs.view(), params).unwrap();
+            let queries = random_csr(60, n_dims, 12, &mut state);
+            let mut searcher = index.searcher();
+            for q in 0..60 {
+                let (a, b) = (queries.indptr[q] as usize, queries.indptr[q + 1] as usize);
+                let ids: Vec<u32> = queries.indices[a..b].iter().map(|&c| c as u32).collect();
+                let vals = &queries.data[a..b];
+                let want = index.brute_force(&ids, vals, 10);
+                let got = searcher.search(&ids, vals, 10, SparseSearchParams::exact());
+                assert_eq!(got, want, "rows {rows} coords {coords} query {q}");
+            }
         }
     }
 
@@ -1084,6 +1548,11 @@ mod tests {
         let params = SparseSearchParams {
             query_cut: 5,
             heap_factor: 0.8,
+            residual: 0.5,
+            tail: -1.0,
+            seed: 0,
+            col_cut: 0.0,
+            batch: SCORE_BATCH,
         };
         let mut searcher = index.searcher();
         let (ids, vals) = ([3u32, 40, 41, 150], [1.0f32, 0.5, 0.75, 2.0]);
@@ -1116,16 +1585,23 @@ mod tests {
     }
 
     #[test]
-    fn half_values_round_to_nearest() {
-        for v in [
-            6.2e-5f32, 0.001, 0.1, 0.333, 1.0, 1.5, 2.75, 7.9, 1000.0, 65504.0,
-        ] {
-            let h = f16_value(f16_bits(v));
-            assert!((h - v).abs() <= v * (1.0 / 2048.0), "{v} -> {h}");
+    fn stored_values_are_within_half_a_step() {
+        let mut state = 5u64;
+        let docs = random_csr(200, 40, 24, &mut state);
+        let index = SparseImpactIndex::build(docs.view(), SparseBuildParams::exact()).unwrap();
+        for d in 0..200u32 {
+            let (_, want) = docs.view().row(d as usize);
+            let max = want.iter().fold(0f32, |m, &v| m.max(v));
+            let got: Vec<(u16, f32)> = index.entries(d).collect();
+            let want_pos: Vec<f32> = want.iter().copied().filter(|&v| v > 0.0).collect();
+            assert_eq!(got.len(), want_pos.len());
+            for ((_, g), w) in got.iter().zip(&want_pos) {
+                assert!(
+                    *g > 0.0 && (g - w).abs() <= max / 510.0 * 1.001,
+                    "{g} vs {w}"
+                );
+            }
         }
-        assert_eq!(f16_value(f16_bits(0.0)), 0.0);
-        assert_eq!(f16_value(f16_bits(1e9)), 65504.0);
-        assert!(f16_value(f16_bits(1e-9)) > 0.0);
     }
 
     #[test]

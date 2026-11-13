@@ -1,0 +1,5 @@
+e7cfbd3578a77b4f7ced95fb4216818fcfbb2a6906a693e6a1f7bbdce480ceb7  cloud-context/final-module/writerslogic_warm.abi3.so
+7d5246573b74af2d40b1bea251a44e0740d9c7805e290c2f9d0bbc3139ccb283  cloud-context/main-module/writerslogic_warm.abi3.so
+3c07facd488ff2f1c91c97f12097c121a5e14fa1b7e3b2c78629083ae14c96a7  cloud-context/sealed_index_run.py
+1bde863b44f336fdb269a417c6b346f4e42d5f9f039af1105a797fad3e83a88a  cloud-context/run-one.sh
+16c43916cad1535f1524e9df8368d310a5a4b713d68611e258e1197b64f2589b  cloud-context/harness/vectordb_bench/backend/clients/warm/warm.py

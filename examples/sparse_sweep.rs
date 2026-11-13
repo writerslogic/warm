@@ -3,7 +3,7 @@
 
 //! Recall/QPS sweep of the learned-sparse index on big-ann-benchmarks sparse files.
 //!
-//! `sparse_sweep BASE.csr QUERIES.csr GT [postings block_fraction energy] [cuts] [factors]`
+//! `sparse_sweep BASE.csr QUERIES.csr GT [postings block_fraction summary_coords] [cuts] [factors]`
 //! where `cuts` and `factors` are comma lists. Recall@10 is reported over all queries and over
 //! the even and odd query rows separately. Threads follow `RAYON_NUM_THREADS`.
 
@@ -36,7 +36,7 @@ fn list<T: std::str::FromStr>(s: &str) -> Vec<T> {
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 4 {
-        eprintln!("usage: sparse_sweep BASE QUERIES GT [postings frac energy] [cuts] [factors]");
+        eprintln!("usage: sparse_sweep BASE QUERIES GT [postings frac coords] [cuts] [factors]");
         std::process::exit(2);
     }
     let base = map(&args[1]);
@@ -49,7 +49,7 @@ fn main() {
             n => n,
         },
         block_fraction: arg(5, "0.1").parse().unwrap(),
-        summary_energy: arg(6, "0.4").parse().unwrap(),
+        summary_coords: arg(6, "256").parse().unwrap(),
         ..SparseBuildParams::default()
     };
     let cuts: Vec<usize> = list(&arg(7, "10"));
@@ -83,13 +83,18 @@ fn main() {
         hit as f64 / n as f64
     };
     println!(
-        "postings,block_fraction,energy,query_cut,heap_factor,qps,recall,recall_even,recall_odd"
+        "postings,block_fraction,summary_coords,query_cut,heap_factor,qps,recall,recall_even,recall_odd"
     );
     for &query_cut in &cuts {
         for &heap_factor in &factors {
             let params = SparseSearchParams {
                 query_cut,
                 heap_factor,
+                residual: 0.12,
+                tail: -1.0,
+                seed: 2,
+                col_cut: 0.0,
+                batch: 16,
             };
             let mut best = f64::INFINITY;
             let mut found = Vec::new();
@@ -102,7 +107,7 @@ fn main() {
                 "{},{},{},{query_cut},{heap_factor},{:.0},{:.4},{:.4},{:.4}",
                 build.postings_per_term,
                 build.block_fraction,
-                build.summary_energy,
+                build.summary_coords,
                 nq as f64 / best,
                 recall(&found, &mut (0..nq)),
                 recall(&found, &mut (0..nq).step_by(2)),

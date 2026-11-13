@@ -1,0 +1,285 @@
+{
+  "schema_version": 1,
+  "date_utc": "2026-11-09",
+  "scope": "WARM-owned Chroma importer and DSPy adapters at dependency versions chromadb1.5.9,dspy3.4.1,diskcache5.6.3. Analysis plus source changes, no lane execution and no advisory dismissal.",
+  "base": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "source_pins": [
+    {
+      "id": "chroma_initializer",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/__init__.py",
+      "blob_sha": "0be492da7d0408d36ab7d17fea376520c3c5e631"
+    },
+    {
+      "id": "chroma_settings",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/config.py",
+      "blob_sha": "4420eb13bacc4172442ffd30d352235aad1b6a9d"
+    },
+    {
+      "id": "chroma_system",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/shared_system_client.py",
+      "blob_sha": "13ceeb1fec4a1a61fe54ea73faf649880f35c161"
+    },
+    {
+      "id": "chroma_client",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/client.py",
+      "blob_sha": "71a22bdeeae40631e3dc7bf1f3d05c0fdcbafb62"
+    },
+    {
+      "id": "chroma_collection",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/models/CollectionCommon.py",
+      "blob_sha": "466f133dfb1365a58fbd9feec8100a8635d5ec34"
+    },
+    {
+      "id": "chroma_transport_model",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/types.py",
+      "blob_sha": "be48337e314f9f4666b98e635569e792ef50a262"
+    },
+    {
+      "id": "chroma_http_client",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/fastapi.py",
+      "blob_sha": "0a41b2b0bb25203df24d4f5dbe33c04baf1cc6f4"
+    },
+    {
+      "id": "chroma_rust_api",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/rust.py",
+      "blob_sha": "51061ab754650f68d2d3f7023aebac72b718d1dd"
+    },
+    {
+      "id": "chroma_python_server",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/server/fastapi/__init__.py",
+      "blob_sha": "59768e62e56bcf93654c4f73dce7e7855b9dd144"
+    },
+    {
+      "id": "chroma_segment_api",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/segment.py",
+      "blob_sha": "412c54a962821e05b3a4e16ebdd3b08f19e2462d"
+    },
+    {
+      "id": "chroma_sql_sysdb",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/db/mixins/sysdb.py",
+      "blob_sha": "40f430e6edecb4d0e0eb3927e47df04390125f33"
+    },
+    {
+      "id": "chroma_rbac",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/auth/simple_rbac_authz/__init__.py",
+      "blob_sha": "ed499ff2fc3075d34aa33f95e40ef44935c6155d"
+    },
+    {
+      "id": "chroma_config_loader",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/api/collection_configuration.py",
+      "blob_sha": "e18ca62cf7d103584c7a1c52fc8fed9cc9262f2d"
+    },
+    {
+      "id": "chroma_auth_scope",
+      "url": "https://github.com/chroma-core/chroma/blob/1.5.9/chromadb/auth/utils/__init__.py",
+      "blob_sha": "215d1dd899ca3dea34cfffe97d963b5990bdc457"
+    },
+    {
+      "id": "dspy_embedding",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/clients/embedding.py",
+      "blob_sha": "01bfc1e6416506836774e4bbde3f2667f819f94c"
+    },
+    {
+      "id": "dspy_module",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/primitives/module.py",
+      "blob_sha": "2b3f891e9a883a14cd736ff1b17640cad1271cbd"
+    },
+    {
+      "id": "dspy_cache",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/clients/cache.py",
+      "blob_sha": "5057cd92fca1313ffb2cb3aea79cd08e53c39f2b"
+    },
+    {
+      "id": "dspy_cache_factory",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/clients/__init__.py",
+      "blob_sha": "0be5e9a73225305e81d97477278d631b1e168500"
+    },
+    {
+      "id": "dspy_lazy_cache",
+      "url": "https://github.com/stanfordnlp/dspy/blob/3.4.1/dspy/__init__.py",
+      "blob_sha": "1813f9c2b2245855d1628984815f39451671dc27"
+    },
+    {
+      "id": "diskcache_core",
+      "url": "https://github.com/grantjenks/python-diskcache/blob/v5.6.3/diskcache/core.py",
+      "blob_sha": "c7c84860ea853fe9232e8ee52eaaa053b00a3a87"
+    },
+    {
+      "id": "diskcache_fanout",
+      "url": "https://github.com/grantjenks/python-diskcache/blob/v5.6.3/diskcache/fanout.py",
+      "blob_sha": "9822ee4e576b4d97d5e0209862f0d3a93fde5b87"
+    }
+  ],
+  "candidate_files": [
+    {
+      "path": "bindings/python/warm-sdk/writerslogic_warm_sdk/importers/sources/chroma.py",
+      "sha256": "82ea35e51d7c9cdfde44e9f5b46c7fe74d6e26d978e7373552c2441e6c41cd50",
+      "change": "RustClient with explicit str(path) preserving PersistentClient Path coercion; None embedding function; returned scope/name checks before reads; reject unsafe collection path components."
+    },
+    {
+      "path": "bindings/python/warm-sdk/tests/importers/test_vectordbs_a1.py",
+      "sha256": "8be63a687bace0860dc4f0acdbf3d793468439d5b900b68c72545089dd2ef400",
+      "change": "Existing poisoned-config3cases plus2backend-environment and11HTTP-transport cases; no tests executed by lane."
+    },
+    {
+      "path": "integrations/python/src/writerslogic_warm_integrations/dspy/retriever.py",
+      "sha256": "f3d8b0645fe41eb792133c31225e4384df02fc674aceb781b0f1cdeaa32a9649",
+      "change": "Real dspy.Embedder invoked with per-call caching=False; plain callable signature preserved."
+    },
+    {
+      "path": "bindings/python/warm-sdk/writerslogic_warm_sdk/dspy/retriever.py",
+      "sha256": "d12c0193eb2c7e51117bd0dfd4c5005f22043e6ff524008aac9fc2a33bd20663",
+      "change": "Same per-call cache bypass; convert real Embedder ndarray to list for SDK HTTP serialization."
+    },
+    {
+      "path": "integrations/python/tests/dspy/test_cache_isolation.py",
+      "sha256": "f697611a7629cca9e060c97245d8192c40614809051755a5120e72fe1deb1977",
+      "change": "Fresh-process positive cache-reachability control followed by real Embedder/ordinary callable sync/async/SDK/error-path checks under cache/import/global-policy traps."
+    }
+  ],
+  "minimum_version": {
+    "required": "chromadb>=1.5.9",
+    "reason": "This is the reviewed safe backend API/configuration boundary, not a claim that RustClient was first introduced in1.5.9. Existing >=0.5 declaration cannot support this security disposition across historical implementations.",
+    "root_owned_changes": [
+      {
+        "file": "bindings/python/warm-sdk/pyproject.toml",
+        "entry": "project.optional-dependencies.import-chroma",
+        "from": "chromadb>=0.5",
+        "to": "chromadb>=1.5.9"
+      },
+      {
+        "file": "bindings/python/warm-sdk/pyproject.toml",
+        "entry": "dependency-groups.importers-test",
+        "from": "chromadb>=1.0.0",
+        "to": "chromadb>=1.5.9"
+      },
+      {
+        "file": "bindings/python/warm-sdk/uv.lock",
+        "change": "Refresh requires-dist/group metadata; existing resolved chromadb version is already1.5.9."
+      }
+    ],
+    "preserved": "Local directory and HTTP import, selected/default tenant/database, selected/all collections, count/paging/stored vectors/documents/metadata/URIs. No fallback to SegmentAPI; no global Chroma settings mutation.",
+    "compatibility_limit": "Published >=floor permits future versions; re-evaluate these callgraphs on every dependency change. Existing persistent-store migration/roundtrip/resume tests remain required; this lane did not prove compatibility for every historical store format."
+  },
+  "chroma_callgraphs": {
+    "local_before": "ChromaSource._connect -> PersistentClient -> Settings() -> ClientCreator -> SharedSystemClient.instance(ServerAPI). Settings.chroma_api_impl defaults RustBindingsAPI but reads CHROMA_API_IMPL. SegmentAPI is explicitly accepted by SharedSystemClient. Thus the earlier default-Rust assumption was insufficient.",
+    "dangerous_local_before": "SegmentAPI.list_collections/get_collection -> SqlSysDB.get_collections -> load_collection_configuration_from_json_str at535 -> load_collection_configuration_from_json -> known_embedding_functions[name].build_from_config. This can instantiate a model before the importer receives a Collection; embedding_function=None at subsequent get_collection cannot prevent it.",
+    "local_after": "Source._connect at82 -> chromadb.RustClient at231 -> Settings() then overwrite chroma_api_impl=chromadb.api.rust.RustBindingsAPI at249 before ClientCreator -> RustBindingsAPI. list_collections/get_collection at191/266 call native bindings and put configuration_json into plain transport models, without Python configuration loaders. _count/_get at390/416 forward collection UUID and established tenant/database to native bindings.",
+    "http": "Source._connect -> chromadb.HttpClient at260 -> force chromadb.api.fastapi.FastAPI at297. This is the outbound HTTP client, not chromadb.server.fastapi.FastAPI. Initialization reads /auth/identity and tenant/database existence; list/get parse JSON using CollectionModel.from_json attypes.py186, retaining configuration_json and schema as dictionaries.",
+    "common_reader": "Client.get_collection at239 validates EF-name conflict without constructing persisted EF, then CollectionCommon.__init__ stores model. Source selects embedding_function=None, checks returned collection scope/name, invokes count and Collection.get. _validate_and_prepare_get_request at258 validates IDs/filters/includes; _transform_get_response at510 returns stored arrays. Include excludes data, so URI data_loader is unused. Neither _embed nor configuration/schema properties are accessed.",
+    "scope_gap_before": "CollectionCommon.tenant/database at172/176 return response-model fields; Collection.get/count use them for later request URLs. A mismatched response could redirect subsequent authenticated count/get calls to a different scope. Initial client tenant/database arguments alone did not enforce this boundary.",
+    "scope_after": "Source validates both listed Collection objects and fetched Collection objects against client.tenant/client.database and expected name, rejecting before count/get. Untrusted returned path components are rejected before name lookup; explicit selected names are also checked. Caller-provided tenant/database are not replaced by this patch; existing Chroma identity-resolution semantics remain.",
+    "limits": "Native Rust authorization implementation is not proven generally secure by excluding the named Python vulnerable functions. A malicious or vulnerable external server can still lie about data while returning matching scope metadata; client checks do not replace server-side authorization."
+  },
+  "alerts": [
+    {
+      "number": 75,
+      "ghsa": "GHSA-f4j7-r4q5-qw2c",
+      "cve": "CVE-2026-45829",
+      "vulnerable_entry": "chromadb.server.fastapi.FastAPI.create_collection at803: load_create_collection_configuration_from_json at823 precedes sync_auth_request at828.",
+      "local": "The hardened RustClient reader does not construct the Python HTTP server or call create_collection. Before backend hardening, related model construction was reachable through SegmentAPI reads; do not use earlier None-only change as a non-reachability argument.",
+      "http": "Outbound requests only identity/tenant/database/list/get/count; there is no POST to the collections creation endpoint. Response config remains opaque in reviewed client path.",
+      "candidate_disposition": "vulnerable_code_not_used within the hardened importer only, conditional on passing backend/HTTP/config regressions and updating the declared minimum.",
+      "external_server": "An independently operated Python Chroma server remains vulnerable to its own exposed creation endpoint. WARM does not patch or certify that service.",
+      "primary": "https://www.hiddenlayer.com/research/chromatoast-served-pre-auth"
+    },
+    {
+      "number": 105,
+      "ghsa": "GHSA-36p7-vc44-83pf",
+      "cve": "CVE-2026-45833",
+      "vulnerable_entry": "chromadb.server.fastapi.FastAPI.update_collection at925: after auth at937, load_update_collection_configuration_from_json at947 builds attacker-selected model configuration.",
+      "local": "No server/update path is used; explicit Rust backend excludes the related eager Python configuration loader on reads.",
+      "http": "Importer never sends PUT/PATCH collection updates or calls modify; get/count/read-only POST get does not dispatch this function.",
+      "candidate_disposition": "vulnerable_code_not_used within hardened importer after required regressions, not package-fixed.",
+      "external_server": "Users who run the installed chromadb distribution as a standalone Python server or call collection update APIs remain exposed outside this reviewed importer path.",
+      "primary": "https://www.hiddenlayer.com/sai-security-advisory/2026-06-chromadb-5"
+    },
+    {
+      "number": 104,
+      "ghsa": "GHSA-xph7-9rjv-w5fr",
+      "cve": "CVE-2026-45831",
+      "vulnerable_entry": "chromadb.auth.simple_rbac_authz.SimpleRBACAuthorizationProvider.authorize_or_raise at58 checks action membership at63-64 and ignores resource tenant/database/collection.",
+      "local": "RustBindingsAPI initialization and read methods do not instantiate/call Python ServerAuthorizationProvider. Local directory access is under filesystem trust; importer is not a multi-user Chroma authorization server.",
+      "http": "ClientAuthProvider only supplies outgoing headers; it does not invoke ServerAuthorizationProvider. The remote server may invoke the vulnerable RBAC implementation on legitimate importer requests.",
+      "candidate_disposition": "vulnerable_code_not_used for the installed WARM-side client/importer code; never extend the disposition to the remote Chroma server.",
+      "external_server": "Remote resource-specific authorization still needs a real upstream/configuration remedy. Collection scope checks preserve requested scope but cannot verify the remote user's entitlement.",
+      "primary": "https://www.hiddenlayer.com/sai-security-advisory/2026-06-chromadb-3"
+    },
+    {
+      "number": 103,
+      "ghsa": "GHSA-2wm9-hf6c-p5cr",
+      "cve": "CVE-2026-45830",
+      "vulnerable_entry": "SegmentAPI._get/_count -> _scan(collection_id) -> SqlSysDB.get_collection_with_segments at574 -> get_collections(id=...) at577. get_collections skips tenant/database filter when id is supplied at511. The1.5.9 route differs slightly from the report's older _get_collection path but retains the unscoped lookup.",
+      "local_before": "Reachable when CHROMA_API_IMPL selected SegmentAPI. list/name resolution initially scopes IDs, but subsequent UUID scan uses the vulnerable function; do not label that implementation unused.",
+      "local_after": "RustClient prevents this Python SegmentAPI/SqlSysDB read path. No UUID override is exposed by importer; collection UUID comes from a scope-validated collection.",
+      "http": "The WARM-side library sends scoped URLs, not Python SysDB calls. A remote Python SegmentAPI service may execute the vulnerable lookup; returned-model scope is now checked before subsequent requests.",
+      "candidate_disposition": "vulnerable_code_not_used only for the hardened installed WARM-side reader; remote server boundary explicitly excluded.",
+      "external_server": "No assertion that a remote vulnerable server becomes safe. Its authorization bug cannot be fixed by selecting a tenant/database in a client.",
+      "primary": "https://www.hiddenlayer.com/sai-security-advisory/2026-06-chromadb"
+    },
+    {
+      "number": 45,
+      "ghsa": "GHSA-w8v5-vhqr-4h9v",
+      "cve": "CVE-2025-69872",
+      "vulnerable_entry": "Disk.fetch at254 unpickles stored value bytes/files at282/284. Disk.get at165 unpickles serialized keys at177.",
+      "actual_owned_reachability_before": "WarmRetriever._coerce_embedder accepts real dspy.Embedder. Dimension inference, ingestion and query call it with default caching=True. Embedder.__call__ at138 selects _cached_compute_embeddings -> request_cache.sync_wrapper at269 -> dspy.cache at272 -> lazy _get_dspy_cache with enable_disk_cache=True -> Cache.get at135 -> FanoutCache.get at257 -> shard Cache.get at1123 -> Disk.fetch. SDK WarmRM.forward calls the same supplied Embedder before its subsequent ndarray serialization failure, so deserialization occurs even if the query later fails.",
+      "known_key_path": "The normal DSPy request key is a SHA256 hex string; ordinary Cache.get reads a value via Disk.fetch, not Disk.get. No WARM-owned key-iteration/pull/export call was found. Do not infer keys are globally safe: diskcache iteration/pull APIs and DSPy restricted Disk subclasses can retain Disk.get unpickling outside this path.",
+      "remedy": "Both owned adapters invoke actual dspy.Embedder instances with caching=False for that call only; Embedder then selects _compute_embeddings and preserves model/batch/kwargs behavior. SDK converts resulting ndarray to list. Generic callables are invoked with the same positional signature; global cache settings and embedding.caching remain unchanged.",
+      "other_owned_paths": "Default HashingEmbedder and ordinary WARM retrieval do not call diskcache. DSPy Module.__call__/acall at94/113 add callback/usage context and dispatch forward without cache access. The owned DummyLM RAG example already sets memory-only cache before first cache/LM use and has a fresh-process import-denial test. User-supplied arbitrary callable/protocol implementations, custom callbacks, and separate application LM/cache use are outside the no-deserialization claim.",
+      "candidate_disposition": "Do not dismiss based on the earlier example alone. After the new real-Embedder regression and existing profile tests pass, vulnerable_code_not_used can be scoped to these reviewed WARM-owned paths; diskcache itself remains unpatched and caller-controlled persistent cache use remains excluded.",
+      "primary": "https://github.com/EthanKim88/ethan-cve-disclosures/blob/main/CVE-2025-69872-DiskCache-Pickle-Deserialization.md"
+    }
+  ],
+  "http_response_boundary_proof": {
+    "fixture": "Actual chromadb1.5.9 HttpClient, httpx.Client and JSON model parsing with httpx.MockTransport; no network listener or standalone Chroma server.",
+    "routes": [
+      "GET /api/v2/auth/identity",
+      "GET /api/v2/tenants/tenant-a",
+      "GET /api/v2/tenants/tenant-a/databases/database-a",
+      "GET .../collections",
+      "GET .../collections/docs",
+      "GET .../collections/{uuid}/count",
+      "POST .../collections/{uuid}/get"
+    ],
+    "cases": "Valid named/all collections; tenant mismatch named/all; database mismatch named/all; wrong returned name on named lookup; returned ../other named/all; returned percent-encoded slash on list; explicitly requested ../other.",
+    "security_oracles": [
+      "Every request retains the fixture credential and expected host; any unlisted route fails.",
+      "Wrong scope/name never reaches count/get.",
+      "Stored config and schema include poison payloads; known EF constructor and configuration/schema/_embed accesses fail immediately.",
+      "Stored URI remains metadata, never a network data-loader input.",
+      "Valid page0/page1 reads preserve id, namespace, text, vector and metadata."
+    ],
+    "not_proven": [
+      "Remote-server RBAC enforcement.",
+      "Arbitrary malformed/oversized JSON, malicious metadata variants, historical Chroma versions or future versions.",
+      "No passed runtime result claimed by this lane."
+    ]
+  },
+  "requested_validation": [
+    {
+      "cwd": "bindings/python/warm-sdk",
+      "command": "uv run --locked --group importers-test pytest -q -rs tests/importers/test_vectordbs_a1.py -k 'chroma_local_backend or chroma_http_mock or chroma_real_reads_never_execute'",
+      "expected": "16 cases pass, zero skips; no WARM or Chroma server required."
+    },
+    {
+      "cwd": "bindings/python/warm-sdk",
+      "command": "uv run --locked --group importers-test pytest -q -rs tests/importers/test_vectordbs_a1.py -k chroma",
+      "expected": "All Chroma cases pass, zero skips; WARM_SERVER_BIN required for existing real roundtrip/resume."
+    },
+    {
+      "cwd": "repository root, existing CI environment",
+      "command": "uv run --no-project --python 3.12 --with './bindings/python/warm-sdk' --with './integrations/python[dspy]' --with 'dspy==3.4.1' --with 'litellm==1.103.10' --with 'filelock==4.2.6' --with pytest --with pytest-asyncio pytest -q -rs integrations/python/tests/dspy",
+      "expected": "New cache control plus all existing contracts pass, zero skips; WARM_SERVER_BIN points to integrated local server. No paid LM calls."
+    }
+  ],
+  "verification": {
+    "lane": "Source inspection and git diff --check only. No build/install/test/disposition action.",
+    "parent_report": "Root reported original3 Chroma poison-config tests passed onPython3.12 before the later backend/scope changes. That result is not validation of this new candidate.",
+    "required_before_disposition": "Root inspects final diff, updates floor/lock, runs the new focused checks and affected integrated gates, then writes exact profile limitations into any disposition. This document alone does not authorize or perform a dismissal."
+  },
+  "unresolved": [
+    "Root validation and integrated artifact identities.",
+    "Any future change to Chroma backend, model/config access, data include, mutation API, authentication boundary or DSPy caching must invalidate the corresponding scoped disposition.",
+    "All benchmark target/confirmation requirements remain open independently of release security."
+  ]
+}

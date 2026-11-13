@@ -1,0 +1,1361 @@
+{
+  "schema_version": 1,
+  "task": "Release open-issue review",
+  "reviewed_at_utc": "2026-11-10T07:31:45Z",
+  "repository": "writerslogic/warm",
+  "worktree": "/Volumes/A/.hms-wt-mission-c",
+  "worktree_head": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+  "published_main_at_review": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+  "ancestry": "Local git merge-base(main snapshot, worktree HEAD) equals the published main snapshot. New candidate-only fixes are not treated as already released.",
+  "inventory": {
+    "query": "repo:writerslogic/warm is:issue is:open",
+    "topn": 100,
+    "returned": 23,
+    "all_issue_states_individually_verified_open": true,
+    "all_nonzero_comment_threads_read": true,
+    "issue_numbers": [
+      1,
+      4,
+      7,
+      8,
+      9,
+      10,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      51,
+      163,
+      164,
+      165,
+      166,
+      167
+    ],
+    "open_prs": [
+      {
+        "number": 426,
+        "title": "Record benchmark frontier experiments and instrument audits",
+        "url": "https://github.com/writerslogic/warm/pull/426"
+      },
+      {
+        "number": 425,
+        "title": "Fix vector query boundaries and reduce redundant memory traffic",
+        "url": "https://github.com/writerslogic/warm/pull/425"
+      },
+      {
+        "number": 423,
+        "title": "deps(rust)(deps): bump the rust-minor-patch group across 1 directory with 3 updates",
+        "url": "https://github.com/writerslogic/warm/pull/423"
+      },
+      {
+        "number": 422,
+        "title": "deps(npm)(deps-dev): bump @napi-rs/cli from 3.10.9 to 3.10.12 in the npm-minor-patch group",
+        "url": "https://github.com/writerslogic/warm/pull/422"
+      },
+      {
+        "number": 421,
+        "title": "ci(deps)(deps): bump the github-actions group with 5 updates",
+        "url": "https://github.com/writerslogic/warm/pull/421"
+      },
+      {
+        "number": 408,
+        "title": "bench: Re-measure the ann-benchmarks entry and add the held-out candidate search tooling (partial)",
+        "url": "https://github.com/writerslogic/warm/pull/408"
+      },
+      {
+        "number": 395,
+        "title": "bench: Record the pinned-commit big-ann filter and streaming runs",
+        "url": "https://github.com/writerslogic/warm/pull/395"
+      }
+    ]
+  },
+  "summary": {
+    "proposed_completed_closures": [
+      4,
+      164,
+      165
+    ],
+    "conditional_closure": [
+      42
+    ],
+    "keep_open": [
+      1,
+      7,
+      8,
+      9,
+      10,
+      39,
+      40,
+      41,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      51,
+      163,
+      166,
+      167
+    ],
+    "direct_release_documentation_defect": [
+      51
+    ],
+    "no_issue_mutations": true,
+    "no_new_tests_or_runs": true,
+    "security_scope": "No open issue was treated as a vulnerability solely from a security-related feature title. This is not a security-alert inventory."
+  },
+  "issues": [
+    {
+      "number": 1,
+      "url": "https://github.com/writerslogic/warm/issues/1",
+      "title": "Hardware Acceleration: Auto-dispatching SIMD kernels for Hamming Distance",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:29:53Z",
+      "labels": [
+        "help wanted",
+        "performance"
+      ],
+      "classification": "partial_implementation",
+      "proposed_action": "update_keep_open",
+      "release_critical": false,
+      "finding": "AVX2 dense screen popcount landed; the sparse Hamming operation still delegates to sparse intersection. AVX-512 coverage and the promised 4–10x end-to-end improvement are not established.",
+      "evidence": [
+        {
+          "path": "src/core/intersection.rs",
+          "line": 15,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/intersection.rs#L15",
+          "note": "Sparse intersection dispatch used by EntangledHVec::hamming."
+        },
+        {
+          "path": "src/core/entangled.rs",
+          "line": 242,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/entangled.rs#L242",
+          "note": "Hamming calls sparse intersection, so dense-screen kernels are not a substitute."
+        },
+        {
+          "path": "src/core/qgraph/kernels.rs",
+          "line": 189,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/qgraph/kernels.rs#L189",
+          "note": "AVX2 screen begins at four words; narrower rows use POPCNT/scalar."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 386,
+          "url": "https://github.com/writerslogic/warm/pull/386",
+          "merge_commit": "a090f971dfa8a4bfa218adc0f65816d87a3fc6d4"
+        },
+        {
+          "number": 388,
+          "url": "https://github.com/writerslogic/warm/pull/388",
+          "merge_commit": "4b7a849ff83bc01d21e66e2089b1438619434fc4"
+        }
+      ],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/1#issuecomment-6328717619",
+        "https://github.com/writerslogic/warm/issues/1#issuecomment-6489673699"
+      ],
+      "proposed_comment": "Update the implementation status with merged #386/#388: AVX2 screen popcount is available from four words, with a reported 1.05–1.75x paired gain over POPCNT on the measured host. Keep open for the requested AVX-512/sparse-Hamming coverage and verified 4–10x target; these are not established by the dense-screen result."
+    },
+    {
+      "number": 4,
+      "url": "https://github.com/writerslogic/warm/issues/4",
+      "title": "Scientific Vertical: K-mer SDR Encoding for Genomics",
+      "state_at_review": "open",
+      "updated_at": "2026-05-15T01:57:57Z",
+      "labels": [
+        "help wanted",
+        "research"
+      ],
+      "classification": "completed_experimental_feature",
+      "proposed_action": "propose_close_completed",
+      "release_critical": false,
+      "finding": "Experimental KmerEncoder, validation tests, user guide and fixed-seed comparative evaluation are committed on main. The anticipated special noise-tolerance advantage was not demonstrated.",
+      "evidence": [
+        {
+          "path": "src/core/experimental/kmer.rs",
+          "line": 168,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/experimental/kmer.rs#L168",
+          "note": "KmerEncoder and checked DNA/RNA encoding entrypoints."
+        },
+        {
+          "path": "docs/guides/kmer-encoder.md",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/guides/kmer-encoder.md#L1",
+          "note": "Experimental feature and exact nucleotide/ambiguity contract."
+        },
+        {
+          "path": "docs/research/KMER-ENCODER-EVAL-2026-11-03.md",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/research/KMER-ENCODER-EVAL-2026-11-03.md#L1",
+          "note": "Explicit limited/negative conclusion and committed result reference."
+        },
+        {
+          "path": "benchmarks/results/kmer_encoder_eval_v1.json",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/results/kmer_encoder_eval_v1.json#L1",
+          "note": "Result metadata includes seed 20261103; no rerun performed."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 388,
+          "url": "https://github.com/writerslogic/warm/pull/388",
+          "merge_commit": "4b7a849ff83bc01d21e66e2089b1438619434fc4"
+        }
+      ],
+      "existing_comment_urls": [],
+      "proposed_comment": "Implemented and evaluated in merged #388 (4b7a849f). KmerEncoder supports DNA/RNA, canonical strands and ambiguity handling behind experimental; the guide and fixed-seed comparative results are committed. Close the implementation request as complete. Preserve the evaluation conclusion: no advantage beyond exact k-mer overlap was demonstrated, and no real-genome claim is made."
+    },
+    {
+      "number": 7,
+      "url": "https://github.com/writerslogic/warm/issues/7",
+      "title": "Add runnable application examples",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:29:54Z",
+      "labels": [
+        "documentation",
+        "good first issue"
+      ],
+      "classification": "partial_examples",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "CI-exercised quickstarts and other application examples exist; the five requested standalone Node examples are not present in the inspected examples inventory.",
+      "evidence": [
+        {
+          "path": ".github/workflows/examples.yml",
+          "line": 74,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/.github/workflows/examples.yml#L74",
+          "note": "Node quickstart exercised; other sections run Rust/Python/demo examples."
+        },
+        {
+          "path": "examples/quickstart/node/quickstart.mjs",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/examples/quickstart/node/quickstart.mjs#L1",
+          "note": "Existing maintained Node quickstart."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/7#issuecomment-6328719847",
+        "https://github.com/writerslogic/warm/issues/7#issuecomment-6489673957"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 8,
+      "url": "https://github.com/writerslogic/warm/issues/8",
+      "title": "Complete Python engine bindings",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:29:55Z",
+      "labels": [
+        "help wanted",
+        "integration"
+      ],
+      "classification": "partial_bindings",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "Native phase/vector indexes and the HTTP SDK exist, but the documented Python boundary still excludes in-process document search and the full persisted engine/knowledge-graph API.",
+      "evidence": [
+        {
+          "path": "README.md",
+          "line": 300,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/README.md#L300",
+          "note": "Published surface table explicitly says Python has no in-process document search."
+        },
+        {
+          "path": "src/bindings/python/mod.rs",
+          "line": 69,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/bindings/python/mod.rs#L69",
+          "note": "Native phase substrate remains separately exposed."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/8#issuecomment-6328717891",
+        "https://github.com/writerslogic/warm/issues/8#issuecomment-6489674205"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 9,
+      "url": "https://github.com/writerslogic/warm/issues/9",
+      "title": "Benchmark comparison against FAISS and Qdrant",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:25:42Z",
+      "labels": [
+        "documentation",
+        "help wanted"
+      ],
+      "classification": "partial_benchmark_coverage",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "The comparison now contains a SIFT-1M row and expanded text comparisons, but the requested complete matched FAISS/Qdrant data/size/metric study is not evidenced. Neither not_run metadata nor different deployment boundaries justify closure.",
+      "evidence": [
+        {
+          "path": "docs/benchmarks/COMPARISON.md",
+          "line": 44,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/benchmarks/COMPARISON.md#L44",
+          "note": "Current SIFT-1M section."
+        },
+        {
+          "path": "docs/benchmarks/COMPARISON.md",
+          "line": 90,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/benchmarks/COMPARISON.md#L90",
+          "note": "Current text corpus results."
+        },
+        {
+          "path": "benchmarks/competitive/warmbench/table.py",
+          "line": 4,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/competitive/warmbench/table.py#L4",
+          "note": "Generated cells derive only from committed result records."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 389,
+          "url": "https://github.com/writerslogic/warm/pull/389",
+          "merge_commit": "18273ef46d301afde3a025251cd0b41941fb99ba"
+        }
+      ],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/9#issuecomment-6328718172",
+        "https://github.com/writerslogic/warm/issues/9#issuecomment-6489608736"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 10,
+      "url": "https://github.com/writerslogic/warm/issues/10",
+      "title": "Node.js API reference with usage examples",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:29:56Z",
+      "labels": [
+        "documentation",
+        "good first issue"
+      ],
+      "classification": "partial_api_documentation",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "Canonical TypeDoc generation and drift checks exist; they do not provide the requested short usage example and return explanation for every public method.",
+      "evidence": [
+        {
+          "path": "scripts/docs_api.py",
+          "line": 8,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/scripts/docs_api.py#L8",
+          "note": "Node reference is generated from declarations."
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "line": 63,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/.github/workflows/ci.yml#L63",
+          "note": "Generated TypeScript/JSON-schema gate."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/10#issuecomment-6328718430",
+        "https://github.com/writerslogic/warm/issues/10#issuecomment-6489674533"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 39,
+      "url": "https://github.com/writerslogic/warm/issues/39",
+      "title": "Durability: Define and test persistence guarantees",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:25:39Z",
+      "labels": [
+        "enhancement",
+        "help wanted"
+      ],
+      "classification": "unimplemented_optional_durability_modes",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "Durability/sync contract is documented. Selectable buffered versus flush-on-write Rust/Node modes and mode-specific tests remain unestablished.",
+      "evidence": [
+        {
+          "path": "docs/file-format/CRASH-CONSISTENCY.md",
+          "line": 9,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/file-format/CRASH-CONSISTENCY.md#L9",
+          "note": "Concrete platform acknowledgement/sync contract."
+        },
+        {
+          "path": "src/core/engine/query.rs",
+          "line": 153,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/query.rs#L153",
+          "note": "Flush path explicitly syncs stored data."
+        },
+        {
+          "path": "src/core/config.rs",
+          "line": 7,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/config.rs#L7",
+          "note": "Existing public configuration inspected; no selectable durability mode found."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/39#issuecomment-6328719034",
+        "https://github.com/writerslogic/warm/issues/39#issuecomment-6489607954"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 40,
+      "url": "https://github.com/writerslogic/warm/issues/40",
+      "title": "Testing: Add crash-consistency recovery suite",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:25:41Z",
+      "labels": [
+        "enhancement",
+        "help wanted"
+      ],
+      "classification": "partial_recovery_matrix",
+      "proposed_action": "update_keep_open",
+      "release_critical": false,
+      "finding": "Background compaction now has deterministic child-process exits at seven publication stages, including encrypted/plain configurations. Full requested append/rotation/index-persistence process-termination matrix on both Linux and macOS remains incomplete.",
+      "evidence": [
+        {
+          "path": "src/core/engine/background_compaction/tests.rs",
+          "line": 363,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/background_compaction/tests.rs#L363",
+          "note": "Child-process termination at staging/caught-up/staged/published/mapped/released/finished."
+        },
+        {
+          "path": "docs/file-format/CRASH-CONSISTENCY.md",
+          "line": 25,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/file-format/CRASH-CONSISTENCY.md#L25",
+          "note": "Per-operation existing recovery coverage; append still uses torn-byte simulation."
+        },
+        {
+          "path": "tests/format_crash.rs",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/tests/format_crash.rs#L1",
+          "note": "Existing simulated torn-state tests."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 386,
+          "url": "https://github.com/writerslogic/warm/pull/386",
+          "merge_commit": "a090f971dfa8a4bfa218adc0f65816d87a3fc6d4"
+        }
+      ],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/40#issuecomment-6328718729",
+        "https://github.com/writerslogic/warm/issues/40#issuecomment-6489608373"
+      ],
+      "proposed_comment": "Update the previous comment: merged #386 now includes deterministic child-process interruption for background compaction at all seven publication stages, with encrypted/plain configurations. Keep open for the remaining append, segment-rotation and index-persistence kill matrix and explicit Linux/macOS evidence. Existing torn-byte tests are not that complete matrix."
+    },
+    {
+      "number": 41,
+      "url": "https://github.com/writerslogic/warm/issues/41",
+      "title": "Evaluation: Expand retrieval regression coverage",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:25:38Z",
+      "labels": [
+        "enhancement",
+        "help wanted",
+        "performance"
+      ],
+      "classification": "partial_retrieval_regression_matrix",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "Relevance/rank metrics, fixed synthetic self-recall, operational workloads and a new state simulation exist; the requested complete noisy/mutation/cold/recovery workload matrix with latency distributions is not established.",
+      "evidence": [
+        {
+          "path": "src/bin/warm-eval.rs",
+          "line": 20,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/bin/warm-eval.rs#L20",
+          "note": "Synthetic report has recall@1, p95 and route."
+        },
+        {
+          "path": "docs/production-readiness.md",
+          "line": 300,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/production-readiness.md#L300",
+          "note": "Limits of curated fixtures and workload tests stated."
+        },
+        {
+          "path": "tests/simulation.rs",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/tests/simulation.rs#L1",
+          "note": "Seeded state-model coverage is not a measured retrieval matrix."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 387,
+          "url": "https://github.com/writerslogic/warm/pull/387",
+          "merge_commit": "9a17efaa583a3964b0c952005eae3876fd20a481"
+        }
+      ],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/41#issuecomment-6489607659"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 42,
+      "url": "https://github.com/writerslogic/warm/issues/42",
+      "title": "Operations: Add bounded background compaction",
+      "state_at_review": "open",
+      "updated_at": "2026-08-07T08:11:02Z",
+      "labels": [
+        "enhancement",
+        "help wanted",
+        "performance"
+      ],
+      "classification": "implemented_with_documented_resource_limits",
+      "proposed_action": "conditional_close_after_scope_review",
+      "release_critical": false,
+      "finding": "Rust/Node background compaction, progress, cancellation, cleanup, no-progress outcomes and publication-crash tests are present. Resource claims are scoped: memory is a snapshot-size estimate; CPU throttles staging/replay but not snapshot/publication. Release latency measurement was not performed in #386.",
+      "evidence": [
+        {
+          "path": "src/core/engine/background_compaction.rs",
+          "line": 16,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/background_compaction.rs#L16",
+          "note": "Options explicitly define estimated snapshot memory and staging allocation bounds."
+        },
+        {
+          "path": "docs/file-format/COMPACTION.md",
+          "line": 6,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/file-format/COMPACTION.md#L6",
+          "note": "Rust/Node API parity and job lifecycle."
+        },
+        {
+          "path": "docs/file-format/COMPACTION.md",
+          "line": 34,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/file-format/COMPACTION.md#L34",
+          "note": "Foreground operations wait during the documented publication/snapshot phases."
+        },
+        {
+          "path": "docs/file-format/COMPACTION.md",
+          "line": 52,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/file-format/COMPACTION.md#L52",
+          "note": "Precise CPU/memory/disk budget scope."
+        },
+        {
+          "path": "src/core/engine/background_compaction/tests.rs",
+          "line": 105,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/background_compaction/tests.rs#L105",
+          "note": "Cancellation and staging cleanup."
+        },
+        {
+          "path": "tests/node/compaction.test.cjs",
+          "line": 21,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/tests/node/compaction.test.cjs#L21",
+          "note": "Node lifecycle, budgets and cancel tests."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 386,
+          "url": "https://github.com/writerslogic/warm/pull/386",
+          "merge_commit": "a090f971dfa8a4bfa218adc0f65816d87a3fc6d4"
+        },
+        {
+          "number": 419,
+          "url": "https://github.com/writerslogic/warm/pull/419",
+          "merge_commit": null
+        }
+      ],
+      "existing_comment_urls": [],
+      "proposed_comment": "Merged #386 implements Rust/Node background compaction with progress, idempotent cancellation, cleanup, no-progress reporting and publication crash tests. Close if the documented bounds satisfy this issue: maxMemoryBytes bounds estimated cloned-snapshot bytes, not total RSS; CPU throttling covers staging/replay, while snapshot/publication retain brief writer leases. Do not describe this as a process-wide hard resource budget or a measured foreground-latency guarantee; #43 retains the unified-budget request."
+    },
+    {
+      "number": 43,
+      "url": "https://github.com/writerslogic/warm/issues/43",
+      "title": "Operations: Add configurable resource budgets",
+      "state_at_review": "open",
+      "updated_at": "2026-08-07T08:11:04Z",
+      "labels": [
+        "enhancement",
+        "help wanted"
+      ],
+      "classification": "partial_resource_budgets",
+      "proposed_action": "update_keep_open",
+      "release_critical": false,
+      "finding": "Reasoning-query limits, server admission controls and compaction budgets exist, but no unified enforced resident-memory/concurrency/temp-disk/index-build resource policy is established.",
+      "evidence": [
+        {
+          "path": "src/core/query_limits.rs",
+          "line": 4,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/query_limits.rs#L4",
+          "note": "Work/frontier/byte limits for optional reasoning queries."
+        },
+        {
+          "path": "src/core/engine/background_compaction.rs",
+          "line": 16,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/background_compaction.rs#L16",
+          "note": "Compaction-specific resource limits, not universal budgets."
+        },
+        {
+          "path": "src/core/config.rs",
+          "line": 7,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/config.rs#L7",
+          "note": "General engine configuration."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 386,
+          "url": "https://github.com/writerslogic/warm/pull/386",
+          "merge_commit": "a090f971dfa8a4bfa218adc0f65816d87a3fc6d4"
+        }
+      ],
+      "existing_comment_urls": [],
+      "proposed_comment": "Record the new compaction CPU/snapshot-memory/staging-disk limits from #386 alongside the existing reasoning-query and server limits. Keep open for a unified enforced policy across resident memory, query/write concurrency, maintenance and index building; these local limits do not satisfy the complete request."
+    },
+    {
+      "number": 44,
+      "url": "https://github.com/writerslogic/warm/issues/44",
+      "title": "API: Add cancellation and deadlines",
+      "state_at_review": "open",
+      "updated_at": "2026-08-07T08:11:05Z",
+      "labels": [
+        "enhancement",
+        "integration"
+      ],
+      "classification": "partial_cancellation",
+      "proposed_action": "update_keep_open",
+      "release_critical": false,
+      "finding": "Compaction has explicit cancellation with documented late-publication behavior, but general Rust deadlines and Node AbortSignal integration across queries/training/cognition are not established.",
+      "evidence": [
+        {
+          "path": "src/core/engine/background_compaction.rs",
+          "line": 356,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/background_compaction.rs#L356",
+          "note": "Handle cancellation, wait/drop lifecycle."
+        },
+        {
+          "path": "src/bindings/node/compaction.rs",
+          "line": 150,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/bindings/node/compaction.rs#L150",
+          "note": "Node job methods; explicit cancellation rather than general AbortSignal."
+        },
+        {
+          "path": "src/core/engine/query.rs",
+          "line": 145,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/query.rs#L145",
+          "note": "Background maintenance returns a JoinHandle."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 386,
+          "url": "https://github.com/writerslogic/warm/pull/386",
+          "merge_commit": "a090f971dfa8a4bfa218adc0f65816d87a3fc6d4"
+        }
+      ],
+      "existing_comment_urls": [],
+      "proposed_comment": "Merged #386 supplies cancellable compaction jobs with documented publication boundaries and cleanup. Keep this broader issue open for query/training/cognition cancellation, deadlines and Node AbortSignal behavior."
+    },
+    {
+      "number": 45,
+      "url": "https://github.com/writerslogic/warm/issues/45",
+      "title": "Observability: Export production metrics",
+      "state_at_review": "open",
+      "updated_at": "2026-10-21T23:18:24Z",
+      "labels": [
+        "enhancement",
+        "integration"
+      ],
+      "classification": "partial_metrics",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "Server Prometheus metrics are implemented. A core-library exporter-neutral metrics abstraction with complete Rust/Node consumption and the requested event coverage is not established.",
+      "evidence": [
+        {
+          "path": "src/bin/warm-server/metrics.rs",
+          "line": 71,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/bin/warm-server/metrics.rs#L71",
+          "note": "Server-owned Metrics implementation."
+        },
+        {
+          "path": "src/bin/warm-server/metrics.rs",
+          "line": 283,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/bin/warm-server/metrics.rs#L283",
+          "note": "HTTP route histogram output."
+        },
+        {
+          "path": "docs/server/operations.md",
+          "line": 34,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/server/operations.md#L34",
+          "note": "Server /metrics boundary."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/45#issuecomment-6328719323"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 46,
+      "url": "https://github.com/writerslogic/warm/issues/46",
+      "title": "Bindings: Track cross-language API parity",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:25:36Z",
+      "labels": [
+        "enhancement",
+        "integration"
+      ],
+      "classification": "partial_binding_governance",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "Generated binding/schema drift checks exist, but an operation-parity manifest and cross-runtime CI report are not evidenced by those checks.",
+      "evidence": [
+        {
+          "path": "scripts/check-generated.sh",
+          "line": 8,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/scripts/check-generated.sh#L8",
+          "note": "Temporary generated-output comparison."
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "line": 63,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/.github/workflows/ci.yml#L63",
+          "note": "Generated artifact CI step."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/46#issuecomment-6489607012"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 47,
+      "url": "https://github.com/writerslogic/warm/issues/47",
+      "title": "Architecture: Separate research modules into a workspace crate",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:25:37Z",
+      "labels": [
+        "enhancement",
+        "help wanted",
+        "research"
+      ],
+      "classification": "partial_research_isolation",
+      "proposed_action": "keep_open_existing_update_sufficient",
+      "release_critical": false,
+      "finding": "Standalone research crates exist, while experimental modules and research binaries remain declared in the production package; full workspace separation is unfinished.",
+      "evidence": [
+        {
+          "path": "Cargo.toml",
+          "line": 190,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/Cargo.toml#L190",
+          "note": "Experimental features remain in production package."
+        },
+        {
+          "path": "Cargo.toml",
+          "line": 254,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/Cargo.toml#L254",
+          "note": "Research binaries still declared in root package."
+        },
+        {
+          "path": "src/core/experimental/mod.rs",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/experimental/mod.rs#L1",
+          "note": "Research module tree remains in core."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/47#issuecomment-6489607324"
+      ],
+      "proposed_comment": null
+    },
+    {
+      "number": 48,
+      "url": "https://github.com/writerslogic/warm/issues/48",
+      "title": "Indexing: Automate index refresh decisions",
+      "state_at_review": "open",
+      "updated_at": "2026-08-07T08:11:09Z",
+      "labels": [
+        "enhancement",
+        "help wanted",
+        "performance"
+      ],
+      "classification": "partial_index_lifecycle_policy",
+      "proposed_action": "keep_open",
+      "release_critical": false,
+      "finding": "Maintenance is threshold-driven and background execution exists; the requested richer age/latency/memory/benefit policy, explanation and cancellation contract are not established.",
+      "evidence": [
+        {
+          "path": "src/core/engine/query.rs",
+          "line": 121,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/query.rs#L121",
+          "note": "Threshold-triggered maintain_indices."
+        },
+        {
+          "path": "src/core/engine/query.rs",
+          "line": 145,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/engine/query.rs#L145",
+          "note": "Background maintenance wrapper."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [],
+      "proposed_comment": null
+    },
+    {
+      "number": 49,
+      "url": "https://github.com/writerslogic/warm/issues/49",
+      "title": "Security: Add external key providers and encryption rotation",
+      "state_at_review": "open",
+      "updated_at": "2026-08-07T08:11:11Z",
+      "labels": [
+        "enhancement",
+        "help wanted"
+      ],
+      "classification": "unimplemented_security_enhancement",
+      "proposed_action": "keep_open_not_a_verified_vulnerability",
+      "release_critical": false,
+      "finding": "Encryption uses passphrase/env configuration. A provenance-signing-key rotation method is not encrypted-store data-key rotation; provider IDs, staged re-encryption and rollback need their own implementation.",
+      "evidence": [
+        {
+          "path": "src/core/config.rs",
+          "line": 106,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/config.rs#L106",
+          "note": "SecurityConfig exposes passphrase and environment variable."
+        },
+        {
+          "path": "docs/file-format/ENCRYPTION.md",
+          "line": 12,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/file-format/ENCRYPTION.md#L12",
+          "note": "Passphrase/Argon2id/AES-GCM format."
+        },
+        {
+          "path": "src/core/provenance/mod.rs",
+          "line": 343,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/provenance/mod.rs#L343",
+          "note": "Separate provenance key rotation must not be misclassified as data-key rotation."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [],
+      "proposed_comment": null
+    },
+    {
+      "number": 51,
+      "url": "https://github.com/writerslogic/warm/issues/51",
+      "title": "API: Establish compatibility and format governance",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:25:35Z",
+      "labels": [
+        "documentation",
+        "enhancement"
+      ],
+      "classification": "actionable_release_documentation_defect_and_partial_governance",
+      "proposed_action": "update_keep_open",
+      "release_critical": true,
+      "finding": "STABILITY has contradictory schema-3/schema-4 claims tied to a hypothetical0.7.0, while the source package is0.6.6 and the documented current writer is schema6. Policy discoverability and release-wide compatibility evidence remain incomplete.",
+      "evidence": [
+        {
+          "path": "docs/STABILITY.md",
+          "line": 41,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/STABILITY.md#L41",
+          "note": "Stale0.7.0 attribution and contradictory new-store descriptions."
+        },
+        {
+          "path": "docs/STABILITY.md",
+          "line": 52,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/STABILITY.md#L52",
+          "note": "Current development writer described as schema6."
+        },
+        {
+          "path": "Cargo.toml",
+          "line": 3,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/Cargo.toml#L3",
+          "note": "Current source version0.6.6."
+        },
+        {
+          "path": "scripts/check-generated.sh",
+          "line": 8,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/scripts/check-generated.sh#L8",
+          "note": "Existing generated-output enforcement does not prove whole API compatibility."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/51#issuecomment-6328719553",
+        "https://github.com/writerslogic/warm/issues/51#issuecomment-6489606690"
+      ],
+      "proposed_comment": "Correct the storage-version description against actual source/tag behavior and link the compatibility policy from README and release documentation. Keep open until the release notes/migration and public-surface governance criteria are fully accounted for; existing generated-file gates alone do not complete the issue."
+    },
+    {
+      "number": 163,
+      "url": "https://github.com/writerslogic/warm/issues/163",
+      "title": "Time-travel queries over the journal",
+      "state_at_review": "open",
+      "updated_at": "2026-10-21T23:24:39Z",
+      "labels": [
+        "enhancement",
+        "research"
+      ],
+      "classification": "partial_historical_views",
+      "proposed_action": "update_keep_open",
+      "release_critical": false,
+      "finding": "Position/time/interval semantics, read-only Rust views, purge-safe tests and cost results landed. The merged PR explicitly states HTTP and SDK exposure are unfinished.",
+      "evidence": [
+        {
+          "path": "docs/memory-api/TIME-TRAVEL.md",
+          "line": 12,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/memory-api/TIME-TRAVEL.md#L12",
+          "note": "Rust APIs and exact semantics."
+        },
+        {
+          "path": "tests/time_travel.rs",
+          "line": 228,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/tests/time_travel.rs#L228",
+          "note": "Earlier position compared to independent stopped store."
+        },
+        {
+          "path": "tests/time_travel.rs",
+          "line": 499,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/tests/time_travel.rs#L499",
+          "note": "Purge exclusion checks."
+        },
+        {
+          "path": "docs/memory-api/TIME-TRAVEL.md",
+          "line": 178,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/memory-api/TIME-TRAVEL.md#L178",
+          "note": "Measured view costs, with later reuse limits."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 386,
+          "url": "https://github.com/writerslogic/warm/pull/386",
+          "merge_commit": "a090f971dfa8a4bfa218adc0f65816d87a3fc6d4"
+        },
+        {
+          "number": 387,
+          "url": "https://github.com/writerslogic/warm/pull/387",
+          "merge_commit": "9a17efaa583a3964b0c952005eae3876fd20a481"
+        }
+      ],
+      "existing_comment_urls": [],
+      "proposed_comment": "Merged #386/#387 implement opt-in Rust history views, position/time/interval semantics, purge-safe regression tests and measured open/reuse costs. Keep open for the HTTP API and SDK surface explicitly left unfinished by #386. These views are not a default retrieval change."
+    },
+    {
+      "number": 164,
+      "url": "https://github.com/writerslogic/warm/issues/164",
+      "title": "Supersession and validity windows with fractional power encoding for timestamps",
+      "state_at_review": "open",
+      "updated_at": "2026-10-21T23:24:40Z",
+      "labels": [
+        "enhancement",
+        "research"
+      ],
+      "classification": "completed_preregistered_research",
+      "proposed_action": "propose_close_completed",
+      "release_critical": false,
+      "finding": "Experimental timestamp FPE, dev-only retrieval comparison, seed/result artifact and explicit go decision are committed. The result is provisional and does not authorize shipping or a mission quality claim.",
+      "evidence": [
+        {
+          "path": "src/core/experimental/fpe_time.rs",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/core/experimental/fpe_time.rs#L1",
+          "note": "Experimental encoder."
+        },
+        {
+          "path": "docs/research/fpe-timestamps-164.md",
+          "line": 24,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/research/fpe-timestamps-164.md#L24",
+          "note": "Method/protocol and no-reader scope."
+        },
+        {
+          "path": "docs/research/fpe-timestamps-164.md",
+          "line": 162,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/research/fpe-timestamps-164.md#L162",
+          "note": "Predeclared rule result: go."
+        },
+        {
+          "path": "benchmarks/results/fpe_timestamps_164_dev.json",
+          "line": 1,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/results/fpe_timestamps_164_dev.json#L1",
+          "note": "Seed164 and committed grid/decision metadata."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 388,
+          "url": "https://github.com/writerslogic/warm/pull/388",
+          "merge_commit": "4b7a849ff83bc01d21e66e2089b1438619434fc4"
+        }
+      ],
+      "existing_comment_urls": [],
+      "proposed_comment": "Close the prototype/evaluation request as completed by #388. The committed seed164 dev experiment records its fixed rule and a provisional go; the selected scalar exact-kernel twin ties FPE, so this is not evidence that vector encoding is uniquely necessary. Preserve all listed limitations: no held-out accuracy claim, no default production change, no semantic-key correction."
+    },
+    {
+      "number": 165,
+      "url": "https://github.com/writerslogic/warm/issues/165",
+      "title": "Query-reinforced edge repair for the vector graph",
+      "state_at_review": "open",
+      "updated_at": "2026-10-29T06:29:57Z",
+      "labels": [
+        "enhancement",
+        "performance",
+        "research"
+      ],
+      "classification": "completed_negative_research",
+      "proposed_action": "propose_close_completed",
+      "release_critical": false,
+      "finding": "Optional query-repair/antihub/medoid mechanisms, disjoint construction/evaluation IDs and full GloVe/SIFT results are committed with an explicit park decision. The issue permits a parked negative outcome.",
+      "evidence": [
+        {
+          "path": "src/bin/research/qgraph-repair-bench.rs",
+          "line": 4,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/src/bin/research/qgraph-repair-bench.rs#L4",
+          "note": "Issue-specific research harness and matched arms."
+        },
+        {
+          "path": "benchmarks/results/qgraph_repair_v1/README.md",
+          "line": 3,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/results/qgraph_repair_v1/README.md#L3",
+          "note": "Park verdict and frozen ship rule."
+        },
+        {
+          "path": "benchmarks/results/qgraph_repair_v1/README.md",
+          "line": 20,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/results/qgraph_repair_v1/README.md#L20",
+          "note": "Disjoint query split, recorded IDs/hashes and seed165."
+        },
+        {
+          "path": "benchmarks/results/qgraph_repair_v1/README.md",
+          "line": 42,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/results/qgraph_repair_v1/README.md#L42",
+          "note": "Full-scale result artifacts retained."
+        }
+      ],
+      "related_prs": [
+        {
+          "number": 388,
+          "url": "https://github.com/writerslogic/warm/pull/388",
+          "merge_commit": "4b7a849ff83bc01d21e66e2089b1438619434fc4"
+        }
+      ],
+      "existing_comment_urls": [
+        "https://github.com/writerslogic/warm/issues/165#issuecomment-6489674790"
+      ],
+      "proposed_comment": "Close as a completed negative investigation: #388 lands the default-off repair and committed GloVe/SIFT comparisons with disjoint construction/evaluation queries and the predeclared park verdict. No end-to-end win is claimed. Update the write-up's stale statement that the code exists only on issue/165-edge-repair, because the experiment now resides on main."
+    },
+    {
+      "number": 166,
+      "url": "https://github.com/writerslogic/warm/issues/166",
+      "title": "LongMemEval-M lexical retrieval path",
+      "state_at_review": "open",
+      "updated_at": "2026-10-21T23:24:43Z",
+      "labels": [
+        "enhancement",
+        "research"
+      ],
+      "classification": "unfinished_benchmark_and_protocol_update_needed",
+      "proposed_action": "update_keep_open",
+      "release_critical": false,
+      "finding": "The competitive loader still targets cleaned S dev sessions; no completed M lexical retrieval table was established. Historical issue names/paths predate WARM renaming. M must not automatically be treated as untouched QA holdout after exposed S.",
+      "evidence": [
+        {
+          "path": "benchmarks/competitive/warmbench/textdata.py",
+          "line": 20,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/competitive/warmbench/textdata.py#L20",
+          "note": "Pinned source URL is longmemeval_s_cleaned.json."
+        },
+        {
+          "path": "benchmarks/competitive/warmbench/textdata.py",
+          "line": 92,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/competitive/warmbench/textdata.py#L92",
+          "note": "S dev session loader."
+        },
+        {
+          "path": "docs/benchmarks/COMPARISON.md",
+          "line": 136,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/benchmarks/COMPARISON.md#L136",
+          "note": "Published memory table is current S session corpus."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [],
+      "proposed_comment": "Keep open: the current warmbench memory loader is S-dev only and the requested M retrieval table is unfinished. Update renamed paths/command names. Separately declare holdout eligibility: S/M history-scale variants are not automatically independent QA questions. The mission E42 prefix count is an infrastructure counterexample, not an M retrieval/accuracy run and not completion of this issue."
+    },
+    {
+      "number": 167,
+      "url": "https://github.com/writerslogic/warm/issues/167",
+      "title": "Presets with one scoreboard per preset",
+      "state_at_review": "open",
+      "updated_at": "2026-10-21T23:24:45Z",
+      "labels": [
+        "enhancement"
+      ],
+      "classification": "unfinished_preset_reporting",
+      "proposed_action": "keep_open",
+      "release_critical": false,
+      "finding": "The current generator emits dataset scoreboards from committed results; per-preset scoreboards, Pareto chart and anti-mixed-preset guard are not present in the inspected output/generator.",
+      "evidence": [
+        {
+          "path": "benchmarks/competitive/warmbench/table.py",
+          "line": 4,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/benchmarks/competitive/warmbench/table.py#L4",
+          "note": "Current table generation contract."
+        },
+        {
+          "path": "docs/benchmarks/COMPARISON.md",
+          "line": 7,
+          "commit": "431722cfba78b02666d1d1ce6004621e23fc71a2",
+          "url": "https://github.com/writerslogic/warm/blob/431722cfba78b02666d1d1ce6004621e23fc71a2/docs/benchmarks/COMPARISON.md#L7",
+          "note": "Single scoreboard structure, followed by dataset sections."
+        }
+      ],
+      "related_prs": [],
+      "existing_comment_urls": [],
+      "proposed_comment": null
+    }
+  ],
+  "release_critical_followups": [
+    {
+      "kind": "documentation",
+      "issue": 51,
+      "action": "Root assigned specialist to verify actual writer/schema/migration history, then amend docs/STABILITY.md and add README discoverability. Root owns docs/RELEASING.md. No invented rollout/version promises.",
+      "status": "verified_documentation_patch_prepared_in_specialist_worktree_not_committed"
+    },
+    {
+      "kind": "unmerged_correctness_fixes",
+      "pr": 425,
+      "head": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+      "status": "open draft at review; no merge performed",
+      "action": "Root should include verified extreme-query, integer-overflow, Python allocation and duplicate persisted-ID fixes in the release candidate, run required integrated gates, and retain the sealed-snapshot boundary limits.",
+      "evidence": {
+        "number": 425,
+        "url": "https://github.com/writerslogic/warm/pull/425",
+        "merged": false,
+        "merge_commit": "9a764a734814dd3e57c304cac49679b7a19bda40",
+        "head": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+        "statement": "Finite extreme cosine queries could return reversed rankings; large supported dimensions could overflow integer dot products; huge or empty padded Python results could abort; and duplicate persisted IDs could load as valid. This change fixes those boundaries with independent regression oracles and preserves ordinary-query results.\n\nIt also pairs primary/residual reranking loads, bounds prefetch distance, and adds explicit Linux sealed-snapshot loading so worker processes can share immutable index pages. Private heap loading remains the default. A publisher helper records setup cost and binds the exact sealed inode; ordinary mutable files and insufficient seals are rejected.\n\nLocal full VectorDBBench runs show modest throughput gains and a separate memory tradeoff. The combined kernel/prefetch arm averaged 4.94% above main in the first interleaved ablation. A later released-wheel comparison retained negative results, including a faster grouped released wheel. On 8 logical CPUs with a 16 GiB limit, sharing reduced mean peak cgroup memory 77.34% (14.21 to 3.22 GiB) while reducing mean maximum QPS 2.70%, at unchanged recall@100=.9406. It is not enabled by default or presented as a throughput win.\n\nValidation: default Rust 1,018 passed, all-features 1,667 passed; fmt, clippy default/python/all-features and MSRV 1.89 passed. Linux Python 164 passed with 3 feature skips; Mac 131 passed with 36 Linux-only skips. Snapshot binding tests: 24 passed. Full ordered-ID replay matches at six search efforts; component ablations and rejected alternatives are retained.\n\nThe [evidence report](https://github.com/writerslogic/warm/blob/perf/vdbbench-low-level/docs/research/LOWLEVEL-SYSTEMS.md#static-graph-follow-up-2026-11-09) and raw results are committed. At the user's stop request, the frozen Azure VectorDBBench package had passed input verification and image loading, but its first workload had not started. The service was stopped; no Azure VectorDBBench number is claimed. The draft retains the frozen package and an explicit stop receipt for future continuation. All development uses owned hosts. No query-quality setting was selected from the new full-set measurements, and previously exposed public queries are not described as an untouched holdout. These source changes are unreleased; VectorDBBench PR 898 remains pinned to published warm-python 0.6.4.\n\nIndependent frozen ANN confirmation is also recorded: Azure E8bds_v5 streaming E2a reached .9965711875 recall in both full runs (2865.57/2871.94 seconds, below the preregistered 3240-second gate); the submitted filter configuration reached 54721.70/53972.75 QPS at .906415 recall. Those runs use their own older frozen pins and are not measurements of this PR's new source. E8bds_v5 is not the official D8lds_v5 platform; no official rank is claimed.\n"
+      }
+    },
+    {
+      "kind": "already_merged_advisory_fix",
+      "pr": 420,
+      "commit": "d2e5d73339eec7be2463ee742e43347368b5e1fc",
+      "status": "RUSTSEC-2026-0462 rmcp3.9 upgrade merged; no new audit run by specialist",
+      "evidence": {
+        "number": 420,
+        "url": "https://github.com/writerslogic/warm/pull/420",
+        "merged": true,
+        "merge_commit": "d2e5d73339eec7be2463ee742e43347368b5e1fc",
+        "head": "558d181bebd3aa01f3fde8ed57bd511f2e823ea8",
+        "statement": "RUSTSEC-2026-0462 (rmcp before 3.9.0: unbounded response body buffering in the Streamable HTTP clients) fails cargo-deny on every PR. This raises rmcp from 3.7 to 3.9 in Cargo.toml and 3.8.0 to 3.9.0 in Cargo.lock. Locally: cargo deny check advisories exit 0; clippy -D warnings exit 0 for --features mcp and --all-features; cargo test --features server,mcp --bin warm-mcp 48 passed."
+      }
+    },
+    {
+      "kind": "validation_boundary",
+      "action": "Recheck current head/issue states before mutations; repeat no benchmark measurement for issue cleanup. Historical PR gate statements are author-reported evidence, not newly executed verification. #42 needs an explicit decision whether its documented estimate/staging-only budgets satisfy the requested scope; otherwise keep it open with the exact remainder."
+    }
+  ],
+  "documentation_patch": {
+    "status": "prepared_not_committed_no_tests_run",
+    "files": [
+      "docs/STABILITY.md",
+      "README.md"
+    ],
+    "change": "Replace incorrect0.7.0 rollout claims with the actual schema2–7 capability/creation/reopen/upgrade contract; link the existing compatibility policy from README. No governance promises or release dates added.",
+    "source_revision": "74bb9fa84b85a9bf1f58f89e5d35762f728ed17b",
+    "sources": [
+      {
+        "path": "src/core/format/mod.rs",
+        "lines": [
+          37,
+          55
+        ],
+        "finding": "Newest supported schema7; ordinary default6; native vector-record schema7; oldest supported2."
+      },
+      {
+        "path": "src/core/schema.rs",
+        "lines": [
+          71,
+          136
+        ],
+        "finding": "New-store selection follows vector_records; normal reopen preserves stored schema; opt-in vector records on older schema fail; newer unsupported versions fail before replay."
+      },
+      {
+        "path": "src/core/format/upgrade.rs",
+        "lines": [
+          91,
+          151
+        ],
+        "finding": "Explicit migration registry upgrades schemas2–6 to7."
+      },
+      {
+        "path": "src/core/format/upgrade.rs",
+        "lines": [
+          313,
+          340
+        ],
+        "finding": "Upgrade rejects nested destination, locks source and stages a copy."
+      },
+      {
+        "path": "src/core/format/upgrade.rs",
+        "lines": [
+          489,
+          520
+        ],
+        "finding": "Staged upgrade is verified and atomically renamed before directory sync."
+      },
+      {
+        "path": "src/core/format/upgrade.rs",
+        "lines": [
+          623,
+          628
+        ],
+        "finding": "Schema upgrade writes STORE_SCHEMA_VERSION in the staging store."
+      },
+      {
+        "path": "docs/file-format/LAYOUT.md",
+        "lines": [
+          37,
+          62
+        ],
+        "finding": "Existing precise creation/reopen contract retained."
+      },
+      {
+        "path": "docs/file-format/MUTATIONS.md",
+        "lines": [
+          10,
+          13
+        ],
+        "finding": "Schema2 JSON and schemas3–7 binary; readers accept both."
+      }
+    ],
+    "historical_verification": {
+      "tag": "v0.6.6",
+      "tag_commit": "0b4c5322e81771a7de8d73fc1a5159bdee7a6e1f",
+      "actual_package_version": "0.6.6",
+      "schema_constants_at_tag": "STORE_SCHEMA_VERSION=7; STORE_SCHEMA_DEFAULT_VERSION=6; VECTOR_RECORDS_SCHEMA_VERSION=7",
+      "introducing_commit": "5154eb94a3350b0143f7e0923a5003fff912f077",
+      "ancestor_check": "git merge-base(introducing commit, v0.6.6) equals introducing commit",
+      "conclusion": "The schema6-default/schema7-opt-in contract already predates the proposed0.6.7 release; no invented0.7.0 rollout attribution remains."
+    },
+    "release_assignment": "Root owns docs/RELEASING.md and integration. Issue51 remains open for the full governance acceptance criteria.",
+    "validation": "Read-only source/tag/history inspection; no builds/tests/docs commands run. Root should run the repository's existing docs gate on the integrated release candidate."
+  },
+  "scope_limits": [
+    "23 open issues were reviewed, not every closed issue or repository security alert.",
+    "No paid service, model call, package install, build, benchmark, test, commit, push, issue comment or issue state mutation.",
+    "No native/Qwen/MLX work performed; E48 source files preserved.",
+    "Existing result summaries were read as historical artifacts; no new benchmark scores or independent reproduction claimed."
+  ],
+  "source_pr_snapshots": [
+    {
+      "number": 386,
+      "url": "https://github.com/writerslogic/warm/pull/386",
+      "merged": true,
+      "merge_commit": "a090f971dfa8a4bfa218adc0f65816d87a3fc6d4",
+      "head": "4a54fc75223872f3e62dd263231a2a0903247866",
+      "statement": "Lands the finished parts of issues #1, #42 and #163 plus two comparator/as_of levers. Negative or parked work (#4, #164, #165, postings block size, supersession probe) stays on branches and is not in this PR.\n\n## Included\n- **#1 AVX2 screen popcount** (`src/core/qgraph/kernels.rs`): 1.05x to 1.75x over POPCNT for 4 or more words on this machine, paired ratios only. AVX-512 is not wired or verified. The issue's 4x to 10x target is not met, so the issue stays open.\n- **#42 background compaction** (`src/core/engine/background_compaction.rs`, Node `startCompaction`, design in `docs/file-format/COMPACTION.md`): bounded worker with progress, cancel and budgets; foreground reads and writes continue. `index.d.ts` regenerated. Release latency run not done.\n- **#163 time-travel views** (`src/core/engine/history.rs`, `docs/memory-api/TIME-TRAVEL.md`): read-only historical view, opt-in. `tests/time_travel.rs` compares every earlier position to a fresh store. Cost: opening a view per query is 813x (1k docs) to 4,246x (10k docs) a live search; a view kept open is 0.65x to 0.89x (`benchmarks/results/history_view_cost.json`). HTTP and SDK not done.\n- **as_of overfetch** (`docs/research/as-of-overfetch.md`): no library change. The API already filters before top-k, so overfetch is a no-go. Records that the committed 14-hit memory_api result reproduces as 13 at its own commit.\n- **Comparator re-pin** (tantivy 0.27.0, Lucene 10.6.0, SQLite 3.53.1, previous-pin controls): no throughput or latency class flips in the local paired run. The published tables are unchanged; `table.py` now labels Lucene with the version each result file recorded instead of the current pin. Modal results are still Lucene 9.12.3 and `GAPS.json` is not regenerated against the new pins.\n\n## Verified locally\n`cargo fmt -- --check`; `cargo +1.99.0 clippy --all-targets --all-features -- -D warnings` and default features; same clippy with `--target x86_64-apple-darwin`; `cargo test`; `cargo test --all-features`; `cargo +1.89.0 check --locked --no-default-features`; `scripts/check-generated.sh`; `check-versions.py`; `npm run build`, `npm test`, `npm run test:types` (macOS arm64 only).\n\n## Not verified\nLinux and Windows Node jobs, AVX-512, and the other CI jobs run here for the first time.\n"
+    },
+    {
+      "number": 387,
+      "url": "https://github.com/writerslogic/warm/pull/387",
+      "merged": true,
+      "merge_commit": "9a17efaa583a3964b0c952005eae3876fd20a481",
+      "head": "e2a00f488640e470f910d995d15072344a412ae8",
+      "statement": "## What\n\nFour independently developed pieces, merged without conflicts:\n\n- **Per-store lexical analyzers** (`lever/language-analyzers`). `WarmConfig::analyzer` is recorded in `store.json` as `lexical_analyzer` and marked on chunks with flag bit 7 plus a matching checkpoint bit. Stores without the key keep the legacy analysis byte for byte; older releases refuse marked stores; replay refuses a chunk whose mark disagrees with `store.json`. Adds per-language Snowball selection, Persian and Hindi normalization with light stemming, Thai/CJK character bigrams, NFC and Turkish dotted/dotless I folding (non-legacy analyzers only). MIRACL dev nDCG@10 and a comparator against Lucene 10.6.0 language analyzers are in `benchmarks/results/multilingual_bm25_analyzers_miracl_dev.json`; the default analyzer reproduces the previous top-100 ids and scores on every query, including SciFact, NFCorpus and LongMemEval. A store written by a090f971 is committed as `tests/fixtures/legacy-analyzer-store` and must reopen with identical rankings and scores.\n- **Historical view open cost** (`lever/view-open`). Views are bulk-indexed once instead of frame by frame. 10k docs, paired factor vs the previous build: 8.12x cheaper at the latest position, 3.2x at the middle (1k docs: 5.26x, 1.89x). The reuse cache is off by default and opt-in via `set_history_cache_budget`, because it retains index memory after callers drop views. No format change.\n- **Deterministic simulation harness** (`lever/sim-harness`). `tests/simulation.rs` drives seeded operation sequences against a naive bitemporal model across writes, supersession, forget, compaction, purge, reopen and a crash copy, checking search, status at as_of/known_at, history positions and a multiset hash. 200 seeds by default; no library bugs found.\n- **Counting-Bloom erratum** (`lever/bloom-equal-bits`). The documented 4x capacity of the counting readout came from k = 64 and from unequal bits. With tuned k a binary Bloom filter at the same dimension matches it to 4000 items, and at equal bits it scores AUC 1.000. Docs and the module comment are corrected; script and result are committed.\n\n## Not done / follow-ups\n\nNode, Python and WASM bindings for the analyzer setting, `warm-admin reencode` carrying the analyzer, the reused-view damage check, stop words, and view-open still short of a 10x target on a cold open.\n\n## Gates\n\n`cargo fmt --check`, `cargo +1.99.0 clippy --all-targets --all-features -- -D warnings`, `cargo test`, `cargo test --all-features`, `cargo deny check licenses` and the generated-files check all exit 0 on this branch.\n"
+    },
+    {
+      "number": 388,
+      "url": "https://github.com/writerslogic/warm/pull/388",
+      "merged": true,
+      "merge_commit": "4b7a849ff83bc01d21e66e2089b1438619434fc4",
+      "head": "4c82da3a7434f9caace6b778a08cbb5c2bff6f8e",
+      "statement": "## What\n\nLands the remaining finished local branches in one batch. None change the default engine behavior or on-disk format.\n\n- **Cue-tag supersession probe and supersession probe harness** (`lever/cue-tags`, `lever/supersession-probe`): research code, docs and result files only. The cue-tag lever was killed (below newest-wins); results are committed.\n- **Postings block-size sweep** (`lever/postings-block-size`): sweep driver and build script.\n- **K-mer encoder evaluation** (`issue/4-kmer-encoder`), **FPE timestamps** (`issue/164-fpe-timestamps`), **edge repair** (`issue/165-edge-repair`): experimental modules behind the `experimental` feature, with their evaluation write-ups. Refs #4, #164, #165.\n- **AVX2 Hamming popcount kernels** (`issue/1-hamming-simd`): x86 dispatch from 4 words up. Refs #1. AVX-512 speed is unverified and the 4-10x target is not met.\n- **Cold start**: the active journal segment starts at 1 MiB.\n\nMerge conflicts in `Cargo.toml`, `src/core/experimental/mod.rs`, `src/core/mod.rs` and `src/core/admin.rs` were resolved by taking both sides; three clippy 1.99 lints in the FPE evaluation binary were fixed.\n\n## Gates\n\nLocal, on aarch64 macOS: `cargo fmt --check`, `cargo +1.99.0 clippy --all-targets --all-features -- -D warnings`, `cargo test` (999 passed), `cargo test --all-features` (1638 passed), `cargo deny check licenses` and `scripts/check-generated.sh` all exit 0.\n\nNot run locally: x86_64 clippy and the MSRV 1.89 x86 check. The AVX2 dispatch only compiles on an x86 target, so CI is the first check of it.\n\n## Not included\n\n28 other local branches conflict with main and were not merged.\n"
+    },
+    {
+      "number": 389,
+      "url": "https://github.com/writerslogic/warm/pull/389",
+      "merged": true,
+      "merge_commit": "18273ef46d301afde3a025251cd0b41941fb99ba",
+      "head": "f59bad25d433b44bfc3dcf47921508bab25d4636",
+      "statement": "Refreshes the competitive text comparison at pinned source revisions and lands a measured serving speedup.\n\n**Benchmarks**\n- Core Ultra 9 standard text rows rerun at `4b7a849f`. The previous rows had an unpinned source revision, so every verdict read n/v.\n- Modal heavy text rows rerun at `7ba2d4fe`, which has the same engine source as `4b7a849f`. The comparators are tantivy 0.27, Lucene 10.6 and SQLite 3.53.1.\n- The Modal image now installs a sha256-pinned Temurin 21. Debian bookworm has no JDK 21, and Lucene 10 needs it.\n- Results on SciFact, NFCorpus and memory, on both machines:\n  - 6 wins, 2 ties and 2 losses each.\n  - 1.66x to 2.00x the single-thread QPS of the best comparator.\n  - 1.69x to 2.91x less serving RSS and 3.1x to 5.7x faster cold start.\n  - nDCG@10 ties.\n- Losses:\n  - FiQA QPS is 0.78x of Lucene 10.6.\n  - Build peak RSS and ingest time trail SQLite FTS5.\n- The README rows now name the machine they were measured on. The ingest, build-RSS and QPS lever notes state what was profiled.\n\n**Serving**\n- `Postings::for_each` decodes one- and two-byte words and frequencies from the loaded 64-bit word.\n- Paired on M4 over 6 interleaved rounds, with identical results:\n  - FiQA 1.092x\n  - SciFact 1.014x\n  - NFCorpus 1.005x\n  - memory 1.002x\n- A new test checks that decoding matches the checked decoder at every varint length boundary and window offset.\n\nMerge with a merge commit. The Modal result files cite `7ba2d4fe`.\n"
+    }
+  ]
+}

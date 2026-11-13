@@ -1,5 +1,8 @@
 # Comparative benchmark (warm-bench)
 
+Start with [recorded results and limitations](EVALUATION.md) for a summary across memory, text
+and vector workloads, including the conditions and known losses.
+
 The modern embedding benchmark and upstream contribution work is tracked in
 [VIBE](VIBE.md), single-core results on the ann-benchmarks runner in
 [ANN-BENCHMARKS](ANN-BENCHMARKS.md), the big-ann-benchmarks streaming track (inserts,

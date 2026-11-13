@@ -1,39 +1,43 @@
 <img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/crystal-halo/crystal-detailed-static.png" alt="WARM logo" width="96" align="left">
 
-# WARM for Node.js
+# writerslogic-warm: embedded WARM for Node.js
 
 Local document search and agent memory backed by the WARM Rust engine. The package
 selects a native binding for your operating system and architecture. It does not start a server or
 make service calls for ordinary document search.
 
+The primary JavaScript client is the separate portable `warm-sdk` HTTP package. Choose this
+`writerslogic-warm` package when the engine should run inside Node. For a published engine
+release, install it explicitly:
+
 ```sh
-npm install warm-sdk
+npm install writerslogic-warm@0.6.8
+```
+
+Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
+To build from the repository root with Rust installed:
+
+```sh
+npm ci --omit=optional
+npm run build
 ```
 
 The native binding is distributed through an optional platform package, so keep npm's optional
-dependencies enabled. Published targets are macOS (arm64, x64), Linux (arm64, x64; glibc and musl),
+dependencies enabled. The release targets are macOS (arm64, x64), Linux (arm64, x64; glibc and musl),
 and Windows (arm64, x64).
 
-## Migrating from `writerslogic-warm`
+## Package names
 
-The Node package is now `warm-sdk`. After `warm-sdk@0.6.5` and its native platform
-packages are published, replace the old dependency and update imports of the root,
-`/semantic`, and `/memory` entry points:
-
-```sh
-npm uninstall writerslogic-warm
-npm install warm-sdk
-```
-
-The package rename does not require converting existing stores. Keep their current
-embedding and security configuration. The separately versioned MCP launcher remains
-`writerslogic-warm-mcp`; PyPI's `warm-sdk` remains the Python HTTP client.
+Existing embedded consumers keep `writerslogic-warm`, `/semantic`, `/memory` and `/vectra`
+imports, store directories, and embedding/security configuration. The portable `warm-sdk`
+exports `WarmClient` and uses a separately running HTTP server; adopting it requires an
+explicit API migration. The separately versioned MCP launcher remains `writerslogic-warm-mcp`.
 
 ## Search documents
 
 ```js
-const { WarmMemorySystem } = require('warm-sdk')
-const { DocumentMemory } = require('warm-sdk/semantic')
+const { WarmMemorySystem } = require('writerslogic-warm')
+const { DocumentMemory } = require('writerslogic-warm/semantic')
 
 async function main() {
   const memory = new DocumentMemory(new WarmMemorySystem(4096, './memory-store'))
@@ -65,7 +69,7 @@ launcher for the MCP server. Install or run that package if you need a server fo
 npx -y writerslogic-warm-mcp
 ```
 
-This `warm-sdk` package embeds the engine in a Node.js application. It does not expose
+This `writerslogic-warm` package embeds the engine in a Node.js application. It does not expose
 the MCP command.
 
 Apache-2.0 · [Source](https://github.com/writerslogic/warm) ·

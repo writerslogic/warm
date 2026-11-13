@@ -346,6 +346,7 @@ pre:hover > .md-clipboard, .md-clipboard:focus-visible { opacity: 1; }
 /* ---- banners ---- */
 .md-banner { background: var(--warm-accent-soft); color: var(--warm-text); border-bottom: 1px solid var(--warm-border); font-size: 0.72rem; }
 .md-banner a { color: var(--warm-accent-strong); }
+.md-banner .md-banner__inner code { color: inherit; background: transparent; }
 .md-banner--warning { background: color-mix(in srgb, var(--warm-warn) 14%, var(--warm-bg)); color: var(--warm-text); }
 .md-banner--warning a { color: var(--warm-text); text-decoration: underline; }
 [data-md-component="outdated"] { --md-default-fg-color: var(--warm-text); }
