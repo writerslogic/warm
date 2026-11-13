@@ -42,6 +42,19 @@ print(matches.tolist())
 The binding also provides `UpdatableIndex` for inserts and deletes, `FilteredIndex` for restricted
 searches, and `SparseIndex` for sparse vectors.
 
+`index.save(path)` persists a `VectorIndex`; `index.load(path)` reads it into private memory.
+Use the same metric and `direct_ip` setting when loading. On Linux, source builds after
+`4299b539` also support `index.load(path, shared=True)` for an immutable memfd snapshot.
+The loader requires `F_SEAL_WRITE`, `F_SEAL_SHRINK` and `F_SEAL_GROW`; ordinary files and
+`F_SEAL_FUTURE_WRITE` alone are rejected. Each worker must open the **same snapshot inode**
+to share physical pages. A loaded mapping remains valid after its publishing descriptor closes.
+The normal private-memory load remains the default on every platform.
+
+[`sealed_index_run.py`](../../scripts/lowlevel/sealed_index_run.py) shows how a publisher copies
+an index once, seals it, keeps it available while worker processes run, and records the snapshot
+hash and setup time. This option is not in the published `warm-python==0.6.4` wheel used by the
+VectorDBBench entry.
+
 With the `[embed]` extra, the pinned default text embedding model is available offline:
 
 ```python

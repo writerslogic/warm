@@ -12,6 +12,7 @@ package-lock.json
 !interop/w3c/package-lock.json
 !integrations/mcp/tests/package-lock.json
 !integrations/js/package-lock.json
+!bindings/js/warm-sdk/package-lock.json
 interop/w3c/node_modules/
 *.node
 !index.js
@@ -54,6 +55,9 @@ benchmarks/public/*.py.lock
 /benchmarks/results/algebraic_codebook_synthetic.json
 /benchmarks/results/longmemeval_dev_answers_v2.json
 /benchmarks/results/longmemeval_dev_answers_v2b.json
+
+# Exploratory mission evidence is retained privately.
+/benchmarks/results/mission/
 
 # Golden stores are committed test data.
 !tests/golden/**/vectors_data.bin/

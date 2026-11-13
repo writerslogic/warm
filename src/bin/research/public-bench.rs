@@ -34,7 +34,7 @@ use clap::{Parser, Subcommand};
 use rayon::prelude::*;
 use serde_json::{json, Value};
 use writerslogic_warm::core::qgraph::{
-    BuildParams, Graph, Metric, QGraph, Residency, SearchParams, UpdatableVGraph, VGraph,
+    BuildParams, Graph, Metric, QGraph, Residency, RowStore, SearchParams, UpdatableVGraph, VGraph,
     VSearchParams,
 };
 use writerslogic_warm::core::WarmConfig;
@@ -87,6 +87,9 @@ enum Mode {
         repeats: usize,
         #[arg(long)]
         cold: bool,
+        /// Keep the base rows on disk behind a cache of this many 64 KiB blocks (0 maps them).
+        #[arg(long, default_value_t = 0)]
+        row_blocks: usize,
     },
     AnnQgraph {
         #[arg(long)]
@@ -206,7 +209,7 @@ enum Mode {
         /// whose serving process passes `--load-index`.
         #[arg(long, conflicts_with = "load_index")]
         save_index: Option<PathBuf>,
-        #[arg(long, requires = "save_index")]
+        #[arg(long, conflicts_with = "load_index")]
         save_updates: Option<PathBuf>,
         /// Serve a vertex index written by `--save-index` instead of building one. The train
         /// vectors are not read; the build parameters and dataset must match the saved ones.
@@ -913,8 +916,10 @@ fn ann_qgraph_count<const K: usize>(a: &QgraphArgs) -> Result<()> {
                 v = v.with_blocks(&graph, a.block_bits)?;
             }
             phase(&mut phases, "encode");
+            let mut graph = graph;
+            graph.release_structure();
             if let Some(path) = &a.save_updates {
-                UpdatableVGraph::create_from_graph(path, &graph, &v)?;
+                UpdatableVGraph::save_from_graph(path, &graph, &v)?;
             }
             Built::Vertex(Box::new(v))
         }
@@ -1595,6 +1600,7 @@ fn ann_updates(
     reranks: &[usize],
     repeats: usize,
     cold: bool,
+    row_blocks: usize,
 ) -> Result<()> {
     if action == "session" {
         return ann_update_session(index_path);
@@ -1618,7 +1624,14 @@ fn ann_updates(
         }
     }
     let start = Instant::now();
-    let index = UpdatableVGraph::open(index_path)?;
+    let store = if row_blocks == 0 {
+        RowStore::Mapped
+    } else {
+        RowStore::Blocks {
+            cache_blocks: row_blocks,
+        }
+    };
+    let index = UpdatableVGraph::open_with(index_path, store)?;
     let open_s = start.elapsed().as_secs_f64();
     let params = VSearchParams {
         ef: *efs.first().context("empty ef sweep")?,
@@ -1706,7 +1719,7 @@ fn ann_updates(
                     configs.push(json!({"params":{"ef":ef,"rerank":rerank}, "recall_at_10":hits as f64/(test.len()*10) as f64, "repeats":timings, "load_1m":load_1m(), "load_gate_met":null}));
                 }
             }
-            json!({"n":index.len(), "n_queries":test.len(), "configs":configs, "open_s":open_s, "cold_start_s":cold_start_s, "first_query_unix_ns":first_query_unix_ns, "rss_steady":rss_bytes(), "rss_after_open":rss_after_open, "memory_phases":[{"phase":"serve_end","memory":memory()}]})
+            json!({"n":index.len(), "row_blocks":row_blocks, "n_queries":test.len(), "configs":configs, "open_s":open_s, "cold_start_s":cold_start_s, "first_query_unix_ns":first_query_unix_ns, "rss_steady":rss_bytes(), "rss_after_open":rss_after_open, "memory_phases":[{"phase":"serve_end","memory":memory()}]})
         }
         _ => anyhow::bail!("unsupported update action {action}"),
     };
@@ -1778,6 +1791,7 @@ fn main() -> Result<()> {
             rerank,
             repeats,
             cold,
+            row_blocks,
         } => ann_updates(
             &index,
             data.as_deref(),
@@ -1787,6 +1801,7 @@ fn main() -> Result<()> {
             &rerank,
             repeats,
             cold,
+            row_blocks,
         ),
         Mode::AnnQgraph {
             data,

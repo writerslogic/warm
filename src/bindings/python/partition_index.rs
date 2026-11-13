@@ -13,7 +13,7 @@ use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-use super::vector_index::{thread_pool, u32_ids};
+use super::vector_index::{result_array, thread_pool, u32_ids};
 use crate::core::error::WarmError;
 use crate::core::qgraph::partition::{PartitionParams, PartitionTier, SearchProfile};
 
@@ -85,7 +85,7 @@ impl PyPartitionIndex {
     #[staticmethod]
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (dim, lists=5000, train_at=1_000_000, nprobe=250, reorder=317, pq_m=50,
-        threads=0, seed=7, retrain_at=None, retrain_imb=1.7, retrain_min_inserts=4_000_000,
+        threads=0, seed=7, retrain_at=None, retrain_imb=1.7, retrain_min_inserts=6_000_000,
         soar_lambda=1.0, train_sample=1_000_000, kmeans_iters=10, retrain_warm_iters=3,
         retrain_sample=1_000_000, kmeans_rebalance=true, nprobe_by_live=None))]
     fn create(
@@ -188,6 +188,7 @@ impl PyPartitionIndex {
         }
         let nq = x.shape()[0];
         let queries = self.rows(&x, nq)?;
+        let mut out = result_array(nq, k)?;
         let was_trained = self.tier.is_trained();
         let (tier, pool) = (&mut self.tier, &self.pool);
         let t0 = std::time::Instant::now();
@@ -219,7 +220,6 @@ impl PyPartitionIndex {
             s.reorder_s += p.reorder_s;
             s.total_s += p.total_s;
         }
-        let mut out = vec![-1i64; nq * k];
         for (row, ids) in out.chunks_mut(k).zip(&found) {
             for (slot, &id) in row.iter_mut().zip(ids) {
                 *slot = i64::from(id);

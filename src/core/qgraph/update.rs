@@ -33,6 +33,17 @@ const MAX_OPS: usize = 65536;
 /// Row counts below this fit 3-byte neighbour ids (`0xFF_FFFF` is the padding id).
 const THREE_BYTE_IDS_BELOW: usize = (1 << 24) - 1;
 
+/// Where an open index keeps its full-precision base rows.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum RowStore {
+    /// The rows file is memory-mapped and read in place.
+    #[default]
+    Mapped,
+    /// The rows file is read as independent 64 KiB blocks through a cache of at most
+    /// `cache_blocks` blocks; no row stays resident beyond it.
+    Blocks { cache_blocks: usize },
+}
+
 /// Failures at the update and persistence boundary.
 #[derive(Debug, thiserror::Error)]
 pub enum UpdateError {
@@ -199,8 +210,8 @@ struct Base {
     dense_ids: bool,
 }
 impl Base {
-    fn open(dir: &Path, m: &Manifest) -> Result<Self, UpdateError> {
-        let rows = BaseRows::open(&m.rows_path(dir), m)?;
+    fn open(dir: &Path, m: &Manifest, store: RowStore) -> Result<Self, UpdateError> {
+        let rows = BaseRows::open(&m.rows_path(dir), m, store)?;
         let graph = if rows.ids.is_empty() {
             None
         } else {
@@ -322,6 +333,7 @@ pub struct UpdatableVGraph {
     diagnostics: diagnostics::Diagnostics,
     /// Rows inserted plus rows deleted by merges since the last rebuild (or open).
     churn: AtomicUsize,
+    store: RowStore,
 }
 struct Writer<'a>(&'a AtomicU8);
 impl Writer<'_> {
@@ -451,7 +463,7 @@ impl UpdatableVGraph {
                 .filter(|p| !p.as_os_str().is_empty())
                 .unwrap_or_else(|| Path::new(".")),
         )?;
-        let base = Base::open(path, &manifest)?;
+        let base = Base::open(path, &manifest, RowStore::Mapped)?;
         Ok(Self {
             dir: path.to_path_buf(),
             _lock: file,
@@ -459,6 +471,7 @@ impl UpdatableVGraph {
             state: RwLock::new(State::new(base, manifest)),
             diagnostics: diagnostics::Diagnostics::from_env(),
             churn: AtomicUsize::new(0),
+            store: RowStore::Mapped,
         })
     }
     /// Saves a graph and its matching vertex encoding without rebuilding the graph.
@@ -467,6 +480,28 @@ impl UpdatableVGraph {
         graph: &Graph,
         vertex: &VGraph,
     ) -> Result<Self, UpdateError> {
+        let (file, manifest) = Self::write_from_graph(path, graph, vertex)?;
+        let base = Base::open(path, &manifest, RowStore::Mapped)?;
+        Ok(Self {
+            dir: path.to_path_buf(),
+            _lock: file,
+            writer: AtomicU8::new(0),
+            state: RwLock::new(State::new(base, manifest)),
+            diagnostics: diagnostics::Diagnostics::from_env(),
+            churn: AtomicUsize::new(0),
+            store: RowStore::Mapped,
+        })
+    }
+    /// [`Self::create_from_graph`] without opening the result: the files are written and
+    /// the directory lock released, so no mapping of the new base adds to the caller's memory.
+    pub fn save_from_graph(path: &Path, graph: &Graph, vertex: &VGraph) -> Result<(), UpdateError> {
+        Self::write_from_graph(path, graph, vertex).map(drop)
+    }
+    fn write_from_graph(
+        path: &Path,
+        graph: &Graph,
+        vertex: &VGraph,
+    ) -> Result<(IndexLock, Manifest), UpdateError> {
         if graph.n != vertex.len()
             || graph.dim != vertex.dim()
             || vertex.metric() != graph.metric.into()
@@ -498,21 +533,17 @@ impl UpdatableVGraph {
                 .filter(|p| !p.as_os_str().is_empty())
                 .unwrap_or_else(|| Path::new(".")),
         )?;
-        let base = Base::open(path, &manifest)?;
-        Ok(Self {
-            dir: path.to_path_buf(),
-            _lock: file,
-            writer: AtomicU8::new(0),
-            state: RwLock::new(State::new(base, manifest)),
-            diagnostics: diagnostics::Diagnostics::from_env(),
-            churn: AtomicUsize::new(0),
-        })
+        Ok((file, manifest))
     }
     /// Opens and replays committed batches; truncates only an incomplete final frame.
     pub fn open(path: &Path) -> Result<Self, UpdateError> {
+        Self::open_with(path, RowStore::Mapped)
+    }
+    /// [`Self::open`] with the base rows kept where `store` says.
+    pub fn open_with(path: &Path, store: RowStore) -> Result<Self, UpdateError> {
         let file = lock(path)?;
         let manifest = Manifest::read(&path.join("CURRENT"))?;
-        let base = Base::open(path, &manifest)?;
+        let base = Base::open(path, &manifest, store)?;
         let mut state = State::new(base, manifest.clone());
         let log = path.join("updates.log");
         let (sequence, end) = format::replay(&log, &manifest, |ops| state.replay(ops))?;
@@ -532,6 +563,7 @@ impl UpdatableVGraph {
             state: RwLock::new(state),
             diagnostics: diagnostics::Diagnostics::from_env(),
             churn: AtomicUsize::new(0),
+            store,
         })
     }
     fn writer(&self) -> Result<Writer<'_>, UpdateError> {
@@ -1020,7 +1052,7 @@ impl UpdatableVGraph {
                     rows.extend_from_slice(snapshot.delta.row(slot, manifest.dim));
                 } else {
                     rows.extend_from_slice(
-                        snapshot
+                        &snapshot
                             .base
                             .rows
                             .row(snapshot.base_slot(id).expect("live base id"))?,
@@ -1032,7 +1064,7 @@ impl UpdatableVGraph {
         }
         drop(base);
         checkpoint(1)?;
-        let base = Base::open(&self.dir, &manifest)?;
+        let base = Base::open(&self.dir, &manifest, self.store)?;
         let publication = (|| {
             atomic_write(&self.dir.join("CURRENT"), &manifest.encode())?;
             checkpoint(2)?;
@@ -1073,7 +1105,12 @@ impl UpdatableVGraph {
         checkpoint(6)?;
         let delta_rows = self.state.read().delta.vectors.clone();
         let t = super::prof::start();
-        let mut output = BaseRowsWriter::new(&manifest.rows_path(&self.dir), manifest, ids)?;
+        let mut output = BaseRowsWriter::new(
+            &manifest.rows_path(&self.dir),
+            manifest,
+            ids,
+            base.rows.is_narrow() && format::byte_valued(&delta_rows),
+        )?;
         let mut prepared = PreparedRows::new(ids.len(), manifest.dim)?;
         let chunk_rows = ((4 << 20) / 4 / manifest.dim).max(1);
         let mut rows = Vec::new();
@@ -1095,7 +1132,8 @@ impl UpdatableVGraph {
                     rows.extend_from_slice(snapshot.delta.row(slot, manifest.dim));
                 } else {
                     rows.extend_from_slice(
-                        base.rows
+                        &base
+                            .rows
                             .row(snapshot.base_slot(id).expect("live base id"))?,
                     );
                 }
