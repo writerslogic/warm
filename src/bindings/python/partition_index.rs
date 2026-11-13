@@ -85,7 +85,7 @@ impl PyPartitionIndex {
     #[staticmethod]
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (dim, lists=5000, train_at=1_000_000, nprobe=250, reorder=317, pq_m=50,
-        threads=0, seed=7, retrain_at=None, retrain_imb=1.7, retrain_min_inserts=4_000_000,
+        threads=0, seed=7, retrain_at=None, retrain_imb=1.7, retrain_min_inserts=6_000_000,
         soar_lambda=1.0, train_sample=1_000_000, kmeans_iters=10, retrain_warm_iters=3,
         retrain_sample=1_000_000, kmeans_rebalance=true, nprobe_by_live=None))]
     fn create(
