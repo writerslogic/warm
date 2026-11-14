@@ -22,6 +22,48 @@
  },
  {
   "status": "LOSS",
+  "dataset": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
+  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
+  "suite": "standard",
+  "metric": "build_seconds",
+  "label": "Build time",
+  "comparator": "sqlite-vec (exact)",
+  "warm": 52.8244744485,
+  "comparator_value": 2.1660542379995604,
+  "unit": "s",
+  "advantage_factor": 0.04100474752685528,
+  "advantage_ci": [
+   0.04083527686110524,
+   0.04117432307566176
+  ],
+  "level": 0.975,
+  "file": "benchmarks/results/competitive/standard-ann-sift-128-euclidean-n250000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
+  "hypothesis": "graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding",
+  "code_path": "src/core/qgraph (Graph::build_owned, VGraph::from_graph_with)"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
+  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
+  "suite": "standard",
+  "metric": "build_peak_rss_mib",
+  "label": "Peak RSS, build",
+  "comparator": "sqlite-vec (exact)",
+  "warm": 364.060546875,
+  "comparator_value": 277.650390625,
+  "unit": "MiB",
+  "advantage_factor": 0.7626489412496849,
+  "advantage_ci": [
+   0.7251821168404514,
+   0.8041975448322679
+  ],
+  "level": 0.975,
+  "file": "benchmarks/results/competitive/standard-ann-sift-128-euclidean-n250000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
+  "hypothesis": "stream the build instead of holding the f32 matrix plus graph (ledger 1A target: peak build RSS <= 2x final index bytes)",
+  "code_path": "src/core/qgraph/vertex.rs (VGraph search/refine), src/bin/research/public-bench.rs (ann-qgraph)"
+ },
+ {
+  "status": "LOSS",
   "dataset": "beir:fiqa (57,600 documents, 500 queries)",
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "suite": "standard",

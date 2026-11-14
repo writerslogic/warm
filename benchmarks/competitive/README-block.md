@@ -9,6 +9,11 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Build time (s) | 120.40 | hnswlib 166.90 | 1.39x | W |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | RSS, serving (MiB) | 489 | hnswlib 897 | 1.83x | W |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Index size (MiB) | 576.3 | hnswlib 751.8 | 1.30x | - |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS @ recall@10 >= 0.95 (QPS) | 25,204 | hnswlib 7,444 | 3.39x | - |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency @ 0.95 (us) | 60 | hnswlib 197 | 3.30x | - |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | Build time (s) | 52.82 | sqlite-vec (exact) 2.17 | 0.04x | L |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | RSS, serving (MiB) | 132 | sqlite-vec (exact) 37 | 0.28x | - |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | Index size (MiB) | 144.0 | LanceDB 127.5 | 0.89x | - |
 | beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x | T |
 | beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS (single thread) (QPS) | 1,001 | tantivy 878 | 1.14x | W |
 | beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency (us) | 2,175 | tantivy 1,971 | 0.91x | T |

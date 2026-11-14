@@ -1,0 +1,2864 @@
+{
+  "schema_version": 1,
+  "kind": "ann",
+  "suite": "standard",
+  "commit": "5e2d3c8b8d7fcd76b07de9ab4144caec258a9e83",
+  "date": "2026-11-14T04:48:50+0000",
+  "hardware": {
+    "class": "linux-x86_64-gcp-n2-icelake-8c-16g",
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.60GHz",
+    "logical_cores": 8,
+    "memory_bytes": 16765677568,
+    "os": "Linux 6.8.0-1073-gcp",
+    "machine": "x86_64",
+    "hosted_runner": false,
+    "load_1m": 3.7041015625
+  },
+  "dataset": {
+    "name": "sift-128-euclidean",
+    "metric": "euclidean",
+    "n_train": 250000,
+    "n_test": 2000,
+    "dim": 128,
+    "subset_of": "sift-128-euclidean",
+    "train_sha256": "fc9bf0ddbd9e5e810dd35cf1edeec6edbad10c50206321a04d7f77fb9219c28c",
+    "test_sha256": "a061b88ba76eef9e39490e499fd949c939b253482aabb8ec93673582726ce3b6"
+  },
+  "protocol": {
+    "k": 10,
+    "rounds": 1,
+    "build_repeats": 2,
+    "build_threads": 4,
+    "search_threads": 1,
+    "queries": 2000,
+    "timing": "one query at a time, single client thread, per-query perf_counter_ns inside the worker process",
+    "ops": "100 replacements then 100 deletions; each mutation is acknowledged and explicitly flushed before the next",
+    "interleaving": "each round runs WARM and every comparator once, order rotated per round",
+    "query_caps": {
+      "qdrant-local": 100,
+      "sqlite-vec": 200,
+      "faiss-flat": 1000,
+      "duckdb-vss": 2000,
+      "chroma": 2000,
+      "milvus-lite": 2000,
+      "lancedb": 2000
+    },
+    "recall_targets": [
+      0.9,
+      0.95,
+      0.99
+    ],
+    "selection": "pooled-median-QPS argmax over sweep rows with recall >= target"
+  },
+  "facts": {
+    "warm": {
+      "service_needed": {
+        "value": "no",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "in-process library; 0 egress sockets in the security matrix"
+      },
+      "encrypted_at_rest": {
+        "value": "yes",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "AES-GCM with Argon2id (feature `security`); encrypted QPS ratio 0.929 of plain; not enabled in the rows above"
+      }
+    },
+    "hnswlib": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "faiss-hnsw": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "faiss-flat": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "faiss-ivfpq": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "usearch": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "annoy": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "sqlite-vec": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no (SQLCipher is a separate build)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "lancedb": {
+      "service_needed": {
+        "value": "no (embedded)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "chroma": {
+      "service_needed": {
+        "value": "no (PersistentClient)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "qdrant-local": {
+      "service_needed": {
+        "value": "no (local mode; server needed for indexed ANN)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "milvus-lite": {
+      "service_needed": {
+        "value": "no (embedded)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "duckdb-vss": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "database-file encryption (DuckDB 1.4+); not exercised with the vss index",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "sqlite-fts5": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no (SQLCipher is a separate build)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "tantivy": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "lancedb-fts": {
+      "service_needed": {
+        "value": "no (embedded)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "duckdb-fts": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "database-file encryption (DuckDB 1.4+); not exercised",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "whoosh": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "bm25s": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "lucene": {
+      "service_needed": {
+        "value": "no (library; needs a JVM)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no (filesystem-level only)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "warm-eager": {
+      "service_needed": {
+        "value": "no",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "in-process library; 0 egress sockets in the security matrix"
+      },
+      "encrypted_at_rest": {
+        "value": "yes",
+        "basis": "measured",
+        "source": "benchmarks/results/security_matrix_v2.json",
+        "note": "AES-GCM with Argon2id (feature `security`); encrypted QPS ratio 0.929 of plain; not enabled in the rows above"
+      }
+    },
+    "ngt": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "scann": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "pynndescent": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "voyager": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "diskann": {
+      "service_needed": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "warm-server": {
+      "service_needed": {
+        "value": "yes (this row; the library needs none)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "yes with feature `security` (not enabled in these rows)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "qdrant-server": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "weaviate": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "opensearch-knn": {
+      "service_needed": {
+        "value": "yes (JVM)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "pgvector": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "redis-vss": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "meilisearch": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "typesense": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "opensearch-bm25": {
+      "service_needed": {
+        "value": "yes (JVM)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "pg-tsvector": {
+      "service_needed": {
+        "value": "yes",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    },
+    "paradedb": {
+      "service_needed": {
+        "value": "yes (PostgreSQL extension)",
+        "basis": "documentation, not exercised here"
+      },
+      "encrypted_at_rest": {
+        "value": "no built-in (filesystem level)",
+        "basis": "documentation, not exercised here"
+      }
+    }
+  },
+  "timing_boundary": {
+    "warm": "native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop",
+    "warm-eager": "native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`)",
+    "hnswlib": "CPython binding call per query",
+    "faiss-hnsw": "CPython (SWIG) call per query",
+    "faiss-flat": "CPython (SWIG) call per query",
+    "faiss-ivfpq": "CPython (SWIG) call per query",
+    "usearch": "CPython binding call per query",
+    "annoy": "CPython binding call per query",
+    "sqlite-vec": "CPython sqlite3 call per query",
+    "lancedb": "CPython + Arrow call per query (multi-threaded Rust runtime inside)",
+    "chroma": "CPython client call per query (Rust core inside)",
+    "qdrant-local": "CPython client call per query (embedded local mode)",
+    "milvus-lite": "CPython client call per query (embedded server process)",
+    "duckdb-vss": "CPython duckdb call per query",
+    "sqlite-fts5": "CPython sqlite3 call per query (query string built outside the timer)",
+    "tantivy": "CPython tantivy-py call per query (stored id fetched per hit)",
+    "whoosh": "pure Python",
+    "lancedb-fts": "CPython + Arrow call per query (native Rust BM25 inside; multi-threaded runtime)",
+    "duckdb-fts": "CPython duckdb call per query (SQL macro match_bm25 over a static index)",
+    "bm25s": "CPython + NumPy (single-threaded retrieve)",
+    "lucene": "in-process JVM API call, after a full untimed JIT warm-up pass",
+    "ngt": "CPython (pybind11) call per query",
+    "scann": "CPython (pybind11) call per query; the ScaNN searcher runs its own thread pool for training only",
+    "pynndescent": "CPython + numba-compiled kernel per query (JIT compile inside cold start)",
+    "voyager": "CPython 3.12 binding call per query",
+    "diskann": "CPython 3.11 binding call per query (diskannpy StaticMemoryIndex)",
+    "warm-server": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; ANN: POST /api/v1/query with index=graph and per-request ef; text: POST /api/v1/memory/recall, lexical weight only",
+    "qdrant-server": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; POST /collections/c/points/query (REST, not gRPC); max_search_threads=1",
+    "weaviate": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; GraphQL nearVector (REST, not gRPC); ef set on the class between sweep points",
+    "opensearch-knn": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; _search knn query with method_parameters.ef_search; concurrent segment search off, one shard",
+    "pgvector": "psycopg 3 over one TCP connection, server-side prepared statement; max_parallel_workers_per_gather=0; enable_seqscan=off",
+    "redis-vss": "redis-py over one TCP connection, FT.SEARCH KNN with NOCONTENT; query engine WORKERS 0 (main thread)",
+    "meilisearch": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; POST /indexes/docs/search (its own ranking rules, not BM25; at most 10 query words are used)",
+    "typesense": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; GET search with drop_tokens_threshold=100 (its own text-match ranking, not BM25)",
+    "opensearch-bm25": "one persistent HTTP/1.1 keep-alive connection from a CPython client on loopback; request body serialized before the timer, response JSON decoded inside it; _search match query (OR), english analyzer, default BM25; one shard",
+    "pg-tsvector": "psycopg 3 over one TCP connection, server-side prepared statement; OR of the query words via to_tsquery, ranked by ts_rank (not BM25)",
+    "paradedb": "psycopg 3 over one TCP connection, server-side prepared statement; `|||` (match any word) over an english-stemmed field, BM25 via pdb.score"
+  },
+  "not_run": {
+    "chroma-fts": "Chroma 1.5.9 PersistentClient: creating a collection with a BM25 sparse-vector index (ChromaBm25EmbeddingFunction) fails with 'Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local'; the only local text query is the unranked where_document $contains/$regex filter (measured 2026-11-14)",
+    "qdrant-fts": "Qdrant embedded local mode has no ranked full-text index (the full-text payload index only filters, and payload indexes are server features); documentation, not exercised here",
+    "mem0": "agent-memory systems belong to the next harness stage (plug in through the same adapter interface)",
+    "zep": "agent-memory systems belong to the next harness stage",
+    "letta": "agent-memory systems belong to the next harness stage",
+    "langmem": "agent-memory systems belong to the next harness stage",
+    "milvus-standalone": "no non-Docker artifact: releases 3.0.3 and 2.6.25 ship only Docker Compose files; the last native package (milvus_2.6.4 .deb/.rpm, Linux only) is superseded"
+  },
+  "systems": {
+    "warm": {
+      "display": "WARM",
+      "builds": {
+        "vertex-d32": {
+          "build_runs": [
+            {
+              "build_s": 52.808133336,
+              "peak_rss_bytes": 362024960,
+              "wall_s": 66.92188512999928,
+              "n": 250000,
+              "in_memory_index_bytes": 116949336,
+              "residual_bytes": 33000000,
+              "graph_hash": "c299a33dd6161106",
+              "memory_phases": [
+                {
+                  "memory": {
+                    "RssAnon": 138805248,
+                    "RssFile": 4165632,
+                    "RssShmem": 0,
+                    "VmHWM": 142970880,
+                    "VmRSS": 142970880,
+                    "smaps_Anonymous": 138805248,
+                    "smaps_Pss_File": 2240512,
+                    "smaps_Rss": 142970880
+                  },
+                  "phase": "input"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 286097408,
+                    "RssFile": 5017600,
+                    "RssShmem": 0,
+                    "VmHWM": 297025536,
+                    "VmRSS": 291115008,
+                    "smaps_Anonymous": 286097408,
+                    "smaps_Pss_File": 3031040,
+                    "smaps_Rss": 291115008
+                  },
+                  "phase": "graph"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 355115008,
+                    "RssFile": 5017600,
+                    "RssShmem": 0,
+                    "VmHWM": 360132608,
+                    "VmRSS": 360132608,
+                    "smaps_Anonymous": 355123200,
+                    "smaps_Pss_File": 3031040,
+                    "smaps_Rss": 360140800
+                  },
+                  "phase": "encode"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 357076992,
+                    "RssFile": 5214208,
+                    "RssShmem": 0,
+                    "VmHWM": 362291200,
+                    "VmRSS": 362291200,
+                    "smaps_Anonymous": 357076992,
+                    "smaps_Pss_File": 3227648,
+                    "smaps_Rss": 362291200
+                  },
+                  "phase": "drop_graph"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 357076992,
+                    "RssFile": 5214208,
+                    "RssShmem": 0,
+                    "VmHWM": 362291200,
+                    "VmRSS": 362291200,
+                    "smaps_Anonymous": 357076992,
+                    "smaps_Pss_File": 3227648,
+                    "smaps_Rss": 362291200
+                  },
+                  "phase": "serve_start"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 357076992,
+                    "RssFile": 5345280,
+                    "RssShmem": 0,
+                    "VmHWM": 362422272,
+                    "VmRSS": 362422272,
+                    "smaps_Anonymous": 357076992,
+                    "smaps_Pss_File": 3358720,
+                    "smaps_Rss": 362422272
+                  },
+                  "phase": "serve_end"
+                }
+              ],
+              "warm_threads": 4,
+              "index_bytes": 151045952
+            },
+            {
+              "build_s": 52.840815561,
+              "peak_rss_bytes": 401465344,
+              "wall_s": 66.91864739999983,
+              "n": 250000,
+              "in_memory_index_bytes": 116949336,
+              "residual_bytes": 33000000,
+              "graph_hash": "c299a33dd6161106",
+              "memory_phases": [
+                {
+                  "memory": {
+                    "RssAnon": 138801152,
+                    "RssFile": 4079616,
+                    "RssShmem": 0,
+                    "VmHWM": 142880768,
+                    "VmRSS": 142880768,
+                    "smaps_Anonymous": 138801152,
+                    "smaps_Pss_File": 2158592,
+                    "smaps_Rss": 142880768
+                  },
+                  "phase": "input"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 280313856,
+                    "RssFile": 5062656,
+                    "RssShmem": 0,
+                    "VmHWM": 296873984,
+                    "VmRSS": 285376512,
+                    "smaps_Anonymous": 280313856,
+                    "smaps_Pss_File": 3086336,
+                    "smaps_Rss": 285376512
+                  },
+                  "phase": "graph"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 396431360,
+                    "RssFile": 5062656,
+                    "RssShmem": 0,
+                    "VmHWM": 401494016,
+                    "VmRSS": 401494016,
+                    "smaps_Anonymous": 396431360,
+                    "smaps_Pss_File": 3086336,
+                    "smaps_Rss": 401494016
+                  },
+                  "phase": "encode"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 396496896,
+                    "RssFile": 5259264,
+                    "RssShmem": 0,
+                    "VmHWM": 401756160,
+                    "VmRSS": 401756160,
+                    "smaps_Anonymous": 396496896,
+                    "smaps_Pss_File": 3282944,
+                    "smaps_Rss": 401756160
+                  },
+                  "phase": "drop_graph"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 396496896,
+                    "RssFile": 5259264,
+                    "RssShmem": 0,
+                    "VmHWM": 401756160,
+                    "VmRSS": 401756160,
+                    "smaps_Anonymous": 396496896,
+                    "smaps_Pss_File": 3282944,
+                    "smaps_Rss": 401756160
+                  },
+                  "phase": "serve_start"
+                },
+                {
+                  "memory": {
+                    "RssAnon": 153403392,
+                    "RssFile": 5390336,
+                    "RssShmem": 0,
+                    "VmHWM": 401465344,
+                    "VmRSS": 158793728,
+                    "smaps_Anonymous": 153403392,
+                    "smaps_Pss_File": 3414016,
+                    "smaps_Rss": 158793728
+                  },
+                  "phase": "serve_end"
+                }
+              ],
+              "warm_threads": 4,
+              "index_bytes": 151045952
+            }
+          ],
+          "serve_rounds": [
+            {
+              "cold_start_s": 0.029404111,
+              "configs": [
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 10,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.89095,
+                  "repeats": [
+                    {
+                      "p50_us": 28.956,
+                      "p99_us": 45.111999999999995,
+                      "qps": 33999.839554757076
+                    },
+                    {
+                      "p50_us": 30.342,
+                      "p99_us": 49.994,
+                      "qps": 32458.44673706033
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 16,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.95145,
+                  "repeats": [
+                    {
+                      "p50_us": 41.04,
+                      "p99_us": 61.893,
+                      "qps": 24254.816542692024
+                    },
+                    {
+                      "p50_us": 41.514,
+                      "p99_us": 59.877,
+                      "qps": 24115.227670236658
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 24,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.9744,
+                  "repeats": [
+                    {
+                      "p50_us": 56.903,
+                      "p99_us": 81.38900000000001,
+                      "qps": 17686.965507640387
+                    },
+                    {
+                      "p50_us": 55.754000000000005,
+                      "p99_us": 77.42200000000001,
+                      "qps": 18124.407801966685
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 32,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.9851,
+                  "repeats": [
+                    {
+                      "p50_us": 66.181,
+                      "p99_us": 87.777,
+                      "qps": 15400.401032603066
+                    },
+                    {
+                      "p50_us": 69.74600000000001,
+                      "p99_us": 99.06700000000001,
+                      "qps": 14561.85924770424
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 48,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.9937,
+                  "repeats": [
+                    {
+                      "p50_us": 95.44500000000001,
+                      "p99_us": 132.908,
+                      "qps": 10657.618206707597
+                    },
+                    {
+                      "p50_us": 97.17699999999999,
+                      "p99_us": 134.078,
+                      "qps": 10522.654459545696
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 64,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.99655,
+                  "repeats": [
+                    {
+                      "p50_us": 113.045,
+                      "p99_us": 155.273,
+                      "qps": 9034.287923298161
+                    },
+                    {
+                      "p50_us": 117.0,
+                      "p99_us": 159.36999999999998,
+                      "qps": 8682.405729488286
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 96,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.99865,
+                  "repeats": [
+                    {
+                      "p50_us": 162.10000000000002,
+                      "p99_us": 273.64799999999997,
+                      "qps": 6208.505029798624
+                    },
+                    {
+                      "p50_us": 155.173,
+                      "p99_us": 222.615,
+                      "qps": 6551.105021232994
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.75,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 128,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.9996,
+                  "repeats": [
+                    {
+                      "p50_us": 192.75900000000001,
+                      "p99_us": 269.41299999999995,
+                      "qps": 5331.722939736625
+                    },
+                    {
+                      "p50_us": 189.79500000000002,
+                      "p99_us": 264.35,
+                      "qps": 5390.073893789672
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.37,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 192,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.99975,
+                  "repeats": [
+                    {
+                      "p50_us": 257.434,
+                      "p99_us": 381.444,
+                      "qps": 3968.11068324142
+                    },
+                    {
+                      "p50_us": 253.498,
+                      "p99_us": 365.286,
+                      "qps": 4022.6252800232346
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.37,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 256,
+                    "rerank": 32
+                  },
+                  "recall_at_10": 0.99985,
+                  "repeats": [
+                    {
+                      "p50_us": 307.73699999999997,
+                      "p99_us": 428.289,
+                      "qps": 3313.9863418261693
+                    },
+                    {
+                      "p50_us": 314.089,
+                      "p99_us": 459.30199999999996,
+                      "qps": 3242.178059816002
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.37,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 10,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.89095,
+                  "repeats": [
+                    {
+                      "p50_us": 29.612000000000002,
+                      "p99_us": 51.387,
+                      "qps": 32655.944544458715
+                    },
+                    {
+                      "p50_us": 30.221,
+                      "p99_us": 48.853,
+                      "qps": 32377.64875068894
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.37,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 16,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.95145,
+                  "repeats": [
+                    {
+                      "p50_us": 39.025,
+                      "p99_us": 57.5,
+                      "qps": 25604.24219278007
+                    },
+                    {
+                      "p50_us": 40.119,
+                      "p99_us": 61.844,
+                      "qps": 24803.56937253266
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.37,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 24,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.9744,
+                  "repeats": [
+                    {
+                      "p50_us": 53.483000000000004,
+                      "p99_us": 74.92599999999999,
+                      "qps": 18826.849316223874
+                    },
+                    {
+                      "p50_us": 53.452999999999996,
+                      "p99_us": 72.85300000000001,
+                      "qps": 19022.85907541656
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.37,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 32,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.9851,
+                  "repeats": [
+                    {
+                      "p50_us": 64.026,
+                      "p99_us": 84.943,
+                      "qps": 15959.84834122194
+                    },
+                    {
+                      "p50_us": 67.02000000000001,
+                      "p99_us": 100.31400000000001,
+                      "qps": 14902.559539935337
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.37,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 48,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.9937,
+                  "repeats": [
+                    {
+                      "p50_us": 89.245,
+                      "p99_us": 116.983,
+                      "qps": 11468.805242546847
+                    },
+                    {
+                      "p50_us": 89.486,
+                      "p99_us": 119.507,
+                      "qps": 11436.848766174193
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.02,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 64,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.99655,
+                  "repeats": [
+                    {
+                      "p50_us": 113.988,
+                      "p99_us": 152.187,
+                      "qps": 8983.21605108468
+                    },
+                    {
+                      "p50_us": 112.84,
+                      "p99_us": 150.149,
+                      "qps": 9075.65394794692
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.02,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 96,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.99865,
+                  "repeats": [
+                    {
+                      "p50_us": 150.25,
+                      "p99_us": 203.734,
+                      "qps": 6828.934067993709
+                    },
+                    {
+                      "p50_us": 151.50799999999998,
+                      "p99_us": 204.07,
+                      "qps": 6752.375446011691
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.02,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 128,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.9996,
+                  "repeats": [
+                    {
+                      "p50_us": 190.088,
+                      "p99_us": 257.378,
+                      "qps": 5413.407050151218
+                    },
+                    {
+                      "p50_us": 186.292,
+                      "p99_us": 249.73,
+                      "qps": 5519.665799249349
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 5.02,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 192,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.99975,
+                  "repeats": [
+                    {
+                      "p50_us": 254.51100000000002,
+                      "p99_us": 357.03200000000004,
+                      "qps": 4013.6796719059275
+                    },
+                    {
+                      "p50_us": 255.47599999999997,
+                      "p99_us": 371.335,
+                      "qps": 3983.598671778169
+                    }
+                  ]
+                },
+                {
+                  "load_1m": 4.7,
+                  "load_gate_met": null,
+                  "params": {
+                    "ef": 256,
+                    "rerank": 64
+                  },
+                  "recall_at_10": 0.99985,
+                  "repeats": [
+                    {
+                      "p50_us": 319.35999999999996,
+                      "p99_us": 435.70000000000005,
+                      "qps": 3215.4390515063133
+                    },
+                    {
+                      "p50_us": 314.569,
+                      "p99_us": 444.65,
+                      "qps": 3238.8128711168383
+                    }
+                  ]
+                }
+              ],
+              "first_query_unix_ns": 1794632310539097230,
+              "memory_phases": [
+                {
+                  "memory": {
+                    "RssAnon": 15069184,
+                    "RssFile": 122937344,
+                    "RssShmem": 0,
+                    "VmHWM": 138006528,
+                    "VmRSS": 138006528,
+                    "smaps_Anonymous": 15069184,
+                    "smaps_Pss_File": 121083904,
+                    "smaps_Rss": 138006528
+                  },
+                  "phase": "serve_end"
+                }
+              ],
+              "n": 250000,
+              "n_queries": 2000,
+              "open_s": 0.02408428,
+              "row_blocks": 0,
+              "rss_after_open": 81645568,
+              "rss_steady": 138006528,
+              "wall_s": 15.524245942000562,
+              "peak_rss_bytes": 137879552,
+              "index_bytes": 151045952
+            }
+          ],
+          "params": {
+            "index": "vertex",
+            "degree": 64,
+            "build_ef": 500,
+            "residual": true,
+            "residual_bits": 8,
+            "vertex_bits": 8,
+            "id_bytes": 3,
+            "align_rows": true,
+            "reorder": true,
+            "rerank": "32,64",
+            "quantized_search": true,
+            "ef": "10,16,24,32,48,64,96,128,192,256",
+            "source": "SIFT-1M train-holdout sweeps in benchmarks/results/qgraph_l2_sweep_m4_sift1m_v1.json (4-bit and 8-bit codes, degree x build_ef)"
+          }
+        }
+      },
+      "ops": {
+        "count": 100,
+        "replace": {
+          "supported": true,
+          "apply_s": 0.018318291999094072,
+          "flush_s": 0.13007704099436523,
+          "per_op_ms_durable": 1.483953329934593,
+          "flush_required": true,
+          "operations_per_flush": 1
+        },
+        "delete": {
+          "supported": true,
+          "apply_s": 0.005604714997389237,
+          "flush_s": 0.13175349500124867,
+          "per_op_ms_durable": 1.373582099986379,
+          "flush_required": true,
+          "operations_per_flush": 1
+        },
+        "peak_rss_bytes_self": 39845888
+      },
+      "version": {
+        "writerslogic-warm": "0.6.8",
+        "commit": "5e2d3c8b8d7fcd76b07de9ab4144caec258a9e83"
+      },
+      "install": {
+        "public-bench": {
+          "bytes": 5328208,
+          "non_system_dynamic_libraries": 0,
+          "profile": "dist",
+          "symbols": "stripped"
+        },
+        "_crate_dependencies": {
+          "count": 0,
+          "note": "unique crates in the default-feature normal dependency tree, including CLI-only crates; compiled in, not installed"
+        }
+      }
+    },
+    "hnswlib": {
+      "display": "hnswlib",
+      "builds": {
+        "m32e500": {
+          "build_runs": [
+            {
+              "build_s": 65.58029927200005,
+              "rss_before_build": 163278848,
+              "rss_after_build": 176467968,
+              "n": 250000,
+              "peak_rss_bytes_self": 393588736,
+              "peak_rss_bytes": 393588736,
+              "wall_s": 65.80721976899986,
+              "index_bytes": 197057020
+            },
+            {
+              "build_s": 65.4586413119996,
+              "rss_before_build": 163221504,
+              "rss_after_build": 176414720,
+              "n": 250000,
+              "peak_rss_bytes_self": 393580544,
+              "peak_rss_bytes": 393580544,
+              "wall_s": 65.69005226000081,
+              "index_bytes": 197057020
+            }
+          ],
+          "serve_rounds": [
+            {
+              "open_s": 0.2018705749997025,
+              "cold_start_s": 0.297391212,
+              "rss_before_sweep": 261160960,
+              "rss_steady": 263733248,
+              "n_queries": 2000,
+              "n": 250000,
+              "configs": [
+                {
+                  "params": {
+                    "ef": 10
+                  },
+                  "recall_at_10": 0.82265,
+                  "repeats": [
+                    {
+                      "qps": 17277.948385999458,
+                      "p50_us": 57.47,
+                      "p99_us": 91.08356
+                    },
+                    {
+                      "qps": 16418.841763675206,
+                      "p50_us": 59.882000000000005,
+                      "p99_us": 97.04261000000001
+                    }
+                  ],
+                  "load_1m": 4.69921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 16
+                  },
+                  "recall_at_10": 0.8985,
+                  "repeats": [
+                    {
+                      "qps": 12399.509723385538,
+                      "p50_us": 81.5855,
+                      "p99_us": 126.09402
+                    },
+                    {
+                      "qps": 12501.171281616766,
+                      "p50_us": 80.5675,
+                      "p99_us": 120.33549
+                    }
+                  ],
+                  "load_1m": 4.69921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 24
+                  },
+                  "recall_at_10": 0.944,
+                  "repeats": [
+                    {
+                      "qps": 8684.310238194737,
+                      "p50_us": 116.622,
+                      "p99_us": 168.32214
+                    },
+                    {
+                      "qps": 9119.483791255218,
+                      "p50_us": 111.67,
+                      "p99_us": 157.51724
+                    }
+                  ],
+                  "load_1m": 4.69921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 32
+                  },
+                  "recall_at_10": 0.96645,
+                  "repeats": [
+                    {
+                      "qps": 7550.517368811866,
+                      "p50_us": 134.3475,
+                      "p99_us": 192.71955
+                    },
+                    {
+                      "qps": 7336.637818591021,
+                      "p50_us": 138.44099999999997,
+                      "p99_us": 201.31263
+                    }
+                  ],
+                  "load_1m": 4.69921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 48
+                  },
+                  "recall_at_10": 0.9863,
+                  "repeats": [
+                    {
+                      "qps": 5394.716125330596,
+                      "p50_us": 189.929,
+                      "p99_us": 262.54747999999995
+                    },
+                    {
+                      "qps": 5006.011118030308,
+                      "p50_us": 203.1685,
+                      "p99_us": 286.19063
+                    }
+                  ],
+                  "load_1m": 4.69921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 64
+                  },
+                  "recall_at_10": 0.99255,
+                  "repeats": [
+                    {
+                      "qps": 4234.878776679715,
+                      "p50_us": 241.4915,
+                      "p99_us": 332.98723
+                    },
+                    {
+                      "qps": 4427.978779035685,
+                      "p50_us": 231.9245,
+                      "p99_us": 315.24100999999996
+                    }
+                  ],
+                  "load_1m": 4.69921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 96
+                  },
+                  "recall_at_10": 0.9976,
+                  "repeats": [
+                    {
+                      "qps": 3084.671934173792,
+                      "p50_us": 332.73850000000004,
+                      "p99_us": 459.1242
+                    },
+                    {
+                      "qps": 3008.937128509946,
+                      "p50_us": 341.8815,
+                      "p99_us": 465.62137
+                    }
+                  ],
+                  "load_1m": 4.40283203125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 128
+                  },
+                  "recall_at_10": 0.9993,
+                  "repeats": [
+                    {
+                      "qps": 2488.0962199157784,
+                      "p50_us": 414.34000000000003,
+                      "p99_us": 567.53709
+                    },
+                    {
+                      "qps": 2572.6379898637497,
+                      "p50_us": 399.2445,
+                      "p99_us": 549.44492
+                    }
+                  ],
+                  "load_1m": 4.40283203125,
+                  "load_gate_met": null
+                }
+              ],
+              "peak_rss_bytes_self": 263565312,
+              "peak_rss_bytes": 263565312,
+              "wall_s": 9.692238743999042
+            }
+          ],
+          "params": {
+            "M": 32,
+            "ef_construction": 500
+          }
+        }
+      },
+      "ops": {
+        "count": 100,
+        "replace": {
+          "supported": true,
+          "apply_s": 0.815333319011188,
+          "flush_s": 99.26269755101384,
+          "per_op_ms_durable": 1000.7803087002502,
+          "flush_required": true,
+          "operations_per_flush": 1
+        },
+        "delete": {
+          "supported": true,
+          "apply_s": 0.003266308001911966,
+          "flush_s": 99.19394833399747,
+          "per_op_ms_durable": 991.9721464199938,
+          "flush_required": true,
+          "operations_per_flush": 1
+        },
+        "peak_rss_bytes_self": 263778304,
+        "peak_rss_bytes": 263778304,
+        "wall_s": 199.6295102690001
+      },
+      "version": {
+        "hnswlib": "0.8.0",
+        "python": "3.13.18"
+      },
+      "install": {
+        "bytes": 65173216,
+        "distributions": 2,
+        "dists": [
+          "hnswlib-0.8.0",
+          "numpy-2.5.4"
+        ]
+      }
+    },
+    "usearch": {
+      "display": "USearch",
+      "builds": {
+        "m16": {
+          "build_runs": [
+            {
+              "build_s": 38.93988966100005,
+              "rss_before_build": 163270656,
+              "rss_after_build": 175235072,
+              "n": 250000,
+              "peak_rss_bytes_self": 368345088,
+              "peak_rss_bytes": 368345088,
+              "wall_s": 39.17968179000127,
+              "index_bytes": 165138296
+            },
+            {
+              "build_s": 38.701731048999136,
+              "rss_before_build": 163246080,
+              "rss_after_build": 175185920,
+              "n": 250000,
+              "peak_rss_bytes_self": 368173056,
+              "peak_rss_bytes": 368173056,
+              "wall_s": 38.94496404700112,
+              "index_bytes": 165138296
+            }
+          ],
+          "serve_rounds": [
+            {
+              "open_s": 0.1843796690009185,
+              "cold_start_s": 0.281127829,
+              "rss_before_sweep": 238333952,
+              "rss_steady": 240906240,
+              "n_queries": 2000,
+              "n": 250000,
+              "configs": [
+                {
+                  "params": {
+                    "ef": 10
+                  },
+                  "recall_at_10": 0.74655,
+                  "repeats": [
+                    {
+                      "qps": 9652.97562288697,
+                      "p50_us": 100.97749999999999,
+                      "p99_us": 163.95978
+                    },
+                    {
+                      "qps": 9570.60234064489,
+                      "p50_us": 102.576,
+                      "p99_us": 162.82118999999997
+                    }
+                  ],
+                  "load_1m": 4.1298828125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 16
+                  },
+                  "recall_at_10": 0.84045,
+                  "repeats": [
+                    {
+                      "qps": 7269.001473332102,
+                      "p50_us": 136.3365,
+                      "p99_us": 206.04720999999998
+                    },
+                    {
+                      "qps": 7451.08175754969,
+                      "p50_us": 133.1055,
+                      "p99_us": 200.25239
+                    }
+                  ],
+                  "load_1m": 4.1298828125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 24
+                  },
+                  "recall_at_10": 0.8974,
+                  "repeats": [
+                    {
+                      "qps": 5802.835070820628,
+                      "p50_us": 171.933,
+                      "p99_us": 253.30963
+                    },
+                    {
+                      "qps": 5710.019204250639,
+                      "p50_us": 174.435,
+                      "p99_us": 276.28898
+                    }
+                  ],
+                  "load_1m": 4.1298828125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 32
+                  },
+                  "recall_at_10": 0.93325,
+                  "repeats": [
+                    {
+                      "qps": 4981.229965851103,
+                      "p50_us": 202.8885,
+                      "p99_us": 287.35393
+                    },
+                    {
+                      "qps": 4863.1568098433445,
+                      "p50_us": 205.7105,
+                      "p99_us": 298.18695
+                    }
+                  ],
+                  "load_1m": 4.1298828125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 48
+                  },
+                  "recall_at_10": 0.96545,
+                  "repeats": [
+                    {
+                      "qps": 3711.9304207254318,
+                      "p50_us": 272.1545,
+                      "p99_us": 380.18878
+                    },
+                    {
+                      "qps": 3696.827221696673,
+                      "p50_us": 273.747,
+                      "p99_us": 374.33864
+                    }
+                  ],
+                  "load_1m": 4.1298828125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 64
+                  },
+                  "recall_at_10": 0.9796,
+                  "repeats": [
+                    {
+                      "qps": 2850.7756050311177,
+                      "p50_us": 355.751,
+                      "p99_us": 478.9339
+                    },
+                    {
+                      "qps": 2888.2791542251575,
+                      "p50_us": 352.478,
+                      "p99_us": 466.31404000000003
+                    }
+                  ],
+                  "load_1m": 3.87890625,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 96
+                  },
+                  "recall_at_10": 0.9912,
+                  "repeats": [
+                    {
+                      "qps": 2030.2524815996874,
+                      "p50_us": 501.63300000000004,
+                      "p99_us": 691.1629499999999
+                    },
+                    {
+                      "qps": 2071.7386773387784,
+                      "p50_us": 493.052,
+                      "p99_us": 667.0445
+                    }
+                  ],
+                  "load_1m": 3.87890625,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 128
+                  },
+                  "recall_at_10": 0.9953,
+                  "repeats": [
+                    {
+                      "qps": 1657.1162939474345,
+                      "p50_us": 608.4929999999999,
+                      "p99_us": 929.1561399999999
+                    },
+                    {
+                      "qps": 1689.63574393327,
+                      "p50_us": 604.312,
+                      "p99_us": 810.37162
+                    }
+                  ],
+                  "load_1m": 3.64794921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 192
+                  },
+                  "recall_at_10": 0.9981,
+                  "repeats": [
+                    {
+                      "qps": 1212.456113809681,
+                      "p50_us": 845.017,
+                      "p99_us": 1159.42294
+                    },
+                    {
+                      "qps": 1238.9829205064543,
+                      "p50_us": 830.196,
+                      "p99_us": 1104.20502
+                    }
+                  ],
+                  "load_1m": 3.435546875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 256
+                  },
+                  "recall_at_10": 0.9989,
+                  "repeats": [
+                    {
+                      "qps": 963.4652753616612,
+                      "p50_us": 1065.3635,
+                      "p99_us": 1418.9670299999998
+                    },
+                    {
+                      "qps": 920.1140040941511,
+                      "p50_us": 1104.659,
+                      "p99_us": 1614.6716
+                    }
+                  ],
+                  "load_1m": 3.240234375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 384
+                  },
+                  "recall_at_10": 0.9995,
+                  "repeats": [
+                    {
+                      "qps": 676.0906683506337,
+                      "p50_us": 1510.417,
+                      "p99_us": 2096.4090899999997
+                    },
+                    {
+                      "qps": 633.6759290309409,
+                      "p50_us": 1605.5475000000001,
+                      "p99_us": 2344.20067
+                    }
+                  ],
+                  "load_1m": 3.060546875,
+                  "load_gate_met": null
+                }
+              ],
+              "peak_rss_bytes_self": 240783360,
+              "peak_rss_bytes": 240783360,
+              "wall_s": 34.88539002300058
+            }
+          ],
+          "params": {
+            "connectivity": 16,
+            "expansion_add": 200,
+            "dtype": "f32"
+          }
+        }
+      },
+      "ops": {
+        "count": 100,
+        "replace": {
+          "supported": true,
+          "apply_s": 0.7537670819983759,
+          "flush_s": 84.43203617901963,
+          "per_op_ms_durable": 851.8580326101801,
+          "flush_required": true,
+          "operations_per_flush": 1
+        },
+        "delete": {
+          "supported": true,
+          "apply_s": 0.007288463993972982,
+          "flush_s": 84.4284344750049,
+          "per_op_ms_durable": 844.3572293899888,
+          "flush_required": true,
+          "operations_per_flush": 1
+        },
+        "peak_rss_bytes_self": 248352768,
+        "peak_rss_bytes": 248352768,
+        "wall_s": 169.9570560000011
+      },
+      "version": {
+        "usearch": "2.26.5",
+        "python": "3.13.18"
+      },
+      "install": {
+        "bytes": 95208324,
+        "distributions": 4,
+        "dists": [
+          "numkong-7.8.5",
+          "numpy-2.5.4",
+          "tqdm-4.70.1",
+          "usearch-2.26.5"
+        ]
+      }
+    },
+    "sqlite-vec": {
+      "display": "sqlite-vec (exact)",
+      "builds": {
+        "exact": {
+          "build_runs": [
+            {
+              "build_s": 2.157769333000033,
+              "rss_before_build": 163233792,
+              "rss_after_build": 164528128,
+              "n": 250000,
+              "peak_rss_bytes_self": 291139584,
+              "peak_rss_bytes": 291139584,
+              "wall_s": 2.391200668998863,
+              "index_bytes": 134352896
+            },
+            {
+              "build_s": 2.174339142999088,
+              "rss_before_build": 163287040,
+              "rss_after_build": 164581376,
+              "n": 250000,
+              "peak_rss_bytes_self": 291135488,
+              "peak_rss_bytes": 291135488,
+              "wall_s": 2.407013043000916,
+              "index_bytes": 134352896
+            }
+          ],
+          "serve_rounds": [
+            {
+              "open_s": 0.002379217999987304,
+              "cold_start_s": 0.166117484,
+              "rss_before_sweep": 37883904,
+              "rss_steady": 38440960,
+              "n_queries": 200,
+              "n": 250000,
+              "configs": [
+                {
+                  "params": {},
+                  "recall_at_10": 1.0,
+                  "repeats": [
+                    {
+                      "qps": 17.750395111037076,
+                      "p50_us": 56240.206000000006,
+                      "p99_us": 58141.37033
+                    },
+                    {
+                      "qps": 17.753097026200635,
+                      "p50_us": 56219.3085,
+                      "p99_us": 58371.853469999995
+                    }
+                  ],
+                  "load_1m": 2.55517578125,
+                  "load_gate_met": null
+                }
+              ],
+              "peak_rss_bytes_self": 38236160,
+              "peak_rss_bytes": 38236160,
+              "wall_s": 36.80991529899984
+            }
+          ],
+          "params": {}
+        }
+      },
+      "ops": {
+        "count": 100,
+        "replace": {
+          "supported": true,
+          "apply_s": 1.0313065769987588,
+          "flush_s": 0.00010037299762188923,
+          "per_op_ms_durable": 10.314069499963807,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "delete": {
+          "supported": true,
+          "apply_s": 0.4617950639967603,
+          "flush_s": 0.00010265200216963422,
+          "per_op_ms_durable": 4.618977159989299,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "peak_rss_bytes_self": 42926080,
+        "peak_rss_bytes": 42926080,
+        "wall_s": 1.6258366429992748
+      },
+      "version": {
+        "sqlite-vec": "0.1.9",
+        "python": "3.13.18"
+      },
+      "install": {
+        "bytes": 162732,
+        "distributions": 1,
+        "dists": [
+          "sqlite_vec-0.1.9"
+        ]
+      }
+    },
+    "lancedb": {
+      "display": "LanceDB",
+      "builds": {
+        "ivf_pq": {
+          "build_runs": [
+            {
+              "build_s": 15.677615893999246,
+              "rss_before_build": 163229696,
+              "rss_after_build": 698511360,
+              "n": 250000,
+              "peak_rss_bytes_self": 807141376,
+              "peak_rss_bytes": 807141376,
+              "wall_s": 16.12392803399962,
+              "index_bytes": 133677073
+            },
+            {
+              "build_s": 15.513065659999484,
+              "rss_before_build": 163184640,
+              "rss_after_build": 664502272,
+              "n": 250000,
+              "peak_rss_bytes_self": 781164544,
+              "peak_rss_bytes": 781164544,
+              "wall_s": 15.946330953000142,
+              "index_bytes": 133674769
+            }
+          ],
+          "serve_rounds": [
+            {
+              "open_s": 0.920261658000527,
+              "cold_start_s": 1.023316076,
+              "rss_before_sweep": 184528896,
+              "rss_steady": 204759040,
+              "n_queries": 2000,
+              "n": 250000,
+              "configs": [
+                {
+                  "params": {
+                    "nprobes": 1,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.3089,
+                  "repeats": [
+                    {
+                      "qps": 276.8441518667719,
+                      "p50_us": 3576.6580000000004,
+                      "p99_us": 5013.684759999999
+                    }
+                  ],
+                  "load_1m": 1.78564453125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 2,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.4175,
+                  "repeats": [
+                    {
+                      "qps": 262.52863536012603,
+                      "p50_us": 3777.308,
+                      "p99_us": 5032.724740000001
+                    }
+                  ],
+                  "load_1m": 1.46337890625,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 4,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.5076,
+                  "repeats": [
+                    {
+                      "qps": 262.8242764590974,
+                      "p50_us": 3743.3975,
+                      "p99_us": 5401.96342
+                    },
+                    {
+                      "qps": 231.11158586361228,
+                      "p50_us": 4170.5225,
+                      "p99_us": 6527.0691
+                    }
+                  ],
+                  "load_1m": 1.2802734375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 8,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.5677,
+                  "repeats": [
+                    {
+                      "qps": 244.13200444620824,
+                      "p50_us": 3971.6425,
+                      "p99_us": 6904.924129999999
+                    },
+                    {
+                      "qps": 255.59429469347103,
+                      "p50_us": 3849.3514999999998,
+                      "p99_us": 5749.9858699999995
+                    }
+                  ],
+                  "load_1m": 1.23388671875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 16,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.5948,
+                  "repeats": [
+                    {
+                      "qps": 243.3723769257223,
+                      "p50_us": 4041.6825,
+                      "p99_us": 5667.118319999999
+                    },
+                    {
+                      "qps": 257.7090113030866,
+                      "p50_us": 3819.54,
+                      "p99_us": 5347.8546799999995
+                    }
+                  ],
+                  "load_1m": 1.07568359375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 32,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.6041,
+                  "repeats": [
+                    {
+                      "qps": 229.42340168160837,
+                      "p50_us": 4292.464,
+                      "p99_us": 5706.46663
+                    },
+                    {
+                      "qps": 226.6837217695823,
+                      "p50_us": 4321.998,
+                      "p99_us": 6039.35024
+                    }
+                  ],
+                  "load_1m": 0.9873046875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 64,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.60605,
+                  "repeats": [
+                    {
+                      "qps": 188.94876745555516,
+                      "p50_us": 5212.0285,
+                      "p99_us": 7502.9899399999995
+                    },
+                    {
+                      "qps": 185.37745392580862,
+                      "p50_us": 5231.045,
+                      "p99_us": 7788.42538
+                    }
+                  ],
+                  "load_1m": 0.8544921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 128,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.60625,
+                  "repeats": [
+                    {
+                      "qps": 144.03616795766968,
+                      "p50_us": 6729.1849999999995,
+                      "p99_us": 9887.18177
+                    },
+                    {
+                      "qps": 125.67603316361459,
+                      "p50_us": 7936.523,
+                      "p99_us": 10833.91794
+                    }
+                  ],
+                  "load_1m": 0.80908203125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 256,
+                    "refine_factor": null
+                  },
+                  "recall_at_10": 0.60625,
+                  "repeats": [
+                    {
+                      "qps": 105.99755275065557,
+                      "p50_us": 9323.978500000001,
+                      "p99_us": 12275.40548
+                    },
+                    {
+                      "qps": 108.63699033644606,
+                      "p50_us": 9076.768,
+                      "p99_us": 11879.86356
+                    }
+                  ],
+                  "load_1m": 0.8505859375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 1,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.3523,
+                  "repeats": [
+                    {
+                      "qps": 152.2149456478852,
+                      "p50_us": 6408.1265,
+                      "p99_us": 9621.249559999998
+                    }
+                  ],
+                  "load_1m": 0.70751953125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 2,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.51515,
+                  "repeats": [
+                    {
+                      "qps": 131.84014861114366,
+                      "p50_us": 7475.3955,
+                      "p99_us": 10542.29314
+                    },
+                    {
+                      "qps": 133.47699079218256,
+                      "p50_us": 7321.6404999999995,
+                      "p99_us": 10751.09323
+                    }
+                  ],
+                  "load_1m": 1.85498046875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 4,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.68435,
+                  "repeats": [
+                    {
+                      "qps": 144.8649920417631,
+                      "p50_us": 6872.5675,
+                      "p99_us": 9229.855510000001
+                    },
+                    {
+                      "qps": 153.68598842099502,
+                      "p50_us": 6382.27,
+                      "p99_us": 9541.82413
+                    }
+                  ],
+                  "load_1m": 2.11962890625,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 8,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.8313,
+                  "repeats": [
+                    {
+                      "qps": 135.9952417092702,
+                      "p50_us": 7335.5625,
+                      "p99_us": 9809.52498
+                    },
+                    {
+                      "qps": 136.89265809060666,
+                      "p50_us": 7314.1925,
+                      "p99_us": 9815.726729999998
+                    }
+                  ],
+                  "load_1m": 1.74951171875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 16,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.92615,
+                  "repeats": [
+                    {
+                      "qps": 132.8863335182122,
+                      "p50_us": 7531.860000000001,
+                      "p99_us": 10059.21709
+                    },
+                    {
+                      "qps": 132.8753250211836,
+                      "p50_us": 7540.3155,
+                      "p99_us": 9970.37395
+                    }
+                  ],
+                  "load_1m": 1.39111328125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 32,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.9752,
+                  "repeats": [
+                    {
+                      "qps": 125.33141068465531,
+                      "p50_us": 7951.021500000001,
+                      "p99_us": 10877.63172
+                    },
+                    {
+                      "qps": 132.16424811427646,
+                      "p50_us": 7488.3015,
+                      "p99_us": 10310.253879999998
+                    }
+                  ],
+                  "load_1m": 1.44921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 64,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.9883,
+                  "repeats": [
+                    {
+                      "qps": 118.04314042974165,
+                      "p50_us": 8473.6955,
+                      "p99_us": 11079.49072
+                    },
+                    {
+                      "qps": 116.54267168743483,
+                      "p50_us": 8530.0195,
+                      "p99_us": 11422.70107
+                    }
+                  ],
+                  "load_1m": 1.22412109375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 128,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.98975,
+                  "repeats": [
+                    {
+                      "qps": 100.98699353346612,
+                      "p50_us": 9811.73,
+                      "p99_us": 13341.01369
+                    },
+                    {
+                      "qps": 93.89992104235462,
+                      "p50_us": 10885.1635,
+                      "p99_us": 14124.09209
+                    }
+                  ],
+                  "load_1m": 1.2080078125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "nprobes": 256,
+                    "refine_factor": 10
+                  },
+                  "recall_at_10": 0.98995,
+                  "repeats": [
+                    {
+                      "qps": 82.29498758136502,
+                      "p50_us": 12136.605500000001,
+                      "p99_us": 15166.33308
+                    },
+                    {
+                      "qps": 82.81798385284385,
+                      "p50_us": 12082.625,
+                      "p99_us": 15026.45144
+                    }
+                  ],
+                  "load_1m": 1.06689453125,
+                  "load_gate_met": null
+                }
+              ],
+              "peak_rss_bytes_self": 203874304,
+              "peak_rss_bytes": 204582912,
+              "wall_s": 691.8884466510008
+            }
+          ],
+          "params": {
+            "index_type": "IVF_PQ"
+          }
+        }
+      },
+      "ops": {
+        "count": 100,
+        "replace": {
+          "supported": true,
+          "apply_s": 1.3161085820029257,
+          "flush_s": 8.75060122780269e-05,
+          "per_op_ms_durable": 13.161960880152037,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "delete": {
+          "supported": true,
+          "apply_s": 1.253869575997669,
+          "flush_s": 8.771199463808443e-05,
+          "per_op_ms_durable": 12.539572879923071,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "peak_rss_bytes_self": 201216000,
+        "peak_rss_bytes": 203558912,
+        "wall_s": 3.898159319000115
+      },
+      "version": {
+        "lancedb": "0.40.0",
+        "python": "3.13.18"
+      },
+      "install": {
+        "bytes": 405566693,
+        "distributions": 16,
+        "dists": [
+          "annotated_types-0.8.0",
+          "deprecation-2.1.0",
+          "lance_namespace-0.13.0",
+          "lance_namespace_urllib3_client-0.13.0",
+          "lancedb-0.40.0",
+          "numpy-2.5.4",
+          "packaging-26.3",
+          "pyarrow-23.0.1",
+          "pydantic-2.14.1",
+          "pydantic_core-2.50.1",
+          "python_dateutil-2.9.0.post0",
+          "six-1.17.0",
+          "tqdm-4.70.1",
+          "typing_extensions-4.16.0",
+          "typing_inspection-0.4.4",
+          "urllib3-2.8.0"
+        ]
+      }
+    },
+    "chroma": {
+      "display": "Chroma",
+      "builds": {
+        "m16": {
+          "build_runs": [
+            {
+              "build_s": 56.28602175699962,
+              "rss_before_build": 163192832,
+              "rss_after_build": 532787200,
+              "n": 250000,
+              "peak_rss_bytes_self": 531824640,
+              "peak_rss_bytes": 531824640,
+              "wall_s": 56.76849579200098,
+              "index_bytes": 210582728
+            },
+            {
+              "build_s": 54.96037061300012,
+              "rss_before_build": 163237888,
+              "rss_after_build": 534708224,
+              "n": 250000,
+              "peak_rss_bytes_self": 533614592,
+              "peak_rss_bytes": 533614592,
+              "wall_s": 55.407620922000206,
+              "index_bytes": 210582728
+            }
+          ],
+          "serve_rounds": [
+            {
+              "open_s": 0.00401688199963246,
+              "cold_start_s": 1.140743923,
+              "rss_before_sweep": 353755136,
+              "rss_steady": 371027968,
+              "n_queries": 2000,
+              "n": 250000,
+              "configs": [
+                {
+                  "params": {
+                    "ef": 16
+                  },
+                  "recall_at_10": 0.8409,
+                  "repeats": [
+                    {
+                      "qps": 717.9855579717963,
+                      "p50_us": 1336.7404999999999,
+                      "p99_us": 2196.32725
+                    },
+                    {
+                      "qps": 785.6918842075853,
+                      "p50_us": 1227.118,
+                      "p99_us": 2054.51958
+                    }
+                  ],
+                  "load_1m": 1.150390625,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 32
+                  },
+                  "recall_at_10": 0.9334,
+                  "repeats": [
+                    {
+                      "qps": 738.6539936913874,
+                      "p50_us": 1310.6575,
+                      "p99_us": 2199.19951
+                    },
+                    {
+                      "qps": 726.9331614613275,
+                      "p50_us": 1325.208,
+                      "p99_us": 2237.2857099999997
+                    }
+                  ],
+                  "load_1m": 1.201171875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 64
+                  },
+                  "recall_at_10": 0.97905,
+                  "repeats": [
+                    {
+                      "qps": 665.29365269798,
+                      "p50_us": 1441.7220000000002,
+                      "p99_us": 2516.5149799999995
+                    },
+                    {
+                      "qps": 668.6424855980961,
+                      "p50_us": 1449.0715,
+                      "p99_us": 2364.74417
+                    }
+                  ],
+                  "load_1m": 1.32470703125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 128
+                  },
+                  "recall_at_10": 0.99555,
+                  "repeats": [
+                    {
+                      "qps": 363.2542066054935,
+                      "p50_us": 2738.4134999999997,
+                      "p99_us": 3847.04735
+                    },
+                    {
+                      "qps": 647.742174091193,
+                      "p50_us": 1501.896,
+                      "p99_us": 2370.51655
+                    }
+                  ],
+                  "load_1m": 1.11083984375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 256
+                  },
+                  "recall_at_10": 0.99885,
+                  "repeats": [
+                    {
+                      "qps": 443.78730845845206,
+                      "p50_us": 2214.027,
+                      "p99_us": 3455.3234199999997
+                    },
+                    {
+                      "qps": 403.6238457220001,
+                      "p50_us": 2447.91,
+                      "p99_us": 3672.87595
+                    }
+                  ],
+                  "load_1m": 1.09326171875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 512
+                  },
+                  "recall_at_10": 0.99995,
+                  "repeats": [
+                    {
+                      "qps": 336.73464860048506,
+                      "p50_us": 2937.323,
+                      "p99_us": 4274.295160000001
+                    },
+                    {
+                      "qps": 326.3173776637962,
+                      "p50_us": 3019.902,
+                      "p99_us": 4669.2482199999995
+                    }
+                  ],
+                  "load_1m": 1.29443359375,
+                  "load_gate_met": null
+                }
+              ],
+              "peak_rss_bytes_self": 366583808,
+              "peak_rss_bytes": 370044928,
+              "wall_s": 9.405534469000486
+            }
+          ],
+          "params": {
+            "max_neighbors": 16,
+            "ef_construction": 200
+          }
+        }
+      },
+      "ops": {
+        "count": 100,
+        "replace": {
+          "supported": true,
+          "apply_s": 1.7969234560241603,
+          "flush_s": 0.00013675401169166435,
+          "per_op_ms_durable": 17.97060210035852,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "delete": {
+          "supported": true,
+          "apply_s": 1.2078301450037543,
+          "flush_s": 9.659799616201781e-05,
+          "per_op_ms_durable": 12.079267429999163,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "peak_rss_bytes_self": 353091584,
+        "peak_rss_bytes": 353091584,
+        "wall_s": 3.9597186189985223
+      },
+      "version": {
+        "chromadb": "1.5.9",
+        "python": "3.13.18"
+      },
+      "install": {
+        "bytes": 367182762,
+        "distributions": 84,
+        "dists": [
+          "aiohappyeyeballs-2.7.1",
+          "aiohttp-3.14.5",
+          "aiohttp_retry-2.9.1",
+          "aiosignal-1.4.0",
+          "annotated_doc-0.0.5",
+          "annotated_types-0.8.0",
+          "anyio-4.15.1",
+          "attrs-26.1.0",
+          "bcrypt-5.0.0",
+          "build-1.6.1",
+          "certifi-2026.10.19",
+          "charset_normalizer-3.5.2",
+          "chromadb-1.5.9",
+          "click-8.5.0",
+          "durationpy-0.11",
+          "filelock-4.2.4",
+          "flatbuffers-25.12.19",
+          "frozenlist-1.8.0",
+          "fsspec-2026.9.0",
+          "googleapis_common_protos-1.75.5",
+          "grpcio-1.84.0",
+          "h11-0.16.0",
+          "hf_xet-1.7.0",
+          "httpcore-1.0.9",
+          "httpcore2-2.15.1",
+          "httptools-0.9.0",
+          "httpx-0.28.1",
+          "httpx2-2.15.1",
+          "huggingface_hub-2.2.0",
+          "idna-3.20",
+          "importlib_resources-7.1.0",
+          "jsonschema-4.26.0",
+          "jsonschema_specifications-2025.9.1",
+          "kubernetes-37.0.1",
+          "markdown_it_py-4.2.0",
+          "mdurl-0.1.2",
+          "mmh3-5.3.1",
+          "multidict-7.1.0",
+          "numpy-2.5.4",
+          "oauthlib-4.0.1",
+          "onnxruntime-1.31.0",
+          "opentelemetry_api-1.45.1",
+          "opentelemetry_exporter_otlp_common-0.66b1",
+          "opentelemetry_exporter_otlp_proto_common-1.45.1",
+          "opentelemetry_exporter_otlp_proto_grpc-1.45.1",
+          "opentelemetry_proto-1.45.1",
+          "opentelemetry_sdk-1.45.1",
+          "opentelemetry_semantic_conventions-0.66b1",
+          "orjson-3.13.0",
+          "overrides-7.7.0",
+          "packaging-26.3",
+          "propcache-0.5.4",
+          "protobuf-7.36.2",
+          "pybase64-1.5.1",
+          "pydantic-2.14.1",
+          "pydantic_core-2.50.1",
+          "pydantic_settings-2.16.1",
+          "pygments-2.21.0",
+          "pypika-0.51.1",
+          "pyproject_hooks-1.3.3",
+          "python_dateutil-2.9.0.post0",
+          "python_dotenv-1.2.4",
+          "pyyaml-6.0.3",
+          "referencing-0.37.0",
+          "requests-2.34.2",
+          "requests_oauthlib-2.0.0",
+          "rich-15.0.0",
+          "rpds_py-2026.9.1",
+          "shellingham-1.5.4",
+          "six-1.17.0",
+          "tenacity-9.2.1",
+          "tokenizers-0.23.3",
+          "tqdm-4.70.1",
+          "truststore-0.10.5",
+          "typer-0.27.3",
+          "typing_extensions-4.16.0",
+          "typing_inspection-0.4.4",
+          "urllib3-2.8.0",
+          "uvicorn-0.54.0",
+          "uvloop-0.23.0",
+          "watchfiles-1.3.0",
+          "websocket_client-1.9.2",
+          "websockets-17.3",
+          "yarl-1.25.1"
+        ]
+      }
+    },
+    "duckdb-vss": {
+      "display": "DuckDB vss",
+      "builds": {
+        "hnsw_m16": {
+          "build_runs": [
+            {
+              "build_s": 43.600564952999775,
+              "rss_before_build": 163143680,
+              "rss_after_build": 264392704,
+              "n": 250000,
+              "peak_rss_bytes_self": 926203904,
+              "peak_rss_bytes": 926203904,
+              "wall_s": 43.84321386300144,
+              "index_bytes": 197931008
+            },
+            {
+              "build_s": 43.401704191001045,
+              "rss_before_build": 163246080,
+              "rss_after_build": 265076736,
+              "n": 250000,
+              "peak_rss_bytes_self": 880885760,
+              "peak_rss_bytes": 880885760,
+              "wall_s": 43.67803341199942,
+              "index_bytes": 197931008
+            }
+          ],
+          "serve_rounds": [
+            {
+              "open_s": 0.11444813799971598,
+              "cold_start_s": 0.519841423,
+              "rss_before_sweep": 479866880,
+              "rss_steady": 540270592,
+              "n_queries": 2000,
+              "n": 250000,
+              "configs": [
+                {
+                  "params": {
+                    "ef": 10
+                  },
+                  "recall_at_10": 0.75005,
+                  "repeats": [
+                    {
+                      "qps": 87.51294576709518,
+                      "p50_us": 11335.9935,
+                      "p99_us": 13504.35424
+                    },
+                    {
+                      "qps": 88.5651092207429,
+                      "p50_us": 11163.519499999999,
+                      "p99_us": 13730.91943
+                    }
+                  ],
+                  "load_1m": 1.18408203125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 16
+                  },
+                  "recall_at_10": 0.8416,
+                  "repeats": [
+                    {
+                      "qps": 89.02123449509514,
+                      "p50_us": 11104.575,
+                      "p99_us": 13513.067939999999
+                    },
+                    {
+                      "qps": 92.16310052454385,
+                      "p50_us": 10709.413499999999,
+                      "p99_us": 13034.18276
+                    }
+                  ],
+                  "load_1m": 1.224609375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 24
+                  },
+                  "recall_at_10": 0.89995,
+                  "repeats": [
+                    {
+                      "qps": 93.92844526324637,
+                      "p50_us": 10554.257,
+                      "p99_us": 12401.90882
+                    },
+                    {
+                      "qps": 92.47609464216553,
+                      "p50_us": 10715.912,
+                      "p99_us": 12806.83106
+                    }
+                  ],
+                  "load_1m": 1.1083984375,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 32
+                  },
+                  "recall_at_10": 0.931,
+                  "repeats": [
+                    {
+                      "qps": 95.4158631833392,
+                      "p50_us": 10325.7845,
+                      "p99_us": 12542.001980000001
+                    },
+                    {
+                      "qps": 98.58942165065754,
+                      "p50_us": 10100.801500000001,
+                      "p99_us": 11133.621579999999
+                    }
+                  ],
+                  "load_1m": 1.27294921875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 48
+                  },
+                  "recall_at_10": 0.96435,
+                  "repeats": [
+                    {
+                      "qps": 89.90956765945306,
+                      "p50_us": 10983.5965,
+                      "p99_us": 13629.40547
+                    },
+                    {
+                      "qps": 89.94747838741696,
+                      "p50_us": 10985.6475,
+                      "p99_us": 13505.02159
+                    }
+                  ],
+                  "load_1m": 1.2978515625,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 64
+                  },
+                  "recall_at_10": 0.97925,
+                  "repeats": [
+                    {
+                      "qps": 88.76695871669678,
+                      "p50_us": 11113.297999999999,
+                      "p99_us": 13959.61104
+                    },
+                    {
+                      "qps": 88.07437053009251,
+                      "p50_us": 11202.153999999999,
+                      "p99_us": 13902.45213
+                    }
+                  ],
+                  "load_1m": 1.0908203125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 96
+                  },
+                  "recall_at_10": 0.99145,
+                  "repeats": [
+                    {
+                      "qps": 86.97442172175668,
+                      "p50_us": 11338.6235,
+                      "p99_us": 14073.5765
+                    },
+                    {
+                      "qps": 91.42556541867229,
+                      "p50_us": 10888.563999999998,
+                      "p99_us": 12346.130309999999
+                    }
+                  ],
+                  "load_1m": 1.18701171875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 128
+                  },
+                  "recall_at_10": 0.99575,
+                  "repeats": [
+                    {
+                      "qps": 90.13733655356256,
+                      "p50_us": 11060.0055,
+                      "p99_us": 12659.26716
+                    },
+                    {
+                      "qps": 90.87447279914097,
+                      "p50_us": 10975.98,
+                      "p99_us": 12201.23286
+                    }
+                  ],
+                  "load_1m": 1.14013671875,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 192
+                  },
+                  "recall_at_10": 0.99835,
+                  "repeats": [
+                    {
+                      "qps": 87.90498035200359,
+                      "p50_us": 11363.3415,
+                      "p99_us": 12616.223129999998
+                    },
+                    {
+                      "qps": 87.95355259961232,
+                      "p50_us": 11355.06,
+                      "p99_us": 12612.366160000001
+                    }
+                  ],
+                  "load_1m": 1.43212890625,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 256
+                  },
+                  "recall_at_10": 0.9989,
+                  "repeats": [
+                    {
+                      "qps": 84.1691808866888,
+                      "p50_us": 11891.259,
+                      "p99_us": 13189.48509
+                    },
+                    {
+                      "qps": 84.73396957800502,
+                      "p50_us": 11774.3305,
+                      "p99_us": 13490.388939999997
+                    }
+                  ],
+                  "load_1m": 1.38330078125,
+                  "load_gate_met": null
+                },
+                {
+                  "params": {
+                    "ef": 384
+                  },
+                  "recall_at_10": 0.9996,
+                  "repeats": [
+                    {
+                      "qps": 80.47057252113325,
+                      "p50_us": 12446.3475,
+                      "p99_us": 13941.4612
+                    },
+                    {
+                      "qps": 80.70050771928321,
+                      "p50_us": 12405.1365,
+                      "p99_us": 14020.02982
+                    }
+                  ],
+                  "load_1m": 1.1748046875,
+                  "load_gate_met": null
+                }
+              ],
+              "peak_rss_bytes_self": 542167040,
+              "peak_rss_bytes": 542167040,
+              "wall_s": 746.4045211209996
+            }
+          ],
+          "params": {
+            "M": 16,
+            "ef_construction": 200
+          }
+        }
+      },
+      "ops": {
+        "count": 100,
+        "replace": {
+          "supported": true,
+          "apply_s": 1.7373864079945633,
+          "flush_s": 104.4697623910015,
+          "per_op_ms_durable": 1062.0714879899606,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "delete": {
+          "supported": true,
+          "apply_s": 0.4128133979975246,
+          "flush_s": 97.0983430609831,
+          "per_op_ms_durable": 975.1115645898062,
+          "flush_required": false,
+          "operations_per_flush": 1
+        },
+        "peak_rss_bytes_self": 1454731264,
+        "peak_rss_bytes": 1454731264,
+        "wall_s": 204.1619844449997
+      },
+      "version": {
+        "duckdb": "1.5.6",
+        "python": "3.13.18"
+      },
+      "install": {
+        "bytes": 61043838,
+        "distributions": 1,
+        "dists": [
+          "duckdb-1.5.6"
+        ]
+      }
+    }
+  },
+  "skipped": {}
+}
