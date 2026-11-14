@@ -22,7 +22,8 @@ def main(argv=None):
     run.add_argument("--datasets", nargs="*", help="restrict to these dataset names")
     run.add_argument("--builds", nargs="*", metavar="SYSTEM:BUILD",
                      help="ANN only: restrict a comparator to these builds (systems not named keep all builds)")
-    run.add_argument("--rounds", type=int)
+    run.add_argument("--rounds", type=int, help=f"independent process rounds (published suites default to {runner.PUBLISHED_MIN_ROUNDS})")
+    run.add_argument("--pin-cpus", metavar="LIST", help="Linux: run the single-threaded serve and ops phases under `taskset -c LIST` (recorded in the results)")
     run.add_argument("--build-repeats", type=int)
     run.add_argument("--mode", choices=["embedded", "server", "all"], default=None,
                      help="embedded (default) or server-mode systems (warm-server is always included); naming server systems implies server")
@@ -52,6 +53,9 @@ def main(argv=None):
             spec["rounds"] = a.rounds
         if a.build_repeats:
             spec["build_repeats"] = a.build_repeats
+        runner.set_pinning(a.pin_cpus)
+        if a.suite in ("standard", "heavy") and spec["rounds"] < runner.PUBLISHED_MIN_ROUNDS:
+            print(f"warning: {spec['rounds']} rounds is below the {runner.PUBLISHED_MIN_ROUNDS} a published {a.suite} run needs; its intervals are ranges, not confidence intervals", file=sys.stderr)
         wanted = set(a.systems) if a.systems else None
         only_builds = None
         if a.builds:

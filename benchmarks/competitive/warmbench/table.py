@@ -174,11 +174,14 @@ def verdict(adv):
     return "WIN" if adv["factor"] > 1.05 else "LOSS" if adv["factor"] < 1 / 1.05 else "TIE"
 
 
-def best_other(metric, cells):
+def best_other(metric, cells, same_contract_as=None):
+    """Strongest comparator for `metric`. For a durable-operation row pass WARM's cell as `same_contract_as`: only
+    systems with the same commit contract (registry.COMMIT_CONTRACT) are eligible."""
     sign = 1 if analyze.direction(metric) == analyze.HIGHER else -1
     # The eager WARM row is reported, never a comparator.
     others = {s: c for s, c in cells.items()
-              if registry.system(s)["family"] != "warm" and c["value"] is not None and not c.get("informational")}
+              if registry.system(s)["family"] != "warm" and c["value"] is not None and not c.get("informational")
+              and (same_contract_as is None or c.get("durability_class") == same_contract_as.get("durability_class"))}
     if not others:
         return None, None
     best = max(others, key=lambda s: sign * others[s]["value"])
@@ -192,6 +195,55 @@ def reference(data):
 
 def is_server(data):
     return data.get("mode") == "server"
+
+
+def _mark_validity(data, metrics):
+    revision = data.get("commit", "")
+    pinned = bool(re.fullmatch(r"[0-9a-fA-F]{40}", revision))
+    for metric, systems in metrics.items():
+        status = data.get("measurement_validity", {}).get(metric, {})
+        for c in systems.values():
+            validity = analyze.Validity(status.get("status", "valid"))
+            c["validity"] = analyze.Validity.UNVERIFIED if not pinned and validity == analyze.Validity.VALID else validity
+            c["validity_reason"] = status.get("reason", "") or ("" if pinned else "source revision is not pinned")
+            if c["validity"] == "invalid":
+                c.update(value=None, ci=[None, None], n=0, note=c["validity_reason"])
+
+
+PER_BUILD_METRICS = ["qps@recall0.90", "qps@recall0.95", "qps@recall0.99", "build_seconds", "build_peak_rss_mib", "serving_rss_mib", "index_bytes_mib", "cold_start_s"]
+LABELS = {k: (label, unit, dec) for k, label, unit, dec in ANN_METRICS}
+
+
+def per_build_for(path, data):
+    """Per-build comparison of one embedded ANN file: for every (comparator, build) one entry per metric, WARM
+    against that build's own value of that metric. No entry compares values taken from different builds.
+    Returns (entries, level); entries carry both cells, the advantage and the verdict."""
+    ref = reference(data)
+    if data["kind"] != "ann" or is_server(data) or ref not in data["systems"]:
+        return [], 0.95
+
+    def entries_at(level):
+        built = analyze.per_build_metrics(rel(path), data, level=level)
+        for cells in built.values():
+            _mark_validity(data, {m: {"x": c} for m, c in cells.items()})
+        mine_by = {m: c for (system, _), cells in built.items() if system == ref for m, c in cells.items()}
+        out = []
+        for (system, build), cells in built.items():
+            if system == ref:
+                continue
+            for metric in PER_BUILD_METRICS:
+                theirs, mine = cells.get(metric), mine_by.get(metric)
+                if theirs is None or mine is None or theirs["value"] is None or mine["value"] is None:
+                    continue
+                adv = advantage(metric, mine, theirs)
+                v = "n/v" if metric in analyze.NO_VERDICT else verdict(adv)
+                out.append({"system": system, "build": build, "metric": metric, "mine": mine, "theirs": theirs, "adv": adv, "verdict": v})
+        return out, built
+    first, _ = entries_at(0.95)
+    family = sum(1 for e in first if e["verdict"] in ("WIN", "TIE", "LOSS"))
+    level = 1 - 0.05 / max(family, 1)
+    entries, built = entries_at(level)
+    return entries, level
 
 
 def metrics_for(path, data):
@@ -215,7 +267,7 @@ def metrics_for(path, data):
         return metrics
     first = measured()
     ref = reference(data)
-    family = sum(1 for k, *_ in spec if k not in analyze.NO_VERDICT and ref in first.get(k, {})
+    family = sum(1 for k, *_ in spec if not analyze.no_verdict(kind, k, data.get("mode", "embedded")) and ref in first.get(k, {})
                  and first[k][ref]["value"] is not None and best_other(k, first[k])[0] is not None
                  and verdict(advantage(k, first[k][ref], best_other(k, first[k])[1])) in ("WIN", "TIE", "LOSS"))
     level = 1 - 0.05 / max(family, 1)
@@ -231,8 +283,9 @@ def section(path, data):
     title = f"{ds.get('id') or ds['name']}" + (f" ({ds['n_train']:,} vectors, {ds['n_test']:,} queries)" if kind == "ann" else f" ({ds['documents']:,} documents, {ds['queries']:,} queries)")
     if is_server(data):
         title += ", server mode"
+    per_build, build_level = per_build_for(path, data)
     return {"path": path, "data": data, "metrics": metrics, "spec": spec, "title": title, "hw": hw, "kind": kind,
-            "level": level, "family": family}
+            "level": level, "family": family, "per_build": per_build, "build_level": build_level}
 
 
 def timing_boundary_lines(data):
@@ -241,13 +294,22 @@ def timing_boundary_lines(data):
     return ["Timing boundary (where each query is timed): " + "; ".join(f"{display(s, data)}: {boundary[s]}" for s in present) + ".", ""] if present else []
 
 
+def interval_text(sec):
+    data = sec["data"]
+    rounds = (data.get("protocol") or {}).get("rounds")
+    if rounds is not None and rounds < analyze.MIN_BOOTSTRAP_ROUNDS:
+        return (f"Intervals: min-max range of the {rounds} process rounds, not a confidence interval (a bootstrap of fewer than "
+                f"{analyze.MIN_BOOTSTRAP_ROUNDS} rounds has too few distinct resamples).")
+    return f"Intervals: {sec['level'] * 100:.2f}% bootstrap over process rounds (Bonferroni family of {sec['family']} verdict metrics)."
+
+
 def render_section(sec, cells_out):
     data, metrics, spec, hw = sec["data"], sec["metrics"], sec["spec"], sec["hw"]
     path = sec["path"]
     lines = [f"### {sec['title']}", "",
              f"Suite `{data['suite']}`, hardware class `{hw['class']}` ({hw['cpu']}, {hw['logical_cores']} logical cores, {hw['memory_bytes'] / 2**30:.0f} GiB, " +
              f"{hw['os']}{', GitHub-hosted runner' if hw.get('hosted_runner') else ''}), commit `{data['commit'][:10]}`, {data['date'][:10]}. " +
-             f"Raw results: [{path.name}](../../{rel(path)}). Intervals: {sec['level'] * 100:.2f}% bootstrap (Bonferroni family of {sec['family']} verdict metrics).", "",
+             f"Raw results: [{path.name}](../../{rel(path)}). {interval_text(sec)}", "",
              *timing_boundary_lines(data),
              f"| Metric | {'warm-server' if is_server(data) else 'WARM'} | Best other | Advantage (WARM vs best other) | Verdict |", "|---|---|---|---|---|"]
     tally = {"WIN": [], "TIE": [], "LOSS": [], "n/m": [], "n/v": []}
@@ -262,12 +324,19 @@ def render_section(sec, cells_out):
             footnotes.append(footnote)
         return "†"
 
+    embedded_ops = lambda key: key in analyze.OPS_METRICS and not is_server(data)  # noqa: E731
+    dropped = {}
     for key, label, unit, dec in spec:
         cells = metrics.get(key)
         if not cells:
             continue
         mine = cells.get(reference(data))
-        name, other = best_other(key, cells)
+        contract = mine if mine is not None and embedded_ops(key) else None
+        name, other = best_other(key, cells, contract)
+        if contract is not None and other is None and any(s != reference(data) and c["value"] is not None for s, c in cells.items()):
+            # Every comparator that measured this row commits by a different contract: no row, no factor.
+            dropped[key] = label
+            continue
         for system, c in cells.items():
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": hw["class"], "metric": key, "system": system,
                               "value": c["value"], "ci": c["ci"] if c["value"] is not None else None, "n": c["n"], "source": c["source"],
@@ -277,7 +346,7 @@ def render_section(sec, cells_out):
             continue
         adv = advantage(key, mine, other) if other else None
         mark = marker(key, mine, other, name)
-        v = "n/v" if key in analyze.NO_VERDICT or mark else verdict(adv) if other else "n/m"
+        v = "n/v" if analyze.no_verdict(sec["kind"], key, data.get("mode", "embedded")) or mark else verdict(adv) if other else "n/m"
         tally[v].append((key, label, name, adv))
         if other is not None:
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": hw["class"], "metric": key, "derived": True,
@@ -286,6 +355,8 @@ def render_section(sec, cells_out):
                               "text": "n/m" if adv is None else fx(adv["factor"])})
         adv_text = "n/m" if adv is None else fx(adv["factor"]) + (f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv["ci"] else " (no CI)")
         best_text = "n/m" if other is None else f"{display(name, data)} {fmt(other['value'], dec)}{mark}"
+        if analyze.no_verdict(sec["kind"], key, data.get("mode", "embedded")) and key in analyze.ANN_PER_BUILD:
+            best_text, adv_text = "per build, see below", "per build"
         note = f" ({mine['note']})" if mine["value"] is None and mine["note"] else ""
         lines.append(f"| {label}{' (' + unit + ')' if unit else ''} | {fmt(mine['value'], dec)}{mark}{note} | {best_text} | {adv_text} | **{v}** |")
     lines += ["", "<details><summary>All systems</summary>", ""]
@@ -294,12 +365,12 @@ def render_section(sec, cells_out):
     lines += ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for key, label, unit, dec in spec:
         cells = metrics.get(key)
-        if not cells:
+        if not cells or key in dropped:
             continue
-        best, _ = best_other(key, {**cells})
         sign = 1 if analyze.direction(key) == analyze.HIGHER else -1
-        valued = {s: c["value"] for s, c in cells.items() if c["value"] is not None}
         mine = cells.get(reference(data))
+        comparable = lambda s_, c_: not (embedded_ops(key) and mine is not None and c_.get("durability_class") != mine.get("durability_class"))  # noqa: E731
+        valued = {s: c["value"] for s, c in cells.items() if c["value"] is not None and comparable(s, c)}
         if mine and any(analyze.comparison_note(key, mine, cells[s]) for s in valued):
             valued = {}
         top = max(valued, key=lambda s: sign * valued[s]) if valued else None
@@ -308,6 +379,8 @@ def render_section(sec, cells_out):
             c = cells.get(s)
             if c is None:
                 row.append("")
+            elif not comparable(s, c):
+                row.append("n/c")
             elif c["value"] is None:
                 row.append(f"n/m ({c['note']})" if c["note"] else "n/m")
             else:
@@ -316,15 +389,90 @@ def render_section(sec, cells_out):
                     text += marker(key, mine, c, s)
                 row.append(f"**{text}**" if s == top else text)
         lines.append("| " + " | ".join(row) + " |")
-    lines += ["", "Bold marks the best value in the row. Operating points for the QPS rows: "
+    lines += ["", "n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below)." if any(embedded_ops(k) for k, *_ in spec) else "",
+              "Bold marks the best value in the row. Operating points for the QPS rows: "
               + "; ".join(f"{display(s, data)}: {metrics['qps@recall0.95'][s]['note']}" for s in systems
                           if "qps@recall0.95" in metrics and s in metrics["qps@recall0.95"] and metrics["qps@recall0.95"][s]["note"]) + "." if sec["kind"] == "ann" else
               "Bold marks the best value in the row.", "", "</details>", ""]
     lines += [f"† {note}" for note in footnotes] + ([""] if footnotes else [])
+    if not is_server(data):
+        lines += ["Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):", "",
+                  "| System | Class | What one operation does |", "|---|---|---|"]
+        lines += [f"| {display(s_, data)} | {registry.commit_contract(s_)[0]} | {registry.commit_contract(s_)[1]} |" for s_ in data["systems"]]
+        lines += [""]
+        for key, label in dropped.items():
+            lines += [f"Row not generated: {label}. Every comparator measured in this file commits by a different contract than WARM, so no comparison exists; "
+                      f"a comparator with an incremental durable commit would be needed.", ""]
+    if sec["kind"] == "text":
+        lines += ingest_mode_lines(sec)
+    lines += per_build_lines(sec, cells_out)
     skipped = data.get("skipped")
     if skipped:
         lines += ["Systems that did not run in this file: " + "; ".join(f"`{k}`: {v[:160]}" for k, v in skipped.items()) + ".", ""]
     return lines, tally
+
+
+def ingest_mode_lines(sec):
+    """Both WARM text rows side by side: `warm` (lexical ingest) feeds every verdict, `warm-eager` is reported only."""
+    metrics, data = sec["metrics"], sec["data"]
+    if registry.WARM not in data["systems"] or registry.WARM_EAGER not in data["systems"]:
+        return []
+    lines = ["WARM ingest modes. Verdicts above use `warm` (lexical-only ingest, like-for-like with the lexical comparators). `warm-eager` "
+             "(chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:", "",
+             "| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |", "|---|---|---|---|"]
+    for key, label, unit, dec in sec["spec"]:
+        a, b = metrics.get(key, {}).get(registry.WARM), metrics.get(key, {}).get(registry.WARM_EAGER)
+        if key not in ("qps", "p50_latency", "p99_latency", "build_seconds", "serving_rss_mib", "disk_mib") or not a or not b or a["value"] is None or b["value"] is None:
+            continue
+        lines.append(f"| {label}{' (' + unit + ')' if unit else ''} | {fmt(a['value'], dec)} | {fmt(b['value'], dec)} | {b['value'] / a['value']:.2f}x |")
+    qa, qb = metrics.get("qps", {}).get(registry.WARM), metrics.get("qps", {}).get(registry.WARM_EAGER)
+    if qa and qb and qa["value"] and qb["value"] and (qb["ci"][0] > qa["ci"][1] or qb["ci"][1] < qa["ci"][0]):
+        lines += ["", "The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, "
+                  "so neither figure alone is the engine's speed."]
+    return lines + [""]
+
+
+def per_build_lines(sec, cells_out):
+    entries = sec.get("per_build") or []
+    if not entries:
+        return []
+    data, path, level = sec["data"], sec["path"], sec["build_level"]
+    ref = reference(data)
+    builds = sorted({(e["system"], e["build"]) for e in entries})
+    tally = {"WIN": 0, "TIE": 0, "LOSS": 0}
+    lines = ["Per-build comparison. Each row is one comparator build; every figure in it, and WARM's factor against it, comes from that build alone "
+             f"(QPS at a recall target uses only that build's sweep). Intervals {level * 100:.2f}% bootstrap or the range of rounds as above.", "",
+             "| Comparator build | " + " | ".join(f"{LABELS[m][0]} ({LABELS[m][1]})" if LABELS[m][1] else LABELS[m][0] for m in PER_BUILD_METRICS) + " |",
+             "|---|" + "---|" * len(PER_BUILD_METRICS)]
+    by = {(e["system"], e["build"], e["metric"]): e for e in entries}
+    for system, build in builds:
+        row = [f"{display(system, data)} {build}"]
+        for m in PER_BUILD_METRICS:
+            e = by.get((system, build, m))
+            if e is None:
+                row.append("n/m")
+                continue
+            dec = LABELS[m][2]
+            adv = e["adv"]
+            text = f"{fmt(e['theirs']['value'], dec)}; WARM {fmt(e['mine']['value'], dec)}"
+            if e["verdict"] in tally:
+                tally[e["verdict"]] += 1
+            if adv is not None and m not in analyze.NO_VERDICT:
+                text += f", {fx(adv['factor'])}" + (f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv["ci"] else "") + f" **{e['verdict']}**"
+            row.append(text)
+            for who, cell_ in ((ref, e["mine"]), (system, e["theirs"])):
+                cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": sec["hw"]["class"], "metric": m, "system": who, "build": build if who == system else None,
+                                  "per_build": [system, build], "value": cell_["value"], "ci": cell_["ci"], "n": cell_["n"], "source": cell_["source"],
+                                  "validity": cell_["validity"], "validity_reason": cell_["validity_reason"], "uncertainty": cell_["uncertainty"], "text": fmt(cell_["value"], dec)})
+            if m in analyze.NO_VERDICT:
+                continue
+            cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": sec["hw"]["class"], "metric": m, "derived": True, "per_build": [system, build],
+                              "warm": ref, "other": system, "factor": None if adv is None or adv["factor"] == float("inf") else adv["factor"],
+                              "factor_infinite": bool(adv and adv["factor"] == float("inf")), "ci": adv["ci"] if adv else None, "verdict": e["verdict"],
+                              "text": "n/m" if adv is None else fx(adv["factor"])})
+        lines.append("| " + " | ".join(row) + " |")
+    lines += ["", f"Per-build verdicts: WARM wins {tally['WIN']}, ties {tally['TIE']}, losses {tally['LOSS']}. Index size carries no verdict.", ""]
+    return lines
 
 
 def facts_table(results):
@@ -370,6 +518,9 @@ def build():
         summary.append((sec, counts, tally))
         for key, label, name, adv in tally["LOSS"]:
             losses.append((sec, key, label, name, adv))
+        for e in sec["per_build"]:
+            if e["verdict"] == "LOSS":
+                losses.append((sec, e["metric"], f"{LABELS[e['metric']][0]}, per build", e["system"] + "|" + e["build"], e["adv"]))
     out = ["# WARM comparison", "",
            "Generated by `./benchmarks/competitive/warm-bench table` from the committed files in `benchmarks/results/competitive/`; do not edit by hand. " +
            "Every cell is indexed with its source file and key path in [comparison.cells.json](comparison.cells.json). Method, caveats and how to reproduce: [README.md](README.md).", "",
@@ -383,7 +534,7 @@ def build():
     if losses:
         out += ["| Dataset | Metric | Best other | WARM disadvantage | Candidate lever (hypothesis unless a file is cited) |", "|---|---|---|---|---|"]
         for sec, key, label, name, adv in losses:
-            out.append(f"| {sec['title']} ({sec['hw']['class']}) | {label} | {display(name, sec['data'])} | {'the comparator has 0' if adv['factor'] == 0 else format(1 / adv['factor'], '.2f') + 'x worse'} | {LEVERS.get(sec['kind'] + ':' + key) or LEVERS.get(key, '')} |")
+            out.append(f"| {sec['title']} ({sec['hw']['class']}) | {label} | {display(name.split('|')[0], sec['data']) + (' ' + name.split('|')[1] if '|' in name else '')} | {'the comparator has 0' if adv['factor'] == 0 else format(1 / adv['factor'], '.2f') + 'x worse'} | {LEVERS.get(sec['kind'] + ':' + key) or LEVERS.get(key, '')} |")
     else:
         out.append("No metric in the committed results is lost.")
     out += ["", "## Results", ""] + body
@@ -434,6 +585,19 @@ def gaps_from(summary):
                     "hypothesis": LEVERS.get(sec["kind"] + ":" + key) or LEVERS.get(key, ""),
                     "code_path": paths.get(key, paths["default"]),
                 })
+    for sec, _, _ in summary:
+        for e in sec["per_build"]:
+            if e["verdict"] not in ("LOSS", "TIE"):
+                continue
+            adv, unit = e["adv"], e["mine"]["unit"]
+            gaps.append({
+                "status": e["verdict"], "dataset": sec["title"], "hardware_class": sec["hw"]["class"], "suite": sec["data"]["suite"],
+                "metric": e["metric"], "label": LABELS[e["metric"]][0] + ", per build", "comparator": f"{display(e['system'], sec['data'])} {e['build']}",
+                "warm": e["mine"]["value"], "comparator_value": e["theirs"]["value"], "unit": unit,
+                "advantage_factor": adv["factor"] if adv and adv["factor"] != float("inf") else None,
+                "advantage_ci": adv["ci"] if adv else None, "level": sec["build_level"], "file": rel(sec["path"]),
+                "hypothesis": LEVERS.get(e["metric"], ""), "code_path": CODE_PATHS["ann"].get(e["metric"], CODE_PATHS["ann"]["default"]),
+            })
     return gaps
 
 
@@ -458,7 +622,10 @@ def readme_block(summary):
             continue
         spec = {k: (label, unit, dec) for k, label, unit, dec in sec["spec"]}
         short = sec["title"].split(" (")[0]
+        mode = sec["data"].get("mode", "embedded")
         for key in HEADLINE[sec["kind"]]:
+            if key in analyze.ANN_PER_BUILD and analyze.no_verdict(sec["kind"], key, mode):
+                continue  # compared per comparator build; see the pointer row below
             cells = sec["metrics"].get(key)
             ref = reference(sec["data"])
             if not cells or ref not in cells:
@@ -467,10 +634,16 @@ def readme_block(summary):
             mine = cells[ref]
             name, other = best_other(key, cells)
             adv = advantage(key, mine, other) if other else None
-            mark = {"WIN": "W", "TIE": "T", "LOSS": "L", "n/m": "-", "n/v": "-"}["n/v" if key in analyze.NO_VERDICT else verdict(adv) if other else "n/m"]
+            mark = {"WIN": "W", "TIE": "T", "LOSS": "L", "n/m": "-", "n/v": "-"}["n/v" if analyze.no_verdict(sec["kind"], key, mode) else verdict(adv) if other else "n/m"]
             best_text = "n/m" if other is None else f"{display(name, sec['data'])} {fmt(other['value'], dec)}"
             lines.append(f"| {short} | `{sec['hw']['class']}` | {label}{' (' + unit + ')' if unit else ''} | {fmt(mine['value'], dec)} | {best_text} | " +
                          f"{'n/m' if adv is None else fx(adv['factor'])} | {mark} |")
+            eager = sec["metrics"].get(key, {}).get(registry.WARM_EAGER) if key == "qps" else None
+            if eager and eager["value"] is not None:
+                lines.append(f"| {short} | `{sec['hw']['class']}` | {label} ({unit}), WARM with eager ingest (reference, feeds no verdict) | {fmt(eager['value'], dec)} | - | - | - |")
+        if sec["per_build"]:
+            counts = {v: sum(1 for e in sec["per_build"] if e["metric"] in ("build_seconds", "serving_rss_mib") and e["verdict"] == v) for v in ("WIN", "TIE", "LOSS")}
+            lines.append(f"| {short} | `{sec['hw']['class']}` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W {counts['WIN']} / T {counts['TIE']} / L {counts['LOSS']} | |")
     lines += ["", END]
     return "\n".join(lines) + "\n"
 

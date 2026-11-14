@@ -18,11 +18,16 @@ WARM = "warm"
 # process in both rows. `warm-eager` is never a comparator in a verdict (same family).
 WARM_EAGER = "warm-eager"
 WARM_TEXT_ENCODE = {WARM: "lexical", WARM_EAGER: "eager"}
+# The tantivy crate behind the native arm (examples/competitive_text_tantivy.rs, pinned in Cargo.toml) is the
+# version tantivy-py 0.27.0 is built against; the example reports it in its build output.
+TANTIVY_CRATE = "0.27.0"
+# Result files written before the rename key the Python binding as `tantivy`.
+LEGACY_KEYS = {"hms": WARM, "hms-eager": WARM_EAGER, "hms-server": "warm-server", "tantivy": "tantivy-py"}
 
 # kind: ann | text.  env: pinned environment (envs.PINS key).  worker: key inside the worker module.
 SYSTEMS = {
     WARM: {"display": "WARM", "kind": "both", "env": None, "package": "writerslogic-warm", "family": "warm"},
-    WARM_EAGER: {"display": "WARM (eager hypervectors)", "kind": "text", "env": None, "package": "writerslogic-warm", "family": "warm"},
+    WARM_EAGER: {"display": "WARM (eager hypervectors, informational)", "kind": "text", "env": None, "package": "writerslogic-warm", "family": "warm"},
     "hnswlib": {"display": "hnswlib", "kind": "ann", "env": "hnswlib", "package": "hnswlib", "family": "hnsw"},
     "faiss-hnsw": {"display": "FAISS HNSW", "kind": "ann", "env": "faiss", "package": "faiss-cpu", "family": "hnsw"},
     "faiss-flat": {"display": "FAISS Flat (exact)", "kind": "ann", "env": "faiss", "package": "faiss-cpu", "family": "exact"},
@@ -37,7 +42,10 @@ SYSTEMS = {
     "duckdb-vss": {"display": "DuckDB vss", "kind": "ann", "env": "duckdb", "package": "duckdb", "family": "hnsw"},
     "sqlite-fts5": {"display": "SQLite FTS5", "kind": "text", "env": "stdlib", "package": "sqlite3", "family": "lexical"},
     "lucene": {"display": f"Apache Lucene {jars.VERSION} (JVM)", "kind": "text", "env": None, "package": "lucene-core", "family": "lexical"},
-    "tantivy": {"display": "tantivy", "kind": "text", "env": "tantivy", "package": "tantivy", "family": "lexical"},
+    # The Python binding and the native crate are separate rows: the binding adds a language boundary and a
+    # per-hit Python object that the native crate does not pay, so neither stands in for the other.
+    "tantivy-py": {"display": "tantivy-py 0.27.0 (CPython binding)", "kind": "text", "env": "tantivy", "package": "tantivy", "family": "lexical"},
+    "tantivy-rs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
     # Version controls: the previous pin of each current comparator, never in a default run or a verdict.
     # Select them with `--systems` to measure the version effect inside the same interleaved rounds.
     "sqlite-fts5-prev": {"display": "SQLite FTS5 (previous pin, SQLite 3.50.4)", "kind": "text-control", "env": "stdlib-prev", "package": "sqlite3", "family": "lexical"},
@@ -57,9 +65,42 @@ TIMING_BOUNDARY = {
     "sqlite-vec": "CPython sqlite3 call per query", "lancedb": "CPython + Arrow call per query (multi-threaded Rust runtime inside)",
     "chroma": "CPython client call per query (Rust core inside)", "qdrant-local": "CPython client call per query (embedded local mode)",
     "milvus-lite": "CPython client call per query (embedded server process)", "duckdb-vss": "CPython duckdb call per query",
-    "sqlite-fts5": "CPython sqlite3 call per query (query string built outside the timer)", "tantivy": "CPython tantivy-py call per query (stored id fetched per hit)",
-    "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after a full untimed JIT warm-up pass",
+    "sqlite-fts5": "CPython sqlite3 call per query (query string built outside the timer)", "tantivy-py": "CPython tantivy-py call per query (query parsed outside the timer; stored id fetched per hit through Python objects)",
+    "tantivy-rs": "native Rust API call in its own process (query parsed outside the timer; id read from a fast field per hit), same process model as WARM",
+    "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after untimed JIT warm-up passes to steady state; query analyzed outside the timer, ids from an array built at open",
 }
+
+# JVM flags per Lucene phase. serve: a small fixed heap and the serial collector (the index is memory-mapped, so the
+# heap holds only the id table, prepared queries and per-query garbage), compiler left at its default tiered C2, and no
+# perf-data mapping; build and ops: heap sized from the machine, parallel collector, the usual indexing setup.
+LUCENE_JVM_FLAGS = {
+    "serve": ["-Xms64m", "-Xmx128m", "-XX:+UseSerialGC", "-XX:-UsePerfData"],
+    "build": ["-XX:MaxRAMPercentage=25", "-XX:+UseParallelGC", "-XX:-UsePerfData"],
+    "ops": ["-XX:MaxRAMPercentage=25", "-XX:+UseParallelGC", "-XX:-UsePerfData"],
+}
+
+# Recorded into every text results file for the systems that ran, so a reader sees the settings each comparator was
+# given and how the timed region was kept to the search itself.
+COMPARATOR_SETTINGS = {
+    "lucene": {"jvm_flags": LUCENE_JVM_FLAGS, "query_cache": "disabled (IndexSearcher.setQueryCache(null))",
+               "query_analysis": "outside the timed region (one Query per query, built before the passes)",
+               "id_resolution": "String[] indexed by docid, built at open; no stored-fields read in the timed region",
+               "warmup": "untimed whole passes until two consecutive passes agree within 5 percent (3 to 30), count in warmup_passes",
+               "similarity": "BM25Similarity default (k1 1.2, b 0.75); index force-merged to one segment"},
+    "sqlite-fts5": {"query": "SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT 100 (no join, no tie-break)",
+                    "id_resolution": "rowid-to-id dict loaded at open, outside the timed region",
+                    "pragmas": {"query_only": "ON", "mmap_size": 1073741824, "cache_size": "-65536 (64 MiB)", "temp_store": "MEMORY"},
+                    "tokenizer": "porter unicode61", "index": "optimize run at build"},
+    "tantivy-py": {"query": "parse_query_lenient outside the timed region; searcher.search(query, 100)",
+                   "id_resolution": "stored field fetched per hit through Python objects (the binding's only document access)",
+                   "analyzer": "en_stem, raw id field", "writer": "1 thread, 200 MB heap"},
+    "tantivy-rs": {"query": "QueryParser::parse_query_lenient outside the timed region; TopDocs::with_limit(100)",
+                   "id_resolution": "id fast field (column read) per hit", "analyzer": "en_stem, raw id field",
+                   "writer": "1 thread, 200 MB heap", "crate": f"tantivy {TANTIVY_CRATE}", "process": "one process per phase, same as WARM"},
+}
+COMPARATOR_SETTINGS["lucene-prev"] = COMPARATOR_SETTINGS["lucene"]
+COMPARATOR_SETTINGS["sqlite-fts5-prev"] = COMPARATOR_SETTINGS["sqlite-fts5"]
+COMPARATOR_SETTINGS["tantivy-prev"] = COMPARATOR_SETTINGS["tantivy-py"]
 
 _DOC = "documentation, not exercised here"
 
@@ -85,7 +126,8 @@ FACTS = {
     "duckdb-vss": {"service_needed": {"value": "no", "basis": _DOC},
                    "encrypted_at_rest": {"value": "database-file encryption (DuckDB 1.4+); not exercised with the vss index", "basis": _DOC}},
     "sqlite-fts5": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no (SQLCipher is a separate build)", "basis": _DOC}},
-    "tantivy": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
+    "tantivy-py": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
+    "tantivy-rs": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "whoosh": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "bm25s": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "lucene": {"service_needed": {"value": "no (library; needs a JVM)", "basis": _DOC}, "encrypted_at_rest": {"value": "no (filesystem-level only)", "basis": _DOC}},
@@ -132,7 +174,40 @@ TIMING_BOUNDARY.update(SERVER_TIMING_BOUNDARY)
 NOT_RUN.update(SERVER_NOT_RUN)
 
 
+# What "durable" means for one replace or delete, per system, from the adapter code that measures it. A replace/delete
+# row is compared only between systems of the same class. "incremental-durable-commit": durable on return, cost
+# proportional to the change (WARM appends one fsynced journal frame; a SQLite or search-index commit logs the change).
+# "full-index-rewrite": the adapter saves the whole index file and fsyncs it per operation, because the library has no
+# incremental durable API; that is a different contract and is never compared with an incremental commit.
+INCREMENTAL = "incremental-durable-commit"
+REWRITE = "full-index-rewrite"
+UNAUDITED = "unaudited"
+COMMIT_CONTRACT = {
+    WARM: (INCREMENTAL, "one fsynced journal frame per commit (F_FULLFSYNC on macOS)"),
+    WARM_EAGER: (INCREMENTAL, "one fsynced journal frame per commit (F_FULLFSYNC on macOS)"),
+    "sqlite-vec": (INCREMENTAL, "one SQLite transaction per operation with fullfsync on (ann_worker SqliteVec)"),
+    "sqlite-fts5": (INCREMENTAL, "one SQLite transaction per operation with fullfsync on"),
+    "tantivy-py": (INCREMENTAL, "writer commit per operation (segment and meta.json synced)"),
+    "tantivy-rs": (INCREMENTAL, "writer commit per operation (segment and meta.json synced)"),
+    "tantivy-prev": (INCREMENTAL, "writer commit per operation (segment and meta.json synced)"),
+    "lucene": (INCREMENTAL, "IndexWriter commit per operation (FileChannel.force)"),
+    "lucene-prev": (INCREMENTAL, "IndexWriter commit per operation (FileChannel.force)"),
+    "whoosh": (INCREMENTAL, "writer commit per operation"),
+    "hnswlib": (REWRITE, "save_index of the whole index plus fsync per operation; the library has no incremental durable API"),
+    "faiss-hnsw": (REWRITE, "write_index of the whole index plus fsync per operation"),
+    "faiss-flat": (REWRITE, "write_index of the whole index plus fsync per operation"),
+    "faiss-ivfpq": (REWRITE, "write_index of the whole index plus fsync per operation"),
+    "usearch": (REWRITE, "save of the whole index plus fsync per operation"),
+    "ngt": (REWRITE, "save of the whole index plus fsync per operation"),
+    "voyager": (REWRITE, "save of the whole index plus fsync per operation"),
+}
+
+
+def commit_contract(name):
+    """(class, description) of a system's durable replace/delete; unaudited systems match nothing."""
+    return COMMIT_CONTRACT.get(LEGACY_KEYS.get(name, name), (UNAUDITED, "adapter's flush semantics not audited as equivalent to an incremental commit"))
+
+
 def system(name):
     """Resolve immutable measurement IDs without changing source-file key paths."""
-    legacy = {"hms": WARM, "hms-eager": WARM_EAGER, "hms-server": "warm-server"}
-    return SYSTEMS[legacy.get(name, name)]
+    return SYSTEMS[LEGACY_KEYS.get(name, name)]

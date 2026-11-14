@@ -130,6 +130,9 @@ napi-build = { version = "2.2", optional = true }
 criterion = "0.8"
 proptest = "1.0"
 tempfile = "3"
+# Native tantivy arm of the competitive text benchmark (examples/competitive_text_tantivy.rs). Same crate
+# version as the tantivy-py pin in benchmarks/competitive (tantivy-py 0.27.0 builds against tantivy 0.27.0).
+tantivy = "=0.27.0"
 # TLS tests mint a throwaway certificate; ring keeps it free of the C toolchain.
 rcgen = { version = "0.14", default-features = false, features = ["crypto", "ring", "pem"] }
 

@@ -8,7 +8,7 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |
 |---|---|---|---|---|---|---|---|
-| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 8 | 1 | 0 | 0 | 5 |
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 5 | 0 | 0 | 0 | 7 |
 | beir:fiqa (57,600 documents, 500 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `modal-x86_64-8vcpu-32g` | heavy | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
@@ -21,6 +21,9 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Metric | Best other | WARM disadvantage | Candidate lever (hypothesis unless a file is cited) |
 |---|---|---|---|---|
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Build time, per build | hnswlib m16 | 2.24x worse | graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding |
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build, per build | hnswlib m16 | 1.01x worse | stream the build instead of holding the f32 matrix plus graph (ledger 1A target: peak build RSS <= 2x final index bytes) |
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Build time, per build | hnswlib m32 | 1.79x worse | graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 | 1.08x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 2.10x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | memory (4,559 documents, 100 queries) (modal-x86_64-8vcpu-32g) | Ingest/build time | SQLite FTS5 | 1.09x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
@@ -39,7 +42,7 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 ### sift-128-euclidean (1,000,000 vectors, 10,000 queries)
 
-Suite `heavy`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.44% bootstrap (Bonferroni family of 9 verdict metrics).
+Suite `heavy`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: min-max range of the 3 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
 Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; hnswlib: CPython binding call per query.
 
@@ -50,13 +53,11 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | QPS @ recall@10 >= 0.99 (QPS) | 12,761 | hnswlib 4,152 | 3.07x [3.04, 3.20] | **WIN** |
 | p50 latency @ 0.95 (us) | 38 | hnswlib 112 | 2.95x [2.88, 3.19] | **WIN** |
 | p99 latency @ 0.95 (us) | 64 | hnswlib 192 | 3.00x [2.87, 3.56] | **WIN** |
-| Build time (s) | 120.40 | hnswlib 166.90 | 1.39x [1.37, 1.41] | **WIN** |
-| Peak RSS, build (MiB) | 1,292 | hnswlib 1,397 | 1.08x [1.08, 1.09] | **WIN** |
-| RSS, serving (MiB) | 489 | hnswlib 897 | 1.83x [1.82, 1.84] | **WIN** |
+| Build time (s) | 120.40 | per build, see below | per build | **n/v** |
+| Peak RSS, build (MiB) | 1,292 | per build, see below | per build | **n/v** |
+| RSS, serving (MiB) | 489 | per build, see below | per build | **n/v** |
 | Index size (MiB) | 576.3 | hnswlib 751.8 | 1.30x (no CI) | **n/v** |
-| Cold start to first answer (s) | 0.18 | hnswlib 0.62 | 3.35x [0.01, 18.68] | **TIE** |
-| Replace one vector (durable) (ms) | 3.976 | hnswlib 276.607 | 69.58x (no CI) | **n/v** |
-| Delete one vector (durable) (ms) | 3.297 | hnswlib 510.776 | 154.93x (no CI) | **n/v** |
+| Cold start to first answer (s) | 0.18 | per build, see below | per build | **n/v** |
 | Install size (MiB) | 5.1 | hnswlib 61.7 | 12.15x (no CI) | **n/v** |
 | Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
 
@@ -74,41 +75,62 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | RSS, serving (MiB) | **489** | 897 |
 | Index size (MiB) | **576.3** | 751.8 |
 | Cold start to first answer (s) | **0.18** | 0.62 |
-| Replace one vector (durable) (ms) | **3.976** | 276.607 |
-| Delete one vector (durable) (ms) | **3.297** | 510.776 |
 | Install size (MiB) | **5.1** | 61.7 |
 | Install distributions (count) | **0** | 2 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 24, 'rerank': 64} recall 0.956; hnswlib: m32e500 {'ef': 32} recall 0.953.
 
 </details>
 
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| hnswlib | full-index-rewrite | save_index of the whole index plus fsync per operation; the library has no incremental durable API |
+
+Row not generated: Replace one vector (durable). Every comparator measured in this file commits by a different contract than WARM, so no comparison exists; a comparator with an incremental durable commit would be needed.
+
+Row not generated: Delete one vector (durable). Every comparator measured in this file commits by a different contract than WARM, so no comparison exists; a comparator with an incremental durable commit would be needed.
+
+Per-build comparison. Each row is one comparator build; every figure in it, and WARM's factor against it, comes from that build alone (QPS at a recall target uses only that build's sweep). Intervals 99.82% bootstrap or the range of rounds as above.
+
+| Comparator build | QPS @ recall@10 >= 0.90 (QPS) | QPS @ recall@10 >= 0.95 (QPS) | QPS @ recall@10 >= 0.99 (QPS) | Build time (s) | Peak RSS, build (MiB) | RSS, serving (MiB) | Index size (MiB) | Cold start to first answer (s) |
+|---|---|---|---|---|---|---|---|---|
+| hnswlib m16 | 13,679; WARM 34,199, 2.50x [2.48, 2.65] **WIN** | 8,035; WARM 26,250, 3.27x [3.19, 3.38] **WIN** | 3,108; WARM 12,761, 4.11x [4.01, 4.25] **WIN** | 53.71; WARM 120.40, 0.45x [0.45, 0.45] **LOSS** | 1,278; WARM 1,292, 0.99x [0.99, 0.99] **LOSS** | 776; WARM 489, 1.59x [1.58, 1.59] **WIN** | 630.0; WARM 576.3 | 0.71; WARM 0.18, 3.84x [0.01, 4.06] **TIE** |
+| hnswlib m32 | 12,545; WARM 34,199, 2.73x [2.68, 2.80] **WIN** | 7,435; WARM 26,250, 3.53x [3.45, 3.61] **WIN** | 4,152; WARM 12,761, 3.07x [3.04, 3.20] **WIN** | 67.33; WARM 120.40, 0.56x [0.56, 0.56] **LOSS** | 1,399; WARM 1,292, 1.08x [1.08, 1.08] **WIN** | 897; WARM 489, 1.83x [1.82, 1.84] **WIN** | 751.8; WARM 576.3 | 0.63; WARM 0.18, 3.42x [0.01, 3.77] **TIE** |
+| hnswlib m32e500 | 11,240; WARM 34,199, 3.04x [3.03, 3.11] **WIN** | 8,955; WARM 26,250, 2.93x [2.86, 3.19] **WIN** | 3,681; WARM 12,761, 3.47x [3.41, 3.57] **WIN** | 166.90; WARM 120.40, 1.39x [1.37, 1.41] **WIN** | 1,397; WARM 1,292, 1.08x [1.08, 1.09] **WIN** | 897; WARM 489, 1.83x [1.82, 1.84] **WIN** | 751.8; WARM 576.3 | 0.62; WARM 0.18, 3.35x [0.01, 18.68] **TIE** |
+| hnswlib m48e500 | 9,824; WARM 34,199, 3.48x [3.43, 3.55] **WIN** | 7,925; WARM 26,250, 3.31x [3.22, 3.45] **WIN** | 3,197; WARM 12,761, 3.99x [3.90, 4.13] **WIN** | 184.90; WARM 120.40, 1.54x [1.53, 1.54] **WIN** | 1,508; WARM 1,292, 1.17x [1.16, 1.18] **WIN** | 1,019; WARM 489, 2.08x [2.07, 2.09] **WIN** | 873.8; WARM 576.3 | 0.62; WARM 0.18, 3.38x [0.01, 4.37] **TIE** |
+
+Per-build verdicts: WARM wins 21, ties 4, losses 3. Index size carries no verdict.
+
 ### beir:fiqa (57,600 documents, 500 queries)
 
-Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: min-max range of the 5 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
-Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit).
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (stored id fetched per hit).
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
 | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x [0.70, 1.41] | **TIE** |
 | recall@100 | 0.5422 | SQLite FTS5 0.5546 | 0.98x [0.82, 1.19] | **TIE** |
-| QPS (single thread) (QPS) | 3,377 | tantivy 1,669 | 2.02x [1.97, 2.06] | **WIN** |
+| QPS (single thread) (QPS) | 3,377 | tantivy-py 0.27.0 (CPython binding) 1,669 | 2.02x [1.97, 2.06] | **WIN** |
 | p50 latency (us) | 277 | Apache Lucene 10.6.0 (JVM) 563 | 2.04x [1.99, 2.10] | **WIN** |
-| p99 latency (us) | 619 | tantivy 1,061 | 1.71x [1.46, 2.11] | **WIN** |
+| p99 latency (us) | 619 | tantivy-py 0.27.0 (CPython binding) 1,061 | 1.71x [1.46, 2.11] | **WIN** |
 | Ingest/build time (s) | 1.46 | SQLite FTS5 1.35 | 0.93x [0.89, 0.97] | **LOSS** |
 | Peak RSS, build (MiB) | 301 | SQLite FTS5 143 | 0.48x [0.48, 0.48] | **LOSS** |
 | Peak RSS, serving (MiB) | 30 | SQLite FTS5 39 | 1.28x [1.26, 1.29] | **WIN** |
 | On-disk size (MiB) | 9.0 | Apache Lucene 10.6.0 (JVM) 12.1 | 1.34x (no CI) | **WIN** |
-| Cold start to first answer (s) | 0.01 | tantivy 0.03 | 3.16x [2.42, 3.48] | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.03 | 3.16x [2.42, 3.48] | **WIN** |
 | Replace one document (durable) (ms) | 1.886 | SQLite FTS5 9.351 | 4.96x (no CI) | **n/v** |
 | Delete one document (durable) (ms) | 1.430 | SQLite FTS5 9.080 | 6.35x (no CI) | **n/v** |
 | Install size (MiB) | 3.9 | Apache Lucene 10.6.0 (JVM) 6.3 | 1.63x (no CI) | **n/v** |
-| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy |
+| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) |
 |---|---|---|---|---|
 | nDCG@10 | 0.2654 | **0.2678** | 0.2657 | 0.2643 |
 | recall@100 | 0.5422 | **0.5546** | 0.5445 | 0.5406 |
@@ -125,36 +147,46 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Install size (MiB) | 3.9 | **0.0** | 6.3 | 16.9 |
 | Install distributions (count) | **0** | 0 | 2 | 1 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row.
 
 </details>
 
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
 ### memory (4,559 documents, 100 queries)
 
-Suite `heavy`, hardware class `modal-x86_64-8vcpu-32g` (unknown, 24 logical cores, 396 GiB, Linux 4.19.0-gvisor), commit `7ba2d4fe35`, 2026-11-06. Raw results: [heavy-text-memory-modal-x86_64-8vcpu-32g.json](../../benchmarks/results/competitive/heavy-text-memory-modal-x86_64-8vcpu-32g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+Suite `heavy`, hardware class `modal-x86_64-8vcpu-32g` (unknown, 24 logical cores, 396 GiB, Linux 4.19.0-gvisor), commit `7ba2d4fe35`, 2026-11-06. Raw results: [heavy-text-memory-modal-x86_64-8vcpu-32g.json](../../benchmarks/results/competitive/heavy-text-memory-modal-x86_64-8vcpu-32g.json). Intervals: min-max range of the 3 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
-Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; WARM (eager hypervectors): native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`); SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit); Whoosh: pure Python; bm25s: CPython + NumPy (single-threaded retrieve).
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`); SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (stored id fetched per hit); Whoosh: pure Python; bm25s: CPython + NumPy (single-threaded retrieve).
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
 | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x [0.60, 1.65] | **TIE** |
 | recall@100 | 0.8203 | SQLite FTS5 0.8392 | 0.98x [0.79, 1.22] | **TIE** |
-| QPS (single thread) (QPS) | 4,138 | tantivy 2,185 | 1.89x [1.60, 2.35] | **WIN** |
-| p50 latency (us) | 207 | tantivy 434 | 2.10x [1.77, 2.45] | **WIN** |
-| p99 latency (us) | 533 | tantivy 798 | 1.50x [1.29, 1.93] | **WIN** |
+| QPS (single thread) (QPS) | 4,138 | tantivy-py 0.27.0 (CPython binding) 2,185 | 1.89x [1.60, 2.35] | **WIN** |
+| p50 latency (us) | 207 | tantivy-py 0.27.0 (CPython binding) 434 | 2.10x [1.77, 2.45] | **WIN** |
+| p99 latency (us) | 533 | tantivy-py 0.27.0 (CPython binding) 798 | 1.50x [1.29, 1.93] | **WIN** |
 | Ingest/build time (s) | 1.91 | SQLite FTS5 1.75 | 0.92x [0.89, 0.94] | **LOSS** |
 | Peak RSS, build (MiB) | 149 | SQLite FTS5 131 | 0.88x [0.88, 0.89] | **LOSS** |
 | Peak RSS, serving (MiB) | 17 | SQLite FTS5 41 | 2.42x [2.30, 2.47] | **WIN** |
 | On-disk size (MiB) | 3.5 | Apache Lucene 10.6.0 (JVM) 10.3 | 2.92x (no CI) | **WIN** |
-| Cold start to first answer (s) | 0.03 | tantivy 0.08 | 3.22x [2.61, 4.32] | **WIN** |
+| Cold start to first answer (s) | 0.03 | tantivy-py 0.27.0 (CPython binding) 0.08 | 3.22x [2.61, 4.32] | **WIN** |
 | Replace one document (durable) (ms) | 7.243 | SQLite FTS5 1.248 | 0.17x (no CI) | **n/v** |
 | Delete one document (durable) (ms) | 0.169 | SQLite FTS5 0.586 | 3.48x (no CI) | **n/v** |
 | Install size (MiB) | 3.4 | Whoosh 2.0 | 0.58x (no CI) | **n/v** |
-| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | WARM | WARM (eager hypervectors) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy | Whoosh | bm25s |
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | Whoosh | bm25s |
 |---|---|---|---|---|---|---|---|
 | nDCG@10 | 0.4561 | 0.4561 | 0.4501 | **0.4627** | 0.4532 | 0.4401 | 0.4418 |
 | recall@100 | 0.8203 | 0.8203 | **0.8392** | 0.8237 | 0.8203 | 0.8207 | 0.8312 |
@@ -166,41 +198,65 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Peak RSS, serving (MiB) | **17** | 48 | 41 | 453 | 51 | 152 | 97 |
 | On-disk size (MiB) | **3.5** | 3.9 | 19.3 | 10.3 | 13.7 | 48.6 | 14.2 |
 | Cold start to first answer (s) | **0.03** | 0.54 | 0.09 | 0.75 | 0.08 | 0.29 | 0.24 |
-| Replace one document (durable) (ms) | 7.243 | 4.301 | **1.248** | 20.114 | 107.201 | 172.562 | n/m (immutable index; any change is a full rebuild) |
-| Delete one document (durable) (ms) | **0.169** | 1.345 | 0.586 | 1.611 | 107.264 | 74.629 | n/m (immutable index; any change is a full rebuild) |
+| Replace one document (durable) (ms) | 7.243 | 4.301 | **1.248** | 20.114 | 107.201 | 172.562 | n/c |
+| Delete one document (durable) (ms) | **0.169** | 1.345 | 0.586 | 1.611 | 107.264 | 74.629 | n/c |
 | Install size (MiB) | 3.4 | 3.4 | **0.0** | 6.3 | 16.9 | 2.0 | 56.5 |
 | Install distributions (count) | **0** | 0 | 0 | 2 | 1 | 2 | 3 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row.
 
 </details>
 
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| Whoosh | incremental-durable-commit | writer commit per operation |
+| bm25s | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest, like-for-like with the lexical comparators). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 4,138 | 4,840 | 1.17x |
+| p50 latency (us) | 207 | 195 | 0.94x |
+| p99 latency (us) | 533 | 382 | 0.72x |
+| Ingest/build time (s) | 1.91 | 18.51 | 9.67x |
+| Peak RSS, serving (MiB) | 17 | 48 | 2.86x |
+| On-disk size (MiB) | 3.5 | 3.9 | 1.11x |
+
 ### memory (4,559 documents, 100 queries)
 
-Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: min-max range of the 5 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
-Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit).
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (stored id fetched per hit).
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
 | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x [0.60, 1.65] | **TIE** |
 | recall@100 | 0.8203 | SQLite FTS5 0.8392 | 0.98x [0.79, 1.22] | **TIE** |
-| QPS (single thread) (QPS) | 11,499 | tantivy 4,990 | 2.30x [1.94, 2.55] | **WIN** |
-| p50 latency (us) | 73 | tantivy 180 | 2.45x [2.29, 2.76] | **WIN** |
-| p99 latency (us) | 197 | tantivy 377 | 1.91x [1.41, 2.82] | **WIN** |
+| QPS (single thread) (QPS) | 11,499 | tantivy-py 0.27.0 (CPython binding) 4,990 | 2.30x [1.94, 2.55] | **WIN** |
+| p50 latency (us) | 73 | tantivy-py 0.27.0 (CPython binding) 180 | 2.45x [2.29, 2.76] | **WIN** |
+| p99 latency (us) | 197 | tantivy-py 0.27.0 (CPython binding) 377 | 1.91x [1.41, 2.82] | **WIN** |
 | Ingest/build time (s) | 0.88 | SQLite FTS5 0.84 | 0.96x [0.93, 0.98] | **LOSS** |
 | Peak RSS, build (MiB) | 140 | SQLite FTS5 118 | 0.84x [0.84, 0.84] | **LOSS** |
 | Peak RSS, serving (MiB) | 14 | SQLite FTS5 23 | 1.68x [1.67, 1.72] | **WIN** |
 | On-disk size (MiB) | 3.1 | Apache Lucene 10.6.0 (JVM) 10.3 | 3.29x (no CI) | **WIN** |
-| Cold start to first answer (s) | 0.01 | tantivy 0.02 | 3.96x [3.56, 4.32] | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.02 | 3.96x [3.56, 4.32] | **WIN** |
 | Replace one document (durable) (ms) | 4.079 | SQLite FTS5 9.718 | 2.38x (no CI) | **n/v** |
 | Delete one document (durable) (ms) | 1.405 | SQLite FTS5 8.831 | 6.29x (no CI) | **n/v** |
 | Install size (MiB) | 3.9 | Apache Lucene 10.6.0 (JVM) 6.3 | 1.63x (no CI) | **n/v** |
-| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy |
+| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) |
 |---|---|---|---|---|
 | nDCG@10 | 0.4561 | 0.4501 | **0.4627** | 0.4532 |
 | recall@100 | 0.8203 | **0.8392** | 0.8237 | 0.8203 |
@@ -217,23 +273,33 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Install size (MiB) | 3.9 | **0.0** | 6.3 | 16.9 |
 | Install distributions (count) | **0** | 0 | 2 | 1 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row.
 
 </details>
 
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
 ### beir:nfcorpus (3,633 documents, 324 queries)
 
-Suite `heavy`, hardware class `modal-x86_64-8vcpu-32g` (unknown, 24 logical cores, 396 GiB, Linux 4.19.0-gvisor), commit `7ba2d4fe35`, 2026-11-06. Raw results: [heavy-text-beir-nfcorpus-modal-x86_64-8vcpu-32g.json](../../benchmarks/results/competitive/heavy-text-beir-nfcorpus-modal-x86_64-8vcpu-32g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+Suite `heavy`, hardware class `modal-x86_64-8vcpu-32g` (unknown, 24 logical cores, 396 GiB, Linux 4.19.0-gvisor), commit `7ba2d4fe35`, 2026-11-06. Raw results: [heavy-text-beir-nfcorpus-modal-x86_64-8vcpu-32g.json](../../benchmarks/results/competitive/heavy-text-beir-nfcorpus-modal-x86_64-8vcpu-32g.json). Intervals: min-max range of the 3 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
-Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; WARM (eager hypervectors): native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`); SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit); Whoosh: pure Python; bm25s: CPython + NumPy (single-threaded retrieve).
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`); SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (stored id fetched per hit); Whoosh: pure Python; bm25s: CPython + NumPy (single-threaded retrieve).
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
 | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x [0.70, 1.42] | **TIE** |
 | recall@100 | 0.2274 | Apache Lucene 10.6.0 (JVM) 0.2276 | 1.00x [0.69, 1.45] | **TIE** |
-| QPS (single thread) (QPS) | 12,373 | tantivy 7,333 | 1.69x [1.54, 1.86] | **WIN** |
-| p50 latency (us) | 99 | tantivy 160 | 1.61x [1.46, 1.81] | **WIN** |
-| p99 latency (us) | 164 | tantivy 280 | 1.71x [1.70, 2.04] | **WIN** |
+| QPS (single thread) (QPS) | 12,373 | tantivy-py 0.27.0 (CPython binding) 7,333 | 1.69x [1.54, 1.86] | **WIN** |
+| p50 latency (us) | 99 | tantivy-py 0.27.0 (CPython binding) 160 | 1.61x [1.46, 1.81] | **WIN** |
+| p99 latency (us) | 164 | tantivy-py 0.27.0 (CPython binding) 280 | 1.71x [1.70, 2.04] | **WIN** |
 | Ingest/build time (s) | 0.44 | SQLite FTS5 0.20 | 0.46x [0.44, 0.48] | **LOSS** |
 | Peak RSS, build (MiB) | 58 | SQLite FTS5 49 | 0.85x [0.83, 0.86] | **LOSS** |
 | Peak RSS, serving (MiB) | 15 | SQLite FTS5 45 | 2.91x [2.89, 3.12] | **WIN** |
@@ -242,11 +308,11 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Replace one document (durable) (ms) | 1.236 | SQLite FTS5 1.257 | 1.02x (no CI) | **n/v** |
 | Delete one document (durable) (ms) | 0.051 | SQLite FTS5 0.887 | 17.37x (no CI) | **n/v** |
 | Install size (MiB) | 3.4 | Whoosh 2.0 | 0.58x (no CI) | **n/v** |
-| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | WARM | WARM (eager hypervectors) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy | Whoosh | bm25s |
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | Whoosh | bm25s |
 |---|---|---|---|---|---|---|---|
 | nDCG@10 | **0.2916** | 0.2916 | 0.2914 | 0.2897 | 0.2903 | 0.2873 | 0.2878 |
 | recall@100 | 0.2274 | 0.2274 | 0.2271 | **0.2276** | 0.2269 | 0.2252 | 0.2272 |
@@ -258,28 +324,54 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Peak RSS, serving (MiB) | **15** | 28 | 45 | 495 | 54 | 79 | 83 |
 | On-disk size (MiB) | **1.0** | 1.0 | 4.0 | 1.5 | 2.0 | 9.9 | 3.4 |
 | Cold start to first answer (s) | **0.02** | 0.18 | 0.06 | 0.65 | 0.06 | 0.19 | 0.19 |
-| Replace one document (durable) (ms) | 1.236 | **1.002** | 1.257 | 14.200 | 24.324 | 43.819 | n/m (immutable index; any change is a full rebuild) |
-| Delete one document (durable) (ms) | **0.051** | 0.382 | 0.887 | 1.346 | 22.204 | 12.752 | n/m (immutable index; any change is a full rebuild) |
+| Replace one document (durable) (ms) | 1.236 | **1.002** | 1.257 | 14.200 | 24.324 | 43.819 | n/c |
+| Delete one document (durable) (ms) | **0.051** | 0.382 | 0.887 | 1.346 | 22.204 | 12.752 | n/c |
 | Install size (MiB) | 3.4 | 3.4 | **0.0** | 6.3 | 16.9 | 2.0 | 56.5 |
 | Install distributions (count) | **0** | 0 | 0 | 2 | 1 | 2 | 3 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row.
 
 </details>
 
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| Whoosh | incremental-durable-commit | writer commit per operation |
+| bm25s | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest, like-for-like with the lexical comparators). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 12,373 | 19,896 | 1.61x |
+| p50 latency (us) | 99 | 48 | 0.49x |
+| p99 latency (us) | 164 | 119 | 0.73x |
+| Ingest/build time (s) | 0.44 | 2.40 | 5.46x |
+| Peak RSS, serving (MiB) | 15 | 28 | 1.85x |
+| On-disk size (MiB) | 1.0 | 1.0 | 1.02x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
 ### beir:nfcorpus (3,633 documents, 324 queries)
 
-Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: min-max range of the 5 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
-Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit).
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (stored id fetched per hit).
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
 | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x [0.70, 1.42] | **TIE** |
 | recall@100 | 0.2274 | Apache Lucene 10.6.0 (JVM) 0.2276 | 1.00x [0.69, 1.45] | **TIE** |
-| QPS (single thread) (QPS) | 34,306 | tantivy 14,425 | 2.38x [1.89, 2.52] | **WIN** |
-| p50 latency (us) | 33 | tantivy 75 | 2.25x [1.86, 2.49] | **WIN** |
-| p99 latency (us) | 63 | tantivy 165 | 2.63x [1.29, 3.11] | **WIN** |
+| QPS (single thread) (QPS) | 34,306 | tantivy-py 0.27.0 (CPython binding) 14,425 | 2.38x [1.89, 2.52] | **WIN** |
+| p50 latency (us) | 33 | tantivy-py 0.27.0 (CPython binding) 75 | 2.25x [1.86, 2.49] | **WIN** |
+| p99 latency (us) | 63 | tantivy-py 0.27.0 (CPython binding) 165 | 2.63x [1.29, 3.11] | **WIN** |
 | Ingest/build time (s) | 0.15 | SQLite FTS5 0.14 | 0.94x [0.92, 0.95] | **LOSS** |
 | Peak RSS, build (MiB) | 52 | SQLite FTS5 33 | 0.63x [0.63, 0.63] | **LOSS** |
 | Peak RSS, serving (MiB) | 13 | SQLite FTS5 28 | 2.19x [2.17, 2.22] | **WIN** |
@@ -288,11 +380,11 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Replace one document (durable) (ms) | 2.767 | SQLite FTS5 14.208 | 5.14x (no CI) | **n/v** |
 | Delete one document (durable) (ms) | 2.154 | SQLite FTS5 14.295 | 6.64x (no CI) | **n/v** |
 | Install size (MiB) | 3.9 | Apache Lucene 10.6.0 (JVM) 6.3 | 1.63x (no CI) | **n/v** |
-| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy |
+| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) |
 |---|---|---|---|---|
 | nDCG@10 | **0.2916** | 0.2914 | 0.2897 | 0.2903 |
 | recall@100 | 0.2274 | 0.2271 | **0.2276** | 0.2269 |
@@ -309,23 +401,33 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Install size (MiB) | 3.9 | **0.0** | 6.3 | 16.9 |
 | Install distributions (count) | **0** | 0 | 2 | 1 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row.
 
 </details>
 
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
 ### beir:scifact (5,183 documents, 809 queries)
 
-Suite `heavy`, hardware class `modal-x86_64-8vcpu-32g` (unknown, 24 logical cores, 396 GiB, Linux 4.19.0-gvisor), commit `7ba2d4fe35`, 2026-11-06. Raw results: [heavy-text-beir-scifact-modal-x86_64-8vcpu-32g.json](../../benchmarks/results/competitive/heavy-text-beir-scifact-modal-x86_64-8vcpu-32g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+Suite `heavy`, hardware class `modal-x86_64-8vcpu-32g` (unknown, 24 logical cores, 396 GiB, Linux 4.19.0-gvisor), commit `7ba2d4fe35`, 2026-11-06. Raw results: [heavy-text-beir-scifact-modal-x86_64-8vcpu-32g.json](../../benchmarks/results/competitive/heavy-text-beir-scifact-modal-x86_64-8vcpu-32g.json). Intervals: min-max range of the 3 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
-Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; WARM (eager hypervectors): native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`); SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit); Whoosh: pure Python; bm25s: CPython + NumPy (single-threaded retrieve).
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`); SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (stored id fetched per hit); Whoosh: pure Python; bm25s: CPython + NumPy (single-threaded retrieve).
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
 | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x [0.90, 1.11] | **TIE** |
 | recall@100 | 0.9264 | SQLite FTS5 0.9322 | 0.99x [0.94, 1.05] | **TIE** |
-| QPS (single thread) (QPS) | 5,534 | tantivy 3,106 | 1.78x [1.61, 2.03] | **WIN** |
-| p50 latency (us) | 179 | tantivy 315 | 1.76x [1.60, 2.01] | **WIN** |
-| p99 latency (us) | 236 | tantivy 474 | 2.01x [1.68, 2.24] | **WIN** |
+| QPS (single thread) (QPS) | 5,534 | tantivy-py 0.27.0 (CPython binding) 3,106 | 1.78x [1.61, 2.03] | **WIN** |
+| p50 latency (us) | 179 | tantivy-py 0.27.0 (CPython binding) 315 | 1.76x [1.60, 2.01] | **WIN** |
+| p99 latency (us) | 236 | tantivy-py 0.27.0 (CPython binding) 474 | 2.01x [1.68, 2.24] | **WIN** |
 | Ingest/build time (s) | 0.58 | SQLite FTS5 0.30 | 0.52x [0.50, 0.54] | **LOSS** |
 | Peak RSS, build (MiB) | 67 | SQLite FTS5 53 | 0.79x [0.78, 0.81] | **LOSS** |
 | Peak RSS, serving (MiB) | 31 | SQLite FTS5 70 | 2.23x [2.23, 2.30] | **WIN** |
@@ -334,11 +436,11 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Replace one document (durable) (ms) | 1.335 | SQLite FTS5 0.973 | 0.73x (no CI) | **n/v** |
 | Delete one document (durable) (ms) | 0.064 | SQLite FTS5 0.657 | 10.25x (no CI) | **n/v** |
 | Install size (MiB) | 3.4 | Whoosh 2.0 | 0.58x (no CI) | **n/v** |
-| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | WARM | WARM (eager hypervectors) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy | Whoosh | bm25s |
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | Whoosh | bm25s |
 |---|---|---|---|---|---|---|---|
 | nDCG@10 | **0.7027** | 0.7027 | 0.7009 | 0.7022 | 0.7011 | 0.6908 | 0.7001 |
 | recall@100 | 0.9264 | 0.9264 | **0.9322** | 0.9295 | 0.9283 | 0.9186 | 0.9283 |
@@ -350,41 +452,67 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Peak RSS, serving (MiB) | **31** | 46 | 70 | 1,242 | 78 | 112 | 108 |
 | On-disk size (MiB) | **1.3** | 1.4 | 5.9 | 2.0 | 2.6 | 13.2 | 4.5 |
 | Cold start to first answer (s) | **0.02** | 0.29 | 0.07 | 0.64 | 0.08 | 0.22 | 0.22 |
-| Replace one document (durable) (ms) | 1.335 | 1.093 | **0.973** | 16.854 | 32.139 | 41.464 | n/m (immutable index; any change is a full rebuild) |
-| Delete one document (durable) (ms) | **0.064** | 0.537 | 0.657 | 1.486 | 22.091 | 9.837 | n/m (immutable index; any change is a full rebuild) |
+| Replace one document (durable) (ms) | 1.335 | 1.093 | **0.973** | 16.854 | 32.139 | 41.464 | n/c |
+| Delete one document (durable) (ms) | **0.064** | 0.537 | 0.657 | 1.486 | 22.091 | 9.837 | n/c |
 | Install size (MiB) | 3.4 | 3.4 | **0.0** | 6.3 | 16.9 | 2.0 | 56.5 |
 | Install distributions (count) | **0** | 0 | 0 | 2 | 1 | 2 | 3 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row.
 
 </details>
 
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| Whoosh | incremental-durable-commit | writer commit per operation |
+| bm25s | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest, like-for-like with the lexical comparators). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 5,534 | 7,018 | 1.27x |
+| p50 latency (us) | 179 | 139 | 0.77x |
+| p99 latency (us) | 236 | 238 | 1.01x |
+| Ingest/build time (s) | 0.58 | 3.73 | 6.38x |
+| Peak RSS, serving (MiB) | 31 | 46 | 1.48x |
+| On-disk size (MiB) | 1.3 | 1.4 | 1.05x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
 ### beir:scifact (5,183 documents, 809 queries)
 
-Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: min-max range of the 5 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
 
-Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit).
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (stored id fetched per hit).
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
 | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x [0.90, 1.11] | **TIE** |
 | recall@100 | 0.9264 | SQLite FTS5 0.9322 | 0.99x [0.94, 1.05] | **TIE** |
-| QPS (single thread) (QPS) | 15,932 | tantivy 6,316 | 2.52x [2.27, 2.82] | **WIN** |
-| p50 latency (us) | 60 | tantivy 154 | 2.58x [2.45, 2.78] | **WIN** |
-| p99 latency (us) | 120 | tantivy 246 | 2.04x [1.28, 3.71] | **WIN** |
+| QPS (single thread) (QPS) | 15,932 | tantivy-py 0.27.0 (CPython binding) 6,316 | 2.52x [2.27, 2.82] | **WIN** |
+| p50 latency (us) | 60 | tantivy-py 0.27.0 (CPython binding) 154 | 2.58x [2.45, 2.78] | **WIN** |
+| p99 latency (us) | 120 | tantivy-py 0.27.0 (CPython binding) 246 | 2.04x [1.28, 3.71] | **WIN** |
 | Ingest/build time (s) | 0.22 | SQLite FTS5 0.22 | 1.01x [0.91, 1.04] | **TIE** |
 | Peak RSS, build (MiB) | 61 | SQLite FTS5 36 | 0.59x [0.59, 0.59] | **LOSS** |
 | Peak RSS, serving (MiB) | 29 | SQLite FTS5 52 | 1.82x [1.81, 1.84] | **WIN** |
 | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.60x (no CI) | **WIN** |
-| Cold start to first answer (s) | 0.00 | tantivy 0.03 | 5.80x [3.73, 6.50] | **WIN** |
+| Cold start to first answer (s) | 0.00 | tantivy-py 0.27.0 (CPython binding) 0.03 | 5.80x [3.73, 6.50] | **WIN** |
 | Replace one document (durable) (ms) | 2.156 | SQLite FTS5 8.916 | 4.14x (no CI) | **n/v** |
 | Delete one document (durable) (ms) | 1.439 | SQLite FTS5 9.229 | 6.41x (no CI) | **n/v** |
 | Install size (MiB) | 3.9 | Apache Lucene 10.6.0 (JVM) 6.3 | 1.63x (no CI) | **n/v** |
-| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
-| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy |
+| Metric | WARM | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) |
 |---|---|---|---|---|
 | nDCG@10 | **0.7027** | 0.7009 | 0.7022 | 0.7011 |
 | recall@100 | 0.9264 | **0.9322** | 0.9295 | 0.9283 |
@@ -401,9 +529,19 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Install size (MiB) | 3.9 | **0.0** | 6.3 | 16.9 |
 | Install distributions (count) | **0** | 0 | 2 | 1 |
 
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
 Bold marks the best value in the row.
 
 </details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 
 ## Operational facts
 
@@ -413,8 +551,8 @@ Bold marks the best value in the row.
 | hnswlib | no | no | documentation (not exercised) |
 | SQLite FTS5 | no | no (SQLCipher is a separate build) | documentation (not exercised) |
 | Apache Lucene (JVM) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
-| tantivy | no | no | documentation (not exercised) |
-| WARM (eager hypervectors) | no | yes | measured: benchmarks/results/security_matrix_v2.json |
+| tantivy-py 0.27.0 (CPython binding) | no | no | documentation (not exercised) |
+| WARM (eager hypervectors, informational) | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | Whoosh | no | no | documentation (not exercised) |
 | bm25s | no | no | documentation (not exercised) |
 
@@ -426,8 +564,8 @@ Bold marks the best value in the row.
 | hnswlib | hnswlib 0.8.0, python 3.13.15 |
 | SQLite FTS5 | python-sqlite3 3.53.1 |
 | Apache Lucene (JVM) | lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22; lucene 10.6.0, jvm openjdk version "21.0.9" 2025-10-21 LTS |
-| tantivy | tantivy 0.27.0, python 3.13.15 |
-| WARM (eager hypervectors) | writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
+| tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0, python 3.13.15 |
+| WARM (eager hypervectors, informational) | writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
 | Whoosh | whoosh-reloaded 2.7.5, python 3.13.15 |
 | bm25s | bm25s 0.3.14, PyStemmer 3.1.0, python 3.13.15 |
 
