@@ -48,12 +48,6 @@ jobs:
           shared-key: durability-${{ matrix.os }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Deletion, crash, disk-fault and second-writer tests
-        env:
-          # A hosted Windows runner took about 20 s per crash run (28 runs in 598 s), so the
-          # full sweep of hundreds of runs does not fit; every n-th point still covers each
-          # kind of point many times over.
-          WARM_FAULT_STRIDE: ${{ matrix.os == 'windows-latest' && '8' || '2' }}
-          WARM_CRASH_STRIDE: ${{ matrix.os == 'windows-latest' && '5' || '1' }}
         run: >
           cargo test --features failpoints
           --test erase --test crash_harness --test disk_faults --test purge_disk_full

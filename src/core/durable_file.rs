@@ -172,9 +172,6 @@ pub(crate) fn copy_file_synced(source: &Path, destination: &Path) -> Result<u64>
 
 pub(crate) fn sync_directory(path: &Path) -> Result<()> {
     crate::core::failpoint::hit("dir-sync")?;
-    if std::env::var_os("WARM_DIAG_NO_DIRSYNC").is_some() {
-        return Ok(());
-    }
     #[cfg(unix)]
     std::fs::File::open(path)?.sync_all()?;
     #[cfg(windows)]

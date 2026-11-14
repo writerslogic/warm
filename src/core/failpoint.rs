@@ -49,8 +49,6 @@ mod enabled {
     use std::io::Write;
     use std::sync::Mutex;
 
-    static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
-
     struct State {
         hits: u64,
         at: Option<(Fault, u64, bool)>,
@@ -130,11 +128,7 @@ mod enabled {
                 .append(true)
                 .open(path)
             {
-                let micros = START
-                    .get_or_init(std::time::Instant::now)
-                    .elapsed()
-                    .as_micros();
-                let _ = writeln!(file, "{name} {micros}");
+                let _ = writeln!(file, "{name}");
             }
         }
         let Some((fault, at, sticky)) = state.at else {
