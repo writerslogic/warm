@@ -258,7 +258,7 @@ fn main() -> Result<()> {
                         .into_iter()
                         .map(|r| Hit {
                             document_id: r.document_id,
-                            lexical_score: r.score,
+                            lexical_score: r.lexical_score,
                         })
                         .collect())
                 }
