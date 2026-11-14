@@ -28,6 +28,8 @@ import tempfile
 import urllib.request
 from datetime import datetime, timezone
 
+import context_shapes
+
 EMBED_MODEL = os.environ.get('WARM_EMBED_MODEL', 'text-embedding-3-small')
 EMBED_DIM = int(os.environ.get('WARM_EMBED_DIM', '1536'))
 
@@ -39,7 +41,7 @@ def _post(url, body, headers, timeout=300):
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
-            if e.code not in (429, 502, 503, 504) or attempt == 5:
+            if e.code not in (429, 500, 502, 503, 504) or attempt == 5:
                 raise
             time.sleep(2 ** attempt)
 
@@ -61,6 +63,15 @@ class WarmClient:
                 raise RuntimeError('warm-server did not start')
             self.host = f'http://{m.group(1)}'
         self.counters = {'embed_calls': 0, 'embed_inputs': 0}
+        # WARM_CONTEXT: turns (default, one item per recalled turn), ordered, or merged (see context_shapes.py)
+        self.context = os.environ.get('WARM_CONTEXT', 'turns')
+        if self.context not in ('turns', 'ordered', 'merged'):
+            raise ValueError(f'WARM_CONTEXT={self.context!r}')
+        self.merge_gap = int(os.environ.get('WARM_MERGE_GAP', '1'))
+        self.merge_max_turns = int(os.environ.get('WARM_MERGE_MAX_TURNS', '300'))
+        self.recall_k = int(os.environ.get('WARM_MERGE_RECALL_K', '400'))
+        self.index = {}
+        self.index_dir = os.environ.get('WARM_INDEX_DIR')  # lets a later process (answer phase after an ingest-only phase) rebuild the turn order
 
     async def __aenter__(self):
         return self
@@ -89,6 +100,17 @@ class WarmClient:
     def _memory(self, tenant, op, body):
         return _post(f'{self.host}/api/v1/memory/{op}', body, {'X-Tenant-ID': tenant})
 
+    def _tenant_index(self, user_id):
+        idx = self.index.get(user_id)
+        if idx is None:
+            idx = self.index[user_id] = context_shapes.TenantIndex()
+            path = os.path.join(self.index_dir or '', f'{user_id}.jsonl')
+            if self.index_dir and os.path.exists(path):
+                for line in open(path):
+                    fid, text, epoch = json.loads(line)
+                    idx.add(fid, text, epoch)
+        return idx
+
     async def add(self, messages, user_id, observation_date=None, timestamp=None, custom_instructions=None, metadata=None):
         facts = []
         for m in messages:
@@ -96,6 +118,13 @@ class WarmClient:
             fid = 'w:' + hashlib.sha256(f'{user_id}\x1f{timestamp}\x1f{text}'.encode()).hexdigest()[:24]
             facts.append({'id': fid, 'text': text, 'eventTime': int(timestamp or 0) * 1000,
                           'metadata': {'timestamp': str(timestamp or '')}})
+        idx = self._tenant_index(user_id)
+        for f in facts:
+            idx.add(f['id'], f['text'], int(timestamp or 0))
+        if self.index_dir:
+            with open(os.path.join(self.index_dir, f'{user_id}.jsonl'), 'a') as fh:
+                for f in facts:
+                    fh.write(json.dumps([f['id'], f['text'], int(timestamp or 0)]) + '\n')
         embs = await asyncio.to_thread(self._embed, [f['text'] for f in facts])
         for f, e in zip(facts, embs):
             f['embedding'] = e
@@ -104,7 +133,14 @@ class WarmClient:
 
     async def search(self, query, user_id, top_k=200, rerank=False, score_debug=False):
         emb = (await asyncio.to_thread(self._embed, [query]))[0]
-        r = await asyncio.to_thread(self._memory, user_id, 'recall', {'query': query, 'k': top_k, 'embedding': emb})
+        k = max(top_k, self.recall_k) if self.context == 'merged' else top_k
+        r = await asyncio.to_thread(self._memory, user_id, 'recall', {'query': query, 'k': k, 'embedding': emb})
+        if self.context != 'turns':
+            index = self._tenant_index(user_id)
+            hits = r['results']
+            items = (context_shapes.ordered_items(hits, index, top_k) if self.context == 'ordered'
+                     else context_shapes.merged_items(hits, index, top_k, self.merge_max_turns, self.merge_gap))
+            return {'results': items}
         out = []
         for h in r['results']:
             created = ''
