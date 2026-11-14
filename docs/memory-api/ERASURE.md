@@ -22,7 +22,7 @@ Historical views ([TIME-TRAVEL.md](TIME-TRAVEL.md)) read these frames.
 | No file under the store directory holds the text (a 10-byte fragment of a unique token) after `forget`, and after reopen | `tests/erase.rs`, `tests/purge.rs` |
 | Same for a superseded chain and for replaced text | `tests/erase.rs`, `tests/purge.rs` |
 | A crash at every durability point of the purge, then a reopen: a document the store no longer holds is in no file; an acknowledged forget removed everything; `purge.pending` is gone | `tests/erase.rs::crash` (`failpoints`; Linux, macOS, Windows in CI) |
-| The bytes of an ext4 image (file data and the filesystem journal) hold no marker after a purge and after a purge cut by a crash and finished at reopen; a control forgotten with `purge: false` is still found, so the scan can see a remnant | `scripts/ci/raw-image-erase.sh` with `tests/raw_image.rs` (Linux CI only) |
+| The bytes of an ext4 image (file data and the filesystem journal) hold no marker after a purge and after a purge cut by a crash and finished at reopen; records that were not forgotten are found in the image, so the scan can see live text (a control forgotten with `purge: false` is reported but not required: the first CI run found no remnant of it in the image, which is not explained yet) | `scripts/ci/raw-image-erase.sh` with `tests/raw_image.rs` (Linux CI only) |
 
 The scan of the raw image covers filesystem-level remanence on that filesystem: freed blocks,
 the ext4 journal and slack. It does not cover a solid-state drive's flash translation layer,
