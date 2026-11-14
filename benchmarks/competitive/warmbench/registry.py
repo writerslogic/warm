@@ -98,8 +98,8 @@ FACTS = {
 
 # Systems named in the brief that were not run, with the reason recorded in every results file.
 NOT_RUN = {
-    "chroma-fts": "Chroma's local PersistentClient offers only unranked `where_document` $contains/$regex filters, no ranked BM25 full-text index (sparse BM25 search is a Chroma Cloud feature)",
-    "qdrant-fts": "Qdrant local (embedded) mode has no ranked full-text index; the text payload index only filters, and needs a server",
+    "chroma-fts": "Chroma 1.5.9 PersistentClient: creating a collection with a BM25 sparse-vector index (ChromaBm25EmbeddingFunction) fails with 'Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local'; the only local text query is the unranked where_document $contains/$regex filter (measured 2026-11-14)",
+    "qdrant-fts": "Qdrant embedded local mode has no ranked full-text index (the full-text payload index only filters, and payload indexes are server features); documentation, not exercised here",
     "mem0": "agent-memory systems belong to the next harness stage (plug in through the same adapter interface)",
     "zep": "agent-memory systems belong to the next harness stage",
     "letta": "agent-memory systems belong to the next harness stage",
