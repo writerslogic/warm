@@ -11,6 +11,7 @@ and a release tag must name it.
 import argparse
 import json
 import pathlib
+import re
 import sys
 
 import tomllib
@@ -27,6 +28,60 @@ PLATFORMS = {
     "aarch64-pc-windows-msvc": "win32-arm64-msvc",
     "x86_64-pc-windows-msvc": "win32-x64-msvc",
 }
+
+
+DOC_SKIP_DIRS = ("docs/research/", "docs/migrations/", "docs/integrations/frameworks/")
+DOC_VERSION = re.compile(r"(?<![\w@/.-])(%s)(?:`)?(?:@|==|\s+)v?(\d+\.\d+\.\d+)(?![\w.-])")
+
+
+def doc_files() -> list[pathlib.Path]:
+    files = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
+    return files + sorted(
+        path for path in (ROOT / "docs").rglob("*.md")
+        if not str(path.relative_to(ROOT)).startswith(DOC_SKIP_DIRS)
+        and path.name not in ("COMPARISON.md", "GAPS.md")
+    )
+
+
+def doc_versions(cargo: str) -> list[str]:
+    """Current-version statements in README, CITATION.cff, CONTRIBUTING and docs/*.md must match the manifests."""
+    sdk_js = json.loads((ROOT / "bindings/js/warm-sdk/package.json").read_text())["version"]
+    sdk_py = tomllib.loads((ROOT / "bindings/python/warm-sdk/pyproject.toml").read_text())["project"]["version"]
+    mcp_npm = json.loads((ROOT / "integrations/mcp/npm/package.json").read_text())["version"]
+    mcp_py = tomllib.loads((ROOT / "integrations/mcp/pypi/pyproject.toml").read_text())["project"]["version"]
+    models = tomllib.loads((ROOT / "bindings/embed-models/python/pyproject.toml").read_text())["project"]["version"]
+    problems = []
+    if sdk_js != sdk_py:
+        problems.append(f"warm-sdk is {sdk_js} on npm and {sdk_py} on PyPI")
+    if mcp_npm != mcp_py:
+        problems.append(f"MCP launcher is {mcp_npm} on npm and {mcp_py} on PyPI")
+    current = {
+        "warm-rust": cargo,
+        "warm-python": cargo,
+        "writerslogic-warm": cargo,
+        "warm-sdk": sdk_js,
+        "writerslogic-warm-mcp": mcp_npm,
+        "warm-mcp": mcp_py,
+        "warm-models": models,
+    }
+    pattern = re.compile(DOC_VERSION.pattern % "|".join(sorted(map(re.escape, current), key=len, reverse=True)))
+    citation = re.search(r"^version:\s*(\S+)", (ROOT / "CITATION.cff").read_text(), re.M)
+    if not citation or citation.group(1) != cargo:
+        problems.append(f"CITATION.cff is {citation and citation.group(1)}, Cargo.toml is {cargo}")
+    rust = tomllib.loads((ROOT / "Cargo.toml").read_text())["package"]["rust-version"]
+    for name in ("README.md", "CONTRIBUTING.md"):
+        if f"Rust {rust}" not in (ROOT / name).read_text():
+            problems.append(f"{name} does not state Rust {rust}, the Cargo.toml rust-version")
+    for path in doc_files():
+        lines = path.read_text().splitlines()
+        for number, line in enumerate(lines, 1):
+            context = " ".join(lines[max(0, number - 3):number])
+            if re.search(r"historical|earlier|previous|superseded|\bpartially published\b", context, re.I):
+                continue
+            for name, stated in pattern.findall(line):
+                if stated != current[name]:
+                    problems.append(f"{path.relative_to(ROOT)}:{number}: {name} {stated}, manifest says {current[name]}")
+    return problems
 
 
 def main() -> int:
@@ -91,6 +146,7 @@ def main() -> int:
         tag_version = args.tag.removeprefix("refs/tags/").removeprefix("py-").removeprefix("v")
         if tag_version != cargo:
             problems.append(f"tag {args.tag} does not name version {cargo}")
+    problems += doc_versions(cargo)
     print(json.dumps({"version": cargo, "problems": len(problems)}))
     for problem in problems:
         print(problem, file=sys.stderr)

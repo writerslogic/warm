@@ -1,0 +1,16 @@
+/Users/davidcondrey/.cache/uv/archive-v0/a8ak23YBtszZMul7/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:3862: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/Users/davidcondrey/.cache/uv/archive-v0/a8ak23YBtszZMul7/lib/python3.14/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+multi-hop    n=208 all-gold 0.837 -> 0.851 diff +0.014 [-0.024,+0.053] gained 10 lost 7  recall diff +0.004 [-0.011,+0.020]
+temporal     n=231 all-gold 0.978 -> 0.974 diff -0.004 [-0.022,+0.013] gained 2 lost 3  recall diff +0.000 [-0.017,+0.017]
+open-domain  n= 73 all-gold 0.753 -> 0.726 diff -0.027 [-0.068,+0.000] gained 0 lost 2  recall diff -0.001 [-0.023,+0.021]
+single-hop   n=641 all-gold 0.984 -> 0.992 diff +0.008 [+0.002,+0.016] gained 5 lost 0  recall diff +0.004 [+0.001,+0.009]
+ALL          n=1153 all-gold 0.942 -> 0.946 diff +0.004 [-0.004,+0.014] gained 17 lost 12  recall diff +0.003 [-0.002,+0.009]
+--- all-gold in top-k from the deeper k=1000 list (approximate: pool normalisation differs from k=200)
+k=200: multi-hop 0.823 | temporal 0.972 | open-domain 0.739 | single-hop 0.985
+k=300: multi-hop 0.940 | temporal 0.988 | open-domain 0.870 | single-hop 0.992
+k=400: multi-hop 0.972 | temporal 0.994 | open-domain 0.924 | single-hop 0.998
+k=600: multi-hop 0.993 | temporal 1.000 | open-domain 0.989 | single-hop 0.999
+N20 informational: questions whose top-200 set changes 1536 of 1536 multi-hop 282
+cost at 0.027 per question: changed 41.47 USD, all 1540 41.58 USD

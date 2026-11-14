@@ -1696,27 +1696,35 @@ fn ann_updates(
                         ..Default::default()
                     };
                     let mut hits = 0;
+                    // Per-query hit counts: the harness scores recall on a half of the queries
+                    // apart from the half that selected this configuration.
+                    let mut hits_per_query = Vec::with_capacity(test.len());
                     for (q, truth) in test.iter().zip(&truth) {
                         index.search_into(q, 10, p, &mut found)?;
-                        hits += found
+                        let query_hits = found
                             .iter()
                             .filter(|&&id| truth[..10.min(truth.len())].contains(&(id as i32)))
                             .count();
+                        hits += query_hits;
+                        hits_per_query.push(query_hits);
                     }
                     let mut timings = Vec::new();
                     for _ in 0..repeats {
                         let mut lat = Vec::with_capacity(test.len());
+                        let mut lat_ns = Vec::with_capacity(test.len());
                         for q in &test {
                             let t = Instant::now();
                             index.search_into(q, 10, p, &mut found)?;
                             std::hint::black_box(&found);
-                            lat.push(t.elapsed().as_secs_f64() * 1e6);
+                            let elapsed = t.elapsed();
+                            lat.push(elapsed.as_secs_f64() * 1e6);
+                            lat_ns.push(elapsed.as_nanos() as u64);
                         }
                         let qps = test.len() as f64 / (lat.iter().sum::<f64>() * 1e-6);
                         lat.sort_by(f64::total_cmp);
-                        timings.push(json!({"qps":qps, "p50_us":percentile(&lat,0.5), "p99_us":percentile(&lat,0.99)}));
+                        timings.push(json!({"qps":qps, "p50_us":percentile(&lat,0.5), "p99_us":percentile(&lat,0.99), "lat_ns":lat_ns}));
                     }
-                    configs.push(json!({"params":{"ef":ef,"rerank":rerank}, "recall_at_10":hits as f64/(test.len()*10) as f64, "repeats":timings, "load_1m":load_1m(), "load_gate_met":null}));
+                    configs.push(json!({"params":{"ef":ef,"rerank":rerank}, "recall_at_10":hits as f64/(test.len()*10) as f64, "repeats":timings, "load_1m":load_1m(), "load_gate_met":null, "hits_per_query":hits_per_query}));
                 }
             }
             json!({"n":index.len(), "row_blocks":row_blocks, "n_queries":test.len(), "configs":configs, "open_s":open_s, "cold_start_s":cold_start_s, "first_query_unix_ns":first_query_unix_ns, "rss_steady":rss_bytes(), "rss_after_open":rss_after_open, "memory_phases":[{"phase":"serve_end","memory":memory()}]})

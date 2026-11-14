@@ -12,6 +12,7 @@ is the verdict-bearing metrics of one section).
 import statistics
 from enum import Enum
 
+from . import registry
 from .common import bootstrap_ci, pass_summary
 
 TARGETS = (0.90, 0.95, 0.99)
@@ -19,6 +20,25 @@ HIGHER = "higher"
 LOWER = "lower"
 # Rows that are informational: the two sides are not the same quantity, so no verdict is drawn.
 NO_VERDICT = {"install_distributions", "index_bytes_mib"}
+# ANN metrics that belong to one comparator build. WARM has one build; a comparator has several, each with its own
+# build time, serving memory, index size and QPS. They are compared build by build (per_build_metrics), never as a
+# best-of cell that takes each metric from whichever build suits it.
+ANN_PER_BUILD = {"build_seconds", "build_peak_rss_mib", "serving_rss_mib", "cold_start_s"}
+# Fewer rounds than this and a percentile bootstrap has too few distinct resamples to be a 95 percent interval
+# (3 observations give at most 10); the interval reported is then the min-max range of the rounds.
+MIN_BOOTSTRAP_ROUNDS = 8
+OPS_METRICS = ("replace_ms_per_op", "delete_ms_per_op")
+
+
+def no_verdict(kind, metric, mode="embedded"):
+    return metric in NO_VERDICT or (kind == "ann" and mode != "server" and metric in ANN_PER_BUILD)
+
+
+def interval(values, level):
+    values = list(values)
+    if 1 < len(values) < MIN_BOOTSTRAP_ROUNDS:
+        return [min(values), max(values)]
+    return bootstrap_ci(values, level=level)
 
 
 class Validity(str, Enum):
@@ -43,6 +63,8 @@ def _operation_cell(results, system, *args, **kwargs):
     c = cell(*args, **kwargs)
     if results.get("mode") == "server":
         c["durability_class"] = results.get("protocol", {}).get("durability_class", {}).get(system)
+    else:
+        c["durability_class"] = registry.commit_contract(system)[0]
     return c
 
 
@@ -66,12 +88,23 @@ def _med(values):
     return statistics.median(values)
 
 
+def _half(config, name):
+    """The `name` half of a config (recall, repeats) when the worker split the queries, else the whole set."""
+    return config.get(name) or config
+
+
+def split_present(builds):
+    return any("select" in c for b in builds.values() for r in b["serve_rounds"] for c in r["configs"])
+
+
 def pick_config(builds, target):
     """Choose (build_id, config index) by pooled-median QPS among rows whose recall reaches `target`.
 
-    Selection pools every round so one lucky round cannot pick the row; the per-round values of
-    the chosen row then carry the confidence interval. Returns (best, closest): `best` is
-    (pooled qps, build id, index, recall) or None; `closest` is the highest recall seen.
+    Selection uses the selection half of the queries when the run recorded one (even-indexed queries), pools every
+    round so one lucky round cannot pick the row, and never looks at the report half; the report half then carries
+    the QPS and the interval. Files written before the split fall back to the whole query set for both.
+    Returns (best, closest): `best` is (pooled qps, build id, index, recall) or None; `closest` is the highest
+    recall seen.
     """
     best = None
     closest = (-1.0, None)
@@ -80,15 +113,28 @@ def pick_config(builds, target):
         if not rounds:
             continue
         for idx in range(len(rounds[0]["configs"])):
-            recall = min(r["configs"][idx]["recall_at_10"] for r in rounds if idx < len(r["configs"]))
+            views = [_half(r["configs"][idx], "select") for r in rounds if idx < len(r["configs"])]
+            recall = min(v["recall_at_10"] for v in views)
             if recall > closest[0]:
                 closest = (recall, (build_id, idx))
             if recall < target:
                 continue
-            pooled = _med([x["qps"] for r in rounds for x in r["configs"][idx]["repeats"]])
+            pooled = _med([x["qps"] for v in views for x in v["repeats"]])
             if best is None or pooled > best[0]:
                 best = (pooled, build_id, idx, recall)
     return best, closest
+
+
+def per_build_metrics(path, results, level=0.95):
+    """{(system, build_id): {metric: cell}} with every metric of that one build: QPS at each recall target
+    (selection and report halves of that build alone), build time and memory, serving memory, index size."""
+    out = {}
+    for system, entry in results["systems"].items():
+        for build_id, build in entry["builds"].items():
+            narrowed = {**results, "systems": {system: {**entry, "builds": {build_id: build}}}}
+            cells = ann_metrics(path, narrowed, level=level)
+            out[(system, build_id)] = {metric: by[system] for metric, by in cells.items() if system in by}
+    return out
 
 
 def _install_cells(put, system, entry, src):
@@ -107,7 +153,9 @@ def _install_cells(put, system, entry, src):
     # Files written before the binaries were built with the `dist` profile record no symbols field.
     symbols = binary.get("symbols", "included")
     put("install_mib", system, cell(binary["bytes"] / 2**20, None, 1, f"{src}.install", "MiB", f"one statically linked binary, symbols {symbols}"))
-    crates = inst.get("_crate_dependencies", {}).get("count", 0)
+    if "_crate_dependencies" not in inst:  # a binary whose dependency tree was not recorded has no count to compare
+        return
+    crates = inst["_crate_dependencies"]["count"]
     put("install_distributions", system, cell(crates, None, 1, f"{src}.install._crate_dependencies", "count",
                                               "crates compiled into the binary (not separately installed); non-OS shared libraries: "
                                               f"{binary['non_system_dynamic_libraries']}"))
@@ -121,7 +169,7 @@ def ann_metrics(path, results, level=0.95):
         out.setdefault(metric, {})[system] = c
 
     def ci(values):
-        return bootstrap_ci(values, level=level)
+        return interval(values, level)
 
     for system, entry in results["systems"].items():
         builds = entry["builds"]
@@ -134,13 +182,20 @@ def ann_metrics(path, results, level=0.95):
                 continue
             _, build_id, idx, recall = best
             rounds = builds[build_id]["serve_rounds"]
-            per_round = [_med([x["qps"] for x in r["configs"][idx]["repeats"]]) for r in rounds]
-            src = f"{path}#systems.{system}.builds.{build_id}.serve_rounds[*].configs[{idx}]"
+            split = "report" in rounds[0]["configs"][idx]
+            reported = [_half(r["configs"][idx], "report") for r in rounds]
+            src = f"{path}#systems.{system}.builds.{build_id}.serve_rounds[*].configs[{idx}]" + (".report" if split else "")
+            held_out = min(v["recall_at_10"] for v in reported)
+            if split and held_out < t:
+                put(f"qps@recall{tag}", system, cell(None, source=src, note=f"selected on the selection half at recall {recall:.3f}; report-half recall {held_out:.3f} is below the target"))
+                continue
+            per_round = [_med([x["qps"] for x in v["repeats"]]) for v in reported]
+            how = f"selected on the even-indexed queries, reported on the odd-indexed; report recall {held_out:.3f}" if split else f"recall {recall:.3f}"
             put(f"qps@recall{tag}", system, cell(_med(per_round), ci(per_round), len(per_round), src, "QPS",
-                                                 f"{build_id} {rounds[0]['configs'][idx]['params']} recall {recall:.3f}"))
-            if all("p50_us" in x for r in rounds for x in r["configs"][idx]["repeats"]):
+                                                 f"{build_id} {rounds[0]['configs'][idx]['params']} {how}"))
+            if all("p50_us" in x for v in reported for x in v["repeats"]):
                 for name in ("p50_us", "p99_us"):
-                    vals = [_med([x[name] for x in r["configs"][idx]["repeats"]]) for r in rounds]
+                    vals = [_med([x[name] for x in v["repeats"]]) for v in reported]
                     put(f"{name[:-3]}_latency@recall{tag}", system, cell(_med(vals), ci(vals), len(vals), src, "us"))
             chosen[t] = (build_id, idx)
         build_id = (chosen.get(0.95) or chosen.get(0.90) or (next(iter(builds)), 0))[0]
@@ -200,7 +255,7 @@ def text_metrics(path, results, level=0.95):
         out.setdefault(metric, {})[system] = c
 
     def ci(values):
-        return bootstrap_ci(values, level=level)
+        return interval(values, level)
 
     for system, entry in results["systems"].items():
         rounds = entry["serve_rounds"]
