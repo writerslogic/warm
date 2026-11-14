@@ -152,6 +152,9 @@ pub(crate) struct DocumentStore {
     /// The checkpoint this store is served from, whose live documents count as the store's
     /// (`overlay`): the store holds only documents written since.
     pub(super) base: Option<super::overlay::Base>,
+    /// Estimated resident bytes of the documents installed since the store was created
+    /// (see [`Self::resident_estimate`]); never lowered by deletes, which keeps it an upper bound.
+    resident_estimate: usize,
 }
 
 #[cfg(test)]
@@ -263,6 +266,10 @@ impl DocumentStore {
         census
     }
 }
+
+/// Bytes the estimate adds per chunk and per distinct term of a chunk.
+const RESIDENT_PER_CHUNK: usize = 512;
+const RESIDENT_PER_TERM: usize = 40;
 
 /// A random starting value for a process-local mutation counter, below 2^53 so increments
 /// cannot overflow. A counter that starts here still advances by one per mutation for the
@@ -602,6 +609,31 @@ impl DocumentStore {
             base: Some(base),
             ..Self::opened()
         }
+    }
+
+    /// Estimated resident bytes of what this store holds: per chunk a record and its slot
+    /// entries, per distinct term of a chunk its share of the postings and the chunk's term
+    /// table. Measured against the process's resident memory in `docs/file-format/CHECKPOINT.md`.
+    pub(crate) fn resident_estimate(&self) -> usize {
+        self.resident_estimate
+    }
+
+    /// What a streaming checkpoint merge reads under this store: `Some(None)` for a store with
+    /// no checkpoint under it, `Some(Some(image))` for one over an intact checkpoint, `None`
+    /// when a checkpoint document is dead (the merge copies documents wholesale).
+    pub(crate) fn merge_base(&self) -> Option<Option<&super::image::ServingImage>> {
+        match &self.base {
+            None => Some(None),
+            Some(base) if base.intact() => Some(Some(&*base.image)),
+            Some(_) => None,
+        }
+    }
+
+    /// Whether [`super::merge_checkpoint`] can write this store's checkpoint.
+    pub(crate) fn can_merge_checkpoint(&self) -> bool {
+        self.merge_base()
+            .is_some_and(|base| base.is_none_or(super::image::ServingImage::mergeable))
+            && super::image::representable(self)
     }
 
     /// Whether the store is served from a checkpoint (see [`Self::over`]).
@@ -948,6 +980,9 @@ impl DocumentStore {
             let mut slots = Vec::with_capacity(document.chunks.len());
             let mut embedded = false;
             for (chunk_index, chunk) in document.chunks.iter().enumerate() {
+                self.resident_estimate += RESIDENT_PER_CHUNK
+                    + RESIDENT_PER_TERM * chunk.terms.keys().len()
+                    + document.id.len();
                 self.nonpositional_chunks += usize::from(chunk.terms.positions.is_none());
                 self.count_vector_state(chunk.vector_state, true);
                 if chunk.embedding.is_some() {

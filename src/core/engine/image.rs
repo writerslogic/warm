@@ -53,6 +53,8 @@ pub(super) struct ImageState {
     pub(super) other_state: AtomicBool,
     /// Set once the engine opened completely; only then may closing write a checkpoint.
     opened: AtomicBool,
+    /// Set when a fold failed: the engine stops folding and keeps the index in memory.
+    fold_failed: AtomicBool,
 }
 
 fn word(header: &[u8], index: usize) -> u64 {
@@ -258,6 +260,76 @@ impl WarmCore {
             return Ok(None);
         };
         self.seal_checkpoint(image).map(Some)
+    }
+
+    /// Whether a compaction writes this store's checkpoint by streaming it
+    /// ([`documents::merge_checkpoint`]) instead of encoding it in memory: a plaintext store
+    /// that takes checkpoints. Sealed checkpoints are one AEAD message and stay in memory until
+    /// the sealed block container carries them.
+    #[cfg(feature = "security")]
+    pub(super) fn streams_checkpoints(&self) -> bool {
+        self.encryption.is_none() && self.streams_plain()
+    }
+
+    #[cfg(not(feature = "security"))]
+    pub(super) fn streams_checkpoints(&self) -> bool {
+        self.streams_plain()
+    }
+
+    fn streams_plain(&self) -> bool {
+        self.checkpoint_schema()
+            && self.config.document_checkpoint.enabled
+            && !self.image.other_state.load(Ordering::Acquire)
+    }
+
+    /// Streams the checkpoint of the live store into the staging generation directory.
+    pub(super) fn stream_checkpoint(
+        &self,
+        store: &DocumentStore,
+        staging: &Path,
+        generation: &str,
+    ) -> Result<Option<u64>> {
+        documents::merge_checkpoint(
+            store,
+            Self::generation_crc(generation),
+            self.dimensions,
+            &staging.join(FILE),
+        )
+    }
+
+    /// After a streamed compaction published a checkpoint holding the whole document store:
+    /// replaces the live store (and with it the index in memory) by the store over that
+    /// checkpoint, the state a reopen would reach.
+    pub(super) fn serve_published_checkpoint(&self) -> Result<()> {
+        let path = self.arena.data_dir().join(FILE);
+        let image = Arc::new(
+            self.load_checkpoint(&path)
+                .with_context(|| format!("document checkpoint {}", path.display()))?,
+        );
+        image.release_pages();
+        *self.documents.write() = DocumentStore::over(CheckpointBase::new(Arc::clone(&image)));
+        *self.image.serving.write() = Some(image);
+        Ok(())
+    }
+
+    /// Folds the live index into the checkpoint when its estimated size reaches
+    /// `document_checkpoint.index_memory_budget`; called after each committed document batch.
+    /// A fold that fails leaves the store as it was (everything is committed) and ends folding
+    /// for this engine.
+    pub(super) fn fold_if_over_budget(&self) {
+        let budget = self.config.document_checkpoint.index_memory_budget;
+        if budget == 0
+            || !self.image.opened.load(Ordering::Acquire)
+            || self.image.fold_failed.load(Ordering::Acquire)
+            || !self.streams_checkpoints()
+            || self.documents.read().resident_estimate() < budget
+        {
+            return;
+        }
+        if let Err(error) = self.compact() {
+            self.image.fold_failed.store(true, Ordering::Release);
+            tracing::warn!(%error, "folding the document index into the checkpoint failed");
+        }
     }
 
     /// Whether a compaction now would write a checkpoint: checkpoints enabled, only document

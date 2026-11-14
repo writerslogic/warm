@@ -73,6 +73,46 @@ included) as recorded, reads each chunk's terms back from the postings, and move
 checkpoint replaced would: `tests/document_checkpoint.rs` compares hits, scores (as bits) and
 records with a store that never checkpointed, through writes and reopens.
 
+## Streaming folds
+
+A checkpoint is also written while documents are still arriving. After each committed
+document batch, an engine whose live index has reached `document_checkpoint.index_memory_budget`
+(32 MiB by default; 0 turns folding off) compacts, and the compaction writes the checkpoint by
+merging instead of encoding the whole store in memory:
+
+1. the checkpoint under the store (if there is one) and the live store are read side by side;
+2. each term dictionary merges in term order; a term only the checkpoint has keeps its posting
+   bytes as they are, a term only the live store has is packed after the checkpoint's slots, and
+   a term in both is unpacked and packed again as one list;
+3. the checkpoint's documents are copied as bytes and interleaved by id with the live
+   documents; owners in the slot table are renumbered;
+4. every section goes to a block-addressed run (`durable_file::BlockWriter`, 64 KiB blocks), and
+   the runs are assembled into one file, synced, and published by the compaction's staging
+   generation exactly as an in-memory checkpoint is.
+
+The file is byte for byte the checkpoint the whole store would encode to (the format is
+unchanged; the generation CRC differs by name), so a store ingested in folds and one ingested in
+a pass are the same store. When the compaction published and no frame was appended since its
+snapshot, the engine then replaces the live index with a store over the new checkpoint (the state
+a reopen reaches) and the resident index is released. The merge reads the mapped checkpoint
+sequentially and drops its resident pages as it goes.
+
+What a fold needs: a plaintext store that takes checkpoints, only lexical-only chunks without
+positions, a version 2 checkpoint, and no dead checkpoint document. A sealed (encrypted)
+store's checkpoint is one AEAD message and stays on the in-memory path until the block
+container carries it; a document written under an id the checkpoint already holds kills the
+checkpoint's document, and the next compaction then rebuilds the full store as before.
+
+A crash at any point of a fold leaves the previous generation current: its checkpoint plus the
+frames of every committed batch, which is the state the next open replays. The scratch directory
+beside the staging generation (`gen-*.fold`) is removed by the next compaction.
+
+The estimate that `index_memory_budget` is compared with is the sum, over the chunks installed
+since the store was created or last folded, of 512 bytes plus 40 bytes per distinct term plus the
+document id length. It runs at about a third of the process's resident growth (measured on
+BEIR FiQA and NFCorpus: the budget `B` gave a peak of about the base footprint plus `2.5 B`
+to `3 B`), so the parameter bounds the index, not the process.
+
 ## Layout
 
 All integers little endian; varints are LEB128.

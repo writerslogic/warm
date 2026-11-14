@@ -432,6 +432,105 @@ pub(crate) fn arena_generation(base: &Path) -> Result<PathBuf> {
     Ok(path)
 }
 
+
+/// Bytes per block of a streamed file: every [`BlockWriter`] write and [`Spool`] read moves
+/// whole blocks of this size (the last one shorter), so streamed persistence is block-addressed
+/// and a sealed block container can replace these two types without touching their callers.
+pub(crate) const STREAM_BLOCK: usize = 64 * 1024;
+
+/// A file written strictly forward in [`STREAM_BLOCK`]-byte blocks. This is the one place
+/// streamed bytes reach a file: callers append with [`BlockWriter::write`] and end with either
+/// [`BlockWriter::finish_synced`] (a durable, atomically published file) or
+/// [`BlockWriter::finish_spool`] (a temporary run that is read back and then discarded).
+pub(crate) struct BlockWriter {
+    file: tempfile::NamedTempFile,
+    block: Vec<u8>,
+    len: u64,
+}
+
+impl BlockWriter {
+    /// A new temporary file in `directory`; it disappears unless it is finished into a file.
+    pub(crate) fn create_in(directory: &Path) -> Result<Self> {
+        Ok(Self {
+            file: tempfile::NamedTempFile::new_in(directory)?,
+            block: Vec::with_capacity(STREAM_BLOCK),
+            len: 0,
+        })
+    }
+
+    /// Bytes written so far, buffered or not.
+    pub(crate) fn len(&self) -> u64 {
+        self.len
+    }
+
+    pub(crate) fn write(&mut self, mut bytes: &[u8]) -> Result<()> {
+        self.len += bytes.len() as u64;
+        while !bytes.is_empty() {
+            let room = STREAM_BLOCK - self.block.len();
+            let (now, later) = bytes.split_at(room.min(bytes.len()));
+            self.block.extend_from_slice(now);
+            bytes = later;
+            if self.block.len() == STREAM_BLOCK {
+                self.flush_block()?;
+            }
+        }
+        Ok(())
+    }
+
+    fn flush_block(&mut self) -> Result<()> {
+        if !self.block.is_empty() {
+            self.file.as_file_mut().write_all(&self.block)?;
+            self.block.clear();
+        }
+        Ok(())
+    }
+
+    /// Ends the file as a run to be read back with [`Spool::for_each_block`].
+    pub(crate) fn finish_spool(mut self) -> Result<Spool> {
+        self.flush_block()?;
+        Ok(Spool {
+            file: self.file,
+            len: self.len,
+        })
+    }
+
+    /// Syncs the file and publishes it at `path` (rename), then syncs the directory: after a
+    /// crash `path` holds the whole file or what it held before.
+    pub(crate) fn finish_synced(mut self, path: &Path) -> Result<u64> {
+        self.flush_block()?;
+        self.file.as_file().sync_all()?;
+        sync_mapped_file(self.file.as_file())?;
+        let len = self.len;
+        self.file.persist(path)?;
+        sync_directory(path.parent().unwrap_or_else(|| Path::new(".")))?;
+        Ok(len)
+    }
+}
+
+/// A finished run of a [`BlockWriter`], readable once or more block by block.
+pub(crate) struct Spool {
+    file: tempfile::NamedTempFile,
+    len: u64,
+}
+
+impl Spool {
+    pub(crate) fn len(&self) -> u64 {
+        self.len
+    }
+
+    /// Calls `f` with each block in file order.
+    pub(crate) fn for_each_block(&self, mut f: impl FnMut(&[u8]) -> Result<()>) -> Result<()> {
+        let mut block = vec![0u8; STREAM_BLOCK];
+        let mut at = 0u64;
+        while at < self.len {
+            let n = (self.len - at).min(STREAM_BLOCK as u64) as usize;
+            positioned_read(self.file.as_file(), &mut block[..n], at)?;
+            f(&block[..n])?;
+            at += n as u64;
+        }
+        Ok(())
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

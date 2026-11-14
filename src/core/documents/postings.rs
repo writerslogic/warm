@@ -335,13 +335,40 @@ pub(super) struct Postings<'a> {
     pub(super) blocked: bool,
 }
 
-/// Appends `list`'s postings to `out` in the checkpoint's block encoding.
-pub(super) fn pack_checkpoint(list: &PostingList, out: &mut Vec<u8>) {
-    let mut block: Vec<Posting> = Vec::with_capacity(CHECKPOINT_BLOCK);
-    let mut last = 0usize;
-    let mut flush = |block: &mut Vec<Posting>, out: &mut Vec<u8>| {
+/// Packs postings pushed in ascending slot order into the checkpoint's block encoding.
+#[derive(Default)]
+pub(super) struct CheckpointPacker {
+    block: Vec<Posting>,
+    last: usize,
+}
+
+impl CheckpointPacker {
+    pub(super) fn new() -> Self {
+        Self {
+            block: Vec::with_capacity(CHECKPOINT_BLOCK),
+            last: 0,
+        }
+    }
+
+    pub(super) fn push(&mut self, slot: usize, frequency: u32, out: &mut Vec<u8>) {
+        self.block.push((slot, frequency));
+        if self.block.len() == CHECKPOINT_BLOCK {
+            self.flush(out);
+        }
+    }
+
+    /// Writes the last, shorter block; the packer then starts a new list.
+    pub(super) fn finish(&mut self, out: &mut Vec<u8>) {
+        if !self.block.is_empty() {
+            self.flush(out);
+        }
+        self.last = 0;
+    }
+
+    fn flush(&mut self, out: &mut Vec<u8>) {
+        let block = &self.block;
         let first = block[0].0;
-        put_varint(out, (first - last) as u64);
+        put_varint(out, (first - self.last) as u64);
         let gap = block
             .windows(2)
             .map(|pair| (pair[1].0 - pair[0].0) as u64)
@@ -362,18 +389,16 @@ pub(super) fn pack_checkpoint(list: &PostingList, out: &mut Vec<u8>) {
             gap_bits,
         );
         pack(out, block.iter().map(|p| u64::from(p.1)), frequency_bits);
-        last = previous;
-        block.clear();
-    };
-    list.for_each(|slot, frequency| {
-        block.push((slot, frequency));
-        if block.len() == CHECKPOINT_BLOCK {
-            flush(&mut block, out);
-        }
-    });
-    if !block.is_empty() {
-        flush(&mut block, out);
+        self.last = previous;
+        self.block.clear();
     }
+}
+
+/// Appends `list`'s postings to `out` in the checkpoint's block encoding.
+pub(super) fn pack_checkpoint(list: &PostingList, out: &mut Vec<u8>) {
+    let mut packer = CheckpointPacker::new();
+    list.for_each(|slot, frequency| packer.push(slot, frequency, out));
+    packer.finish(out);
 }
 
 /// Appends `list`'s postings to `out` in the version 1 flat encoding, for tests of reading it.

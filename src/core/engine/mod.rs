@@ -33,6 +33,8 @@ mod vector_records;
 #[cfg(test)]
 mod deferred_cache_tests;
 #[cfg(test)]
+mod fold_tests;
+#[cfg(test)]
 mod document_memory_census;
 #[cfg(test)]
 mod document_snapshot_tests;
