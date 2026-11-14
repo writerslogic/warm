@@ -158,8 +158,10 @@ export interface ForgetOptions {
   includeChain?: boolean
   /** Report without removing. */
   dryRun?: boolean
-  /** Compact and scrub removed journal data, and rebuild the live text segment before returning. */
+  /** Default true. Record the delete as a durable pending purge; a scrubbing compaction (the next `compact`, open, or the 64th waiting purge) erases the deleted text from the journal. False leaves deleted frames in the journal. */
   purge?: boolean
+  /** Default false. With `purge`, run the scrubbing compaction before returning, so `purged` is true. */
+  synchronous?: boolean
 }
 
 export interface ForgetReport {

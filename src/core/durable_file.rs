@@ -147,6 +147,7 @@ pub(crate) fn positioned_write(_: &File, _: &[u8], _: u64) -> std::io::Result<()
 }
 
 pub(crate) fn copy_file_synced(source: &Path, destination: &Path) -> Result<u64> {
+    crate::core::failpoint::hit("copy")?;
     let bytes = std::fs::copy(source, destination)?;
     #[cfg(windows)]
     {
@@ -170,11 +171,48 @@ pub(crate) fn copy_file_synced(source: &Path, destination: &Path) -> Result<u64>
 }
 
 pub(crate) fn sync_directory(path: &Path) -> Result<()> {
+    crate::core::failpoint::hit("dir-sync")?;
     #[cfg(unix)]
     std::fs::File::open(path)?.sync_all()?;
-    #[cfg(not(unix))]
+    #[cfg(windows)]
+    sync_directory_windows(path)?;
+    #[cfg(not(any(unix, windows)))]
     let _ = path;
     Ok(())
+}
+
+/// Flushes a directory through a handle opened with `FILE_FLAG_BACKUP_SEMANTICS` (the only way
+/// `CreateFileW` opens a directory) and `GENERIC_WRITE` (which `FlushFileBuffers` requires).
+/// Microsoft documents neither what this flushes for a directory nor that it persists directory
+/// entries; NTFS journals metadata, which orders a rename after the data it names, and this call
+/// asks the filesystem to write what it holds for the directory. A filesystem that refuses to
+/// flush a directory handle (access denied, not supported) is the platform's own limit: it is
+/// logged and the call succeeds, as every other platform call here does for a filesystem
+/// without the feature. Any other error propagates.
+#[cfg(windows)]
+fn sync_directory_windows(path: &Path) -> Result<()> {
+    use std::os::windows::fs::OpenOptionsExt;
+    const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+    // ERROR_INVALID_FUNCTION, ERROR_NOT_SUPPORTED, ERROR_INVALID_PARAMETER.
+    const REFUSED: [i32; 3] = [1, 50, 87];
+    let result = std::fs::OpenOptions::new()
+        .write(true)
+        .custom_flags(FILE_FLAG_BACKUP_SEMANTICS)
+        .open(path)
+        .and_then(|directory| directory.sync_all());
+    match result {
+        Ok(()) => Ok(()),
+        Err(error)
+            if error.kind() == std::io::ErrorKind::PermissionDenied
+                || error
+                    .raw_os_error()
+                    .is_some_and(|code| REFUSED.contains(&code)) =>
+        {
+            tracing::debug!(%error, path = %path.display(), "the filesystem refused a directory flush");
+            Ok(())
+        }
+        Err(error) => Err(error.into()),
+    }
 }
 
 /// Completes the durability of a range of a `MAP_SHARED` mapping of `file` whose `msync`
@@ -191,6 +229,7 @@ pub(crate) fn sync_directory(path: &Path) -> Result<()> {
 /// - Windows: memmap2's flush is `FlushViewOfFile` followed by `FlushFileBuffers`; nothing
 ///   further is done.
 pub(crate) fn sync_mapped_file(file: &std::fs::File) -> std::io::Result<()> {
+    crate::core::failpoint::hit("file-sync")?;
     #[cfg(target_os = "macos")]
     {
         use std::os::fd::AsRawFd;
@@ -249,6 +288,7 @@ pub(crate) fn scrub_remove_file(path: &Path) -> Result<()> {
             "refusing to scrub a multiply linked file"
         );
     }
+    crate::core::failpoint::hit("scrub-overwrite")?;
     let mut remaining = file.metadata()?.len();
     let zeros = vec![0u8; 1 << 20];
     file.seek(SeekFrom::Start(0))?;
@@ -259,6 +299,7 @@ pub(crate) fn scrub_remove_file(path: &Path) -> Result<()> {
     }
     file.sync_all()?;
     drop(file);
+    crate::core::failpoint::hit("scrub-unlink")?;
     std::fs::remove_file(path)?;
     Ok(())
 }
@@ -309,11 +350,15 @@ pub(crate) fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
 
 fn write_file(path: &Path, bytes: &[u8]) -> Result<()> {
     let parent = path.parent().unwrap_or_else(|| Path::new("."));
+    crate::core::failpoint::hit("atomic-create-temp")?;
     let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    crate::core::failpoint::hit("atomic-write")?;
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
     sync_mapped_file(temp.as_file())?;
+    crate::core::failpoint::hit("atomic-rename")?;
     temp.persist(path)?;
+    crate::core::failpoint::hit("atomic-renamed")?;
     Ok(())
 }
 
@@ -351,10 +396,13 @@ fn atomic_create_checked(path: &Path, bytes: &[u8], checkpoint: impl Fn(&str)) -
         .parent()
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
+    crate::core::failpoint::hit("atomic-create-temp")?;
     let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    crate::core::failpoint::hit("atomic-write")?;
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
     sync_mapped_file(temp.as_file())?;
+    crate::core::failpoint::hit("atomic-rename")?;
     checkpoint("synced");
     let created = match temp.persist_noclobber(path) {
         Ok(_) => true,
