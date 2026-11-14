@@ -81,10 +81,10 @@ WARM_PROFILE = "dist"
 def warm_binary(name, example=False):
     target = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "target"))
     path = target / WARM_PROFILE / ("examples" if example else "") / name
-    if not path.exists():
-        log(f"building {name}")
-        cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc", "--example" if example else "--bin", name]
-        subprocess.run(cmd, check=True, cwd=ROOT)
+    # Always ask cargo: it is a no-op when the binary is current, and a checkout that moved to a newer commit
+    # would otherwise be measured with the binary of the commit the target directory was first built at.
+    cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc", "--example" if example else "--bin", name]
+    subprocess.run(cmd, check=True, cwd=ROOT)
     return path
 
 
