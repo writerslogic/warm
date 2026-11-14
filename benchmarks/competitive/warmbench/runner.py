@@ -16,7 +16,8 @@ import time
 from pathlib import Path
 
 from . import SCHEMA_VERSION, data, envs, jars, registry, textdata
-from .common import CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, pass_summary, run_measured, write_json
+from . import common
+from .common import T0_PLACEHOLDER, CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, pass_summary, run_measured, write_json
 
 WORK = Path(os.environ.get("WARM_BENCH_WORK", CACHE / "competitive" / "work"))
 WORKER_DIR = Path(__file__).resolve().parent
@@ -80,6 +81,15 @@ def warm_install_facts(paths):
     return out
 
 
+def hnswlib_cpp_driver():
+    """Path of the native hnswlib driver, built once from the hnswlib sdist the Python binding comes from.
+    Called before any timed phase, so compilation never overlaps a measurement."""
+    out = envs.ENV_ROOT / "hnswlib-cpp"
+    script = WORKER_DIR.parent / "hnswlib_cpp" / "build.sh"
+    path = subprocess.run(["bash", str(script), str(out)], check=True, capture_output=True, text=True).stdout.strip().splitlines()[-1]
+    return path
+
+
 def _rotate(items, r):
     k = r % len(items) if items else 0
     return items[k:] + items[:k]
@@ -96,8 +106,7 @@ def _worker(system, args, threads_env, timeout=None):
     timeout = timeout or _LIMITS["timeout"]
     env_name = registry.SYSTEMS[system]["env"]
     python = envs.ensure(env_name)
-    t0 = time.time_ns()
-    stdout, stderr, wall, peak = run_measured([str(python), "-I", str(WORKER_DIR / "ann_worker.py"), *args, "--t0-ns", str(t0)],
+    stdout, stderr, wall, peak = run_measured([str(python), "-I", str(WORKER_DIR / "ann_worker.py"), *args, "--t0-ns", T0_PLACEHOLDER],
                                               env=threads_env, timeout=timeout)
     result = _parse_result(stdout)
     result["peak_rss_bytes"] = peak
@@ -135,12 +144,20 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
             if only_builds is None or build_id in only_builds.get(system, cls.BUILDS):
                 plan.append((system, build_id))
     state = {}
+    env_cpp = {**env1, "HNSWLIB_CPP_DRIVER": hnswlib_cpp_driver()} if "hnswlib-cpp" in systems else None
     # --- builds: every system builds and persists its index in a build process; serve rounds
     # open the persisted index in fresh processes, so build memory never counts as serving memory
     for system, build_id in plan:
         key = (system, build_id)
         workdir = WORK / f"{dataset}-{n_train}" / f"{system}-{build_id}"
         builds = []
+        if system == "hnswlib-cpp":
+            # No build of its own: it serves the index file the hnswlib row's build process saved.
+            if ("hnswlib", build_id) in state:
+                state[key] = {"builds": [], "workdir": state[("hnswlib", build_id)]["workdir"], "serves": []}
+            else:
+                results["skipped"][f"{system}:{build_id}"] = "needs the hnswlib row's build of the same id in this run"
+            continue
         try:
             for _ in range(spec["build_repeats"]):
                 if system == registry.WARM:
@@ -175,7 +192,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                         args += ["--queries", str(QUERY_CAPS[system])]
                     if variant:
                         args += ["--variant", json.dumps(variant)]
-                    one = _worker(system, args, env1)
+                    one = _worker(system, args, env_cpp if system == "hnswlib-cpp" else env1)
                     if merged is None:
                         merged = one
                     else:
@@ -193,6 +210,9 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
         if system in seen:
             continue
         seen.add(system)
+        if system == "hnswlib-cpp":
+            st["ops"] = {"error": "serves the hnswlib row's index file; mutations are measured on the hnswlib row"}
+            continue
         copy = st["workdir"].with_name(st["workdir"].name + "-ops")
         shutil.rmtree(copy, ignore_errors=True)
         shutil.copytree(st["workdir"], copy)
@@ -208,7 +228,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
         shutil.rmtree(copy, ignore_errors=True)
     for (system, build_id), st in state.items():
         entry = results["systems"].setdefault(system, {"display": registry.SYSTEMS[system]["display"], "builds": {}})
-        entry["builds"][build_id] = {"build_runs": st["builds"], "serve_rounds": st["serves"],
+        entry["builds"][build_id] = {"build_runs": st["builds"], "serve_rounds": st["serves"], **({"index_of": "hnswlib"} if system == "hnswlib-cpp" else {}),
                                       "params": _adapter_class(system).BUILDS[build_id] if system != registry.WARM else WARM_ANN_BUILDS[meta["metric"]]}
         if "ops" in st:
             entry["ops"] = st["ops"]
@@ -277,8 +297,8 @@ def _warm_ann_round(directory, meta, workdir):
     build = WARM_ANN_BUILDS[meta["metric"]]
     cmd = [str(warm_binary("public-bench")), "ann-updates", "--action", "serve", "--index", str(workdir / "index.updates"),
            "--data", str(directory), "--out", str(out), "--ef", build["ef"], "--rerank", build["rerank"], "--repeats", "2"]
-    t0 = time.time_ns()
     stdout, stderr, wall, peak = run_measured(cmd, env=SINGLE_THREAD, timeout=14400)
+    t0 = common.LAST_T0_NS
     raw = json.loads(out.read_text())
     out.unlink()
     raw["cold_start_s"] = (raw["first_query_unix_ns"] - t0) / 1e9
@@ -302,6 +322,11 @@ def _attach_versions_and_footprints(results):
         reg = registry.SYSTEMS[system]
         if reg["family"] == "warm":
             entry["version"] = _warm_version()
+            continue
+        if system == "hnswlib-cpp":
+            entry["version"] = {"hnswlib": envs.PINS["hnswlib"][0].split("==")[1], "source": "sdist headers (the bytes the Python binding compiles)",
+                                "compiler": subprocess.run(["g++", "--version"], capture_output=True, text=True).stdout.splitlines()[0],
+                                "flags": "-O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux)"}
             continue
         if system in ("lucene", "lucene-prev"):
             version = jars.VERSION if system == "lucene" else jars.PREVIOUS
@@ -378,8 +403,7 @@ def run_text(dataset, spec, systems, out_path=None):
         for system in _rotate(live, r):
             out = stores[system].with_suffix(".serve.json")
             try:
-                t0 = time.time_ns()
-                stdout, stderr, wall, peak = _text_cmd(system, "serve", serve_input_path, stores[system], out, threads, t0=t0)
+                stdout, stderr, wall, peak = _text_cmd(system, "serve", serve_input_path, stores[system], out, threads, t0=T0_PLACEHOLDER)
                 body = json.loads(out.read_text())
                 rows = body.pop("rows")
                 body["quality"] = _quality(rows, qrels) if r == 0 else None
@@ -415,7 +439,7 @@ def run_text(dataset, spec, systems, out_path=None):
 
 
 def _text_cmd(system, phase, input_path, store, out, env, t0=None):
-    t0 = t0 or time.time_ns()
+    t0 = t0 or T0_PLACEHOLDER
     if system in registry.WARM_TEXT_ENCODE:
         cmd = [str(warm_binary("competitive_text", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--encode", registry.WARM_TEXT_ENCODE[system]]
