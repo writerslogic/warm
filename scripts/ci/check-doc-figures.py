@@ -21,6 +21,7 @@ import argparse
 import bisect
 import pathlib
 import re
+import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -60,12 +61,21 @@ def numbers(text: str):
             continue
 
 
+def tracked(directory: pathlib.Path) -> list:
+    """Files under a directory that git tracks, so a local run sees what CI sees."""
+    try:
+        listing = subprocess.run(
+            ["git", "ls-files", "-z", "--", "."], cwd=directory, capture_output=True, check=True
+        ).stdout.decode()
+    except (OSError, subprocess.CalledProcessError):
+        return [p for p in directory.rglob("*") if p.is_file()]
+    return [directory / name for name in listing.split("\0") if name]
+
+
 def file_numbers(path: pathlib.Path, cache: dict) -> list:
     if path not in cache:
         values = []
-        files = [path] if path.is_file() else (
-            [p for p in path.rglob("*") if p.is_file()] if path.is_dir() else []
-        )
+        files = [path] if path.is_file() else tracked(path) if path.is_dir() else []
         for item in files[:5000]:
             try:
                 if item.suffix in CORPUS_SUFFIXES and item.stat().st_size <= MAX_FILE:
