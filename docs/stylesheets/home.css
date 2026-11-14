@@ -38,7 +38,7 @@
 [dir] .md-typeset .warm-runtimes li { margin: 0; padding: 0.22rem 0.7rem; border-radius: 6px; border: 1px solid var(--warm-border); background: var(--warm-surface); font-size: 0.7rem; font-weight: 560; font-family: var(--md-code-font); color: var(--warm-text); }
 .warm-runtimes small { color: var(--warm-muted); font-weight: 400; }
 .warm-hero__art { justify-self: center; width: min(100%, 30rem); }
-.warm-crystal { display: block; width: 100%; height: auto; max-width: 26rem; margin: auto; }
+.warm-hero-logo { display: block; width: 100%; height: auto; max-width: 26rem; margin: auto; }
 
 /* ---- install tabs ---- */
 .warm-install { max-width: 52rem; }
