@@ -46,8 +46,8 @@ SYSTEMS = {
     # The Python binding and the native crate are separate rows: the binding adds a language boundary and a
     # per-hit Python object that the native crate does not pay, so neither stands in for the other.
     "tantivy-py": {"display": "tantivy-py 0.27.0 (CPython binding)", "kind": "text", "env": "tantivy", "package": "tantivy", "family": "lexical"},
-    "tantivy-rs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, top-100)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
-    "tantivy-rs-count": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, top-100 + Count)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
+    "tantivy-rs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, pruning collector)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
+    "tantivy-rs-count": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, exhaustive collector with Count)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
     # Version controls: the previous pin of each current comparator, never in a default run or a verdict.
     # Select them with `--systems` to measure the version effect inside the same interleaved rounds.
     "sqlite-fts5-prev": {"display": "SQLite FTS5 (previous pin, SQLite 3.50.4)", "kind": "text-control", "env": "stdlib-prev", "package": "sqlite3", "family": "lexical"},

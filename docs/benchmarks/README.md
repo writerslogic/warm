@@ -148,7 +148,7 @@ existing bytes and do not claim a fresh performance measurement.
   which narrows WARM's lead against SQLite; the two protocols are not interchangeable.
 * Comparator query preparation (word splitting, SQL expression building, Lucene analysis, tantivy
   parsing) is done outside the timer to favour the comparators; WARM's own parsing stays inside it.
-* tantivy is three rows (the native crate runs with and without a Count collector, because bare top-100 lets tantivy prune with block-max WAND and the Count collector forces exhaustive scoring, and which one is faster depends on the corpus; tantivy-py always adds the Count collector):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
+* tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, a mechanism inferred from that measurement and not profiled, see `benchmarks/results/tantivy_collector_microbench_20261114.txt`; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
   `tantivy-rs` (the native crate in its own process, ids from an array built at open, built by
   `examples/competitive_text_tantivy.rs`, the same tantivy version as the binding). The binding row is
   never a stand-in for the crate.
