@@ -40,13 +40,17 @@ fn crash_child() {
     }
 }
 
-fn run_child(dir: &Path, failpoint: Option<&str>, trace: Option<&Path>) -> (usize, Option<i32>) {
+fn run_child(
+    dir: &Path,
+    failpoint: Option<&str>,
+    trace: Option<&Path>,
+) -> (usize, Option<i32>, String) {
     let mut command = Command::new(std::env::current_exe().unwrap());
     command
         .args(["--exact", "crash_child", "--nocapture", "--test-threads=1"])
         .env("WARM_CRASH_CHILD_DIR", dir)
         .stdout(Stdio::piped())
-        .stderr(Stdio::null());
+        .stderr(Stdio::piped());
     if let Some(spec) = failpoint {
         command.env("WARM_FAILPOINT", spec);
     }
@@ -59,7 +63,9 @@ fn run_child(dir: &Path, failpoint: Option<&str>, trace: Option<&Path>) -> (usiz
         .map_while(Result::ok)
         .filter(|line| line.contains("ACK "))
         .count();
-    (acked, child.wait().unwrap().code())
+    let mut stderr = String::new();
+    let _ = std::io::Read::read_to_string(&mut child.stderr.take().unwrap(), &mut stderr);
+    (acked, child.wait().unwrap().code(), stderr)
 }
 
 fn env_usize(name: &str, default: usize) -> usize {
@@ -73,7 +79,7 @@ fn env_usize(name: &str, default: usize) -> usize {
 fn every_acknowledged_operation_survives_a_cut_at_every_durability_point() {
     let work = tempfile::tempdir().unwrap();
     let trace = work.path().join("trace");
-    let (acked, code) = run_child(&work.path().join("count"), None, Some(&trace));
+    let (acked, code, _) = run_child(&work.path().join("count"), None, Some(&trace));
     let ops = plan(OPS);
     assert_eq!((acked, code), (ops.len(), Some(0)));
     let names: Vec<String> = std::fs::read_to_string(&trace)
@@ -104,11 +110,11 @@ fn every_acknowledged_operation_survives_a_cut_at_every_durability_point() {
     let mut cut = 0;
     for k in (1 + offset..=names.len()).step_by(stride) {
         let dir = work.path().join(format!("run{k}"));
-        let (acked, code) = run_child(&dir, Some(&format!("exit@{k}")), None);
+        let (acked, code, stderr) = run_child(&dir, Some(&format!("exit@{k}")), None);
         assert_eq!(
             code,
             Some(writerslogic_warm::core::failpoint::EXIT_CODE),
-            "exit@{k} ({}) did not end the child",
+            "exit@{k} ({}) did not end the child; stderr: {stderr}",
             names[k - 1]
         );
         cut += 1;
