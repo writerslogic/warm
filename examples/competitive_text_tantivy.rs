@@ -198,9 +198,19 @@ fn main() -> Result<()> {
                     .add_document(doc!(id_field => d.id.as_str(), body_field => d.text.as_str()))?;
             }
             writer.commit()?;
+            // Merged to one segment, as the Lucene arm is force-merged: queries then pay one
+            // dictionary and postings lookup, not one per segment the heap budget flushed. The
+            // merge is inside the ingest clock.
+            let segments_before = index.searchable_segment_ids()?;
+            if segments_before.len() > 1 {
+                writer.merge(&segments_before).wait()?;
+            }
             writer.wait_merging_threads()?;
+            let segments = index.searchable_segment_ids()?.len();
+            ensure!(segments == 1, "expected one segment, found {segments}");
             json!({"documents": input.documents.len(), "ingest_s": start.elapsed().as_secs_f64(),
-                "tantivy": "0.27.0", "threads": 1, "heap_bytes": BUILD_HEAP})
+                "tantivy": "0.27.0", "threads": 1, "heap_bytes": BUILD_HEAP,
+                "segments_before_merge": segments_before.len(), "segments": segments})
         }
         "serve" => {
             ensure!(
