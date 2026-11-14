@@ -365,7 +365,7 @@ def _attach_versions_and_footprints(results):
                                 "compiler": subprocess.run(["g++", "--version"], capture_output=True, text=True).stdout.splitlines()[0],
                                 "flags": "-O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux)"}
             continue
-        if system == "tantivy-rs":
+        if system in ("tantivy-rs", "tantivy-rs-count"):
             entry["version"] = {"tantivy": registry.TANTIVY_CRATE, "rustc": subprocess.run(["rustc", "--version"], capture_output=True, text=True).stdout.strip()}
             entry["install"] = warm_install_facts([warm_binary("competitive_text_tantivy", example=True)], crates=False)
             continue
@@ -492,7 +492,7 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None):
     if system in registry.WARM_TEXT_ENCODE:
         cmd = [str(warm_binary("competitive_text", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--encode", registry.WARM_TEXT_ENCODE[system]]
-    elif system == "tantivy-rs":
+    elif system in ("tantivy-rs", "tantivy-rs-count"):
         cmd = [str(warm_binary("competitive_text_tantivy", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0)]
     elif system in ("lucene", "lucene-prev"):

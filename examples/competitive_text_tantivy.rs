@@ -24,7 +24,7 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 use tantivy::{
-    collector::TopDocs,
+    collector::{Count, TopDocs},
     doc,
     query::{Query, QueryParser},
     schema::{Field, IndexRecordOption, Schema, TextFieldIndexing, TextOptions},
@@ -33,7 +33,7 @@ use tantivy::{
 
 const USAGE: &str =
     "usage: competitive_text_tantivy <build|serve|ops> --input FILE --store DIR --out FILE \
-    [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)]";
+    [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--collector topk|count (topk)]";
 const K: usize = 100;
 const BUILD_HEAP: usize = 200_000_000;
 const OPS_HEAP: usize = 50_000_000;
@@ -46,6 +46,7 @@ struct Args {
     passes: usize,
     ops: usize,
     t0_ns: u128,
+    exhaustive: bool,
 }
 
 impl Args {
@@ -54,6 +55,7 @@ impl Args {
         let phase = words.next().context(USAGE)?;
         let (mut input, mut store, mut out) = (None, None, None);
         let (mut passes, mut ops, mut t0_ns) = (3, 100, 0);
+        let mut exhaustive = false;
         while let Some(flag) = words.next() {
             let value = words
                 .next()
@@ -66,6 +68,13 @@ impl Args {
                 "--passes" => passes = value.parse().with_context(number)?,
                 "--ops" => ops = value.parse().with_context(number)?,
                 "--t0-ns" => t0_ns = value.parse().with_context(number)?,
+                "--collector" => {
+                    exhaustive = match value.as_str() {
+                        "topk" => false,
+                        "count" => true,
+                        _ => bail!("--collector takes topk or count; {USAGE}"),
+                    }
+                }
                 _ => bail!("unknown argument {flag}; {USAGE}"),
             }
         }
@@ -77,6 +86,7 @@ impl Args {
             passes,
             ops,
             t0_ns,
+            exhaustive,
         })
     }
 }
@@ -236,9 +246,17 @@ fn main() -> Result<()> {
                 .iter()
                 .map(|q| parser.parse_query_lenient(&words(&q.text).join(" ")).0)
                 .collect();
-            let collector = TopDocs::with_limit(K).order_by_score();
+            // `topk` is the bare top-100 collector, which lets tantivy prune with block-max WAND.
+            // `count` adds a Count collector, which forces exhaustive scoring (tantivy-py always
+            // does, its `count` argument defaults to true). Neither changes the hits returned; which
+            // is faster depends on the corpus, so the harness times both as separate rows.
+            let top = TopDocs::with_limit(K).order_by_score();
             let run = |query: &dyn Query| -> Result<Vec<(&str, f32)>> {
-                let hits = searcher.search(query, &collector)?;
+                let hits = if args.exhaustive {
+                    searcher.search(query, &(top.clone(), Count))?.0
+                } else {
+                    searcher.search(query, &top)?
+                };
                 Ok(hits
                     .into_iter()
                     .map(|(score, address)| (ids.resolve(address.segment_ord, address.doc_id), score))
@@ -267,7 +285,7 @@ fn main() -> Result<()> {
                 }
                 passes.push(ns);
             }
-            json!({"open_s": open_s, "cold_start_s": cold_start_s, "rows": rows, "passes_ns": passes})
+            json!({"open_s": open_s, "collector": if args.exhaustive { "top-100 + Count" } else { "top-100" }, "cold_start_s": cold_start_s, "rows": rows, "passes_ns": passes})
         }
         "ops" => {
             ensure!(
