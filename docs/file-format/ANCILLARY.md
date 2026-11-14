@@ -57,6 +57,21 @@ is a raw revocation bit string (bit `i` of byte `i/8`); `kel.json` is a pretty J
 key events. These are written with plain, non-atomic writes. **(unverified byte-level; outside
 the stability promise.)**
 
+## sparse-docs.wsp (learned-sparse document vectors)
+
+Created by the first sparse vector a caller supplies; a store without one has no such file, and a
+store written before it opens unchanged. Append-only log: a 16-byte header (magic `WARMSPRS`,
+version `u32` LE = 1, four zero bytes), then records framed as `payload length u32 LE`,
+`crc32 of payload u32 LE`, payload. Put: `1u8`, `id length u16 LE`, id (UTF-8), `nnz u32 LE`,
+`nnz` term ids (`u16` LE, strictly ascending), `nnz` weights (`f32` LE, finite, above zero).
+Delete: `2u8`, `id length u16 LE`, id. The last record of an id wins. A torn tail (a record cut
+short, or a last record failing its checksum) is dropped and truncated at open; a bad checksum
+elsewhere, an unknown magic or a version other than 1 fails the open. When the log exceeds twice
+the live rows plus 1 MiB it is rewritten through a temporary file and an atomic rename. Not
+written for encrypted stores. Rows whose document no longer exists are skipped at search time.
+The committed example is `tests/golden/sparse-docs-v1/`. **(Outside the stability promise until
+a release lists it.)**
+
 ## connection_graph.log (feature `experimental`)
 
 Event log of the experimental connection graph. Unstable; no promise.

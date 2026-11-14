@@ -21,8 +21,10 @@ pub use crate::core::engine::{
     CompactionHandle, CompactionOptions, CompactionProgress, CompactionReport, CompactionResource,
     CompactionStage, CompactionStatus,
 };
+pub use crate::core::engine::{RankingMode, SparseSearch};
 pub use crate::core::entangled::EntangledHVec;
 pub use crate::core::error::{CommittedMutationError, IndeterminateMutationError, WarmError};
+pub use crate::core::index::sparse_store::SparseVector;
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::core::memory_api::{Memory, MemoryConfig};
 pub use crate::core::types::{

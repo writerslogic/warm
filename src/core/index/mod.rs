@@ -3,3 +3,4 @@
 
 pub mod inverted;
 pub mod sparse_impact;
+pub mod sparse_store;
