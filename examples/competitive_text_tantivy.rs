@@ -251,9 +251,10 @@ fn main() -> Result<()> {
             // does, its `count` argument defaults to true). Neither changes the hits returned; which
             // is faster depends on the corpus, so the harness times both as separate rows.
             let top = TopDocs::with_limit(K).order_by_score();
+            let top_and_count = (TopDocs::with_limit(K).order_by_score(), Count);
             let run = |query: &dyn Query| -> Result<Vec<(&str, f32)>> {
                 let hits = if args.exhaustive {
-                    searcher.search(query, &(top.clone(), Count))?.0
+                    searcher.search(query, &top_and_count)?.0
                 } else {
                     searcher.search(query, &top)?
                 };
