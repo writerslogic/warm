@@ -14,7 +14,9 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use serde_json::Value;
 
-use crate::core::documents::{DocumentInput, SearchOptions};
+use crate::core::documents::{DocumentInput, IngestOptions, SearchOptions};
+use crate::core::engine::{RankingMode, SparseSearch};
+use crate::core::index::sparse_store::SparseVector;
 use crate::core::memory_api::Memory;
 use crate::WarmCore;
 
@@ -99,6 +101,71 @@ impl PyWarm {
         let core = &self.core;
         let hits = py
             .detach(|| core.search_documents(query, &options))
+            .map_err(err)?;
+        to_py(py, &serde_json::to_value(hits).map_err(err)?)
+    }
+
+    /// [`Self::memorize_documents`] with learned-sparse vectors: `sparse` is a list parallel to
+    /// `documents` whose entries are `None` or an `(ids, weights)` pair of term ids and
+    /// non-negative weights. A document with `None` has no sparse vector afterwards. Not
+    /// supported on an encrypted store.
+    fn memorize_documents_sparse(
+        &self,
+        py: Python<'_>,
+        documents: &Bound<'_, PyAny>,
+        sparse: Vec<Option<(Vec<u32>, Vec<f32>)>>,
+    ) -> PyResult<Vec<u32>> {
+        let documents: Vec<DocumentInput> = typed(py, documents)?;
+        if documents.len() != sparse.len() {
+            return Err(err(format!(
+                "{} documents but {} sparse entries",
+                documents.len(),
+                sparse.len()
+            )));
+        }
+        let inputs = documents
+            .into_iter()
+            .zip(sparse)
+            .map(|(document, vector)| {
+                (
+                    document,
+                    vector.map(|(ids, weights)| SparseVector::new(ids, weights)),
+                )
+            })
+            .collect();
+        let core = &self.core;
+        py.detach(|| core.memorize_documents_sparse(inputs, &IngestOptions::default()))
+            .map_err(err)
+    }
+
+    /// [`Self::search_documents`] under a ranking: `"lexical"` (default, ignores
+    /// `sparse_query`), `"sparse"` (inner product with the stored sparse vectors) or `"fused"`
+    /// (reciprocal rank fusion of both). `sparse_query` is an `(ids, weights)` pair.
+    #[pyo3(signature = (query, options=None, ranking="lexical", sparse_query=None))]
+    fn search_documents_ranked<'py>(
+        &self,
+        py: Python<'py>,
+        query: &str,
+        options: Option<&Bound<'py, PyAny>>,
+        ranking: &str,
+        sparse_query: Option<(Vec<u32>, Vec<f32>)>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let options: SearchOptions = match options {
+            Some(options) => typed(py, options)?,
+            None => SearchOptions::default(),
+        };
+        let mode: RankingMode = ranking.parse().map_err(err)?;
+        let (ids, weights) = sparse_query.unwrap_or_default();
+        if mode != RankingMode::Lexical && ids.is_empty() {
+            return Err(err("sparse_query is required for sparse and fused ranking"));
+        }
+        let ranking = SparseSearch {
+            mode,
+            query: SparseVector::new(ids, weights),
+        };
+        let core = &self.core;
+        let hits = py
+            .detach(|| core.search_documents_ranked(query, &options, &ranking))
             .map_err(err)?;
         to_py(py, &serde_json::to_value(hits).map_err(err)?)
     }

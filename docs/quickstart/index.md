@@ -249,3 +249,60 @@ API key and no service, build with the `local-embed` feature and set
 `text_encoder: TextEncoder::LocalEmbedV1`: chunks and queries are embedded by a bundled model and
 search fuses cosine with BM25. Options, model choice and offline packs are in
 [local embeddings](../embeddings/README.md).
+
+## 6. Learned-sparse ranking (opt-in)
+
+A learned sparse encoder (SPLADE style) maps a text to weights over a vocabulary of up to 65,536
+terms. WARM runs no encoder here: you encode documents and queries yourself and pass the vectors in.
+Nothing changes for a store that never receives one; no sparse file is written and lexical search is
+byte for byte what it was.
+
+```python
+from writerslogic_warm import Warm
+
+w = Warm(path="store")
+# One (term ids, weights) pair per document, or None. Weights are finite and >= 0.
+w.memorize_documents_sparse(
+    [{"id": "d1", "text": "..."}, {"id": "d2", "text": "..."}],
+    [([101, 2045, 9120], [1.2, 0.4, 2.0]), None],
+)
+hits = w.search_documents_ranked(
+    "query text", {"k": 10}, ranking="fused", sparse_query=([2045, 9120], [0.9, 1.4])
+)
+```
+
+`ranking` is `"lexical"` (default, ignores the sparse query), `"sparse"` (inner product with the
+stored vectors, text unused) or `"fused"` (reciprocal rank fusion, k = 60, of the lexical and sparse
+document rankings over `candidateLimit` candidates, default 100). The Rust calls are
+`memorize_documents_sparse`, `memorize_document_sparse` and `search_documents_ranked`. A document
+ingested without a vector, or replaced without one, is absent from sparse ranking; deleting a
+document removes its vector. `filter` and `sourceUri` are rejected in sparse and fused modes;
+`documentIds` is honoured.
+
+Measured gain, Apple M4, one thread, with `opensearch-neural-sparse-encoding-v2-distill`
+(Apache-2.0) encodings ingested through this API, the benchmark harness's train/dev splits
+(nDCG@10 against WARM BM25 on the same corpus):
+
+| Dataset | BM25 | sparse | fused |
+|---|---|---|---|
+| SciFact (train queries, 5,183 docs) | 0.7027 | 0.7252 | 0.7344 |
+| NFCorpus (dev queries, 3,633 docs) | 0.2916 | 0.3384 | 0.3352 |
+
+A standalone `SparseIndex` run on FiQA (dev queries, 57,600 docs) gave 0.3664 against 0.2654 for
+BM25; it was not repeated through the document API. Fusion helped on SciFact and not on NFCorpus,
+so test both modes on your data.
+
+Costs. Encoding is yours to pay: 21 to 47 ms per document on an Apple GPU for that model, against
+0.1 to 0.4 ms per document for BM25 ingest. Storing the vectors adds 0.2 to 0.3 ms per document
+(noisy measurement) and about 1.5 KB per document at 250 terms (5,183 documents wrote a 7.9 MB
+file); rows are also held in memory at 6 bytes per entry. Search below 100,000 rows scans every
+row exactly (863 queries per second on SciFact and 518 on NFCorpus, against about 12,600 and
+24,800 for BM25 on the same machine). From 100,000 rows a pruned impact index is built from the
+stored rows on first search and rebuilt after changes touch a tenth of them; it is approximate
+and the recall of its default parameters is not measured through this API.
+
+Limits: term ids below 65,536; at most 4,096 entries per document and 1,024 per query; at most
+536,870,912 entries and 67,108,864 documents per store; `k` up to 10,000. Duplicate term ids in a
+document, negative or non-finite weights are errors. An encrypted store refuses sparse vectors
+because the file is plaintext. The file is `sparse-docs.wsp`
+([format](../file-format/ANCILLARY.md#sparse-docswsp)).
