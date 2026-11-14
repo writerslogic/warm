@@ -72,6 +72,7 @@ fn acknowledged_operations_survive_enospc_and_eio_at_every_point() {
                     acked.len()
                 );
                 check_reopened(&dir, &acked, &failed, &context);
+                std::fs::remove_dir_all(&dir).unwrap();
             }
         }
     }

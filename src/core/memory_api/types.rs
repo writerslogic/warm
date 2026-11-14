@@ -267,12 +267,19 @@ pub struct ForgetOptions {
     pub include_chain: bool,
     /// Report what would be removed without removing it.
     pub dry_run: bool,
-    /// Compact the store afterwards and overwrite what the compaction replaced, so the deleted
-    /// text is in no file of the store when the call returns, and a purge cut short by a crash
-    /// is finished by the next open. Default: `true`. With `false` the delete is logical: the
-    /// append-only journal keeps the deleted frames (and time-travel reads them) until some
-    /// later compaction.
+    /// Purge what the delete leaves in the journal: the delete is recorded durably as a purge
+    /// before it commits, so a crash cannot leave deleted text without an obligation to erase
+    /// it, and a scrubbing compaction overwrites what the compaction replaced. Default: `true`.
+    /// With `false` the delete is logical: the append-only journal keeps the deleted frames
+    /// (and time-travel reads them) until some later compaction.
     pub purge: bool,
+    /// With `purge`, run the scrubbing compaction before returning, so the text is in no file
+    /// of the store when the call returns. Default: `false`, which defers the scrub: the call
+    /// returns once the delete and the pending purge are durable, and the next
+    /// `compact`, `compact_scrubbing`, open, or the 64th waiting purge erases the text of every
+    /// deferred delete in one compaction. A compaction costs time that grows with the store, so
+    /// one per delete does not scale.
+    pub synchronous: bool,
 }
 
 impl Default for ForgetOptions {
@@ -281,6 +288,7 @@ impl Default for ForgetOptions {
             include_chain: false,
             dry_run: false,
             purge: true,
+            synchronous: false,
         }
     }
 }
@@ -292,6 +300,8 @@ pub struct ForgetReport {
     /// Ids removed (or, for a dry run, that would be removed), sorted.
     pub forgotten: Vec<String>,
     pub dry_run: bool,
+    /// The deleted text is in no file of the store. `false` after a deferred purge (see
+    /// [`ForgetOptions::synchronous`]) until the scrubbing compaction that covers it ends.
     pub purged: bool,
 }
 

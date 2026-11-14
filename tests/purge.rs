@@ -70,6 +70,7 @@ fn purge(memory: &Memory, ids: &[&str]) {
             },
             &ForgetOptions {
                 purge: true,
+                synchronous: true,
                 ..Default::default()
             },
         )

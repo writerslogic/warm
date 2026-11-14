@@ -545,6 +545,7 @@ fn purged_text_is_never_returned_at_any_position() {
             },
             &ForgetOptions {
                 purge: true,
+                synchronous: true,
                 ..Default::default()
             },
         )

@@ -8,6 +8,8 @@ pub use background_compaction::{
     CompactionStage, CompactionStatus,
 };
 mod compaction;
+mod purge;
+pub use purge::{PurgeStatus, PurgeTicket};
 pub(crate) mod concepts;
 mod dense_vectors;
 mod document_api;
@@ -164,9 +166,11 @@ pub struct WarmCore {
     phase_graph: crate::core::sync::Mutex<Option<super::phase_graph::PhaseGraph>>,
     // Declared last so it is dropped after every mmap, index, and store
     // component. No subsequent instance can enter while teardown is flushing.
-    /// Bumped by every [`WarmCore::mark_purge_pending`]; a scrubbing compaction clears the
-    /// marker file only if no purge began while it ran.
-    purge_epoch: std::sync::atomic::AtomicU64,
+    /// Purges waiting for a scrubbing compaction (`purge.pending`).
+    purge: Arc<purge::PurgeLedger>,
+    /// Serializes scrubbing compactions, so a purge whose ticket another one already cleared
+    /// does not compact again.
+    scrub_gate: crate::core::sync::Mutex<()>,
     _store_lock: StoreLock,
 }
 
@@ -314,6 +318,7 @@ impl WarmCore {
                 (None, None, None, None, None, None, None)
             };
 
+        let purge = Arc::new(purge::PurgeLedger::open(&base_path)?);
         let core = Self {
             config: config.clone(),
             mutation_gate: mutation_gate::MutationGate::default(),
@@ -375,7 +380,8 @@ impl WarmCore {
             connection_graph: crate::core::sync::Mutex::new(None),
             #[cfg(feature = "experimental")]
             phase_graph: crate::core::sync::Mutex::new(None),
-            purge_epoch: std::sync::atomic::AtomicU64::new(0),
+            purge,
+            scrub_gate: crate::core::sync::Mutex::new(()),
             _store_lock: store_lock,
         };
 
@@ -410,8 +416,16 @@ impl WarmCore {
         // A purge that died between its delete commit and the end of its compaction left the
         // deleted text in the journal; finish it before the store is handed out.
         if core.purge_pending() {
-            core.compact_scrubbing()
-                .context("completing a purge interrupted before it finished")?;
+            if let Err(error) = core.compact_scrubbing() {
+                // A full disk (or any failure) must not make the store unopenable: nothing
+                // acknowledged is lost, the deletes are committed, and the ticket stays on disk
+                // so a later open (or `compact_scrubbing`) finishes the purge. The store reports
+                // it as pending (`purge_status`), never as purged.
+                tracing::warn!(
+                    error = %format!("{error:#}"),
+                    "an interrupted purge could not be completed; it stays pending"
+                );
+            }
         }
 
         Ok(core)

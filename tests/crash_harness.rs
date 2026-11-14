@@ -128,6 +128,10 @@ fn every_acknowledged_operation_survives_a_cut_at_every_durability_point() {
         // Recovery is idempotent and the store keeps working.
         let memory = open(&dir).unwrap();
         apply(&memory, Op::Remember(OPS + 1)).unwrap();
+        drop(memory);
+        // A store preallocates its segments; on a filesystem without sparse files every kept
+        // run takes that much disk, and hundreds of runs fill the volume.
+        std::fs::remove_dir_all(&dir).unwrap();
     }
     assert!(
         cut >= names.len() / stride / 2,

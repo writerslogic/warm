@@ -11,8 +11,6 @@ use serde::Serialize;
 use super::background_compaction::{CompactionStage, JobState, Stop};
 use super::{mutation::Mutation, WarmCore};
 
-/// Marker file: a purge started and its scrubbing compaction has not finished.
-const PURGE_PENDING: &str = "purge.pending";
 use crate::core::documents::StoredDocument;
 use crate::core::storage::StagedArena;
 
@@ -83,7 +81,12 @@ enum DocumentMutation<'a> {
 }
 
 impl WarmCore {
+    /// Compacts. Purges that are waiting for a scrub (`defer_purge`) make this a scrubbing
+    /// compaction, so the next compaction of a store with deferred deletes erases them.
     pub fn compact(&self) -> Result<()> {
+        if self.purge.status().committed > 0 {
+            return self.compact_scrubbing();
+        }
         self.compact_impl(|| {}, || {}, false, &JobState::foreground())
     }
 
@@ -95,40 +98,75 @@ impl WarmCore {
     /// arrived in (see `canonicalize_derived_state`), so every query, status field
     /// other than the opaque counters, and file other than the generation's name match a store
     /// that never held them and was purged at the same point.
+    ///
+    /// Clears the `purge.pending` ticket of every purge whose deletes had committed when the
+    /// compaction began, and no other.
     pub fn compact_scrubbing(&self) -> Result<()> {
-        let epoch = self.purge_epoch.load(std::sync::atomic::Ordering::Acquire);
-        self.sync_text_segment()?;
-        self.compact_impl(|| {}, || {}, true, &JobState::foreground())?;
-        self.clear_purge_pending(epoch)
+        let _gate = self.scrub_gate.lock();
+        self.scrub_covering_committed()
     }
 
-    fn purge_marker(&self) -> std::path::PathBuf {
-        self.storage_path.join(PURGE_PENDING)
+    /// Caller holds `scrub_gate`.
+    fn scrub_covering_committed(&self) -> Result<()> {
+        // Collected before the snapshot: every delete of these tickets precedes it.
+        let covered = self.purge.committed();
+        let result = self
+            .sync_text_segment()
+            .and_then(|()| self.compact_impl(|| {}, || {}, true, &JobState::foreground()))
+            .and_then(|()| self.purge.clear(&covered));
+        if let Err(error) = &result {
+            self.purge.record_failure(error);
+        }
+        result
     }
 
-    /// Whether a purge began and no scrubbing compaction has completed since.
+    /// Whether a purge began and no scrubbing compaction has covered it yet.
     pub(crate) fn purge_pending(&self) -> bool {
-        self.purge_marker().exists()
+        self.purge.status().pending > 0
+    }
+
+    /// The purges waiting for a scrubbing compaction, and why the last attempt to finish them
+    /// failed (a store opened with a full disk reports the interrupted purge here).
+    pub fn purge_status(&self) -> super::PurgeStatus {
+        self.purge.status()
     }
 
     /// Records, durably and before the delete is committed, that deleted text must be purged:
-    /// if the process dies before the scrubbing compaction ends, the next open finishes the
-    /// purge. A scrubbing compaction that ends without a newer mark removes it.
-    pub fn mark_purge_pending(&self) -> Result<()> {
-        self.purge_epoch
-            .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-        crate::core::durable_file::atomic_write(&self.purge_marker(), b"purge pending\n")
+    /// if the process dies before a scrubbing compaction ends, the next open finishes the
+    /// purge. Delete, then end the purge with [`Self::finish_purge`] (erased before it
+    /// returns) or [`Self::defer_purge`] (erased by the next scrubbing compaction or open).
+    pub fn mark_purge_pending(&self) -> Result<super::PurgeTicket> {
+        let id = self.purge.mark()?;
+        Ok(super::PurgeTicket::new(id, Arc::clone(&self.purge)))
     }
 
-    fn clear_purge_pending(&self, epoch: u64) -> Result<()> {
-        if self.purge_epoch.load(std::sync::atomic::Ordering::Acquire) != epoch {
+    /// Ends a purge whose deletes have committed, scrubbing before it returns. A scrubbing
+    /// compaction that another thread completed since the mark already covered this purge, and
+    /// then nothing more is done.
+    pub fn finish_purge(&self, ticket: super::PurgeTicket) -> Result<()> {
+        ticket.ledger().commit(ticket.id());
+        let _gate = self.scrub_gate.lock();
+        if !ticket.ledger().contains(ticket.id()) {
             return Ok(());
         }
-        match std::fs::remove_file(self.purge_marker()) {
-            Ok(()) => crate::core::durable_file::sync_directory(&self.storage_path),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(error) => Err(error.into()),
+        self.scrub_covering_committed()
+    }
+
+    /// Ends a purge whose deletes have committed without scrubbing: the ticket stays durable
+    /// and a later scrubbing compaction, `compact`, or the next open erases the text. Once
+    /// `DEFERRED_BATCH` purges are waiting this call scrubs them all in one compaction.
+    /// Returns whether the text of this purge was erased before the call returned.
+    pub fn defer_purge(&self, ticket: super::PurgeTicket) -> Result<bool> {
+        let id = ticket.id();
+        ticket.ledger().commit(id);
+        if self.purge.status().committed < super::purge::DEFERRED_BATCH {
+            return Ok(false);
         }
+        let _gate = self.scrub_gate.lock();
+        if self.purge.contains(id) {
+            self.scrub_covering_committed()?;
+        }
+        Ok(!self.purge.contains(id))
     }
 
     /// Rebuilds the state a delete leaves shaped by history rather than by the live set: the

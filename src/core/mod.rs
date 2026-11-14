@@ -111,6 +111,8 @@ pub use engine::{
     HistoryBounds, HistoryError, HistoryOptions, HistoryRevision, HistoryView, JournalPosition,
     RevisionKind, TimeResolution,
 };
+#[cfg(not(target_arch = "wasm32"))]
+pub use engine::{PurgeStatus, PurgeTicket};
 pub use phase_hvec::PhaseHVec;
 pub use phase_resonator::{
     phase_resonator_factorize, FactorResult, PhaseResonator, ResonatorConfig,

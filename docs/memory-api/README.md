@@ -99,7 +99,7 @@ node examples/temporal-memory.cjs verify ./temporal-demo
 `replace` returns Berlin for current recall, Paris for `asOf: 2021-06-01`, and an explanation
 linking the replacement to its predecessor. The example reapplies `latest-by-subject` on
 every open: policies are runtime configuration, while facts and supersession links persist.
-`forget` targets the latest ID with `{ includeChain: true, purge: true, dryRun: false }`, then
+`forget` targets the latest ID with `{ includeChain: true, purge: true, synchronous: true, dryRun: false }`, then
 flushes. The final process reports empty current, historical and document results and `null`
 for both IDs. This workflow uses lexical retrieval and needs no embedding model or service.
 
@@ -197,9 +197,11 @@ removes the matched facts, and:
 - with `include_chain`, every fact connected to a match by supersession, in both directions, so
   no version of the chain survives;
 - with `dry_run`, nothing; the report lists what would go;
-- with `purge` (the default), the store is compacted afterwards and what the compaction
-  replaced is overwritten (see below). `purge: false` is a logical delete that keeps the
-  deleted frames in the journal.
+- with `purge` (the default), the delete is recorded as a durable pending purge, and a
+  scrubbing compaction overwrites what it replaced: before the call returns with
+  `synchronous: true`, otherwise at the next `compact`, open, or the 64th waiting purge, which
+  erases every deferred delete in one compaction (see below and [ERASURE.md](ERASURE.md)).
+  `purge: false` is a logical delete that keeps the deleted frames in the journal.
 
 What "gone" means: removed from search, `has_document`, `recall`, `get`, `history`, `explain`
 and the in-memory index at once, and after a restart. Removal is one journal transaction per
@@ -215,15 +217,17 @@ the store directory, before reopen, after an abort in a child process, and after
   synced the text segment in every delete measured about 4 ms instead of 60 us on macOS;
   `benchmarks/results/purge_v1.json`, recorded before journal commits used `F_FULLFSYNC`). The
   journal frame that records the delete is durable when the call returns.
-  `DELETE /api/v1/documents/{id}` purges by default; `?purge=false` opts out.
+  `DELETE /api/v1/documents/{id}` purges by default (deferred; `?synchronous=true` scrubs before
+  the response); `?purge=false` opts out.
 - **Updates:** replacing a document zeroes the old text records in `documents.text` the same
   way (synced by the next `forget`, purge or compaction); the journal keeps the old frame
   until a purge.
-- **By default (`purge: true`), before it returns:** the journal is rewritten without the
+- **With `purge: true, synchronous: true`, before it returns** (by default the same work is
+  deferred, see [ERASURE.md](ERASURE.md)): the journal is rewritten without the
   text, then the replaced generation and any unreferenced generation left by an interrupted
   compaction are overwritten with zeros through the file API, synced and unlinked. A
-  `purge.pending` marker is made durable before the first delete commits and removed after
-  the compaction; a crash in between leaves the marker, and the next open finishes the purge
+  `purge.pending` ticket is made durable before the first delete commits and removed by the
+  scrubbing compaction that covers it; a crash in between leaves the ticket, and the next open finishes the purge
   before returning the store. `tests/erase.rs` cuts the process at every durability point of
   the purge and requires that a document the reopened store no longer holds is in no file.
 - **With `purge: false`:** the deleted frames stay in the append-only journal segments
@@ -361,7 +365,7 @@ serde form of the Rust types, unknown fields rejected.
 | `remember` | a fact, or `{"facts": [...]}` | `{"remembered": [...]}` |
 | `recall` | `{"query", ...RecallOptions}` | `{"results": [...]}` |
 | `explain` | `{"query", "id", ...RecallOptions}` | `{"explanation": {...}}` |
-| `forget` | `{"scope": {"kind": ...}, "includeChain", "dryRun", "purge"}` | `{"forgotten", "dryRun", "purged"}` |
+| `forget` | `{"scope": {"kind": ...}, "includeChain", "dryRun", "purge", "synchronous"}` | `{"forgotten", "dryRun", "purged"}` |
 | `get` | `{"id"}` | `{"fact": {...} or null}` |
 | `history` | `{"id"}` | `{"history": [...]}` |
 | `applyForgetting` | `{"includeChain", "dryRun" (default true), "purge"}` | as `forget` |

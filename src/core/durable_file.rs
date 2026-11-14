@@ -174,9 +174,45 @@ pub(crate) fn sync_directory(path: &Path) -> Result<()> {
     crate::core::failpoint::hit("dir-sync")?;
     #[cfg(unix)]
     std::fs::File::open(path)?.sync_all()?;
-    #[cfg(not(unix))]
+    #[cfg(windows)]
+    sync_directory_windows(path)?;
+    #[cfg(not(any(unix, windows)))]
     let _ = path;
     Ok(())
+}
+
+/// Flushes a directory through a handle opened with `FILE_FLAG_BACKUP_SEMANTICS` (the only way
+/// `CreateFileW` opens a directory) and `GENERIC_WRITE` (which `FlushFileBuffers` requires).
+/// Microsoft documents neither what this flushes for a directory nor that it persists directory
+/// entries; NTFS journals metadata, which orders a rename after the data it names, and this call
+/// asks the filesystem to write what it holds for the directory. A filesystem that refuses to
+/// flush a directory handle (access denied, not supported) is the platform's own limit: it is
+/// logged and the call succeeds, as every other platform call here does for a filesystem
+/// without the feature. Any other error propagates.
+#[cfg(windows)]
+fn sync_directory_windows(path: &Path) -> Result<()> {
+    use std::os::windows::fs::OpenOptionsExt;
+    const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+    // ERROR_INVALID_FUNCTION, ERROR_NOT_SUPPORTED, ERROR_INVALID_PARAMETER.
+    const REFUSED: [i32; 3] = [1, 50, 87];
+    let result = std::fs::OpenOptions::new()
+        .write(true)
+        .custom_flags(FILE_FLAG_BACKUP_SEMANTICS)
+        .open(path)
+        .and_then(|directory| directory.sync_all());
+    match result {
+        Ok(()) => Ok(()),
+        Err(error)
+            if error.kind() == std::io::ErrorKind::PermissionDenied
+                || error
+                    .raw_os_error()
+                    .is_some_and(|code| REFUSED.contains(&code)) =>
+        {
+            tracing::debug!(%error, path = %path.display(), "the filesystem refused a directory flush");
+            Ok(())
+        }
+        Err(error) => Err(error.into()),
+    }
 }
 
 /// Completes the durability of a range of a `MAP_SHARED` mapping of `file` whose `msync`

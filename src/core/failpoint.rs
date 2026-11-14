@@ -4,7 +4,7 @@
 //! Fault injection at the store's durability points, for the crash and disk-fault tests.
 //!
 //! Every write-back, sync, rename, scrub and unlink of the commit and purge paths calls
-//! [`hit`] with a stable name. Without the `failpoints` feature `hit` is an inlined `Ok(())`.
+//! `hit` with a stable name. Without the `failpoints` feature `hit` is an inlined `Ok(())`.
 //! With it, the n-th hit (counted across all names, from 1) can be made to
 //!
 //! - `exit`: end the process at once with [`EXIT_CODE`] and no unwinding, which is what a

@@ -839,6 +839,7 @@ impl Sim {
                 &scope,
                 &ForgetOptions {
                     purge,
+                    synchronous: purge,
                     ..Default::default()
                 },
             )

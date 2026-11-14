@@ -48,6 +48,7 @@ fn forget(memory: &Memory, name: &str, purge: bool) {
             },
             &ForgetOptions {
                 purge,
+                synchronous: purge,
                 ..ForgetOptions::default()
             },
         )

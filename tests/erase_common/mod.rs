@@ -17,6 +17,14 @@ pub fn open(path: &Path) -> anyhow::Result<Memory> {
     Ok(Memory::new(core).with_clock(Arc::new(ManualClock::new(1))))
 }
 
+/// The default forget defers its scrub; the tests that assert erasure on return ask for it.
+pub fn sync_purge() -> ForgetOptions {
+    ForgetOptions {
+        synchronous: true,
+        ..ForgetOptions::default()
+    }
+}
+
 pub fn files(dir: &Path) -> Vec<PathBuf> {
     fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
         for entry in std::fs::read_dir(dir).unwrap().filter_map(Result::ok) {
@@ -32,6 +40,15 @@ pub fn files(dir: &Path) -> Vec<PathBuf> {
     walk(dir, &mut out);
     out.sort();
     out
+}
+
+/// Allocated-by-length bytes of every file under `dir`, for failure messages.
+pub fn tree_bytes(dir: &Path) -> u64 {
+    files(dir)
+        .iter()
+        .filter_map(|path| std::fs::metadata(path).ok())
+        .map(|meta| meta.len())
+        .sum()
 }
 
 /// Files under `dir` containing the first ten bytes of `needle` (a dictionary or delta list
@@ -112,10 +129,7 @@ pub fn apply(memory: &Memory, op: Op) -> anyhow::Result<()> {
             })?;
         }
         Op::Forget(i) => {
-            let report = memory.forget(
-                &ForgetScope::Ids { ids: vec![id(i)] },
-                &ForgetOptions::default(),
-            )?;
+            let report = memory.forget(&ForgetScope::Ids { ids: vec![id(i)] }, &sync_purge())?;
             anyhow::ensure!(report.purged, "forget did not purge");
         }
         Op::Compact => memory.core().compact()?,
@@ -127,7 +141,14 @@ pub fn apply(memory: &Memory, op: Op) -> anyhow::Result<()> {
 /// `doubtful` ops started and did not return `Ok` (they may or may not have taken effect,
 /// but never partially).
 pub fn check_reopened(dir: &Path, acked: &[Op], doubtful: &[Op], context: &str) {
-    let memory = open(dir).unwrap_or_else(|e| panic!("{context}: reopen failed: {e:#}"));
+    let memory = open(dir).unwrap_or_else(|e| {
+        panic!(
+            "{context}: reopen failed: {e:#}; store {} bytes in {} files, work tree {} bytes",
+            tree_bytes(dir),
+            files(dir).len(),
+            dir.parent().map_or(0, tree_bytes)
+        )
+    });
     let mut present = std::collections::BTreeMap::new();
     let mut gone = std::collections::BTreeSet::new();
     for op in acked {

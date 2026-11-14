@@ -71,9 +71,7 @@ fn the_default_forget_leaves_no_trace_before_or_after_reopen() {
         !leaks(dir.path(), &token(1)).is_empty(),
         "the fixture must write the text"
     );
-    let report = memory
-        .forget(&ids(&[0, 1, 2]), &ForgetOptions::default())
-        .unwrap();
+    let report = memory.forget(&ids(&[0, 1, 2]), &sync_purge()).unwrap();
     assert!(report.purged && report.forgotten.len() == 3);
     assert_clean(dir.path(), &[0, 1, 2], "after forget");
     assert!(
@@ -107,7 +105,7 @@ fn forgetting_a_superseded_chain_and_replaced_text_erases_every_version() {
             &ids(&[1]),
             &ForgetOptions {
                 include_chain: true,
-                ..ForgetOptions::default()
+                ..sync_purge()
             },
         )
         .unwrap();
@@ -139,6 +137,105 @@ fn an_interrupted_purge_is_finished_by_the_next_open() {
     assert!(memory.get(&id(1)).unwrap().is_some());
 }
 
+fn pending_file(dir: &Path) -> bool {
+    dir.join("purge.pending").exists()
+}
+
+/// One purge finishing must not erase the record of another that has not committed its
+/// deletes yet: the second one is still owed a scrub when the process dies.
+#[test]
+fn a_finished_purge_leaves_the_ticket_of_another_in_flight() {
+    let dir = tempfile::tempdir().unwrap();
+    let memory = open(dir.path()).unwrap();
+    seed(&memory, 4);
+    let core = memory.core().clone();
+    let first = core.mark_purge_pending().unwrap();
+    let second = core.mark_purge_pending().unwrap();
+    memory
+        .forget(
+            &ids(&[0]),
+            &ForgetOptions {
+                purge: false,
+                ..ForgetOptions::default()
+            },
+        )
+        .unwrap();
+    core.finish_purge(first).unwrap();
+    assert_clean(dir.path(), &[0], "after the first purge");
+    assert!(pending_file(dir.path()), "the second purge is still owed");
+    assert_eq!(core.purge_status().pending, 1);
+    // The second purge's delete commits after the scrub that finished the first, then the
+    // process dies before its own scrub.
+    memory
+        .forget(
+            &ids(&[1]),
+            &ForgetOptions {
+                purge: false,
+                ..ForgetOptions::default()
+            },
+        )
+        .unwrap();
+    assert!(!leaks(dir.path(), &token(1)).is_empty());
+    drop(second);
+    drop(core);
+    drop(memory);
+    let memory = open(dir.path()).unwrap();
+    assert_clean(
+        dir.path(),
+        &[0, 1],
+        "after the open that finishes the second purge",
+    );
+    assert!(!pending_file(dir.path()));
+    assert!(memory.get(&id(2)).unwrap().is_some());
+}
+
+/// The default forget returns once the delete and the pending purge are durable; the text
+/// leaves the files at the next compaction, at open, or when enough purges are waiting.
+#[test]
+fn a_deferred_purge_is_durable_and_erased_by_compaction_open_or_batch() {
+    let dir = tempfile::tempdir().unwrap();
+    let memory = open(dir.path()).unwrap();
+    seed(&memory, 4);
+    let report = memory
+        .forget(&ids(&[0]), &ForgetOptions::default())
+        .unwrap();
+    assert!(!report.purged && report.forgotten == [id(0)]);
+    assert!(memory.get(&id(0)).unwrap().is_none());
+    assert!(pending_file(dir.path()));
+    assert!(!leaks(dir.path(), &token(0)).is_empty(), "not erased yet");
+    memory.core().compact().unwrap();
+    assert_clean(dir.path(), &[0], "after compact");
+    assert!(!pending_file(dir.path()));
+
+    memory
+        .forget(&ids(&[1]), &ForgetOptions::default())
+        .unwrap();
+    drop(memory);
+    let memory = open(dir.path()).unwrap();
+    assert_clean(dir.path(), &[1], "after reopen");
+    assert!(!pending_file(dir.path()));
+    assert_eq!(memory.core().purge_status().pending, 0);
+
+    // 64 waiting purges are scrubbed together by the call that makes the 64th.
+    let memory_dir = tempfile::tempdir().unwrap();
+    let memory = open(memory_dir.path()).unwrap();
+    seed(&memory, 70);
+    for i in 0..63 {
+        let report = memory
+            .forget(&ids(&[i]), &ForgetOptions::default())
+            .unwrap();
+        assert!(!report.purged, "forget {i}");
+    }
+    assert_eq!(memory.core().purge_status().pending, 63);
+    assert!(!leaks(memory_dir.path(), &token(0)).is_empty());
+    let report = memory
+        .forget(&ids(&[63]), &ForgetOptions::default())
+        .unwrap();
+    assert!(report.purged);
+    assert_eq!(memory.core().purge_status().pending, 0);
+    assert_clean(memory_dir.path(), &[0, 31, 63], "after the batch");
+}
+
 #[cfg(feature = "failpoints")]
 mod crash {
     use super::*;
@@ -156,9 +253,7 @@ mod crash {
         let memory = open(Path::new(&dir)).unwrap();
         seed(&memory, SEEDED);
         println!("ACK seeded");
-        memory
-            .forget(&ids(&[0, 1, 2]), &ForgetOptions::default())
-            .unwrap();
+        memory.forget(&ids(&[0, 1, 2]), &sync_purge()).unwrap();
         println!("ACK forgotten");
     }
 
@@ -263,6 +358,8 @@ mod crash {
                     );
                 }
             }
+            // See `crash_harness.rs`: keep the volume from filling.
+            std::fs::remove_dir_all(&dir).unwrap();
         }
         assert!(cut > 0);
     }

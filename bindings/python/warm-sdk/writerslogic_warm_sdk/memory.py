@@ -532,11 +532,14 @@ class MemoryClient:
         include_chain: bool = False,
         dry_run: bool = False,
         purge: bool = True,
+        synchronous: bool = False,
     ) -> ForgetReport:
         """Remove facts by exactly one scope. Repeating a call removes nothing more.
 
-        ``include_chain`` also removes every version linked by supersession; ``purge`` (the default) compacts
-        the store afterwards so deleted text leaves the journal; ``dry_run`` only reports.
+        ``include_chain`` also removes every version linked by supersession; ``purge`` (the default) records
+        the delete as a durable pending purge, and the next scrubbing compaction (or open) erases the deleted
+        text from the journal; ``synchronous`` runs that compaction before returning, so ``purged`` is true;
+        ``dry_run`` only reports.
         """
         payload: Dict[str, Any] = {
             "scope": _scope_payload(ids, subject, entity, ingested_before, event_before, matching),
@@ -544,6 +547,8 @@ class MemoryClient:
             "dryRun": dry_run,
             "purge": purge,
         }
+        if synchronous:
+            payload["synchronous"] = True
         return ForgetReport._from(self._post("forget", payload))
 
     def get(self, fact_id: str) -> Optional[FactRecord]:
@@ -728,6 +733,7 @@ class AsyncMemoryClient:
         include_chain: bool = False,
         dry_run: bool = False,
         purge: bool = True,
+        synchronous: bool = False,
     ) -> ForgetReport:
         payload: Dict[str, Any] = {
             "scope": _scope_payload(ids, subject, entity, ingested_before, event_before, matching),
@@ -735,6 +741,8 @@ class AsyncMemoryClient:
             "dryRun": dry_run,
             "purge": purge,
         }
+        if synchronous:
+            payload["synchronous"] = True
         return ForgetReport._from(await self._post("forget", payload))
 
     async def get(self, fact_id: str) -> Optional[FactRecord]:
