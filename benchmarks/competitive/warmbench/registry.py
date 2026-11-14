@@ -97,7 +97,7 @@ TIMING_BOUNDARY = {
     "sqlite-fts5": "CPython sqlite3 call per query (query string built inside the timer from the raw text)", "tantivy-py": "CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects)",
     "tantivy-rs": "native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM",
     "tantivy-rs-count": "native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM",
-    "sqlite-fts5-docs": "CPython sqlite3 calls per query (top-100 rowids by rank, then id, body and bucket of those rows read from the docstore table by primary key, all inside the timer)",
+    "sqlite-fts5-docs": "CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer)",
     "tantivy-py-docs": "CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer",
     "tantivy-rs-docs": "native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer",
     "tantivy-rs-count-docs": "native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer",
@@ -137,10 +137,12 @@ COMPARATOR_SETTINGS = {
                    "writer": "1 thread, 200 MB heap", "crate": f"tantivy {TANTIVY_CRATE}", "process": "one process per phase, same as WARM"},
 }
 # Doc-store settings of the documents-contract tantivy rows: the doc-store compressor of the index and the number of
-# decompressed doc-store blocks the reader caches (IndexReaderBuilder::doc_store_cache_num_blocks, default 10). Chosen
-# by the microbenchmark recorded in the run's evidence (the faster documented setting); see COMPARATOR_SETTINGS.
+# decompressed doc-store blocks the reader caches (IndexReaderBuilder::doc_store_cache_num_blocks, default 10).
+# Microbenchmark of the native crate on the four corpora (evidence run10/micro): a cache of 100000 blocks, which holds the
+# whole doc store, was 1.3x to 6x faster than the default 10; the `none` compressor against the default lz4 was within
+# noise (geometric mean of the four ratios 0.99), so the default compressor stays. The faster cache setting is used.
 TANTIVY_DOCSTORE = "lz4"
-TANTIVY_DOC_CACHE = 10
+TANTIVY_DOC_CACHE = 100000
 _TANTIVY_DOCS = {"id_resolution": "id read from the fetched stored document (no id table)", "analyzer": "en_stem, raw id field; body and bucket stored",
                  "stored_fields": "id, body, bucket (u64) stored; every hit's stored document fetched with Searcher::doc inside the timer",
                  "doc_store": f"compressor {TANTIVY_DOCSTORE}, reader doc_store_cache_num_blocks {TANTIVY_DOC_CACHE}",
@@ -154,7 +156,7 @@ COMPARATOR_SETTINGS["lucene-docs"] = {**COMPARATOR_SETTINGS["lucene"], "id_resol
                                       "stored_fields": "id, body, bucket stored; StoredFields.document(hit) per hit inside the timer, one StoredFields instance reused",
                                       "codec": "Lucene104Codec with Mode.BEST_SPEED stored fields (the default mode, the faster of the two documented modes), set explicitly"}
 COMPARATOR_SETTINGS["sqlite-fts5-docs"] = {**COMPARATOR_SETTINGS["sqlite-fts5"],
-                                           "query": "SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT 100, then SELECT rowid, id, body, bucket FROM docstore WHERE rowid IN (the 100 rowids) (the stored columns of the top-100 only)",
+                                           "query": "SELECT d.id, t.rank, d.body, d.bucket FROM (SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT 100) t JOIN docstore d ON d.rowid = t.rowid ORDER BY t.rank (the stored columns of the top-100 only; fastest of join, IN and point selects in evidence run10/micro_fts.log)",
                                            "id_resolution": "id read from the docstore row", "stored_fields": "docstore(rowid, id, body, bucket) table beside the contentless FTS5 index"}
 COMPARATOR_SETTINGS["lucene-prev"] = COMPARATOR_SETTINGS["lucene"]
 COMPARATOR_SETTINGS["sqlite-fts5-prev"] = COMPARATOR_SETTINGS["sqlite-fts5"]

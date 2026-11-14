@@ -18,7 +18,8 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 use writerslogic_warm::core::documents::{
-    BatchTooLarge, DocumentResult, EncodeMode, IngestOptions, LexicalOptions, LexicalQuery, MAX_BATCH_ITEMS,
+    BatchTooLarge, DocumentResult, EncodeMode, IngestOptions, LexicalOptions, LexicalQuery,
+    MAX_BATCH_ITEMS,
 };
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
@@ -141,7 +142,11 @@ const CRC_TABLE: [u32; 256] = {
         let mut c = i as u32;
         let mut k = 0;
         while k < 8 {
-            c = if c & 1 != 0 { 0xEDB8_8320 ^ (c >> 1) } else { c >> 1 };
+            c = if c & 1 != 0 {
+                0xEDB8_8320 ^ (c >> 1)
+            } else {
+                c >> 1
+            };
             k += 1;
         }
         table[i] = c;
@@ -320,7 +325,9 @@ fn main() -> Result<()> {
                             .collect(),
                     ))
                 } else if digest {
-                    Ok(Found::Documents(core.search_documents(&query.text, &query.options)?))
+                    Ok(Found::Documents(
+                        core.search_documents(&query.text, &query.options)?,
+                    ))
                 } else {
                     Ok(Found::Ids(
                         core.search_documents(&query.text, &query.options)?

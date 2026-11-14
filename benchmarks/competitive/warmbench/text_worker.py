@@ -110,7 +110,7 @@ def check(body, bucket):
 
 class SqliteFts5Docs(SqliteFts5):
     """Documents contract: the same contentless FTS5 index as the ids row plus a `docstore` table holding id, body and
-    bucket. A query takes the top-100 rowids by rank, then reads their stored columns by primary key in one statement."""
+    bucket. One statement ranks the top-100 rowids and joins them to their stored columns by primary key."""
 
     def build(self, documents):
         super().build(documents)
@@ -125,17 +125,12 @@ class SqliteFts5Docs(SqliteFts5):
     def search(self, expression):
         if not expression:
             return []
-        db = self.db
-        ranked = db.execute("SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT ?", (expression, K)).fetchall()
-        if not ranked:
-            return []
-        marks = ",".join("?" * len(ranked))
-        rows = {r[0]: r for r in db.execute(f"SELECT rowid, id, body, bucket FROM docstore WHERE rowid IN ({marks})", [r for r, _ in ranked])}
-        out = []
-        for rowid, score in ranked:
-            _, id_, body, bucket = rows[rowid]
-            out.append((id_, -score, body, bucket))
-        return out
+        # The measured-fastest of three fetch forms (join on the top-100 subquery, one IN statement, 100 point selects:
+        # evidence run10/micro_fts.log).
+        rows = self.db.execute(
+            "SELECT d.id, t.rank, d.body, d.bucket FROM (SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT ?) t "
+            "JOIN docstore d ON d.rowid = t.rowid ORDER BY t.rank", (expression, K)).fetchall()
+        return [(id_, -score, body, bucket) for id_, score, body, bucket in rows]
 
     def replace(self, document):
         super().replace(document)
