@@ -177,6 +177,8 @@ base64 = []
 ciborium = []
 # Command-line parsing (clap) for the binaries and examples that take arguments.
 cli = ["dep:clap"]
+# Fault injection at the durability points (crash and ENOSPC/EIO tests); inert unless armed.
+failpoints = []
 # Global allocator of the public-bench binary only; never linked into the library.
 mimalloc = ["dep:mimalloc"]
 conversation-memory = ["sha2"]

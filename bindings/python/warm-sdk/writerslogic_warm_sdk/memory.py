@@ -531,11 +531,11 @@ class MemoryClient:
         matching: Optional[Mapping[str, Any]] = None,
         include_chain: bool = False,
         dry_run: bool = False,
-        purge: bool = False,
+        purge: bool = True,
     ) -> ForgetReport:
         """Remove facts by exactly one scope. Repeating a call removes nothing more.
 
-        ``include_chain`` also removes every version linked by supersession; ``purge`` compacts
+        ``include_chain`` also removes every version linked by supersession; ``purge`` (the default) compacts
         the store afterwards so deleted text leaves the journal; ``dry_run`` only reports.
         """
         payload: Dict[str, Any] = {
@@ -554,7 +554,7 @@ class MemoryClient:
         """Every version of the fact's supersession chain, in effect order."""
         return [FactRecord._from(r) for r in self._post("history", {"id": fact_id})["history"]]
 
-    def apply_forgetting(self, *, include_chain: bool = False, dry_run: bool = True, purge: bool = False) -> ForgetReport:
+    def apply_forgetting(self, *, include_chain: bool = False, dry_run: bool = True, purge: bool = True) -> ForgetReport:
         """Run the service's configured forgetting policy. Defaults to a dry run; the default policy selects nothing."""
         payload = {"includeChain": include_chain, "dryRun": dry_run, "purge": purge}
         return ForgetReport._from(self._post("applyForgetting", payload))
@@ -727,7 +727,7 @@ class AsyncMemoryClient:
         matching: Optional[Mapping[str, Any]] = None,
         include_chain: bool = False,
         dry_run: bool = False,
-        purge: bool = False,
+        purge: bool = True,
     ) -> ForgetReport:
         payload: Dict[str, Any] = {
             "scope": _scope_payload(ids, subject, entity, ingested_before, event_before, matching),
@@ -746,7 +746,7 @@ class AsyncMemoryClient:
         return [FactRecord._from(r) for r in body["history"]]
 
     async def apply_forgetting(
-        self, *, include_chain: bool = False, dry_run: bool = True, purge: bool = False
+        self, *, include_chain: bool = False, dry_run: bool = True, purge: bool = True
     ) -> ForgetReport:
         payload = {"includeChain": include_chain, "dryRun": dry_run, "purge": purge}
         return ForgetReport._from(await self._post("applyForgetting", payload))

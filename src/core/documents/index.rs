@@ -1260,6 +1260,7 @@ impl DocumentStore {
             ..Self::default()
         };
         rebuilt.insert_batch(documents)?;
+        crate::core::failpoint::hit("text-rename")?;
         std::fs::rename(&staging, path)?;
         *self = rebuilt;
         if let Some(parent) = path.parent() {

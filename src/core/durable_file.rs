@@ -147,6 +147,7 @@ pub(crate) fn positioned_write(_: &File, _: &[u8], _: u64) -> std::io::Result<()
 }
 
 pub(crate) fn copy_file_synced(source: &Path, destination: &Path) -> Result<u64> {
+    crate::core::failpoint::hit("copy")?;
     let bytes = std::fs::copy(source, destination)?;
     #[cfg(windows)]
     {
@@ -170,6 +171,7 @@ pub(crate) fn copy_file_synced(source: &Path, destination: &Path) -> Result<u64>
 }
 
 pub(crate) fn sync_directory(path: &Path) -> Result<()> {
+    crate::core::failpoint::hit("dir-sync")?;
     #[cfg(unix)]
     std::fs::File::open(path)?.sync_all()?;
     #[cfg(not(unix))]
@@ -191,6 +193,7 @@ pub(crate) fn sync_directory(path: &Path) -> Result<()> {
 /// - Windows: memmap2's flush is `FlushViewOfFile` followed by `FlushFileBuffers`; nothing
 ///   further is done.
 pub(crate) fn sync_mapped_file(file: &std::fs::File) -> std::io::Result<()> {
+    crate::core::failpoint::hit("file-sync")?;
     #[cfg(target_os = "macos")]
     {
         use std::os::fd::AsRawFd;
@@ -249,6 +252,7 @@ pub(crate) fn scrub_remove_file(path: &Path) -> Result<()> {
             "refusing to scrub a multiply linked file"
         );
     }
+    crate::core::failpoint::hit("scrub-overwrite")?;
     let mut remaining = file.metadata()?.len();
     let zeros = vec![0u8; 1 << 20];
     file.seek(SeekFrom::Start(0))?;
@@ -259,6 +263,7 @@ pub(crate) fn scrub_remove_file(path: &Path) -> Result<()> {
     }
     file.sync_all()?;
     drop(file);
+    crate::core::failpoint::hit("scrub-unlink")?;
     std::fs::remove_file(path)?;
     Ok(())
 }
@@ -309,11 +314,15 @@ pub(crate) fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
 
 fn write_file(path: &Path, bytes: &[u8]) -> Result<()> {
     let parent = path.parent().unwrap_or_else(|| Path::new("."));
+    crate::core::failpoint::hit("atomic-create-temp")?;
     let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    crate::core::failpoint::hit("atomic-write")?;
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
     sync_mapped_file(temp.as_file())?;
+    crate::core::failpoint::hit("atomic-rename")?;
     temp.persist(path)?;
+    crate::core::failpoint::hit("atomic-renamed")?;
     Ok(())
 }
 
@@ -351,10 +360,13 @@ fn atomic_create_checked(path: &Path, bytes: &[u8], checkpoint: impl Fn(&str)) -
         .parent()
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
+    crate::core::failpoint::hit("atomic-create-temp")?;
     let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    crate::core::failpoint::hit("atomic-write")?;
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
     sync_mapped_file(temp.as_file())?;
+    crate::core::failpoint::hit("atomic-rename")?;
     checkpoint("synced");
     let created = match temp.persist_noclobber(path) {
         Ok(_) => true,

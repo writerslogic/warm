@@ -10,6 +10,9 @@ use serde::Serialize;
 
 use super::background_compaction::{CompactionStage, JobState, Stop};
 use super::{mutation::Mutation, WarmCore};
+
+/// Marker file: a purge started and its scrubbing compaction has not finished.
+const PURGE_PENDING: &str = "purge.pending";
 use crate::core::documents::StoredDocument;
 use crate::core::storage::StagedArena;
 
@@ -93,8 +96,39 @@ impl WarmCore {
     /// other than the opaque counters, and file other than the generation's name match a store
     /// that never held them and was purged at the same point.
     pub fn compact_scrubbing(&self) -> Result<()> {
+        let epoch = self.purge_epoch.load(std::sync::atomic::Ordering::Acquire);
         self.sync_text_segment()?;
-        self.compact_impl(|| {}, || {}, true, &JobState::foreground())
+        self.compact_impl(|| {}, || {}, true, &JobState::foreground())?;
+        self.clear_purge_pending(epoch)
+    }
+
+    fn purge_marker(&self) -> std::path::PathBuf {
+        self.storage_path.join(PURGE_PENDING)
+    }
+
+    /// Whether a purge began and no scrubbing compaction has completed since.
+    pub(crate) fn purge_pending(&self) -> bool {
+        self.purge_marker().exists()
+    }
+
+    /// Records, durably and before the delete is committed, that deleted text must be purged:
+    /// if the process dies before the scrubbing compaction ends, the next open finishes the
+    /// purge. A scrubbing compaction that ends without a newer mark removes it.
+    pub fn mark_purge_pending(&self) -> Result<()> {
+        self.purge_epoch
+            .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        crate::core::durable_file::atomic_write(&self.purge_marker(), b"purge pending\n")
+    }
+
+    fn clear_purge_pending(&self, epoch: u64) -> Result<()> {
+        if self.purge_epoch.load(std::sync::atomic::Ordering::Acquire) != epoch {
+            return Ok(());
+        }
+        match std::fs::remove_file(self.purge_marker()) {
+            Ok(()) => crate::core::durable_file::sync_directory(&self.storage_path),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(error.into()),
+        }
     }
 
     /// Rebuilds the state a delete leaves shaped by history rather than by the live set: the

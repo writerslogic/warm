@@ -677,6 +677,9 @@ impl WarmBackend {
         }
         let mut deleted = 0;
         let mut missing = Vec::new();
+        if !ids.is_empty() {
+            store.core.mark_purge_pending().map_err(Fail::internal)?;
+        }
         for id in ids {
             if store.core.delete_document(&id).map_err(|error| {
                 Self::committed_write(
@@ -693,6 +696,16 @@ impl WarmBackend {
             } else {
                 missing.push(id);
             }
+        }
+        if deleted > 0 {
+            // The delete is physical when the tool returns: the journal is rewritten without
+            // the text and what it replaced is overwritten.
+            store.core.compact_scrubbing().map_err(|error| {
+                Self::committed_write(
+                    error,
+                    json!({"deleted": deleted, "missing": missing, "namespace": namespace}),
+                )
+            })?;
         }
         Ok(ForgetOut { deleted, missing })
     }

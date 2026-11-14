@@ -117,7 +117,13 @@ fn damaged_text_does_not_block_metadata_only_memory_operations() {
     assert_eq!(core.revision(), revision);
     assert_eq!(
         memory
-            .forget(&scope, &ForgetOptions::default())
+            .forget(
+                &scope,
+                &ForgetOptions {
+                    purge: false,
+                    ..ForgetOptions::default()
+                }
+            )
             .unwrap()
             .forgotten,
         ["doc"]

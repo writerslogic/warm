@@ -1,0 +1,78 @@
+# Copyright 2024-2026 WritersLogic Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+name: durability
+
+# Deletion and crash-safety proofs, run on every platform the engine ships on:
+#   - tests/erase.rs: forget leaves no deleted text in any file, also across a crash at every
+#     durability point of the purge;
+#   - tests/crash_harness.rs: process death at every durability point of the commit,
+#     compaction and purge paths; every acknowledged write survives;
+#   - tests/disk_faults.rs: ENOSPC and EIO at every durability point;
+#   - tests/second_writer.rs: the one-owner-per-store lock.
+# The raw-image job (Linux) scans the bytes of a file-backed ext4 image after a purge.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  CARGO_NET_RETRY: "10"
+  RUST_BACKTRACE: "1"
+
+permissions:
+  contents: read
+
+jobs:
+  crash-and-erase:
+    name: crash and erase (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: durability-${{ matrix.os }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Deletion, crash, disk-fault and second-writer tests
+        env:
+          WARM_FAULT_STRIDE: "2"
+          WARM_CRASH_STRIDE: "1"
+        run: >
+          cargo test --features failpoints
+          --test erase --test crash_harness --test disk_faults --test second_writer --test purge
+      - name: Same with encryption compiled in
+        run: >
+          cargo test --features failpoints,security
+          --test erase --test crash_harness --test purge
+
+  raw-image:
+    name: raw ext4 image scan (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: durability-raw-image
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Scan the raw image after forget and a crashed purge
+        run: scripts/ci/raw-image-erase.sh

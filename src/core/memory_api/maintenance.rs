@@ -189,7 +189,10 @@ impl Memory {
                     revision.wrapping_add(u64::from(created.iter().any(|fact| fact.created)));
                 let cleanup = self.forget_at_revision(
                 &ForgetScope::Ids { ids: doomed },
-                &ForgetOptions::default(),
+                &ForgetOptions {
+                    purge: false,
+                    ..ForgetOptions::default()
+                },
                 expected,
                 &mut Default::default(),
             ).and_then(|report| report.ok_or_else(|| MemoryError::Concurrent(

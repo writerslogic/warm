@@ -29,6 +29,7 @@ pub mod embed;
 pub mod encoding;
 #[cfg(feature = "experimental")]
 pub mod experimental;
+pub mod failpoint;
 pub(crate) mod schema;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod vector_records;

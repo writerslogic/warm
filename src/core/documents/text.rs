@@ -222,6 +222,7 @@ impl TextSegment {
         let mut failure = None;
         for (at, len) in pending {
             let result = (|| {
+                crate::core::failpoint::hit("text-scrub")?;
                 let mut written = 0u64;
                 while written < u64::from(len) {
                     let count = (u64::from(len) - written).min(SCRUB_ZEROS.len() as u64) as usize;
@@ -251,6 +252,7 @@ impl TextSegment {
     /// Flushes scrubbed records to stable storage.
     pub(crate) fn sync(&self) -> Result<()> {
         self.drain_scrubs()?;
+        crate::core::failpoint::hit("text-sync")?;
         self.file.sync_data().context("syncing text segment")
     }
 

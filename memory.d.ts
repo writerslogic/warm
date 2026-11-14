@@ -158,7 +158,7 @@ export interface ForgetOptions {
   includeChain?: boolean
   /** Report without removing. */
   dryRun?: boolean
-  /** Compact and scrub removed journal data, and rebuild the live text segment before returning. */
+  /** Default true. Compact and scrub removed journal data, and rebuild the live text segment before returning; false leaves deleted frames in the journal. */
   purge?: boolean
 }
 

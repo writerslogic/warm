@@ -258,7 +258,7 @@ pub enum ForgetScope {
 }
 
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct ForgetOptions {
     /// Also remove every fact linked to a matched one by supersession, in both directions,
@@ -267,9 +267,22 @@ pub struct ForgetOptions {
     pub include_chain: bool,
     /// Report what would be removed without removing it.
     pub dry_run: bool,
-    /// Compact the store afterwards. Deleted text stays in the append-only journal until a
-    /// compaction rewrites it; this makes the removal physical.
+    /// Compact the store afterwards and overwrite what the compaction replaced, so the deleted
+    /// text is in no file of the store when the call returns, and a purge cut short by a crash
+    /// is finished by the next open. Default: `true`. With `false` the delete is logical: the
+    /// append-only journal keeps the deleted frames (and time-travel reads them) until some
+    /// later compaction.
     pub purge: bool,
+}
+
+impl Default for ForgetOptions {
+    fn default() -> Self {
+        Self {
+            include_chain: false,
+            dry_run: false,
+            purge: true,
+        }
+    }
 }
 
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
