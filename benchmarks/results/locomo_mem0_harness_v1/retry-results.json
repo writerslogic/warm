@@ -1,0 +1,200 @@
+[
+ {
+  "question_id": "conv0_q15",
+  "category_name": "multi-hop",
+  "new_answer": "- Painting (landscapes, still life, sunsets)\n- Pottery (classes/workshops; making bowls and vases)\n- Running (including a charity race; runs to de-stress)\n- Reading\n- Playing instruments: clarinet and violin\n- Camping with her family\n- Hiking and exploring forests\n- Roasting marshmallows around campfires\n- Swimming with her kids\n- Visiting museums with her kids\n- Beach trips with her family\n- Attending live music concerts/shows\n- Volunteering at a homeless shelter with her family\n- Taking the kids to parks/playgrounds\n- Feeding a horse a carrot\n- Playing games at family gatherings",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer includes multiple gold activities\u2014painting, pottery, camping, and swimming\u2014matching the core items."
+ },
+ {
+  "question_id": "conv0_q32",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and contains none of the gold items (pride parade, school speech, support group)."
+ },
+ {
+  "question_id": "conv0_q38",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer contains none of the listed activities such as pottery, painting, camping, visiting a museum, swimming, or hiking."
+ },
+ {
+  "question_id": "conv0_q39",
+  "category_name": "multi-hop",
+  "new_answer": "- Attends LGBTQ community spaces and events: support groups, multiple pride parades/events, a transgender poetry reading, and LGBTQ/trans conferences.\n- Speaks publicly about her transgender journey to encourage allyship and involvement (school talk).\n- Trains to better support the community: attended an LGBTQ+ counseling workshop focused on working with trans people.\n- Supports LGBTQ youth: joined a mentorship program, mentors a transgender teen, and volunteers at an LGBTQ+ youth center.\n- Activism/organizing: member of \u201cConnected LGBTQ Activists,\u201d participating in regular meetings and planning events/campaigns.\n- Arts-based advocacy: creates LGBTQ-themed art (paintings, stained glass) to promote inclusion and understanding; organizes and exhibits in an LGBTQ art show featuring LGBTQ artists.\n- Chooses and promotes inclusive services: selected an adoption agency because it supports LGBTQ+ families.",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer includes attending pride parades, joining an activist group, participating in an art show, and joining a mentoring program, all matching the gold items."
+ },
+ {
+  "question_id": "conv0_q40",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and does not provide the correct value of 2 times."
+ },
+ {
+  "question_id": "conv2_q11",
+  "category_name": "multi-hop",
+  "new_answer": "- An about 8-year-old girl at the shelter whom Maria comforted and made laugh (2023-01-28).\n- A homeless man she connected to a housing/support organization (2023-02-05).\n- Jean, a shelter guest who had become homeless; Maria connected with and supported her during volunteering (2023-02-25).\n- An unnamed shelter guest who had been sad for months but laughed when Maria played with the kids (2023-06-27).\n- Children at the shelter she played with and uplifted (multiple times, e.g., 2023-06-27).\n- Laura, a shelter resident who later wrote a gratitude letter (2023-07-03).\n- Cindy, a shelter resident who wrote a thank-you note (2023-08-03).\n- General shelter guests she assisted at the front desk with food and beds (2023-08-16).",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer includes Jean, Laura, and Cindy from the gold list, so it contains correct items and qualifies for partial credit."
+ },
+ {
+  "question_id": "conv3_q54",
+  "category_name": "temporal",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and provides no date, so it contains none of the gold answer\u2019s information."
+ },
+ {
+  "question_id": "conv3_q58",
+  "category_name": "multi-hop",
+  "new_answer": "- The Lord of the Rings trilogy (Joanna said she watched it on Nate\u2019s recommendation on 2022-05-02)\n- A TV series (title not specified; Joanna thanked Nate for the recommendation on 2022-04-21)\n- A coconut-based idea for dairy-free desserts (Joanna praised Nate\u2019s \u201ccoconut recommendation\u201d on 2022-05-02)\n- A dairy-free dessert recipe (unspecified; Nate said he was sending her the recipe on 2022-08-14)",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer includes The Lord of the Rings movies, which is one of the gold items."
+ },
+ {
+  "question_id": "conv3_q70",
+  "category_name": "multi-hop",
+  "new_answer": "- Walks them\n- Takes them outdoors (to parks and even the beach in Tampa)\n- Feeds them a varied diet and treats (fruits like strawberries, plus veggies and insects) and watches them eat\n- Lets them bask/soak in the sun and relax in their tank (under a heat lamp)\n- Gives them baths\n- Holds them\n- Upgrades their habitat (new/expanded tank) and added a third turtle as a companion\n- Photographs them and shares the pics\n- Spends quiet time watching them to relax and de-stress",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer mentions walking, holding, feeding strawberries, and giving baths, which directly match the gold answer\u2019s activities."
+ },
+ {
+  "question_id": "conv3_q73",
+  "category_name": "open-domain",
+  "new_answer": "Indiana",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer exactly matches the gold answer (Indiana)."
+ },
+ {
+  "question_id": "conv3_q74",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and includes none of the items from the gold answer."
+ },
+ {
+  "question_id": "conv3_q78",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and does not mention the correct count of nine, so none of the gold items appear."
+ },
+ {
+  "question_id": "conv3_q81",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and includes none of the recipes from the gold answer, so it matches zero items."
+ },
+ {
+  "question_id": "conv4_q17",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and does not state the correct number (6), so it contains no correct items from the gold answer."
+ },
+ {
+  "question_id": "conv4_q4",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and contains none of the books from the gold list."
+ },
+ {
+  "question_id": "conv4_q61",
+  "category_name": "multi-hop",
+  "new_answer": "- The Alchemist by Paulo Coelho (he reread it in Nov 2023)\n- The Hobbit by J.R.R. Tolkien (stated as one of his favorites)\n- Dune by Frank Herbert (he was reading it as of Dec 8, 2023)\n\nNotes:\n- He also mentioned finishing an unnamed fantasy series (Nov 11, 2023) and having read \u201canother popular fantasy series\u201d (title not specified). \n- He specifically said he hadn\u2019t read George R. R. Martin\u2019s books as of Dec 8, 2023.",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer includes The Alchemist, Dune, and mentions a fantasy series, all of which match items from the gold answer."
+ },
+ {
+  "question_id": "conv5_q17",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and does not provide the correct count of 'three times' or any equivalent."
+ },
+ {
+  "question_id": "conv5_q51",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer lists no items, so none of the gold items (dog tags, toys, dog beds, collars) are included."
+ },
+ {
+  "question_id": "conv7_q82",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer provides no locations, so none of the gold answer items appear."
+ },
+ {
+  "question_id": "conv7_q88",
+  "category_name": "multi-hop",
+  "new_answer": "- Running/jogging (including group runs and regular park runs)\n- Organizing and joining community initiatives (e.g., fundraising for a neighborhood cleanup, organizing community events, attending support meetups)\n- Gardening and sharing plant care/environmental stewardship\n- Traveling and spending time in nature (beach/forest walks, sunset watching)\n- Playing games for fun (recently a cat-themed card game; has also played video games)",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer includes running/jogging and gardening, which match items in the gold list (running and gardening)."
+ },
+ {
+  "question_id": "conv8_q50",
+  "category_name": "multi-hop",
+  "new_answer": "Evan pursues:\n- Painting (watercolor and acrylic; takes classes and has exhibited work)\n- Outdoor activities: hiking and biking\n- Winter sports: skiing, snowboarding, ice skating, and snowshoeing\n- Kayaking and camping\n- Fitness: weightlifting and gym workouts\n- Leisure in nature: road trips/driving and beach sunset walks\n- Caring for a bonsai (plant/houseplant care)",
+  "nonempty": true,
+  "judgment": "CORRECT",
+  "score": 1.0,
+  "reason": "The generated answer includes multiple hobbies from the gold list, such as painting, hiking, biking, skiing, snowboarding, ice skating, camping, and kayaking."
+ },
+ {
+  "question_id": "conv9_q19",
+  "category_name": "multi-hop",
+  "new_answer": "",
+  "nonempty": false,
+  "judgment": "WRONG",
+  "score": 0.0,
+  "reason": "The generated answer is empty and includes none of the gold items (music festival, car museum, Shibuya crossing, or Shinjuku)."
+ }
+]

@@ -1,0 +1,12 @@
+ORIGINAL SINGLE PASS
+  overall      n=1540 WARM  92.0% (1417) Mem0  91.6% (1410) diff  +0.5 pp [ -1.0,  +1.9]
+  multi-hop    n= 282 WARM  88.3% (249) Mem0  93.3% (263) diff  -5.0 pp [ -8.9,  -1.1]
+  temporal     n= 321 WARM  94.4% (303) Mem0  92.8% (298) diff  +1.6 pp [ -0.9,  +4.4]
+  open-domain  n=  96 WARM  75.0% (72) Mem0  76.0% (73) diff  -1.0 pp [ -8.3,  +5.2]
+  single-hop   n= 841 WARM  94.3% (793) Mem0  92.3% (776) diff  +2.0 pp [ +0.2,  +3.8]
+WITH ONE IDENTICAL-SETTINGS RETRY OF EMPTY RESPONSES
+  overall      n=1540 WARM  92.6% (1426) Mem0  91.6% (1410) diff  +1.0 pp [ -0.3,  +2.4]
+  multi-hop    n= 282 WARM  91.1% (257) Mem0  93.3% (263) diff  -2.1 pp [ -5.7,  +1.4]
+  temporal     n= 321 WARM  94.4% (303) Mem0  92.8% (298) diff  +1.6 pp [ -1.2,  +4.4]
+  open-domain  n=  96 WARM  76.0% (73) Mem0  76.0% (73) diff  +0.0 pp [ -6.2,  +6.2]
+  single-hop   n= 841 WARM  94.3% (793) Mem0  92.3% (776) diff  +2.0 pp [ +0.2,  +3.8]

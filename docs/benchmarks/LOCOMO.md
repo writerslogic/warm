@@ -58,7 +58,32 @@ answers: 18 of 23 multi-hop, and 10 of the 12 whose gold evidence is partly abse
 (`empty_answers.txt`). Excluding the 22 after the fact, which is not a headline number, gives 93.3% against 91.6%
 overall (+1.8 pp [+0.5, +3.1]) and 95.0% against 93.5% on multi-hop (+1.5 pp [-1.1, +4.2]). So most of the measured multi-hop
 deficit is the reader's completion limit meeting WARM's longer raw-turn context (about 10,000 prompt tokens per answer), not a
-retrieval loss. A rerun of only these 22 questions would settle it; it has not been done.
+retrieval loss.
+
+### Retry of the 22 empty answers (one identical-settings pass)
+
+Done once, 2026-11-14, cost 1.14 USD (`retry-usage.jsonl`). Each of the 22 answers was requested again with the same model
+(`gpt-5`, returned `gpt-5-2025-08-07`), the same prompt (the rebuilt prompt hashes to the original call's key for all 22,
+checked before any paid call), the same retrieved context, the same 4,096-token limit and the default reasoning setting; the
+cache was bypassed for those keys only, and the judge ran as before. An answer that came back empty again stayed empty and
+wrong. Result: 9 of 22 came back non-empty and all 9 were judged correct; 13 were empty again. Files: `retry-results.json`,
+`retry-analysis.txt`, `scripts/run_retry.py`, `scripts/analyze_retry.py`.
+
+| Category | n | Mem0 | WARM, original single pass (primary) | Paired difference | WARM, with one retry of empty responses | Paired difference |
+|---|---|---|---|---|---|---|
+| Overall | 1,540 | 91.6% | 92.0% | +0.5 pp [-1.0, +1.9] | 92.6% | +1.0 pp [-0.3, +2.4] |
+| Multi-hop | 282 | 93.3% | 88.3% | -5.0 pp [-8.9, -1.1] | 91.1% | -2.1 pp [-5.7, +1.4] |
+| Temporal | 321 | 92.8% | 94.4% | +1.6 pp [-0.9, +4.4] | 94.4% | +1.6 pp [-1.2, +4.4] |
+| Open-domain | 96 | 76.0% | 75.0% | -1.0 pp [-8.3, +5.2] | 76.0% | +0.0 pp [-6.2, +6.2] |
+| Single-hop | 841 | 92.3% | 94.3% | +2.0 pp [+0.2, +3.8] | 94.3% | +2.0 pp [+0.2, +3.8] |
+
+The original single pass stays the primary result. The evidence on Mem0's side (`empty-answer-policy.txt`): its file's metadata
+lists 156 questions "merged from reruns" but does not say why they were rerun, and the published harness has no rerun or
+merge script; the file keeps one empty answer (conv3_q78, scored ERROR), and that question is itself in the rerun list, so a
+rerun did not replace it; the harness retries only on exceptions, timeouts and `None` content, not on the empty string that
+`finish_reason: length` returns, so it would not have retried WARM's 22 either. Nothing shows that Mem0's file had empty
+responses retried away, so the retry version is shown as a sensitivity analysis, not as the like-for-like number. Even with
+the retry, 13 empty answers remain, and the multi-hop interval turns to include zero.
 
 ### Retrieval of the gold evidence
 
