@@ -18,7 +18,7 @@
   "sideEffects": false,
   "engines": { "node": ">=18" },
   "scripts": {
-    "build": "tsup",
+    "build": "node scripts/require-node.mjs && tsup",
     "typecheck": "tsc6 --noEmit",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "test:package": "node --test test/packed-consumer.test.mjs"

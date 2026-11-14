@@ -12,6 +12,8 @@ mod purge;
 pub use purge::{PurgeStatus, PurgeTicket};
 pub(crate) mod concepts;
 mod dense_vectors;
+mod sparse_docs;
+pub use sparse_docs::{RankingMode, SparseSearch};
 mod document_api;
 mod document_batch;
 #[cfg(feature = "local-embed")]
@@ -131,6 +133,7 @@ pub struct WarmCore {
     /// Snapshot answering unfiltered vector queries (`search_vectors`); built by maintenance.
     vector_index: super::documents::VectorIndexSlot,
     dense: dense_vectors::DenseVectors,
+    sparse: crate::core::index::sparse_store::SparseStore,
     #[cfg(feature = "local-models")]
     model_stages: RwLock<Option<Arc<crate::core::models::ModelStages>>>,
     #[cfg(feature = "local-embed")]
@@ -211,6 +214,7 @@ impl WarmCore {
         let store_lock = StoreLock::acquire(&base_path)?;
         let (schema, analyzer) = super::schema::validate_store(&base_path, dim, &config)?;
         let dense = dense_vectors::DenseVectors::open(&base_path)?;
+        let base_path_sparse = base_path.clone();
 
         let arena = PersistentArena::new(base_path.join("vectors_data.bin"))?;
 
@@ -341,6 +345,7 @@ impl WarmCore {
             image: image::ImageState::default(),
             vector_index: super::documents::VectorIndexSlot::default(),
             dense,
+            sparse: crate::core::index::sparse_store::SparseStore::open(&base_path_sparse)?,
             #[cfg(feature = "local-models")]
             model_stages: RwLock::new(None),
             #[cfg(feature = "local-embed")]

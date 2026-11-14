@@ -26,6 +26,8 @@ classifiers = [
 ]
 dynamic = ["version"]
 
+dependencies = ["numpy>=1.26"]
+
 [project.optional-dependencies]
 embed = ["warm-models==0.1.0"]
 

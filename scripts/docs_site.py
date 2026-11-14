@@ -25,7 +25,7 @@ from pathlib import Path
 from importlib.metadata import version
 
 import yaml
-from urllib.parse import quote_from_bytes, urlsplit
+from urllib.parse import urlsplit
 from mkdocs.exceptions import PluginError
 from mkdocs.plugins import event_priority
 from markupsafe import Markup
@@ -179,8 +179,9 @@ def build_comparison(root, site):
 
 
 def on_config(config):
+    logo_url = config["site_url"].rstrip("/") + "/assets/warm-logo.svg"
     for key in ("logo", "favicon"):
-        config["theme"][key] = config["site_url"].rstrip("/") + "/assets/crystal-detailed-static.svg"
+        config["theme"][key] = logo_url
     root = _repo_root(config)
     site = yaml.safe_load((root / "docs" / "_data" / "site.yml").read_text(encoding="utf-8"))
     ref = os.environ.get("WARM_DOCS_REF", "main")
@@ -198,7 +199,7 @@ def on_config(config):
         "runtimes": build_runtimes(root, site), "features": features,
         "headline": headline, "chart": chart, "inline_css": inline_css(docs_dir, config["site_url"]), "crate_version": crate_version(root),
         "comparison": build_comparison(root, site),
-        "hero_image": "data:image/svg+xml," + quote_from_bytes((docs_dir / "assets/crystal-detailed-static.svg").read_bytes()),
+        "hero_image": logo_url,
         "ref": ref, "is_dev": ref == "main", "is_latest": os.environ.get("WARM_IS_LATEST") == "1",
         "repo": REPO, "repo_ref": ref,
     }

@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/crystal-halo/crystal-detailed-static.png" width="88" alt="WritersLogic Adaptive Retention & Memory" align="left">
+<img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/logo/warm-logo.png" width="88" alt="WritersLogic Adaptive Retention & Memory" align="left">
 
 <h1>WARM fuzzing</h1>
 <p><strong>Deterministic, allocation-bounded fuzz targets for every parser of untrusted input in the WritersLogic Adaptive Retention & Memory.</strong></p>

@@ -32,13 +32,20 @@ class VersionTests(unittest.TestCase):
             "bindings/js/warm-sdk/package.json",
             "bindings/js/warm-sdk/package-lock.json",
             "docs/server/openapi.json",
+            "integrations/mcp/npm/package.json",
+            "integrations/mcp/pypi/pyproject.toml",
+            "CITATION.cff",
+            "README.md",
+            "CONTRIBUTING.md",
+            "docs/INTEGRATION.md",
         ):
             destination = self.tree / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, destination)
-        version = tomllib.loads((ROOT / "Cargo.toml").read_text())["package"]["version"]
+        package = tomllib.loads((ROOT / "Cargo.toml").read_text())["package"]
+        version, msrv = package["version"], package["rust-version"]
         (self.tree / "Cargo.toml").write_text(
-            f'[package]\nname = "warm-rust"\nversion = "{version}"\nedition = "2021"\n'
+            f'[package]\nname = "warm-rust"\nversion = "{version}"\nedition = "2021"\nrust-version = "{msrv}"\n'
         )
         (self.tree / "src").mkdir()
         (self.tree / "src/lib.rs").write_text("")
@@ -72,6 +79,20 @@ class VersionTests(unittest.TestCase):
                     self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
                 sdk = self.run_script("check-sdk-versions.py")
                 self.assertEqual(sdk.returncode, 0, sdk.stdout + sdk.stderr)
+
+    def test_stale_documented_versions_are_rejected(self) -> None:
+        for relative, old, new in (
+            ("CITATION.cff", "version: 0.", "version: 9."),
+            ("docs/INTEGRATION.md", "writerslogic-warm@0.", "writerslogic-warm@9."),
+        ):
+            with self.subTest(file=relative):
+                path = self.tree / relative
+                original = path.read_text()
+                path.write_text(original.replace(old, new, 1))
+                result = self.run_script("check-versions.py")
+                path.write_text(original)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(relative, result.stderr)
 
     def test_stale_contract_is_rejected_before_building(self) -> None:
         path = self.tree / "docs/server/openapi.json"

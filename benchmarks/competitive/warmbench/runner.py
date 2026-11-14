@@ -15,8 +15,9 @@ import sys
 import time
 from pathlib import Path
 
-from . import SCHEMA_VERSION, data, envs, jars, registry, textdata
-from .common import CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, pass_summary, run_measured, write_json
+from . import SCHEMA_VERSION, data, envs, jars, rawdata, registry, textdata
+from . import common
+from .common import T0_PLACEHOLDER, CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, pass_summary, run_measured, write_json
 
 WORK = Path(os.environ.get("WARM_BENCH_WORK", CACHE / "competitive" / "work"))
 WORKER_DIR = Path(__file__).resolve().parent
@@ -36,11 +37,35 @@ SUITES = {
     # standard: local workstation; full public sizes for the text sets, 250k glove and 250k SIFT.
     "standard": {"ann": [("glove-100-angular", 250_000, 2_000), ("sift-128-euclidean", 250_000, 2_000)],
                  "text": ["beir:scifact", "beir:nfcorpus", "memory", "beir:fiqa"],
-                 "rounds": 5, "build_repeats": 3, "threads": 4, "timeout_s": 2700},
+                 "rounds": 10, "build_repeats": 3, "threads": 4, "timeout_s": 2700},
     # heavy: self-hosted or Modal; full GloVe-100 (1.18M) and SIFT-1M.
     "heavy": {"ann": [("glove-100-angular", None, 10_000), ("sift-128-euclidean", None, 10_000)],
-              "text": ["beir:scifact", "beir:nfcorpus", "memory", "beir:fiqa"], "rounds": 3, "build_repeats": 2, "threads": 8, "timeout_s": 3600},
+              "text": ["beir:scifact", "beir:nfcorpus", "memory", "beir:fiqa"], "rounds": 10, "build_repeats": 2, "threads": 8, "timeout_s": 3600},
 }
+
+
+# Published suites (standard, heavy) run at least this many independent process rounds: intervals over fewer are ranges.
+PUBLISHED_MIN_ROUNDS = 10
+
+# CPU pinning of the single-threaded serve and ops phases: `taskset -c LIST` on Linux, recorded in every results file.
+# Builds are multi-threaded and never pinned. Set with `warm-bench run --pin-cpus 2` or WARM_BENCH_PIN_CPUS.
+PIN = {"cpus": os.environ.get("WARM_BENCH_PIN_CPUS") or None}
+
+
+def set_pinning(cpus):
+    if cpus and sys.platform != "linux":
+        raise SystemExit("--pin-cpus needs taskset, which exists on Linux only")
+    PIN["cpus"] = cpus or None
+
+
+def _pin(cmd, phase):
+    """Prefix a serve or ops command with taskset when pinning is on."""
+    return ["taskset", "-c", PIN["cpus"], *cmd] if PIN["cpus"] and phase in ("serve", "ops") else cmd
+
+
+def pinning_record():
+    return {"cpus": PIN["cpus"], "tool": "taskset -c" if PIN["cpus"] else None,
+            "phases": "serve and ops (single-threaded); builds are not pinned" if PIN["cpus"] else "none: the scheduler places every process"}
 
 
 def _out_dir(spec):
@@ -56,14 +81,14 @@ WARM_PROFILE = "dist"
 def warm_binary(name, example=False):
     target = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "target"))
     path = target / WARM_PROFILE / ("examples" if example else "") / name
-    if not path.exists():
-        log(f"building {name}")
-        cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc", "--example" if example else "--bin", name]
-        subprocess.run(cmd, check=True, cwd=ROOT)
+    # Always ask cargo: it is a no-op when the binary is current, and a checkout that moved to a newer commit
+    # would otherwise be measured with the binary of the commit the target directory was first built at.
+    cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc", "--example" if example else "--bin", name]
+    subprocess.run(cmd, check=True, cwd=ROOT)
     return path
 
 
-def warm_install_facts(paths):
+def warm_install_facts(paths, crates=True):
     """Install footprint of the WARM binaries used: size and non-OS dynamic libraries."""
     out = {}
     for path in paths:
@@ -73,11 +98,22 @@ def warm_install_facts(paths):
             m in l for m in ("/usr/lib/", "/System/", "libc.so", "libm.so", "libgcc_s", "libpthread", "libdl", "ld-linux", "linux-vdso", "librt"))]
         out[path.name] = {"bytes": path.stat().st_size, "non_system_dynamic_libraries": len(non_system),
                           "profile": WARM_PROFILE, "symbols": "stripped"}
+    if not crates:
+        return out
     tree = subprocess.run(["cargo", "tree", "-e", "normal", "--prefix", "none", "-p", "writerslogic-warm", "--offline"],
                           capture_output=True, text=True, cwd=ROOT)
     crates = sorted({line.split()[0] for line in tree.stdout.splitlines() if line.strip()}) if tree.returncode == 0 else []
     out["_crate_dependencies"] = {"count": len(crates), "note": "unique crates in the default-feature normal dependency tree, including CLI-only crates; compiled in, not installed"}
     return out
+
+
+def hnswlib_cpp_driver():
+    """Path of the native hnswlib driver, built once from the hnswlib sdist the Python binding comes from.
+    Called before any timed phase, so compilation never overlaps a measurement."""
+    out = envs.ENV_ROOT / "hnswlib-cpp"
+    script = WORKER_DIR.parent / "hnswlib_cpp" / "build.sh"
+    path = subprocess.run(["bash", str(script), str(out)], check=True, capture_output=True, text=True).stdout.strip().splitlines()[-1]
+    return path
 
 
 def _rotate(items, r):
@@ -96,8 +132,7 @@ def _worker(system, args, threads_env, timeout=None):
     timeout = timeout or _LIMITS["timeout"]
     env_name = registry.SYSTEMS[system]["env"]
     python = envs.ensure(env_name)
-    t0 = time.time_ns()
-    stdout, stderr, wall, peak = run_measured([str(python), "-I", str(WORKER_DIR / "ann_worker.py"), *args, "--t0-ns", str(t0)],
+    stdout, stderr, wall, peak = run_measured(_pin([str(python), "-I", str(WORKER_DIR / "ann_worker.py"), *args, "--t0-ns", T0_PLACEHOLDER], args[0]),
                                               env=threads_env, timeout=timeout)
     result = _parse_result(stdout)
     result["peak_rss_bytes"] = peak
@@ -107,6 +142,8 @@ def _worker(system, args, threads_env, timeout=None):
 
 def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=None):
     directory, meta = data.ann_subset(dataset, n_train, n_test)
+    rawdata.require_digests(meta, ("train_sha256", "test_sha256"))
+    raw = rawdata.RawStore()
     threads = spec["threads"]
     hw = hardware()
     results = {"schema_version": SCHEMA_VERSION, "kind": "ann", "suite": spec["name"], "commit": commit(), "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -118,7 +155,11 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                             "ops": "100 replacements then 100 deletions; each mutation is acknowledged and explicitly flushed before the next",
                             "interleaving": "each round runs WARM and every comparator once, order rotated per round",
                             "query_caps": QUERY_CAPS if meta["n_train"] > 200_000 else {},
-                            "recall_targets": [0.9, 0.95, 0.99], "selection": "pooled-median-QPS argmax over sweep rows with recall >= target"},
+                            "recall_targets": [0.9, 0.95, 0.99],
+                            "selection": "pooled-median-QPS argmax over sweep rows with recall >= target, computed on the selection half of the queries only",
+                            "query_split": "even-indexed queries select the operating point, odd-indexed queries report its recall and QPS; "
+                                           "per-half records are stored in each config (select, report)",
+                            "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems)},
                "facts": registry.FACTS, "timing_boundary": registry.TIMING_BOUNDARY, "not_run": registry.NOT_RUN, "systems": {}, "skipped": {}}
     rounds = spec["rounds"]
     _LIMITS["timeout"] = spec.get("timeout_s", 7200)
@@ -135,12 +176,20 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
             if only_builds is None or build_id in only_builds.get(system, cls.BUILDS):
                 plan.append((system, build_id))
     state = {}
+    env_cpp = {**env1, "HNSWLIB_CPP_DRIVER": hnswlib_cpp_driver()} if "hnswlib-cpp" in systems else None
     # --- builds: every system builds and persists its index in a build process; serve rounds
     # open the persisted index in fresh processes, so build memory never counts as serving memory
     for system, build_id in plan:
         key = (system, build_id)
         workdir = WORK / f"{dataset}-{n_train}" / f"{system}-{build_id}"
         builds = []
+        if system == "hnswlib-cpp":
+            # No build of its own: it serves the index file the hnswlib row's build process saved.
+            if ("hnswlib", build_id) in state:
+                state[key] = {"builds": [], "workdir": state[("hnswlib", build_id)]["workdir"], "serves": []}
+            else:
+                results["skipped"][f"{system}:{build_id}"] = "needs the hnswlib row's build of the same id in this run"
+            continue
         try:
             for _ in range(spec["build_repeats"]):
                 if system == registry.WARM:
@@ -161,21 +210,21 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                 continue
             if system == registry.WARM:
                 try:
-                    state[key]["serves"].append(_warm_ann_round(directory, meta, state[key]["workdir"]))
+                    state[key]["serves"].append(rawdata.split_serve_round(_warm_ann_round(directory, meta, state[key]["workdir"]), raw, f"{system}/{build_id}/round{r}"))
                 except Exception as error:
                     results["skipped"][f"{system}:{build_id}"] = str(error)[-600:]
                     log(f"warm round failed: {str(error)[-300:]}")
                 continue
             try:
                 merged = None
-                for variant in _adapter_class(system).VARIANTS.get(build_id) or [None]:
+                for vi, variant in enumerate(_adapter_class(system).VARIANTS.get(build_id) or [None]):
                     args = ["serve", "--system", system, "--build", build_id, "--data", str(directory),
                             "--workdir", str(state[key]["workdir"]), "--repeats", "2"]
                     if big and system in QUERY_CAPS:
                         args += ["--queries", str(QUERY_CAPS[system])]
                     if variant:
                         args += ["--variant", json.dumps(variant)]
-                    one = _worker(system, args, env1)
+                    one = rawdata.split_serve_round(_worker(system, args, env_cpp if system == "hnswlib-cpp" else env1), raw, f"{system}/{build_id}/round{r}/v{vi}")
                     if merged is None:
                         merged = one
                     else:
@@ -193,13 +242,16 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
         if system in seen:
             continue
         seen.add(system)
+        if system == "hnswlib-cpp":
+            st["ops"] = {"error": "serves the hnswlib row's index file; mutations are measured on the hnswlib row"}
+            continue
         copy = st["workdir"].with_name(st["workdir"].name + "-ops")
         shutil.rmtree(copy, ignore_errors=True)
         shutil.copytree(st["workdir"], copy)
         try:
             if system == registry.WARM:
                 command = [sys.executable, str(WORKER_DIR / "ann_worker.py"), "ops", "--system", "warm", "--build", "persisted", "--data", str(directory), "--workdir", str(copy)]
-                stdout, _, _, _ = run_measured(command, env={**env1, "WARM_PUBLIC_BENCH": str(warm_binary("public-bench"))}, timeout=14400)
+                stdout, _, _, _ = run_measured(_pin(command, "ops"), env={**env1, "WARM_PUBLIC_BENCH": str(warm_binary("public-bench"))}, timeout=14400)
                 st["ops"] = _parse_result(stdout)
             else:
                 st["ops"] = _worker(system, ["ops", "--system", system, "--build", build_id, "--data", str(directory), "--workdir", str(copy)], env1)
@@ -208,7 +260,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
         shutil.rmtree(copy, ignore_errors=True)
     for (system, build_id), st in state.items():
         entry = results["systems"].setdefault(system, {"display": registry.SYSTEMS[system]["display"], "builds": {}})
-        entry["builds"][build_id] = {"build_runs": st["builds"], "serve_rounds": st["serves"],
+        entry["builds"][build_id] = {"build_runs": st["builds"], "serve_rounds": st["serves"], **({"index_of": "hnswlib"} if system == "hnswlib-cpp" else {}),
                                       "params": _adapter_class(system).BUILDS[build_id] if system != registry.WARM else WARM_ANN_BUILDS[meta["metric"]]}
         if "ops" in st:
             entry["ops"] = st["ops"]
@@ -216,6 +268,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
     if system_warm := results["systems"].get(registry.WARM):
         system_warm["install"] = warm_install_facts([warm_binary("public-bench")])
     out_path = out_path or _out_dir(spec) / f"{spec['name']}-ann-{dataset}-n{meta['n_train']}-{results['hardware']['class']}.json"
+    results["raw_latency"] = raw.write(out_path)
     write_json(out_path, results)
     return out_path
 
@@ -269,6 +322,10 @@ def _warm_ann_build(directory, meta, threads, workdir):
             "memory_phases": raw["memory_phases"], "warm_threads": raw["build"]["threads"]}
 
 
+def _settings(systems):
+    return {s: registry.COMPARATOR_SETTINGS[s] for s in systems if s in registry.COMPARATOR_SETTINGS}
+
+
 def _warm_ann_round(directory, meta, workdir):
     """One mapped updatable-index serving process; queries never load the train matrix."""
     out = WORK / "warm-ann-out.json"
@@ -277,8 +334,8 @@ def _warm_ann_round(directory, meta, workdir):
     build = WARM_ANN_BUILDS[meta["metric"]]
     cmd = [str(warm_binary("public-bench")), "ann-updates", "--action", "serve", "--index", str(workdir / "index.updates"),
            "--data", str(directory), "--out", str(out), "--ef", build["ef"], "--rerank", build["rerank"], "--repeats", "2"]
-    t0 = time.time_ns()
-    stdout, stderr, wall, peak = run_measured(cmd, env=SINGLE_THREAD, timeout=14400)
+    stdout, stderr, wall, peak = run_measured(_pin(cmd, "serve"), env=SINGLE_THREAD, timeout=14400)
+    t0 = common.LAST_T0_NS
     raw = json.loads(out.read_text())
     out.unlink()
     raw["cold_start_s"] = (raw["first_query_unix_ns"] - t0) / 1e9
@@ -286,6 +343,9 @@ def _warm_ann_round(directory, meta, workdir):
     raw["peak_rss_bytes"] = peak
     raw["index_bytes"] = dir_bytes(workdir)
     return raw
+
+
+TANTIVY_NATIVE = ("tantivy-rs", "tantivy-rs-count", "tantivy-rs-docs", "tantivy-rs-count-docs")
 
 
 def _adapter_class(system):
@@ -303,8 +363,17 @@ def _attach_versions_and_footprints(results):
         if reg["family"] == "warm":
             entry["version"] = _warm_version()
             continue
-        if system in ("lucene", "lucene-prev"):
-            version = jars.VERSION if system == "lucene" else jars.PREVIOUS
+        if system == "hnswlib-cpp":
+            entry["version"] = {"hnswlib": envs.PINS["hnswlib"][0].split("==")[1], "source": "sdist headers (the bytes the Python binding compiles)",
+                                "compiler": subprocess.run(["g++", "--version"], capture_output=True, text=True).stdout.splitlines()[0],
+                                "flags": "-O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux)"}
+            continue
+        if system in TANTIVY_NATIVE:
+            entry["version"] = {"tantivy": registry.TANTIVY_CRATE, "rustc": subprocess.run(["rustc", "--version"], capture_output=True, text=True).stdout.strip()}
+            entry["install"] = warm_install_facts([warm_binary("competitive_text_tantivy", example=True)], crates=False)
+            continue
+        if system in ("lucene", "lucene-docs", "lucene-prev"):
+            version = jars.PREVIOUS if system == "lucene-prev" else jars.VERSION
             entry["version"] = {"lucene": version, "jvm": jars.java_version()}
             entry["install"] = jars.footprint(version)
             continue
@@ -337,13 +406,19 @@ def _warm_version():
 def run_text(dataset, spec, systems, out_path=None):
     folder = textdata.load(dataset)
     meta = json.loads((folder / "meta.json").read_text())
+    meta |= {"input_sha256": rawdata.sha256_file(folder / "input.json"), "qrels_sha256": rawdata.sha256_file(folder / "qrels.json")}
+    rawdata.require_digests(meta, ("input_sha256", "qrels_sha256"))
+    raw = rawdata.RawStore()
     hw = hardware()
     results = {"schema_version": SCHEMA_VERSION, "kind": "text", "suite": spec["name"], "commit": commit(), "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                "hardware": hw, "dataset": meta | {"id": dataset},
                "protocol": {"measurement_version": 2, "resampling_unit": "independent process-round summaries", "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied", "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "k": 100, "passes_per_round": 3,
+                            "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems),
                             "retrieval": "lexical only, OR over the lowercase alphanumeric query word set, top 100; each system's own analyzer and default BM25",
-                            "timing": "one query at a time, single client thread; WARM timed inside its process, Python systems inside their worker",
-                            "warm_rows": "warm = `--encode lexical` (BM25 index only, like-for-like); warm-eager = default eager encoding (chunk hypervectors at ingest); every build repeat is one cold process",
+                            "timing": "one query at a time, single client thread; raw query string in and the engine's own query analysis and construction inside the timed region for every system, under two contracts measured in the same interleaved rounds: ids (top-100 (id, score) pairs out, no document text; indexes store no text) and documents (the top-100 hits come back with their stored document: id, score, stored text and the bucket metadata value; indexes store the same text and bucket); WARM timed inside its process, Python systems inside their worker",
+                            "contracts": {c: {"label": registry.CONTRACT_LABEL[c], "reference": registry.CONTRACT_REFERENCE[c], "systems": [s for s in systems if registry.contract(s) == c]} for c in (registry.IDS, registry.DOCUMENTS)},
+                            "verification": "documents rows: every returned hit's text digest (CRC-32 and byte length), byte range and bucket are compared with the corpus in the orchestrator, and each documents row's round-0 ordered id lists are compared with its engine's ids row; any mismatch fails the run",
+                            "warm_rows": "warm = `--encode lexical` with the document text stored at ingest (`--store-text`), timed through `search_documents` on the raw query string: the documents-contract row; warm-eager = the same with eager encoding (chunk hypervectors at ingest), reference only; warm-lexical-api = `--encode lexical` with no text stored, timed through `search_lexical` on the word set: the ids-contract row; every build repeat is one cold process",
                             "interleaving": "each round runs WARM and every comparator once, order rotated per round",
                             "peak_rss": "wait4 rusage of that phase's own process, forked from a small helper so it never inherits the orchestrator's RSS (Linux)",
                             "disk": "allocated bytes of the store directory (du); where the filesystem reports sparse files as fully allocated, only non-zero 4 KiB blocks count",
@@ -359,6 +434,9 @@ def run_text(dataset, spec, systems, out_path=None):
     threads = {k: "1" for k in SINGLE_THREAD}
     stores = {}
     runs = {s: {"build_runs": [], "serve_rounds": []} for s in systems}
+    corpus = _corpus_digests(input_path) if any(registry.contract(s) == registry.DOCUMENTS for s in systems) else {}
+    verification = {"documents_checks": {}, "pairs": {}}
+    first_rows = {}
     for system in systems:
         store = WORK / f"text-{dataset.replace(':', '-')}" / system
         try:
@@ -378,15 +456,29 @@ def run_text(dataset, spec, systems, out_path=None):
         for system in _rotate(live, r):
             out = stores[system].with_suffix(".serve.json")
             try:
-                t0 = time.time_ns()
-                stdout, stderr, wall, peak = _text_cmd(system, "serve", serve_input_path, stores[system], out, threads, t0=t0)
+                stdout, stderr, wall, peak = _text_cmd(system, "serve", serve_input_path, stores[system], out, threads, t0=T0_PLACEHOLDER)
                 body = json.loads(out.read_text())
                 rows = body.pop("rows")
+                if registry.contract(system) == registry.DOCUMENTS:
+                    checked = _check_documents(rows, corpus)
+                    prior = verification["documents_checks"].setdefault(system, {k: 0 for k in checked})
+                    for k, v in checked.items():
+                        prior[k] += v
+                if r == 0:
+                    first_rows[system] = rows
                 body["quality"] = _quality(rows, qrels) if r == 0 else None
-                body["passes"] = [pass_summary(ns) for ns in body.pop("passes_ns")]
+                passes_ns = body.pop("passes_ns")
+                for p_, ns in enumerate(passes_ns):
+                    raw.add_latency(f"{system}/round{r}/pass{p_}", ns)
+                body["passes"] = [pass_summary(ns) for ns in passes_ns]
                 runs[system]["serve_rounds"].append(body | {"peak_rss_bytes": peak, "wall_s": wall})
             except Exception as error:
                 results["skipped"][system] = str(error)[-600:]
+    for system in live:
+        base = system.removesuffix("-docs") if system.endswith("-docs") else registry.WARM_LEXICAL_API if system in registry.WARM_TEXT_STORED else None
+        if base in first_rows and system in first_rows:
+            verification["pairs"][system] = {"ids_row": base} | _pair_ids(first_rows[system], first_rows[base])
+    results["verification"] = verification
     for system in live:
         if os.environ.get("WARM_BENCH_SKIP_OPS"):  # durable replace/delete fsync per operation dominates a loaded local disk
             runs[system]["ops"] = {"error": "skipped: WARM_BENCH_SKIP_OPS"}
@@ -403,30 +495,98 @@ def run_text(dataset, spec, systems, out_path=None):
         shutil.rmtree(copy, ignore_errors=True)
     for system, body in runs.items():
         if system in stores:
-            results["systems"][system] = {"display": registry.SYSTEMS[system]["display"], **body}
+            results["systems"][system] = {"display": registry.SYSTEMS[system]["display"], "contract": registry.contract(system), **body}
     _attach_versions_and_footprints(results)
     for system in registry.WARM_TEXT_ENCODE:
         if system in results["systems"]:
             results["systems"][system]["install"] = warm_install_facts([warm_binary("competitive_text", example=True)])
             results["systems"][system]["encode"] = registry.WARM_TEXT_ENCODE[system]
     out_path = out_path or _out_dir(spec) / f"{spec['name']}-text-{dataset.replace(':', '-')}-{hw['class']}.json"
+    results["raw_latency"] = raw.write(out_path)
     write_json(out_path, results)
+    failed = [s for s, c in verification["documents_checks"].items() if c["text_mismatches"] or c["bucket_mismatches"] or c["unknown_ids"] or c["empty_text"]]
+    failed += [s for s, c in verification["pairs"].items() if c["queries_with_different_id_lists"]]
+    if failed:
+        raise SystemExit(f"documents-contract verification failed for {sorted(set(failed))} (see `verification` in {out_path})")
     return out_path
 
 
 def _text_cmd(system, phase, input_path, store, out, env, t0=None):
-    t0 = t0 or time.time_ns()
+    t0 = t0 or T0_PLACEHOLDER
+    stored = registry.contract(system) == registry.DOCUMENTS
     if system in registry.WARM_TEXT_ENCODE:
         cmd = [str(warm_binary("competitive_text", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--encode", registry.WARM_TEXT_ENCODE[system]]
-    elif system in ("lucene", "lucene-prev"):
-        classpath, _ = jars.ensure(jars.VERSION if system == "lucene" else jars.PREVIOUS)
-        cmd = ["java", "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
+        if phase == "build":
+            cmd += ["--store-text", "true" if system in registry.WARM_TEXT_STORED else "false"]
+        if phase == "serve":
+            cmd += ["--api", registry.WARM_TEXT_API[system]]
+            if system in registry.WARM_TEXT_STORED:
+                cmd += ["--digest", "true"]
+    elif system in TANTIVY_NATIVE:
+        cmd = [str(warm_binary("competitive_text_tantivy", example=True)), phase, "--input", str(input_path), "--store", str(store),
+               "--out", str(out), "--t0-ns", str(t0), "--collector", "count" if system.startswith("tantivy-rs-count") else "topk"]
+        if stored:
+            cmd += ["--stored", "true", "--docstore", registry.TANTIVY_DOCSTORE]
+            if phase == "serve":
+                cmd += ["--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE)]
+    elif system in ("lucene", "lucene-docs", "lucene-prev"):
+        classpath, _ = jars.ensure(jars.PREVIOUS if system == "lucene-prev" else jars.VERSION)
+        cmd = ["java", *registry.LUCENE_JVM_FLAGS[phase], "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
+        if stored:
+            cmd += ["english", "stored"]
     else:
         python = envs.ensure(registry.SYSTEMS[system]["env"])
         cmd = [str(python), "-I", str(WORKER_DIR / "text_worker.py"), phase, "--system", system, "--input", str(input_path),
                "--store", str(store), "--out", str(out), "--t0-ns", str(t0)]
-    return run_measured(cmd, env=env, timeout=7200)
+    return run_measured(_pin(cmd, phase), env=env, timeout=7200)
+
+
+def _corpus_digests(input_path):
+    """{document id: (utf-8 bytes of the text, bucket)} of a text corpus, for the documents-contract checks."""
+    out = {}
+    for d in json.loads(Path(input_path).read_text())["documents"]:
+        out[d["id"]] = (d["text"].encode("utf-8"), (d.get("metadata") or {}).get("bucket"))
+    return out
+
+
+def _check_documents(rows, corpus):
+    """Compare what every returned hit carried (CRC-32 and length of its text, byte range, bucket) with the corpus. Returns
+    counts; a hit passes when its text equals the corpus bytes of its range and its bucket equals the corpus bucket."""
+    import zlib
+    counts = {"hits": 0, "text_mismatches": 0, "bucket_mismatches": 0, "unknown_ids": 0, "partial_ranges": 0, "empty_text": 0}
+    for row in rows:
+        for hit in row["results"]:
+            check = hit.pop("check", None)
+            counts["hits"] += 1
+            entry = corpus.get(hit["documentId"])
+            if check is None or entry is None:
+                counts["unknown_ids"] += 1
+                continue
+            text, bucket = entry
+            start, end = check["start"], check["end"]
+            if (start, end) != (0, len(text)):
+                counts["partial_ranges"] += 1
+            expected = text[start:end]
+            if check["len"] == 0:
+                counts["empty_text"] += 1
+            if check["len"] != len(expected) or check["crc"] != zlib.crc32(expected):
+                counts["text_mismatches"] += 1
+            if check["bucket"] != bucket:
+                counts["bucket_mismatches"] += 1
+    return counts
+
+
+def _pair_ids(docs_rows, ids_rows):
+    """Queries whose ordered top-100 id list differs between an engine's documents row and its ids row, and the largest score gap."""
+    differing, gap = 0, 0.0
+    for d, i in zip(docs_rows, ids_rows):
+        a, b = [h["documentId"] for h in d["results"]], [h["documentId"] for h in i["results"]]
+        if a != b or d["id"] != i["id"]:
+            differing += 1
+        else:
+            gap = max([gap] + [abs(x["lexicalScore"] - y["lexicalScore"]) for x, y in zip(d["results"], i["results"])])
+    return {"queries": len(docs_rows), "queries_with_different_id_lists": differing, "max_abs_score_gap": gap}
 
 
 def _quality(rows, qrels):

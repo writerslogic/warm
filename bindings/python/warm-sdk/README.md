@@ -1,4 +1,4 @@
-<a href="https://writerslogic.com/warm/"><img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/crystal-halo/crystal-detailed-static.png" width="96" alt="WARM logo" align="left"></a>
+<a href="https://writerslogic.com/warm/"><img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/logo/warm-logo.png" width="96" alt="WARM logo" align="left"></a>
 
 # WARM SDK
 

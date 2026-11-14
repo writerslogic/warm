@@ -1,0 +1,14 @@
+Mem0 handling of empty or failed answers, from the published file and the harness (mem0ai/memory-benchmarks 4b61c5d)
+
+(a) The 156 "merged from reruns" questions
+- File metadata: project_name 'locomo-v3-run', timestamp 20260406_170942, 'merged_from_questions' lists 156 ids (conv0_q128, ... ); 'questions': None, 'previous_results_file': None, 'judge_only': False.
+- The metadata does not record why they were rerun. No rerun, merge or failure-recovery script exists in the published harness: grep of benchmarks/ for merged_from_questions, previous_results, rerun finds nothing; locomo/run.py exposes only --resume (checkpoint) and --max-questions. The merge tool is not published.
+- Outcomes of those 156 in the published file: 129 WRONG, 26 CORRECT, 1 ERROR (conv3_q78). Categories: 82 single-hop, 26 temporal, 25 open-domain, 23 multi-hop. The set is therefore mostly questions that ended up wrong, consistent with reruns of failed or flagged responses, but the reason is not evidenced.
+(b) Empty answers in the published file
+- Exactly 1 of 1540: conv3_q78, generated_answer "", judgment ERROR, score 0.0, error "". Its metrics block records 'errors': 1 and counts it as incorrect (1410 correct of 1540).
+- conv3_q78 is itself in the merged-from-reruns list, so after a rerun it was still empty and was kept as a scored error. The published file therefore does include a failed response that was not replaced.
+- WARM's run has 22 empty answers (finish_reason 'length', content '', 4096 completion tokens all spent on reasoning); the harness code path is identical for both.
+(c) Completion limit and reasoning setting
+- Not recorded in the published results metadata (no max_tokens, reasoning_effort or temperature fields).
+- Harness: LLMClient.generate defaults max_tokens=4096, sent as max_completion_tokens for gpt-5 (llm_client.py _openai_chat_token_limit_kwargs); no reasoning_effort is passed anywhere, so the API default applies. Mem0 used provider azure; WARM's run used provider openai with the same harness code.
+- Retry logic in the harness (llm_client.py _generate_openai): up to 5 attempts, but only on exceptions, timeouts, or content None. An empty string content with finish_reason length is returned as is (no retry). So the harness itself would not have retried WARM's 22.
