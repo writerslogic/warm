@@ -524,6 +524,65 @@ pub(crate) struct StoredChunk {
     pub vector_state: VectorState,
 }
 
+/// A stored document's metadata object. Documents of one batch whose metadata is equal share
+/// one allocation ([`SharedMetadata::intern`]): a one-entry JSON object is a 632-byte map node.
+/// It serializes exactly as the value it holds.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct SharedMetadata(Arc<Value>);
+
+impl SharedMetadata {
+    /// Shares the allocation of an earlier equal value in `seen`, or records this one.
+    pub(crate) fn intern(&mut self, seen: &mut std::collections::HashMap<u64, Vec<SharedMetadata>>) {
+        use std::hash::Hasher;
+        struct Feed<'a>(&'a mut std::collections::hash_map::DefaultHasher);
+        impl std::io::Write for Feed<'_> {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                self.0.write(bytes);
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        if serde_json::to_writer(Feed(&mut hasher), &*self.0).is_err() {
+            return;
+        }
+        let candidates = seen.entry(hasher.finish()).or_default();
+        match candidates.iter().find(|other| *other.0 == *self.0) {
+            Some(other) => self.0 = Arc::clone(&other.0),
+            None if candidates.len() < 4 => candidates.push(self.clone()),
+            None => {}
+        }
+    }
+}
+
+impl From<Value> for SharedMetadata {
+    fn from(value: Value) -> Self {
+        Self(Arc::new(value))
+    }
+}
+
+impl Deref for SharedMetadata {
+    type Target = Value;
+
+    fn deref(&self) -> &Value {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for SharedMetadata {
+    fn deref_mut(&mut self) -> &mut Value {
+        Arc::make_mut(&mut self.0)
+    }
+}
+
+impl Serialize for SharedMetadata {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.serialize(serializer)
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct StoredDocument {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -535,7 +594,7 @@ pub(crate) struct StoredDocument {
     #[serde(deserialize_with = "deserialize_compact_string")]
     pub version: String,
     #[serde(deserialize_with = "deserialize_compact_metadata")]
-    pub metadata: Value,
+    pub metadata: SharedMetadata,
     #[serde(deserialize_with = "deserialize_compact_chunks")]
     pub chunks: Vec<StoredChunk>,
 }
@@ -569,13 +628,13 @@ where
     Ok(value)
 }
 
-fn deserialize_compact_metadata<'de, D>(deserializer: D) -> Result<Value, D::Error>
+fn deserialize_compact_metadata<'de, D>(deserializer: D) -> Result<SharedMetadata, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
     let mut value = Value::deserialize(deserializer)?;
     compact_metadata(&mut value);
-    Ok(value)
+    Ok(value.into())
 }
 
 fn compact_vec<T>(values: &mut Vec<T>) {
@@ -1584,7 +1643,10 @@ pub(crate) fn prepare_spans(
         id: input.id,
         source_uri: input.source_uri,
         version: input.version.unwrap_or_else(|| "1".into()),
-        metadata: input.metadata.unwrap_or_else(|| serde_json::json!({})),
+        metadata: input
+            .metadata
+            .unwrap_or_else(|| serde_json::json!({}))
+            .into(),
         chunks: stored,
     };
     compact_string(&mut document.id);
@@ -1994,7 +2056,7 @@ fn search_impl(
                 document_id: d.id.clone(),
                 source_uri: d.source_uri.clone(),
                 version: d.version.clone(),
-                metadata: d.metadata.clone(),
+                metadata: (*d.metadata).clone(),
                 text: c.text.clone(),
                 start_byte: c.start_byte,
                 end_byte: c.end_byte,
@@ -2129,6 +2191,28 @@ mod tests {
                 input.text.chars().take(40).collect::<String>()
             );
         }
+    }
+
+    /// Equal metadata shares one allocation, unequal metadata does not, the stored form is
+    /// the value's own JSON, and a write through one sharer is not seen by the other.
+    #[test]
+    fn interned_metadata_shares_equal_values_only() {
+        let mut seen = std::collections::HashMap::new();
+        let mut first: SharedMetadata = json!({"bucket": 3, "tags": ["a", 1.5]}).into();
+        let mut equal: SharedMetadata = json!({"tags": ["a", 1.5], "bucket": 3}).into();
+        let mut other: SharedMetadata = json!({"bucket": 4, "tags": ["a", 1.5]}).into();
+        for metadata in [&mut first, &mut equal, &mut other] {
+            metadata.intern(&mut seen);
+        }
+        assert!(Arc::ptr_eq(&first.0, &equal.0));
+        assert!(!Arc::ptr_eq(&first.0, &other.0));
+        assert_eq!(
+            serde_json::to_string(&equal).unwrap(),
+            serde_json::to_string(&json!({"bucket": 3, "tags": ["a", 1.5]})).unwrap()
+        );
+        equal["bucket"] = json!(9);
+        assert_eq!(first["bucket"], 3);
+        assert_eq!(equal["bucket"], 9);
     }
 
     /// The chunk id keeps the journal's text form, and recognising it agrees with comparing
@@ -2600,7 +2684,7 @@ mod tests {
                 let old = serde_json::to_value(execute_search(&retained, 0).unwrap()).unwrap();
                 let mut replacement = document(3, 2);
                 replacement.chunks.truncate(chunks);
-                replacement.metadata = json!({"group":99, "flag":false});
+                replacement.metadata = json!({"group":99, "flag":false}).into();
                 replacement.source_uri = Some("replacement-source".into());
                 for chunk in &mut replacement.chunks {
                     chunk.terms.insert("common".into(), (chunks - 1) as u32);

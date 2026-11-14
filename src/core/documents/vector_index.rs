@@ -930,7 +930,7 @@ fn to_result(hit: &Hit, segment: Option<&TextSegment>) -> Result<DocumentResult>
         document_id: document.id.clone(),
         source_uri: document.source_uri.clone(),
         version: document.version.clone(),
-        metadata: document.metadata.clone(),
+        metadata: (*document.metadata).clone(),
         text: try_text_of(chunk, segment)?,
         start_byte: chunk.start_byte,
         end_byte: chunk.end_byte,

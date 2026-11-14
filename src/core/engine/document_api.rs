@@ -276,7 +276,16 @@ impl WarmCore {
             .collect::<Result<Vec<_>>>();
         // Every split has returned its interner; keep the warmest within the memory bound.
         self.stem_memos.trim();
-        let mutations = mutations?;
+        let mut mutations = mutations?;
+        // Documents of a batch commonly carry the same few metadata objects.
+        let mut seen = std::collections::HashMap::new();
+        for mutation in &mut mutations {
+            if let Mutation::Document(document) = mutation {
+                if let Some(document) = Arc::get_mut(document) {
+                    document.metadata.intern(&mut seen);
+                }
+            }
+        }
         let payload = super::document_batch::serialize_transaction(self, &mutations)?;
         Ok((mutations, payload))
     }
