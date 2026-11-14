@@ -69,7 +69,7 @@ clap = { version = "4.4", features = ["derive", "env"], optional = true }
 foldhash = "0.2"
 nalgebra = { version = "0.35", features = ["serde-serialize"] }
 matrixmultiply = "0.3"
-gemm = { version = "0.19", default-features = false, features = ["std"], optional = true }
+gemm = { version = "0.19", default-features = false, features = ["std", "x86-v4"], optional = true }
 ed25519-dalek = { version = "3", features = ["rand_core"], optional = true }
 zeroize = { version = "1", features = ["derive"], optional = true }
 aes-gcm = { version = "0.11", optional = true }
