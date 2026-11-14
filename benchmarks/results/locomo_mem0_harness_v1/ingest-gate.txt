@@ -1,0 +1,11 @@
+conv 0 tenant locomo_0_a3a6075e dataset_turns=419 chunks_processed=419 server_remember_200=419 failed=0 spot_recall(D10:19)=PASS -> OK
+conv 1 tenant locomo_1_a3a6075e dataset_turns=369 chunks_processed=369 server_remember_200=369 failed=0 spot_recall(D10:9)=PASS -> OK
+conv 2 tenant locomo_2_a3a6075e dataset_turns=663 chunks_processed=663 server_remember_200=663 failed=0 spot_recall(D16:5)=PASS -> OK
+conv 3 tenant locomo_3_a3a6075e dataset_turns=629 chunks_processed=629 server_remember_200=629 failed=0 spot_recall(D16:11)=PASS -> OK
+conv 4 tenant locomo_4_a3a6075e dataset_turns=680 chunks_processed=680 server_remember_200=680 failed=0 spot_recall(D15:20)=PASS -> OK
+conv 5 tenant locomo_5_a3a6075e dataset_turns=675 chunks_processed=675 server_remember_200=675 failed=0 spot_recall(D14:21)=PASS -> OK
+conv 6 tenant locomo_6_a3a6075e dataset_turns=689 chunks_processed=689 server_remember_200=689 failed=0 spot_recall(D15:16)=PASS -> OK
+conv 7 tenant locomo_7_a3a6075e dataset_turns=681 chunks_processed=681 server_remember_200=681 failed=0 spot_recall(D15:29)=PASS -> OK
+conv 8 tenant locomo_8_a3a6075e dataset_turns=509 chunks_processed=509 server_remember_200=509 failed=0 spot_recall(D13:15)=PASS -> OK
+conv 9 tenant locomo_9_a3a6075e dataset_turns=568 chunks_processed=568 server_remember_200=568 failed=0 spot_recall(D16:14)=PASS -> OK
+GATE PASSED

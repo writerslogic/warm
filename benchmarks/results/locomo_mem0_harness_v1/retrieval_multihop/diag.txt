@@ -1,0 +1,19 @@
+multi-hop questions 282 with all gold in top-200 236 missing >=1 46 missing gold turns 64
+missing turns: in k=1000 list 64 (100%)
+  rank in k=1000 quantiles (25/50/75/90): [223, 278, 362, 457] ranks 201-400: 41 401-1000: 11 absent from 1000: 0
+short (<=8 words) 2 (3%)
+image-caption turn 28 (44%)
+zero lexical overlap with question (no stopwords) 4 (6%)
+adjacent turn (+-1) already in top-200 44 (69%)
+adjacent turn is another gold turn present in top-200 5 (8%)
+same session as a gold turn already present 20 (31%)
+evidence-set size of affected questions {4: 15, 7: 2, 6: 4, 8: 2, 2: 9, 3: 10, 1: 1, 10: 1, 5: 2}
+all turns: median words 20.0 share <=8 words 0.08 image share 0.21
+all multi-hop gold turns: median words 30.0 share short 0.01
+partial questions 46 | every missing turn has adjacent gold present: 2 | every missing turn has neighbour in top200: 29 | every missing turn within rank 400: 38
+conv0_q4 D1:5 286 Caroline: The transgender stories were so inspiring! I was so happy and thankful for all the support. [Sharing image - query: transgender pride flag mural. The 
+conv0_q15 D1:12 271 Melanie: You'd be a great counselor! Your empathy and understanding will really help the people you work with. By the way, take a look at this. [Sharing image -
+conv0_q48 D12:14 363 Melanie: I appreciate our friendship too, Caroline. You've always been there for me.
+conv0_q75 D18:1 257 Melanie: Hey Caroline, that roadtrip this past weekend was insane! We were all freaked when my son got into an accident. We were so lucky he was okay. It was a 
+conv1_q3 D1:4 278 Jon: Sorry to hear that! I'm starting a dance studio 'cause I'm passionate about dancing and it'd be great to share it with others.
+conv2_q3 D3:5 278 John: We held some events and got to meet some people. We went to a homeless shelter to give out food and supplies. Seeing the smiles on their faces, we knew we

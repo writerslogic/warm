@@ -1,0 +1,18 @@
+questions with evidence 1536 questions with an unparsable evidence entry 9 of which multi-hop 4
+all
+  multi-hop    n= 282 all-gold 0.812 evidence-recall 0.917 partial 51 none 2 | split-ids all-gold 0.816
+  temporal     n= 321 all-gold 0.969 evidence-recall 0.971 partial 3 none 7 | split-ids all-gold 0.969
+  open-domain  n=  92 all-gold 0.717 evidence-recall 0.770 partial 15 none 11 | split-ids all-gold 0.717
+  single-hop   n= 841 all-gold 0.973 evidence-recall 0.974 partial 11 none 12 | split-ids all-gold 0.973
+dev 0-2
+  multi-hop    n=  74 all-gold 0.797 evidence-recall 0.918 partial 13 none 2 | split-ids all-gold 0.811
+  temporal     n=  90 all-gold 1.000 evidence-recall 1.000 partial 0 none 0 | split-ids all-gold 1.000
+  open-domain  n=  19 all-gold 0.737 evidence-recall 0.722 partial 3 none 2 | split-ids all-gold 0.737
+  single-hop   n= 200 all-gold 0.975 evidence-recall 0.976 partial 2 none 3 | split-ids all-gold 0.975
+held-out 3-9
+  multi-hop    n= 208 all-gold 0.817 evidence-recall 0.917 partial 38 none 0 | split-ids all-gold 0.817
+  temporal     n= 231 all-gold 0.957 evidence-recall 0.961 partial 3 none 7 | split-ids all-gold 0.957
+  open-domain  n=  73 all-gold 0.712 evidence-recall 0.780 partial 12 none 9 | split-ids all-gold 0.712
+  single-hop   n= 641 all-gold 0.972 evidence-recall 0.974 partial 9 none 9 | split-ids all-gold 0.972
+classification of the 58 recomputed {('single-hop', 'all'): 20, ('multi-hop', 'partial'): 12, ('multi-hop', 'all'): 11, ('temporal', 'all'): 6, ('open-domain', 'all'): 5, ('single-hop', 'none'): 2, ('open-domain', 'none'): 1, ('temporal', 'none'): 1}
+agree with misses_full.json classes: 58 of 58
