@@ -64,6 +64,17 @@ class SqliteFts5:
         # (JDK FileChannel.force); fullfsync holds SQLite to the same standard.
         self.db.execute("PRAGMA fullfsync = ON")
         self.db.execute("PRAGMA checkpoint_fullfsync = ON")
+        # rowid-to-id map held in Python, so the query is a bare MATCH with no join.
+        self.ids = dict(self.db.execute("SELECT rowid, id FROM identities"))
+
+    def open_serving(self):
+        """Documented read-side settings (sqlite.org pragma and FTS5 docs): a read-only connection, memory-mapped
+        reads and a larger page cache."""
+        self.open()
+        self.db.execute("PRAGMA query_only = ON")
+        self.db.execute("PRAGMA mmap_size = 1073741824")
+        self.db.execute("PRAGMA cache_size = -65536")
+        self.db.execute("PRAGMA temp_store = MEMORY")
 
     def prepare(self, text):
         return " OR ".join('"' + w + '"' for w in words(text))
@@ -71,10 +82,11 @@ class SqliteFts5:
     def search(self, expression):
         if not expression:
             return []
-        rows = self.db.execute(
-            "SELECT identities.id, bm25(docs) FROM docs JOIN identities ON docs.rowid=identities.rowid "
-            "WHERE docs MATCH ? ORDER BY 2, identities.id LIMIT ?", (expression, K)).fetchall()
-        return [(i, -s) for i, s in rows]
+        # The documented top-k form: ORDER BY rank (FTS5's hidden bm25 column) with LIMIT, no join and no
+        # tie-break the other arms do not pay; ids come from the table held in memory.
+        ids = self.ids
+        return [(ids[rowid], -score) for rowid, score in self.db.execute(
+            "SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT ?", (expression, K))]
 
     def replace(self, document):
         row = self.db.execute("SELECT rowid FROM identities WHERE id = ?", (document["id"],)).fetchone()[0]
@@ -117,10 +129,11 @@ class Tantivy:
         self.searcher = self.index.searcher()
 
     def prepare(self, text):
-        return " ".join(words(text))
+        # Parsed once outside the timer, as the native arm and every other comparator receive their query.
+        query, _ = self.index.parse_query_lenient(" ".join(words(text)), ["body"])
+        return query
 
-    def search(self, text):
-        query, _ = self.index.parse_query_lenient(text, ["body"])
+    def search(self, query):
         hits = self.searcher.search(query, K).hits
         return [(self.searcher.doc(addr)["id"][0], score) for score, addr in hits]
 
@@ -238,7 +251,7 @@ class Bm25s:
         raise Unsupported("immutable index; any change is a full rebuild")
 
 
-SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s,
+SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy-py": Tantivy, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s,
            "sqlite-fts5-prev": SqliteFts5, "tantivy-prev": Tantivy}
 
 
@@ -261,7 +274,7 @@ def main():
         report = {"documents": len(data["documents"]), "ingest_s": time.perf_counter() - start}
     elif a.mode == "serve":
         start = time.perf_counter()
-        system.open()
+        getattr(system, "open_serving", system.open)()
         open_s = time.perf_counter() - start
         queries = data["queries"]
         prepared = [system.prepare(q["text"]) for q in queries]
