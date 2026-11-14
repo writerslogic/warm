@@ -128,7 +128,7 @@ jobs:
         run: |
           set -euo pipefail
           cd server-release-assets
-          test "$(ls | wc -l | tr -d ' ')" = 5
+          test "$(find . -maxdepth 1 -name 'warm-server-*' | wc -l | tr -d ' ')" = 5
           sha256sum warm-server-* > SHA256SUMS
           cat SHA256SUMS
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
