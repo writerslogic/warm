@@ -17,7 +17,7 @@ use super::image::{MetadataCache, ServingImage};
 use super::lexical::{LexicalHit, LexicalResults};
 use super::overlay::Overlaid;
 use super::{
-    matches_document_metadata, normalize_embedding, query_words_with, terms_with, top_ranked,
+    matches_document_metadata, normalize_embedding, query_words_both, terms_with, top_ranked,
     Analyzer, Bm25, DocumentResult, DocumentStore, SearchOptions, StoredChunk, StoredDocument,
     MAX_DOCUMENT_BYTES,
 };
@@ -198,10 +198,7 @@ pub(crate) fn prepare_search_with(
     analyzer: Analyzer,
 ) -> Result<PreparedSearch> {
     let mut prepared = validate_search(text, options, embedding_dimensions)?;
-    prepared.query_terms = [
-        query_words_with(analyzer, text, false),
-        query_words_with(analyzer, text, true),
-    ];
+    prepared.query_terms = query_words_both(analyzer, text);
     Ok(prepared)
 }
 

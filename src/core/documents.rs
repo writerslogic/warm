@@ -805,12 +805,33 @@ pub(crate) fn query_words(text: &str, stem: bool) -> std::collections::BTreeSet<
 }
 
 /// [`query_words`] through `analyzer`.
+#[cfg(test)]
 pub(crate) fn query_words_with(
     analyzer: Analyzer,
     text: &str,
     stem: bool,
 ) -> std::collections::BTreeSet<String> {
     terms_with(analyzer, text, stem).into_keys().collect()
+}
+
+/// The distinct terms of `text` in both forms (unstemmed, stemmed) through `analyzer`: the
+/// keys of [`terms_with`] for each form, from one tokenization of the text.
+pub(crate) fn query_words_both(
+    analyzer: Analyzer,
+    text: &str,
+) -> [std::collections::BTreeSet<String>; 2] {
+    let mut sets: [std::collections::BTreeSet<String>; 2] = Default::default();
+    let mut lower = String::new();
+    let text = analyzer.prepare(text);
+    for word in analyzer.words(&text) {
+        for (form, set) in sets.iter_mut().enumerate() {
+            let term = analyzer.term(word, form == 1, &mut lower);
+            if !term.is_empty() && !set.contains(&*term) {
+                set.insert(term.into_owned());
+            }
+        }
+    }
+    sets
 }
 
 /// [`terms_with`] through [`Analyzer::Legacy`].

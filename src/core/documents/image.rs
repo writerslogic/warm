@@ -407,6 +407,8 @@ pub(crate) struct MetadataCache {
     entries: Vec<(Box<[u8]>, serde_json::Value)>,
     repeated: bool,
     next: usize,
+    /// The entry the last lookup found: consecutive hits mostly share their metadata.
+    last: usize,
 }
 
 impl MetadataCache {
@@ -419,9 +421,17 @@ impl MetadataCache {
         if bytes.len() > Self::LONGEST || (!self.repeated && self.entries.len() >= Self::GIVE_UP) {
             return parse_metadata(bytes);
         }
-        if let Some((_, value)) = self.entries.iter().find(|(stored, _)| &**stored == bytes) {
+        let found = match self.entries.get(self.last) {
+            Some((stored, _)) if &**stored == bytes => Some(self.last),
+            _ => self
+                .entries
+                .iter()
+                .position(|(stored, _)| &**stored == bytes),
+        };
+        if let Some(at) = found {
             self.repeated = true;
-            return Ok(value.clone());
+            self.last = at;
+            return Ok(self.entries[at].1.clone());
         }
         let value = parse_metadata(bytes)?;
         let entry = (bytes.into(), value.clone());

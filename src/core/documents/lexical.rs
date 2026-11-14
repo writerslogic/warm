@@ -165,7 +165,7 @@ impl LexicalQuery {
     }
 
     /// The distinct terms per form of a query that is a bare disjunction of single words, the
-    /// terms [`super::query_words_with`] reads from the same text; `None` for a query with a
+    /// terms [`super::query_words_both`] reads from the same text; `None` for a query with a
     /// required, excluded or phrase clause.
     fn disjunction_terms(&self) -> Option<[BTreeSet<String>; 2]> {
         let mut terms: [BTreeSet<String>; 2] = Default::default();
