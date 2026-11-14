@@ -413,7 +413,7 @@ def run_text(dataset, spec, systems, out_path=None):
                             "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems),
                             "retrieval": "lexical only, OR over the lowercase alphanumeric query word set, top 100; each system's own analyzer and default BM25",
                             "timing": "one query at a time, single client thread; one contract for every system: raw query string in, the engine's own query analysis and construction inside the timed region, top-100 (id, score) pairs out and no document bodies; WARM timed inside its process, Python systems inside their worker",
-                            "warm_rows": "warm = `--encode lexical` (BM25 index only, like-for-like); warm-eager = default eager encoding (chunk hypervectors at ingest); every build repeat is one cold process",
+                            "warm_rows": "warm = `--encode lexical` (BM25 index only, like-for-like); warm-eager = default eager encoding (chunk hypervectors at ingest); warm and warm-eager time `search_documents` on the raw query string, warm-lexical-api times `search_lexical` (hydrates the store) and feeds no verdict; every build repeat is one cold process",
                             "interleaving": "each round runs WARM and every comparator once, order rotated per round",
                             "peak_rss": "wait4 rusage of that phase's own process, forked from a small helper so it never inherits the orchestrator's RSS (Linux)",
                             "disk": "allocated bytes of the store directory (du); where the filesystem reports sparse files as fully allocated, only non-zero 4 KiB blocks count",
@@ -492,6 +492,8 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None):
     if system in registry.WARM_TEXT_ENCODE:
         cmd = [str(warm_binary("competitive_text", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--encode", registry.WARM_TEXT_ENCODE[system]]
+        if phase == "serve":
+            cmd += ["--api", registry.WARM_TEXT_API[system]]
     elif system in ("tantivy-rs", "tantivy-rs-count"):
         cmd = [str(warm_binary("competitive_text_tantivy", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--collector", "count" if system == "tantivy-rs-count" else "topk"]

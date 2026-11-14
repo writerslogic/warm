@@ -25,7 +25,7 @@ use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 const USAGE: &str =
     "usage: competitive_text <build|serve|ops> --input FILE --store DIR --out FILE \
     [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--encode eager|deferred|lexical (eager)] [--analyzer NAME] \
-    [--batch N (0)]";
+    [--batch N (0)] [--api documents|lexical (documents)]";
 
 /// Command line, parsed by hand: this binary is what the harness measures as WARM's install
 /// footprint, and an argument-parsing framework would be most of it.
@@ -46,6 +46,9 @@ struct Args {
     analyzer: Option<writerslogic_warm::core::documents::Analyzer>,
     /// `build` only: documents per atomic batch (0 = as many per batch as the engine accepts).
     batch: usize,
+    /// `serve` only: `documents` calls `search_documents` (the product path for document search) with the raw
+    /// query string; `lexical` calls `search_lexical` on the query's word set.
+    api: String,
 }
 
 impl Args {
@@ -64,6 +67,7 @@ impl Args {
             encode: "eager".into(),
             analyzer: None,
             batch: 0,
+            api: "documents".into(),
         };
         while let Some(flag) = words.next() {
             let value = words
@@ -80,6 +84,7 @@ impl Args {
                 "--encode" => args.encode = value,
                 "--analyzer" => args.analyzer = Some(value.parse()?),
                 "--batch" => args.batch = value.parse().with_context(number)?,
+                "--api" => args.api = value,
                 _ => bail!("unknown argument {flag}; {USAGE}"),
             }
         }
@@ -221,29 +226,47 @@ fn main() -> Result<()> {
             let start = Instant::now();
             let core = WarmCore::new(1024, Some(store), None)?;
             let open_s = start.elapsed().as_secs_f64();
-            // One contract for every arm: the raw query string goes in, WARM's own query analysis
-            // (`LexicalQuery::parse`) is inside the timed region, and the top-100 (id, score) pairs come
-            // out, with no document bodies or metadata built.
+            // One contract for every arm: the raw query string goes in, WARM's own query analysis is inside the
+            // timed region, and the top-100 (id, score) pairs come out. `documents` is the product path for
+            // document search and builds full documents per hit, more work than the contract needs (conservative);
+            // `lexical` is the id-and-score API on the query's word set.
+            ensure!(
+                matches!(args.api.as_str(), "documents" | "lexical"),
+                "--api takes documents or lexical, not {:?}",
+                args.api
+            );
+            let lexical_api = args.api == "lexical";
             let lexical = LexicalOptions {
                 k: 100,
                 ..Default::default()
             };
-            let search = |text: &str| -> Result<Vec<Hit>> {
-                let query = LexicalQuery::parse(&words(text).join(" "))?;
-                Ok(core
-                    .search_lexical(&query, &lexical)?
-                    .hits
-                    .into_iter()
-                    .map(|h| Hit {
-                        document_id: h.document_id,
-                        lexical_score: h.score,
-                    })
-                    .collect())
+            let search = |query: &Query| -> Result<Vec<Hit>> {
+                if lexical_api {
+                    let parsed = LexicalQuery::parse(&words(&query.text).join(" "))?;
+                    Ok(core
+                        .search_lexical(&parsed, &lexical)?
+                        .hits
+                        .into_iter()
+                        .map(|h| Hit {
+                            document_id: h.document_id,
+                            lexical_score: h.score,
+                        })
+                        .collect())
+                } else {
+                    Ok(core
+                        .search_documents(&query.text, &query.options)?
+                        .into_iter()
+                        .map(|r| Hit {
+                            document_id: r.document_id,
+                            lexical_score: r.score,
+                        })
+                        .collect())
+                }
             };
-            search(&input.queries[0].text)?;
+            search(&input.queries[0])?;
             let cold_start_s = (epoch_ns().saturating_sub(args.t0_ns)) as f64 / 1e9;
             for query in input.queries.iter().take(16) {
-                search(&query.text)?;
+                search(query)?;
             }
             let mut rows = Vec::new();
             let mut passes = Vec::new();
@@ -251,7 +274,7 @@ fn main() -> Result<()> {
                 let mut ns = Vec::with_capacity(input.queries.len());
                 for query in &input.queries {
                     let t = Instant::now();
-                    let results = search(&query.text)?;
+                    let results = search(query)?;
                     ns.push(t.elapsed().as_nanos() as u64);
                     if pass == 0 {
                         rows.push(Row {
