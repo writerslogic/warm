@@ -12,6 +12,11 @@
 //!          Lucene arm and WARM keep theirs.
 //! `ops`    replaces `--ops` documents and then deletes `--ops` others, one commit each.
 //!
+//! The documents contract builds the stored variant (`--stored true`): the body text and the `bucket`
+//! metadata value are stored beside the id, and `serve --digest true` fetches every hit's stored
+//! document inside the timed region (`Searcher::doc`) and reads all three fields. `--docstore` and
+//! `--doc-cache` choose the doc-store compressor and the reader's decompressed-block cache size.
+//!
 //! Schema and analyzer match the tantivy-py arm (`text_worker.py`): `id` raw-tokenized and
 //! stored, `body` indexed with positions through `en_stem`, OR over the lowercase alphanumeric
 //! query word set, top 100. The crate version is pinned to the tantivy-py pin's tantivy.
@@ -23,17 +28,22 @@ use std::{
     path::PathBuf,
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
+use tantivy::Document as _;
 use tantivy::{
     collector::{Count, TopDocs},
     doc,
     query::{Query, QueryParser},
-    schema::{Field, IndexRecordOption, Schema, TextFieldIndexing, TextOptions},
-    Index, IndexReader, ReloadPolicy, Term,
+    schema::{
+        Field, IndexRecordOption, Schema, TextFieldIndexing, TextOptions, Value, INDEXED, STORED,
+    },
+    store::Compressor,
+    Index, IndexReader, IndexSettings, ReloadPolicy, TantivyDocument, Term,
 };
 
 const USAGE: &str =
     "usage: competitive_text_tantivy <build|serve|ops> --input FILE --store DIR --out FILE \
-    [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--collector topk|count (topk)]";
+    [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--collector topk|count (topk)] \
+    [--stored true|false (false)] [--digest true|false (false)] [--docstore lz4|none (lz4)] [--doc-cache N (10)]";
 const K: usize = 100;
 const BUILD_HEAP: usize = 200_000_000;
 const OPS_HEAP: usize = 50_000_000;
@@ -47,6 +57,10 @@ struct Args {
     ops: usize,
     t0_ns: u128,
     exhaustive: bool,
+    stored: bool,
+    digest: bool,
+    docstore_none: bool,
+    doc_cache: usize,
 }
 
 impl Args {
@@ -56,6 +70,7 @@ impl Args {
         let (mut input, mut store, mut out) = (None, None, None);
         let (mut passes, mut ops, mut t0_ns) = (3, 100, 0);
         let mut exhaustive = false;
+        let (mut stored, mut digest, mut docstore_none, mut doc_cache) = (false, false, false, 10);
         while let Some(flag) = words.next() {
             let value = words
                 .next()
@@ -75,6 +90,16 @@ impl Args {
                         _ => bail!("--collector takes topk or count; {USAGE}"),
                     }
                 }
+                "--stored" => stored = value.parse().with_context(number)?,
+                "--digest" => digest = value.parse().with_context(number)?,
+                "--doc-cache" => doc_cache = value.parse().with_context(number)?,
+                "--docstore" => {
+                    docstore_none = match value.as_str() {
+                        "lz4" => false,
+                        "none" => true,
+                        _ => bail!("--docstore takes lz4 or none; {USAGE}"),
+                    }
+                }
                 _ => bail!("unknown argument {flag}; {USAGE}"),
             }
         }
@@ -87,6 +112,10 @@ impl Args {
             ops,
             t0_ns,
             exhaustive,
+            stored,
+            digest,
+            docstore_none,
+            doc_cache,
         })
     }
 }
@@ -95,6 +124,18 @@ impl Args {
 struct Document {
     id: String,
     text: String,
+    #[serde(default)]
+    metadata: Option<serde_json::Value>,
+}
+
+impl Document {
+    fn bucket(&self) -> u64 {
+        self.metadata
+            .as_ref()
+            .and_then(|m| m.get("bucket"))
+            .and_then(|b| b.as_u64())
+            .unwrap_or(0)
+    }
 }
 
 #[derive(Deserialize)]
@@ -122,7 +163,49 @@ fn words(text: &str) -> Vec<String> {
     out
 }
 
-fn schema() -> (Schema, Field, Field) {
+/// CRC-32 (IEEE, reflected), the digest every arm of the documents contract records.
+const CRC_TABLE: [u32; 256] = {
+    let mut table = [0u32; 256];
+    let mut i = 0;
+    while i < 256 {
+        let mut c = i as u32;
+        let mut k = 0;
+        while k < 8 {
+            c = if c & 1 != 0 { 0xEDB8_8320 ^ (c >> 1) } else { c >> 1 };
+            k += 1;
+        }
+        table[i] = c;
+        i += 1;
+    }
+    table
+};
+
+fn crc32(bytes: &[u8]) -> u32 {
+    let mut c = !0u32;
+    for &b in bytes {
+        c = CRC_TABLE[((c ^ u32::from(b)) & 0xff) as usize] ^ (c >> 8);
+    }
+    !c
+}
+
+/// Schema fields: id, body and (stored variant) the `bucket` metadata value.
+struct Fields {
+    id: Field,
+    body: Field,
+    bucket: Option<Field>,
+}
+
+impl Fields {
+    fn document(&self, id: &str, text: &str, bucket: u64) -> TantivyDocument {
+        let mut document = doc!(self.id => id, self.body => text);
+        if let Some(field) = self.bucket {
+            document.add_u64(field, bucket);
+        }
+        document
+    }
+}
+
+fn schema(stored: bool) -> (Schema, Fields) {
     let mut builder = Schema::builder();
     // Raw-tokenized id: stored, indexed for `delete_term`, and a fast field so a hit's id is a
     // column read rather than a document-store decompression.
@@ -137,15 +220,18 @@ fn schema() -> (Schema, Field, Field) {
                     .set_index_option(IndexRecordOption::Basic),
             ),
     );
-    let body = builder.add_text_field(
-        "body",
-        TextOptions::default().set_indexing_options(
-            TextFieldIndexing::default()
-                .set_tokenizer("en_stem")
-                .set_index_option(IndexRecordOption::WithFreqsAndPositions),
-        ),
+    let mut body_options = TextOptions::default().set_indexing_options(
+        TextFieldIndexing::default()
+            .set_tokenizer("en_stem")
+            .set_index_option(IndexRecordOption::WithFreqsAndPositions),
     );
-    (builder.build(), id, body)
+    if stored {
+        body_options = body_options.set_stored();
+    }
+    let body = builder.add_text_field("body", body_options);
+    // The metadata value WARM's `DocumentResult` carries, stored with the body in the stored variant only.
+    let bucket = stored.then(|| builder.add_u64_field("bucket", STORED | INDEXED));
+    (builder.build(), Fields { id, body, bucket })
 }
 
 fn epoch_ns() -> u128 {
@@ -199,17 +285,28 @@ impl Ids {
 fn main() -> Result<()> {
     let args = Args::parse()?;
     let input: Input = serde_json::from_slice(&std::fs::read(&args.input)?)?;
-    let (schema, id_field, body_field) = schema();
+    let (schema, fields) = schema(args.stored);
+    let (id_field, body_field) = (fields.id, fields.body);
     let report = match args.phase.as_str() {
         "build" => {
             ensure!(!args.store.exists(), "store exists; remove it first");
             std::fs::create_dir_all(&args.store)?;
             let start = Instant::now();
-            let index = Index::create_in_dir(&args.store, schema)?;
+            let settings = IndexSettings {
+                docstore_compression: if args.docstore_none {
+                    Compressor::None
+                } else {
+                    Compressor::default()
+                },
+                ..IndexSettings::default()
+            };
+            let index = Index::builder()
+                .schema(schema)
+                .settings(settings)
+                .create_in_dir(&args.store)?;
             let mut writer = index.writer_with_num_threads(1, BUILD_HEAP)?;
             for d in &input.documents {
-                writer
-                    .add_document(doc!(id_field => d.id.as_str(), body_field => d.text.as_str()))?;
+                writer.add_document(fields.document(&d.id, &d.text, d.bucket()))?;
             }
             writer.commit()?;
             // Merged to one segment, as the Lucene arm is force-merged: queries then pay one
@@ -223,7 +320,8 @@ fn main() -> Result<()> {
             let segments = index.searchable_segment_ids()?.len();
             ensure!(segments == 1, "expected one segment, found {segments}");
             json!({"documents": input.documents.len(), "ingest_s": start.elapsed().as_secs_f64(),
-                "tantivy": "0.27.0", "threads": 1, "heap_bytes": BUILD_HEAP,
+                "tantivy": "0.27.0", "threads": 1, "stored": args.stored,
+                "docstore": if args.docstore_none { "none" } else { "default (lz4)" }, "heap_bytes": BUILD_HEAP,
                 "segments_before_merge": segments_before.len(), "segments": segments})
         }
         "serve" => {
@@ -233,54 +331,113 @@ fn main() -> Result<()> {
             );
             let start = Instant::now();
             let index = Index::open_in_dir(&args.store)?;
-            let reader = index
+            let reader: IndexReader = index
                 .reader_builder()
                 .reload_policy(ReloadPolicy::Manual)
+                .doc_store_cache_num_blocks(args.doc_cache)
                 .try_into()?;
             let searcher = reader.searcher();
-            let ids = Ids::open(&reader)?;
+            // Documents contract: ids come from the fetched stored documents, no id table.
+            ensure!(
+                !args.digest || args.stored,
+                "--digest needs the stored variant (--stored true)"
+            );
+            let ids = if args.digest {
+                Ids { segments: Vec::new() }
+            } else {
+                Ids::open(&reader)?
+            };
             let open_s = start.elapsed().as_secs_f64();
             let parser = QueryParser::for_index(&index, vec![body_field]);
             let top = TopDocs::with_limit(K).order_by_score();
             let top_and_count = (TopDocs::with_limit(K).order_by_score(), Count);
-            let run = |text: &str| -> Result<Vec<(&str, f32)>> {
+            let hits_for = |text: &str| -> Result<Vec<(f32, tantivy::DocAddress)>> {
                 // The query string is reduced to its word set and parsed inside the timed region.
                 let query = parser.parse_query_lenient(&words(text).join(" ")).0;
                 let query: &dyn Query = query.as_ref();
-                let hits = if args.exhaustive {
+                Ok(if args.exhaustive {
                     searcher.search(query, &top_and_count)?.0
                 } else {
                     searcher.search(query, &top)?
-                };
-                Ok(hits
+                })
+            };
+            let run = |text: &str| -> Result<Vec<(&str, f32)>> {
+                Ok(hits_for(text)?
                     .into_iter()
                     .map(|(score, address)| (ids.resolve(address.segment_ord, address.doc_id), score))
                     .collect())
             };
-            run(&input.queries[0].text)?;
+            // Documents contract: every hit's stored document is fetched (`Searcher::doc`) and its id,
+            // body and bucket read, inside the timed region.
+            let run_docs = |text: &str| -> Result<Vec<(f32, TantivyDocument)>> {
+                hits_for(text)?
+                    .into_iter()
+                    .map(|(score, address)| Ok((score, searcher.doc::<TantivyDocument>(address)?)))
+                    .collect()
+            };
+            let bucket_field = fields.bucket;
+            let touch = |found: &[(f32, TantivyDocument)]| {
+                for (score, d) in found {
+                    std::hint::black_box(score);
+                    std::hint::black_box(d.get_first(id_field).and_then(|v| v.as_str()));
+                    std::hint::black_box(d.get_first(body_field).and_then(|v| v.as_str()));
+                    std::hint::black_box(bucket_field.and_then(|f| d.get_first(f)).and_then(|v| v.as_u64()));
+                }
+            };
+            let timed = |text: &str| -> Result<()> {
+                if args.digest {
+                    let found = run_docs(text)?;
+                    touch(&found);
+                } else {
+                    std::hint::black_box(run(text)?);
+                }
+                Ok(())
+            };
+            timed(&input.queries[0].text)?;
             let cold_start_s = (epoch_ns().saturating_sub(args.t0_ns)) as f64 / 1e9;
             for query in input.queries.iter().take(16) {
-                run(&query.text)?;
+                timed(&query.text)?;
             }
             let mut rows = Vec::new();
             let mut passes = Vec::new();
             for pass in 0..args.passes {
                 let mut ns = Vec::with_capacity(input.queries.len());
                 for q in &input.queries {
-                    let t = Instant::now();
-                    let found = run(&q.text)?;
-                    ns.push(t.elapsed().as_nanos() as u64);
-                    if pass == 0 {
+                    if pass == 0 && !args.digest {
+                        let t = Instant::now();
+                        let found = run(&q.text)?;
+                        ns.push(t.elapsed().as_nanos() as u64);
                         let results: Vec<_> = found
                             .into_iter()
                             .map(|(id, score)| json!({"documentId": id, "lexicalScore": score}))
                             .collect();
                         rows.push(json!({"id": q.id, "results": results}));
+                    } else {
+                        let t = Instant::now();
+                        timed(&q.text)?;
+                        ns.push(t.elapsed().as_nanos() as u64);
                     }
                 }
                 passes.push(ns);
             }
-            json!({"open_s": open_s, "collector": if args.exhaustive { "top-100 + Count" } else { "top-100" }, "cold_start_s": cold_start_s, "rows": rows, "passes_ns": passes})
+            if args.digest {
+                // Untimed: what each hit carried, for the orchestrator to compare with the corpus.
+                for q in &input.queries {
+                    let results: Vec<_> = run_docs(&q.text)?
+                        .into_iter()
+                        .map(|(score, d)| {
+                            let body = d.get_first(body_field).and_then(|v| v.as_str()).unwrap_or("");
+                            json!({"documentId": d.get_first(id_field).and_then(|v| v.as_str()).unwrap_or(""),
+                                "lexicalScore": score,
+                                "check": {"crc": crc32(body.as_bytes()), "len": body.len(), "start": 0, "end": body.len(),
+                                    "bucket": bucket_field.and_then(|f| d.get_first(f)).and_then(|v| v.as_u64())}})
+                        })
+                        .collect();
+                    rows.push(json!({"id": q.id, "results": results}));
+                }
+            }
+            json!({"open_s": open_s, "collector": if args.exhaustive { "top-100 + Count" } else { "top-100" }, "cold_start_s": cold_start_s, "rows": rows, "passes_ns": passes,
+                "stored": args.stored, "doc_cache_blocks": args.doc_cache})
         }
         "ops" => {
             ensure!(
@@ -294,8 +451,7 @@ fn main() -> Result<()> {
             for d in input.documents.iter().take(args.ops) {
                 writer.delete_term(Term::from_field_text(id_field, &d.id));
                 let text = format!("{} benchmarkrevision", d.text);
-                writer
-                    .add_document(doc!(id_field => d.id.as_str(), body_field => text.as_str()))?;
+                writer.add_document(fields.document(&d.id, &text, d.bucket()))?;
                 writer.commit()?;
             }
             let replace_s = t.elapsed().as_secs_f64();

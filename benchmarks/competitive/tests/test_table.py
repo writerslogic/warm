@@ -59,16 +59,24 @@ def test_every_cell_recomputes_from_its_results_file():
     cells = json.loads(table.CELLS.read_text())
     markdown = table.COMPARISON.read_text()
     assert cells, "empty cell index"
-    by_file = {}
+    by_file, fresh_views = {}, {}
     for cell in cells:
         by_file.setdefault(cell["file"], []).append(cell)
     for file, group in by_file.items():
         path = ROOT / file
-        data = json.loads(path.read_text())
-        metrics, _, _ = table.metrics_for(path, data)
-        entries, _ = table.per_build_for(path, data)
-        by_build = {(e["system"], e["build"], e["metric"]): e for e in entries}
+        whole = json.loads(path.read_text())
+        # A file written under two text timing contracts is read as one view per contract; a cell belongs to the view
+        # named in its section title. Both views share the file's Bonferroni family.
+        views = [d for _, d in table.contract_views(path, whole)]
+        siblings = [d for d in views if d.get("contract")]
         for cell in group:
+            data = next((d for d in views if not d.get("contract") or f"{d['contract']} contract" in cell["section"]), None)
+            assert data is not None, cell["section"]
+            if (file, data.get("contract")) not in fresh_views:
+                metrics, _, _ = table.metrics_for(path, data, siblings)
+                entries, _ = table.per_build_for(path, data)
+                fresh_views[(file, data.get("contract"))] = (metrics, {(e["system"], e["build"], e["metric"]): e for e in entries})
+            metrics, by_build = fresh_views[(file, data.get("contract"))]
             if cell.get("per_build"):
                 system, build = cell["per_build"]
                 entry = by_build[(system, build, cell["metric"])]

@@ -345,6 +345,9 @@ def _warm_ann_round(directory, meta, workdir):
     return raw
 
 
+TANTIVY_NATIVE = ("tantivy-rs", "tantivy-rs-count", "tantivy-rs-docs", "tantivy-rs-count-docs")
+
+
 def _adapter_class(system):
     import importlib.util
     spec = importlib.util.spec_from_file_location("ann_worker_meta", WORKER_DIR / "ann_worker.py")
@@ -365,12 +368,12 @@ def _attach_versions_and_footprints(results):
                                 "compiler": subprocess.run(["g++", "--version"], capture_output=True, text=True).stdout.splitlines()[0],
                                 "flags": "-O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux)"}
             continue
-        if system in ("tantivy-rs", "tantivy-rs-count"):
+        if system in TANTIVY_NATIVE:
             entry["version"] = {"tantivy": registry.TANTIVY_CRATE, "rustc": subprocess.run(["rustc", "--version"], capture_output=True, text=True).stdout.strip()}
             entry["install"] = warm_install_facts([warm_binary("competitive_text_tantivy", example=True)], crates=False)
             continue
-        if system in ("lucene", "lucene-prev"):
-            version = jars.VERSION if system == "lucene" else jars.PREVIOUS
+        if system in ("lucene", "lucene-docs", "lucene-prev"):
+            version = jars.PREVIOUS if system == "lucene-prev" else jars.VERSION
             entry["version"] = {"lucene": version, "jvm": jars.java_version()}
             entry["install"] = jars.footprint(version)
             continue
@@ -412,8 +415,10 @@ def run_text(dataset, spec, systems, out_path=None):
                "protocol": {"measurement_version": 2, "resampling_unit": "independent process-round summaries", "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied", "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "k": 100, "passes_per_round": 3,
                             "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems),
                             "retrieval": "lexical only, OR over the lowercase alphanumeric query word set, top 100; each system's own analyzer and default BM25",
-                            "timing": "one query at a time, single client thread; one contract for every system: raw query string in, the engine's own query analysis and construction inside the timed region, top-100 (id, score) pairs out and no document bodies; WARM timed inside its process, Python systems inside their worker",
-                            "warm_rows": "warm = `--encode lexical` (BM25 index only, like-for-like); warm-eager = default eager encoding (chunk hypervectors at ingest); warm and warm-eager time `search_documents` on the raw query string, warm-lexical-api times `search_lexical` and feeds no verdict; every build repeat is one cold process",
+                            "timing": "one query at a time, single client thread; raw query string in and the engine's own query analysis and construction inside the timed region for every system, under two contracts measured in the same interleaved rounds: ids (top-100 (id, score) pairs out, no document text; indexes store no text) and documents (the top-100 hits come back with their stored document: id, score, stored text and the bucket metadata value; indexes store the same text and bucket); WARM timed inside its process, Python systems inside their worker",
+                            "contracts": {c: {"label": registry.CONTRACT_LABEL[c], "reference": registry.CONTRACT_REFERENCE[c], "systems": [s for s in systems if registry.contract(s) == c]} for c in (registry.IDS, registry.DOCUMENTS)},
+                            "verification": "documents rows: every returned hit's text digest (CRC-32 and byte length), byte range and bucket are compared with the corpus in the orchestrator, and each documents row's round-0 ordered id lists are compared with its engine's ids row; any mismatch fails the run",
+                            "warm_rows": "warm = `--encode lexical` with the document text stored at ingest (`--store-text`), timed through `search_documents` on the raw query string: the documents-contract row; warm-eager = the same with eager encoding (chunk hypervectors at ingest), reference only; warm-lexical-api = `--encode lexical` with no text stored, timed through `search_lexical` on the word set: the ids-contract row; every build repeat is one cold process",
                             "interleaving": "each round runs WARM and every comparator once, order rotated per round",
                             "peak_rss": "wait4 rusage of that phase's own process, forked from a small helper so it never inherits the orchestrator's RSS (Linux)",
                             "disk": "allocated bytes of the store directory (du); where the filesystem reports sparse files as fully allocated, only non-zero 4 KiB blocks count",
@@ -429,6 +434,9 @@ def run_text(dataset, spec, systems, out_path=None):
     threads = {k: "1" for k in SINGLE_THREAD}
     stores = {}
     runs = {s: {"build_runs": [], "serve_rounds": []} for s in systems}
+    corpus = _corpus_digests(input_path) if any(registry.contract(s) == registry.DOCUMENTS for s in systems) else {}
+    verification = {"documents_checks": {}, "pairs": {}}
+    first_rows = {}
     for system in systems:
         store = WORK / f"text-{dataset.replace(':', '-')}" / system
         try:
@@ -451,6 +459,13 @@ def run_text(dataset, spec, systems, out_path=None):
                 stdout, stderr, wall, peak = _text_cmd(system, "serve", serve_input_path, stores[system], out, threads, t0=T0_PLACEHOLDER)
                 body = json.loads(out.read_text())
                 rows = body.pop("rows")
+                if registry.contract(system) == registry.DOCUMENTS:
+                    checked = _check_documents(rows, corpus)
+                    prior = verification["documents_checks"].setdefault(system, {k: 0 for k in checked})
+                    for k, v in checked.items():
+                        prior[k] += v
+                if r == 0:
+                    first_rows[system] = rows
                 body["quality"] = _quality(rows, qrels) if r == 0 else None
                 passes_ns = body.pop("passes_ns")
                 for p_, ns in enumerate(passes_ns):
@@ -459,6 +474,11 @@ def run_text(dataset, spec, systems, out_path=None):
                 runs[system]["serve_rounds"].append(body | {"peak_rss_bytes": peak, "wall_s": wall})
             except Exception as error:
                 results["skipped"][system] = str(error)[-600:]
+    for system in live:
+        base = system.removesuffix("-docs") if system.endswith("-docs") else registry.WARM_LEXICAL_API if system in registry.WARM_TEXT_STORED else None
+        if base in first_rows and system in first_rows:
+            verification["pairs"][system] = {"ids_row": base} | _pair_ids(first_rows[system], first_rows[base])
+    results["verification"] = verification
     for system in live:
         if os.environ.get("WARM_BENCH_SKIP_OPS"):  # durable replace/delete fsync per operation dominates a loaded local disk
             runs[system]["ops"] = {"error": "skipped: WARM_BENCH_SKIP_OPS"}
@@ -475,7 +495,7 @@ def run_text(dataset, spec, systems, out_path=None):
         shutil.rmtree(copy, ignore_errors=True)
     for system, body in runs.items():
         if system in stores:
-            results["systems"][system] = {"display": registry.SYSTEMS[system]["display"], **body}
+            results["systems"][system] = {"display": registry.SYSTEMS[system]["display"], "contract": registry.contract(system), **body}
     _attach_versions_and_footprints(results)
     for system in registry.WARM_TEXT_ENCODE:
         if system in results["systems"]:
@@ -484,27 +504,89 @@ def run_text(dataset, spec, systems, out_path=None):
     out_path = out_path or _out_dir(spec) / f"{spec['name']}-text-{dataset.replace(':', '-')}-{hw['class']}.json"
     results["raw_latency"] = raw.write(out_path)
     write_json(out_path, results)
+    failed = [s for s, c in verification["documents_checks"].items() if c["text_mismatches"] or c["bucket_mismatches"] or c["unknown_ids"] or c["empty_text"]]
+    failed += [s for s, c in verification["pairs"].items() if c["queries_with_different_id_lists"]]
+    if failed:
+        raise SystemExit(f"documents-contract verification failed for {sorted(set(failed))} (see `verification` in {out_path})")
     return out_path
 
 
 def _text_cmd(system, phase, input_path, store, out, env, t0=None):
     t0 = t0 or T0_PLACEHOLDER
+    stored = registry.contract(system) == registry.DOCUMENTS
     if system in registry.WARM_TEXT_ENCODE:
         cmd = [str(warm_binary("competitive_text", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--encode", registry.WARM_TEXT_ENCODE[system]]
+        if phase == "build":
+            cmd += ["--store-text", "true" if system in registry.WARM_TEXT_STORED else "false"]
         if phase == "serve":
             cmd += ["--api", registry.WARM_TEXT_API[system]]
-    elif system in ("tantivy-rs", "tantivy-rs-count"):
+            if system in registry.WARM_TEXT_STORED:
+                cmd += ["--digest", "true"]
+    elif system in TANTIVY_NATIVE:
         cmd = [str(warm_binary("competitive_text_tantivy", example=True)), phase, "--input", str(input_path), "--store", str(store),
-               "--out", str(out), "--t0-ns", str(t0), "--collector", "count" if system == "tantivy-rs-count" else "topk"]
-    elif system in ("lucene", "lucene-prev"):
-        classpath, _ = jars.ensure(jars.VERSION if system == "lucene" else jars.PREVIOUS)
+               "--out", str(out), "--t0-ns", str(t0), "--collector", "count" if system.startswith("tantivy-rs-count") else "topk"]
+        if stored:
+            cmd += ["--stored", "true", "--docstore", registry.TANTIVY_DOCSTORE]
+            if phase == "serve":
+                cmd += ["--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE)]
+    elif system in ("lucene", "lucene-docs", "lucene-prev"):
+        classpath, _ = jars.ensure(jars.PREVIOUS if system == "lucene-prev" else jars.VERSION)
         cmd = ["java", *registry.LUCENE_JVM_FLAGS[phase], "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
+        if stored:
+            cmd += ["english", "stored"]
     else:
         python = envs.ensure(registry.SYSTEMS[system]["env"])
         cmd = [str(python), "-I", str(WORKER_DIR / "text_worker.py"), phase, "--system", system, "--input", str(input_path),
                "--store", str(store), "--out", str(out), "--t0-ns", str(t0)]
     return run_measured(_pin(cmd, phase), env=env, timeout=7200)
+
+
+def _corpus_digests(input_path):
+    """{document id: (utf-8 bytes of the text, bucket)} of a text corpus, for the documents-contract checks."""
+    out = {}
+    for d in json.loads(Path(input_path).read_text())["documents"]:
+        out[d["id"]] = (d["text"].encode("utf-8"), (d.get("metadata") or {}).get("bucket"))
+    return out
+
+
+def _check_documents(rows, corpus):
+    """Compare what every returned hit carried (CRC-32 and length of its text, byte range, bucket) with the corpus. Returns
+    counts; a hit passes when its text equals the corpus bytes of its range and its bucket equals the corpus bucket."""
+    import zlib
+    counts = {"hits": 0, "text_mismatches": 0, "bucket_mismatches": 0, "unknown_ids": 0, "partial_ranges": 0, "empty_text": 0}
+    for row in rows:
+        for hit in row["results"]:
+            check = hit.pop("check", None)
+            counts["hits"] += 1
+            entry = corpus.get(hit["documentId"])
+            if check is None or entry is None:
+                counts["unknown_ids"] += 1
+                continue
+            text, bucket = entry
+            start, end = check["start"], check["end"]
+            if (start, end) != (0, len(text)):
+                counts["partial_ranges"] += 1
+            expected = text[start:end]
+            if check["len"] == 0:
+                counts["empty_text"] += 1
+            if check["len"] != len(expected) or check["crc"] != zlib.crc32(expected):
+                counts["text_mismatches"] += 1
+            if check["bucket"] != bucket:
+                counts["bucket_mismatches"] += 1
+    return counts
+
+
+def _pair_ids(docs_rows, ids_rows):
+    """Queries whose ordered top-100 id list differs between an engine's documents row and its ids row, and the largest score gap."""
+    differing, gap = 0, 0.0
+    for d, i in zip(docs_rows, ids_rows):
+        a, b = [h["documentId"] for h in d["results"]], [h["documentId"] for h in i["results"]]
+        if a != b or d["id"] != i["id"]:
+            differing += 1
+        else:
+            gap = max([gap] + [abs(x["lexicalScore"] - y["lexicalScore"]) for x, y in zip(d["results"], i["results"])])
+    return {"queries": len(docs_rows), "queries_with_different_id_lists": differing, "max_abs_score_gap": gap}
 
 
 def _quality(rows, qrels):

@@ -13,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 
-from . import analyze, registry
+from . import analyze, jars, registry
 from .common import RESULTS, ROOT
 
 DOCS = ROOT / "docs/benchmarks"
@@ -106,15 +106,33 @@ def load_results():
                data.get("mode", "embedded"))
         if key not in found or data["date"] > found[key][1]["date"]:
             found[key] = (path, data)
-    return sorted(found.values(), key=lambda pd: (pd[1]["kind"], str(pd[1]["dataset"]), pd[1]["suite"], pd[1]["hardware"]["class"]))
+    views = [view for path, data in found.values() for view in contract_views(path, data)]
+    return sorted(views, key=lambda pd: (pd[1]["kind"], str(pd[1]["dataset"]), pd[1]["suite"], pd[1]["hardware"]["class"], pd[1].get("contract", "")))
+
+
+def contract_views(path, data):
+    """A text results file written under two timing contracts is read as one view per contract: the systems of that
+    contract and its WARM reference row (`protocol.contracts`). The cell source paths keep the file's own system keys.
+    A file without contracts is one view, unchanged."""
+    contracts = (data.get("protocol") or {}).get("contracts")
+    if data["kind"] != "text" or not contracts:
+        return [(path, data)]
+    views = []
+    for name, spec in contracts.items():
+        members = {s: v for s, v in data["systems"].items() if v.get("contract", registry.contract(s)) == name}
+        if spec["reference"] in members:
+            views.append((path, {**data, "systems": members, "reference": spec["reference"], "contract": name}))
+    return views
 
 
 def display(system, data=None):
     """Name of a system as measured: Lucene carries the version recorded in the result file, never the current pin."""
     name = registry.system(system)["display"]
-    if system == "lucene":
+    if system in ("lucene", "lucene-docs"):
         recorded = (((data or {}).get("systems") or {}).get(system) or {}).get("version") or {}
-        return f"Apache Lucene {recorded['lucene']} (JVM)" if recorded.get("lucene") else "Apache Lucene (JVM)"
+        if recorded.get("lucene"):
+            return name.replace(f"Lucene {jars.VERSION}", f"Lucene {recorded['lucene']}")
+        return name.replace(f" {jars.VERSION}", "")
     return name
 
 
@@ -246,43 +264,41 @@ def per_build_for(path, data):
     return entries, level
 
 
-def metrics_for(path, data):
+def metrics_for(path, data, siblings=()):
     """Cells at a Bonferroni-adjusted level: the family is the verdict-bearing metrics of this
-    results file (those where WARM and at least one comparator have a value)."""
+    results file (those where WARM and at least one comparator have a value). A file read under two timing
+    contracts counts both contracts in one family: the two verdict sets are read side by side."""
     kind = data["kind"]
     fn = analyze.ann_metrics if kind == "ann" else analyze.text_metrics
     spec = ANN_METRICS if kind == "ann" else TEXT_METRICS
-    def measured(level=0.95):
-        metrics = fn(rel(path), data, level=level)
-        revision = data.get("commit", "")
-        pinned = bool(re.fullmatch(r"[0-9a-fA-F]{40}", revision))
-        for metric, systems in metrics.items():
-            status = data.get("measurement_validity", {}).get(metric, {})
-            for c in systems.values():
-                validity = analyze.Validity(status.get("status", "valid"))
-                c["validity"] = analyze.Validity.UNVERIFIED if not pinned and validity == analyze.Validity.VALID else validity
-                c["validity_reason"] = status.get("reason", "") or ("" if pinned else "source revision is not pinned")
-                if c["validity"] == "invalid":
-                    c.update(value=None, ci=[None, None], n=0, note=c["validity_reason"])
+
+    def cells_of(view, level):
+        metrics = fn(rel(path), view, level=level)
+        _mark_validity(view, metrics)
         return metrics
-    first = measured()
-    ref = reference(data)
-    family = sum(1 for k, *_ in spec if not analyze.no_verdict(kind, k, data.get("mode", "embedded")) and ref in first.get(k, {})
-                 and first[k][ref]["value"] is not None and best_other(k, first[k])[0] is not None
-                 and verdict(advantage(k, first[k][ref], best_other(k, first[k])[1])) in ("WIN", "TIE", "LOSS"))
+
+    def family_of(view):
+        first = cells_of(view, 0.95)
+        ref = reference(view)
+        return sum(1 for k, *_ in spec if not analyze.no_verdict(kind, k, view.get("mode", "embedded")) and ref in first.get(k, {})
+                   and first[k][ref]["value"] is not None and best_other(k, first[k])[0] is not None
+                   and verdict(advantage(k, first[k][ref], best_other(k, first[k])[1])) in ("WIN", "TIE", "LOSS"))
+    family = sum(family_of(v) for v in siblings) if siblings else family_of(data)
     level = 1 - 0.05 / max(family, 1)
-    return measured(level), level, family
+    return cells_of(data, level), level, family
 
 
-def section(path, data):
+def section(path, data, siblings=()):
     kind = data["kind"]
-    metrics, level, family = metrics_for(path, data)
+    metrics, level, family = metrics_for(path, data, siblings)
     spec = ANN_METRICS if kind == "ann" else TEXT_METRICS
     hw = data["hardware"]
     ds = data["dataset"]
     title = f"{ds.get('id') or ds['name']}" + (f" ({ds['n_train']:,} vectors, {ds['n_test']:,} queries)" if kind == "ann" else f" ({ds['documents']:,} documents, {ds['queries']:,} queries)")
     if is_server(data):
         title += ", server mode"
+    if data.get("contract"):
+        title += f", {data['contract']} contract"
     per_build, build_level = per_build_for(path, data)
     return {"path": path, "data": data, "metrics": metrics, "spec": spec, "title": title, "hw": hw, "kind": kind,
             "level": level, "family": family, "per_build": per_build, "build_level": build_level}
@@ -292,6 +308,16 @@ def timing_boundary_lines(data):
     boundary = data.get("timing_boundary", {})
     present = [s for s in data["systems"] if s in boundary]
     return ["Timing boundary (where each query is timed): " + "; ".join(f"{display(s, data)}: {boundary[s]}" for s in present) + ".", ""] if present else []
+
+
+def contract_lines(data):
+    name = data.get("contract")
+    if not name:
+        return []
+    reference_row = reference(data)
+    others = [display(s, data) for s in data["systems"] if s != reference_row and registry.system(s)["family"] != "warm"]
+    return [f"Timing contract: **{registry.CONTRACT_LABEL[name]}**. Every verdict in this section is the `{reference_row}` row ({display(reference_row, data)}) "
+            f"against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: {'; '.join(others)}.", ""]
 
 
 def interval_text(sec):
@@ -310,6 +336,7 @@ def render_section(sec, cells_out):
              f"Suite `{data['suite']}`, hardware class `{hw['class']}` ({hw['cpu']}, {hw['logical_cores']} logical cores, {hw['memory_bytes'] / 2**30:.0f} GiB, " +
              f"{hw['os']}{', GitHub-hosted runner' if hw.get('hosted_runner') else ''}), commit `{data['commit'][:10]}`, {data['date'][:10]}. " +
              f"Raw results: [{path.name}](../../{rel(path)}). {interval_text(sec)}", "",
+             *contract_lines(data),
              *timing_boundary_lines(data),
              f"| Metric | {'warm-server' if is_server(data) else 'WARM'} | Best other | Advantage (WARM vs best other) | Verdict |", "|---|---|---|---|---|"]
     tally = {"WIN": [], "TIE": [], "LOSS": [], "n/m": [], "n/v": []}
@@ -417,7 +444,7 @@ def ingest_mode_lines(sec):
     metrics, data = sec["metrics"], sec["data"]
     if registry.WARM not in data["systems"] or registry.WARM_EAGER not in data["systems"]:
         return []
-    lines = ["WARM ingest modes. Verdicts above use `warm` (lexical-only ingest, like-for-like with the lexical comparators). `warm-eager` "
+    lines = ["WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` "
              "(chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:", "",
              "| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |", "|---|---|---|---|"]
     for key, label, unit, dec in sec["spec"]:
@@ -505,7 +532,7 @@ def build():
     # Embedded sections first, then server-mode sections under their own heading: a server row is
     # never compared with an embedded one.
     results = sorted(load_results(), key=lambda pd: is_server(pd[1]))
-    sections = [section(p, d) for p, d in results]
+    sections = [section(p, d, [d2 for p2, d2 in results if p2 == p and d.get("contract") and d2.get("contract")]) for p, d in results]
     cells = []
     body, server_body, summary, losses = [], [], [], []
     for sec in sections:
@@ -621,7 +648,7 @@ def readme_block(summary):
         if sec["data"]["suite"] == "smoke":
             continue
         spec = {k: (label, unit, dec) for k, label, unit, dec in sec["spec"]}
-        short = sec["title"].split(" (")[0]
+        short = sec["title"].split(" (")[0] + (f" ({sec['data']['contract']})" if sec["data"].get("contract") else "")
         mode = sec["data"].get("mode", "embedded")
         for key in HEADLINE[sec["kind"]]:
             if key in analyze.ANN_PER_BUILD and analyze.no_verdict(sec["kind"], key, mode):
@@ -642,7 +669,7 @@ def readme_block(summary):
             if eager and eager["value"] is not None:
                 lines.append(f"| {short} | `{sec['hw']['class']}` | {label} ({unit}), WARM with eager ingest (reference, feeds no verdict) | {fmt(eager['value'], dec)} | - | - | - |")
             lexapi = sec["metrics"].get(key, {}).get(registry.WARM_LEXICAL_API) if key == "qps" else None
-            if lexapi and lexapi["value"] is not None:
+            if lexapi and lexapi["value"] is not None and ref != registry.WARM_LEXICAL_API:
                 lines.append(f"| {short} | `{sec['hw']['class']}` | {label} ({unit}), WARM lexical-only API `search_lexical` (reference, feeds no verdict) | {fmt(lexapi['value'], dec)} | - | - | - |")
         if sec["per_build"]:
             counts = {v: sum(1 for e in sec["per_build"] if e["metric"] in ("build_seconds", "serving_rss_mib") and e["verdict"] == v) for v in ("WIN", "TIE", "LOSS")}
