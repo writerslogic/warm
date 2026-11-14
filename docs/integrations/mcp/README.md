@@ -12,7 +12,7 @@ cargo build --release --features mcp,security --bin warm-mcp     # add local-mod
 ./target/release/warm-mcp --transport http                        # http://127.0.0.1:8765/mcp
 ```
 
-After the first release the launchers fetch a prebuilt binary for you:
+The launchers fetch a prebuilt, checksum-verified binary for you:
 
 ```sh
 npx -y writerslogic-warm-mcp          # npm launcher

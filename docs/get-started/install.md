@@ -25,7 +25,8 @@ Package installation needs network access; the engine can run offline after inst
 |---|---|
 | Rust 1.89 or newer (the MSRV) | the Rust crate, the HTTP server and embedded Node source builds |
 | Node 18 or newer, or standard Fetch and Web Streams APIs | the portable JavaScript client |
-| Node 22 or newer | the embedded Node bindings; Node 24 for the native quickstart, which uses `node:sqlite` |
+| Node 18 or newer | the embedded Node bindings (verified on 18.19); Node 24 for the native quickstart, which uses `node:sqlite` |
+| Node 20.19 or newer | building the portable JavaScript client from a checkout (`tsup`) |
 | Python 3.11 or newer | the Python HTTP SDK (`warm-python` needs 3.9) |
 
 For Python, create and activate a virtual environment first: `uv venv`, then
@@ -52,19 +53,20 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     uv pip install warm-sdk
     ```
 
-    Build and start the server from a checkout, then point the client at it:
+    Install a prebuilt server (checksum-verified, from the `server-v<version>` GitHub release;
+    Linux glibc and macOS, no Alpine) and start it:
 
     ```sh
-    git clone https://github.com/writerslogic/warm
-    cd warm
-    cargo build --release --features server --bin warm-server
-    WARM_API_KEY=change-me target/release/warm-server --input-dim 384
+    curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+    WARM_API_KEY=change-me warm-server --input-dim 384
     ```
 
-    The `warm-python` wheel runs the engine in-process, imported as `writerslogic_warm`: `Warm`
-    provides document search (`memorize_document`, `search_documents`), the memory API
-    (`remember`, `recall`, `forget`, `explain`) and vector search, next to the native vector
-    indexes and phase vectors.
+    To build it from a checkout instead: `cargo build --release --features server --bin warm-server`.
+
+    The `warm-python` wheel runs native code in-process, imported as `writerslogic_warm`. The
+    0.6.8 wheel provides the vector indexes and phase vectors only. The in-process `Warm` class
+    (document search, `remember`, `recall`, `forget`, `explain`) is on `main` and ships with
+    the release after 0.6.8.
 
     ```sh
     uv pip install warm-python

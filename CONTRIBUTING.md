@@ -21,7 +21,7 @@ privately as described in [SECURITY.md](SECURITY.md), never in a public issue.
 
 The default Rust library supports Rust 1.89 or newer. `local-models` and
 `--all-features` need Rust 1.94 or newer; CI uses the current stable toolchain.
-The Node bindings require Node.js 22 or newer (24 for the quickstart, which uses
+The Node bindings require Node.js 18 or newer (24 for the quickstart, which uses
 `node:sqlite`). The HTTP Python SDK requires Python 3.11 or newer (the published 0.1.3 still declares 3.10); native Python
 binding requirements are documented separately.
 
