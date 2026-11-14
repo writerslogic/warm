@@ -147,12 +147,14 @@ existing bytes and do not claim a fresh performance measurement.
   accepted serving rows (`benchmarks/results/serving_memory_v40.json`) drive both arms from Node,
   which narrows WARM's lead against SQLite; the two protocols are not interchangeable.
 * Text timing contract, the same for every system: the input is the raw query string, the timed region
-  holds the reduction to a lowercase alphanumeric word set and that engine's own query analysis and
-  construction (WARM `LexicalQuery::parse`, tantivy `parse_query_lenient`, Lucene analysis, the FTS5 MATCH
-  expression), and the output is the top-100 (id, score) pairs with no document bodies or metadata
-  (WARM `search_lexical`, not `search_documents`). Results written before this contract (the mixed
-  contract) timed WARM through `search_documents` with every comparator's query prepared outside the
-  timer; those runs are kept as evidence only.
+  holds that engine's own query analysis and construction (WARM `search_documents` analyses the raw string;
+  tantivy `parse_query_lenient`, Lucene analysis and the FTS5 MATCH expression run on its lowercase alphanumeric
+  word set), and the output is the top-100 (id, score) pairs. WARM's verdict row calls `search_documents`, the
+  document-search product path, which builds full documents per hit, more than the contract needs. The
+  `warm-lexical-api` row (WARM `search_lexical` on the word set) is reference only and feeds no verdict (at this
+  commit that API hydrates the whole in-memory store before it ranks). Results written
+  before this contract (the mixed contract) timed comparators with their queries prepared outside the timer;
+  those runs are kept as evidence only.
 * tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, a mechanism inferred from that measurement and not profiled, see `benchmarks/results/tantivy_collector_microbench_20261114.txt`; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
   `tantivy-rs` (the native crate in its own process, ids from an array built at open, built by
   `examples/competitive_text_tantivy.rs`, the same tantivy version as the binding). The binding row is
