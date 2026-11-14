@@ -8,8 +8,8 @@
 //! `build`  indexes the corpus (one writer thread, `en_stem` analyzer, one commit).
 //! `serve`  opens the index, answers the first query (cold start), then times `--passes`
 //!          passes over all queries. Queries are parsed before the timed region, as the Python
-//!          comparators receive theirs; document ids are read from a fast field per hit inside
-//!          the timed region.
+//!          comparators receive theirs; document ids come from an array built at open, as the
+//!          Lucene arm and WARM keep theirs.
 //! `ops`    replaces `--ops` documents and then deletes `--ops` others, one commit each.
 //!
 //! Schema and analyzer match the tantivy-py arm (`text_worker.py`): `id` raw-tokenized and
@@ -25,7 +25,6 @@ use std::{
 };
 use tantivy::{
     collector::TopDocs,
-    columnar::StrColumn,
     doc,
     query::{Query, QueryParser},
     schema::{Field, IndexRecordOption, Schema, TextFieldIndexing, TextOptions},
@@ -146,39 +145,44 @@ fn epoch_ns() -> u128 {
         .unwrap_or(0)
 }
 
-/// Document ids of every segment, resolved through the `id` fast field.
+/// Document ids of every segment, read once at open into an array indexed by document id, as the
+/// Lucene arm and WARM keep theirs: a hit's id is then an array read. Resolving through the fast
+/// field's term dictionary per hit costs a dictionary block lookup each and is not what a serving
+/// tantivy application would do inside the query path.
 struct Ids {
-    columns: Vec<StrColumn>,
+    segments: Vec<Vec<String>>,
 }
 
 impl Ids {
     fn open(reader: &IndexReader) -> Result<Self> {
         let searcher = reader.searcher();
-        let columns = searcher
-            .segment_readers()
-            .iter()
-            .map(|segment| {
-                segment
-                    .fast_fields()
-                    .str("id")?
-                    .context("id fast field missing")
-            })
-            .collect::<Result<Vec<_>>>()?;
-        Ok(Ids { columns })
+        let mut segments = Vec::new();
+        for segment in searcher.segment_readers() {
+            let column = segment
+                .fast_fields()
+                .str("id")?
+                .context("id fast field missing")?;
+            let mut table = Vec::with_capacity(segment.max_doc() as usize);
+            let mut buffer = String::new();
+            for doc in 0..segment.max_doc() {
+                let ord = column
+                    .term_ords(doc)
+                    .next()
+                    .context("document without an id")?;
+                buffer.clear();
+                ensure!(
+                    column.ord_to_str(ord, &mut buffer)?,
+                    "id ordinal not in dictionary"
+                );
+                table.push(buffer.clone());
+            }
+            segments.push(table);
+        }
+        Ok(Ids { segments })
     }
 
-    fn resolve(&self, segment: u32, doc: u32, buffer: &mut String) -> Result<String> {
-        let column = &self.columns[segment as usize];
-        let ord = column
-            .term_ords(doc)
-            .next()
-            .context("document without an id")?;
-        buffer.clear();
-        ensure!(
-            column.ord_to_str(ord, buffer)?,
-            "id ordinal not in dictionary"
-        );
-        Ok(buffer.clone())
+    fn resolve(&self, segment: u32, doc: u32) -> &str {
+        &self.segments[segment as usize][doc as usize]
     }
 }
 
@@ -233,17 +237,12 @@ fn main() -> Result<()> {
                 .map(|q| parser.parse_query_lenient(&words(&q.text).join(" ")).0)
                 .collect();
             let collector = TopDocs::with_limit(K).order_by_score();
-            let mut buffer = String::new();
-            let mut run = |query: &dyn Query| -> Result<Vec<(String, f32)>> {
+            let run = |query: &dyn Query| -> Result<Vec<(&str, f32)>> {
                 let hits = searcher.search(query, &collector)?;
-                hits.into_iter()
-                    .map(|(score, address)| {
-                        Ok((
-                            ids.resolve(address.segment_ord, address.doc_id, &mut buffer)?,
-                            score,
-                        ))
-                    })
-                    .collect()
+                Ok(hits
+                    .into_iter()
+                    .map(|(score, address)| (ids.resolve(address.segment_ord, address.doc_id), score))
+                    .collect())
             };
             run(prepared[0].as_ref())?;
             let cold_start_s = (epoch_ns().saturating_sub(args.t0_ns)) as f64 / 1e9;

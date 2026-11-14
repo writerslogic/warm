@@ -69,7 +69,7 @@ TIMING_BOUNDARY = {
     "chroma": "CPython client call per query (Rust core inside)", "qdrant-local": "CPython client call per query (embedded local mode)",
     "milvus-lite": "CPython client call per query (embedded server process)", "duckdb-vss": "CPython duckdb call per query",
     "sqlite-fts5": "CPython sqlite3 call per query (query string built outside the timer)", "tantivy-py": "CPython tantivy-py call per query (query parsed outside the timer; stored id fetched per hit through Python objects)",
-    "tantivy-rs": "native Rust API call in its own process (query parsed outside the timer; id read from a fast field per hit), same process model as WARM",
+    "tantivy-rs": "native Rust API call in its own process (query parsed outside the timer; id from an array built at open), same process model as WARM",
     "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after untimed JIT warm-up passes to steady state; query analyzed outside the timer, ids from an array built at open",
 }
 
@@ -98,7 +98,7 @@ COMPARATOR_SETTINGS = {
                    "id_resolution": "stored field fetched per hit through Python objects (the binding's only document access)",
                    "analyzer": "en_stem, raw id field", "writer": "1 thread, 200 MB heap"},
     "tantivy-rs": {"query": "QueryParser::parse_query_lenient outside the timed region; TopDocs::with_limit(100)",
-                   "id_resolution": "id fast field (column read) per hit", "analyzer": "en_stem, raw id field",
+                   "id_resolution": "array indexed by docid, built at open from the id fast field; no dictionary lookup in the timed region", "analyzer": "en_stem, raw id field",
                    "writer": "1 thread, 200 MB heap", "crate": f"tantivy {TANTIVY_CRATE}", "process": "one process per phase, same as WARM"},
 }
 COMPARATOR_SETTINGS["lucene-prev"] = COMPARATOR_SETTINGS["lucene"]

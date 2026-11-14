@@ -149,7 +149,7 @@ existing bytes and do not claim a fresh performance measurement.
 * Comparator query preparation (word splitting, SQL expression building, Lucene analysis, tantivy
   parsing) is done outside the timer to favour the comparators; WARM's own parsing stays inside it.
 * tantivy is two rows: `tantivy-py` (the CPython binding, ids fetched through Python objects) and
-  `tantivy-rs` (the native crate in its own process, ids from a fast field, built by
+  `tantivy-rs` (the native crate in its own process, ids from an array built at open, built by
   `examples/competitive_text_tantivy.rs`, the same tantivy version as the binding). The binding row is
   never a stand-in for the crate.
 * LanceDB, Chroma and Milvus Lite run Rust or C++ runtimes with their own threads; QPS is still one
