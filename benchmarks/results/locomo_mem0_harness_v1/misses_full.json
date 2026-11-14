@@ -1,0 +1,1113 @@
+{
+ "WARM wrong, Mem0 right": [
+  {
+   "id": "conv0_q110",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What kind of pot did Mel and her kids make with clay?",
+   "gold": "a cup with a dog face on it",
+   "warm": "Clay pots (at a family pottery workshop).",
+   "mem0": "A cup decorated with a dog face."
+  },
+  {
+   "id": "conv0_q15",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What activities does Melanie partake in?",
+   "gold": "pottery, camping, painting, swimming",
+   "warm": "",
+   "mem0": "- Painting (landscapes, still life, abstracts, and animals like horses; painted a lake sunrise in 2022; creates nature\u2011inspired pieces with her kids)\n- Pottery (took classes starting July 2, 2023; made bowls including a black\u2011and\u2011white design; continued on Aug 24, 2023; finds it therapeutic)\n- Running (for de\u2011stress; increased distance by July 12, 2023; ran a charity race for mental health on May 20, 2023)\n- Swimming with her kids (e.g., May 8, 2023)\n- Hiking and camping/outdoor adventures (mountain and forest trips in June and July 2023; campfires, storytelling, stargazing/meteor showers; Grand Canyon visit; nature walks after an Oct 2023 road trip)\n- Frisbee and frisbee golf (family frisbee games; interest in disc golf)\n- Volunteering (spent a day helping at a homeless shelter on Aug 24, 2023)\n- Music (plays violin for me\u2011time; plays clarinet since childhood to relax; attends live music concerts/shows and loves them)\n- Reading (including \u201cBecoming Nicole\u201d; uses reading as daily me\u2011time)\n- Beach outings (once or twice a year with the family; sandcastles and seaside time)\n- Animal interactions (e.g., fed a horse a carrot; enjoys painting horses)"
+  },
+  {
+   "id": "conv0_q151",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Melanie do after the road trip to relax?",
+   "gold": "Went on a nature walk or hike",
+   "warm": "She went camping with her family.",
+   "mem0": "She relaxed by spending peaceful time in nature with her kids\u2014a camping\u2011style reset after the drive."
+  },
+  {
+   "id": "conv0_q32",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What LGBTQ+ events has Caroline participated in?",
+   "gold": "Pride parade, school speech, support group",
+   "warm": "",
+   "mem0": "- LGBTQ support group sessions \u2014 May 7, 2023 and June 26, 2023\n- LGBTQ+ counseling workshop \u2014 June 23, 2023\n- LGBTQ+ Pride parade/event \u2014 around June 26, 2023 (shared photos and described it as a top memory)\n- LGBTQ conference \u2014 July 10, 2023 (connected with others and emphasized trans rights)\n- LGBTQ youth mentorship program \u2014 joined and began participating the weekend of July 15\u201316, 2023 (ongoing as of July 17)\n- \u201cConnected LGBTQ Activists\u201d group \u2014 joined July 18, 2023 (regular meetings and planned campaigns)\n- LGBTQ Pride parade \u2014 August 11, 2023\n- Volunteering at an LGBTQ+ youth center \u2014 August 2023 (shared her story and plans to continue)\n- Transgender poetry reading \u2014 October 6, 2023\n- Pride festival with supportive friends \u2014 2022\n- Organizing an LGBTQ art show featuring her paintings \u2014 slated for late summer 2023 (Aug/Sep), intended to foster understanding and acceptance"
+  },
+  {
+   "id": "conv0_q38",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What activities has Melanie done with her family?",
+   "gold": "Pottery, painting, camping, museum, swimming, hiking",
+   "warm": "",
+   "mem0": "- Camping together (mountains, forest, and beach): explored nature, roasted marshmallows, told stories around the campfire, woke up to birdsong, and watched the Perseid meteor shower and made wishes\n- Hiking as a family: to a summit, along mountain trails, and while visiting the Grand Canyon\n- Beach days: flew a kite, built sandcastles, watched sunsets, and beach\u2011camped around a campfire\n- Family picnic in the park: played games, ate good food, and hung out together\n- Playing frisbee together (family frisbee game)\n- Painting together: created nature\u2011inspired pieces like a vibrant sunset with a palm tree and other joint paintings\n- Museum outing with the kids (July 5, 2023)\n- Park outings with the kids: explored and played (Aug 27, 2023)\n- Volunteering together at a homeless shelter (Aug 24, 2023)\n- Attended a concert to celebrate her daughter\u2019s birthday (Aug 13, 2023)\n- Road trip as a family to the Grand Canyon, followed by a relaxing activity the next day"
+  },
+  {
+   "id": "conv0_q39",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "In what ways is Caroline participating in the LGBTQ community?",
+   "gold": "Joining activist group, going to pride parades, participating in an art show, mentoring program",
+   "warm": "",
+   "mem0": "- Advocacy and organizing\n  - Joined the \u201cConnected LGBTQ Activists\u201d group (July 18, 2023), taking part in regular meetings and helping plan events and campaigns.\n  - Spoke at a school event (early June 2023) about her transgender journey, encouraging students to engage with and support the LGBTQ community.\n  - Attended an LGBTQ conference (July 10, 2023) and continues to speak up for trans rights.\n\n- Mentorship and community support\n  - Joined an LGBTQ youth mentorship program (July 15\u201316, 2023) and has been actively supporting young people.\n  - Volunteers at an LGBTQ+ youth center (August 2023 onward), sharing her story, offering guidance, and intending to keep volunteering.\n\n- Arts-based outreach\n  - Organizing/hosting LGBTQ-themed art shows (planned for August and September 2023) featuring her own work to foster understanding and acceptance.\n  - Creates and shares advocacy art that represents inclusivity, diversity, and her trans experience (e.g., transgender-flag drawings; pieces inspired by visiting an LGBTQ center).\n\n- Community participation and learning\n  - Attends LGBTQ support groups (e.g., May 7 and June 26, 2023) for connection and mutual support.\n  - Participates in Pride events and parades (June 2023 and August 11, 2023).\n  - Engages in learning spaces like an LGBTQ+ counseling workshop (June 23, 2023) and a transgender poetry reading, using these experiences to deepen her advocacy and creative work."
+  },
+  {
+   "id": "conv0_q40",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How many times has Melanie gone to the beach in 2023?",
+   "gold": "2",
+   "warm": "",
+   "mem0": "2 times. (Beach camping around July 6, 2023, and a beach day with her children around July 19, 2023.)"
+  },
+  {
+   "id": "conv1_q43",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What do the dancers in the photo represent?",
+   "gold": "They are performing at the festival",
+   "warm": "They symbolize the \u201cJust do it\u201d spirit\u2014perseverance in chasing your passion and the freedom of self\u2011expression that dance provides.",
+   "mem0": "They represent an energetic performance."
+  },
+  {
+   "id": "conv1_q75",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What does Gina say to Jon about the grand opening?",
+   "gold": "Let's live it up and make some great memories",
+   "warm": "\"Can't wait for tomorrow's grand opening!\"",
+   "mem0": "She tells Jon the studio looks amazing and that she\u2019s pumped for the launch on June 20, 2023; urges him not to miss a beat and to savor the joy and thrill of it; and promises she\u2019ll be right by his side at the opening to make great memories together."
+  },
+  {
+   "id": "conv2_q11",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What people has Maria met and helped while volunteering?",
+   "gold": "David, Jean, Cindy, Laura",
+   "warm": "",
+   "mem0": "- David \u2014 a man Maria met at a Feb 3, 2023 charity event; she helped him by connecting him with a nearby organization that provides housing and support services.\n- Jean \u2014 a woman she met at the shelter on Feb 24, 2023; Maria spent time listening and offering support and connection during a difficult period.\n- Cindy \u2014 a shelter resident who later wrote Maria a heartfelt note of thanks, reflecting the help and care Maria provided.\n- Children at the shelter \u2014 especially during the kids\u2019 event around Jan 21, 2023 and other visits; she played with them and lifted their spirits (including helping someone who had been sad for months laugh again).\n- Veterans \u2014 at a small party she co\u2011hosted with John in May 2023 where they were able to share stories and build friendships.\n- Shelter residents and guests in general \u2014 through organizing and serving meals, dropping off baked goods (late July 2023), and working the front desk (Aug 11, 2023) to help people get food or a bed.\n- A student she mentors \u2014 she supports the student\u2019s growth and learning as part of her volunteer mentoring."
+  },
+  {
+   "id": "conv2_q125",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What does John appreciate about the veteran's hospital visit?",
+   "gold": "the resilience of the veterans and their inspiring stories",
+   "warm": "That it made him appreciate what we have and the need to give back.",
+   "mem0": "He came away deeply appreciating his own circumstances after meeting the inspiring veterans there, and the visit reinforced his commitment to give back."
+  },
+  {
+   "id": "conv2_q62",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How many dogs has Maria adopted from the dog shelter she volunteers at?",
+   "gold": "two",
+   "warm": "1\n\n- 2023-06-03: Maria started volunteering once a month at a local dog shelter.\n- 2023-08-13: She said she \u201cadopted this cute pup from a shelter last week\u201d \u2014 this dog is Shadow.\n- 2023-08-11: She \u201cgot a puppy\u201d named Coco, but this was not stated as an adoption from the shelter, so it isn\u2019t counted.",
+   "mem0": "2"
+  },
+  {
+   "id": "conv2_q63",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "How many weeks passed between Maria adopting Coco and Shadow?",
+   "gold": "two weeks",
+   "warm": "One week.",
+   "mem0": "About 1 week and 2 days (9 days), from around July 28, 2023 (Coco) to around August 6, 2023 (Shadow)."
+  },
+  {
+   "id": "conv2_q8",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "What might John's financial status be?",
+   "gold": "Middle-class or wealthy",
+   "warm": "As of mid\u2011August 2023, John is unemployed and under financial strain. He mentioned car-repair costs straining his wallet in April, briefly got a promotion in June, and then lost his job on August 5, leaving his finances currently tight while he looks for new work.",
+   "mem0": "Around April 2023, John was experiencing financial strain and money problems\u2014sparked by car issues\u2014indicating a tight budget at that time. By June 2023 he earned a promotion to assistant manager, suggesting his finances likely improved afterward. Overall, he appears to be in a modest, working\u2011to\u2011middle\u2011class situation: able to provide resources for his children but vulnerable to unexpected expenses."
+  },
+  {
+   "id": "conv3_q138",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Joanna discover at the library in Woodhaven?",
+   "gold": "cool old book collection",
+   "warm": "A book from the 1900s filled with stories and sketches about Woodhaven and its people.",
+   "mem0": "A vintage book from the 1900s filled with stories and sketches about a town and its people."
+  },
+  {
+   "id": "conv3_q166",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How did Joanna describe the classic movie he watched?",
+   "gold": "gripping with great actors",
+   "warm": "She called it amazing\u2014\u201ca great story about sisterhood, love, and reaching for your dreams,\u201d saying those themes were explored really well and that it\u2019s definitely a must-see.",
+   "mem0": "She called it awesome\u2014\u201ca gripping story with great actors that really stuck with her\u201d\u2014and rated it about 9 to 10 out of 10."
+  },
+  {
+   "id": "conv3_q171",
+   "cat": "single-hop",
+   "class": "no gold present (retrieval miss)",
+   "q": "What does Joanna do after receiving a rejection from a production company?",
+   "gold": "keep grinding and moving ahead",
+   "warm": "She turned to cooking\u2014revising and perfecting a family dessert recipe (10-21-2022).",
+   "mem0": "She kept pushing forward\u2014refusing to let it slow her down\u2014and soon after submitted several additional screenplays."
+  },
+  {
+   "id": "conv3_q177",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What inspires Joanna to create drawings of her characters?",
+   "gold": "visuals to help bring the characters alive in her head so she can write better",
+   "warm": "People she knows, things she sees, and her imagination.",
+   "mem0": "Ideas from everywhere\u2014people she knows, things she sees, and her imagination\u2014inspire Joanna to sketch her characters, giving her visual references that help bring them alive in her mind."
+  },
+  {
+   "id": "conv3_q23",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "Which of Joanna's screenplay were rejected from production companies?",
+   "gold": "first screenplay on drama and romance, third screenplay on loss identity and connection",
+   "warm": "- Two of Joanna\u2019s screenplays (titles not given) were rejected:\n  1) An unnamed screenplay that received a generic rejection letter on 2022-06-03.\n  2) Another unnamed screenplay that she reported as \u201canother rejection from a production company\u201d on 2022-10-21.",
+   "mem0": "- Her first full screenplay (the one she finished on January 21, 2022) \u2014 she received a generic rejection from a major production company around June 3, 2022.\n- Another later submission (screenplay not specified by title) \u2014 she received another production\u2011company rejection around October 20, 2022."
+  },
+  {
+   "id": "conv3_q4",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "What pets wouldn't cause any discomfort to Joanna?",
+   "gold": "Hairless cats or pigs,since they don't have fur, which is one of the main causes of Joanna's allergy.",
+   "warm": "Non-living \u201cpets\u201d like stuffed animals\u2014for example, her stuffed dog Tilly\u2014wouldn\u2019t cause Joanna any discomfort.",
+   "mem0": "Pets without fur and not reptiles\u2014such as aquarium fish\u2014wouldn\u2019t cause Joanna any discomfort."
+  },
+  {
+   "id": "conv3_q54",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When was Joanna's second movie script shown on the big screens?",
+   "gold": "The Sunday before 25October, 2022.",
+   "warm": "",
+   "mem0": "Sunday, October 23, 2022."
+  },
+  {
+   "id": "conv3_q58",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What things has Nate reccomended to Joanna?",
+   "gold": "A pet,\"The Lord of the Rings\" movies,a dragon book series,coconut flavoring,\"Project Hail Mary\" book,Xenoblade Chronicles, dairy-free margarine, coconut oil",
+   "warm": "",
+   "mem0": "- The Lord of the Rings film trilogy\n- Attending a writing convention\n- His dairy\u2011free coconut\u2011milk ice cream recipe (and encouraged her to try making it)\n- Considering other types of pets (as an alternative due to her allergies)"
+  },
+  {
+   "id": "conv3_q70",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What activities does Nate do with his turtles?",
+   "gold": "takes them onwalks, holds them,feeds themstrawberries, givesthem baths.",
+   "warm": "",
+   "mem0": "- Walks them (he\u2019s taken his turtles out for walks)\n- Takes them on outings, like a beach trip to Tampa\n- Brings them into the kitchen so they can watch him cook\n- Gives them baths\n- Holds them\n- Feeds and cares for them (keeps their enclosure clean and provides proper light)\n- Upgrades their habitat (expanded their tank)\n- Watches them play, bask in the sun, and eat\u2014especially strawberries\n- Takes and shares photos of them\n- Spends downtime just hanging out with them"
+  },
+  {
+   "id": "conv3_q73",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "What state did Joanna visit in summer 2021?",
+   "gold": "Indiana",
+   "warm": "",
+   "mem0": "Indiana"
+  },
+  {
+   "id": "conv3_q74",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What recommendations has Nate received from Joanna?",
+   "gold": "\"Eternal Sunshine of the Spotless Mind\" movie, \"A Court of Thorns and Roses\" book, pointers for making living room comfy, starting a cork board for memories, \"Little Women\" movie",
+   "warm": "",
+   "mem0": "- Movies:\n  - Eternal Sunshine of the Spotless Mind (Joanna explicitly said she\u2019d recommend it to Nate).\n  - Another, unspecified movie she recommended earlier (Nate said he added it to his watch list and she asked him to let her know what he thought after watching).\n\n- Living room setup:\n  - Add a large fluffy couch, a weighted blanket, and dimmable lights to make his movie\u2011night space cozier (Nate said he planned to implement her suggestions).\n\n- Content creation:\n  - Before posting his own gaming videos, watch other creators\u2019 videos first to learn what the audience likes so his videos won\u2019t flop."
+  },
+  {
+   "id": "conv3_q81",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What recipes has Joanna made?",
+   "gold": "dairy free vanilla cake with strawberry filling and coconut cream frosting, parfait, strawberry chocolate cake, chocolate coconut cupcakes, chocolate raspberry tart, chocolate cake with raspberries, blueberry cheesecake bars",
+   "warm": "",
+   "mem0": "- Dairy\u2011free cake with white frosting\n- Dairy\u2011free chocolate cake with pink frosting, topped with strawberries and chocolate\n- Dairy\u2011free chocolate cake with raspberries\n- Chocolate raspberry tart\n- An almond\u2011milk dessert (made on September 9, 2022)\n- Plus a variety of dairy\u2011free desserts for different diets, including cookies, pies, and cakes"
+  },
+  {
+   "id": "conv4_q135",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How does Tim stay motivated during difficult study sessions?",
+   "gold": "Visualizing goals and success",
+   "warm": "By using 25-minute focused study blocks followed by 5-minute breaks to do something fun (Pomodoro-style) to keep it manageable and motivating.",
+   "mem0": "He uses a Pomodoro\u2011style routine\u201425\u2011minute focused blocks followed by 5\u2011minute fun breaks\u2014to keep sessions from feeling overwhelming and stay on track. He also leans on motivational cues like visual reminders and favorite quotes (e.g., his J.K. Rowling line) and reminds himself of his meaningful goals and love for reading and writing to push through tough moments."
+  },
+  {
+   "id": "conv4_q165",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What book did Tim get in Italy that inspired him to cook?",
+   "gold": "a cooking book",
+   "warm": "It wasn\u2019t Tim\u2014John was the one who bought a (unnamed) book in Italy that inspired his cooking. The title wasn\u2019t mentioned.",
+   "mem0": "Tim didn\u2019t get a book in Italy. It was John who did\u2014he picked up an inspiring cookbook there that\u2019s been giving him cooking ideas."
+  },
+  {
+   "id": "conv4_q175",
+   "cat": "single-hop",
+   "class": "no gold present (retrieval miss)",
+   "q": "What achievement did John share with Tim in January 2024?",
+   "gold": "endorsement with a popular beverage company",
+   "warm": "He shared that he\u2019d just sealed a new endorsement deal\u2014specifically, he signed with a renowned outdoor gear company.",
+   "mem0": "He announced he\u2019d secured an endorsement deal with a popular beverage company\u2014Gatorade\u2014around January 5, 2024."
+  },
+  {
+   "id": "conv4_q19",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "What is a prominent charity organization that John might want to work with and why?",
+   "gold": "Good Sports, because they work with Nike, Gatorade, and Under Armour and they aim toprovide youth sports opportunities for kids ages 3-18 in high-need communities.",
+   "warm": "Boys & Girls Clubs of America \u2014 because John\u2019s charity focus is helping underserved kids through sports and school support. BGCA is a leading national organization that provides after-school programs, mentorship, and athletics for disadvantaged youth, matching John\u2019s ongoing mentoring, youth camps, and efforts to create fair access to sports and academic opportunities.",
+   "mem0": "A national youth\u2011sports nonprofit that combines athletics with academics for underserved kids\u2014like the local organization he\u2019s already teaming up with\u2014would be a great fit. John has repeatedly said he wants to support youth sports and fight for fair chances for underserved communities, he\u2019s already collaborating with a group that helps disadvantaged kids through sports and school, he mentors younger players, and he even organized a children\u2019s charity basketball game. Partnering with a prominent youth\u2011sports and education charity directly matches his stated goals and lets him amplify the impact he\u2019s already making."
+  },
+  {
+   "id": "conv4_q4",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What books has Tim read?",
+   "gold": "Harry Potter, Game of Thrones, the Name of the Wind, The Alchemist, The Hobbit, A Dance with Dragons, and the Wheel of Time.",
+   "warm": "",
+   "mem0": "- J.K. Rowling\u2019s Harry Potter books \u2014 including Harry Potter and the Sorcerer\u2019s Stone (he\u2019s read Rowling\u2019s books for a long time and has a well\u2011read copy, and he compares the books to the films)\n- A Dance with Dragons by George R. R. Martin \u2014 finished on December 8, 2023\n- The Alchemist by Paulo Coelho \u2014 read before November 21, 2023\n- A book about castles in the United Kingdom (non\u2011fiction; title not specified)\n- A self\u2011improvement book emphasizing that small changes can lead to big differences (title not specified)"
+  },
+  {
+   "id": "conv4_q61",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What books has John read?",
+   "gold": "inpsiring book on dreaming big, The Alchemist, fantasy series, non-fiction books on personal development, Dune",
+   "warm": "",
+   "mem0": "- The Name of the Wind by Patrick Rothfuss (read and loved)\n- The Alchemist by Paulo Coelho (read and recently reread)\n- The Hobbit by J.R.R. Tolkien (one of his favorite books)\n- Dune by Frank Herbert (currently reading)\n\nHe also mentioned finishing an amazing fantasy series, though he didn\u2019t specify the title."
+  },
+  {
+   "id": "conv5_q111",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What do Andrew and Buddy like doing on walks?",
+   "gold": "Checking out new hiking trails",
+   "warm": "Spending time together and getting some fresh air.",
+   "mem0": "Spending time together, getting fresh air, and checking out new trails."
+  },
+  {
+   "id": "conv5_q15",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What is a shared frustration regarding dog ownership for Audrey and Andrew?",
+   "gold": "Not being able to find pet friendly spots.",
+   "warm": "Managing multiple dogs is a lot of work. Andrew said having two is already a lot to handle, and Audrey said four is already a lot and even described a chaotic vet visit with all of them.",
+   "mem0": "Finding dog\u2011friendly spots in the city\u2014it's hard to locate places (and even housing) that welcome dogs and make city dog ownership work."
+  },
+  {
+   "id": "conv5_q16",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When is Andrew going to go hiking with Audrey?",
+   "gold": "August",
+   "warm": "On a Saturday in November 2023 (they agreed on \u201cSaturday,\u201d planning a lake-trail hike).",
+   "mem0": "August 2023"
+  },
+  {
+   "id": "conv5_q17",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "How many times did Audrey and Andew plan to hike together?",
+   "gold": "three times",
+   "warm": "",
+   "mem0": "3"
+  },
+  {
+   "id": "conv5_q24",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "Did Audrey and Andrew grow up with a pet dog?",
+   "gold": "Yes",
+   "warm": "Audrey did \u2014 she grew up with a dog named Max. For Andrew, it isn\u2019t established; he mentions a family dog from past hikes but never says he grew up with one.",
+   "mem0": "Audrey did\u2014she grew up with a childhood dog named Max and loved taking long walks with him. For Andrew, there\u2019s no confirmation of a childhood dog; the memories only show him adopting dogs as an adult in 2023 (e.g., Toby)."
+  },
+  {
+   "id": "conv5_q33",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "What can Andrew potentially do to improve his stress and accomodate his living situation with his dogs?",
+   "gold": "Change to a hybrid or remote job so he can move away from the city to the suburbs to have a larger living space and be closer to nature.",
+   "warm": "- Use the doggy daycare near you 1\u20132 days a week to burn energy while you work (6/26).\n- Join a local dog owners group weekly for social time, tips, and structured play (11/4).\n- Do daily city-friendly enrichment: short park walks, fetch, training reps, puzzle toys, and toy rotations for mental stimulation (11/4).\n- Keep positive-reinforcement training and tighten routines, as behaviorists recommend, to reduce chaos and stress at home (10/28).\n- For Scout, continue gradual acclimation: leash outdoors and a consistent \u201csafe haven\u201d with bed/toys/puppy pads (11/22).\n- Protect your own stress levels with habits that already help you: lunch-break walks (with a dog), morning coffee rituals, cooking nights, board games with your partner, and balcony gardening (9/6, 7/3, 10/13, 9/24).\n- Reach bigger green spaces by biking or public transport for weekend micro-hikes or birdwatching (10/1).\n- Keep pursuing (or renewing) the pet-friendly housing search near parks/woods and keep contacting landlords/neighborhoods (5/6); in the meantime, you\u2019ve shown you can \u201cmake it work\u201d in the city (11/4).",
+   "mem0": "- Keep simple daily self\u2011care he already started to lower stress: morning coffee and a lunchtime walk. Keep cooking as a relaxing hobby, and add more houseplants at home for a calming feel.\n- Use nearby dog\u2011friendly options to accommodate city living with his dogs: keep going to the local dog park, and make use of the doggy daycare with a large indoor play space so the pups can run even when outdoor access is limited.\n- Schedule regular neighborhood walks and small local hikes with Toby, Buddy, and Scout, plus occasional countryside/park day trips to recharge and give them space to roam.\n- Continue the housing search he started: keep contacting landlords and scouting neighborhoods for a pet\u2011friendly place near a park or woods, and share his criteria with Audrey so she can help.\n- Focus on training and comfort to make city life smoother: stick with positive reinforcement (no punishment), try the pet\u2011bonding workshop classes, keep Scout leashed outside, and maintain the safe home setup (bed, toys, puppy pads).\n- Manage the multi\u2011dog household by prioritizing the care of Toby, Buddy, and Scout before considering any more dogs.\n- Address his anxiety about dogs getting lost by keeping them leashed during outings and maintaining consistent routines."
+  },
+  {
+   "id": "conv5_q51",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What items has Audrey bought or made for her dogs?",
+   "gold": "dog tags, toys, dog beds, collars",
+   "warm": "",
+   "mem0": "- Protective dog boots for Pepper, Precious, and Panda (around May 3, 2023)\n- New collars and ID tags for her three dogs\n- Personalized wooden keychain name tags engraved with each dog\u2019s name (she made these for their August 2023 hike)\n- New dog beds (around August 30, 2023)\n- Toys for her four dogs (bought October 16, 2023)"
+  },
+  {
+   "id": "conv7_q106",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What is Jolene's favorite book which she mentioned on 4 February, 2023?",
+   "gold": "\"Sapiens\"",
+   "warm": "\u201cAvalanche\u201d by Neal Stephenson.",
+   "mem0": "Sapiens"
+  },
+  {
+   "id": "conv7_q174",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "Why did Jolene have to reschedule their meeting with Deborah on September 8, 2023?",
+   "gold": "Jolene already had plans",
+   "warm": "Because Deborah already had plans on the Monday Jolene first suggested, so Jolene rescheduled to Wednesday.",
+   "mem0": "Because she and her partner were heading out for a multi\u2011week meditation retreat in Phuket starting that weekend (beginning September 9, 2023), so she needed to move the September 8 meetup."
+  },
+  {
+   "id": "conv7_q19",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "How many times has Jolene been to France?",
+   "gold": "two times",
+   "warm": "1 time",
+   "mem0": "Twice."
+  },
+  {
+   "id": "conv7_q48",
+   "cat": "open-domain",
+   "class": "no gold present (retrieval miss)",
+   "q": "Which US state did Jolene visit during her internship?",
+   "gold": "Alaska",
+   "warm": "The memories do not name any US state Jolene visited during her internship.",
+   "mem0": "Alaska"
+  },
+  {
+   "id": "conv7_q81",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did the Deboran and Jolene agree to go surfing?",
+   "gold": "in October 2023",
+   "warm": "17 September 2023",
+   "mem0": "September 17, 2023 \u2014 they agreed to go surfing and planned it for the following month (October 2023)."
+  },
+  {
+   "id": "conv7_q82",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "Which locations does Deborah practice her yoga at?",
+   "gold": "at her mother's old home, park, yoga studio, beach",
+   "warm": "",
+   "mem0": "- At home in her living\u2011room studio\n- In parks and outdoor fields (especially the park near her house with a forest trail)\n- On beaches (including in Bali, and the beach where she got married\u2014often at sunrise or sunset)\n- At her favorite yoga studio\n- At a local care home (where she led a sunset yoga/meditation session)\n- At a yoga retreat near her mother\u2019s house"
+  },
+  {
+   "id": "conv7_q88",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What activities does Deborah pursue besides practicing and teaching yoga?",
+   "gold": "biking, going to art shows, running, organizing workshops to practice mindfulness and self-care, surfing, gardening",
+   "warm": "",
+   "mem0": "- Meditates daily as part of her routine\n- Runs/jogs regularly, including morning jogs and a supportive running group\n- Surfs and loves spending time at the beach\n- Gardens at home (roses and dahlias) and co\u2011ran a free community gardening class (Sept 16, 2023)\n- Organizes community events and mindfulness/self\u2011care workshops (e.g., coordinated a community event with food stalls and live music; created a meditation guide for a retreat)\n- Travels (e.g., Bali in 2022) and enjoys exploring historical places\n- Spends time in nature on forest trails and by the water to reflect\n- Reads and relaxes with books, keeping a large bookshelf and carving out quiet reading time\n- Prioritizes evenings with loved ones"
+  },
+  {
+   "id": "conv8_q103",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What kind of recipe did Evan request from Sam on 19 August, 2023?",
+   "gold": "recipes with more vegetables",
+   "warm": "Sam\u2019s homemade sauce recipe.",
+   "mem0": "Vegetable-based recipes."
+  },
+  {
+   "id": "conv8_q109",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What fun activity did Evan mention doing in July 2023?",
+   "gold": "skiing",
+   "warm": "Kayaking.",
+   "mem0": "He went skiing at Banff National Park."
+  },
+  {
+   "id": "conv8_q144",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Evan share with Sam after their hiking trip?",
+   "gold": "a photo of a man standing on a rock looking out over a valley",
+   "warm": "A scenic photo from his mountain drive\u2014a small stream running through a lush green forest.",
+   "mem0": "A photo of a woman with a backpack on a mountain\u2014an outdoor hiking scene."
+  },
+  {
+   "id": "conv8_q50",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "What kind of hobbies does Evan pursue?",
+   "gold": "painting, hiking, reading books, biking, skiing, snowboarding, ice skating, swimming, camping, kayaking",
+   "warm": "",
+   "mem0": "- Watercolor painting (takes classes, creates landscapes and figurative pieces, and even exhibited a recent work)\n- Outdoor adventures: hiking, camping, kayaking, and biking\n- Winter sports: skiing, snowboarding, ice skating, and he tried snowshoeing\n- Fitness and wellness: regular gym workouts, yoga, swimming (during knee recovery), and walks (morning walks and beach\u2011sunset walks)\n- Reading, especially mystery novels\n- Music: learning/playing a vintage guitar he recently picked up\n- Photography, particularly nature/landscape shots on trips\n- Road\u2011tripping/driving for relaxation and exploration"
+  },
+  {
+   "id": "conv8_q60",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "Which new activity does Sam take up in October 2023?",
+   "gold": "kayaking",
+   "warm": "Hiking.",
+   "mem0": "Kayaking"
+  },
+  {
+   "id": "conv8_q68",
+   "cat": "temporal",
+   "class": "no gold present (retrieval miss)",
+   "q": "What was Sam doing on December 4, 2023?",
+   "gold": "Attending a Weight Watchers meeting",
+   "warm": "There\u2019s no memory entry for December 4, 2023. The next day (December 5), Sam said they\u2019d had an insightful meeting and that their smoothie bowl was a hit.",
+   "mem0": "She attended a Weight Watchers meeting, where she learned helpful tips for healthier living."
+  },
+  {
+   "id": "conv9_q109",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What is Calvin excited about after the tour?",
+   "gold": "exploring and growing his brand",
+   "warm": "Going to Tokyo next month\u2014especially to see Shibuya Crossing, explore Shinjuku, and enjoy the food.",
+   "mem0": "Exploring Boston\u2019s acclaimed music scene (and meeting up with Dave there)."
+  },
+  {
+   "id": "conv9_q12",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When was Calvin's concert in Tokyo?",
+   "gold": "last week of May 2023",
+   "warm": "August 2023.",
+   "mem0": "Late May 2023 \u2014 during the week of May 24\u201330, 2023."
+  },
+  {
+   "id": "conv9_q120",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What does Dave aim to do with his passion for cars?",
+   "gold": "Take something broken and make it into something awesome",
+   "warm": "Build a custom car from scratch.",
+   "mem0": "Turn it into real work restoring classic cars and helping people with their rides through his shop\u2014while ultimately building a custom car from scratch\u2014and share his know\u2011how via a car\u2011mod blog to inspire others."
+  },
+  {
+   "id": "conv9_q132",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How does Calvin describe his music in relation to capturing feelings?",
+   "gold": "Express himself and work through his emotions",
+   "warm": "He said he\u2019s been digging deeper into his music to capture the feelings of people\u2019s struggles.",
+   "mem0": "He said that being inspired by people\u2019s struggles has led him to dig deeper into his music to capture those feelings."
+  },
+  {
+   "id": "conv9_q147",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What tools does Calvin use to boost his motivation for music?",
+   "gold": "Writing lyrics and notes",
+   "warm": "- Watching music videos, concert footage, and artist documentaries\n- Staying current on world events\n- Leaning on a supportive circle (friends/team)\n- Taking breaks to recharge with favorite activities, using his relaxation/TV room to unwind and get re-inspired",
+   "mem0": "- Gold necklace with a diamond pendant \u2014 a daily visual reminder that keeps him pushing as a musician.\n- His notebook \u2014 part of his music\u2011creation workflow for capturing ideas and staying connected to the process.\n- Watching music videos, concerts, and artist documentaries \u2014 he uses these as inspiration to spark motivation.\n- His guitar \u2014 a personal totem that reminds him of his passion and friendships, keeping him inspired.\n- Positive feedback from listeners \u2014 he leans on it as a reminder of his purpose and to fuel his drive.\n- Stepping away to recharge: spending time in nature and working on/fixing cars \u2014 clears his head and restores his creative mojo."
+  },
+  {
+   "id": "conv9_q19",
+   "cat": "multi-hop",
+   "class": "some gold absent (partial retrieval miss)",
+   "q": "Which places or events has Calvin visited in Tokyo?",
+   "gold": "music festival, car museum, Shibuya crossing, Shinjuku",
+   "warm": "",
+   "mem0": "- Tokyo music festival (April 20, 2023) \u2014 attended; met artists and industry professionals.\n- Tokyo concert during the Frank Ocean tour (late May 2023) \u2014 performed there; crowd was \u201cinsane.\u201d\n- Tokyo music festival (August 2022) \u2014 attended; this is where he met Frank Ocean.\n- Shinjuku \u2014 has visited before and is excited to explore and eat there again.\n- Tokyo\u2019s vibrant night streets (similar to the lively crowded street scenes he and Dave shared) \u2014 visited and described as incredible.\n- A Tokyo rooftop bar with a skyline view at night \u2014 has experienced and wants to revisit those views."
+  }
+ ],
+ "Mem0 wrong, WARM right": [
+  {
+   "id": "conv0_q128",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Caroline find in her neighborhood during her walk?",
+   "gold": "a rainbow sidewalk",
+   "warm": "A rainbow sidewalk for Pride Month.",
+   "mem0": "She came across sidewalk chalk art\u2014someone drawing flowers on the ground."
+  },
+  {
+   "id": "conv0_q135",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What setback did Melanie face in October 2023?",
+   "gold": "She got hurt and had to take a break from pottery.",
+   "warm": "She was injured and had to pause her pottery practice.",
+   "mem0": "Her family\u2019s road trip got off to a bad start when her son was involved in a car accident on the weekend of October 14\u201315, 2023\u2014airbags deployed and the dashboard was damaged, though he was okay."
+  },
+  {
+   "id": "conv0_q148",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What was Melanie's reaction to her children enjoying the Grand Canyon?",
+   "gold": "She was happy and thankful",
+   "warm": "She was grateful and happy\u2014saying she was \u201cso thankful\u201d to have her family and that the kids \u201cenjoyed the Grand Canyon a lot.\u201d",
+   "mem0": "She said they enjoyed the trip and even shared a photo of her kids standing on a rocky cliff at the Grand Canyon."
+  },
+  {
+   "id": "conv0_q37",
+   "cat": "multi-hop",
+   "class": "no gold present (retrieval miss)",
+   "q": "What did Melanie paint recently?",
+   "gold": "sunset",
+   "warm": "A landscape sunset \u2014 she painted a calming sunset scene with a pink/purple sky.",
+   "mem0": "An abstract painting with vibrant colors on a blue background, using peaceful blue streaks to convey tranquility."
+  },
+  {
+   "id": "conv0_q55",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What subject have Caroline and Melanie both painted?",
+   "gold": "Sunsets",
+   "warm": "Sunsets.",
+   "mem0": "Flowers"
+  },
+  {
+   "id": "conv0_q59",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "Would Caroline be considered religious?",
+   "gold": "Somewhat, but not extremely religious",
+   "warm": "Somewhat. Caroline shows signs of being at least spiritually inclined or culturally religious\u2014she values a cross necklace tied to \u201cfaith\u201d and created stained glass for a church\u2014though there\u2019s no clear evidence of regular religious practice.",
+   "mem0": "Probably not. Across her 2023\u20132024 memories, Caroline doesn\u2019t mention practicing a religion. The only religion\u2011related moment was a negative encounter with religious conservatives on a hike (around Aug 16, 2023). Her references to \u201cfaith\u201d (in a necklace\u2019s symbolic meaning) and sharing a stained\u2011glass photo are personal or artistic, not signs of religious observance."
+  },
+  {
+   "id": "conv0_q68",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "How long has Melanie been practicing art?",
+   "gold": "Since 2016",
+   "warm": "Seven years.",
+   "mem0": "Seven years."
+  },
+  {
+   "id": "conv1_q14",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Jon start expanding his studio's social media presence?",
+   "gold": "April, 2023",
+   "warm": "April 3, 2023",
+   "mem0": "June 16, 2023."
+  },
+  {
+   "id": "conv1_q34",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Gina start being recognized by fashion editors?",
+   "gold": "July 2023",
+   "warm": "Early July 2023 \u2014 specifically, the week before July 9, 2023.",
+   "mem0": "Last week."
+  },
+  {
+   "id": "conv1_q36",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Jon and Gina decide to collaborate to create dance content?",
+   "gold": "21 July 2023",
+   "warm": "July 21, 2023.",
+   "mem0": "June 2023. After Gina suggested promoting on Instagram/TikTok and offered to help, Jon asked her to help create content and manage his social media, and she agreed\u2014marking their decision to collaborate."
+  },
+  {
+   "id": "conv1_q37",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Gina mention Shia Labeouf?",
+   "gold": " 23 July, 2023",
+   "warm": "July 23, 2023.",
+   "mem0": "Right after encouraging Jon with \u201cjust do it,\u201d she clarified that the person she was referencing was Shia LaBeouf."
+  },
+  {
+   "id": "conv1_q44",
+   "cat": "single-hop",
+   "class": "no gold present (retrieval miss)",
+   "q": "What does Gina say about the dancers in the photo?",
+   "gold": "They look graceful",
+   "warm": "\u201cThey\u2019re so graceful!\u201d",
+   "mem0": "She said she was excited and looking forward to seeing Jon\u2019s dancers perform at the upcoming festival."
+  },
+  {
+   "id": "conv1_q47",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Gina find for her clothing store on 1 February, 2023?",
+   "gold": "The perfect spot for her store",
+   "warm": "The perfect spot for her store\u2014a cozy, inviting space.",
+   "mem0": "A wholesale supplier \u2014 she got a positive reply from wholesalers, enabling her to expand her clothing store."
+  },
+  {
+   "id": "conv1_q67",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How does Jon use the clipboard with a notepad attached to it?",
+   "gold": "To set goals, track achievements, and find areas for improvement",
+   "warm": "He uses it to stay organized and motivated\u2014writing down goals, tracking his achievements, and noting areas to improve.",
+   "mem0": "He uses it like a whiteboard to plan out his dance moves."
+  },
+  {
+   "id": "conv1_q71",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How does Gina describe the studio that Jon has opened?",
+   "gold": "amazing",
+   "warm": "She says the studio looks \u201camazing.\u201d",
+   "mem0": "She describes it as a place for dancers to grow, not just a business."
+  },
+  {
+   "id": "conv1_q74",
+   "cat": "single-hop",
+   "class": "no gold present (retrieval miss)",
+   "q": "What does Jon plan to do at the grand opening of his dance studio?",
+   "gold": "savor all the good vibes",
+   "warm": "Make it unforgettable \u2014 he plans to make awesome memories at the grand opening.",
+   "mem0": "Host his studio\u2019s official opening night on June 20, 2023, making sure every detail is perfect\u2014he\u2019s even had his dancers rehearsing in the studio to be ready."
+  },
+  {
+   "id": "conv2_q107",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What new activity did Maria start recently, as mentioned on 3 June, 2023?",
+   "gold": "volunteering at a local dog shelter once a month",
+   "warm": "She started volunteering at a local dog shelter once a month.",
+   "mem0": "Aerial yoga."
+  },
+  {
+   "id": "conv2_q119",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How often does John get to see sunsets like the one he shared with Maria?",
+   "gold": "At least once a week",
+   "warm": "At least once a week.",
+   "mem0": "Only every now and then \u2014 mainly on special outings and trips (like his California beach evening or a road\u2011trip mountain sunset) and during occasional quiet, reflective moments (like the bench sunset), rather than regularly."
+  },
+  {
+   "id": "conv2_q75",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Jean go through before meeting Maria?",
+   "gold": "divorce, job loss, homelessness",
+   "warm": "She\u2019d gone through a divorce, lost her job, and become homeless.",
+   "mem0": "She had faced many hardships."
+  },
+  {
+   "id": "conv2_q80",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Maria make for her home to remind her of a trip to England?",
+   "gold": "painting of a castle on a hill",
+   "warm": "A painting of a castle.",
+   "mem0": "A castle\u2011themed shadow box\u2014a DIY cardboard \u201cfort\u201d with fairy lights\u2014so she could bring the magic of her England trip into her home."
+  },
+  {
+   "id": "conv3_q119",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What does Nate feel he could do when out in cool places like Whispering Falls?",
+   "gold": "write a whole movie",
+   "warm": "Start to come up with a drama and publish his own screenplay.",
+   "mem0": "Find inspiration \u2014 he says nature in places like Whispering Falls inspires him."
+  },
+  {
+   "id": "conv3_q120",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What creative activity does Nate joke about pursuing after being inspired by their hikes with Jo?",
+   "gold": "Start thinking about a drama and publish a screenplay",
+   "warm": "Writing and publishing his own drama screenplay.",
+   "mem0": "Taking up nature photography."
+  },
+  {
+   "id": "conv3_q128",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What superhero is Joanna a fan of?",
+   "gold": "Spider-Man",
+   "warm": "Spider-Man",
+   "mem0": "Iron Man"
+  },
+  {
+   "id": "conv3_q150",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How did Joanna celebrate after sharing her book with her writers group?",
+   "gold": "making a delicious treat",
+   "warm": "She celebrated by making a raspberry chia pudding parfait dessert.",
+   "mem0": "She kept it low\u2011key\u2014over the Aug 27\u201328, 2022 weekend she relaxed and recharged with a long walk and some reading."
+  },
+  {
+   "id": "conv3_q151",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How did Nate celebrate winning the international tournament?",
+   "gold": "Taking time off to chill with pets",
+   "warm": "He celebrated by taking the weekend off to relax and chill with his pets.",
+   "mem0": "He marked it by sharing the news and savoring the moment\u2014calling the win \u201cwild\u201d and appreciating that gaming now lets him earn a living\u2014rather than doing a big celebratory event."
+  },
+  {
+   "id": "conv3_q186",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What dish did Nate make on 9 November, 2022?",
+   "gold": "Homemade coconut ice cream",
+   "warm": "Homemade coconut ice cream.",
+   "mem0": "None. On November 9, 2022, Nate didn\u2019t make a dish\u2014he added a third turtle to his pet family and shared photos of them."
+  },
+  {
+   "id": "conv3_q187",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What project is Joanna working on in her notebook on November 9, 2022?",
+   "gold": "A suspenseful thriller set in a small Midwestern town",
+   "warm": "A suspenseful thriller set in a small Midwestern town.",
+   "mem0": "She\u2019s working on a notebook where she\u2019s writing down her favorite memories."
+  },
+  {
+   "id": "conv3_q43",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "How long did it take for Joanna to finish writing her book?",
+   "gold": "four months",
+   "warm": "About three months. She said on 2022-07-10 that she\u2019d \u201cstarted on a book recently,\u201d and on 2022-10-06 that she\u2019d \u201cfinished [her] writing for [her] book last week,\u201d placing completion in late September/early October 2022.",
+   "mem0": "About six weeks (from mid\u2011August 2022, when she shared her book with her writers group, to around September 29, 2022, when she finished it)."
+  },
+  {
+   "id": "conv3_q49",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How many times has Joanna's scripts been rejected?",
+   "gold": "Twice",
+   "warm": "2",
+   "mem0": "Once \u2014 she received a rejection letter around June 3, 2022."
+  },
+  {
+   "id": "conv3_q51",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Nate get Tilly for Joanna?",
+   "gold": "25 May, 2022",
+   "warm": "May 25, 2022.",
+   "mem0": "The memories don\u2019t give a date for when Nate gave Joanna the stuffed dog she named Tilly. They only say she still has it and keeps it by her while she writes."
+  },
+  {
+   "id": "conv3_q53",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How many times has Nate taken his turtles on a walk?",
+   "gold": "Twice.",
+   "warm": "2",
+   "mem0": "1 time \u2014 on October 25, 2022."
+  },
+  {
+   "id": "conv3_q62",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How many letters has Joanna recieved?",
+   "gold": "Two",
+   "warm": "2",
+   "mem0": "One \u2014 a generic rejection letter around June 3, 2022."
+  },
+  {
+   "id": "conv3_q68",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "How many hikes has Joanna been on?",
+   "gold": "Four",
+   "warm": "4",
+   "mem0": "2"
+  },
+  {
+   "id": "conv3_q79",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How many screenplays has Joanna written?",
+   "gold": "three",
+   "warm": "3",
+   "mem0": "2"
+  },
+  {
+   "id": "conv3_q84",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "Was the first half of September 2022 a good month career-wise for Nate and Joanna? Answer yes or no.",
+   "gold": "No; because both of them faced setbacks in their career",
+   "warm": "No",
+   "mem0": "Yes"
+  },
+  {
+   "id": "conv3_q93",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What game was the second tournament that Nate won based on?",
+   "gold": "Street Fighter",
+   "warm": "Street Fighter",
+   "mem0": "Counter-Strike: Global Offensive (CS:GO)"
+  },
+  {
+   "id": "conv3_q95",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What is Nate's favorite video game?",
+   "gold": "Xenoblade Chronicles",
+   "warm": "Xenoblade Chronicles",
+   "mem0": "Cyberpunk 2077"
+  },
+  {
+   "id": "conv4_q119",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "Where did Tim capture the photography of the sunset over the mountain range?",
+   "gold": "Smoky Mountains",
+   "warm": "The Blue Ridge Mountains in North Carolina (during his Smoky Mountains trip).",
+   "mem0": "The Blue Ridge Mountains in North Carolina."
+  },
+  {
+   "id": "conv4_q128",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What type of meal does John often cook using a slow cooker?",
+   "gold": "honey garlic chicken with roasted veg",
+   "warm": "Honey garlic chicken with roasted vegetables.",
+   "mem0": "A mixed-ingredient stew."
+  },
+  {
+   "id": "conv4_q148",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How long has Tim been playing the piano for, as of December 2023?",
+   "gold": "about four months",
+   "warm": "About four months.",
+   "mem0": "He had only just started learning the piano by December 2023\u2014he\u2019d been playing for a short time."
+  },
+  {
+   "id": "conv4_q169",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What kind of painting does John have in his room as a reminder?",
+   "gold": "a painting of Aragorn",
+   "warm": "A painting of Aragorn from The Lord of the Rings.",
+   "mem0": "A painting of a man smoking a cigarette, which he keeps as a reminder to stay true and be a leader."
+  },
+  {
+   "id": "conv4_q49",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How many times has John injured his ankle?",
+   "gold": "two times",
+   "warm": "Twice.",
+   "mem0": "1"
+  },
+  {
+   "id": "conv4_q88",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How did John get introduced to basketball?",
+   "gold": "Dad signed him up for a local league",
+   "warm": "Through his father\u2014he grew up watching NBA games with him, and at age ten his dad signed him up for a local basketball league.",
+   "mem0": "As a kid, he got into basketball by watching NBA games with his dad, and then started playing himself in a local league at age ten."
+  },
+  {
+   "id": "conv4_q96",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "Which movie's theme is Tim's favorite to play on the piano?",
+   "gold": "\"Harry Potter and the Philosopher's Stone\"",
+   "warm": "Harry Potter and the Philosopher\u2019s Stone.",
+   "mem0": "A movie theme that brings back lots of great memories for him."
+  },
+  {
+   "id": "conv5_q119",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Audrey share to show ways to keep dogs active in the city?",
+   "gold": "photography of a basket full of stuffed animals",
+   "warm": "- A photo of her dogs playing fetch in the park.\n- A photo of the toys and games she uses at home (a basket of stuffed toys) to entertain them indoors.\n- A photo illustrating indoor puzzle/toy play (her dog playing with a toy in a room).",
+   "mem0": "A photo of a dog playing with a frisbee indoors."
+  },
+  {
+   "id": "conv5_q22",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "Where did Andrew go during the first weekend of August 2023?",
+   "gold": "camping with girlfriend",
+   "warm": "He went camping (with his girlfriend and Toby).",
+   "mem0": "A local forest trail\u2014he went hiking on a wooded trail (he even photographed a dirt path and a stream) during the first weekend of August 2023."
+  },
+  {
+   "id": "conv5_q55",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Andrew make his dogs a fun indoor area?",
+   "gold": "few days before November 22, 2023",
+   "warm": "November 22, 2023",
+   "mem0": "Right after he adopted Scout\u2014he and his girlfriend set up a safe, fun indoor space at home for the new pup."
+  },
+  {
+   "id": "conv5_q88",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What advice did Audrey give to Andrew regarding grooming Toby?",
+   "gold": "Grooming slowly and gently, paying attention to sensitive areas like ears and paws. And remember to stay patient and positive throughout the grooming process.",
+   "warm": "- Groom Toby slowly and gently, paying special attention to sensitive areas like his ears and paws.\n- Stay patient and positive throughout the process.\n- Keep a regular routine: daily brushing, regular baths, and nail trims\u2014plus lots of love.",
+   "mem0": "She offered to share her grooming tips and said she\u2019d give him more guidance if and when he decides to try grooming Toby himself."
+  },
+  {
+   "id": "conv6_q112",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What aspect of \"The Witcher 3\" does John find immersive?",
+   "gold": "shaping the world with choices",
+   "warm": "The game\u2019s choice-driven storytelling\u2014making decisions (especially in dialogues) that shape the world and carry major consequences.",
+   "mem0": "The monster\u2011hunting RPG experience \u2014 he described The Witcher 3 as an \u201cimmersive monster\u2011hunting RPG.\u201d"
+  },
+  {
+   "id": "conv6_q36",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "Who is Jill?",
+   "gold": "Most likely John's partner.",
+   "warm": "Jill is John\u2019s partner (significant other).",
+   "mem0": "Jill is someone close to John whom James also brought a souvenir for\u2014James \u201cbrought souvenirs for both John and Jill,\u201d and John said Jill would be delighted."
+  },
+  {
+   "id": "conv6_q59",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did John and his gaming friends organize the charity tournament?",
+   "gold": "On the night of October 30 to 31, 2022",
+   "warm": "October 30, 2022.",
+   "mem0": "May 7, 2022."
+  },
+  {
+   "id": "conv6_q77",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What advice did James receive from the famous players he met at the tournament?",
+   "gold": "never put your ego above team success",
+   "warm": "To communicate properly with your team and never put your ego above the team\u2019s success.",
+   "mem0": "He was given a couple of gaming tips by one of the tournament team members when he met them on April 4, 2022\u2014practical pointers to help him improve his play."
+  },
+  {
+   "id": "conv7_q101",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Jolene buy her pet snake?",
+   "gold": "A year ago",
+   "warm": "She didn\u2019t buy her pet snake\u2014she adopted Susie about two years before August 1, 2023 (and got her other snake, Seraphim, last year\u20142022).",
+   "mem0": "Around August 2021 (when she adopted Susie)."
+  },
+  {
+   "id": "conv7_q172",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What was one of Jolene's favorite games to play with her mom on the nintendo wii game system?",
+   "gold": "Monster Hunter: World",
+   "warm": "Monster Hunter: World",
+   "mem0": "She loved playing video games with her mom on their Nintendo Wii, but no specific title is mentioned in the memories."
+  },
+  {
+   "id": "conv8_q116",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What painting did Evan share with Sam in October?",
+   "gold": "a cactus in the desert",
+   "warm": "He shared multiple in October:\n- A watercolor of a cactus in the desert (Oct 6).\n- A colorful landscape of a mountain range with a horse (Oct 6).\n- A peaceful sunset showing a person on a cliff (Oct 14).",
+   "mem0": "A sunset painting."
+  },
+  {
+   "id": "conv8_q119",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What activity did Evan start one year ago?",
+   "gold": "lifting weights",
+   "warm": "Lifting weights.",
+   "mem0": "Yoga"
+  },
+  {
+   "id": "conv8_q141",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What did Evan suggest Sam should keep doing to find his own version of love?",
+   "gold": "Keep trying new things",
+   "warm": "Keep trying new things.",
+   "mem0": "Keep believing in love."
+  },
+  {
+   "id": "conv8_q59",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "When did Sam and his friend decide to try kayaking?",
+   "gold": "October 14, 2023",
+   "warm": "October 14, 2023.",
+   "mem0": "On the spot\u2014when they realized they were just around the corner from a lake, Sam said they\u2019d try kayaking right then."
+  },
+  {
+   "id": "conv8_q97",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "Why did Evan decide to get the bonsai tree?",
+   "gold": "motivates him to keep going through tough times",
+   "warm": "Because it symbolized strength and resilience for him, and caring for it motivates him to keep going through tough times.",
+   "mem0": "To bring a calming piece of nature into his space\u2014he finds nature peaceful and stress\u2011relieving and likes appreciating small, mindful details, so a bonsai lets him keep that tranquil vibe indoors."
+  },
+  {
+   "id": "conv9_q113",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What activity did Calvin enjoy during his summer drives?",
+   "gold": "feeling the wind blowing through his hair",
+   "warm": "Reflecting on life\u2014pondering his path and decisions as he drove, enjoying the wind and sense of freedom.",
+   "mem0": "Reflecting on life\u2014using those summer drives to think about the intricacies of life and appreciate his path and decisions."
+  },
+  {
+   "id": "conv9_q54",
+   "cat": "multi-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "What does help Calvin stay connected to the creative process?",
+   "gold": "Calvin stays connected to the creative process by always staying up-to-date on world events and watching documentaries about artists.",
+   "warm": "Watching music videos, concerts, and documentaries about artists and their creative process.",
+   "mem0": "His notebook \u2014 the one he uses as part of his music creation workflow."
+  },
+  {
+   "id": "conv9_q61",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "How long did Dave's work on the Ford Mustang take?",
+   "gold": "nearly two months",
+   "warm": "About seven weeks (from mid-August 2023 to at least early October 2023), and it was still ongoing at that point.",
+   "mem0": "A long time."
+  },
+  {
+   "id": "conv9_q62",
+   "cat": "temporal",
+   "class": "all gold present (reader/judge)",
+   "q": "How long was the car modification workshop in San Francisco?",
+   "gold": "two weeks",
+   "warm": "At least 18 days (from Aug 14, 2023, until his return on Sep 1, 2023)\u2014roughly two and a half weeks.",
+   "mem0": "One day (held on August 14, 2023)."
+  },
+  {
+   "id": "conv9_q7",
+   "cat": "open-domain",
+   "class": "all gold present (reader/judge)",
+   "q": "Does Dave's shop employ a lot of people?",
+   "gold": "Yes",
+   "warm": "Yes. Photos from May 1, 2023 (group at his shop) and Oct 25, 2023 (multiple people working in the garage), plus Dave saying he works with \u201cawesome mechanics,\u201d indicate his shop employs a lot of people.",
+   "mem0": "No. From what Dave has shared, his shop appears to be a small, hands\u2011on operation he largely runs himself. He\u2019s usually the one doing the work and sometimes teams up with a local garage, but there\u2019s no indication of a large staff."
+  },
+  {
+   "id": "conv9_q90",
+   "cat": "single-hop",
+   "class": "all gold present (reader/judge)",
+   "q": "How does Calvin describe his process of adding electronic elements to his songs?",
+   "gold": "gives them a fresh vibe",
+   "warm": "He says adding electronic elements gives his songs a fresh vibe and has been an exciting process of self\u2011discovery and growth, pushing him out of his comfort zone while he balances his core sound with new ideas.",
+   "mem0": "He describes it as an exciting process of self\u2011discovery and growth."
+  }
+ ]
+}

@@ -98,19 +98,20 @@ jobs:
           key: ${{ runner.os }}-quickstart-python-${{ hashFiles('Cargo.toml') }}
       - run: cargo build --release --features server --bin warm-server
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-      - run: uv sync --frozen --no-dev --project bindings/python/warm-sdk
+      - name: Build the warm-sdk wheel
+        run: uv build --wheel --out-dir "$RUNNER_TEMP/wheel" bindings/python/warm-sdk
       - name: Run the quickstart against a live warm-server
         env:
           WARM_API_KEY: quickstart-ci
         run: |
-          cd "$RUNNER_TEMP"
           "$GITHUB_WORKSPACE/target/release/warm-server" --input-dim 384 --data-dir "$RUNNER_TEMP/warm-data" > "$RUNNER_TEMP/server.log" 2>&1 &
           server=$!
           trap 'kill "$server"' EXIT
           for _ in $(seq 1 60); do grep -q "listening on" "$RUNNER_TEMP/server.log" && break; sleep 1; done
           grep -q "listening on" "$RUNNER_TEMP/server.log"
-          "$GITHUB_WORKSPACE/bindings/python/warm-sdk/.venv/bin/python" "$GITHUB_WORKSPACE/examples/quickstart/python/quickstart.py" | tee "$RUNNER_TEMP/python.out"
-          awk '/^query /,/^top-1 correct/' "$RUNNER_TEMP/python.out" | diff - "$GITHUB_WORKSPACE/examples/quickstart/expected-search-python.txt"
+          # The documented command, with the built wheel in place of PyPI: no source build of this checkout.
+          uv run --no-project --with "$(ls "$RUNNER_TEMP"/wheel/*.whl)" python examples/quickstart/python/quickstart.py | tee "$RUNNER_TEMP/python.out"
+          awk '/^query /,/^top-1 correct/' "$RUNNER_TEMP/python.out" | diff - examples/quickstart/expected-search-python.txt
 
   demo-offline-agent:
     runs-on: ubuntu-latest

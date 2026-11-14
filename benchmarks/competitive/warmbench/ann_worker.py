@@ -922,8 +922,8 @@ def run_serve(a, adapter, meta):
     for sp in adapter.SWEEPS[a.build]:
         adapter.configure(sp)
         found = [list(adapter.query(q[None])) for q in test]
-        hits = sum(len(set(int(x) for x in f[:K]) & set(int(x) for x in t)) for f, t in zip(found, truth))
-        recall = hits / (K * len(test))
+        per_query = [len(set(int(x) for x in f[:K]) & set(int(x) for x in t)) for f, t in zip(found, truth)]
+        recall = sum(per_query) / (K * len(test))
         load, gate = wait_for_idle(a.max_load, a.max_wait)
         repeats = []
         for _ in range(a.repeats if recall >= 0.5 else 1):
@@ -934,8 +934,10 @@ def run_serve(a, adapter, meta):
                 adapter.query(qq)
                 lat[i] = time.perf_counter_ns() - t
             order = np.sort(lat) / 1e3
-            repeats.append({"qps": len(test) / (lat.sum() / 1e9), "p50_us": float(pctl(order, 0.5)), "p99_us": float(pctl(order, 0.99))})
-        configs.append({"params": {**variant, **sp}, "recall_at_10": recall, "repeats": repeats, "load_1m": load, "load_gate_met": gate})
+            repeats.append({"qps": len(test) / (lat.sum() / 1e9), "p50_us": float(pctl(order, 0.5)), "p99_us": float(pctl(order, 0.99)),
+                            "lat_ns": lat.tolist()})
+        configs.append({"params": {**variant, **sp}, "recall_at_10": recall, "repeats": repeats, "load_1m": load, "load_gate_met": gate,
+                        "hits_per_query": per_query})
         best_recall = max(best_recall, recall)
         if recall >= 0.999:
             break

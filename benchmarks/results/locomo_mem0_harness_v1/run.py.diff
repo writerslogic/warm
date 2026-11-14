@@ -1,0 +1,71 @@
+--- run.py.orig	2026-11-14 00:15:02
++++ run.py	2026-11-14 00:15:09
+@@ -855,6 +855,7 @@
+     existing_ids = {e["question_id"] for e in all_evaluations}
+     results_lock = asyncio.Lock()
+     conv_semaphore = asyncio.Semaphore(args.max_workers)
++    q_sem = asyncio.Semaphore(args.max_workers)
+ 
+     async def process_conversation(conv_idx: int):
+         """Process a single conversation: ingest → answer questions."""
+@@ -899,43 +900,33 @@
+             if args.max_questions is not None:
+                 conv_questions = conv_questions[:args.max_questions]
+ 
+-            search_pbar = tqdm(conv_questions, desc=f"Questions conv {conv_idx}", leave=True)
+-            for qi, qa in search_pbar:
+-                qid = f"conv{conv_idx}_q{qi}"
++            search_pbar = tqdm(total=len(conv_questions), desc=f"Questions conv {conv_idx}", leave=True)
+ 
++            async def run_question(qi, qa):
++                qid = f"conv{conv_idx}_q{qi}"
+                 if shutdown.requested:
+-                    break
+-
+-                # Skip if already done
++                    return
+                 async with results_lock:
+                     if qid in existing_ids:
+-                        continue
+-
+-                result = await process_question(
+-                    qa=qa,
+-                    qa_idx=qi,
+-                    conv_idx=conv_idx,
+-                    user_id=user_id,
+-                    mem0=mem0,
+-                    answerer=answerer,
+-                    judge_llm=judge_llm,
+-                    cutoffs=cutoffs,
+-                    top_k=args.top_k,
+-                    reference_date_human=ref_date_human,
+-                    user_profile=user_profile,
+-                    evidence_lookup=evidence_lookup,
+-                    predict_only=args.predict_only,
+-                    logger=logger,
+-                    score_debug=args.score_debug,
+-                )
+-
+-                # Save per-question result
++                        search_pbar.update(1)
++                        return
++                async with q_sem:
++                    result = await process_question(
++                        qa=qa, qa_idx=qi, conv_idx=conv_idx, user_id=user_id, mem0=mem0,
++                        answerer=answerer, judge_llm=judge_llm, cutoffs=cutoffs, top_k=args.top_k,
++                        reference_date_human=ref_date_human, user_profile=user_profile,
++                        evidence_lookup=evidence_lookup, predict_only=args.predict_only,
++                        logger=logger, score_debug=args.score_debug,
++                    )
+                 result_path = os.path.join(output_dir, f"{qid}.json")
+                 save_result_json(result_path, result)
+                 async with results_lock:
+                     all_evaluations.append(result)
+                     existing_ids.add(qid)
++                search_pbar.update(1)
+ 
++            await asyncio.gather(*[run_question(qi, qa) for qi, qa in conv_questions])
++
+     async with mem0:
+         with shutdown:
+             tasks = [process_conversation(idx) for idx in conv_indices]
