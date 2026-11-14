@@ -146,14 +146,26 @@ existing bytes and do not claim a fresh performance measurement.
   JVM after untimed warm-up passes to steady state (query analysis, document-id lookup and JVM flags: `comparator_settings` in each results file). Each section prints the boundary per system. The existing
   accepted serving rows (`benchmarks/results/serving_memory_v40.json`) drive both arms from Node,
   which narrows WARM's lead against SQLite; the two protocols are not interchangeable.
-* Text timing contract, the same for every system: the input is the raw query string, the timed region
-  holds that engine's own query analysis and construction (WARM `search_documents` analyses the raw string;
-  tantivy `parse_query_lenient`, Lucene analysis and the FTS5 MATCH expression run on its lowercase alphanumeric
-  word set), and the output is the top-100 (id, score) pairs. WARM's verdict row calls `search_documents`, the
-  document-search product path, which builds full documents per hit, more than the contract needs. The
-  `warm-lexical-api` row (WARM `search_lexical` on the word set) is reference only and feeds no verdict. Results written
-  before this contract (the mixed contract) timed comparators with their queries prepared outside the timer;
-  those runs are kept as evidence only.
+* Text timing, two contracts measured in the same interleaved rounds. For every system the input is the raw
+  query string and the timed region holds that engine's own query analysis and construction (WARM
+  `search_documents` analyses the raw string; tantivy `parse_query_lenient`, Lucene analysis and the FTS5 MATCH
+  expression run on its lowercase alphanumeric word set). **ids contract**: the output is the top-100
+  (id, score) pairs, no document text, and no index stores any. The WARM row is `warm-lexical-api` (`search_lexical`
+  on the word set, which ranks bit-identically to `search_documents`); the comparators are `lucene`, `tantivy-rs`,
+  `tantivy-rs-count`, `tantivy-py` and `sqlite-fts5`. **documents contract**: the top-100 hits come back with their
+  stored document (id, score, stored text and the `bucket` metadata value, what WARM's `DocumentResult` carries).
+  The WARM row is `warm` (text stored at ingest with `--store-text`, `search_documents`, the 100 results freed inside
+  the timer); the comparators are the `-docs` variants (`lucene-docs`, `tantivy-rs-docs`, `tantivy-rs-count-docs`,
+  `tantivy-py-docs`, `sqlite-fts5-docs`), whose indexes store the same text and bucket and whose queries read them
+  back inside the timer with each engine's fastest documented setting (tantivy: a doc-store block cache that holds the
+  whole store, `doc_store_cache_num_blocks`, from the microbenchmark in the run's evidence; Lucene: `StoredFields` reused
+  across hits, Lucene104 `BEST_SPEED`; FTS5: the top-100 rowids joined to a docstore table in one statement; tantivy-py has
+  no doc-store setting). Index size, ingest time and serving RSS of the stored variants are reported in the documents
+  section. Each contract is a section of its own in COMPARISON.md with its own verdicts, drawn against the fastest
+  comparator of the same contract and one Bonferroni family over both. Every documents row is checked against the corpus
+  while the run is written (CRC-32 and length of each returned text, byte range, bucket, and the ordered id lists
+  against the engine's ids row); a mismatch aborts the run. Results written before the two contracts (the single
+  `search_documents` contract of runs 8 and 9, and the mixed contract before that) are kept as evidence only.
 * tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, a mechanism inferred from that measurement and not profiled, see `benchmarks/results/tantivy_collector_microbench_20261114.txt`; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
   `tantivy-rs` (the native crate in its own process, ids from an array built at open, built by
   `examples/competitive_text_tantivy.rs`, the same tantivy version as the binding). The binding row is

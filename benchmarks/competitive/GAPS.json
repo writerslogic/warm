@@ -1,49 +1,172 @@
 [
  {
   "status": "LOSS",
-  "dataset": "beir:fiqa (57,600 documents, 500 queries)",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_seconds",
   "label": "Ingest/build time",
-  "comparator": "SQLite FTS5",
-  "warm": 1.380842936,
-  "comparator_value": 1.292161130986642,
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 1.75251965,
+  "comparator_value": 1.4211971139884554,
   "unit": "s",
-  "advantage_factor": 0.9357770513203697,
+  "advantage_factor": 0.8109450378992643,
   "advantage_ci": [
-   0.914710719514285,
-   0.9426440512011774
+   0.7649677089619794,
+   0.8217931965018547
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
   "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
  },
  {
   "status": "LOSS",
-  "dataset": "beir:fiqa (57,600 documents, 500 queries)",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
-  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 301.05078125,
-  "comparator_value": 116.171875,
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 402.484375,
+  "comparator_value": 143.86328125,
   "unit": "MiB",
-  "advantage_factor": 0.3858879705199237,
+  "advantage_factor": 0.3574381769478629,
   "advantage_ci": [
-   0.3855515478630926,
-   0.387779266912157
+   0.35735356907192484,
+   0.358090108308865
   ],
-  "level": 0.995,
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "disk_mib",
+  "label": "On-disk size",
+  "comparator": "Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit)",
+  "warm": 93.5945053100586,
+  "comparator_value": 41.22071933746338,
+  "unit": "MiB",
+  "advantage_factor": 0.4404181549003111,
+  "advantage_ci": null,
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack",
+  "code_path": "src/core/storage.rs (arena preallocation), src/core/documents/postings.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "ndcg@10",
+  "label": "nDCG@10",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 0.26537791112001474,
+  "comparator_value": 0.26781574230549227,
+  "unit": "nDCG",
+  "advantage_factor": 0.9908973566509144,
+  "advantage_ci": [
+   0.6868425334852687,
+   1.415209364705616
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "recall@100",
+  "label": "recall@100",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 0.5422345043845044,
+  "comparator_value": 0.5545597791097792,
+  "unit": "recall",
+  "advantage_factor": 0.9777746688642652,
+  "advantage_ci": [
+   0.7952072682533653,
+   1.2009674952633824
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "cold_start_s",
+  "label": "Cold start to first answer",
+  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract)",
+  "warm": 0.029924366,
+  "comparator_value": 0.020759933,
+  "unit": "s",
+  "advantage_factor": 0.693746794836021,
+  "advantage_ci": [
+   0.30365857564779813,
+   1.3393188882176994
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever",
+  "code_path": "src/core/storage.rs and src/core/engine/mod.rs (open: arena and document map load)"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), ids contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_seconds",
+  "label": "Ingest/build time",
+  "comparator": "SQLite FTS5",
+  "warm": 1.392787449,
+  "comparator_value": 1.28372280599433,
+  "unit": "s",
+  "advantage_factor": 0.921693261176372,
+  "advantage_ci": [
+   0.9126518516700353,
+   0.9352939193059782
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
+  "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), ids contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_peak_rss_mib",
+  "label": "Peak RSS, build",
+  "comparator": "SQLite FTS5",
+  "warm": 301.03125,
+  "comparator_value": 143.94921875,
+  "unit": "MiB",
+  "advantage_factor": 0.47818696148655665,
+  "advantage_ci": [
+   0.47781122674071574,
+   0.4782952879037596
+  ],
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "beir:fiqa (57,600 documents, 500 queries)",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "ndcg@10",
@@ -54,17 +177,17 @@
   "unit": "nDCG",
   "advantage_factor": 0.9908973566509144,
   "advantage_ci": [
-   0.7038434470031211,
-   1.4091222835086625
+   0.6868425334852687,
+   1.415209364705616
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "beir:fiqa (57,600 documents, 500 queries)",
+  "dataset": "beir:fiqa (57,600 documents, 500 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "recall@100",
@@ -75,54 +198,12 @@
   "unit": "recall",
   "advantage_factor": 0.9777746688642652,
   "advantage_ci": [
-   0.8180864491038681,
-   1.1854053304304581
+   0.7952072682533653,
+   1.2009674952633824
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
-  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
- },
- {
-  "status": "TIE",
-  "dataset": "beir:fiqa (57,600 documents, 500 queries)",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "suite": "standard",
-  "metric": "qps",
-  "label": "QPS (single thread)",
-  "comparator": "Apache Lucene 10.6.0 (JVM)",
-  "warm": 3177.504811249911,
-  "comparator_value": 2622.5278486020607,
-  "unit": "QPS",
-  "advantage_factor": 1.2116190922219114,
-  "advantage_ci": [
-   0.9842221200288703,
-   1.489037201838229
-  ],
-  "level": 0.995,
-  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "measured (M4, same process, identical results, 2026-11-05): ranking from the mapped checkpoint is 1.5x to 1.9x slower than from the live store on all four corpora. On FiQA the flat varint postings cost most of it: 56% of postings carry a frequency above 1 and missed the one-byte fast path; the two-byte window decoder recovers 1.09x, and the rest needs a block-packed checkpoint posting encoding (a checkpoint format change). On the small corpora, rebuilding a StoredDocument per hit was about 45% of a query; checkpoint hits now decode straight into their results (paired M4, identical results: NFCorpus 1.17x, SciFact 1.11x, memory and FiQA unchanged); the record's JSON metadata parse, 13% of that profile, was still paid per hit. Cut on 2026-11-06 (paired M4, same process, identical results, against main after the block-packed checkpoint): a hit now decodes its record without building the chunk vector and a per-query cache shares repeated metadata values; NFCorpus 1.18x, memory 1.08x, FiQA 1.00x QPS, since hit decode is about 10% of a FiQA query and the exhaustive rank() pass is 82%. Block-max MaxScore was slower than the exhaustive pass at k=100, and a larger hot-list budget doubles serving RSS",
-  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
- },
- {
-  "status": "TIE",
-  "dataset": "beir:fiqa (57,600 documents, 500 queries)",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "suite": "standard",
-  "metric": "p50_latency",
-  "label": "p50 latency",
-  "comparator": "Apache Lucene 10.6.0 (JVM)",
-  "warm": 298.4125,
-  "comparator_value": 296.24199999999996,
-  "unit": "us",
-  "advantage_factor": 0.9927265111213502,
-  "advantage_ci": [
-   0.9495595432300163,
-   1.042625981807876
-  ],
-  "level": 0.995,
-  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -211,28 +292,151 @@
  },
  {
   "status": "LOSS",
-  "dataset": "memory (4,559 documents, 100 queries)",
+  "dataset": "memory (4,559 documents, 100 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_seconds",
+  "label": "Ingest/build time",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 1.049943499,
+  "comparator_value": 0.9384251000010408,
+  "unit": "s",
+  "advantage_factor": 0.8937862855428192,
+  "advantage_ci": [
+   0.8520019702554742,
+   0.9214278068365755
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
+  "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "memory (4,559 documents, 100 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_peak_rss_mib",
+  "label": "Peak RSS, build",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 233.5546875,
+  "comparator_value": 117.91015625,
+  "unit": "MiB",
+  "advantage_factor": 0.5048503094162904,
+  "advantage_ci": [
+   0.5041759930511476,
+   0.5052457205963556
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "memory (4,559 documents, 100 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "disk_mib",
+  "label": "On-disk size",
+  "comparator": "Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit)",
+  "warm": 92.82719326019287,
+  "comparator_value": 35.64904308319092,
+  "unit": "MiB",
+  "advantage_factor": 0.3840366365841454,
+  "advantage_ci": null,
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack",
+  "code_path": "src/core/storage.rs (arena preallocation), src/core/documents/postings.rs"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "memory (4,559 documents, 100 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "cold_start_s",
+  "label": "Cold start to first answer",
+  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract)",
+  "warm": 0.0140463845,
+  "comparator_value": 0.0075141495,
+  "unit": "s",
+  "advantage_factor": 0.5349525708911073,
+  "advantage_ci": [
+   0.46628793087376524,
+   0.5651968463880859
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever",
+  "code_path": "src/core/storage.rs and src/core/engine/mod.rs (open: arena and document map load)"
+ },
+ {
+  "status": "TIE",
+  "dataset": "memory (4,559 documents, 100 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "ndcg@10",
+  "label": "nDCG@10",
+  "comparator": "Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit)",
+  "warm": 0.4561419499447157,
+  "comparator_value": 0.46265299364569407,
+  "unit": "nDCG",
+  "advantage_factor": 0.9859267230723582,
+  "advantage_ci": [
+   0.5863661209554932,
+   1.7115849053375807
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "memory (4,559 documents, 100 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "recall@100",
+  "label": "recall@100",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 0.8203333333333334,
+  "comparator_value": 0.8391666666666667,
+  "unit": "recall",
+  "advantage_factor": 0.9775571002979145,
+  "advantage_ci": [
+   0.7781995661605206,
+   1.2384823848238482
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "memory (4,559 documents, 100 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
   "comparator": "SQLite FTS5",
-  "warm": 139.83203125,
-  "comparator_value": 117.69140625,
+  "warm": 139.7265625,
+  "comparator_value": 117.9453125,
   "unit": "MiB",
-  "advantage_factor": 0.8416627091655725,
+  "advantage_factor": 0.8441151803187028,
   "advantage_ci": [
-   0.8410912238572585,
-   0.8428915123370447
+   0.842625422261928,
+   0.8447364742066266
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "memory (4,559 documents, 100 queries)",
+  "dataset": "memory (4,559 documents, 100 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "ndcg@10",
@@ -243,17 +447,17 @@
   "unit": "nDCG",
   "advantage_factor": 0.9859267230723582,
   "advantage_ci": [
-   0.597111272490446,
-   1.6477744218570605
+   0.5863661209554932,
+   1.7115849053375807
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "memory (4,559 documents, 100 queries)",
+  "dataset": "memory (4,559 documents, 100 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "recall@100",
@@ -264,31 +468,31 @@
   "unit": "recall",
   "advantage_factor": 0.9775571002979145,
   "advantage_ci": [
-   0.7894450489662675,
-   1.2235241099594412
+   0.7781995661605206,
+   1.2384823848238482
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "memory (4,559 documents, 100 queries)",
+  "dataset": "memory (4,559 documents, 100 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_seconds",
   "label": "Ingest/build time",
   "comparator": "SQLite FTS5",
-  "warm": 0.892384686,
-  "comparator_value": 0.8618027319898829,
+  "warm": 0.85162353,
+  "comparator_value": 0.8689685569843277,
   "unit": "s",
-  "advantage_factor": 0.965730077521616,
+  "advantage_factor": 1.0203670123867148,
   "advantage_ci": [
-   0.9463955932714686,
-   1.0114103358755169
+   0.9805256667183468,
+   1.0257655419061489
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
   "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
@@ -379,91 +583,193 @@
  },
  {
   "status": "LOSS",
-  "dataset": "beir:nfcorpus (3,633 documents, 324 queries)",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "suite": "standard",
-  "metric": "qps",
-  "label": "QPS (single thread)",
-  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 28935.174162218304,
-  "comparator_value": 42938.6604032733,
-  "unit": "QPS",
-  "advantage_factor": 0.6738723073906729,
-  "advantage_ci": [
-   0.5811774656071176,
-   0.8385503416374411
-  ],
-  "level": 0.995,
-  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "measured (M4, same process, identical results, 2026-11-05): ranking from the mapped checkpoint is 1.5x to 1.9x slower than from the live store on all four corpora. On FiQA the flat varint postings cost most of it: 56% of postings carry a frequency above 1 and missed the one-byte fast path; the two-byte window decoder recovers 1.09x, and the rest needs a block-packed checkpoint posting encoding (a checkpoint format change). On the small corpora, rebuilding a StoredDocument per hit was about 45% of a query; checkpoint hits now decode straight into their results (paired M4, identical results: NFCorpus 1.17x, SciFact 1.11x, memory and FiQA unchanged); the record's JSON metadata parse, 13% of that profile, was still paid per hit. Cut on 2026-11-06 (paired M4, same process, identical results, against main after the block-packed checkpoint): a hit now decodes its record without building the chunk vector and a per-query cache shares repeated metadata values; NFCorpus 1.18x, memory 1.08x, FiQA 1.00x QPS, since hit decode is about 10% of a FiQA query and the exhaustive rank() pass is 82%. Block-max MaxScore was slower than the exhaustive pass at k=100, and a larger hot-list budget doubles serving RSS",
-  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
- },
- {
-  "status": "LOSS",
-  "dataset": "beir:nfcorpus (3,633 documents, 324 queries)",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "suite": "standard",
-  "metric": "p50_latency",
-  "label": "p50 latency",
-  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 36.8975,
-  "comparator_value": 17.274,
-  "unit": "us",
-  "advantage_factor": 0.4681617995799173,
-  "advantage_ci": [
-   0.45131176565266384,
-   0.47942234302501163
-  ],
-  "level": 0.995,
-  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding",
-  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
- },
- {
-  "status": "LOSS",
-  "dataset": "beir:nfcorpus (3,633 documents, 324 queries)",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), documents contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_seconds",
   "label": "Ingest/build time",
-  "comparator": "SQLite FTS5",
-  "warm": 0.163771753,
-  "comparator_value": 0.14620579002075829,
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 0.212961824,
+  "comparator_value": 0.18673917499836534,
   "unit": "s",
-  "advantage_factor": 0.8927411921930047,
+  "advantage_factor": 0.8768669026724966,
   "advantage_ci": [
-   0.875192088941795,
-   0.9309881334558302
+   0.8141275389286448,
+   0.8996599749415687
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
   "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
  },
  {
   "status": "LOSS",
-  "dataset": "beir:nfcorpus (3,633 documents, 324 queries)",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_peak_rss_mib",
+  "label": "Peak RSS, build",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 77.5859375,
+  "comparator_value": 32.859375,
+  "unit": "MiB",
+  "advantage_factor": 0.42352230389688855,
+  "advantage_ci": [
+   0.4210261569416499,
+   0.4238287153652393
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "disk_mib",
+  "label": "On-disk size",
+  "comparator": "Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit)",
+  "warm": 11.966870307922363,
+  "comparator_value": 4.841461181640625,
+  "unit": "MiB",
+  "advantage_factor": 0.40457204407366715,
+  "advantage_ci": null,
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack",
+  "code_path": "src/core/storage.rs (arena preallocation), src/core/documents/postings.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "ndcg@10",
+  "label": "nDCG@10",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 0.29158226275481797,
+  "comparator_value": 0.29140981016338025,
+  "unit": "nDCG",
+  "advantage_factor": 1.0005917871856855,
+  "advantage_ci": [
+   0.697305228868484,
+   1.4372579007721404
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "recall@100",
+  "label": "recall@100",
+  "comparator": "Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit)",
+  "warm": 0.22742500506264265,
+  "comparator_value": 0.22757113786424402,
+  "unit": "recall",
+  "advantage_factor": 0.9993578588085782,
+  "advantage_ci": [
+   0.6635054962097233,
+   1.4991496541933793
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "p99_latency",
+  "label": "p99 latency",
+  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract)",
+  "warm": 101.88,
+  "comparator_value": 145.0095,
+  "unit": "us",
+  "advantage_factor": 1.4233362779740872,
+  "advantage_ci": [
+   0.8871281089001901,
+   1.9295128971365991
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "cold_start_s",
+  "label": "Cold start to first answer",
+  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract)",
+  "warm": 0.0067127309999999996,
+  "comparator_value": 0.0058233595,
+  "unit": "s",
+  "advantage_factor": 0.8675097363502277,
+  "advantage_ci": [
+   0.7627308383728396,
+   1.058749113513311
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever",
+  "code_path": "src/core/storage.rs and src/core/engine/mod.rs (open: arena and document map load)"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), ids contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_seconds",
+  "label": "Ingest/build time",
+  "comparator": "SQLite FTS5",
+  "warm": 0.146001473,
+  "comparator_value": 0.13204499299172312,
+  "unit": "s",
+  "advantage_factor": 0.9044086356013896,
+  "advantage_ci": [
+   0.8983722344251809,
+   0.9761679846523694
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
+  "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
   "comparator": "SQLite FTS5",
-  "warm": 51.87109375,
-  "comparator_value": 32.64453125,
+  "warm": 51.80078125,
+  "comparator_value": 32.86328125,
   "unit": "MiB",
-  "advantage_factor": 0.6293395587017094,
+  "advantage_factor": 0.634416710655305,
   "advantage_ci": [
-   0.6278929966937181,
-   0.6319444444444444
+   0.633692458374143,
+   0.636844891476972
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "beir:nfcorpus (3,633 documents, 324 queries)",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "ndcg@10",
@@ -474,17 +780,17 @@
   "unit": "nDCG",
   "advantage_factor": 1.0005917871856855,
   "advantage_ci": [
-   0.7019718318493078,
-   1.419067575689336
+   0.697305228868484,
+   1.4372579007721404
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "beir:nfcorpus (3,633 documents, 324 queries)",
+  "dataset": "beir:nfcorpus (3,633 documents, 324 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "recall@100",
@@ -495,33 +801,12 @@
   "unit": "recall",
   "advantage_factor": 0.9993578588085782,
   "advantage_ci": [
-   0.6898622199107787,
-   1.4495060916111866
+   0.6635054962097233,
+   1.4991496541933793
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
-  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
- },
- {
-  "status": "TIE",
-  "dataset": "beir:nfcorpus (3,633 documents, 324 queries)",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "suite": "standard",
-  "metric": "p99_latency",
-  "label": "p99 latency",
-  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 95.6765,
-  "comparator_value": 76.2805,
-  "unit": "us",
-  "advantage_factor": 0.7972751929679702,
-  "advantage_ci": [
-   0.5914318527385073,
-   1.2621229609645523
-  ],
-  "level": 0.995,
-  "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -610,49 +895,193 @@
  },
  {
   "status": "LOSS",
-  "dataset": "beir:scifact (5,183 documents, 809 queries)",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), documents contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_seconds",
   "label": "Ingest/build time",
-  "comparator": "SQLite FTS5",
-  "warm": 0.239519089,
-  "comparator_value": 0.2075620770046953,
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 0.279261297,
+  "comparator_value": 0.24514951501623727,
   "unit": "s",
-  "advantage_factor": 0.8665784337744176,
+  "advantage_factor": 0.877849947879592,
   "advantage_ci": [
-   0.8368504104864685,
-   0.9048660793488685
+   0.8561235862142537,
+   0.9193626401841561
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
   "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
  },
  {
   "status": "LOSS",
-  "dataset": "beir:scifact (5,183 documents, 809 queries)",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_peak_rss_mib",
+  "label": "Peak RSS, build",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 90.3203125,
+  "comparator_value": 36.078125,
+  "unit": "MiB",
+  "advantage_factor": 0.39944641467001124,
+  "advantage_ci": [
+   0.39935135135135136,
+   0.4000866363439463
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "disk_mib",
+  "label": "On-disk size",
+  "comparator": "Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit)",
+  "warm": 16.09896945953369,
+  "comparator_value": 6.629749298095703,
+  "unit": "MiB",
+  "advantage_factor": 0.41181203025201185,
+  "advantage_ci": null,
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack",
+  "code_path": "src/core/storage.rs (arena preallocation), src/core/documents/postings.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "ndcg@10",
+  "label": "nDCG@10",
+  "comparator": "Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit)",
+  "warm": 0.7026997341473034,
+  "comparator_value": 0.7021782838562147,
+  "unit": "nDCG",
+  "advantage_factor": 1.0007426180830101,
+  "advantage_ci": [
+   0.8969990949315977,
+   1.1158108977856072
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "recall@100",
+  "label": "recall@100",
+  "comparator": "SQLite FTS5 (documents contract: docstore table read per hit)",
+  "warm": 0.9264112072517512,
+  "comparator_value": 0.9321796456530697,
+  "unit": "recall",
+  "advantage_factor": 0.9938118811881188,
+  "advantage_ci": [
+   0.9401930368838332,
+   1.0484512419607754
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "p99_latency",
+  "label": "p99 latency",
+  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract)",
+  "warm": 201.548,
+  "comparator_value": 246.0695,
+  "unit": "us",
+  "advantage_factor": 1.220897751404132,
+  "advantage_ci": [
+   0.9541918909068281,
+   2.066263798899578
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate",
+  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), documents contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "cold_start_s",
+  "label": "Cold start to first answer",
+  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract)",
+  "warm": 0.0083929245,
+  "comparator_value": 0.0068192475,
+  "unit": "s",
+  "advantage_factor": 0.8124995643651984,
+  "advantage_ci": [
+   0.64643443264067,
+   1.183309635223072
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever",
+  "code_path": "src/core/storage.rs and src/core/engine/mod.rs (open: arena and document map load)"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), ids contract",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_seconds",
+  "label": "Ingest/build time",
+  "comparator": "SQLite FTS5",
+  "warm": 0.219121264,
+  "comparator_value": 0.2018205450149253,
+  "unit": "s",
+  "advantage_factor": 0.9210450018895715,
+  "advantage_ci": [
+   0.8739978171900659,
+   0.924472285849134
+  ],
+  "level": 0.9975,
+  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
+  "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
   "comparator": "SQLite FTS5",
-  "warm": 60.32421875,
-  "comparator_value": 35.86328125,
+  "warm": 60.38671875,
+  "comparator_value": 36.1015625,
   "unit": "MiB",
-  "advantage_factor": 0.5945088389561614,
+  "advantage_factor": 0.5978394462772495,
   "advantage_ci": [
-   0.5935842711162851,
-   0.5948063722315762
+   0.597270728236968,
+   0.5980975799145852
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "beir:scifact (5,183 documents, 809 queries)",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "ndcg@10",
@@ -663,17 +1092,17 @@
   "unit": "nDCG",
   "advantage_factor": 1.0007426180830101,
   "advantage_ci": [
-   0.8992113393218454,
-   1.114207640520607
+   0.8969990949315977,
+   1.1158108977856072
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
   "status": "TIE",
-  "dataset": "beir:scifact (5,183 documents, 809 queries)",
+  "dataset": "beir:scifact (5,183 documents, 809 queries), ids contract",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
   "metric": "recall@100",
@@ -684,33 +1113,12 @@
   "unit": "recall",
   "advantage_factor": 0.9938118811881188,
   "advantage_ci": [
-   0.9412867765923053,
-   1.0459256571337854
+   0.9401930368838332,
+   1.0484512419607754
   ],
-  "level": 0.995,
+  "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
-  "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
- },
- {
-  "status": "TIE",
-  "dataset": "beir:scifact (5,183 documents, 809 queries)",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "suite": "standard",
-  "metric": "p99_latency",
-  "label": "p99 latency",
-  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 97.939,
-  "comparator_value": 195.75650000000002,
-  "unit": "us",
-  "advantage_factor": 1.9987594318912796,
-  "advantage_ci": [
-   0.8601367897692137,
-   2.3536471338840794
-  ],
-  "level": 0.995,
-  "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
