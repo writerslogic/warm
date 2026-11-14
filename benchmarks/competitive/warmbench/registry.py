@@ -18,8 +18,8 @@ WARM = "warm"
 # process in both rows. `warm-eager` is never a comparator in a verdict (same family).
 WARM_EAGER = "warm-eager"
 # `warm-lexical-api` is the same lexical index timed through `search_lexical` (ids and scores, the word set parsed inside
-# the timer), an API that hydrates the whole in-memory store from the checkpoint before it ranks. It is shown next to the
-# product path so the choice of API is visible, and it feeds no verdict.
+# the timer). It is shown next to the document-search product path so the choice of API is visible, and it feeds no
+# verdict. Before the engine served it from the checkpoint (run 8) it hydrated the whole in-memory store first.
 WARM_LEXICAL_API = "warm-lexical-api"
 WARM_TEXT_ENCODE = {WARM: "lexical", WARM_EAGER: "eager", WARM_LEXICAL_API: "lexical"}
 WARM_TEXT_API = {WARM: "documents", WARM_EAGER: "documents", WARM_LEXICAL_API: "lexical"}
@@ -33,7 +33,7 @@ LEGACY_KEYS = {"hms": WARM, "hms-eager": WARM_EAGER, "hms-server": "warm-server"
 SYSTEMS = {
     WARM: {"display": "WARM", "kind": "both", "env": None, "package": "writerslogic-warm", "family": "warm"},
     WARM_EAGER: {"display": "WARM (eager hypervectors, informational)", "kind": "text", "env": None, "package": "writerslogic-warm", "family": "warm"},
-    WARM_LEXICAL_API: {"display": "WARM (lexical-only API, hydrates the store; reference)", "kind": "text", "env": None, "package": "writerslogic-warm", "family": "warm"},
+    WARM_LEXICAL_API: {"display": "WARM (lexical-only API search_lexical; reference)", "kind": "text", "env": None, "package": "writerslogic-warm", "family": "warm"},
     "hnswlib": {"display": "hnswlib", "kind": "ann", "env": "hnswlib", "package": "hnswlib", "family": "hnsw"},
     "hnswlib-cpp": {"display": "hnswlib (native C++)", "kind": "ann", "env": "hnswlib", "package": "hnswlib", "family": "hnsw"},
     "faiss-hnsw": {"display": "FAISS HNSW", "kind": "ann", "env": "faiss", "package": "faiss-cpu", "family": "hnsw"},
@@ -68,7 +68,7 @@ SYSTEMS = {
 TIMING_BOUNDARY = {
     WARM: "native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`), `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, (id, score) taken from the returned documents; ANN: public-bench loop",
     WARM_EAGER: "native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`), `search_documents` on the raw query string inside the timer, (id, score) taken from the returned documents",
-    WARM_LEXICAL_API: "native Rust API call in the engine process; text: BM25 index only (`--encode lexical`), `search_lexical` on the word set parsed inside the timer, ids and scores out; this API hydrates the whole in-memory store before it ranks, so it is not the document-search product path",
+    WARM_LEXICAL_API: "native Rust API call in the engine process; text: BM25 index only (`--encode lexical`), `search_lexical` on the word set parsed inside the timer, ids and scores out; the id-and-score API, not the document-search product path",
     "hnswlib": "CPython binding call per query",
     "hnswlib-cpp": "native C++ searchKnn call per query from a C++ driver process (no Python in the timed region); same index file and queries as the hnswlib row",
     "faiss-hnsw": "CPython (SWIG) call per query", "faiss-flat": "CPython (SWIG) call per query",

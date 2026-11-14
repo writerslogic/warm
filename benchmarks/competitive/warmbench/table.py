@@ -643,7 +643,7 @@ def readme_block(summary):
                 lines.append(f"| {short} | `{sec['hw']['class']}` | {label} ({unit}), WARM with eager ingest (reference, feeds no verdict) | {fmt(eager['value'], dec)} | - | - | - |")
             lexapi = sec["metrics"].get(key, {}).get(registry.WARM_LEXICAL_API) if key == "qps" else None
             if lexapi and lexapi["value"] is not None:
-                lines.append(f"| {short} | `{sec['hw']['class']}` | {label} ({unit}), WARM lexical-only API that hydrates the store (reference, feeds no verdict) | {fmt(lexapi['value'], dec)} | - | - | - |")
+                lines.append(f"| {short} | `{sec['hw']['class']}` | {label} ({unit}), WARM lexical-only API `search_lexical` (reference, feeds no verdict) | {fmt(lexapi['value'], dec)} | - | - | - |")
         if sec["per_build"]:
             counts = {v: sum(1 for e in sec["per_build"] if e["metric"] in ("build_seconds", "serving_rss_mib") and e["verdict"] == v) for v in ("WIN", "TIE", "LOSS")}
             lines.append(f"| {short} | `{sec['hw']['class']}` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W {counts['WIN']} / T {counts['TIE']} / L {counts['LOSS']} | |")
