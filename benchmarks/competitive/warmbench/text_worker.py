@@ -238,7 +238,95 @@ class Bm25s:
         raise Unsupported("immutable index; any change is a full rebuild")
 
 
-SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s,
+class LancedbFts:
+    """LanceDB native full-text index (Rust BM25, not the tantivy-backed variant): stemmed English, other settings default."""
+
+    def __init__(self, store):
+        self.store = Path(store)
+
+    def build(self, documents):
+        import lancedb
+        import pyarrow as pa
+        self.store.mkdir(parents=True)
+        db = lancedb.connect(str(self.store / "db"))
+        table = db.create_table("t", pa.table({"id": pa.array([d["id"] for d in documents], type=pa.string()),
+                                               "text": pa.array([d["text"] for d in documents], type=pa.string())}))
+        table.create_fts_index("text", use_tantivy=False, language="English", stem=True, remove_stop_words=True, replace=True)
+
+    def open(self):
+        import lancedb
+        self.table = lancedb.connect(str(self.store / "db")).open_table("t")
+
+    def prepare(self, text):
+        return " ".join(words(text))
+
+    def search(self, text):
+        if not text:
+            return []
+        rows = self.table.search(text, query_type="fts", fts_columns="text").select(["id"]).limit(K).to_arrow()
+        return list(zip(rows["id"].to_pylist(), rows["_score"].to_pylist()))
+
+    def replace(self, document):
+        import pyarrow as pa
+        self.table.delete("id = '" + document["id"].replace("'", "''") + "'")
+        self.table.add(pa.table({"id": [document["id"]], "text": [document["text"] + " benchmarkrevision"]}))
+        self.table.optimize()
+
+    def delete(self, document):
+        self.table.delete("id = '" + document["id"].replace("'", "''") + "'")
+        self.table.optimize()
+
+
+class DuckdbFts:
+    """DuckDB `fts` extension: BM25 over a static inverted index (porter stemmer, English stop words)."""
+
+    def __init__(self, store):
+        self.store = Path(store)
+
+    def _connect(self):
+        import duckdb
+        con = duckdb.connect(str(self.store / "fts.duckdb"))
+        con.execute("INSTALL fts; LOAD fts")
+        return con
+
+    def build(self, documents):
+        import pyarrow as pa
+        self.store.mkdir(parents=True)
+        con = self._connect()
+        try:
+            con.execute("CREATE TABLE docs(id VARCHAR PRIMARY KEY, text VARCHAR)")
+            for lo in range(0, len(documents), 20000):
+                batch = documents[lo: lo + 20000]
+                con.register("warm_ingest_batch", pa.table({"id": [d["id"] for d in batch], "text": [d["text"] for d in batch]}))
+                try:
+                    con.execute("INSERT INTO docs SELECT * FROM warm_ingest_batch")
+                finally:
+                    con.unregister("warm_ingest_batch")
+            con.execute("PRAGMA create_fts_index('docs', 'id', 'text', stemmer='porter', stopwords='english', lower=1, overwrite=1)")
+            con.execute("CHECKPOINT")
+        finally:
+            con.close()
+
+    def open(self):
+        self.con = self._connect()
+
+    def prepare(self, text):
+        return " ".join(words(text))
+
+    def search(self, text):
+        if not text:
+            return []
+        return self.con.execute("SELECT id, score FROM (SELECT id, fts_main_docs.match_bm25(id, ?, fields := 'text') AS score FROM docs) "
+                                "WHERE score IS NOT NULL ORDER BY score DESC, id LIMIT ?", [text, K]).fetchall()
+
+    def replace(self, document):
+        raise Unsupported("the fts index is static; any change needs create_fts_index again (full rebuild)")
+
+    def delete(self, document):
+        raise Unsupported("the fts index is static; any change needs create_fts_index again (full rebuild)")
+
+
+SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s, "lancedb-fts": LancedbFts, "duckdb-fts": DuckdbFts,
            "sqlite-fts5-prev": SqliteFts5, "tantivy-prev": Tantivy}
 
 

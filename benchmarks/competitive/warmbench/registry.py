@@ -44,6 +44,8 @@ SYSTEMS = {
     "lucene-prev": {"display": f"Apache Lucene {jars.PREVIOUS} (JVM, previous pin)", "kind": "text-control", "env": None, "package": "lucene-core", "family": "lexical"},
     "tantivy-prev": {"display": "tantivy-py 0.26.2 (previous pin)", "kind": "text-control", "env": "tantivy-prev", "package": "tantivy", "family": "lexical"},
     "whoosh": {"display": "Whoosh", "kind": "text", "env": "whoosh", "package": "whoosh-reloaded", "family": "lexical"},
+    "lancedb-fts": {"display": "LanceDB FTS", "kind": "text", "env": "lancedb", "package": "lancedb", "family": "lexical"},
+    "duckdb-fts": {"display": "DuckDB fts", "kind": "text", "env": "duckdb", "package": "duckdb", "family": "lexical"},
     "bm25s": {"display": "bm25s", "kind": "text", "env": "bm25s", "package": "bm25s", "family": "lexical"},
 }
 
@@ -58,7 +60,8 @@ TIMING_BOUNDARY = {
     "chroma": "CPython client call per query (Rust core inside)", "qdrant-local": "CPython client call per query (embedded local mode)",
     "milvus-lite": "CPython client call per query (embedded server process)", "duckdb-vss": "CPython duckdb call per query",
     "sqlite-fts5": "CPython sqlite3 call per query (query string built outside the timer)", "tantivy": "CPython tantivy-py call per query (stored id fetched per hit)",
-    "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after a full untimed JIT warm-up pass",
+    "whoosh": "pure Python",
+    "lancedb-fts": "CPython + Arrow call per query (native Rust BM25 inside; multi-threaded runtime)", "duckdb-fts": "CPython duckdb call per query (SQL macro match_bm25 over a static index)", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after a full untimed JIT warm-up pass",
 }
 
 _DOC = "documentation, not exercised here"
@@ -86,6 +89,8 @@ FACTS = {
                    "encrypted_at_rest": {"value": "database-file encryption (DuckDB 1.4+); not exercised with the vss index", "basis": _DOC}},
     "sqlite-fts5": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no (SQLCipher is a separate build)", "basis": _DOC}},
     "tantivy": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
+    "lancedb-fts": {"service_needed": {"value": "no (embedded)", "basis": _DOC}, "encrypted_at_rest": {"value": "no built-in", "basis": _DOC}},
+    "duckdb-fts": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "database-file encryption (DuckDB 1.4+); not exercised", "basis": _DOC}},
     "whoosh": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "bm25s": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "lucene": {"service_needed": {"value": "no (library; needs a JVM)", "basis": _DOC}, "encrypted_at_rest": {"value": "no (filesystem-level only)", "basis": _DOC}},
@@ -93,6 +98,8 @@ FACTS = {
 
 # Systems named in the brief that were not run, with the reason recorded in every results file.
 NOT_RUN = {
+    "chroma-fts": "Chroma's local PersistentClient offers only unranked `where_document` $contains/$regex filters, no ranked BM25 full-text index (sparse BM25 search is a Chroma Cloud feature)",
+    "qdrant-fts": "Qdrant local (embedded) mode has no ranked full-text index; the text payload index only filters, and needs a server",
     "mem0": "agent-memory systems belong to the next harness stage (plug in through the same adapter interface)",
     "zep": "agent-memory systems belong to the next harness stage",
     "letta": "agent-memory systems belong to the next harness stage",

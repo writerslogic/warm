@@ -39,3 +39,15 @@ def test_version_controls_are_selectable_but_never_default():
         assert registry.SYSTEMS[control]["env"] != registry.SYSTEMS[control.removesuffix("-prev")]["env"]
     assert set(jars.PINNED) == set(jars.JAVA_RELEASE) == {jars.VERSION, jars.PREVIOUS}
     assert jars.PINNED[jars.VERSION] != jars.PINNED[jars.PREVIOUS]
+
+
+@pytest.mark.parametrize("system, package", [("lancedb-fts", "lancedb"), ("duckdb-fts", "duckdb")])
+def test_native_fts_ranks_matching_document_first(tmp_path, system, package):
+    pytest.importorskip(package)
+    docs = [{"id": "a", "text": "apricot orchard harvest"}, {"id": "b", "text": "banana orchard"}, {"id": "c", "text": "cherry blossom festival"}]
+    adapter = text_worker.SYSTEMS[system](tmp_path / "store")
+    adapter.build(docs)
+    adapter.open()
+    hits = [i for i, _ in adapter.search(adapter.prepare("apricot harvest"))]
+    assert hits[0] == "a" and "c" not in hits
+    assert adapter.search(adapter.prepare("")) == []
