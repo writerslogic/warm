@@ -379,11 +379,14 @@ impl SparseStore {
             }
             at = end;
         }
-        let file = OpenOptions::new().append(true).read(true).open(path)?;
         if at < bytes.len() {
-            file.set_len(at as u64)?;
-            file.sync_all()?;
+            // An append-only handle cannot set the length on Windows (access denied), so the torn tail is
+            // cut through a plain write handle.
+            let trunc = OpenOptions::new().write(true).open(path)?;
+            trunc.set_len(at as u64)?;
+            trunc.sync_all()?;
         }
+        let file = OpenOptions::new().append(true).read(true).open(path)?;
         Ok(Some(Inner {
             rows,
             slots,
