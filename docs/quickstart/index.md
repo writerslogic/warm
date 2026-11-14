@@ -8,14 +8,17 @@ uses Rust, Python or the optional embedded `writerslogic-warm` Node engine.
 
 ## Portable JavaScript client
 
-The npm client release is pending. From a checkout, build the client and server:
+From a checkout, build the client (needs Node 20.19 or newer; the built client runs on Node 18)
+and install a prebuilt server:
 
 ```sh
 npm ci --prefix bindings/js/warm-sdk
 npm run build --prefix bindings/js/warm-sdk
-cargo build --release --features server --bin warm-server
-WARM_API_KEY=quickstart target/release/warm-server --input-dim 384
+curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+WARM_API_KEY=quickstart warm-server --input-dim 384
 ```
+
+In an application, skip the build: `npm install warm-sdk`.
 
 Leave the server running. In another terminal, from the same checkout:
 
@@ -67,22 +70,22 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
 
 === "Python"
 
-    The Python package is an HTTP client for `warm-server`, which stores vectors you supply.
-    Start the server, then run the script:
+    The Python package is an HTTP client for `warm-server`. Start the server, then run the script:
 
     ```sh
     git clone https://github.com/writerslogic/warm
     cd warm
-    cargo build --release --features server --bin warm-server
-    WARM_API_KEY=quickstart target/release/warm-server --input-dim 384 &
-    WARM_API_KEY=quickstart uv run --with bindings/python/warm-sdk \
+    curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+    WARM_API_KEY=quickstart warm-server --input-dim 384 &
+    WARM_API_KEY=quickstart uv run --no-project --with warm-sdk \
         python examples/quickstart/python/quickstart.py
     ```
 
-    The script embeds text with `toy_embed`, a small hashed bag of words so it needs no model
-    download. It is lexical and only a stand-in: use a real embedding model for semantic
-    search. The `warm-python` wheel runs the engine in-process (`writerslogic_warm.Warm`:
-    `memorize_document`, `search_documents`, `remember`, `recall`) without a server.
+    `--no-project` stops uv from compiling this checkout's native package. The comparison uses the
+    memory API, which ranks with the same stemmed lexical search as the Rust and Node examples, so it
+    needs no embedding model. The masked-vector step uses `toy_embed`, a small hashed bag of words
+    that is only a stand-in: use a real embedding model for semantic search. The in-process
+    `writerslogic_warm.Warm` class is not in the 0.6.8 wheel; it ships with the next release.
 
 === "Embedded Node"
 

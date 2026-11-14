@@ -1,0 +1,159 @@
+# Copyright 2024-2026 WritersLogic Contributors
+# SPDX-License-Identifier: Apache-2.0
+name: warm-server release
+
+# Builds warm-server for the same targets as the MCP launcher, writes a SHA-256 table and, on a
+# `server-v<version>` tag, attaches both to a GitHub release. `scripts/install-warm-server.sh`
+# downloads one asset and verifies it against that table. Run it by hand (workflow_dispatch) or
+# open a pull request that touches this file for a build-and-smoke dry run that publishes nothing.
+
+on:
+  push:
+    tags: ["server-v*"]
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/warm-server-release.yml
+      - scripts/install-warm-server.sh
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The tag must name the crate version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          echo "crate version $version"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            test "$GITHUB_REF_NAME" = "server-v$version" || { echo "::error::tag $GITHUB_REF_NAME does not match crate version $version"; exit 1; }
+          fi
+      - name: Installer script is valid shell
+        run: sh -n scripts/install-warm-server.sh
+
+  binary:
+    name: binary ${{ matrix.target }}
+    needs: version
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_PROFILE_RELEASE_LTO: "false"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, target: aarch64-apple-darwin }
+          - { os: macos-15-intel, target: x86_64-apple-darwin }
+          - { os: ubuntu-24.04, target: x86_64-unknown-linux-gnu, linux: true }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, linux: true }
+          - { os: windows-2025, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        if: ${{ matrix.linux }}
+        with:
+          version: 0.14.1
+          use-cache: false
+      - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        if: ${{ matrix.linux }}
+        with:
+          tool: cargo-zigbuild
+      - name: Build and smoke test warm-server
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          host=$(rustc -vV | sed -n 's/^host: //p')
+          test "$host" = "$TARGET"
+          binary=target/release/warm-server
+          if [[ "$TARGET" == *linux* ]]; then
+            cargo zigbuild --release --locked --target "${TARGET}.2.17" --features server --bin warm-server
+            binary="target/${TARGET}/release/warm-server"
+            newer=$(readelf -W --version-info "$binary" | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | cut -d_ -f2 | sort -Vu | awk -F. '$1 > 2 || ($1 == 2 && $2 > 17)' | head -1)
+            test -z "$newer"
+          else
+            cargo build --release --locked --features server --bin warm-server
+          fi
+          extension=""
+          if [[ "$TARGET" == *windows* ]]; then extension=".exe"; fi
+          "${binary}${extension}" --version
+          mkdir -p assets
+          cp "${binary}${extension}" "assets/warm-server-${TARGET}${extension}"
+      - name: Serve a request
+        if: ${{ !contains(matrix.target, 'windows') }}
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          WARM_API_KEY=smoke "assets/warm-server-${TARGET}" --input-dim 8 --data-dir "$RUNNER_TEMP/warm-smoke" &
+          pid=$!
+          trap 'kill $pid 2>/dev/null || true' EXIT
+          for _ in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8080/readyz >/dev/null 2>&1 && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8080/readyz
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: server-binary-${{ matrix.target }}
+          path: assets/warm-server-*
+          if-no-files-found: error
+          compression-level: 0
+
+  checksums:
+    needs: binary
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: server-release-assets
+          pattern: server-binary-*
+          merge-multiple: true
+      - name: Write SHA256SUMS
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd server-release-assets
+          test "$(find . -maxdepth 1 -name 'warm-server-*' | wc -l | tr -d ' ')" = 5
+          sha256sum warm-server-* > SHA256SUMS
+          cat SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: server-release
+          path: server-release-assets/*
+          if-no-files-found: error
+          compression-level: 0
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/server-v')
+    needs: checksums
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: server-release
+          path: server-release-assets
+      - name: Publish binaries and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" server-release-assets/* \
+            --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "warm-server $GITHUB_REF_NAME" \
+            --notes "warm-server binaries and a SHA256SUMS table. Install with scripts/install-warm-server.sh."

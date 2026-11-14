@@ -7,12 +7,16 @@ From the repository root:
 
     cargo build --release --features server --bin warm-server
     WARM_API_KEY=quickstart target/release/warm-server --input-dim 384 &
-    WARM_API_KEY=quickstart uv run --with bindings/python/warm-sdk \
+    WARM_API_KEY=quickstart uv run --no-project --with warm-sdk \
         python examples/quickstart/python/quickstart.py
 
-The Python package is an HTTP client for warm-server, and the server stores vectors you supply.
-`toy_embed` below is a deliberately tiny lexical stand-in (hashed bag of words), so this
-script needs no model download. Swap in a real embedding model for semantic search.
+`--no-project` keeps uv from building this checkout's own warm-python from source. Inside the
+checkout, `--with bindings/python/warm-sdk` also works, with `--no-project` in front.
+
+The Python package is an HTTP client for warm-server. Steps 1 and 2 use the memory API, which
+ranks with the server's stemmed lexical search, the same engine the Rust and Node quickstarts
+use, so no embedding model is needed. Step 3 stores vectors you supply; `toy_embed` is a
+deliberately tiny stand-in (hashed bag of words) so that step needs no model download either.
 """
 
 import hashlib
@@ -54,15 +58,13 @@ queries = json.loads((HERE / "queries.json").read_text())
 tenant = f"quickstart-{int(time.time())}"  # a tenant is a store; a fresh one per run
 
 # --8<-- [start:ingest]
-# 1. Ingest. The server keeps one store per tenant; you send the text and a vector per document.
-docs = [
-    {"id": d["id"], "vector": toy_embed(d["text"]), "text": d["text"], "metadata": {"title": d["title"]}}
-    for d in corpus
-]
+# 1. Ingest. The server keeps one store per tenant; remember_many stores the facts atomically.
 client = WarmClient(url=URL, api_key=API_KEY, tenant_id=tenant)
 started = time.perf_counter()
-client.add_documents(docs)
-print(f"ingested {len(docs)} documents in {(time.perf_counter() - started) * 1000:.1f} ms")
+client.memory.remember_many(
+    [{"id": d["id"], "text": d["text"], "metadata": {"title": d["title"]}} for d in corpus]
+)
+print(f"ingested {len(corpus)} documents in {(time.perf_counter() - started) * 1000:.1f} ms")
 # --8<-- [end:ingest]
 
 # --8<-- [start:compare]
@@ -75,8 +77,8 @@ db.executemany("INSERT INTO docs (id, text) VALUES (?, ?)", [(d["id"], d["text"]
 print(f"\n{'query':<58} {'WARM':<9} {'FTS5':<9} expected")
 warm_hits = fts_hits = 0
 for q in queries:
-    matches = client.query(toy_embed(q["query"]), top_k=3)["matches"]
-    warm = matches[0]["id"] if matches else "-"
+    matches = client.memory.recall(q["query"], k=3)
+    warm = matches[0].id if matches else "-"
     row = db.execute(
         "SELECT id FROM docs WHERE docs MATCH ? ORDER BY bm25(docs) LIMIT 1", (fts5_query(q["query"]),)
     ).fetchone()
@@ -85,20 +87,24 @@ for q in queries:
     fts_hits += fts == q["expect"]
     print(f"{q['query']:<58} {warm:<9} {fts:<9} {q['expect']}")
 print(f"top-1 correct: WARM {warm_hits}/{len(queries)}, FTS5 {fts_hits}/{len(queries)}")
-assert warm_hits >= 4, f"WARM found the expected article for only {warm_hits} queries"
+assert warm_hits >= 7, f"WARM found the expected article for only {warm_hits} queries"
 # --8<-- [end:compare]
 
 # --8<-- [start:hit]
-# Hits carry the stored text, metadata and the exact cosine score.
-top = client.query(toy_embed("asylum from persecution"), top_k=1)["matches"][0]
-print(f"\n{top['id']} score {top['score']:.3f}: {top['text']}")
+# Hits carry the stored text, metadata and the retrieval score.
+top = client.memory.recall("asylum from persecution", k=1)[0]
+print(f"\n{top.id} score {top.score:.3f}: {top.text}")
 # --8<-- [end:hit]
 client.close()
 
 # --8<-- [start:encrypt]
-# 3. Protect. warm-server has no encryption at rest, so the client masks vectors with a key the
+# 3. Protect (vector path). warm-server has no encryption at rest, so the client masks vectors with a key the
 # server never sees. This is obfuscation, not encryption: the server still learns every pairwise
 # similarity and stores text and metadata in plaintext (docs/SERVER.md).
+docs = [
+    {"id": d["id"], "vector": toy_embed(d["text"]), "text": d["text"], "metadata": {"title": d["title"]}}
+    for d in corpus
+]
 masked = WarmClient(
     url=URL, api_key=API_KEY, tenant_id=tenant + "-masked", zero_trust_key="correct horse battery staple"
 )

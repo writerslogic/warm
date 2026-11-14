@@ -80,20 +80,26 @@ remains AGPL-3.0-or-later; it is available from that Git tag, not as a
 `warm-rust` 0.6.1 release on crates.io.
 
 ```rust quickstart-check
-use writerslogic_warm::{DocumentInput, WarmCore, SearchOptions};
+use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
-let dir = tempfile::tempdir()?;
-let warm = WarmCore::new(4096, Some(dir.path().display().to_string()), None)?;
-warm.memorize_document(DocumentInput {
-    id: "backups".into(),
-    text: "Restore deleted documents from verified backups.".into(),
-    source_uri: Some("operations.md".into()),
-    version: Some("1".into()),
-    metadata: Some(serde_json::json!({ "project": "alpha" })),
-    chunk_words: None, overlap_words: None, store_text: None, embeddings: None, title_weight: None,
-})?;
-let hits = warm.search_documents("restore backups", &SearchOptions::default())?;
-println!("{} {:?}", hits[0].document_id, hits[0].source_uri);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // A store is a directory; it persists there and reopens with the same arguments.
+    let dir = std::env::temp_dir().join(format!("warm-quickstart-{}", std::process::id()));
+    let warm = WarmCore::new(4096, Some(dir.display().to_string()), None)?;
+    warm.memorize_document(DocumentInput {
+        id: "backups".into(),
+        text: "Restore deleted documents from verified backups.".into(),
+        source_uri: Some("operations.md".into()),
+        version: Some("1".into()),
+        metadata: None,
+        chunk_words: None, overlap_words: None, store_text: None, embeddings: None, title_weight: None,
+    })?;
+    let hits = warm.search_documents("restore backups", &SearchOptions::default())?;
+    println!("{} {:?}", hits[0].document_id, hits[0].source_uri);
+    drop(warm);
+    std::fs::remove_dir_all(&dir)?;
+    Ok(())
+}
 ```
 
 Rust API change in 0.6.6 (0.6.5 returns these values directly): `WarmCore::query`, `query_batch`, and
@@ -119,7 +125,8 @@ npm install warm-sdk@0.2.1
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
-To build the client from this checkout:
+To build the client from this checkout (the build needs Node 20.19 or newer; the built client
+and the published package run on Node 18):
 
 ```sh
 npm ci --prefix bindings/js/warm-sdk
@@ -132,9 +139,13 @@ In your application, install that directory with
 Start the server in a separate terminal:
 
 ```sh
-cargo build --release --features server --bin warm-server
-WARM_API_KEY=change-me target/release/warm-server --input-dim 384
+curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+WARM_API_KEY=change-me warm-server --input-dim 384
 ```
+
+The installer downloads a prebuilt, checksum-verified binary from the `server-v<version>` GitHub
+release (Linux glibc x86_64 and aarch64, macOS, no Alpine). To build it yourself instead:
+`cargo build --release --features server --bin warm-server`.
 
 ```js
 import { WarmClient } from 'warm-sdk'
@@ -212,13 +223,14 @@ main().catch(error => { console.error(error); process.exit(1) })
 <summary><strong>Server and Python</strong></summary>
 
 The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores vectors you
-supply. For in-process use without a server, `warm-python` (imported as `writerslogic_warm`)
-provides `Warm`: document search, the memory API (`remember`, `recall`, `forget`, `explain`) and
-vector search, next to the native vector indexes and phase vectors.
+supply. `warm-python` (imported as `writerslogic_warm`) is the in-process native package: vector
+indexes and phase vectors in 0.6.8, which has no document search. The in-process `Warm` class
+(document search, `remember`, `recall`, `forget`, `explain`) is on `main` and ships with the
+release after 0.6.8; until then, `maturin develop --release` from a checkout provides it.
 
 ```sh
-cargo build --release --features server --bin warm-server
-WARM_API_KEY=change-me target/release/warm-server --input-dim 384 &
+curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+WARM_API_KEY=change-me warm-server --input-dim 384 &
 uv pip install warm-sdk
 ```
 
@@ -232,7 +244,7 @@ print(client.query([0.1] * 384, top_k=1)["matches"][0]["id"])
 
 Endpoints, flags, tenants and limits are in the
 [server docs](https://writerslogic.com/warm/docs/latest/server/). A runnable Python quickstart
-with a toy embedder is in [`examples/quickstart/python`](examples/quickstart/python/quickstart.py).
+(memory API plus a toy-embedder vector section; `uv run --no-project --with warm-sdk`) is in [`examples/quickstart/python`](examples/quickstart/python/quickstart.py).
 
 </details>
 
@@ -243,6 +255,7 @@ with a toy embedder is in [`examples/quickstart/python`](examples/quickstart/pyt
 
 ```sh
 npx -y writerslogic-warm-mcp                                # stdio; downloads a verified binary on first run
+uvx warm-mcp                                                # the same launcher from PyPI
 npx -y writerslogic-warm-mcp --transport http               # http://127.0.0.1:8765/mcp
 ```
 
