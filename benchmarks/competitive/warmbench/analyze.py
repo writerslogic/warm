@@ -146,19 +146,25 @@ def ann_metrics(path, results, level=0.95):
         build_id = (chosen.get(0.95) or chosen.get(0.90) or (next(iter(builds)), 0))[0]
         build = builds[build_id]
         src = f"{path}#systems.{system}.builds.{build_id}"
-        if build["build_runs"]:
-            runs, runs_key = build["build_runs"], "build_runs"
-            ib = runs[0]["index_bytes"]
-            ib_note = "directory size of the persisted index (on disk)"
+        shared = build.get("index_of")
+        if shared:
+            why = f"serves the {shared} row's index file (built there, same bytes); not a separate build"
+            for metric, unit in (("build_seconds", "s"), ("build_peak_rss_mib", "MiB"), ("index_bytes_mib", "MiB")):
+                put(metric, system, cell(None, None, 0, src, unit, why))
         else:
-            runs, runs_key = [r for r in build["serve_rounds"] if r.get("graph_built")], "serve_rounds[graph_built]"
-            ib = build["serve_rounds"][0]["index_bytes"]
-            ib_note = "in-memory index_bytes reported by the binary (WARM has no persisted ANN index)"
-        bt = [r["build_s"] for r in runs]
-        put("build_seconds", system, cell(_med(bt), ci(bt), len(bt), f"{src}.{runs_key}", "s", build_id))
-        pk = [r["peak_rss_bytes"] / 2**20 for r in runs]
-        put("build_peak_rss_mib", system, cell(_med(pk), ci(pk), len(pk), f"{src}.{runs_key}", "MiB"))
-        put("index_bytes_mib", system, cell(ib / 2**20, None, 1, src, "MiB", ib_note))
+            if build["build_runs"]:
+                runs, runs_key = build["build_runs"], "build_runs"
+                ib = runs[0]["index_bytes"]
+                ib_note = "directory size of the persisted index (on disk)"
+            else:
+                runs, runs_key = [r for r in build["serve_rounds"] if r.get("graph_built")], "serve_rounds[graph_built]"
+                ib = build["serve_rounds"][0]["index_bytes"]
+                ib_note = "in-memory index_bytes reported by the binary (WARM has no persisted ANN index)"
+            bt = [r["build_s"] for r in runs]
+            put("build_seconds", system, cell(_med(bt), ci(bt), len(bt), f"{src}.{runs_key}", "s", build_id))
+            pk = [r["peak_rss_bytes"] / 2**20 for r in runs]
+            put("build_peak_rss_mib", system, cell(_med(pk), ci(pk), len(pk), f"{src}.{runs_key}", "MiB"))
+            put("index_bytes_mib", system, cell(ib / 2**20, None, 1, src, "MiB", ib_note))
         steady = [r["rss_steady"] / 2**20 for r in build["serve_rounds"] if r.get("rss_steady")]
         if steady:
             put("serving_rss_mib", system, cell(_med(steady), ci(steady), len(steady), src + ".serve_rounds[*].rss_steady", "MiB",
