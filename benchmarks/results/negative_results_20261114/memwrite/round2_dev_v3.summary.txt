@@ -1,0 +1,9 @@
+ALL                          n=100 base= 83 treat= 79 diff= -4.0pts helped=2 hurt=6 mcnemar_p=0.289
+knowledge-update             n= 16 base= 14 treat= 15 diff= +6.2pts helped=2 hurt=1 mcnemar_p=1.000
+multi-session                n= 30 base= 19 treat= 17 diff= -6.7pts helped=0 hurt=2 mcnemar_p=0.500
+single-session-assistant     n=  8 base=  8 treat=  8 diff= +0.0pts helped=0 hurt=0 mcnemar_p=1.000
+single-session-preference    n= 10 base=  8 treat=  7 diff=-10.0pts helped=0 hurt=1 mcnemar_p=1.000
+single-session-user          n=  8 base=  8 treat=  8 diff= +0.0pts helped=0 hurt=0 mcnemar_p=1.000
+temporal-reasoning           n= 28 base= 26 treat= 24 diff= -7.1pts helped=0 hurt=2 mcnemar_p=0.500
+prompt tokens treat 4681 base 5625
+spent 5.393
