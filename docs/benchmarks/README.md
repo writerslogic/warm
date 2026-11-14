@@ -84,8 +84,25 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
   51,200; and so on, see `ann_worker.py`). For each target recall@10 (0.90, 0.95, 0.99) the row
   with recall at or above the target and the highest pooled median QPS over all rounds is chosen;
   that row's per-round values carry the confidence interval. A system that never reaches the
-  target is reported as "not reached" with its best recall, never dropped.
+  target is reported as "not reached" with its best recall, never dropped. The queries are split
+  by index: even-indexed queries select the operating point, odd-indexed queries report its recall and
+  QPS, so no point is scored on the queries that picked it; a point whose report-half recall falls below
+  the target is reported as not reached.
+* **Per-build comparison.** A comparator has several builds; build time, serving memory, index size
+  and QPS belong to one build. The generated table never takes each metric from a different build:
+  the verdict table draws no verdict on build-dependent rows, and a per-build table gives, for every
+  comparator build, its own build time, memory, size and QPS at each recall target, with WARM's factor
+  against that build alone.
   Comparators are never tuned below their documented defaults.
+* **Rounds.** The standard and heavy suites run 10 independent process rounds by default
+  (`--rounds N` changes it). With fewer than 8 rounds a bootstrap has too few distinct resamples, so the
+  interval printed is the min-max range of the rounds and the section says so. `--pin-cpus LIST` runs the
+  single-threaded serve and ops phases under `taskset -c LIST` (Linux) and the pinning is recorded in the
+  results.
+* **Raw data.** Every results file has `raw_latency`: the name and sha256 of `<result>.latency.npz`, which holds
+  the per-query nanoseconds of every timed pass (and the per-query hit counts of every ANN configuration), so
+  every interval can be recomputed. Dataset digests (`train_sha256`, `test_sha256`; `input_sha256`,
+  `qrels_sha256` for text) are recorded and a run with a missing digest refuses to start.
 * **Intervals and verdicts.** 95% bootstrap intervals over rounds (or queries, for quality),
   Bonferroni-adjusted over the family of verdict metrics of the file ("family guard", as in the
   superiority ledger). The advantage factor is oriented so that above 1 means WARM is better; WIN or
@@ -93,7 +110,11 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
   everything else is TIE. `index size` and `install distributions` are printed without a verdict
   because the two sides measure different things (WARM reports its in-memory index, comparators the
   persisted directory; Python wheels versus statically linked crates).
-* **Durability rows.** Replace/delete cost is one durable commit per operation on a persisted store
+* **Durability rows.** A replace/delete row compares only systems with the same commit contract; the table
+  prints each system's contract (`registry.COMMIT_CONTRACT`). A library whose adapter must save and fsync the
+  whole index per operation (`full-index-rewrite`, e.g. hnswlib) has no incremental durable commit, so no row is
+  generated against it; a comparator such as sqlite-vec, which commits one transaction per operation, can have one.
+  Replace/delete cost is one durable commit per operation on a persisted store
   (on macOS every system's commit ends in `fcntl(F_FULLFSYNC)`, which flushes the drive cache:
   WARM after each journal frame, tantivy through Rust's `sync_all`/`sync_data`, Lucene through the
   JDK's `FileChannel.force`, and SQLite because it runs with `fullfsync`; libraries that need an
@@ -122,11 +143,20 @@ existing bytes and do not claim a fresh performance measurement.
 ## Known measurement boundaries (read before quoting a ratio)
 
 * WARM is timed through its Rust API; Python comparators through their bindings; Lucene through the
-  JVM after a full untimed warm-up pass. Each section prints the boundary per system. The existing
+  JVM after untimed warm-up passes to steady state (query analysis, document-id lookup and JVM flags: `comparator_settings` in each results file). Each section prints the boundary per system. The existing
   accepted serving rows (`benchmarks/results/serving_memory_v40.json`) drive both arms from Node,
   which narrows WARM's lead against SQLite; the two protocols are not interchangeable.
-* Comparator query preparation (word splitting, SQL expression building) is done outside the timer
-  to favour the comparators; each engine's own parsing stays inside it.
+* Text timing contract, the same for every system: the input is the raw query string, the timed region
+  holds the reduction to a lowercase alphanumeric word set and that engine's own query analysis and
+  construction (WARM `LexicalQuery::parse`, tantivy `parse_query_lenient`, Lucene analysis, the FTS5 MATCH
+  expression), and the output is the top-100 (id, score) pairs with no document bodies or metadata
+  (WARM `search_lexical`, not `search_documents`). Results written before this contract (the mixed
+  contract) timed WARM through `search_documents` with every comparator's query prepared outside the
+  timer; those runs are kept as evidence only.
+* tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, a mechanism inferred from that measurement and not profiled, see `benchmarks/results/tantivy_collector_microbench_20261114.txt`; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
+  `tantivy-rs` (the native crate in its own process, ids from an array built at open, built by
+  `examples/competitive_text_tantivy.rs`, the same tantivy version as the binding). The binding row is
+  never a stand-in for the crate.
 * LanceDB, Chroma and Milvus Lite run Rust or C++ runtimes with their own threads; QPS is still one
   client at a time.
 * Qdrant's embedded local mode is an exact scan (its documentation points to a server for indexed

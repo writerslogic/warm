@@ -18,10 +18,22 @@ protocols, not a substitute for testing your own data.
 
 | Result | Conditions | Source file |
 |--------|------------|-------------|
-| ann-benchmarks at recall 0.95: sift 2,819 QPS against faiss-ivfpqfs 3,788 (0.74x); glove 1,019 against ScaNN 1,535 (0.66x) | Official ann-benchmarks runner, each run pinned to one CPU, AVX2 host | [`ann_benchmarks_harness_wl02_v1.json`](../../benchmarks/results/ann_benchmarks_harness_wl02_v1.json) |
+| ann-benchmarks at recall 0.95: sift 2,819 QPS against faiss-ivfpqfs 3,787 (0.74x); glove 1,019 against ScaNN 1,535 (0.66x) | Official ann-benchmarks runner, each run pinned to one CPU, AVX2 host | [`ann_benchmarks_harness_wl02_v1.json`](../../benchmarks/results/ann_benchmarks_harness_wl02_v1.json) |
 | VIBE llama-128-ip QPS: 24.6% behind RoarGraph at recall 0.95, 54.8% behind MLANN RF80 at 0.99 | One thread, official test queries | [`query_aware_graph_v1/README.md`](../../benchmarks/results/query_aware_graph_v1/README.md) |
 | Text ingest: peak build memory 1.1x to 2.1x SQLite FTS5's on every corpus; ingest time behind SQLite FTS5 in 6 of 7 corpus and machine pairs (0.46x to 0.96x, including FiQA at 0.93x on the 185H), tied on SciFact on the 185H (1.01x) | Same runs, both machines | [`docs/benchmarks/GAPS.md`](../../docs/benchmarks/GAPS.md) |
 | glove-100-angular through `memorize_vector` / `query_vector` (vertex graph, fixed ef 128): recall@10 0.859 at 2,092 QPS, against hnswlib 0.831 at 3,368 QPS and FAISS HNSW 0.832 at 4,111 QPS (higher recall, lower QPS) | One thread, Apple M4; one operating point, no sweep; includes exact-cosine scoring of the returned ids | [`public_glove-100-angular.json`](../../benchmarks/results/public_glove-100-angular.json) |
+
+## Tried and not adopted
+
+Experiments that were run to a pre-set gate and failed it. The raw summaries are committed under
+[`negative_results_20261114`](../../benchmarks/results/negative_results_20261114/).
+
+| Result | Conditions | Source file |
+|--------|------------|-------------|
+| LongMemEval-V2 small tier, WARM retrieval with a Qwen3.5-9B reader: overall accuracy 0.4191 on 451 questions, below the lowest point of the benchmark's reference frontier (RAG, 0.510). Not submitted. | Static 0.4233, dynamic 0.3701, procedure 0.5, gotchas 0.3103; mean `memory.query` time 0.0583 s. One run of the `warm_wide` operating point. | [`metric_overview.json`](../../benchmarks/results/negative_results_20261114/lme_v2/metric_overview.json) |
+| Write-time dated-facts layer on LongMemEval_S (kill test, 100 questions): 81 correct against 83 for the earlier baseline run and 80 for a same-day rerun. The pre-registered gate (+5 points, no stratum down more than 3) failed, so the full 500 was not run. | Facts extracted by gpt-4o-mini, stored and recalled through the memory API; reader `gpt-4o-2024-08-06` and the official gpt-4o judge unchanged. Helped 7 questions, hurt 9. Reader prompt 8,913 tokens against 5,632. | [`RESULT_kill100.txt`](../../benchmarks/results/negative_results_20261114/memwrite/RESULT_kill100.txt), [`PREREGISTRATION.md`](../../benchmarks/results/negative_results_20261114/memwrite/PREREGISTRATION.md) |
+| Chronological evidence table before the same reader (second write-time design, 100 development questions): 53, 83 and 79 correct for the three variants against a same-session baseline of 83. The gate failed after three designs; the 150 held-out questions were never run. | Variants: selected sentences only (1,082 prompt tokens), all user sentences with dates (5,055), the same grouped by topic (4,681), against 5,625 for the baseline. The development set was tuned on; LongMemEval has no official held-out split. | [`round2_dev_v1.summary.txt`](../../benchmarks/results/negative_results_20261114/memwrite/round2_dev_v1.summary.txt), [`v2`](../../benchmarks/results/negative_results_20261114/memwrite/round2_dev_v2.summary.txt), [`v3`](../../benchmarks/results/negative_results_20261114/memwrite/round2_dev_v3.summary.txt) |
+| `PartitionIndex` on text2image (out-of-distribution queries), 1M prefix: best held-out recall 0.9059 at 24,885 QPS, against the query-aware graph at 0.9155 and 50,120 QPS on the same VM and split. The 10M build was not run. | Public query set split into tuning and held-out halves, 8 threads, 1,024 lists, 102-code lift of the 200-dimension inner-product data, recall@10. The graph index is the earlier OOD build (degree 32, 8-bit codes). | [`A.jsonl`](../../benchmarks/results/negative_results_20261114/ood_partition/A.jsonl), [`graph.txt`](../../benchmarks/results/negative_results_20261114/ood_partition/graph.txt) |
 
 Method, intervals and every loss: [docs/benchmarks](../../docs/benchmarks/README.md) and the
 [benchmarks pages](https://writerslogic.com/warm/docs/latest/benchmarks/).

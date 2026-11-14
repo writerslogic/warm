@@ -269,37 +269,69 @@ public final class LuceneBm25 {
         DirectoryReader reader = DirectoryReader.open(dir);
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(new BM25Similarity());
+        // Documented for benchmarking: the query cache would answer repeated queries from memory,
+        // which no other system's timed region may do.
+        searcher.setQueryCache(null);
+        // Document id table built at open, as WARM keeps its own: a hit's id is an array read, not a
+        // decompressing stored-fields lookup.
+        String[] ids = new String[reader.maxDoc()];
+        StoredFields stored = reader.storedFields();
+        for (int d = 0; d < ids.length; d++) ids[d] = stored.document(d, Set.of("id")).get("id");
         double openS = (System.nanoTime() - start) / 1e9;
-        search(searcher, analyzer, queries.get(0));
+        // One contract for every system: the raw query string goes in, the engine's own analysis and query
+        // construction are inside the timed region, and the top-100 documents come out.
+        String[] prepared = new String[queries.size()];
+        for (int i = 0; i < prepared.length; i++) prepared[i] = queries.get(i).text;
+        search(searcher, analyzer, prepared[0], ids);
         double cold = (System.currentTimeMillis() * 1_000_000L - t0) / 1e9;
-        for (int i = 0; i < Math.min(16, queries.size()); i++) search(searcher, analyzer, queries.get(i));
-        // JIT warm-up pass: the JVM has no equivalent of the other systems' ahead-of-time code.
-        for (Q q : queries) search(searcher, analyzer, q);
-        StringBuilder rows = new StringBuilder("[");
-        StringBuilder pass = new StringBuilder("[");
-        for (int n = 0; n < passes; n++) {
-          long[] ns = new long[queries.size()];
-          for (int i = 0; i < queries.size(); i++) {
-            long t = System.nanoTime();
-            String[][] hits = search(searcher, analyzer, queries.get(i));
-            ns[i] = System.nanoTime() - t;
-            if (n == 0) {
-              if (i > 0) rows.append(',');
-              rows.append("{\"id\":").append(esc(queries.get(i).id)).append(",\"results\":[");
-              for (int h = 0; h < hits.length; h++) {
-                if (h > 0) rows.append(',');
-                rows.append("{\"documentId\":").append(esc(hits[h][0])).append(",\"lexicalScore\":").append(hits[h][1]).append('}');
-              }
-              rows.append("]}");
-            }
-          }
-          if (n > 0) pass.append(',');
-          pass.append(Arrays.toString(ns));
+        for (int i = 0; i < Math.min(16, prepared.length); i++) search(searcher, analyzer, prepared[i], ids);
+        // JIT warm-up: whole untimed passes until two consecutive passes agree within 5 percent (at least
+        // 3, at most 30), so the timed passes run compiled code.
+        int warmPasses = 0, stable = 0;
+        double previous = -1;
+        while (warmPasses < 30) {
+          long t = System.nanoTime();
+          for (String q : prepared) search(searcher, analyzer, q, ids);
+          double took = System.nanoTime() - t;
+          warmPasses++;
+          stable = previous > 0 && Math.abs(took - previous) / previous < 0.05 ? stable + 1 : 0;
+          previous = took;
+          if (warmPasses >= 3 && stable >= 2) break;
         }
-        json.append("\"open_s\":").append(openS).append(",\"cold_start_s\":").append(cold)
-            .append(",\"rows\":").append(rows).append("],\"passes_ns\":").append(pass).append(']');
+        ScoreDoc[][] first = new ScoreDoc[prepared.length][];
+        long[][] passNs = new long[passes][];
+        for (int n = 0; n < passes; n++) {
+          long[] ns = new long[prepared.length];
+          for (int i = 0; i < prepared.length; i++) {
+            long t = System.nanoTime();
+            ScoreDoc[] hits = search(searcher, analyzer, prepared[i], ids);
+            ns[i] = System.nanoTime() - t;
+            if (n == 0) first[i] = hits;
+          }
+          passNs[n] = ns;
+        }
+        // Streamed to the file: the report is never held as one string.
+        try (java.io.BufferedWriter w = Files.newBufferedWriter(out, StandardCharsets.UTF_8)) {
+          w.write("{\"open_s\":" + openS + ",\"cold_start_s\":" + cold + ",\"warmup_passes\":" + warmPasses + ",\"rows\":[");
+          for (int i = 0; i < first.length; i++) {
+            if (i > 0) w.write(',');
+            w.write("{\"id\":" + esc(queries.get(i).id) + ",\"results\":[");
+            for (int h = 0; h < first[i].length; h++) {
+              if (h > 0) w.write(',');
+              w.write("{\"documentId\":" + esc(ids[first[i][h].doc]) + ",\"lexicalScore\":" + first[i][h].score + "}");
+            }
+            w.write("]}");
+          }
+          w.write("],\"passes_ns\":[");
+          for (int n = 0; n < passNs.length; n++) {
+            if (n > 0) w.write(',');
+            w.write(Arrays.toString(passNs[n]));
+          }
+          w.write("],\"peak_rss_bytes_self\":" + rssBytes() + "}");
+        }
         reader.close();
         dir.close();
+        return;
       }
       case "ops" -> {
         try (FSDirectory dir = FSDirectory.open(store);
@@ -335,14 +367,13 @@ public final class LuceneBm25 {
     return d;
   }
 
-  static String[][] search(IndexSearcher searcher, Analyzer analyzer, Q q) throws IOException {
-    Query query = query(analyzer, q.text);
-    ScoreDoc[] hits = searcher.search(query, K).scoreDocs;
-    String[][] out = new String[hits.length][];
-    StoredFields stored = searcher.storedFields();
-    for (int i = 0; i < hits.length; i++) {
-      out[i] = new String[] {stored.document(hits[i].doc).get("id"), Float.toString(hits[i].score)};
-    }
-    return out;
+  /** The timed unit: analyze the query string, run it, then map each hit to its document id through the table. */
+  static ScoreDoc[] search(IndexSearcher searcher, Analyzer analyzer, String text, String[] ids) throws IOException {
+    ScoreDoc[] hits = searcher.search(query(analyzer, text), K).scoreDocs;
+    for (ScoreDoc hit : hits) SINK = ids[hit.doc];
+    return hits;
   }
+
+  // Keeps the id reads observable so the JIT cannot drop them.
+  static volatile String SINK;
 }
