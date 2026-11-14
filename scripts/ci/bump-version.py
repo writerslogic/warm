@@ -8,6 +8,7 @@ Updates Cargo.toml, Cargo.lock (offline), package.json with its optionalDependen
 package-lock.json and the OpenAPI version, then runs check-versions.py. The wheel version
 comes from Cargo.toml.
 """
+import importlib.util
 import json
 import pathlib
 import re
@@ -30,6 +31,7 @@ def main(argv: list[str]) -> int:
 
     cargo = ROOT / "Cargo.toml"
     text = cargo.read_text()
+    previous = re.search(r'(?m)^version = "([^"]+)"$', text)
     text, count = re.subn(r'(?m)^version = "[^"]+"$', f'version = "{version}"', text, count=1)
     if count != 1:
         print("no package version found in Cargo.toml", file=sys.stderr)
@@ -57,6 +59,18 @@ def main(argv: list[str]) -> int:
     openapi = json.loads(openapi_path.read_text())
     openapi["info"]["version"] = version
     dump(openapi_path, openapi)
+
+    citation = ROOT / "CITATION.cff"
+    citation.write_text(re.sub(r"(?m)^version:.*$", f"version: {version}", citation.read_text(), count=1))
+    checker = importlib.util.spec_from_file_location("check_versions", ROOT / "scripts/ci/check-versions.py")
+    module = importlib.util.module_from_spec(checker)
+    checker.loader.exec_module(module)
+    engine = re.compile(
+        r"(?<![\w@/.-])(warm-rust|warm-python|writerslogic-warm)(`?(?:@|==|\s+)v?)"
+        + re.escape(previous.group(1)) + r"(?![\w.-])"
+    )
+    for path in module.doc_files():
+        path.write_text(engine.sub(lambda m: f"{m.group(1)}{m.group(2)}{version}", path.read_text()))
 
     subprocess.run(["cargo", "update", "--workspace", "--offline"], cwd=ROOT, check=True)
     return subprocess.run([sys.executable, str(ROOT / "scripts/ci/check-versions.py")]).returncode

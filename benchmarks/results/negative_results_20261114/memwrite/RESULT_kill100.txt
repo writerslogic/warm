@@ -1,0 +1,23 @@
+== judge gpt-4o (official old-run verdicts as baseline; n=100)
+stratum | n | base(old run) | base rerun | treat | treat-base pts | helped | hurt | treat-rerun pts
+knowledge-update | 16 | 16 | 15 | 15 | -6.2 | 0 | 1 | +0.0
+multi-session | 30 | 18 | 19 | 17 | -3.3 | 3 | 4 | -6.7
+single-session-assistant | 8 | 7 | 8 | 8 | +12.5 | 1 | 0 | +0.0
+single-session-preference | 10 | 9 | 7 | 8 | -10.0 | 1 | 2 | +10.0
+single-session-user | 8 | 8 | 8 | 8 | +0.0 | 0 | 0 | +0.0
+temporal-reasoning | 28 | 25 | 23 | 25 | +0.0 | 2 | 2 | +7.1
+ALL | 100 | 83 | 80 | 81 | -2.0 | 7 | 9 | +1.0
+reweighted to 500: base 84.5% rerun 82.7% treat 83.4%
+
+== judge gpt-4o-mini (official old-run verdicts as baseline; n=100)
+stratum | n | base(old run) | base rerun | treat | treat-base pts | helped | hurt | treat-rerun pts
+knowledge-update | 16 | 15 | 15 | 15 | +0.0 | 1 | 1 | +0.0
+multi-session | 30 | 17 | 19 | 16 | -3.3 | 3 | 4 | -10.0
+single-session-assistant | 8 | 7 | 8 | 8 | +12.5 | 1 | 0 | +0.0
+single-session-preference | 10 | 9 | 9 | 8 | -10.0 | 1 | 2 | -10.0
+single-session-user | 8 | 8 | 8 | 8 | +0.0 | 0 | 0 | +0.0
+temporal-reasoning | 28 | 24 | 24 | 23 | -3.6 | 1 | 2 | -3.6
+ALL | 100 | 80 | 83 | 78 | -2.0 | 7 | 9 | -5.0
+reweighted to 500: base 81.7% rerun 84.9% treat 80.7%
+
+mean reader prompt tokens: treat 8913, base_rerun 5632

@@ -1,0 +1,114 @@
+docs/benchmarks/BIG-ANN-FILTER.md|11.6 GiB
+docs/benchmarks/BIG-ANN-FILTER.md|14.3846 GiB
+docs/benchmarks/BIG-ANN-FILTER.md|24,187 QPS
+docs/benchmarks/BIG-ANN-FILTER.md|45,282 QPS
+docs/benchmarks/BIG-ANN-FILTER.md|53,972.75 QPS
+docs/benchmarks/BIG-ANN-FILTER.md|9,245 QPS
+docs/benchmarks/BIG-ANN-FILTER.md|9.34 GiB
+docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9045
+docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9067
+docs/benchmarks/BIG-ANN-FILTER.md|recall@10 **.906415
+docs/benchmarks/BIG-ANN-STREAMING.md|11.2 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|1493 MiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.55 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.69 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.70 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.84 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.85 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.87 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.93 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.97 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|4.98 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|5.28 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|5.57 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|518 MiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.02 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.04 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.22 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.45 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.47 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.53 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.56 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|6.58 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|7.26 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|7.47 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|7.51 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|7.57 GiB
+docs/benchmarks/BIG-ANN-STREAMING.md|recall 0.8768
+docs/benchmarks/BIG-ANN-STREAMING.md|recall@10 0.935
+docs/benchmarks/BIG-ANN-STREAMING.md|recall@10 0.9942
+docs/benchmarks/NEIGHBOUR-BLOCKS.md|0.77x
+docs/benchmarks/README.md|1.10x
+docs/benchmarks/README.md|1.32x
+docs/benchmarks/README.md|1.47x
+docs/benchmarks/README.md|1.56x
+docs/benchmarks/README.md|1.57x
+docs/benchmarks/README.md|1.62x
+docs/benchmarks/README.md|1.79x
+docs/benchmarks/README.md|1.85x
+docs/benchmarks/README.md|10.02x
+docs/benchmarks/README.md|10.11x
+docs/benchmarks/README.md|10.14x
+docs/benchmarks/README.md|10.34x
+docs/benchmarks/README.md|10.61x
+docs/benchmarks/README.md|10.77x
+docs/benchmarks/README.md|15.97x
+docs/benchmarks/README.md|16.07x
+docs/benchmarks/README.md|19.88x
+docs/benchmarks/README.md|2.07x
+docs/benchmarks/README.md|2.13x
+docs/benchmarks/README.md|2.20x
+docs/benchmarks/README.md|2.28x
+docs/benchmarks/README.md|2.56x
+docs/benchmarks/README.md|2.57x
+docs/benchmarks/README.md|2.62x
+docs/benchmarks/README.md|2.71x
+docs/benchmarks/README.md|20.56x
+docs/benchmarks/README.md|25.02x
+docs/benchmarks/README.md|25.11x
+docs/benchmarks/README.md|28.52x
+docs/benchmarks/README.md|28.70x
+docs/benchmarks/README.md|3.39x
+docs/benchmarks/README.md|3.42x
+docs/benchmarks/README.md|3.57x
+docs/benchmarks/README.md|3.68x
+docs/benchmarks/README.md|3.80x
+docs/benchmarks/README.md|4.15x
+docs/benchmarks/README.md|4.31x
+docs/benchmarks/README.md|4.66x
+docs/benchmarks/README.md|4.80x
+docs/benchmarks/README.md|4.94x
+docs/benchmarks/README.md|41.25x
+docs/benchmarks/README.md|47.84x
+docs/benchmarks/README.md|5.37x
+docs/benchmarks/README.md|5.38x
+docs/benchmarks/README.md|5.40x
+docs/benchmarks/README.md|5.56x
+docs/benchmarks/README.md|5.61x
+docs/benchmarks/README.md|6.31x
+docs/benchmarks/README.md|6.58x
+docs/benchmarks/README.md|6.78x
+docs/benchmarks/README.md|6.79x
+docs/benchmarks/README.md|7.38x
+docs/benchmarks/README.md|7.40x
+docs/benchmarks/README.md|7.68x
+docs/benchmarks/README.md|9.09x
+docs/benchmarks/README.md|96.30x
+docs/benchmarks/SBG-POSITION-LOOKUP.md|12.7 GiB
+docs/benchmarks/VIBE.md|0.77x
+docs/benchmarks/VIBE.md|1.10x
+docs/benchmarks/VIBE.md|1.16x
+docs/benchmarks/VIBE.md|1.23x
+docs/benchmarks/VIBE.md|1.48x
+docs/benchmarks/VIBE.md|1.57x
+docs/benchmarks/VIBE.md|1.62x
+docs/benchmarks/VIBE.md|1.64x
+docs/benchmarks/VIBE.md|3,740 QPS
+docs/benchmarks/VIBE.md|4,002 QPS
+docs/benchmarks/VIBE.md|549 QPS
+docs/benchmarks/VIBE.md|6,828 QPS
+docs/benchmarks/VIBE.md|recall 0.99034
+docs/benchmarks/VIBE.md|recall 0.99043
+docs/benchmarks/VIBE.md|recall 0.996797
+docs/benchmarks/VIBE.md|recall 0.998
+docs/benchmarks/VIBE.md|recall 0.99805
