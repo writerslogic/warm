@@ -9,18 +9,21 @@ Rows are never compared across hardware classes: each section is one dataset on 
 | Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |
 |---|---|---|---|---|---|---|---|
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 8 | 1 | 0 | 0 | 5 |
+| beir:fiqa (57,600 documents, 500 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | standard | 5 | 4 | 1 | 0 | 4 |
 | beir:fiqa (57,600 documents, 500 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `modal-x86_64-8vcpu-32g` | heavy | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
 | beir:nfcorpus (3,633 documents, 324 queries) | `modal-x86_64-8vcpu-32g` | heavy | 6 | 2 | 2 | 0 | 4 |
 | beir:nfcorpus (3,633 documents, 324 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
 | beir:scifact (5,183 documents, 809 queries) | `modal-x86_64-8vcpu-32g` | heavy | 6 | 2 | 2 | 0 | 4 |
+| beir:scifact (5,183 documents, 809 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | standard | 6 | 2 | 2 | 0 | 4 |
 | beir:scifact (5,183 documents, 809 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 3 | 1 | 0 | 4 |
 
 ## Where WARM loses
 
 | Dataset | Metric | Best other | WARM disadvantage | Candidate lever (hypothesis unless a file is cited) |
 |---|---|---|---|---|
+| beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Peak RSS, build | SQLite FTS5 | 2.09x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 | 1.08x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 2.10x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | memory (4,559 documents, 100 queries) (modal-x86_64-8vcpu-32g) | Ingest/build time | SQLite FTS5 | 1.09x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
@@ -33,6 +36,8 @@ Rows are never compared across hardware classes: each section is one dataset on 
 | beir:nfcorpus (3,633 documents, 324 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 1.58x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:scifact (5,183 documents, 809 queries) (modal-x86_64-8vcpu-32g) | Ingest/build time | SQLite FTS5 | 1.92x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:scifact (5,183 documents, 809 queries) (modal-x86_64-8vcpu-32g) | Peak RSS, build | SQLite FTS5 | 1.26x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:scifact (5,183 documents, 809 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Ingest/build time | SQLite FTS5 | 1.42x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:scifact (5,183 documents, 809 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Peak RSS, build | SQLite FTS5 | 1.68x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:scifact (5,183 documents, 809 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 1.70x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 
 ## Results
@@ -80,6 +85,52 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | Install distributions (count) | **0** | 2 |
 
 Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 24, 'rerank': 64} recall 0.956; hnswlib: m32e500 {'ef': 32} recall 0.953.
+
+</details>
+
+### beir:fiqa (57,600 documents, 500 queries)
+
+Suite `standard`, hardware class `linux-x86_64-gcp-n2-icelake-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 6.8.0-1073-gcp), commit `5e2d3c8b8d`, 2026-11-14. Raw results: [standard-text-beir-fiqa-linux-x86_64-gcp-n2-icelake-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-gcp-n2-icelake-8c-16g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); tantivy: CPython tantivy-py call per query (stored id fetched per hit); LanceDB FTS: CPython + Arrow call per query (native Rust BM25 inside; multi-threaded runtime); DuckDB fts: CPython duckdb call per query (SQL macro match_bm25 over a static index).
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x [0.70, 1.41] | **TIE** |
+| recall@100 | 0.5422 | SQLite FTS5 0.5546 | 0.98x [0.82, 1.19] | **TIE** |
+| QPS (single thread) (QPS) | 1,001 | tantivy 878 | 1.14x [1.04, 1.27] | **WIN** |
+| p50 latency (us) | 953 | tantivy 1,116 | 1.17x [1.10, 1.33] | **WIN** |
+| p99 latency (us) | 2,175 | tantivy 1,971 | 0.91x [0.81, 1.05] | **TIE** |
+| Ingest/build time (s) | 2.33 | SQLite FTS5 2.28 | 0.98x [0.93, 1.02] | **TIE** |
+| Peak RSS, build (MiB) | 301 | SQLite FTS5 144 | 0.48x [0.48, 0.48] | **LOSS** |
+| Peak RSS, serving (MiB) | 30 | SQLite FTS5 39 | 1.29x [1.28, 1.29] | **WIN** |
+| On-disk size (MiB) | 9.0 | tantivy 17.4 | 1.92x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.02 | tantivy 0.04 | 2.80x [2.33, 3.15] | **WIN** |
+| Replace one document (durable) (ms) | 1.457 | SQLite FTS5 5.120 | 3.51x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.398 | SQLite FTS5 4.347 | 10.91x (no CI) | **n/v** |
+| Install size (MiB) | 3.9 | tantivy 16.9 | 4.38x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | SQLite FTS5 | tantivy | LanceDB FTS | DuckDB fts |
+|---|---|---|---|---|---|
+| nDCG@10 | 0.2654 | **0.2678** | 0.2643 | 0.2675 | 0.2330 |
+| recall@100 | 0.5422 | **0.5546** | 0.5406 | 0.5541 | 0.5295 |
+| QPS (single thread) (QPS) | **1,001** | 14 | 878 | 167 | 22 |
+| p50 latency (us) | **953** | 66,287 | 1,116 | 5,831 | 45,041 |
+| p99 latency (us) | 2,175 | 158,413 | **1,971** | 8,918 | 54,846 |
+| Ingest/build time (s) | 2.33 | **2.28** | 3.29 | 3.11 | 7.21 |
+| Peak RSS, build (MiB) | 301 | **144** | 170 | 421 | 534 |
+| Peak RSS, serving (MiB) | **30** | 39 | 53 | 214 | 223 |
+| On-disk size (MiB) | **9.0** | 27.1 | 17.4 | 32.6 | 144.5 |
+| Cold start to first answer (s) | **0.02** | 0.15 | 0.04 | 1.17 | 0.20 |
+| Replace one document (durable) (ms) | **1.457** | 5.120 | 40.343 | 1,485.904 | n/m (the fts index is static; any change needs create_fts_index again (full rebuild)) |
+| Delete one document (durable) (ms) | **0.398** | 4.347 | 20.174 | 69.307 | n/m (the fts index is static; any change needs create_fts_index again (full rebuild)) |
+| Install size (MiB) | 3.9 | **0.0** | 16.9 | 386.8 | 58.2 |
+| Install distributions (count) | **0** | 0 | 1 | 16 | 1 |
+
+Bold marks the best value in the row.
 
 </details>
 
@@ -361,6 +412,52 @@ Bold marks the best value in the row.
 
 ### beir:scifact (5,183 documents, 809 queries)
 
+Suite `standard`, hardware class `linux-x86_64-gcp-n2-icelake-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 6.8.0-1073-gcp), commit `5e2d3c8b8d`, 2026-11-14. Raw results: [standard-text-beir-scifact-linux-x86_64-gcp-n2-icelake-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-gcp-n2-icelake-8c-16g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); tantivy: CPython tantivy-py call per query (stored id fetched per hit); LanceDB FTS: CPython + Arrow call per query (native Rust BM25 inside; multi-threaded runtime); DuckDB fts: CPython duckdb call per query (SQL macro match_bm25 over a static index).
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.7027 | tantivy 0.7011 | 1.00x [0.90, 1.12] | **TIE** |
+| recall@100 | 0.9264 | SQLite FTS5 0.9322 | 0.99x [0.94, 1.05] | **TIE** |
+| QPS (single thread) (QPS) | 8,174 | tantivy 3,256 | 2.51x [2.26, 2.82] | **WIN** |
+| p50 latency (us) | 117 | tantivy 298 | 2.56x [2.37, 2.82] | **WIN** |
+| p99 latency (us) | 196 | tantivy 544 | 2.77x [1.57, 3.32] | **WIN** |
+| Ingest/build time (s) | 0.48 | SQLite FTS5 0.34 | 0.70x [0.64, 0.81] | **LOSS** |
+| Peak RSS, build (MiB) | 60 | SQLite FTS5 36 | 0.60x [0.60, 0.60] | **LOSS** |
+| Peak RSS, serving (MiB) | 29 | SQLite FTS5 53 | 1.83x [1.82, 1.84] | **WIN** |
+| On-disk size (MiB) | 1.3 | tantivy 2.6 | 2.11x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.01 | SQLite FTS5 0.05 | 7.05x [5.91, 8.18] | **WIN** |
+| Replace one document (durable) (ms) | 2.108 | SQLite FTS5 5.914 | 2.81x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.488 | SQLite FTS5 5.338 | 10.95x (no CI) | **n/v** |
+| Install size (MiB) | 3.9 | tantivy 16.9 | 4.38x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | SQLite FTS5 | tantivy | LanceDB FTS | DuckDB fts |
+|---|---|---|---|---|---|
+| nDCG@10 | **0.7027** | 0.7009 | 0.7011 | 0.6989 | 0.6817 |
+| recall@100 | 0.9264 | **0.9322** | 0.9283 | 0.9289 | 0.9202 |
+| QPS (single thread) (QPS) | **8,174** | 126 | 3,256 | 182 | 43 |
+| p50 latency (us) | **117** | 7,552 | 298 | 5,349 | 23,416 |
+| p99 latency (us) | **196** | 17,242 | 544 | 7,697 | 29,877 |
+| Ingest/build time (s) | 0.48 | **0.34** | 0.60 | 1.88 | 1.49 |
+| Peak RSS, build (MiB) | 60 | **36** | 68 | 237 | 228 |
+| Peak RSS, serving (MiB) | **29** | 53 | 59 | 221 | 201 |
+| On-disk size (MiB) | **1.3** | 5.9 | 2.6 | 6.4 | 14.0 |
+| Cold start to first answer (s) | **0.01** | 0.05 | 0.05 | 1.16 | 0.18 |
+| Replace one document (durable) (ms) | **2.108** | 5.914 | 52.114 | 478.157 | n/m (the fts index is static; any change needs create_fts_index again (full rebuild)) |
+| Delete one document (durable) (ms) | **0.488** | 5.338 | 34.320 | 65.574 | n/m (the fts index is static; any change needs create_fts_index again (full rebuild)) |
+| Install size (MiB) | 3.9 | **0.0** | 16.9 | 386.8 | 58.2 |
+| Install distributions (count) | **0** | 0 | 1 | 16 | 1 |
+
+Bold marks the best value in the row.
+
+</details>
+
+### beir:scifact (5,183 documents, 809 queries)
+
 Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d41fc94979`, 2026-11-13. Raw results: [standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.50% bootstrap (Bonferroni family of 10 verdict metrics).
 
 Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; SQLite FTS5: CPython sqlite3 call per query (query string built outside the timer); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after a full untimed JIT warm-up pass; tantivy: CPython tantivy-py call per query (stored id fetched per hit).
@@ -412,8 +509,10 @@ Bold marks the best value in the row.
 | WARM | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | hnswlib | no | no | documentation (not exercised) |
 | SQLite FTS5 | no | no (SQLCipher is a separate build) | documentation (not exercised) |
-| Apache Lucene (JVM) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
 | tantivy | no | no | documentation (not exercised) |
+| LanceDB FTS | no (embedded) | no built-in | documentation (not exercised) |
+| DuckDB fts | no | database-file encryption (DuckDB 1.4+); not exercised | documentation (not exercised) |
+| Apache Lucene (JVM) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
 | WARM (eager hypervectors) | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | Whoosh | no | no | documentation (not exercised) |
 | bm25s | no | no | documentation (not exercised) |
@@ -422,11 +521,13 @@ Bold marks the best value in the row.
 
 | System | Pinned version(s) |
 |---|---|
-| WARM | writerslogic-warm 0.6.8, commit d41fc94979319d40f0e285970a86b97df01e91c7; writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
+| WARM | writerslogic-warm 0.6.8, commit d41fc94979319d40f0e285970a86b97df01e91c7; writerslogic-warm 0.6.8, commit 5e2d3c8b8d7fcd76b07de9ab4144caec258a9e83; writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
 | hnswlib | hnswlib 0.8.0, python 3.13.15 |
 | SQLite FTS5 | python-sqlite3 3.53.1 |
+| tantivy | tantivy 0.27.0, python 3.13.18; tantivy 0.27.0, python 3.13.15 |
+| LanceDB FTS | lancedb 0.40.0, python 3.13.18 |
+| DuckDB fts | duckdb 1.5.6, python 3.13.18 |
 | Apache Lucene (JVM) | lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22; lucene 10.6.0, jvm openjdk version "21.0.9" 2025-10-21 LTS |
-| tantivy | tantivy 0.27.0, python 3.13.15 |
 | WARM (eager hypervectors) | writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
 | Whoosh | whoosh-reloaded 2.7.5, python 3.13.15 |
 | bm25s | bm25s 0.3.14, PyStemmer 3.1.0, python 3.13.15 |
@@ -438,4 +539,6 @@ Bold marks the best value in the row.
 - `letta`: agent-memory systems belong to the next harness stage
 - `langmem`: agent-memory systems belong to the next harness stage
 - `milvus-standalone`: no non-Docker artifact: releases 3.0.3 and 2.6.25 ship only Docker Compose files; the last native package (milvus_2.6.4 .deb/.rpm, Linux only) is superseded
+- `chroma-fts`: Chroma 1.5.9 PersistentClient: creating a collection with a BM25 sparse-vector index (ChromaBm25EmbeddingFunction) fails with 'Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local'; the only local text query is the unranked where_document $contains/$regex filter (measured 2026-11-14)
+- `qdrant-fts`: Qdrant embedded local mode has no ranked full-text index (the full-text payload index only filters, and payload indexes are server features); documentation, not exercised here
 

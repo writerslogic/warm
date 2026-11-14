@@ -9,6 +9,12 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Build time (s) | 120.40 | hnswlib 166.90 | 1.39x | W |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | RSS, serving (MiB) | 489 | hnswlib 897 | 1.83x | W |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Index size (MiB) | 576.3 | hnswlib 751.8 | 1.30x | - |
+| beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x | T |
+| beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS (single thread) (QPS) | 1,001 | tantivy 878 | 1.14x | W |
+| beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency (us) | 2,175 | tantivy 1,971 | 0.91x | T |
+| beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | Ingest/build time (s) | 2.33 | SQLite FTS5 2.28 | 0.98x | T |
+| beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | Peak RSS, serving (MiB) | 30 | SQLite FTS5 39 | 1.29x | W |
+| beir:fiqa | `linux-x86_64-gcp-n2-icelake-8c-16g` | On-disk size (MiB) | 9.0 | tantivy 17.4 | 1.92x | W |
 | beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x | T |
 | beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 3,377 | tantivy 1,669 | 2.02x | W |
 | beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 619 | tantivy 1,061 | 1.71x | W |
@@ -45,6 +51,12 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | beir:scifact | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 0.58 | SQLite FTS5 0.30 | 0.52x | L |
 | beir:scifact | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 31 | SQLite FTS5 70 | 2.23x | W |
 | beir:scifact | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.53x | W |
+| beir:scifact | `linux-x86_64-gcp-n2-icelake-8c-16g` | nDCG@10 | 0.7027 | tantivy 0.7011 | 1.00x | T |
+| beir:scifact | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS (single thread) (QPS) | 8,174 | tantivy 3,256 | 2.51x | W |
+| beir:scifact | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency (us) | 196 | tantivy 544 | 2.77x | W |
+| beir:scifact | `linux-x86_64-gcp-n2-icelake-8c-16g` | Ingest/build time (s) | 0.48 | SQLite FTS5 0.34 | 0.70x | L |
+| beir:scifact | `linux-x86_64-gcp-n2-icelake-8c-16g` | Peak RSS, serving (MiB) | 29 | SQLite FTS5 53 | 1.83x | W |
+| beir:scifact | `linux-x86_64-gcp-n2-icelake-8c-16g` | On-disk size (MiB) | 1.3 | tantivy 2.6 | 2.11x | W |
 | beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
 | beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 15,932 | tantivy 6,316 | 2.52x | W |
 | beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 120 | tantivy 246 | 2.04x | W |
