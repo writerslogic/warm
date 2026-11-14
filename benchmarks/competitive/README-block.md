@@ -8,11 +8,11 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency @ 0.95 (us) | 67 | hnswlib 178 | 2.66x | W |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Index size (MiB) | 576.3 | hnswlib 751.8 | 1.30x | - |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W 10 / T 0 / L 2 | |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x | T |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 3,377 | tantivy-py 0.27.0 (CPython binding) 1,669 | 2.02x | W |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 619 | tantivy-py 0.27.0 (CPython binding) 1,061 | 1.71x | W |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 1.46 | SQLite FTS5 1.35 | 0.93x | L |
-| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 30 | SQLite FTS5 39 | 1.28x | W |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2663 | SQLite FTS5 0.2678 | 0.99x | T |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 710 | Apache Lucene 10.6.0 (JVM) 3,025 | 0.23x | L |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 4,037 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 867 | 0.21x | L |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 1.38 | SQLite FTS5 1.28 | 0.93x | L |
+| beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 268 | tantivy-py 0.27.0 (CPython binding) 52 | 0.20x | L |
 | beir:fiqa | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 9.0 | Apache Lucene 10.6.0 (JVM) 12.1 | 1.34x | W |
 | memory | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x | T |
 | memory | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 4,138 | tantivy-py 0.27.0 (CPython binding) 2,185 | 1.89x | W |
@@ -21,11 +21,11 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | memory | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 1.91 | SQLite FTS5 1.75 | 0.92x | L |
 | memory | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 17 | SQLite FTS5 41 | 2.42x | W |
 | memory | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 3.5 | Apache Lucene 10.6.0 (JVM) 10.3 | 2.92x | W |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x | T |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 11,499 | tantivy-py 0.27.0 (CPython binding) 4,990 | 2.30x | W |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 197 | tantivy-py 0.27.0 (CPython binding) 377 | 1.91x | W |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.88 | SQLite FTS5 0.84 | 0.96x | L |
-| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 14 | SQLite FTS5 23 | 1.68x | W |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.4558 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x | T |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 2,559 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 8,363 | 0.31x | L |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 1,078 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 275 | 0.26x | L |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.90 | SQLite FTS5 0.88 | 0.97x | T |
+| memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 79 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 25 | 0.32x | L |
 | memory | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 3.1 | Apache Lucene 10.6.0 (JVM) 10.3 | 3.29x | W |
 | beir:nfcorpus | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x | T |
 | beir:nfcorpus | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 12,373 | tantivy-py 0.27.0 (CPython binding) 7,333 | 1.69x | W |
@@ -35,10 +35,10 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | beir:nfcorpus | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 15 | SQLite FTS5 45 | 2.91x | W |
 | beir:nfcorpus | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 1.0 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.55x | W |
 | beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x | T |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 34,306 | tantivy-py 0.27.0 (CPython binding) 14,425 | 2.38x | W |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 63 | tantivy-py 0.27.0 (CPython binding) 165 | 2.63x | W |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.15 | SQLite FTS5 0.14 | 0.94x | L |
-| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 13 | SQLite FTS5 28 | 2.19x | W |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 24,212 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 43,101 | 0.56x | L |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 170 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 70 | 0.41x | L |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.16 | SQLite FTS5 0.16 | 0.97x | L |
+| beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 30 | SQLite FTS5 29 | 0.97x | L |
 | beir:nfcorpus | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 0.9 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.63x | W |
 | beir:scifact | `modal-x86_64-8vcpu-32g` | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
 | beir:scifact | `modal-x86_64-8vcpu-32g` | QPS (single thread) (QPS) | 5,534 | tantivy-py 0.27.0 (CPython binding) 3,106 | 1.78x | W |
@@ -47,11 +47,11 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | beir:scifact | `modal-x86_64-8vcpu-32g` | Ingest/build time (s) | 0.58 | SQLite FTS5 0.30 | 0.52x | L |
 | beir:scifact | `modal-x86_64-8vcpu-32g` | Peak RSS, serving (MiB) | 31 | SQLite FTS5 70 | 2.23x | W |
 | beir:scifact | `modal-x86_64-8vcpu-32g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.53x | W |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 15,932 | tantivy-py 0.27.0 (CPython binding) 6,316 | 2.52x | W |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 120 | tantivy-py 0.27.0 (CPython binding) 246 | 2.04x | W |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.22 | SQLite FTS5 0.22 | 1.01x | T |
-| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 29 | SQLite FTS5 52 | 1.82x | W |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | nDCG@10 | 0.7014 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x | T |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS (single thread) (QPS) | 4,269 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 12,000 | 0.36x | L |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency (us) | 593 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 142 | 0.24x | L |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Ingest/build time (s) | 0.23 | SQLite FTS5 0.21 | 0.90x | L |
+| beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Peak RSS, serving (MiB) | 39 | SQLite FTS5 51 | 1.31x | W |
 | beir:scifact | `linux-x86_64-intel-ultra-9-185h-22c-27g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.60x | W |
 
 <!-- BENCH:END -->
