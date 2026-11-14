@@ -1,0 +1,172 @@
+{
+ "example": "examples/forget_cost.rs",
+ "host": "wl2 (Linux WSL2, 22 threads, ext4), release build, timing lock held",
+ "date": "2026-11-14",
+ "base": "2c1aa70a plus this change (mode names: logical = purge:false; sync = synchronous purge, which was the default before this change; deferred = the new default)",
+ "before_default_change": [
+  {
+   "mode": "logical",
+   "docs": 1000,
+   "calls": 200,
+   "median_us": 3165,
+   "p99_us": 4907,
+   "max_us": 5623,
+   "total_ms": 641
+  },
+  {
+   "mode": "sync",
+   "docs": 1000,
+   "calls": 200,
+   "median_us": 77729,
+   "p99_us": 99982,
+   "max_us": 109970,
+   "total_ms": 15619
+  },
+  {
+   "mode": "batch100",
+   "docs": 1000,
+   "calls": 2,
+   "median_us": 78007,
+   "p99_us": 78007,
+   "max_us": 78007,
+   "total_ms": 153
+  },
+  {
+   "mode": "logical",
+   "docs": 10000,
+   "calls": 200,
+   "median_us": 3214,
+   "p99_us": 5935,
+   "max_us": 5962,
+   "total_ms": 656
+  },
+  {
+   "mode": "sync",
+   "docs": 10000,
+   "calls": 200,
+   "median_us": 202304,
+   "p99_us": 253770,
+   "max_us": 254418,
+   "total_ms": 40352
+  },
+  {
+   "mode": "batch100",
+   "docs": 10000,
+   "calls": 2,
+   "median_us": 189114,
+   "p99_us": 189114,
+   "max_us": 189114,
+   "total_ms": 365
+  },
+  {
+   "mode": "logical",
+   "docs": 100000,
+   "calls": 200,
+   "median_us": 3395,
+   "p99_us": 14854,
+   "max_us": 16267,
+   "total_ms": 710
+  },
+  {
+   "mode": "sync",
+   "docs": 100000,
+   "calls": 200,
+   "median_us": 1926863,
+   "p99_us": 2021946,
+   "max_us": 2025322,
+   "total_ms": 374503
+  },
+  {
+   "mode": "batch100",
+   "docs": 100000,
+   "calls": 2,
+   "median_us": 1029403,
+   "p99_us": 1029403,
+   "max_us": 1029403,
+   "total_ms": 2058
+  }
+ ],
+ "after": [
+  {
+   "mode": "logical",
+   "docs": 1000,
+   "calls": 200,
+   "median_us": 3139,
+   "p99_us": 5060,
+   "max_us": 5364,
+   "total_ms": 633
+  },
+  {
+   "mode": "deferred",
+   "docs": 1000,
+   "calls": 200,
+   "median_us": 9528,
+   "p99_us": 76011,
+   "max_us": 78412,
+   "total_ms": 2110
+  },
+  {
+   "mode": "batch100",
+   "docs": 1000,
+   "calls": 2,
+   "median_us": 13204,
+   "p99_us": 13204,
+   "max_us": 13204,
+   "total_ms": 24
+  },
+  {
+   "mode": "logical",
+   "docs": 10000,
+   "calls": 200,
+   "median_us": 3162,
+   "p99_us": 5797,
+   "max_us": 6682,
+   "total_ms": 647
+  },
+  {
+   "mode": "deferred",
+   "docs": 10000,
+   "calls": 200,
+   "median_us": 9581,
+   "p99_us": 175142,
+   "max_us": 175284,
+   "total_ms": 2424
+  },
+  {
+   "mode": "batch100",
+   "docs": 10000,
+   "calls": 2,
+   "median_us": 14992,
+   "p99_us": 14992,
+   "max_us": 14992,
+   "total_ms": 29
+  },
+  {
+   "mode": "logical",
+   "docs": 100000,
+   "calls": 200,
+   "median_us": 3152,
+   "p99_us": 14219,
+   "max_us": 16663,
+   "total_ms": 665
+  },
+  {
+   "mode": "deferred",
+   "docs": 100000,
+   "calls": 200,
+   "median_us": 10105,
+   "p99_us": 1022885,
+   "max_us": 1064923,
+   "total_ms": 5167
+  },
+  {
+   "mode": "batch100",
+   "docs": 100000,
+   "calls": 2,
+   "median_us": 30756,
+   "p99_us": 30756,
+   "max_us": 30756,
+   "total_ms": 56
+  }
+ ]
+}

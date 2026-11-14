@@ -67,7 +67,7 @@ def test_conflicting_sources_coexist_until_explicit_forgetting(server):
         dry = memory.forget(ids=["yes"], dry_run=True)
         assert dry.forgotten == ["yes"] and dry.dry_run
         assert memory.get("yes") is not None
-        removed = memory.forget(ids=["yes"], purge=True)
+        removed = memory.forget(ids=["yes"], purge=True, synchronous=True)
         assert removed.forgotten == ["yes"] and removed.purged
         assert memory.get("yes") is None
         assert identifiers(memory.recall("Alice city", subject="alice/city", k=10, history="all")) == {"no"}
@@ -117,7 +117,7 @@ def test_async_memory_chain_forgetting_and_error_parsing(server):
             report = await memory.forget(ids=["new"], include_chain=True, dry_run=True)
             assert set(report.forgotten) == {"old", "new"} and report.dry_run
             assert await memory.get("old") is not None
-            report = await memory.forget(ids=["new"], include_chain=True, purge=True)
+            report = await memory.forget(ids=["new"], include_chain=True, purge=True, synchronous=True)
             assert set(report.forgotten) == {"old", "new"} and report.purged
             assert await memory.get("old") is None and await memory.get("new") is None
             assert await memory.recall("Alice city", history="all") == []
