@@ -7,8 +7,8 @@
 //!
 //! `build`  indexes the corpus (one writer thread, `en_stem` analyzer, one commit).
 //! `serve`  opens the index, answers the first query (cold start), then times `--passes`
-//!          passes over all queries. Queries are parsed before the timed region, as the Python
-//!          comparators receive theirs; document ids come from an array built at open, as the
+//!          passes over all queries. The raw query string is reduced to its word set and parsed inside
+//!          the timed region, as every arm does; document ids come from an array built at open, as the
 //!          Lucene arm and WARM keep theirs.
 //! `ops`    replaces `--ops` documents and then deletes `--ops` others, one commit each.
 //!
@@ -241,18 +241,12 @@ fn main() -> Result<()> {
             let ids = Ids::open(&reader)?;
             let open_s = start.elapsed().as_secs_f64();
             let parser = QueryParser::for_index(&index, vec![body_field]);
-            let prepared: Vec<Box<dyn Query>> = input
-                .queries
-                .iter()
-                .map(|q| parser.parse_query_lenient(&words(&q.text).join(" ")).0)
-                .collect();
-            // `topk` is the bare top-100 collector, which lets tantivy prune with block-max WAND.
-            // `count` adds a Count collector, which forces exhaustive scoring (tantivy-py always
-            // does, its `count` argument defaults to true). Neither changes the hits returned; which
-            // is faster depends on the corpus, so the harness times both as separate rows.
             let top = TopDocs::with_limit(K).order_by_score();
             let top_and_count = (TopDocs::with_limit(K).order_by_score(), Count);
-            let run = |query: &dyn Query| -> Result<Vec<(&str, f32)>> {
+            let run = |text: &str| -> Result<Vec<(&str, f32)>> {
+                // The query string is reduced to its word set and parsed inside the timed region.
+                let query = parser.parse_query_lenient(&words(text).join(" ")).0;
+                let query: &dyn Query = query.as_ref();
                 let hits = if args.exhaustive {
                     searcher.search(query, &top_and_count)?.0
                 } else {
@@ -263,18 +257,18 @@ fn main() -> Result<()> {
                     .map(|(score, address)| (ids.resolve(address.segment_ord, address.doc_id), score))
                     .collect())
             };
-            run(prepared[0].as_ref())?;
+            run(&input.queries[0].text)?;
             let cold_start_s = (epoch_ns().saturating_sub(args.t0_ns)) as f64 / 1e9;
-            for query in prepared.iter().take(16) {
-                run(query.as_ref())?;
+            for query in input.queries.iter().take(16) {
+                run(&query.text)?;
             }
             let mut rows = Vec::new();
             let mut passes = Vec::new();
             for pass in 0..args.passes {
-                let mut ns = Vec::with_capacity(prepared.len());
-                for (q, query) in input.queries.iter().zip(&prepared) {
+                let mut ns = Vec::with_capacity(input.queries.len());
+                for q in &input.queries {
                     let t = Instant::now();
-                    let found = run(query.as_ref())?;
+                    let found = run(&q.text)?;
                     ns.push(t.elapsed().as_nanos() as u64);
                     if pass == 0 {
                         let results: Vec<_> = found

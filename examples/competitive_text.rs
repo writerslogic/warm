@@ -18,7 +18,7 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 use writerslogic_warm::core::documents::{
-    BatchTooLarge, EncodeMode, IngestOptions, MAX_BATCH_ITEMS,
+    BatchTooLarge, EncodeMode, IngestOptions, LexicalOptions, LexicalQuery, MAX_BATCH_ITEMS,
 };
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
@@ -146,6 +146,20 @@ fn process_memory() -> serde_json::Value {
     serde_json::Value::Null
 }
 
+/// Lowercase alphanumeric word set, sorted: the reduction every arm applies to a raw query string
+/// (`text_worker.words`, the native tantivy arm).
+fn words(text: &str) -> Vec<String> {
+    let lowered = text.to_lowercase();
+    let mut out: Vec<String> = lowered
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .map(str::to_owned)
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 fn epoch_ns() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -207,11 +221,29 @@ fn main() -> Result<()> {
             let start = Instant::now();
             let core = WarmCore::new(1024, Some(store), None)?;
             let open_s = start.elapsed().as_secs_f64();
-            let first = &input.queries[0];
-            core.search_documents(&first.text, &first.options)?;
+            // One contract for every arm: the raw query string goes in, WARM's own query analysis
+            // (`LexicalQuery::parse`) is inside the timed region, and the top-100 (id, score) pairs come
+            // out, with no document bodies or metadata built.
+            let lexical = LexicalOptions {
+                k: 100,
+                ..Default::default()
+            };
+            let search = |text: &str| -> Result<Vec<Hit>> {
+                let query = LexicalQuery::parse(&words(text).join(" "))?;
+                Ok(core
+                    .search_lexical(&query, &lexical)?
+                    .hits
+                    .into_iter()
+                    .map(|h| Hit {
+                        document_id: h.document_id,
+                        lexical_score: h.score,
+                    })
+                    .collect())
+            };
+            search(&input.queries[0].text)?;
             let cold_start_s = (epoch_ns().saturating_sub(args.t0_ns)) as f64 / 1e9;
             for query in input.queries.iter().take(16) {
-                core.search_documents(&query.text, &query.options)?;
+                search(&query.text)?;
             }
             let mut rows = Vec::new();
             let mut passes = Vec::new();
@@ -219,17 +251,9 @@ fn main() -> Result<()> {
                 let mut ns = Vec::with_capacity(input.queries.len());
                 for query in &input.queries {
                     let t = Instant::now();
-                    let results = core.search_documents(&query.text, &query.options)?;
+                    let results = search(&query.text)?;
                     ns.push(t.elapsed().as_nanos() as u64);
                     if pass == 0 {
-                        // The same fields the Python workers keep: id and score per hit.
-                        let results = results
-                            .into_iter()
-                            .map(|r| Hit {
-                                document_id: r.document_id,
-                                lexical_score: r.score,
-                            })
-                            .collect();
                         rows.push(Row {
                             id: &query.id,
                             results,

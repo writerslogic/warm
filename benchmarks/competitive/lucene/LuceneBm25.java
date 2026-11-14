@@ -278,19 +278,20 @@ public final class LuceneBm25 {
         StoredFields stored = reader.storedFields();
         for (int d = 0; d < ids.length; d++) ids[d] = stored.document(d, Set.of("id")).get("id");
         double openS = (System.nanoTime() - start) / 1e9;
-        // Queries are analyzed once, outside the timed region, as every other comparator receives its query.
-        Query[] prepared = new Query[queries.size()];
-        for (int i = 0; i < prepared.length; i++) prepared[i] = query(analyzer, queries.get(i).text);
-        search(searcher, prepared[0], ids);
+        // One contract for every system: the raw query string goes in, the engine's own analysis and query
+        // construction are inside the timed region, and the top-100 documents come out.
+        String[] prepared = new String[queries.size()];
+        for (int i = 0; i < prepared.length; i++) prepared[i] = queries.get(i).text;
+        search(searcher, analyzer, prepared[0], ids);
         double cold = (System.currentTimeMillis() * 1_000_000L - t0) / 1e9;
-        for (int i = 0; i < Math.min(16, prepared.length); i++) search(searcher, prepared[i], ids);
+        for (int i = 0; i < Math.min(16, prepared.length); i++) search(searcher, analyzer, prepared[i], ids);
         // JIT warm-up: whole untimed passes until two consecutive passes agree within 5 percent (at least
         // 3, at most 30), so the timed passes run compiled code.
         int warmPasses = 0, stable = 0;
         double previous = -1;
         while (warmPasses < 30) {
           long t = System.nanoTime();
-          for (Query q : prepared) search(searcher, q, ids);
+          for (String q : prepared) search(searcher, analyzer, q, ids);
           double took = System.nanoTime() - t;
           warmPasses++;
           stable = previous > 0 && Math.abs(took - previous) / previous < 0.05 ? stable + 1 : 0;
@@ -303,7 +304,7 @@ public final class LuceneBm25 {
           long[] ns = new long[prepared.length];
           for (int i = 0; i < prepared.length; i++) {
             long t = System.nanoTime();
-            ScoreDoc[] hits = search(searcher, prepared[i], ids);
+            ScoreDoc[] hits = search(searcher, analyzer, prepared[i], ids);
             ns[i] = System.nanoTime() - t;
             if (n == 0) first[i] = hits;
           }
@@ -366,9 +367,9 @@ public final class LuceneBm25 {
     return d;
   }
 
-  /** The timed unit: run the prepared query, then map each hit to its document id through the table. */
-  static ScoreDoc[] search(IndexSearcher searcher, Query query, String[] ids) throws IOException {
-    ScoreDoc[] hits = searcher.search(query, K).scoreDocs;
+  /** The timed unit: analyze the query string, run it, then map each hit to its document id through the table. */
+  static ScoreDoc[] search(IndexSearcher searcher, Analyzer analyzer, String text, String[] ids) throws IOException {
+    ScoreDoc[] hits = searcher.search(query(analyzer, text), K).scoreDocs;
     for (ScoreDoc hit : hits) SINK = ids[hit.doc];
     return hits;
   }

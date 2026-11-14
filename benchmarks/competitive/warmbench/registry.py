@@ -60,8 +60,8 @@ SYSTEMS = {
 # Where each system's query is timed. Binding overhead is part of what a user of that package
 # pays, but it differs by language, so it is printed next to every timing row.
 TIMING_BOUNDARY = {
-    WARM: "native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop",
-    WARM_EAGER: "native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`)",
+    WARM: "native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`), `search_lexical` on the word set parsed inside the timer, ids and scores out; ANN: public-bench loop",
+    WARM_EAGER: "native Rust API call in the engine process (no language binding); text: BM25 index plus chunk hypervectors at ingest (`--encode eager`), `search_lexical` on the word set parsed inside the timer, ids and scores out",
     "hnswlib": "CPython binding call per query",
     "hnswlib-cpp": "native C++ searchKnn call per query from a C++ driver process (no Python in the timed region); same index file and queries as the hnswlib row",
     "faiss-hnsw": "CPython (SWIG) call per query", "faiss-flat": "CPython (SWIG) call per query",
@@ -69,10 +69,10 @@ TIMING_BOUNDARY = {
     "sqlite-vec": "CPython sqlite3 call per query", "lancedb": "CPython + Arrow call per query (multi-threaded Rust runtime inside)",
     "chroma": "CPython client call per query (Rust core inside)", "qdrant-local": "CPython client call per query (embedded local mode)",
     "milvus-lite": "CPython client call per query (embedded server process)", "duckdb-vss": "CPython duckdb call per query",
-    "sqlite-fts5": "CPython sqlite3 call per query (query string built outside the timer)", "tantivy-py": "CPython tantivy-py call per query (query parsed outside the timer; stored id fetched per hit through Python objects)",
-    "tantivy-rs": "native Rust API call in its own process (query parsed outside the timer; id from an array built at open), same process model as WARM",
-    "tantivy-rs-count": "native Rust API call, top-100 plus Count collector, in its own process (query parsed outside the timer; id from an array built at open), same process model as WARM",
-    "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after untimed JIT warm-up passes to steady state; query analyzed outside the timer, ids from an array built at open",
+    "sqlite-fts5": "CPython sqlite3 call per query (query string built inside the timer from the raw text)", "tantivy-py": "CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects)",
+    "tantivy-rs": "native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM",
+    "tantivy-rs-count": "native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM",
+    "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open",
 }
 
 # JVM flags per Lucene phase. serve: a small fixed heap and the serial collector (the index is memory-mapped, so the
@@ -88,7 +88,7 @@ LUCENE_JVM_FLAGS = {
 # given and how the timed region was kept to the search itself.
 COMPARATOR_SETTINGS = {
     "lucene": {"jvm_flags": LUCENE_JVM_FLAGS, "query_cache": "disabled (IndexSearcher.setQueryCache(null))",
-               "query_analysis": "outside the timed region (one Query per query, built before the passes)",
+               "query_analysis": "inside the timed region (the Query is built from the raw text on every call)",
                "id_resolution": "String[] indexed by docid, built at open; no stored-fields read in the timed region",
                "warmup": "untimed whole passes until two consecutive passes agree within 5 percent (3 to 30), count in warmup_passes",
                "similarity": "BM25Similarity default (k1 1.2, b 0.75); index force-merged to one segment"},
@@ -96,13 +96,13 @@ COMPARATOR_SETTINGS = {
                     "id_resolution": "rowid-to-id dict loaded at open, outside the timed region",
                     "pragmas": {"query_only": "ON", "mmap_size": 1073741824, "cache_size": "-65536 (64 MiB)", "temp_store": "MEMORY"},
                     "tokenizer": "porter unicode61", "index": "optimize run at build"},
-    "tantivy-py": {"query": "parse_query_lenient outside the timed region; searcher.search(query, 100) (the binding always adds a Count collector, count defaults to true)",
+    "tantivy-py": {"query": "word-set reduction and parse_query_lenient inside the timed region; searcher.search(query, 100) (the binding always adds a Count collector, count defaults to true)",
                    "id_resolution": "stored field fetched per hit through Python objects (the binding's only document access)",
                    "analyzer": "en_stem, raw id field", "writer": "1 thread, 200 MB heap"},
-    "tantivy-rs": {"query": "QueryParser::parse_query_lenient outside the timed region; TopDocs::with_limit(100)",
+    "tantivy-rs": {"query": "word-set reduction and QueryParser::parse_query_lenient inside the timed region; TopDocs::with_limit(100)",
                    "id_resolution": "array indexed by docid, built at open from the id fast field; no dictionary lookup in the timed region", "analyzer": "en_stem, raw id field",
                    "writer": "1 thread, 200 MB heap", "crate": f"tantivy {TANTIVY_CRATE}", "process": "one process per phase, same as WARM"},
-    "tantivy-rs-count": {"query": "QueryParser::parse_query_lenient outside the timed region; TopDocs::with_limit(100) plus a Count collector (exhaustive scoring)",
+    "tantivy-rs-count": {"query": "word-set reduction and QueryParser::parse_query_lenient inside the timed region; TopDocs::with_limit(100) plus a Count collector (exhaustive scoring)",
                    "id_resolution": "array indexed by docid, built at open from the id fast field; no dictionary lookup in the timed region", "analyzer": "en_stem, raw id field",
                    "writer": "1 thread, 200 MB heap", "crate": f"tantivy {TANTIVY_CRATE}", "process": "one process per phase, same as WARM"},
 }

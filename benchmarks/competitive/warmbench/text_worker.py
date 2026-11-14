@@ -129,7 +129,7 @@ class Tantivy:
         self.searcher = self.index.searcher()
 
     def prepare(self, text):
-        # Parsed once outside the timer, as the native arm and every other comparator receive their query.
+        # Parsed inside the timer: every system receives the raw query string.
         query, _ = self.index.parse_query_lenient(" ".join(words(text)), ["body"])
         return query
 
@@ -277,17 +277,22 @@ def main():
         getattr(system, "open_serving", system.open)()
         open_s = time.perf_counter() - start
         queries = data["queries"]
-        prepared = [system.prepare(q["text"]) for q in queries]
-        system.search(prepared[0])
+        # One contract for every system: the raw query string goes in, the engine's own query analysis and
+        # construction (`prepare`) are inside the timed region, and the top-100 (id, score) pairs come out.
+        prepared = [q["text"] for q in queries]
+
+        def search(text):
+            return system.search(system.prepare(text))
+        search(prepared[0])
         cold_start_s = (time.time_ns() - a.t0_ns) / 1e9
         for text in prepared[:16]:
-            system.search(text)
+            search(text)
         rows, passes = [], []
         for n in range(a.passes):
             ns = []
             for q, text in zip(queries, prepared):
                 t = time.perf_counter_ns()
-                found = system.search(text)
+                found = search(text)
                 ns.append(time.perf_counter_ns() - t)
                 if n == 0:
                     rows.append({"id": q["id"], "results": [{"documentId": i, "lexicalScore": s} for i, s in found]})

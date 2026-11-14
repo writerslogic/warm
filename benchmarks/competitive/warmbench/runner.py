@@ -412,7 +412,7 @@ def run_text(dataset, spec, systems, out_path=None):
                "protocol": {"measurement_version": 2, "resampling_unit": "independent process-round summaries", "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied", "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "k": 100, "passes_per_round": 3,
                             "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems),
                             "retrieval": "lexical only, OR over the lowercase alphanumeric query word set, top 100; each system's own analyzer and default BM25",
-                            "timing": "one query at a time, single client thread; WARM timed inside its process, Python systems inside their worker",
+                            "timing": "one query at a time, single client thread; one contract for every system: raw query string in, the engine's own query analysis and construction inside the timed region, top-100 (id, score) pairs out and no document bodies; WARM timed inside its process, Python systems inside their worker",
                             "warm_rows": "warm = `--encode lexical` (BM25 index only, like-for-like); warm-eager = default eager encoding (chunk hypervectors at ingest); every build repeat is one cold process",
                             "interleaving": "each round runs WARM and every comparator once, order rotated per round",
                             "peak_rss": "wait4 rusage of that phase's own process, forked from a small helper so it never inherits the orchestrator's RSS (Linux)",

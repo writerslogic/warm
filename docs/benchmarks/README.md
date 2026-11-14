@@ -146,8 +146,13 @@ existing bytes and do not claim a fresh performance measurement.
   JVM after untimed warm-up passes to steady state (query analysis, document-id lookup and JVM flags: `comparator_settings` in each results file). Each section prints the boundary per system. The existing
   accepted serving rows (`benchmarks/results/serving_memory_v40.json`) drive both arms from Node,
   which narrows WARM's lead against SQLite; the two protocols are not interchangeable.
-* Comparator query preparation (word splitting, SQL expression building, Lucene analysis, tantivy
-  parsing) is done outside the timer to favour the comparators; WARM's own parsing stays inside it.
+* Text timing contract, the same for every system: the input is the raw query string, the timed region
+  holds the reduction to a lowercase alphanumeric word set and that engine's own query analysis and
+  construction (WARM `LexicalQuery::parse`, tantivy `parse_query_lenient`, Lucene analysis, the FTS5 MATCH
+  expression), and the output is the top-100 (id, score) pairs with no document bodies or metadata
+  (WARM `search_lexical`, not `search_documents`). Results written before this contract (the mixed
+  contract) timed WARM through `search_documents` with every comparator's query prepared outside the
+  timer; those runs are kept as evidence only.
 * tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, a mechanism inferred from that measurement and not profiled, see `benchmarks/results/tantivy_collector_microbench_20261114.txt`; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
   `tantivy-rs` (the native crate in its own process, ids from an array built at open, built by
   `examples/competitive_text_tantivy.rs`, the same tantivy version as the binding). The binding row is
