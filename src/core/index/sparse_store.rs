@@ -228,12 +228,16 @@ fn decode(payload: &[u8], limits: &SparseLimits) -> Result<Record> {
                 "sparse put record has the wrong length"
             );
             let ids: Vec<u16> = rest[4..4 + 2 * nnz]
-                .chunks_exact(2)
-                .map(|b| u16::from_le_bytes([b[0], b[1]]))
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|b| u16::from_le_bytes(*b))
                 .collect();
             let weights: Vec<f32> = rest[4 + 2 * nnz..]
-                .chunks_exact(4)
-                .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|b| f32::from_le_bytes(*b))
                 .collect();
             ensure!(
                 ids.windows(2).all(|w| w[0] < w[1])
