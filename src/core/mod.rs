@@ -24,6 +24,7 @@ pub(crate) mod decompose;
 pub(crate) mod diffusion;
 pub mod documents;
 pub(crate) mod durable_file;
+pub mod failpoint;
 #[cfg(feature = "local-embed")]
 pub mod embed;
 pub mod encoding;

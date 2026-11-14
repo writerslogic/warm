@@ -54,7 +54,7 @@ The contract is [`server/openapi.json`](server/openapi.json). Every operation li
 | `POST /api/v1/documents` one document | write | 200 `{"added": 1}` |
 | `POST /api/v1/documents/batch` 1..=`max-batch` documents, one atomic commit | write | 200 `{"added": n}` |
 | `POST /api/v1/documents/stream` NDJSON, committed every `--stream-batch` lines | write | 200 `{"added","rejected","errors":[{"line","message"}],"errors_truncated"}` |
-| `DELETE /api/v1/documents/{id}[?purge=true]` (percent-encoded; `purge` also rewrites the journal and scrubs the deleted data) | write | 200 `{"deleted": true}` |
+| `DELETE /api/v1/documents/{id}[?purge=false]` (percent-encoded; by default the delete also rewrites the journal and scrubs the deleted data, `purge=false` opts out) | write | 200 `{"deleted": true}` |
 | `GET /api/v1/documents?limit&after` ids and metadata, id cursor | read | 200 `{"documents":[{"id","metadata"}],"next_cursor","count"}` |
 | `GET /api/v1/documents/{id}/chunks/{index}` retained chunk, zero-based index | read | 200 `{"revision","document","index","id","startByte","endByte","text"}`; 404 if absent |
 | `GET /api/v1/stats` | read | 200 `{"tenant","documents","vectors","documentIndexTrained","usedBytes","capacityBytes"}` |

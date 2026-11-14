@@ -869,7 +869,13 @@ impl Sim {
             if !purge {
                 self.expect_unchanged(&before, "forgetting nothing", || {
                     self.memory()
-                        .forget(&scope, &ForgetOptions::default())
+                        .forget(
+                            &scope,
+                            &ForgetOptions {
+                                purge: false,
+                                ..Default::default()
+                            },
+                        )
                         .unwrap();
                 });
             }
@@ -1098,7 +1104,10 @@ impl Sim {
                 &ForgetScope::Ids {
                     ids: vec![id.clone()],
                 },
-                &ForgetOptions::default(),
+                &ForgetOptions {
+                    purge: false,
+                    ..Default::default()
+                },
             )
             .unwrap_or_else(|e| panic!("forget: {e:#}; {}", self.ctx()));
         let text = self.model.facts[&id].text.clone();
@@ -1888,7 +1897,10 @@ fn deleting_a_superseder_restores_the_older_fact() {
                     &ForgetScope::Ids {
                         ids: vec!["b".into()],
                     },
-                    &ForgetOptions::default(),
+                    &ForgetOptions {
+                        purge: false,
+                        ..Default::default()
+                    },
                 )
                 .unwrap();
             assert_eq!(report.forgotten, vec!["b".to_string()]);

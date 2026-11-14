@@ -132,6 +132,7 @@ impl ActiveSegment {
     /// Writes back the mapping's dirty pages (`msync`) without the platform's full sync:
     /// for intermediate flushes whose durability a later [`Self::sync`] completes.
     fn write_back(&self) -> Result<()> {
+        crate::core::failpoint::hit("segment-flush")?;
         self.map
             .flush()
             .map_err(|e| anyhow!("mmap flush failed: {}", e))
@@ -145,6 +146,7 @@ impl ActiveSegment {
 
     /// Makes `[offset, offset + len)` durable.
     fn sync_range(&self, offset: usize, len: usize, test_point: &'static str) -> Result<()> {
+        crate::core::failpoint::hit("segment-flush")?;
         self.map
             .flush_range(offset, len)
             .map_err(|e| anyhow!("mmap flush_range failed: {}", e))?;
@@ -247,6 +249,7 @@ impl PersistentArena {
         // A reopened segment already has its durable length (growth syncs it); only a new or
         // resized file needs the length change and the full sync.
         if length != active_capacity as u64 {
+            crate::core::failpoint::hit("segment-resize")?;
             file.set_len(active_capacity as u64)?;
             file.sync_all()?;
         }
@@ -804,6 +807,7 @@ impl PersistentArena {
         ));
         let file = OpenOptions::new().read(true).write(true).open(path)?;
         active.write_back()?;
+        crate::core::failpoint::hit("segment-resize")?;
         file.set_len(capacity as u64)?;
         file.sync_all()?;
         // SAFETY: the writer guard excludes all readers and the file has its new durable length.
@@ -844,6 +848,7 @@ impl PersistentArena {
         } else {
             self.segment_size
         };
+        crate::core::failpoint::hit("segment-resize")?;
         next_file.set_len(capacity as u64)?;
         next_file.sync_all()?;
         super::durable_file::sync_directory(&self.data_path.read())?;

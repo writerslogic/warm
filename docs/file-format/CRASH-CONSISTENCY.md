@@ -6,6 +6,18 @@
 Assumes a filesystem where rename is atomic and the sync calls below are honoured.
 Each row names the test that exercises it; the tests interrupt processes, they do not cut power.
 
+`tests/crash_harness.rs` ends a child process at every durability point of a workload
+(segment flush, file sync, directory sync, atomic write and rename, scrub, text sync; the
+`failpoints` feature, `core::failpoint`) and checks the reopened store: every acknowledged
+operation took effect, the operation in flight is whole or absent, every present document is
+searchable, no deleted text is in any file. `tests/disk_faults.rs` fails each point with
+ENOSPC and EIO, once and persistently, with the same checks. Both run on Linux, macOS and
+Windows (`.github/workflows/durability.yml`). A killed process keeps every write in the
+kernel, so these do not test lost unsynced data or lost renames: the power-loss model is the
+Linux `LD_PRELOAD` matrix in `benchmarks/public/durability_matrix.py`, whose shim treats a
+rename as durable and which has not run on a committed tree; there is no dm-flakey or
+dm-log-writes run (not attempted).
+
 ## When a returned commit is durable
 
 A journal commit writes the frame and the end marker after it into the active segment's
@@ -33,6 +45,7 @@ creation before any commit).
 | Compaction | A crash before `CURRENT` is replaced leaves the old generation; after, the new one. Both complete. A leftover `gen-*` is removed by the next compaction (overwritten first by a scrubbing one). | `storage::tests::interrupted_compaction_recovers_a_complete_generation`, `layout_tests::legacy_compaction_tail_survives_each_plain_and_encrypted_publication_interruption` |
 | Checkpoint compaction | The checkpoint is written atomically and synced inside the staging generation before `CURRENT` is replaced, so a crash at any publication step opens either the old generation (frames, or its own checkpoint plus frames) or the new checkpoint plus the frames replayed into it, with every acknowledged write. | `compaction::tests::checkpoint_compaction_survives_each_publication_interruption` |
 | Background compaction | The same publication, interrupted at each stage of [COMPACTION.md](COMPACTION.md) (`staging`, `caught-up`, `staged`, `published`, `mapped`, `released`, `finished`), reopens with every acknowledged write, including writes made while it ran; the next compaction leaves only the live generation. | `background_compaction::tests::background_compaction_survives_interruption_at_each_publish_stage` |
+| Purge | `purge.pending` is made durable before the first delete commits and removed after the scrubbing compaction; an open that finds it finishes the purge. | `tests/erase.rs::crash::a_crash_at_every_point_of_a_purge_leaves_nothing_after_reopen`, `tests/erase.rs::an_interrupted_purge_is_finished_by_the_next_open` |
 | `encryption.salt` | Atomic and fsynced before the first frame. | `tests/format_crash.rs::salt_is_written_atomically` |
 | Vector update batch | One CRC32 frame per durable batch; an incomplete final frame is truncated, a complete bad frame fails open. | `qgraph::update::tests::torn_last_batch_at_every_byte_and_checksum_corruption` |
 | Vector consolidation | A synced checkpoint publishes a complete generation; its sequence suppresses old log replay before rotation. | `qgraph::update::tests::consolidation_interruption_recovers_committed_state` |

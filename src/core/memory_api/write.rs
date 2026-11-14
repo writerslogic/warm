@@ -494,9 +494,10 @@ impl Memory {
     /// removed and the same call finishes the rest.
     ///
     /// Without `include_chain` only the matched facts go, and a removed successor makes its
-    /// predecessor current again. Deleted text stays in the append-only journal until the
-    /// store compacts. The text segment is zeroed and synced once before this returns; `purge`
-    /// then compacts and overwrites what the compaction replaced.
+    /// predecessor current again. The text segment is zeroed and synced before this returns;
+    /// with `purge` (the default) the store then compacts and overwrites what the compaction
+    /// replaced, so no file keeps the deleted text. Without it the journal keeps the deleted
+    /// frames until some later compaction.
     pub fn forget(&self, scope: &ForgetScope, options: &ForgetOptions) -> Result<ForgetReport> {
         let mut completed = BTreeSet::new();
         for _ in 0..WRITE_ATTEMPTS {
@@ -573,6 +574,11 @@ impl Memory {
                 dry_run: options.dry_run,
                 purged,
             }));
+        }
+        if options.purge {
+            // Durable before the first delete commits, so a crash from here on is finished by
+            // the next open.
+            self.core.mark_purge_pending()?;
         }
         let rewrites = self.bridge_survivors(&forgotten)?;
         let mut revision = before;

@@ -106,7 +106,7 @@ const PURGE: &[Param] = &[
         name: "purge",
         location: "query",
         description:
-            "true also rewrites the journal and scrubs what the deleted document left behind.",
+            "Default true: the journal is rewritten and what the deleted document left behind is scrubbed before the call returns. false leaves the deleted frame in the journal until a later compaction.",
         kind: "boolean",
     },
     Param {

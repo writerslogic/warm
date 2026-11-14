@@ -164,6 +164,9 @@ pub struct WarmCore {
     phase_graph: crate::core::sync::Mutex<Option<super::phase_graph::PhaseGraph>>,
     // Declared last so it is dropped after every mmap, index, and store
     // component. No subsequent instance can enter while teardown is flushing.
+    /// Bumped by every [`WarmCore::mark_purge_pending`]; a scrubbing compaction clears the
+    /// marker file only if no purge began while it ran.
+    purge_epoch: std::sync::atomic::AtomicU64,
     _store_lock: StoreLock,
 }
 
@@ -372,6 +375,7 @@ impl WarmCore {
             connection_graph: crate::core::sync::Mutex::new(None),
             #[cfg(feature = "experimental")]
             phase_graph: crate::core::sync::Mutex::new(None),
+            purge_epoch: std::sync::atomic::AtomicU64::new(0),
             _store_lock: store_lock,
         };
 
@@ -403,6 +407,12 @@ impl WarmCore {
         // Only a completely opened engine may write an image when it closes.
         core.flush_audit()?;
         core.mark_opened();
+        // A purge that died between its delete commit and the end of its compaction left the
+        // deleted text in the journal; finish it before the store is handed out.
+        if core.purge_pending() {
+            core.compact_scrubbing()
+                .context("completing a purge interrupted before it finished")?;
+        }
 
         Ok(core)
     }

@@ -101,8 +101,9 @@ return a truncated list. To read a revision's content, open a view at its `writt
   before the delete returns that document, with its text and embeddings, exactly as the store
   held it. This also applies to facts that `forget` removed without `purge`. A caller that must
   not see forgotten content in history must purge.
-- **A purge removes the history.** A purge is a scrubbing compaction. It publishes a new
-  generation that holds only the live state and overwrites the old generation with zeros.
+- **A purge removes the history.** A purge (the default for `forget`) is a scrubbing
+  compaction. It publishes a new generation that holds only the live state and overwrites the
+  old generation with zeros through the file API.
   Purged text and embeddings are never returned at any position, including positions from
   before the purge, for three reasons:
   1. a position from before the purge names the old generation and fails with

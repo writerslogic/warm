@@ -144,7 +144,7 @@ def test_explain_forget_get_history_and_maintenance():
 
     report = memory.forget(ids=["f0"], include_chain=True, dry_run=True)
     assert body(requests[-1]) == {
-        "scope": {"kind": "ids", "ids": ["f0"]}, "includeChain": True, "dryRun": True, "purge": False,
+        "scope": {"kind": "ids", "ids": ["f0"]}, "includeChain": True, "dryRun": True, "purge": True,
     }
     assert report.forgotten == ["f0"] and report.dry_run
     memory.forget(ingested_before=dt.datetime(1970, 1, 1, 0, 0, 1, tzinfo=dt.timezone.utc))
@@ -159,7 +159,7 @@ def test_explain_forget_get_history_and_maintenance():
     assert memory.get("f0").superseded_by == ["f1"]
     assert [fact.id for fact in memory.history("f0")] == ["f0"]
     assert memory.apply_forgetting().dry_run is True
-    assert body(requests[-1]) == {"includeChain": False, "dryRun": True, "purge": False}
+    assert body(requests[-1]) == {"includeChain": False, "dryRun": True, "purge": True}
     consolidated = memory.consolidate(allow_destructive=False)
     assert consolidated.created[0].id == "f1"
     assert body(requests[-1]) == {"dryRun": True, "allowDestructive": False}

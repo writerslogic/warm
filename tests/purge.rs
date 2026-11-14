@@ -110,7 +110,10 @@ fn forget_without_purge_scrubs_the_text_segment_at_once() {
             &ForgetScope::Ids {
                 ids: vec!["d0".into()],
             },
-            &ForgetOptions::default(),
+            &ForgetOptions {
+                purge: false,
+                ..ForgetOptions::default()
+            },
         )
         .unwrap();
     // The append-only journal keeps the frame until a purge; the text segment does not.

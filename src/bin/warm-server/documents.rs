@@ -611,12 +611,13 @@ pub async fn delete_doc(
     req: Request,
 ) -> ApiResult {
     let (_, tenant) = admit(&state, &req, Scope::Write)?;
-    // `?purge=true` also rewrites the journal and scrubs what it replaced; without it the text
-    // segment is scrubbed but the deleted frame stays in the journal until compaction.
-    let purge = req
+    // The delete rewrites the journal and scrubs what it replaced before it returns;
+    // `?purge=false` opts out, which scrubs the text segment but leaves the deleted frame in
+    // the journal until a later compaction.
+    let purge = !req
         .uri()
         .query()
-        .is_some_and(|q| q.split('&').any(|pair| pair == "purge=true"));
+        .is_some_and(|q| q.split('&').any(|pair| pair == "purge=false"));
     let identities: Vec<_> = req
         .uri()
         .query()
@@ -677,6 +678,9 @@ pub async fn delete_doc(
         };
         let before = core.revision();
         let result = (|| {
+            if purge {
+                core.mark_purge_pending().map_err(ApiError::from_core)?;
+            }
             if core.delete_document(&id).map_err(ApiError::from_core)? {
                 if let Some(vectors) = core.vectors() {
                     if let Err(error) = vectors.remove(&[id.as_str()]) {
