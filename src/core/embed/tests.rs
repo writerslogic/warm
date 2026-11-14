@@ -492,6 +492,7 @@ fn offline_mode_fails_with_actionable_error_and_never_downloads() {
         ENV_MODEL_DIR,
         "offline mode is on",
         "warm-embed fetch",
+        "warm-python[embed]",
         "sha256",
     ] {
         assert!(err.contains(needle), "missing {needle:?} in {err}");

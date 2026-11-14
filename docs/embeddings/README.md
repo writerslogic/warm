@@ -30,7 +30,13 @@ index.add(&["a", "b"], &["The cat sat on the mat.", "Quarterly revenue grew."])?
 let hits = index.search("feline on a rug", 3)?;                     // [{id, score, text}]
 ```
 
-Python (`uv pip install warm-python`; add `[embed]` for the pinned default offline pack):
+Python (`uv pip install warm-python`; add `[embed]` for the pinned default offline pack).
+Without `[embed]`, the first `SemanticIndex()` or `Embedder()` downloads the default model
+(`granite-embedding-30m-english`, about 32 MB) from `https://huggingface.co/ibm-granite/granite-embedding-30m-english`
+at a pinned commit, checks every file and the converted pack against the sha256 values in
+`src/core/embed/registry.rs`, caches it, and prints one line on stderr when it starts. Forbid
+the download with `WARM_EMBED_OFFLINE=1` or `Embedder(offline=True)`; the error then names how
+to install the pack:
 
 ```python
 import writerslogic_warm as hm
@@ -148,7 +154,9 @@ export WARM_EMBED_MODEL_DIR=./packs WARM_EMBED_OFFLINE=1   # on the offline one
 `warm-python[embed]` installs `warm-models`, which carries the pinned
 default Granite embedding pack. The Python `Embedder` also uses packs from
 `WARM_EMBED_MODEL_DIR` or the local cache. Fetch other models on a connected machine with
-`warm-embed fetch`, then copy them to an offline machine if needed.
+`warm-embed fetch`, then copy them to an offline machine if needed. No package ships a
+prebuilt `warm-embed`; build it with
+`cargo install warm-rust --features local-embed-download,cli --bin warm-embed`.
 `warm-embed pack` converts a local BERT-family Hugging Face directory.
 
 Why not bundle weights in the Rust crate: crates.io caps a crate at 10 MB and the smallest good int8

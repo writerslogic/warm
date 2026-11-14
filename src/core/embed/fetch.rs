@@ -149,6 +149,17 @@ pub fn download_pack(spec: &ModelSpec, cache: &Path) -> Result<PathBuf> {
             .filter(|v| !v.is_empty())
             .unwrap_or_else(|| "https://huggingface.co".into());
         let base = base.trim_end_matches('/');
+        let bytes: u64 = spec.files.iter().map(|f| f.size).sum();
+        eprintln!(
+            "warm: first use of embedding model {id}: downloading {mb:.0} MB from {base} (files and \
+             pack pinned by sha256, pack {sha}) into {cache}. Set {offline}=1 or pass offline=True \
+             to forbid downloads.",
+            id = spec.id,
+            mb = bytes as f64 / 1e6,
+            sha = spec.pack_sha256,
+            cache = cache.display(),
+            offline = super::locate::ENV_OFFLINE,
+        );
         for f in spec.files {
             let url = format!("{base}/{}/resolve/{}/{}", spec.repo, spec.revision, f.name);
             download_file(&url, &work.join(f.name), f.sha256, f.size)?;

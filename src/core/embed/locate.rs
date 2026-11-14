@@ -147,7 +147,10 @@ pub(crate) fn missing_message(spec: &ModelSpec, cache: &Path, why: &str) -> Stri
     format!(
         "embedding model {id:?} is not installed and {why}. Provide the pack {name} (sha256 {sha}) in one of these ways: \
          set {ENV_PACK} to its path; put it in a directory named by {ENV_MODEL_DIR}; or copy it to {cache}. \
-         On a connected machine, `warm-embed fetch {id} --out DIR` creates it. \
+         Python: `pip install \"warm-python[embed]\"` installs the pinned pack with no download. \
+         Any language: on a connected machine, build the tool with \
+         `cargo install warm-rust --features local-embed-download,cli --bin warm-embed`, then \
+         `warm-embed fetch {id} --out DIR` creates the pack. \
          Unset {ENV_OFFLINE} to allow the one-time pinned download.",
         id = spec.id,
         name = spec.pack_name(),
