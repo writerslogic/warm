@@ -20,7 +20,7 @@ protocols, not a substitute for testing your own data.
 |--------|------------|-------------|
 | ann-benchmarks at recall 0.95: sift 2,819 QPS against faiss-ivfpqfs 3,787 (0.74x); glove 1,019 against ScaNN 1,535 (0.66x) | Official ann-benchmarks runner, each run pinned to one CPU, AVX2 host | [`ann_benchmarks_harness_wl02_v1.json`](../../benchmarks/results/ann_benchmarks_harness_wl02_v1.json) |
 | VIBE llama-128-ip QPS: 24.6% behind RoarGraph at recall 0.95, 54.8% behind MLANN RF80 at 0.99 | One thread, official test queries | [`query_aware_graph_v1/README.md`](../../benchmarks/results/query_aware_graph_v1/README.md) |
-| Text ingest: peak build memory 1.1x to 2.1x SQLite FTS5's on every corpus; ingest time behind SQLite FTS5 in 6 of 7 corpus and machine pairs (0.46x to 0.96x, including FiQA at 0.93x on the 185H), tied on SciFact on the 185H (1.01x) | Same runs, both machines | [`docs/benchmarks/GAPS.md`](../../docs/benchmarks/GAPS.md) |
+| Text ingest on the 185H: peak build memory 0.36x to 0.84x of SQLite FTS5's on every corpus and contract (WARM uses more); ingest time behind SQLite FTS5 in 7 of 8 corpus and contract pairs (0.81x to 0.92x, including FiQA at 0.92x on the ids contract), tied on the memory corpus ids contract (1.02x) | Same runs, 185H | [`docs/benchmarks/GAPS.md`](../../docs/benchmarks/GAPS.md) |
 | glove-100-angular through `memorize_vector` / `query_vector` (vertex graph, fixed ef 128): recall@10 0.859 at 2,092 QPS, against hnswlib 0.831 at 3,368 QPS and FAISS HNSW 0.832 at 4,111 QPS (higher recall, lower QPS) | One thread, Apple M4; one operating point, no sweep; includes exact-cosine scoring of the returned ids | [`public_glove-100-angular.json`](../../benchmarks/results/public_glove-100-angular.json) |
 
 ## Tried and not adopted

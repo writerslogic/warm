@@ -102,6 +102,10 @@ def load_results():
         data = json.loads(path.read_text())
         if data.get("schema_version") != 1 or data.get("kind") not in ("ann", "text"):
             continue
+        if data["kind"] == "text" and not (data.get("protocol") or {}).get("contracts"):
+            # Written before the ids/documents timing contracts: WARM and the comparators were timed on different
+            # boundaries, so the rows contradict the current protocol. The file stays as history, out of the tables.
+            continue
         key = (data["kind"], data["dataset"].get("id") or data["dataset"].get("name"), data["dataset"].get("n_train"), data["hardware"]["class"], data["suite"],
                data.get("mode", "embedded"))
         if key not in found or data["date"] > found[key][1]["date"]:
