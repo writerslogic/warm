@@ -66,7 +66,19 @@ def test_every_cell_recomputes_from_its_results_file():
         path = ROOT / file
         data = json.loads(path.read_text())
         metrics, _, _ = table.metrics_for(path, data)
+        entries, _ = table.per_build_for(path, data)
+        by_build = {(e["system"], e["build"], e["metric"]): e for e in entries}
         for cell in group:
+            if cell.get("per_build"):
+                system, build = cell["per_build"]
+                entry = by_build[(system, build, cell["metric"])]
+                if cell.get("derived"):
+                    assert cell["verdict"] == entry["verdict"] and cell["text"] == ("n/m" if entry["adv"] is None else table.fx(entry["adv"]["factor"]))
+                else:
+                    fresh = entry["mine"] if cell["system"] == table.reference(data) else entry["theirs"]
+                    assert fresh["value"] == cell["value"] and fresh["source"] == cell["source"]
+                    assert resolve(data, cell["source"].split("#", 1)[1]), f"{cell['source']} resolves to nothing"
+                continue
             if cell.get("derived"):
                 mine, other = metrics[cell["metric"]][cell["warm"]], metrics[cell["metric"]][cell["other"]]
                 adv = table.advantage(cell["metric"], mine, other)

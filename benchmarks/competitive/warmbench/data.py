@@ -66,18 +66,31 @@ def _truth(train, test, metric, width):
     return out
 
 
+def with_digests(directory, meta):
+    """A dataset's metadata always carries the sha256 of the train and test files the systems read; a full-size
+    dataset that was prepared without them gets them computed and written back."""
+    changed = False
+    for key, name in (("train_sha256", "train.f32"), ("test_sha256", "test.f32")):
+        if not meta.get(key):
+            meta[key] = _sha(Path(directory) / name)
+            changed = True
+    if changed:
+        (Path(directory) / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
+    return meta
+
+
 def ann_subset(name, n_train, n_test):
     """Prepared directory with the first `n_train` train rows and `n_test` test rows (None = all)."""
     src = source_ann(name)
     meta = json.loads((src / "meta.json").read_text())
     if (n_train is None or n_train >= meta["n_train"]) and (n_test is None or n_test >= meta["n_test"]):
-        return src, meta
+        return src, with_digests(src, meta)
     dim = meta["dim"]
     n_train = min(n_train or meta["n_train"], meta["n_train"])
     n_test = min(n_test or meta["n_test"], meta["n_test"])
     out = DATA / f"{name}-n{n_train}-q{n_test}"
     if (out / "meta.json").exists():
-        return out, json.loads((out / "meta.json").read_text())
+        return out, with_digests(out, json.loads((out / "meta.json").read_text()))
     log(f"cutting {out.name}")
     train = np.fromfile(src / "train.f32", dtype="<f4").reshape(-1, dim)[:n_train]
     test = np.fromfile(src / "test.f32", dtype="<f4").reshape(-1, dim)[:n_test]

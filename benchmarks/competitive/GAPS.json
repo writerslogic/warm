@@ -586,5 +586,68 @@
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
   "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "heavy",
+  "metric": "build_seconds",
+  "label": "Build time, per build",
+  "comparator": "hnswlib m16",
+  "warm": 119.28127899399999,
+  "comparator_value": 53.58684440750221,
+  "unit": "s",
+  "advantage_factor": 0.4492477349291141,
+  "advantage_ci": [
+   0.44899933747881443,
+   0.44949626554206285
+  ],
+  "level": 0.9989583333333333,
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding",
+  "code_path": "src/core/qgraph (Graph::build_owned, VGraph::from_graph_with)"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "heavy",
+  "metric": "build_peak_rss_mib",
+  "label": "Peak RSS, build, per build",
+  "comparator": "hnswlib m16",
+  "warm": 1301.59375,
+  "comparator_value": 1278.19140625,
+  "unit": "MiB",
+  "advantage_factor": 0.9820202396100934,
+  "advantage_ci": [
+   0.9745769276605887,
+   0.9895730040873583
+  ],
+  "level": 0.9989583333333333,
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "stream the build instead of holding the f32 matrix plus graph (ledger 1A target: peak build RSS <= 2x final index bytes)",
+  "code_path": "src/core/qgraph/vertex.rs (VGraph search/refine), src/bin/research/public-bench.rs (ann-qgraph)"
+ },
+ {
+  "status": "LOSS",
+  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "heavy",
+  "metric": "build_seconds",
+  "label": "Build time, per build",
+  "comparator": "hnswlib m32",
+  "warm": 119.28127899399999,
+  "comparator_value": 68.20250828099961,
+  "unit": "s",
+  "advantage_factor": 0.5717788143806731,
+  "advantage_ci": [
+   0.5680156104681245,
+   0.5755440356979957
+  ],
+  "level": 0.9989583333333333,
+  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding",
+  "code_path": "src/core/qgraph (Graph::build_owned, VGraph::from_graph_with)"
  }
 ]
