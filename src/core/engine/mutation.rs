@@ -368,6 +368,11 @@ impl WarmCore {
             if let Mutation::Vector { id, .. } | Mutation::Delete { id } = mutation {
                 self.forget_dense(id);
             }
+            match mutation {
+                Mutation::DeleteDocument { id } => self.forget_sparse(id),
+                Mutation::Document(document) => self.forget_sparse(&document.id),
+                _ => {}
+            }
         }
         crate::core::error::after_commit("live publication", applied)?;
         crate::core::error::after_commit("retained-text cleanup", cleaned)?;
