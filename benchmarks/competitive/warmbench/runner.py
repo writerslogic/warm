@@ -511,7 +511,7 @@ def run_text(dataset, spec, systems, out_path=None):
     return out_path
 
 
-def _text_cmd(system, phase, input_path, store, out, env, t0=None):
+def _text_cmd(system, phase, input_path, store, out, env, t0=None, extra=()):
     t0 = t0 or T0_PLACEHOLDER
     stored = registry.contract(system) == registry.DOCUMENTS
     if system in registry.WARM_TEXT_ENCODE:
@@ -523,6 +523,7 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None):
             cmd += ["--api", registry.WARM_TEXT_API[system]]
             if system in registry.WARM_TEXT_STORED:
                 cmd += ["--digest", "true"]
+        cmd += extra
     elif system in TANTIVY_NATIVE:
         cmd = [str(warm_binary("competitive_text_tantivy", example=True)), phase, "--input", str(input_path), "--store", str(store),
                "--out", str(out), "--t0-ns", str(t0), "--collector", "count" if system.startswith("tantivy-rs-count") else "topk"]
