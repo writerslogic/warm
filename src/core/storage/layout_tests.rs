@@ -132,11 +132,7 @@ fn manifest_geometry_boundaries_fail_before_segment_mutation() -> Result<()> {
                 assert_eq!(inspection.format_version, version);
                 assert_eq!(
                     inspection.allocated_bytes,
-                    if version == 4 {
-                        GROWTH_STEP
-                    } else {
-                        expected
-                    } as u64
+                    if version == 4 { GROWTH_STEP } else { expected } as u64
                 );
             } else {
                 let segment = arena_path.join("seg_0.bin");
