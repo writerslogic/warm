@@ -3,6 +3,8 @@ docs/benchmarks/BIG-ANN-FILTER.md|14.3846 GiB
 docs/benchmarks/BIG-ANN-FILTER.md|24,187 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|45,282 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|53,972.75 QPS
+docs/benchmarks/BIG-ANN-FILTER.md|60k QPS
+docs/benchmarks/BIG-ANN-FILTER.md|88.2k QPS
 docs/benchmarks/BIG-ANN-FILTER.md|9,245 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|9.34 GiB
 docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9045
@@ -36,7 +38,6 @@ docs/benchmarks/BIG-ANN-STREAMING.md|7.57 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|recall 0.8768
 docs/benchmarks/BIG-ANN-STREAMING.md|recall@10 0.935
 docs/benchmarks/BIG-ANN-STREAMING.md|recall@10 0.9942
-docs/benchmarks/NEIGHBOUR-BLOCKS.md|0.77x
 docs/benchmarks/README.md|1.10x
 docs/benchmarks/README.md|1.32x
 docs/benchmarks/README.md|1.47x
@@ -44,7 +45,6 @@ docs/benchmarks/README.md|1.56x
 docs/benchmarks/README.md|1.57x
 docs/benchmarks/README.md|1.62x
 docs/benchmarks/README.md|1.79x
-docs/benchmarks/README.md|1.85x
 docs/benchmarks/README.md|10.02x
 docs/benchmarks/README.md|10.11x
 docs/benchmarks/README.md|10.14x
@@ -54,7 +54,6 @@ docs/benchmarks/README.md|10.77x
 docs/benchmarks/README.md|15.97x
 docs/benchmarks/README.md|16.07x
 docs/benchmarks/README.md|19.88x
-docs/benchmarks/README.md|2.07x
 docs/benchmarks/README.md|2.13x
 docs/benchmarks/README.md|2.20x
 docs/benchmarks/README.md|2.28x
@@ -66,8 +65,6 @@ docs/benchmarks/README.md|25.02x
 docs/benchmarks/README.md|25.11x
 docs/benchmarks/README.md|28.52x
 docs/benchmarks/README.md|28.70x
-docs/benchmarks/README.md|3.39x
-docs/benchmarks/README.md|3.42x
 docs/benchmarks/README.md|3.57x
 docs/benchmarks/README.md|3.68x
 docs/benchmarks/README.md|3.80x
@@ -93,11 +90,9 @@ docs/benchmarks/README.md|7.68x
 docs/benchmarks/README.md|9.09x
 docs/benchmarks/README.md|96.30x
 docs/benchmarks/SBG-POSITION-LOOKUP.md|12.7 GiB
-docs/benchmarks/VIBE.md|0.77x
 docs/benchmarks/VIBE.md|1.10x
 docs/benchmarks/VIBE.md|1.16x
 docs/benchmarks/VIBE.md|1.23x
-docs/benchmarks/VIBE.md|1.48x
 docs/benchmarks/VIBE.md|1.57x
 docs/benchmarks/VIBE.md|1.62x
 docs/benchmarks/VIBE.md|1.64x

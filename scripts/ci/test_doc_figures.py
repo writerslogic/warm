@@ -24,6 +24,10 @@ class FigureTests(unittest.TestCase):
         found = [written for written, _, _ in module.figures(text)]
         self.assertEqual(sorted(found), ["0.859", "1.5", "12,345", "2.93"])
 
+    def test_multiplication_sign_and_thousands_shorthand_are_figures(self) -> None:
+        found = [written for written, _, _ in module.figures("a 2.93\u00d7 lead and 3.4k QPS")]
+        self.assertEqual(sorted(found), ["2.93", "3400"])
+
 
 if __name__ == "__main__":
     unittest.main()

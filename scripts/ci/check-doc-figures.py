@@ -28,11 +28,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 NUM = r"\d[\d,]*(?:\.\d+)?"
 TOKEN = re.compile(r"(?<![\w.])-?" + NUM)
 UNIT_AFTER = re.compile(
-    r"(?<![\w.@])(" + NUM + r")(?:\s?(?:x|QPS|qps|MiB|GiB)(?![A-Za-z0-9])|\s(?:QPS|MiB|GiB)\b)"
+    r"(?<![\w.@])(" + NUM + r")(?:\s?(?:x|\u00d7|QPS|qps|MiB|GiB)(?![A-Za-z0-9])|\s(?:QPS|MiB|GiB)\b)"
 )
 UNIT_BEFORE = re.compile(
     r"(?:recall(?:@\d+)?|nDCG(?:@\d+)?|MRR(?:@\d+)?)\s*(?:of|is|was|to|=|:)?\s*\**(" + r"\d?\.\d+" + r")"
 )
+# "3.4k QPS" written in thousands: the number is scaled before it is looked up.
+KILO = re.compile(r"(?<![\w.@])(" + NUM + r")\s?[kK]\s?(?:QPS|qps)\b")
 GENERATED_DOCS = {"COMPARISON.md", "GAPS.md"}
 STRICT = {"README.md", "docs/benchmarks/EVALUATION.md", "docs/benchmarks/ANN-BENCHMARKS.md"}
 BASELINE = "scripts/ci/doc-figures-baseline.txt"
@@ -136,6 +138,8 @@ def present(values: list, written: str, percent: bool, unit: str = "") -> bool:
 def figures(text: str):
     for number in UNIT_AFTER.finditer(text):
         yield number.group(1), number.group(0).rstrip().endswith("%"), number.group(0)
+    for number in KILO.finditer(text):
+        yield f"{float(number.group(1).replace(',', '')) * 1000:.6f}".rstrip("0").rstrip("."), False, number.group(0)
     for number in UNIT_BEFORE.finditer(text):
         yield number.group(1), False, number.group(0)
 
