@@ -147,6 +147,7 @@ pub(super) fn merge_structure(
         params.build_ef.min(FIRST_PASS_EF),
         1.0,
         r,
+        &[],
     );
     prof::report("merge-insert", t);
     // The build's second pass, over the delta rows and the base rows whose neighbourhood
@@ -164,7 +165,7 @@ pub(super) fn merge_structure(
     drop(again);
     shuffle(&mut order, params.seed ^ n as u64 ^ 1);
     let t = prof::start();
-    rows.insert_pass(&mut adj, &order, start, params.build_ef, params.alpha, r);
+    rows.insert_pass(&mut adj, &order, start, params.build_ef, params.alpha, r, &[]);
     prof::report("merge-relink", t);
     let t = prof::start();
     rows.fill(&mut adj, r);

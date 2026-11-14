@@ -159,7 +159,7 @@ fn epoch_ns() -> u128 {
 /// halve on a batch-limit error, keeping the size that worked. A fixed size takes `fixed`.
 fn ingest(
     core: &WarmCore,
-    documents: &[DocumentInput],
+    documents: &mut [DocumentInput],
     options: &IngestOptions,
     fixed: usize,
 ) -> Result<()> {
@@ -168,7 +168,15 @@ fn ingest(
     while at < documents.len() {
         let end = (at + size).min(documents.len());
         match core.memorize_documents_with(documents[at..end].to_vec(), options) {
-            Ok(_) => at = end,
+            Ok(_) => {
+                // The batch is committed; the corpus copy of its text is not read again, so
+                // release it instead of holding the whole input next to the growing index.
+                for document in &mut documents[at..end] {
+                    document.text = String::new();
+                    document.metadata = None;
+                }
+                at = end;
+            }
             Err(error) if fixed == 0 && size > 1 && error.is::<BatchTooLarge>() => size /= 2,
             Err(error) => return Err(error),
         }
@@ -178,7 +186,7 @@ fn ingest(
 
 fn main() -> Result<()> {
     let args = Args::parse()?;
-    let input: Input = serde_json::from_slice(&std::fs::read(&args.input)?)?;
+    let mut input: Input = serde_json::from_slice(&std::fs::read(&args.input)?)?;
     let store = args.store.display().to_string();
     let report = match args.phase.as_str() {
         "build" => {
@@ -195,7 +203,7 @@ fn main() -> Result<()> {
                 ..Default::default()
             };
             let core = WarmCore::new(1024, Some(store), Some(config))?;
-            ingest(&core, &input.documents, &options, args.batch)?;
+            ingest(&core, &mut input.documents, &options, args.batch)?;
             json!({"documents": count, "ingest_s": start.elapsed().as_secs_f64(),
                 "encode": mode.name()})
         }

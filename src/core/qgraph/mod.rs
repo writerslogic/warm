@@ -78,6 +78,10 @@ pub use vertex::{
 /// Default out-degree of every vertex; one batch of edge codes per expansion.
 pub const DEFAULT_DEGREE: usize = 32;
 const NONE: u32 = u32::MAX;
+/// Smallest batch whose points are run in locality order, and the number of cells that order
+/// groups the rows into (a quarter of the square root of the row count, within the bounds).
+const LOCALITY_MIN_BATCH: usize = 1024;
+const LOCALITY_CELLS: std::ops::RangeInclusive<usize> = 64..=256;
 
 /// Every failure of a build or search names its cause as an invalid parameter.
 fn invalid(details: String) -> WarmError {
@@ -891,6 +895,54 @@ impl Rows<'_> {
         }
     }
 
+    /// The position of every row in an order that keeps near rows together: the rows are
+    /// grouped by their nearest of `cells` sampled rows, and the groups follow a nearest-
+    /// neighbour tour of the samples. Empty when the build is too small to gain from it.
+    fn locality_rank(&self, order: &[u32]) -> Vec<u32> {
+        let n = order.len();
+        if n < 4 * LOCALITY_MIN_BATCH {
+            return Vec::new();
+        }
+        let cells = ((n as f64).sqrt() as usize / 4).clamp(*LOCALITY_CELLS.start(), *LOCALITY_CELLS.end());
+        let centers = &order[..cells];
+        let cell_of: Vec<u32> = (0..n as u32)
+            .into_par_iter()
+            .map_init(Vec::new, |d, p| {
+                self.d2_many(p, centers, d);
+                let mut best = 0;
+                for (i, &x) in d.iter().enumerate() {
+                    if x < d[best] {
+                        best = i;
+                    }
+                }
+                best as u32
+            })
+            .collect();
+        // Nearest-neighbour tour of the cell centres.
+        let mut tour = Vec::with_capacity(cells);
+        let mut left: Vec<u32> = (1..cells as u32).collect();
+        let mut at = 0u32;
+        tour.push(0u32);
+        let mut d = Vec::new();
+        while !left.is_empty() {
+            let ids: Vec<u32> = left.iter().map(|&c| centers[c as usize]).collect();
+            self.d2_many(centers[at as usize], &ids, &mut d);
+            let mut best = 0;
+            for (i, &x) in d.iter().enumerate() {
+                if x < d[best] {
+                    best = i;
+                }
+            }
+            at = left.swap_remove(best);
+            tour.push(at);
+        }
+        let mut place = vec![0u32; cells];
+        for (i, &c) in tour.iter().enumerate() {
+            place[c as usize] = i as u32;
+        }
+        cell_of.iter().map(|&c| place[c as usize]).collect()
+    }
+
     /// One insertion pass in batches of doubling size; each batch searches a frozen graph, so
     /// the result does not depend on thread scheduling.
     #[allow(clippy::too_many_arguments)]
@@ -902,6 +954,7 @@ impl Rows<'_> {
         l: usize,
         alpha: f32,
         r: usize,
+        rank: &[u32],
     ) {
         let n = graph.len();
         // Length of the prefix of each list that is an unchanged output of `prune` in this pass.
@@ -911,7 +964,17 @@ impl Rows<'_> {
         let (mut start, mut size) = (0, 1);
         while start < order.len() {
             let end = (start + size).min(order.len());
-            let batch = &order[start..end];
+            // Each batch searches a frozen graph and its lists are merged in sorted order, so
+            // the order the points run in cannot change the result. Running neighbours of the
+            // space together keeps their rows and lists in the cache.
+            let mut local;
+            let batch = if !rank.is_empty() && end - start >= LOCALITY_MIN_BATCH {
+                local = order[start..end].to_vec();
+                local.sort_unstable_by_key(|&p| rank[p as usize]);
+                &local[..]
+            } else {
+                &order[start..end]
+            };
             let g: &Adjacency = graph;
             outs.par_set(batch.len(), |i, out| {
                 let p = batch[i];
@@ -1584,11 +1647,14 @@ fn build_structure(
     let tup = prof::start();
     let layers = upper_layers(&rows, &order, params);
     prof::report("upper", tup);
+    let tloc = prof::start();
+    let rank = rows.locality_rank(&order);
+    prof::report("locality", tloc);
     let mut graph = Adjacency::new(n, r);
     let first_ef = params.build_ef.min(FIRST_PASS_EF);
     for (l, alpha) in [(first_ef, 1.0), (params.build_ef, params.alpha)] {
         let t = prof::start();
-        rows.insert_pass(&mut graph, &order, entry, l, alpha, r);
+        rows.insert_pass(&mut graph, &order, entry, l, alpha, r, &rank);
         prof::report("pass", t);
     }
     let t = prof::start();
@@ -1696,6 +1762,7 @@ fn upper_layers(rows: &Rows<'_>, order: &[u32], params: &BuildParams) -> Vec<Vec
             params.build_ef,
             params.alpha,
             UPPER_DEGREE,
+            &[],
         );
         layers.push(g.to_lists());
         size /= LAYER_RATIO;
@@ -2358,7 +2425,7 @@ mod tests {
                     let order: Vec<u32> = (0..n as u32).rev().collect();
                     let mut graph = Adjacency::new(n, 12);
                     for alpha in [1.0, 1.2] {
-                        rows.insert_pass(&mut graph, &order, 0, 40, alpha, 12);
+                        rows.insert_pass(&mut graph, &order, 0, 40, alpha, 12, &[]);
                     }
                     rows.fill(&mut graph, 12);
                     graph
@@ -2366,6 +2433,31 @@ mod tests {
                 assert_eq!(build(Some(&codes)), build(None), "{metric:?}, d = {d}");
             }
         }
+    }
+
+    #[test]
+    fn locality_order_leaves_the_graph_unchanged() {
+        let (n, d) = (6000, 16);
+        let mut data = clustered(n, d, 3);
+        let norms = prepare_rows(&mut data, d, Metric::Euclidean);
+        let rows = Rows {
+            data: &data,
+            dim: d,
+            norms: norms_opt(&norms),
+            codes: None,
+            quantized: false,
+        };
+        let order: Vec<u32> = (0..n as u32).rev().collect();
+        let rank = rows.locality_rank(&order);
+        assert_eq!(rank.len(), n, "a build this size must take the locality order");
+        let build = |rank: &[u32]| {
+            let mut graph = Adjacency::new(n, 12);
+            for alpha in [1.0, 1.2] {
+                rows.insert_pass(&mut graph, &order, 0, 40, alpha, 12, rank);
+            }
+            graph
+        };
+        assert_eq!(build(&rank), build(&[]));
     }
 
     #[test]
