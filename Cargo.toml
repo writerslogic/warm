@@ -472,6 +472,7 @@ path = "src/bin/research/binding-discriminator.rs"
 [[bin]]
 name = "bloom-wall"
 path = "src/bin/research/bloom-wall.rs"
+required-features = ["experimental"]
 
 [[bin]]
 name = "capacity-campaign"

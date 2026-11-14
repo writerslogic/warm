@@ -539,7 +539,7 @@ fn run_holographic_bloom_memory(dim: usize, quick: bool) -> serde_json::Value {
             .map(|i| EntangledHVec::new_deterministic(dim, i as u64 * 137 + 7))
             .collect();
 
-        let mut mem = HolographicBloomMemory::new(dim);
+        let mut mem = HolographicBloomMemory::with_expected_items(dim, n_items);
         mem.insert_batch(&items);
         let density = mem.density();
 
@@ -618,7 +618,7 @@ fn run_holographic_bloom_memory(dim: usize, quick: bool) -> serde_json::Value {
         compositions.push(comp);
     }
 
-    let mut fact_mem = HolographicBloomMemory::new(dim);
+    let mut fact_mem = HolographicBloomMemory::with_expected_items(dim, compositions.len());
     fact_mem.insert_batch(&compositions);
 
     let mut struct_correct = 0;
@@ -915,7 +915,7 @@ fn run_compositional_text(dim: usize) -> serde_json::Value {
 
     let n = sentences.len() as f64;
 
-    let mut mem = HolographicBloomMemory::new(dim);
+    let mut mem = HolographicBloomMemory::with_expected_items(dim, compositions.len());
     mem.insert_batch(&compositions);
 
     let query_word = "chases";
