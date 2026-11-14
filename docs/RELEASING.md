@@ -14,6 +14,7 @@ on `main`, or publication from the Python release workflows. MCP manual runs do 
 | `py-models-vX.Y.Z` | `.github/workflows/warm-models-release.yml` | the pinned default offline `warm-models` pack, published to PyPI through Trusted Publishing |
 | `py-vX.Y.Z` | `.github/workflows/warm-py-release.yml` | `warm-python` wheels and sdist, published to PyPI through Trusted Publishing |
 | `sdk-vX.Y.Z` | `.github/workflows/warm-sdk-release.yml` and `.github/workflows/warm-js-sdk-release.yml` | portable `warm-sdk` clients: Python wheel/sdist on PyPI and JavaScript/TypeScript package on npm |
+| `server-vX.Y.Z` | `.github/workflows/warm-server-release.yml` | five `warm-server` binaries and a `SHA256SUMS` table on a GitHub release; X.Y.Z is the crate version. `scripts/install-warm-server.sh` installs from it. Pull requests touching the workflow run a build-and-smoke dry run |
 | `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
 
 Publish a new model pack before a native wheel that requires that new version through `[embed]`.
