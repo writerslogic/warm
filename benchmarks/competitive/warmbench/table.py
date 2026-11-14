@@ -166,6 +166,8 @@ def advantage(metric, mine, theirs):
         better = (mine["value"] > theirs["value"]) == higher
         return {"factor": float("inf") if better else 0.0, "ci": None,
                 "deterministic": mine.get("uncertainty") == theirs.get("uncertainty") == "deterministic"}
+    if metric in analyze.PAIRED and mine.get("per_query") and theirs.get("per_query"):
+        return analyze.paired_advantage(metric, mine, theirs)
     point = mine["value"] / theirs["value"] if higher else theirs["value"] / mine["value"]
     if _has_ci(mine) and _has_ci(theirs):
         (ml, mh), (tl, th) = mine["ci"], theirs["ci"]
@@ -330,7 +332,8 @@ def interval_text(sec):
     if rounds is not None and rounds < analyze.MIN_BOOTSTRAP_ROUNDS:
         return (f"Intervals: min-max range of the {rounds} process rounds, not a confidence interval (a bootstrap of fewer than "
                 f"{analyze.MIN_BOOTSTRAP_ROUNDS} rounds has too few distinct resamples).")
-    return f"Intervals: {sec['level'] * 100:.2f}% bootstrap over process rounds (Bonferroni family of {sec['family']} verdict metrics)."
+    return (f"Intervals: {sec['level'] * 100:.2f}% bootstrap over process rounds (Bonferroni family of {sec['family']} verdict metrics); "
+            "nDCG@10 and recall@100 are compared by a paired per-query bootstrap at the same level, since every system answers the same queries.")
 
 
 def render_section(sec, cells_out):
@@ -385,6 +388,9 @@ def render_section(sec, cells_out):
                               "factor_infinite": bool(adv and adv["factor"] == float("inf")), "ci": adv["ci"] if adv else None, "verdict": v,
                               "text": "n/m" if adv is None else fx(adv["factor"])})
         adv_text = "n/m" if adv is None else fx(adv["factor"]) + (f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv["ci"] else " (no CI)")
+        if adv and adv.get("paired"):
+            p_ = adv["paired"]
+            adv_text += f"; paired difference {p_['difference']:+.4f} [{p_['ci'][0]:+.4f}, {p_['ci'][1]:+.4f}]"
         best_text = "n/m" if other is None else f"{display(name, data)} {fmt(other['value'], dec)}{mark}"
         if analyze.no_verdict(sec["kind"], key, data.get("mode", "embedded")) and key in analyze.ANN_PER_BUILD:
             best_text, adv_text = "per build, see below", "per build"

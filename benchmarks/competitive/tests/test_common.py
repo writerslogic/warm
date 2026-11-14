@@ -116,3 +116,27 @@ def test_run_measured_raises_on_failure_and_on_timeout():
         run_measured(["false"])
     with pytest.raises(TimeoutError):
         run_measured(["sleep", "30"], timeout=1)
+
+
+def test_paired_bootstrap_resolves_a_small_consistent_gain_the_unpaired_intervals_cannot():
+    """Per-query scores vary widely across queries but the second system beats the first by 0.01 on every query: the
+    paired difference excludes 0 while the separate intervals of the two means overlap."""
+    rng = np.random.default_rng(7)
+    base = rng.uniform(0, 1, 300)
+    other = base + 0.01
+    paired = common.paired_bootstrap(other, base)
+    assert paired["difference"] == pytest.approx(0.01)
+    assert paired["difference_ci"][0] > 0
+    assert paired["ratio_ci"][0] > 1
+    separate_a, separate_b = bootstrap_ci(list(other), np.mean), bootstrap_ci(list(base), np.mean)
+    assert separate_a[0] < separate_b[1]
+
+
+def test_paired_bootstrap_straddles_zero_for_independent_noise_and_rejects_unpaired_input():
+    rng = np.random.default_rng(8)
+    first, second = rng.uniform(0, 1, 200), rng.uniform(0, 1, 200)
+    lo, hi = common.paired_bootstrap(first, second)["difference_ci"]
+    assert lo < 0 < hi
+    assert common.paired_bootstrap(first, second, seed=3) == common.paired_bootstrap(first, second, seed=3)
+    with pytest.raises(ValueError):
+        common.paired_bootstrap([0.1, 0.2], [0.1])
