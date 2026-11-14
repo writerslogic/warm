@@ -5,8 +5,11 @@ cff-version: 1.2.0
 message: "If you use this software in research, cite it using this metadata."
 title: WARM
 authors:
-  - name: WritersLogic Contributors
-version: 0.6.4
+  - family-names: Condrey
+    given-names: David
+    email: david@writerslogic.com
+    affiliation: WritersLogic, Inc.
+version: 0.6.8
 license: Apache-2.0
 repository-code: https://github.com/writerslogic/warm
 url: https://writerslogic.com/warm

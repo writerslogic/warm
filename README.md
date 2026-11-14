@@ -32,7 +32,7 @@ through HTTP, or from an MCP client, with storage on infrastructure you control.
 WARM is a Rust library that stores text, vectors and facts in a
 directory on your machine and finds them again. It ships with optional Node.js, C, WASM and UniFFI
 bindings, an HTTP server with portable JavaScript and Python clients, and an MCP server.
-The embedded engine makes no service calls or telemetry requests. HTTP clients connect to the
+The embedded engine makes no service calls or telemetry requests: the `offline` job in [ci.yml](.github/workflows/ci.yml) runs the default-feature test suite in a network namespace without external interfaces and checks that the default dependency tree has no HTTP, TLS or socket client. HTTP clients connect to the
 server you configure; model stages are opt-in.
 
 | Capability | What you get |
@@ -56,7 +56,7 @@ server you configure; model stages are opt-in.
 
 For an editor or agent host, start with the [MCP integration](docs/integrations/mcp/README.md).
 For an application, choose the Rust library or HTTP server below. WARM runs locally or on your
-own infrastructure; this repository does not provide a managed cloud service.
+own infrastructure. This repository contains no hosted service. WritersLogic sells WARM Sync, a separate encrypted multi-device sync service with its own client package; the engine here does not contact it.
 
 To try the offline memory demo from source:
 
@@ -282,16 +282,16 @@ provide the evidence for evaluating WARM on your own workload.
 | Hybrid document search (BM25 + exact cosine, filters, byte offsets) | Ships | Exact scan of eligible chunks; benchmark your corpus before assuming capacity ([guide](docs/production-readiness.md)) |
 | Boolean lexical search (`+required`, `-excluded`, quoted phrases) | Ships | Flat queries only, no nesting; an empty or only-excluded query matches nothing ([design](docs/benchmarks/lexical/DESIGN.md)) |
 | Atomic replace/delete, crash-safe journal, verified compaction, process lock | Ships | One writer per store; compaction is not secure erasure |
-| Vector index (`qgraph` vertex graph, memory-mapped) | Ships | Build time and serving RSS behind hnswlib on SIFT-1M ([gaps](docs/benchmarks/GAPS.md)) |
+| Vector index (`qgraph` vertex graph, memory-mapped) | Ships | Builds slower than hnswlib at M=16 and M=32 on SIFT-1M ([results](docs/benchmarks/EVALUATION.md)); behind ScaNN and faiss-ivfpqfs on single-core ann-benchmarks at recall 0.95: SIFT 2,819 against 3,787 QPS ([`ann_benchmarks_harness_wl02_v1.json`](benchmarks/results/ann_benchmarks_harness_wl02_v1.json)) |
 | Updatable vector index (durable delta for inserts and deletes) | Ships | Single writer; format in [VECTOR-UPDATES.md](docs/file-format/VECTOR-UPDATES.md) |
 | Query-aware graph routing (trained on sample queries) | Ships (opt-in) | Needs representative training queries; tested on VIBE llama and yi ([report](benchmarks/results/query_aware_graph_v1/README.md)) |
 | Memory API: remember, recall, forget, explain | Ships | Forgetting removes a fact from the store; it does not cover what a model inferred ([docs](docs/memory-api/README.md)) |
 | Conversation memory (`conversation-memory`) | Ships | Bounded context with exact source provenance; native recall not yet benchmarked on LongMemEval end to end |
 | Meaning memory: triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on synthetic and 2,120-fact sets ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
 | Union-bundle membership (`experimental`) | Research | At D = 16,384: positive gap to N = 500 (4% false positives), tested to 2,500 ([`benchmark_scaling_results.json`](benchmarks/results/benchmark_scaling_results.json)) |
-| Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS, below hnswlib's QPS ([results](docs/benchmarks/EVALUATION.md#where-its-behind)). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
+| Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS on one thread of an Apple M4, below hnswlib's QPS ([`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json), `hms` row). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
 | Encrypted stores (`security`) | Ships | AES-256-GCM, Argon2id; covers the log, index caches and the text segment. Metadata, file names and sizes are not encrypted |
-| Signed audit log, credential-gated access, COSE/SCITT/C2PA (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented |
+| Signed audit log, credential-gated access, COSE_Sign1 over Ed25519, `did:key`/`did:jwk` identities, SCITT-style signed statements (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented. Tests: `core::provenance::cose::tests::sign_verify_roundtrip`, `core::provenance::did::tests::did_key_roundtrip`, `tests/scitt_receipt_interop.rs`. Manifests use C2PA-style labels and are not C2PA Content Credentials ([standards](docs/reference/standards.md)) |
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |

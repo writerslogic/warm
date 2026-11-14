@@ -1,7 +1,9 @@
 # Privacy limits
 
 WARM processes everything locally: the core engine makes no network calls, and the model
-adapters only read local directories. That removes the cloud as a threat. It does not make the
+adapters only read local directories. The `offline` job in [ci.yml](https://github.com/writerslogic/warm/blob/main/.github/workflows/ci.yml)
+checks this on every change: the default dependency tree has no HTTP, TLS or socket client crate, and the default-feature
+test suite passes in a network namespace that has no external interface. That removes the cloud as a threat. It does not make the
 stored representation private. This page summarises the limits; [Privacy and security
 boundaries](../PRIVACY.md) is the complete statement and wins on any difference.
 

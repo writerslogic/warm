@@ -55,7 +55,9 @@ jobs:
         run: |
           uv run --no-project --python 3.12 python scripts/ci/check-versions.py
           uv run --no-project --python 3.12 python scripts/ci/check-sdk-versions.py
-          uv run --no-project --python 3.12 python -m unittest scripts/ci/test_versions.py
+          uv run --no-project --python 3.12 python -m unittest scripts/ci/test_versions.py scripts/ci/test_doc_figures.py
+      - name: Benchmark figures in README and docs exist in the committed results
+        run: uv run --no-project --python 3.12 python scripts/ci/check-doc-figures.py
       - name: Campaign integrity regressions
         run: uv run --no-project --python 3.12 --with numpy==2.5.4 python -m unittest discover -s benchmarks/ann-benchmarks/campaign -p test_campaign_integrity.py
       - run: cargo fmt -- --check
@@ -141,6 +143,81 @@ jobs:
         run: cargo nextest run --locked --no-fail-fast ${{ matrix.flags }}
       - name: Doc tests
         run: cargo test --locked --doc ${{ matrix.flags }}
+
+  offline:
+    name: offline (default features, no network)
+    runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_DEV_OPT_LEVEL: "1"
+      CARGO_PROFILE_TEST_OPT_LEVEL: "1"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: test-default features
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: nextest
+      - name: The default dependency tree holds no HTTP, TLS or socket client
+        run: |
+          uv run --no-project --python 3.12 python scripts/ci/check-no-network-deps.py
+          # Negative control: a feature that does use the network must be reported.
+          uv run --no-project --python 3.12 python scripts/ci/check-no-network-deps.py --features provenance-scitt --expect-found
+      - name: Fetch and build everything while the network is up
+        run: |
+          cargo fetch --locked
+          cargo nextest archive --locked --archive-file "$RUNNER_TEMP/default.tar.zst"
+      - name: Default-feature test suite in a network namespace without external interfaces
+        # GitHub-hosted Linux runners run commands with passwordless sudo. `unshare --net` gives the
+        # tests a namespace that holds only a loopback device; the canary proves that an outbound
+        # connection fails there before the suite runs, and the suite then runs as the runner user.
+        run: |
+          sudo unshare --net -- bash -euo pipefail -c '
+            ip link set lo up
+            if timeout 5 bash -c "exec 3<>/dev/tcp/1.1.1.1/443"; then
+              echo "canary connected: the namespace is not isolated" >&2
+              exit 1
+            fi
+            ip -o link show
+            exec setpriv --reuid="$1" --regid="$2" --init-groups env HOME="$4" PATH="$5" CARGO_NET_OFFLINE=true \
+              cargo nextest run --archive-file "$3" --workspace-remap . --no-fail-fast
+          ' _ "$(id -u)" "$(id -g)" "$RUNNER_TEMP/default.tar.zst" "$HOME" "$PATH"
+
+  test-macos:
+    name: test (macos-latest, default features)
+    runs-on: macos-latest
+    env:
+      CARGO_PROFILE_DEV_OPT_LEVEL: "1"
+      CARGO_PROFILE_TEST_OPT_LEVEL: "1"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: test-macos
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: nextest
+      - name: Unit and integration tests
+        run: cargo nextest run --locked --no-fail-fast
+      - name: Doc tests
+        run: cargo test --locked --doc
 
   test-windows:
     name: test (windows-latest)
@@ -424,7 +501,7 @@ jobs:
   check:
     name: check
     if: always()
-    needs: [lint, features, docs-rs, test, test-windows, bench-build, deny, msrv, retrieval-quality, python-sdk, javascript-sdk, node, workflows]
+    needs: [lint, features, docs-rs, test, offline, test-macos, test-windows, bench-build, deny, msrv, retrieval-quality, python-sdk, javascript-sdk, node, workflows]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs succeeded
