@@ -7,13 +7,13 @@
   "metric": "build_seconds",
   "label": "Ingest/build time",
   "comparator": "SQLite FTS5",
-  "warm": 1.4396986,
-  "comparator_value": 1.2925378209911287,
+  "warm": 1.380842936,
+  "comparator_value": 1.292161130986642,
   "unit": "s",
-  "advantage_factor": 0.8977836201209952,
+  "advantage_factor": 0.9357770513203697,
   "advantage_ci": [
-   0.8628592905703111,
-   0.9166212454467549
+   0.914710719514285,
+   0.9426440512011774
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -27,14 +27,14 @@
   "suite": "standard",
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
-  "comparator": "tantivy 0.27.0 (native Rust, pruning collector)",
-  "warm": 300.9921875,
-  "comparator_value": 116.12109375,
+  "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
+  "warm": 301.05078125,
+  "comparator_value": 116.171875,
   "unit": "MiB",
-  "advantage_factor": 0.38579437796869726,
+  "advantage_factor": 0.3858879705199237,
   "advantage_ci": [
-   0.3851034840718874,
-   0.3867056530214425
+   0.3855515478630926,
+   0.387779266912157
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -91,13 +91,13 @@
   "metric": "qps",
   "label": "QPS (single thread)",
   "comparator": "Apache Lucene 10.6.0 (JVM)",
-  "warm": 3107.7757144531843,
-  "comparator_value": 2851.439203423717,
+  "warm": 3177.504811249911,
+  "comparator_value": 2622.5278486020607,
   "unit": "QPS",
-  "advantage_factor": 1.0898972388124861,
+  "advantage_factor": 1.2116190922219114,
   "advantage_ci": [
-   0.988094723216262,
-   1.2554706985960735
+   0.9842221200288703,
+   1.489037201838229
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -112,13 +112,13 @@
   "metric": "p50_latency",
   "label": "p50 latency",
   "comparator": "Apache Lucene 10.6.0 (JVM)",
-  "warm": 303.1865,
-  "comparator_value": 297.8645,
+  "warm": 298.4125,
+  "comparator_value": 296.24199999999996,
   "unit": "us",
-  "advantage_factor": 0.9824464479783895,
+  "advantage_factor": 0.9927265111213502,
   "advantage_ci": [
-   0.9402123850175799,
-   1.0273763926112998
+   0.9495595432300163,
+   1.042625981807876
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -214,37 +214,16 @@
   "dataset": "memory (4,559 documents, 100 queries)",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "suite": "standard",
-  "metric": "build_seconds",
-  "label": "Ingest/build time",
-  "comparator": "SQLite FTS5",
-  "warm": 0.899335018,
-  "comparator_value": 0.8871022209932562,
-  "unit": "s",
-  "advantage_factor": 0.9863979531966319,
-  "advantage_ci": [
-   0.9686018756081015,
-   0.9956254694640179
-  ],
-  "level": 0.995,
-  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
-  "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
- },
- {
-  "status": "LOSS",
-  "dataset": "memory (4,559 documents, 100 queries)",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "suite": "standard",
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
   "comparator": "SQLite FTS5",
-  "warm": 139.75,
-  "comparator_value": 117.625,
+  "warm": 139.83203125,
+  "comparator_value": 117.69140625,
   "unit": "MiB",
-  "advantage_factor": 0.8416815742397138,
+  "advantage_factor": 0.8416627091655725,
   "advantage_ci": [
-   0.8407180947594718,
-   0.8426202924483462
+   0.8410912238572585,
+   0.8428915123370447
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -292,6 +271,27 @@
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
+ },
+ {
+  "status": "TIE",
+  "dataset": "memory (4,559 documents, 100 queries)",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "suite": "standard",
+  "metric": "build_seconds",
+  "label": "Ingest/build time",
+  "comparator": "SQLite FTS5",
+  "warm": 0.892384686,
+  "comparator_value": 0.8618027319898829,
+  "unit": "s",
+  "advantage_factor": 0.965730077521616,
+  "advantage_ci": [
+   0.9463955932714686,
+   1.0114103358755169
+  ],
+  "level": 0.995,
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hypothesis": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
+  "code_path": "src/core/documents.rs prepare + src/core/engine/document_api.rs memorize_documents"
  },
  {
   "status": "LOSS",
@@ -385,13 +385,13 @@
   "metric": "qps",
   "label": "QPS (single thread)",
   "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 30265.11127079186,
-  "comparator_value": 43274.865415982145,
+  "warm": 28935.174162218304,
+  "comparator_value": 42938.6604032733,
   "unit": "QPS",
-  "advantage_factor": 0.6993692754412226,
+  "advantage_factor": 0.6738723073906729,
   "advantage_ci": [
-   0.6637834102248215,
-   0.7347953627671685
+   0.5811774656071176,
+   0.8385503416374411
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -406,13 +406,13 @@
   "metric": "p50_latency",
   "label": "p50 latency",
   "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 37.51,
-  "comparator_value": 17.0915,
+  "warm": 36.8975,
+  "comparator_value": 17.274,
   "unit": "us",
-  "advantage_factor": 0.4556518261796854,
+  "advantage_factor": 0.4681617995799173,
   "advantage_ci": [
-   0.4462011996211722,
-   0.474766556916932
+   0.45131176565266384,
+   0.47942234302501163
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -427,13 +427,13 @@
   "metric": "build_seconds",
   "label": "Ingest/build time",
   "comparator": "SQLite FTS5",
-  "warm": 0.163126126,
-  "comparator_value": 0.14252506199409254,
+  "warm": 0.163771753,
+  "comparator_value": 0.14620579002075829,
   "unit": "s",
-  "advantage_factor": 0.8737108241882268,
+  "advantage_factor": 0.8927411921930047,
   "advantage_ci": [
-   0.8648424178552219,
-   0.9395413550684176
+   0.875192088941795,
+   0.9309881334558302
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -448,13 +448,13 @@
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
   "comparator": "SQLite FTS5",
-  "warm": 51.7109375,
-  "comparator_value": 32.60546875,
+  "warm": 51.87109375,
+  "comparator_value": 32.64453125,
   "unit": "MiB",
-  "advantage_factor": 0.6305333131893035,
+  "advantage_factor": 0.6293395587017094,
   "advantage_ci": [
-   0.6221437161755863,
-   0.6306088533011028
+   0.6278929966937181,
+   0.6319444444444444
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -511,13 +511,13 @@
   "metric": "p99_latency",
   "label": "p99 latency",
   "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 71.713,
-  "comparator_value": 72.9845,
+  "warm": 95.6765,
+  "comparator_value": 76.2805,
   "unit": "us",
-  "advantage_factor": 1.0177303975569283,
+  "advantage_factor": 0.7972751929679702,
   "advantage_ci": [
-   0.7343094898588971,
-   1.1716001779623313
+   0.5914318527385073,
+   1.2621229609645523
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -616,13 +616,13 @@
   "metric": "build_seconds",
   "label": "Ingest/build time",
   "comparator": "SQLite FTS5",
-  "warm": 0.23090147,
-  "comparator_value": 0.20499236902105622,
+  "warm": 0.239519089,
+  "comparator_value": 0.2075620770046953,
   "unit": "s",
-  "advantage_factor": 0.8877915286596323,
+  "advantage_factor": 0.8665784337744176,
   "advantage_ci": [
-   0.8696052149657845,
-   0.9459963787890535
+   0.8368504104864685,
+   0.9048660793488685
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -637,13 +637,13 @@
   "metric": "build_peak_rss_mib",
   "label": "Peak RSS, build",
   "comparator": "SQLite FTS5",
-  "warm": 60.33984375,
-  "comparator_value": 35.75,
+  "warm": 60.32421875,
+  "comparator_value": 35.86328125,
   "unit": "MiB",
-  "advantage_factor": 0.5924775037224056,
+  "advantage_factor": 0.5945088389561614,
   "advantage_ci": [
-   0.5908473040326234,
-   0.5941634241245136
+   0.5935842711162851,
+   0.5948063722315762
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
@@ -700,13 +700,13 @@
   "metric": "p99_latency",
   "label": "p99 latency",
   "comparator": "tantivy 0.27.0 (native Rust, exhaustive collector with Count)",
-  "warm": 118.29899999999999,
-  "comparator_value": 151.46949999999998,
+  "warm": 97.939,
+  "comparator_value": 195.75650000000002,
   "unit": "us",
-  "advantage_factor": 1.2803954386765737,
+  "advantage_factor": 1.9987594318912796,
   "advantage_ci": [
-   0.8002381047775495,
-   2.2126459143968873
+   0.8601367897692137,
+   2.3536471338840794
   ],
   "level": 0.995,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json",

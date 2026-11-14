@@ -151,8 +151,7 @@ existing bytes and do not claim a fresh performance measurement.
   tantivy `parse_query_lenient`, Lucene analysis and the FTS5 MATCH expression run on its lowercase alphanumeric
   word set), and the output is the top-100 (id, score) pairs. WARM's verdict row calls `search_documents`, the
   document-search product path, which builds full documents per hit, more than the contract needs. The
-  `warm-lexical-api` row (WARM `search_lexical` on the word set) is reference only and feeds no verdict (at this
-  commit that API hydrates the whole in-memory store before it ranks). Results written
+  `warm-lexical-api` row (WARM `search_lexical` on the word set) is reference only and feeds no verdict. Results written
   before this contract (the mixed contract) timed comparators with their queries prepared outside the timer;
   those runs are kept as evidence only.
 * tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, a mechanism inferred from that measurement and not profiled, see `benchmarks/results/tantivy_collector_microbench_20261114.txt`; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and

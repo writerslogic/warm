@@ -4221,17 +4221,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "ndcg@10",
   "system": "warm-lexical-api",
-  "value": 0.26629835911658933,
+  "value": 0.26537791112001474,
   "ci": [
-   0.2233532810891486,
-   0.3141551634012753
+   0.22125723074237688,
+   0.31412317208373625
   ],
   "n": 500,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[0].quality",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.2663"
+  "text": "0.2654"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4364,10 +4364,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "recall@100",
   "system": "warm-lexical-api",
-  "value": 0.542201171051171,
+  "value": 0.5422345043845044,
   "ci": [
-   0.4911556277056277,
-   0.5963353701853702
+   0.4922032467532467,
+   0.5975496558996559
   ],
   "n": 500,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[0].quality",
@@ -4489,17 +4489,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm",
-  "value": 3107.7757144531843,
+  "value": 3177.504811249911,
   "ci": [
-   3058.2544192066894,
-   3217.504397668923
+   3073.504809985852,
+   3206.5617307151624
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "3,108"
+  "text": "3,178"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4507,17 +4507,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm-lexical-api",
-  "value": 715.4557615705348,
+  "value": 3463.10066995684,
   "ci": [
-   709.5777117837392,
-   720.7848032949656
+   3436.5899158148877,
+   3533.9818435038906
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "715"
+  "text": "3,463"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4525,17 +4525,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "sqlite-fts5",
-  "value": 16.394808267368823,
+  "value": 16.591909146012163,
   "ci": [
-   16.253090479199006,
-   16.447515933629088
+   16.421837963255104,
+   16.63053631153758
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "16"
+  "text": "17"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4543,17 +4543,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "lucene",
-  "value": 2851.439203423717,
+  "value": 2622.5278486020607,
   "ci": [
-   2562.787328503077,
-   3095.1024707955416
+   2153.4463522849765,
+   3122.775588396343
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2,851"
+  "text": "2,623"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4561,17 +4561,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-py",
-  "value": 1547.832203354395,
+  "value": 1566.8201180367428,
   "ci": [
-   1522.919683868799,
-   1562.2625279779545
+   1549.5463974092206,
+   1576.5744023045536
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,548"
+  "text": "1,567"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4579,17 +4579,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs",
-  "value": 801.4263067382367,
+  "value": 813.7532445022787,
   "ci": [
-   797.4518148154015,
-   808.3248810437985
+   801.7167680667078,
+   822.0624340010258
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "801"
+  "text": "814"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4597,17 +4597,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs-count",
-  "value": 2427.725290679855,
+  "value": 2442.4960522821143,
   "ci": [
-   2375.9953079985135,
-   2452.192834771913
+   2381.059596664505,
+   2483.650205208618
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2,428"
+  "text": "2,442"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4617,14 +4617,14 @@
   "derived": true,
   "warm": "warm",
   "other": "lucene",
-  "factor": 1.0898972388124861,
+  "factor": 1.2116190922219114,
   "factor_infinite": false,
   "ci": [
-   0.988094723216262,
-   1.2554706985960735
+   0.9842221200288703,
+   1.489037201838229
   ],
   "verdict": "TIE",
-  "text": "1.09x"
+  "text": "1.21x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4632,67 +4632,13 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "warm",
-  "value": 303.1865,
+  "value": 298.4125,
   "ci": [
-   297.373,
-   308.308
+   296.392,
+   306.5
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
-  "validity": "valid",
-  "validity_reason": "",
-  "uncertainty": "sampled",
-  "text": "303"
- },
- {
-  "section": "beir:fiqa (57,600 documents, 500 queries)",
-  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "p50_latency",
-  "system": "warm-lexical-api",
-  "value": 1185.083,
-  "ci": [
-   1172.094,
-   1199.025
-  ],
-  "n": 10,
-  "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
-  "validity": "valid",
-  "validity_reason": "",
-  "uncertainty": "sampled",
-  "text": "1,185"
- },
- {
-  "section": "beir:fiqa (57,600 documents, 500 queries)",
-  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "p50_latency",
-  "system": "sqlite-fts5",
-  "value": 58046.361999999994,
-  "ci": [
-   57986.219,
-   58456.143
-  ],
-  "n": 10,
-  "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
-  "validity": "valid",
-  "validity_reason": "",
-  "uncertainty": "sampled",
-  "text": "58,046"
- },
- {
-  "section": "beir:fiqa (57,600 documents, 500 queries)",
-  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "p50_latency",
-  "system": "lucene",
-  "value": 297.8645,
-  "ci": [
-   289.875,
-   305.514
-  ],
-  "n": 10,
-  "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
@@ -4703,18 +4649,72 @@
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
-  "system": "tantivy-py",
-  "value": 637.4970000000001,
+  "system": "warm-lexical-api",
+  "value": 270.529,
   "ci": [
-   633.039,
-   644.835
+   266.94,
+   275.094
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "271"
+ },
+ {
+  "section": "beir:fiqa (57,600 documents, 500 queries)",
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "p50_latency",
+  "system": "sqlite-fts5",
+  "value": 57436.019499999995,
+  "ci": [
+   57210.724,
+   57897.648
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "57,436"
+ },
+ {
+  "section": "beir:fiqa (57,600 documents, 500 queries)",
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "p50_latency",
+  "system": "lucene",
+  "value": 296.24199999999996,
+  "ci": [
+   291.04,
+   309.026
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "296"
+ },
+ {
+  "section": "beir:fiqa (57,600 documents, 500 queries)",
+  "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "p50_latency",
+  "system": "tantivy-py",
+  "value": 635.2935,
+  "ci": [
+   632.249,
+   639.319
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "637"
+  "text": "635"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4722,17 +4722,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs",
-  "value": 1004.8575,
+  "value": 989.0145,
   "ci": [
-   989.258,
-   1019.255
+   974.695,
+   996.88
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,005"
+  "text": "989"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4740,17 +4740,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs-count",
-  "value": 400.344,
+  "value": 395.3905,
   "ci": [
-   395.765,
-   402.024
+   392.853,
+   400.608
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "400"
+  "text": "395"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4760,14 +4760,14 @@
   "derived": true,
   "warm": "warm",
   "other": "lucene",
-  "factor": 0.9824464479783895,
+  "factor": 0.9927265111213502,
   "factor_infinite": false,
   "ci": [
-   0.9402123850175799,
-   1.0273763926112998
+   0.9495595432300163,
+   1.042625981807876
   ],
   "verdict": "TIE",
-  "text": "0.98x"
+  "text": "0.99x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4775,17 +4775,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm",
-  "value": 659.236,
+  "value": 643.442,
   "ci": [
-   622.392,
-   695.598
+   627.7950000000001,
+   707.797
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "659"
+  "text": "643"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4793,17 +4793,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm-lexical-api",
-  "value": 4042.5985,
+  "value": 620.06,
   "ci": [
-   3969.72,
-   4166.193
+   604.048,
+   645.371
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,043"
+  "text": "620"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4811,17 +4811,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "sqlite-fts5",
-  "value": 131704.826,
+  "value": 129794.00349999999,
   "ci": [
-   129795.537,
-   132891.312
+   129528.025,
+   131201.268
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "131,705"
+  "text": "129,794"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4829,17 +4829,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "lucene",
-  "value": 1232.4825,
+  "value": 2361.114,
   "ci": [
-   904.519,
-   4331.817
+   875.992,
+   4636.619
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,232"
+  "text": "2,361"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4847,17 +4847,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-py",
-  "value": 1306.9279999999999,
+  "value": 1099.1555,
   "ci": [
-   1124.825,
-   1444.681
+   1086.893,
+   1134.971
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,307"
+  "text": "1,099"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4865,17 +4865,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs",
-  "value": 4018.093,
+  "value": 3894.1684999999998,
   "ci": [
-   3814.832,
-   4090.207
+   3803.532,
+   3978.829
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,018"
+  "text": "3,894"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4883,17 +4883,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs-count",
-  "value": 859.759,
+  "value": 831.1435,
   "ci": [
-   844.506,
-   911.4314999999999
+   807.871,
+   894.388
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "860"
+  "text": "831"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4903,14 +4903,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.3041748326851084,
+  "factor": 1.2917147155454571,
   "factor_infinite": false,
   "ci": [
-   1.2140719208508364,
-   1.4644010527127596
+   1.141387996840902,
+   1.4246497662453508
   ],
   "verdict": "WIN",
-  "text": "1.30x"
+  "text": "1.29x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4918,17 +4918,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 1.4396986,
+  "value": 1.380842936,
   "ci": [
-   1.414709414,
-   1.474304558
+   1.379498494,
+   1.405824417
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1.44"
+  "text": "1.38"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4936,17 +4936,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "warm-lexical-api",
-  "value": 1.430560197,
+  "value": 1.406502411,
   "ci": [
-   1.4236327260000001,
-   1.444835018
+   1.355657301,
+   1.446375671
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1.43"
+  "text": "1.41"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4954,10 +4954,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "sqlite-fts5",
-  "value": 1.2925378209911287,
+  "value": 1.292161130986642,
   "ci": [
-   1.2721173850004561,
-   1.2967527050059289
+   1.2859226639848202,
+   1.300376049010083
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
@@ -4972,17 +4972,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "lucene",
-  "value": 2.751177298,
+  "value": 2.699856074,
   "ci": [
-   2.744571365,
-   2.869382214
+   2.660372056,
+   2.740479138
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2.75"
+  "text": "2.70"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -4990,17 +4990,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-py",
-  "value": 2.220934219978517,
+  "value": 2.1490241280116607,
   "ci": [
-   2.19523987499997,
-   2.2430656799988355
+   2.130417889013188,
+   2.162171825009864
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2.22"
+  "text": "2.15"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5008,17 +5008,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-rs",
-  "value": 2.198843917,
+  "value": 2.13918386,
   "ci": [
-   2.198606547,
-   2.201176846
+   2.136689693,
+   2.155993416
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2.20"
+  "text": "2.14"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5026,17 +5026,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-rs-count",
-  "value": 2.213821186,
+  "value": 2.131631234,
   "ci": [
-   2.21146715,
-   2.234380803
+   2.110369211,
+   2.162092879
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2.21"
+  "text": "2.13"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5046,14 +5046,14 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 0.8977836201209952,
+  "factor": 0.9357770513203697,
   "factor_infinite": false,
   "ci": [
-   0.8628592905703111,
-   0.9166212454467549
+   0.914710719514285,
+   0.9426440512011774
   ],
   "verdict": "LOSS",
-  "text": "0.90x"
+  "text": "0.94x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5061,10 +5061,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 300.9921875,
+  "value": 301.05078125,
   "ci": [
-   300.5859375,
-   301.03515625
+   300.20703125,
+   301.0703125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
@@ -5079,10 +5079,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm-lexical-api",
-  "value": 300.87109375,
+  "value": 301.109375,
   "ci": [
-   300.86328125,
-   300.8984375
+   300.70703125,
+   301.19921875
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
@@ -5097,10 +5097,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "sqlite-fts5",
-  "value": 143.58203125,
+  "value": 143.625,
   "ci": [
-   143.48046875,
-   143.59375
+   143.61328125,
+   143.66015625
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
@@ -5115,17 +5115,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "lucene",
-  "value": 628.76953125,
+  "value": 632.87890625,
   "ci": [
-   619.8046875,
-   643.8671875
+   628.0234375,
+   635.328125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "629"
+  "text": "633"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5133,10 +5133,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-py",
-  "value": 169.609375,
+  "value": 169.81640625,
   "ci": [
-   169.5703125,
-   169.6640625
+   169.53515625,
+   169.93359375
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
@@ -5151,10 +5151,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs",
-  "value": 116.12109375,
+  "value": 116.33203125,
   "ci": [
-   115.9296875,
-   116.23828125
+   116.24609375,
+   116.4296875
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
@@ -5169,10 +5169,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 116.1328125,
+  "value": 116.171875,
   "ci": [
-   115.9921875,
-   116.20703125
+   116.078125,
+   116.4140625
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
@@ -5188,12 +5188,12 @@
   "metric": "build_peak_rss_mib",
   "derived": true,
   "warm": "warm",
-  "other": "tantivy-rs",
-  "factor": 0.38579437796869726,
+  "other": "tantivy-rs-count",
+  "factor": 0.3858879705199237,
   "factor_infinite": false,
   "ci": [
-   0.3851034840718874,
-   0.3867056530214425
+   0.3855515478630926,
+   0.387779266912157
   ],
   "verdict": "LOSS",
   "text": "0.39x"
@@ -5204,10 +5204,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 30.466796875,
+  "value": 30.478515625,
   "ci": [
-   30.4140625,
-   30.55859375
+   30.4296875,
+   30.58984375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].peak_rss_bytes",
@@ -5222,17 +5222,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm-lexical-api",
-  "value": 268.41015625,
+  "value": 22.423828125,
   "ci": [
-   268.3671875,
-   268.4765625
+   22.3828125,
+   22.51953125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "268"
+  "text": "22"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5240,10 +5240,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "sqlite-fts5",
-  "value": 73.671875,
+  "value": 73.78125,
   "ci": [
-   73.3515625,
-   73.765625
+   73.404296875,
+   73.8515625
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].peak_rss_bytes",
@@ -5258,17 +5258,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "lucene",
-  "value": 114.560546875,
+  "value": 115.50390625,
   "ci": [
-   113.9140625,
-   115.90625
+   113.06640625,
+   116.984375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "115"
+  "text": "116"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5276,10 +5276,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-py",
-  "value": 52.359375,
+  "value": 52.41015625,
   "ci": [
-   52.28515625,
-   52.41015625
+   52.34765625,
+   52.46875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].peak_rss_bytes",
@@ -5294,10 +5294,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs",
-  "value": 91.1484375,
+  "value": 91.33203125,
   "ci": [
-   91.126953125,
-   91.25390625
+   91.2265625,
+   91.38671875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].peak_rss_bytes",
@@ -5312,10 +5312,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 91.271484375,
+  "value": 91.298828125,
   "ci": [
-   91.05859375,
-   91.328125
+   91.203125,
+   91.43359375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].peak_rss_bytes",
@@ -5332,11 +5332,11 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-py",
-  "factor": 1.718571703314315,
+  "factor": 1.719577058635053,
   "factor_infinite": false,
   "ci": [
-   1.7109804422855681,
-   1.723221166195736
+   1.711275699144426,
+   1.7242618741976894
   ],
   "verdict": "WIN",
   "text": "1.72x"
@@ -5487,10 +5487,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.011825804499999999,
+  "value": 0.011641019499999999,
   "ci": [
-   0.011189187,
-   0.012960264
+   0.010765406,
+   0.012748579
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].cold_start_s",
@@ -5505,17 +5505,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm-lexical-api",
-  "value": 0.3843518555,
+  "value": 0.0114272465,
   "ci": [
-   0.373635043,
-   0.403421625
+   0.010905727,
+   0.012306147
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.38"
+  "text": "0.01"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5523,10 +5523,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "sqlite-fts5",
-  "value": 0.133630743,
+  "value": 0.131548187,
   "ci": [
-   0.131156294,
-   0.139919
+   0.127998053,
+   0.134423829
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].cold_start_s",
@@ -5541,17 +5541,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "lucene",
-  "value": 0.745243512,
+  "value": 0.7413941425,
   "ci": [
-   0.739167281,
-   0.761512821
+   0.7205493605,
+   0.762512424
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.75"
+  "text": "0.74"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5559,10 +5559,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-py",
-  "value": 0.0310907505,
+  "value": 0.0294019665,
   "ci": [
-   0.029206275,
-   0.034517706
+   0.027975089,
+   0.030721368
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].cold_start_s",
@@ -5577,17 +5577,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs",
-  "value": 0.529025485,
+  "value": 0.5249798830000001,
   "ci": [
-   0.524055371,
-   0.538491101
+   0.517279116,
+   0.535866189
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.53"
+  "text": "0.52"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5595,10 +5595,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs-count",
-  "value": 0.5244322534999999,
+  "value": 0.5180571265,
   "ci": [
-   0.517743496,
-   0.534449906
+   0.509535989,
+   0.523669768
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].cold_start_s",
@@ -5615,14 +5615,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-py",
-  "factor": 2.629060077899986,
+  "factor": 2.525720921608284,
   "factor_infinite": false,
   "ci": [
-   2.2535246967191407,
-   3.08491635719378
+   2.194369192048777,
+   2.8537119733338434
   ],
   "verdict": "WIN",
-  "text": "2.63x"
+  "text": "2.53x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5630,17 +5630,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm",
-  "value": 1.9468739900000003,
+  "value": 2.01414601,
   "ci": [
-   1.9468739900000003,
-   1.9468739900000003
+   2.01414601,
+   2.01414601
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.947"
+  "text": "2.014"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5648,17 +5648,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 1.94831676,
+  "value": 1.9863691700000001,
   "ci": [
-   1.94831676,
-   1.94831676
+   1.9863691700000001,
+   1.9863691700000001
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.948"
+  "text": "1.986"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5666,17 +5666,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 9.757316760078538,
+  "value": 9.15302443987457,
   "ci": [
-   9.757316760078538,
-   9.757316760078538
+   9.15302443987457,
+   9.15302443987457
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "9.757"
+  "text": "9.153"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5684,17 +5684,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "lucene",
-  "value": 41.25772189,
+  "value": 40.10782767,
   "ci": [
-   41.25772189,
-   41.25772189
+   40.10782767,
+   40.10782767
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "41.258"
+  "text": "40.108"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5702,17 +5702,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-py",
-  "value": 90.46632437006338,
+  "value": 89.58123570017051,
   "ci": [
-   90.46632437006338,
-   90.46632437006338
+   89.58123570017051,
+   89.58123570017051
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "90.466"
+  "text": "89.581"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5720,17 +5720,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs",
-  "value": 70.70961392,
+  "value": 69.62724066999999,
   "ci": [
-   70.70961392,
-   70.70961392
+   69.62724066999999,
+   69.62724066999999
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "70.710"
+  "text": "69.627"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5738,17 +5738,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 72.59764861,
+  "value": 68.79290526,
   "ci": [
-   72.59764861,
-   72.59764861
+   68.79290526,
+   68.79290526
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "72.598"
+  "text": "68.793"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5758,11 +5758,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 5.011786489622031,
+  "factor": 4.544369869131072,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "5.01x"
+  "text": "4.54x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5770,17 +5770,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm",
-  "value": 1.44774659,
+  "value": 1.44044153,
   "ci": [
-   1.44774659,
-   1.44774659
+   1.44044153,
+   1.44044153
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.448"
+  "text": "1.440"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5788,17 +5788,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 1.4199765,
+  "value": 1.44391453,
   "ci": [
-   1.4199765,
-   1.4199765
+   1.44391453,
+   1.44391453
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.420"
+  "text": "1.444"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5806,17 +5806,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 9.64231322024716,
+  "value": 8.755462360277306,
   "ci": [
-   9.64231322024716,
-   9.64231322024716
+   8.755462360277306,
+   8.755462360277306
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "9.642"
+  "text": "8.755"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5824,17 +5824,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "lucene",
-  "value": 18.67053903,
+  "value": 16.95349209,
   "ci": [
-   18.67053903,
-   18.67053903
+   16.95349209,
+   16.95349209
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "18.671"
+  "text": "16.953"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5842,17 +5842,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-py",
-  "value": 47.127398930024356,
+  "value": 45.555570729775354,
   "ci": [
-   47.127398930024356,
-   47.127398930024356
+   45.555570729775354,
+   45.555570729775354
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "47.127"
+  "text": "45.556"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5860,17 +5860,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs",
-  "value": 20.534784780000003,
+  "value": 17.54402675,
   "ci": [
-   20.534784780000003,
-   20.534784780000003
+   17.54402675,
+   17.54402675
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "20.535"
+  "text": "17.544"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5878,17 +5878,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 18.312378080000002,
+  "value": 17.28092921,
   "ci": [
-   18.312378080000002,
-   18.312378080000002
+   17.28092921,
+   17.28092921
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "18.312"
+  "text": "17.281"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5898,11 +5898,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 6.66022167612024,
+  "factor": 6.078318472445949,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "6.66x"
+  "text": "6.08x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -5910,10 +5910,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.install",
@@ -5928,10 +5928,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm-lexical-api",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.install",
@@ -6038,11 +6038,11 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs",
-  "factor": 1.5248354734312661,
+  "factor": 1.529935267358599,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.52x"
+  "text": "1.53x"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries)",
@@ -8153,17 +8153,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "ndcg@10",
   "system": "warm-lexical-api",
-  "value": 0.45575641585362187,
+  "value": 0.4561419499447157,
   "ci": [
-   0.3425521820184666,
-   0.5685920344038492
+   0.34378214839170335,
+   0.5689042043949878
   ],
   "n": 100,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[0].quality",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.4558"
+  "text": "0.4561"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8421,17 +8421,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm",
-  "value": 10973.312018856583,
+  "value": 11119.097806864182,
   "ci": [
-   9401.444795233243,
-   11616.201627522778
+   10038.817094057593,
+   11520.932439754453
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "10,973"
+  "text": "11,119"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8439,17 +8439,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm-lexical-api",
-  "value": 2588.188190175015,
+  "value": 16876.842719856035,
   "ci": [
-   2541.689489979249,
-   2637.1961056736086
+   15659.080520714537,
+   17414.218430721186
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2,588"
+  "text": "16,877"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8457,10 +8457,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "sqlite-fts5",
-  "value": 48.25426089274984,
+  "value": 48.44617197113695,
   "ci": [
-   47.90127974673245,
-   48.441062579025086
+   47.683769821621574,
+   48.77556701636897
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
@@ -8475,17 +8475,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "lucene",
-  "value": 2593.378470469892,
+  "value": 2024.2934609558529,
   "ci": [
-   2444.627297133765,
-   2916.527098692798
+   1660.6777920232564,
+   2767.2183799087547
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2,593"
+  "text": "2,024"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8493,17 +8493,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-py",
-  "value": 4855.093096040575,
+  "value": 4695.500763234975,
   "ci": [
-   4628.614548744565,
-   4913.640073211272
+   4509.4352266076885,
+   4948.326604598817
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,855"
+  "text": "4,696"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8511,17 +8511,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs",
-  "value": 2803.5030764577364,
+  "value": 2809.418678616853,
   "ci": [
-   2685.2513269035167,
-   2815.3444040370573
+   2703.2393322404137,
+   2829.87322847106
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2,804"
+  "text": "2,809"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8529,17 +8529,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs-count",
-  "value": 8784.099500051756,
+  "value": 8823.052871492506,
   "ci": [
-   8576.123386402385,
-   8902.39282965672
+   7625.0593610871265,
+   8883.550072707416
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "8,784"
+  "text": "8,823"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8549,14 +8549,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.2492244673221118,
+  "factor": 1.2602324806179335,
   "factor_infinite": false,
   "ci": [
-   1.0560581829094333,
-   1.354481635133713
+   1.1300456475052083,
+   1.5109301966289062
   ],
   "verdict": "WIN",
-  "text": "1.25x"
+  "text": "1.26x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8564,17 +8564,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "warm",
-  "value": 81.30250000000001,
+  "value": 81.7195,
   "ci": [
-   79.167,
-   88.424
+   80.337,
+   91.101
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "81"
+  "text": "82"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8582,17 +8582,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "warm-lexical-api",
-  "value": 334.44100000000003,
+  "value": 51.9135,
   "ci": [
-   330.972,
-   337.96000000000004
+   50.079,
+   53.078
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "334"
+  "text": "52"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8600,17 +8600,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "sqlite-fts5",
-  "value": 16907.213499999998,
+  "value": 16682.877500000002,
   "ci": [
-   16648.296,
-   17143.951
+   16542.155,
+   16951.041
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "16,907"
+  "text": "16,683"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8618,17 +8618,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "lucene",
-  "value": 163.697,
+  "value": 195.92149999999998,
   "ci": [
-   155.933,
-   178.711
+   157.473,
+   227.359
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "164"
+  "text": "196"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8636,17 +8636,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-py",
-  "value": 195.2655,
+  "value": 192.054,
   "ci": [
-   192.456,
-   197.735
+   190.733,
+   195.644
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "195"
+  "text": "192"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8654,17 +8654,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs",
-  "value": 288.006,
+  "value": 291.27,
   "ci": [
-   285.394,
-   298.161
+   288.576,
+   295.994
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "288"
+  "text": "291"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8672,10 +8672,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs-count",
-  "value": 104.071,
+  "value": 104.4495,
   "ci": [
-   102.793,
-   104.901
+   102.927,
+   114.96
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
@@ -8692,11 +8692,11 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.2800467390301649,
+  "factor": 1.2781465867999682,
   "factor_infinite": false,
   "ci": [
-   1.1625011309146838,
-   1.3250596839592255
+   1.1298119669377944,
+   1.4309720303222673
   ],
   "verdict": "WIN",
   "text": "1.28x"
@@ -8707,17 +8707,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm",
-  "value": 173.8195,
+  "value": 163.33100000000002,
   "ci": [
-   163.892,
-   205.624
+   152.896,
+   181.359
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "174"
+  "text": "163"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8725,17 +8725,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm-lexical-api",
-  "value": 1069.997,
+  "value": 129.14999999999998,
   "ci": [
-   1051.595,
-   1076.958
+   123.731,
+   169.406
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,070"
+  "text": "129"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8743,17 +8743,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "sqlite-fts5",
-  "value": 68638.8885,
+  "value": 68647.8215,
   "ci": [
-   67467.531,
-   70911.095
+   67235.634,
+   70528.064
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "68,639"
+  "text": "68,648"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8761,17 +8761,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "lucene",
-  "value": 4319.886,
+  "value": 5661.1795,
   "ci": [
-   4238.353,
-   4535.429
+   4505.158,
+   7302.811
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,320"
+  "text": "5,661"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8779,17 +8779,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-py",
-  "value": 353.952,
+  "value": 373.86850000000004,
   "ci": [
-   345.801,
-   391.897
+   347.487,
+   525.055
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "354"
+  "text": "374"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8797,17 +8797,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs",
-  "value": 1245.4650000000001,
+  "value": 1241.7469999999998,
   "ci": [
-   1235.154,
-   1259.167
+   1232.039,
+   1353.127
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,245"
+  "text": "1,242"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8815,17 +8815,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs-count",
-  "value": 260.019,
+  "value": 269.07349999999997,
   "ci": [
-   248.964,
-   277.329
+   244.052,
+   298.325
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "260"
+  "text": "269"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8835,14 +8835,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.4959138646699592,
+  "factor": 1.6474123099717748,
   "factor_infinite": false,
   "ci": [
-   1.2107730615103296,
-   1.6921448270812487
+   1.3456845262710975,
+   1.9511628819589788
   ],
   "verdict": "WIN",
-  "text": "1.50x"
+  "text": "1.65x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8850,49 +8850,13 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 0.899335018,
+  "value": 0.892384686,
   "ci": [
-   0.897629115,
-   0.909203035
+   0.879642903,
+   0.906780897
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
-  "validity": "valid",
-  "validity_reason": "",
-  "uncertainty": "sampled",
-  "text": "0.90"
- },
- {
-  "section": "memory (4,559 documents, 100 queries)",
-  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "build_seconds",
-  "system": "warm-lexical-api",
-  "value": 0.862955539,
-  "ci": [
-   0.862401545,
-   0.904304074
-  ],
-  "n": 3,
-  "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
-  "validity": "valid",
-  "validity_reason": "",
-  "uncertainty": "sampled",
-  "text": "0.86"
- },
- {
-  "section": "memory (4,559 documents, 100 queries)",
-  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "build_seconds",
-  "system": "sqlite-fts5",
-  "value": 0.8871022209932562,
-  "ci": [
-   0.8806557650095783,
-   0.8937024090264458
-  ],
-  "n": 3,
-  "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
@@ -8903,18 +8867,54 @@
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
-  "system": "lucene",
-  "value": 2.32473145,
+  "system": "warm-lexical-api",
+  "value": 0.87729608,
   "ci": [
-   2.314117905,
-   2.381479695
+   0.876028111,
+   0.881782215
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "0.88"
+ },
+ {
+  "section": "memory (4,559 documents, 100 queries)",
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "build_seconds",
+  "system": "sqlite-fts5",
+  "value": 0.8618027319898829,
+  "ci": [
+   0.8581734449835494,
+   0.8896799239737447
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "0.86"
+ },
+ {
+  "section": "memory (4,559 documents, 100 queries)",
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "build_seconds",
+  "system": "lucene",
+  "value": 2.378789781,
+  "ci": [
+   2.359540437,
+   2.433366084
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "2.32"
+  "text": "2.38"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8922,17 +8922,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-py",
-  "value": 1.5439891880087089,
+  "value": 1.4943099970114417,
   "ci": [
-   1.5284836159844417,
-   1.556362015020568
+   1.473356991977198,
+   1.500995779002551
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1.54"
+  "text": "1.49"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8940,31 +8940,13 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-rs",
-  "value": 1.475486687,
+  "value": 1.471043262,
   "ci": [
-   1.466712674,
-   1.493110505
+   1.462349046,
+   1.494764564
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
-  "validity": "valid",
-  "validity_reason": "",
-  "uncertainty": "sampled",
-  "text": "1.48"
- },
- {
-  "section": "memory (4,559 documents, 100 queries)",
-  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
-  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
-  "metric": "build_seconds",
-  "system": "tantivy-rs-count",
-  "value": 1.4699424460000001,
-  "ci": [
-   1.461011061,
-   1.4866482269999999
-  ],
-  "n": 3,
-  "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
@@ -8975,17 +8957,35 @@
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
+  "system": "tantivy-rs-count",
+  "value": 1.485702292,
+  "ci": [
+   1.476476399,
+   1.489185842
+  ],
+  "n": 3,
+  "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
+  "validity": "valid",
+  "validity_reason": "",
+  "uncertainty": "sampled",
+  "text": "1.49"
+ },
+ {
+  "section": "memory (4,559 documents, 100 queries)",
+  "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json",
+  "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
+  "metric": "build_seconds",
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 0.9863979531966319,
+  "factor": 0.965730077521616,
   "factor_infinite": false,
   "ci": [
-   0.9686018756081015,
-   0.9956254694640179
+   0.9463955932714686,
+   1.0114103358755169
   ],
-  "verdict": "LOSS",
-  "text": "0.99x"
+  "verdict": "TIE",
+  "text": "0.97x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -8993,10 +8993,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 139.75,
+  "value": 139.83203125,
   "ci": [
-   139.71484375,
-   139.91015625
+   139.6328125,
+   139.89453125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
@@ -9011,9 +9011,9 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm-lexical-api",
-  "value": 139.5859375,
+  "value": 139.6875,
   "ci": [
-   139.5234375,
+   139.63671875,
    139.921875
   ],
   "n": 3,
@@ -9029,10 +9029,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "sqlite-fts5",
-  "value": 117.625,
+  "value": 117.69140625,
   "ci": [
-   117.625,
-   117.7265625
+   117.6640625,
+   117.6953125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
@@ -9047,17 +9047,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "lucene",
-  "value": 462.84765625,
+  "value": 460.33203125,
   "ci": [
-   457.65234375,
-   466.77734375
+   459.9296875,
+   480.12890625
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "463"
+  "text": "460"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9065,10 +9065,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-py",
-  "value": 203.0703125,
+  "value": 202.78125,
   "ci": [
-   202.83984375,
-   203.1328125
+   202.77734375,
+   203.0078125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
@@ -9083,10 +9083,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs",
-  "value": 136.8046875,
+  "value": 136.91796875,
   "ci": [
-   136.625,
-   136.95703125
+   136.87890625,
+   137.0390625
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
@@ -9101,10 +9101,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 136.71484375,
+  "value": 136.7890625,
   "ci": [
-   136.6015625,
-   136.76953125
+   136.59765625,
+   136.8359375
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
@@ -9121,11 +9121,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 0.8416815742397138,
+  "factor": 0.8416627091655725,
   "factor_infinite": false,
   "ci": [
-   0.8407180947594718,
-   0.8426202924483462
+   0.8410912238572585,
+   0.8428915123370447
   ],
   "verdict": "LOSS",
   "text": "0.84x"
@@ -9136,10 +9136,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 14.13671875,
+  "value": 14.16015625,
   "ci": [
-   14.046875,
-   14.21484375
+   14.03515625,
+   14.2578125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].peak_rss_bytes",
@@ -9154,17 +9154,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm-lexical-api",
-  "value": 78.904296875,
+  "value": 12.423828125,
   "ci": [
-   78.84765625,
-   78.98828125
+   12.39453125,
+   12.46875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "79"
+  "text": "12"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9172,10 +9172,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "sqlite-fts5",
-  "value": 39.2734375,
+  "value": 39.35546875,
   "ci": [
-   39.25390625,
-   39.30078125
+   39.30859375,
+   39.478515625
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].peak_rss_bytes",
@@ -9190,17 +9190,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "lucene",
-  "value": 99.546875,
+  "value": 97.462890625,
   "ci": [
-   98.30859375,
-   101.767578125
+   95.21875,
+   103.25390625
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "100"
+  "text": "97"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9208,10 +9208,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-py",
-  "value": 31.70703125,
+  "value": 31.802734375,
   "ci": [
-   31.66796875,
-   31.828125
+   31.76171875,
+   31.80859375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].peak_rss_bytes",
@@ -9226,10 +9226,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs",
-  "value": 25.2109375,
+  "value": 25.345703125,
   "ci": [
-   25.15234375,
-   25.26953125
+   25.15625,
+   25.396484375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].peak_rss_bytes",
@@ -9244,10 +9244,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 25.271484375,
+  "value": 25.3515625,
   "ci": [
-   25.16796875,
-   25.3515625
+   25.12109375,
+   25.4375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].peak_rss_bytes",
@@ -9264,14 +9264,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs",
-  "factor": 1.7833655705996132,
+  "factor": 1.7899310344827586,
   "factor_infinite": false,
   "ci": [
-   1.7694421544380323,
-   1.7989432703003336
+   1.7643835616438357,
+   1.8094906763150571
   ],
   "verdict": "WIN",
-  "text": "1.78x"
+  "text": "1.79x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9419,10 +9419,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.0078120735,
+  "value": 0.007862408,
   "ci": [
-   0.007449816,
-   0.012325870499999999
+   0.007256295,
+   0.008976222
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].cold_start_s",
@@ -9437,17 +9437,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm-lexical-api",
-  "value": 0.1093078425,
+  "value": 0.0080781235,
   "ci": [
-   0.106183492,
-   0.113211209
+   0.007320546,
+   0.0091489415
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.11"
+  "text": "0.01"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9455,10 +9455,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "sqlite-fts5",
-  "value": 0.042214071,
+  "value": 0.041508417000000006,
   "ci": [
-   0.041587811,
-   0.044109924999999994
+   0.040525941,
+   0.043284809
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].cold_start_s",
@@ -9473,17 +9473,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "lucene",
-  "value": 0.5361441305,
+  "value": 0.5344167854999999,
   "ci": [
-   0.513144371,
-   0.547238489
+   0.523599868,
+   0.553997094
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.54"
+  "text": "0.53"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9491,10 +9491,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-py",
-  "value": 0.0263005705,
+  "value": 0.026691272000000002,
   "ci": [
-   0.025436408,
-   0.027397592
+   0.025673898,
+   0.027282981
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].cold_start_s",
@@ -9509,17 +9509,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs",
-  "value": 0.0357553735,
+  "value": 0.034042009,
   "ci": [
-   0.034543914,
-   0.036660529
+   0.033349018,
+   0.035101564
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.04"
+  "text": "0.03"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9527,10 +9527,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs-count",
-  "value": 0.0347610415,
+  "value": 0.0343734975,
   "ci": [
-   0.034174305,
-   0.036061372
+   0.033364764,
+   0.035207777
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].cold_start_s",
@@ -9547,14 +9547,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-py",
-  "factor": 3.366656816528928,
+  "factor": 3.3947960980910685,
   "factor_infinite": false,
   "ci": [
-   2.063660169072846,
-   3.6776199573251205
+   2.8602120134729287,
+   3.759905158210905
   ],
   "verdict": "WIN",
-  "text": "3.37x"
+  "text": "3.39x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9562,17 +9562,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm",
-  "value": 4.26861123,
+  "value": 4.189799799999999,
   "ci": [
-   4.26861123,
-   4.26861123
+   4.189799799999999,
+   4.189799799999999
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "4.269"
+  "text": "4.190"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9580,17 +9580,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 4.14948116,
+  "value": 4.21328496,
   "ci": [
-   4.14948116,
-   4.14948116
+   4.21328496,
+   4.21328496
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "4.149"
+  "text": "4.213"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9598,17 +9598,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 12.18443675985327,
+  "value": 10.356831270037219,
   "ci": [
-   12.18443675985327,
-   12.18443675985327
+   10.356831270037219,
+   10.356831270037219
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "12.184"
+  "text": "10.357"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9616,17 +9616,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "lucene",
-  "value": 45.03531433,
+  "value": 45.014227039999994,
   "ci": [
-   45.03531433,
-   45.03531433
+   45.014227039999994,
+   45.014227039999994
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "45.035"
+  "text": "45.014"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9634,17 +9634,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-py",
-  "value": 166.12481986987405,
+  "value": 161.2314624901046,
   "ci": [
-   166.12481986987405,
-   166.12481986987405
+   161.2314624901046,
+   161.2314624901046
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "166.125"
+  "text": "161.231"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9652,17 +9652,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs",
-  "value": 79.38979251,
+  "value": 72.98876242,
   "ci": [
-   79.38979251,
-   79.38979251
+   72.98876242,
+   72.98876242
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "79.390"
+  "text": "72.989"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9670,17 +9670,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 74.64652294,
+  "value": 73.08675162,
   "ci": [
-   74.64652294,
-   74.64652294
+   73.08675162,
+   73.08675162
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "74.647"
+  "text": "73.087"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9690,11 +9690,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 2.8544264406700885,
+  "factor": 2.471915548336515,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "2.85x"
+  "text": "2.47x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9702,17 +9702,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm",
-  "value": 1.4887720500000001,
+  "value": 1.4623203100000002,
   "ci": [
-   1.4887720500000001,
-   1.4887720500000001
+   1.4623203100000002,
+   1.4623203100000002
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.489"
+  "text": "1.462"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9720,17 +9720,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 1.4693619599999999,
+  "value": 1.5217322,
   "ci": [
-   1.4693619599999999,
-   1.4693619599999999
+   1.5217322,
+   1.5217322
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.469"
+  "text": "1.522"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9738,17 +9738,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 9.414264439838007,
+  "value": 9.087707590078935,
   "ci": [
-   9.414264439838007,
-   9.414264439838007
+   9.087707590078935,
+   9.087707590078935
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "9.414"
+  "text": "9.088"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9756,17 +9756,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "lucene",
-  "value": 17.81398685,
+  "value": 17.24556536,
   "ci": [
-   17.81398685,
-   17.81398685
+   17.24556536,
+   17.24556536
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "17.814"
+  "text": "17.246"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9774,17 +9774,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-py",
-  "value": 185.40708401007578,
+  "value": 185.06885600014357,
   "ci": [
-   185.40708401007578,
-   185.40708401007578
+   185.06885600014357,
+   185.06885600014357
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "185.407"
+  "text": "185.069"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9792,17 +9792,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs",
-  "value": 18.7334111,
+  "value": 18.47047903,
   "ci": [
-   18.7334111,
-   18.7334111
+   18.47047903,
+   18.47047903
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "18.733"
+  "text": "18.470"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9810,17 +9810,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 18.25887433,
+  "value": 18.86884428,
   "ci": [
-   18.25887433,
-   18.25887433
+   18.86884428,
+   18.86884428
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "18.259"
+  "text": "18.869"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9830,11 +9830,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 6.323509660083964,
+  "factor": 6.214580709802857,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "6.32x"
+  "text": "6.21x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -9842,10 +9842,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.install",
@@ -9860,10 +9860,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm-lexical-api",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.install",
@@ -9970,11 +9970,11 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs",
-  "factor": 1.5248354734312661,
+  "factor": 1.529935267358599,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.52x"
+  "text": "1.53x"
  },
  {
   "section": "memory (4,559 documents, 100 queries)",
@@ -12353,17 +12353,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm",
-  "value": 30265.11127079186,
+  "value": 28935.174162218304,
   "ci": [
-   28847.106684168433,
-   30752.391425549882
+   25344.820586440037,
+   31155.30570046963
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "30,265"
+  "text": "28,935"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12371,17 +12371,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm-lexical-api",
-  "value": 23961.088058782225,
+  "value": 63587.22124430258,
   "ci": [
-   23572.484188428836,
-   24305.731899225135
+   55745.02363829876,
+   66298.34254143646
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "23,961"
+  "text": "63,587"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12389,17 +12389,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "sqlite-fts5",
-  "value": 918.733214922122,
+  "value": 913.1567941113152,
   "ci": [
-   906.6960663052729,
-   927.0682848368891
+   906.8535888211576,
+   931.0009346214939
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "919"
+  "text": "913"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12407,17 +12407,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "lucene",
-  "value": 10048.819765258722,
+  "value": 11081.780568015278,
   "ci": [
-   8894.549678009065,
-   11150.602738112439
+   8564.635999401427,
+   12271.648390306293
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "10,049"
+  "text": "11,082"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12425,17 +12425,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-py",
-  "value": 13913.396331925946,
+  "value": 13980.44334200862,
   "ci": [
-   13601.148910877506,
-   14066.87514007178
+   13425.621497502938,
+   14111.771150975219
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "13,913"
+  "text": "13,980"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12443,17 +12443,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs",
-  "value": 26364.564461528054,
+  "value": 26237.321806937594,
   "ci": [
-   24127.097691054798,
-   26637.223217464154
+   24260.225966034337,
+   26811.035819543857
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "26,365"
+  "text": "26,237"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12461,17 +12461,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs-count",
-  "value": 43274.865415982145,
+  "value": 42938.6604032733,
   "ci": [
-   41851.6405843109,
-   43458.61351731886
+   37153.76901478869,
+   43609.434443511986
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "43,275"
+  "text": "42,939"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12481,14 +12481,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 0.6993692754412226,
+  "factor": 0.6738723073906729,
   "factor_infinite": false,
   "ci": [
-   0.6637834102248215,
-   0.7347953627671685
+   0.5811774656071176,
+   0.8385503416374411
   ],
   "verdict": "LOSS",
-  "text": "0.70x"
+  "text": "0.67x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12496,17 +12496,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "warm",
-  "value": 37.51,
+  "value": 36.8975,
   "ci": [
-   37.054,
-   38.012
+   36.423,
+   37.278
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "38"
+  "text": "37"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12514,17 +12514,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "warm-lexical-api",
-  "value": 21.100499999999997,
+  "value": 13.8565,
   "ci": [
-   20.827,
-   21.898
+   13.686,
+   14.318
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21"
+  "text": "14"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12532,17 +12532,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "sqlite-fts5",
-  "value": 341.3465,
+  "value": 336.8985,
   "ci": [
-   332.423,
-   345.858
+   329.115,
+   341.78
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "341"
+  "text": "337"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12550,17 +12550,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "lucene",
-  "value": 41.6085,
+  "value": 39.6745,
   "ci": [
-   36.669,
-   45.444
+   33.619,
+   48.141
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "42"
+  "text": "40"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12568,10 +12568,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-py",
-  "value": 79.77600000000001,
+  "value": 79.5695,
   "ci": [
-   79.279,
-   82.423
+   78.301,
+   80.257
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
@@ -12586,10 +12586,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs",
-  "value": 23.004,
+  "value": 22.844,
   "ci": [
-   22.731,
-   24.235
+   22.466,
+   23.335
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
@@ -12604,10 +12604,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs-count",
-  "value": 17.0915,
+  "value": 17.274,
   "ci": [
-   16.961,
-   17.592
+   16.824,
+   17.462
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
@@ -12624,14 +12624,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 0.4556518261796854,
+  "factor": 0.4681617995799173,
   "factor_infinite": false,
   "ci": [
-   0.4462011996211722,
-   0.474766556916932
+   0.45131176565266384,
+   0.47942234302501163
   ],
   "verdict": "LOSS",
-  "text": "0.46x"
+  "text": "0.47x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12639,17 +12639,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm",
-  "value": 71.713,
+  "value": 95.6765,
   "ci": [
-   67.43,
-   93.974
+   71.909,
+   123.644
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "72"
+  "text": "96"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12657,17 +12657,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm-lexical-api",
-  "value": 170.97,
+  "value": 45.6335,
   "ci": [
-   166.536,
-   174.788
+   39.259,
+   58.76
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "171"
+  "text": "46"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12675,17 +12675,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "sqlite-fts5",
-  "value": 4362.967000000001,
+  "value": 4349.4580000000005,
   "ci": [
-   4330.946,
-   4402.133
+   4232.499,
+   4438.893
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,363"
+  "text": "4,349"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12693,17 +12693,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "lucene",
-  "value": 496.6935,
+  "value": 379.93100000000004,
   "ci": [
-   175.332,
-   2729.735
+   161.724,
+   2158.285
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "497"
+  "text": "380"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12711,17 +12711,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-py",
-  "value": 155.667,
+  "value": 158.40699999999998,
   "ci": [
-   149.893,
-   169.414
+   146.258,
+   168.452
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "156"
+  "text": "158"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12729,17 +12729,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs",
-  "value": 159.707,
+  "value": 161.24099999999999,
   "ci": [
-   155.591,
-   181.36700000000002
+   153.077,
+   176.414
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "160"
+  "text": "161"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12747,17 +12747,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs-count",
-  "value": 72.9845,
+  "value": 76.2805,
   "ci": [
-   69.006,
-   79.001
+   73.127,
+   90.758
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "73"
+  "text": "76"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12767,14 +12767,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.0177303975569283,
+  "factor": 0.7972751929679702,
   "factor_infinite": false,
   "ci": [
-   0.7343094898588971,
-   1.1716001779623313
+   0.5914318527385073,
+   1.2621229609645523
   ],
   "verdict": "TIE",
-  "text": "1.02x"
+  "text": "0.80x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12782,10 +12782,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 0.163126126,
+  "value": 0.163771753,
   "ci": [
-   0.161722546,
-   0.163894934
+   0.162447874,
+   0.165059609
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
@@ -12800,10 +12800,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "warm-lexical-api",
-  "value": 0.16339269,
+  "value": 0.163848246,
   "ci": [
-   0.160087281,
-   0.164963501
+   0.161600287,
+   0.166035359
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
@@ -12818,17 +12818,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "sqlite-fts5",
-  "value": 0.14252506199409254,
+  "value": 0.14620579002075829,
   "ci": [
-   0.141743290994782,
-   0.1519450200139545
+   0.1444588640006259,
+   0.15123704299912788
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.14"
+  "text": "0.15"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12836,17 +12836,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "lucene",
-  "value": 0.730309114,
+  "value": 0.72338536,
   "ci": [
-   0.706576937,
-   0.735206583
+   0.710128741,
+   0.72486471
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.73"
+  "text": "0.72"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12854,17 +12854,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-py",
-  "value": 0.2631257570174057,
+  "value": 0.26548055102466606,
   "ci": [
-   0.2628046589961741,
-   0.266813114983961
+   0.26176782901166007,
+   0.27056048600934446
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.26"
+  "text": "0.27"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12872,10 +12872,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-rs",
-  "value": 0.253776522,
+  "value": 0.253890396,
   "ci": [
-   0.249375917,
-   0.257852707
+   0.248230692,
+   0.255837304
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
@@ -12890,17 +12890,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-rs-count",
-  "value": 0.252193025,
+  "value": 0.257264992,
   "ci": [
-   0.249816712,
-   0.259689096
+   0.255430731,
+   0.260111759
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.25"
+  "text": "0.26"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12910,14 +12910,14 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 0.8737108241882268,
+  "factor": 0.8927411921930047,
   "factor_infinite": false,
   "ci": [
-   0.8648424178552219,
-   0.9395413550684176
+   0.875192088941795,
+   0.9309881334558302
   ],
   "verdict": "LOSS",
-  "text": "0.87x"
+  "text": "0.89x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12925,10 +12925,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 51.7109375,
+  "value": 51.87109375,
   "ci": [
-   51.7109375,
-   51.96875
+   51.75,
+   51.984375
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
@@ -12943,10 +12943,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm-lexical-api",
-  "value": 51.578125,
+  "value": 51.6328125,
   "ci": [
-   51.44921875,
-   51.6953125
+   51.3828125,
+   51.73828125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
@@ -12961,10 +12961,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "sqlite-fts5",
-  "value": 32.60546875,
+  "value": 32.64453125,
   "ci": [
-   32.33203125,
-   32.609375
+   32.640625,
+   32.703125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
@@ -12979,17 +12979,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "lucene",
-  "value": 185.25390625,
+  "value": 185.65234375,
   "ci": [
-   184.46875,
-   186.75390625
+   185.09375,
+   185.7734375
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "185"
+  "text": "186"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -12997,10 +12997,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-py",
-  "value": 59.78515625,
+  "value": 59.8515625,
   "ci": [
-   59.57421875,
-   60.01953125
+   59.82421875,
+   59.87890625
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
@@ -13015,17 +13015,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs",
-  "value": 35.44140625,
+  "value": 35.5,
   "ci": [
-   35.26171875,
-   35.66796875
+   35.2734375,
+   35.75390625
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "35"
+  "text": "36"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13033,10 +13033,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 35.6328125,
+  "value": 35.62890625,
   "ci": [
-   35.6328125,
-   35.64453125
+   35.0625,
+   35.6953125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
@@ -13053,11 +13053,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 0.6305333131893035,
+  "factor": 0.6293395587017094,
   "factor_infinite": false,
   "ci": [
-   0.6221437161755863,
-   0.6306088533011028
+   0.6278929966937181,
+   0.6319444444444444
   ],
   "verdict": "LOSS",
   "text": "0.63x"
@@ -13068,10 +13068,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 13.078125,
+  "value": 13.1484375,
   "ci": [
-   13.0,
-   13.12109375
+   13.03125,
+   13.23828125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].peak_rss_bytes",
@@ -13086,17 +13086,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm-lexical-api",
-  "value": 29.763671875,
+  "value": 9.8125,
   "ci": [
-   29.64453125,
-   29.84765625
+   9.73046875,
+   9.8125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "30"
+  "text": "10"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13104,10 +13104,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "sqlite-fts5",
-  "value": 28.77734375,
+  "value": 28.84765625,
   "ci": [
-   28.76953125,
-   28.849609375
+   28.84375,
+   28.8984375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].peak_rss_bytes",
@@ -13122,17 +13122,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "lucene",
-  "value": 104.2578125,
+  "value": 102.1015625,
   "ci": [
-   94.30859375,
-   105.65625
+   93.30859375,
+   105.6875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "104"
+  "text": "102"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13142,8 +13142,8 @@
   "system": "tantivy-py",
   "value": 34.0859375,
   "ci": [
-   34.0546875,
-   34.13671875
+   34.03125,
+   34.20703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].peak_rss_bytes",
@@ -13158,10 +13158,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs",
-  "value": 40.634765625,
+  "value": 40.708984375,
   "ci": [
-   40.5625,
-   40.734375
+   40.59765625,
+   40.80078125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].peak_rss_bytes",
@@ -13176,10 +13176,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 40.583984375,
+  "value": 40.74609375,
   "ci": [
-   40.4453125,
-   40.62109375
+   40.45703125,
+   40.79296875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].peak_rss_bytes",
@@ -13196,14 +13196,14 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 2.2004181600955794,
+  "factor": 2.1939988116458706,
   "factor_infinite": false,
   "ci": [
-   2.1926168502530516,
-   2.2192007211538463
+   2.178813809383299,
+   2.2176258992805757
   ],
   "verdict": "WIN",
-  "text": "2.20x"
+  "text": "2.19x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13351,10 +13351,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.0061521955,
+  "value": 0.00601459,
   "ci": [
-   0.00574598,
-   0.006464166
+   0.00586651,
+   0.006959171
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].cold_start_s",
@@ -13369,17 +13369,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm-lexical-api",
-  "value": 0.0350222075,
+  "value": 0.005864378,
   "ci": [
-   0.033507304,
-   0.037304963
+   0.005391283,
+   0.006143412
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.04"
+  "text": "0.01"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13387,10 +13387,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "sqlite-fts5",
-  "value": 0.027250162,
+  "value": 0.02673756,
   "ci": [
-   0.026218705,
-   0.028024975
+   0.025997411,
+   0.027478128
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].cold_start_s",
@@ -13405,17 +13405,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "lucene",
-  "value": 0.5526543475,
+  "value": 0.539437136,
   "ci": [
-   0.530031909,
-   0.9308369734999999
+   0.528057302,
+   0.566251152
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.55"
+  "text": "0.54"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13423,10 +13423,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-py",
-  "value": 0.025714989,
+  "value": 0.026647698,
   "ci": [
-   0.025052637,
-   0.026838538
+   0.025866357,
+   0.028248629
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].cold_start_s",
@@ -13441,10 +13441,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs",
-  "value": 0.034837114,
+  "value": 0.034461096,
   "ci": [
-   0.033472974,
-   0.036743558
+   0.034115944999999995,
+   0.035528883
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].cold_start_s",
@@ -13459,10 +13459,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs-count",
-  "value": 0.034444099,
+  "value": 0.034224844500000004,
   "ci": [
-   0.033764437,
-   0.035303083
+   0.033395787,
+   0.036849520499999996
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].cold_start_s",
@@ -13479,14 +13479,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-py",
-  "factor": 4.179806867320781,
+  "factor": 4.430509477786516,
   "factor_infinite": false,
   "ci": [
-   3.8756178291213432,
-   4.670837350634704
+   3.7168733172385044,
+   4.815235804592509
   ],
   "verdict": "WIN",
-  "text": "4.18x"
+  "text": "4.43x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13494,17 +13494,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm",
-  "value": 2.22746807,
+  "value": 2.16020217,
   "ci": [
-   2.22746807,
-   2.22746807
+   2.16020217,
+   2.16020217
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "2.227"
+  "text": "2.160"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13512,17 +13512,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 2.3503452,
+  "value": 2.2289199,
   "ci": [
-   2.3503452,
-   2.3503452
+   2.2289199,
+   2.2289199
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "2.350"
+  "text": "2.229"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13530,17 +13530,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 11.744979550130665,
+  "value": 9.689400969946291,
   "ci": [
-   11.744979550130665,
-   11.744979550130665
+   9.689400969946291,
+   9.689400969946291
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "11.745"
+  "text": "9.689"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13548,17 +13548,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "lucene",
-  "value": 38.84672083,
+  "value": 39.04756408,
   "ci": [
-   38.84672083,
-   38.84672083
+   39.04756408,
+   39.04756408
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "38.847"
+  "text": "39.048"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13566,17 +13566,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-py",
-  "value": 109.6471996200853,
+  "value": 104.76263246993767,
   "ci": [
-   109.6471996200853,
-   109.6471996200853
+   104.76263246993767,
+   104.76263246993767
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "109.647"
+  "text": "104.763"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13584,17 +13584,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs",
-  "value": 72.89395074,
+  "value": 70.03938093000001,
   "ci": [
-   72.89395074,
-   72.89395074
+   70.03938093000001,
+   70.03938093000001
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "72.894"
+  "text": "70.039"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13602,17 +13602,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 70.46425961,
+  "value": 68.18639214,
   "ci": [
-   70.46425961,
-   70.46425961
+   68.18639214,
+   68.18639214
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "70.464"
+  "text": "68.186"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13622,11 +13622,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 5.272793674717261,
+  "factor": 4.485413960095361,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "5.27x"
+  "text": "4.49x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13634,17 +13634,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm",
-  "value": 1.46203807,
+  "value": 1.43338882,
   "ci": [
-   1.46203807,
-   1.46203807
+   1.43338882,
+   1.43338882
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.462"
+  "text": "1.433"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13652,17 +13652,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 1.67248644,
+  "value": 1.42815109,
   "ci": [
-   1.67248644,
-   1.67248644
+   1.42815109,
+   1.42815109
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.672"
+  "text": "1.428"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13670,17 +13670,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 10.463071840058547,
+  "value": 9.202889690059237,
   "ci": [
-   10.463071840058547,
-   10.463071840058547
+   9.202889690059237,
+   9.202889690059237
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "10.463"
+  "text": "9.203"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13688,17 +13688,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "lucene",
-  "value": 17.16393618,
+  "value": 16.92337816,
   "ci": [
-   17.16393618,
-   17.16393618
+   16.92337816,
+   16.92337816
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "17.164"
+  "text": "16.923"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13706,17 +13706,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-py",
-  "value": 61.71318931999849,
+  "value": 59.704003460064996,
   "ci": [
-   61.71318931999849,
-   61.71318931999849
+   59.704003460064996,
+   59.704003460064996
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "61.713"
+  "text": "59.704"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13724,17 +13724,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs",
-  "value": 18.233573939999996,
+  "value": 17.83070372,
   "ci": [
-   18.233573939999996,
-   18.233573939999996
+   17.83070372,
+   17.83070372
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "18.234"
+  "text": "17.831"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13742,17 +13742,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 18.84688352,
+  "value": 17.40115429,
   "ci": [
-   18.84688352,
-   18.84688352
+   17.40115429,
+   17.40115429
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "18.847"
+  "text": "17.401"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13762,11 +13762,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 7.156497532282827,
+  "factor": 6.420372170936311,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "7.16x"
+  "text": "6.42x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -13774,10 +13774,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.install",
@@ -13792,10 +13792,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm-lexical-api",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.install",
@@ -13902,11 +13902,11 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs",
-  "factor": 1.5248354734312661,
+  "factor": 1.529935267358599,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.52x"
+  "text": "1.53x"
  },
  {
   "section": "beir:nfcorpus (3,633 documents, 324 queries)",
@@ -16017,17 +16017,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "ndcg@10",
   "system": "warm-lexical-api",
-  "value": 0.7013940327918062,
+  "value": 0.7026997341473034,
   "ci": [
-   0.6633739472009156,
-   0.7411404046645232
+   0.6664189500472893,
+   0.7419550353136701
   ],
   "n": 809,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[0].quality",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.7014"
+  "text": "0.7027"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16160,17 +16160,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "recall@100",
   "system": "warm-lexical-api",
-  "value": 0.9288833951380305,
+  "value": 0.9264112072517512,
   "ci": [
-   0.9024103831891224,
-   0.9520601565718995
+   0.8996909765142151,
+   0.9501030078285949
   ],
   "n": 809,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[0].quality",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.9289"
+  "text": "0.9264"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16285,17 +16285,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm",
-  "value": 14563.388288785423,
+  "value": 14725.845878423552,
   "ci": [
-   13563.947717738372,
-   14766.041382916983
+   14290.253958479836,
+   14876.079773078918
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "14,563"
+  "text": "14,726"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16303,17 +16303,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "warm-lexical-api",
-  "value": 4326.455640417328,
+  "value": 23173.578856025353,
   "ci": [
-   4302.2619948114725,
-   4386.3828566711445
+   22546.414958378595,
+   23536.19966424404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,326"
+  "text": "23,174"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16321,10 +16321,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "sqlite-fts5",
-  "value": 156.51497707801587,
+  "value": 156.54635287281883,
   "ci": [
-   155.99010934858654,
-   157.24282862636343
+   156.1207471220609,
+   156.99885677119738
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
@@ -16339,17 +16339,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "lucene",
-  "value": 4159.357795008648,
+  "value": 4278.038275714048,
   "ci": [
-   4076.059039997103,
-   4673.574722331603
+   4098.732373031581,
+   4472.948942808289
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,159"
+  "text": "4,278"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16357,17 +16357,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-py",
-  "value": 5666.710843911631,
+  "value": 5698.293241086193,
   "ci": [
-   5502.462722753498,
-   5793.02759791187
+   5569.021366614025,
+   5807.254495534606
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,667"
+  "text": "5,698"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16375,17 +16375,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs",
-  "value": 4780.848937908526,
+  "value": 4779.656707343141,
   "ci": [
-   4697.022838231381,
-   4877.516841831783
+   4736.57206118274,
+   4882.160988081794
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,781"
+  "text": "4,780"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16393,17 +16393,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "qps",
   "system": "tantivy-rs-count",
-  "value": 11940.561126064378,
+  "value": 11753.19416962262,
   "ci": [
-   11530.6216038382,
-   12209.902194457498
+   11522.87497924209,
+   12153.103080051498
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "11,941"
+  "text": "11,753"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16413,14 +16413,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.2196569436754379,
+  "factor": 1.2529228791679512,
   "factor_infinite": false,
   "ci": [
-   1.1108973275720033,
-   1.2805936999963476
+   1.1758522794014912,
+   1.2910041808036161
   ],
   "verdict": "WIN",
-  "text": "1.22x"
+  "text": "1.25x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16428,17 +16428,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "warm",
-  "value": 66.6875,
+  "value": 66.143,
   "ci": [
-   65.866,
-   66.984
+   65.834,
+   66.733
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "67"
+  "text": "66"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16446,17 +16446,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "warm-lexical-api",
-  "value": 206.64999999999998,
+  "value": 41.5965,
   "ci": [
-   204.993,
-   207.941
+   41.256,
+   42.249
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "207"
+  "text": "42"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16464,17 +16464,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "sqlite-fts5",
-  "value": 6075.2725,
+  "value": 6073.83,
   "ci": [
-   6042.513,
-   6117.668
+   6045.473,
+   6097.838
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "6,075"
+  "text": "6,074"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16482,17 +16482,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "lucene",
-  "value": 105.6075,
+  "value": 103.547,
   "ci": [
-   96.145,
-   108.811
+   100.154,
+   110.1905
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "106"
+  "text": "104"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16500,17 +16500,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-py",
-  "value": 168.52300000000002,
+  "value": 167.844,
   "ci": [
-   167.626,
-   170.799
+   167.329,
+   168.57
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "169"
+  "text": "168"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16518,10 +16518,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs",
-  "value": 181.91250000000002,
+  "value": 182.196,
   "ci": [
-   181.37650000000002,
-   185.773
+   180.291,
+   183.594
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
@@ -16536,10 +16536,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p50_latency",
   "system": "tantivy-rs-count",
-  "value": 80.67949999999999,
+  "value": 80.69149999999999,
   "ci": [
-   80.092,
-   81.83
+   80.218,
+   81.216
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
@@ -16556,14 +16556,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.2098144329896905,
+  "factor": 1.219955248476785,
   "factor_infinite": false,
   "ci": [
-   1.1956885226322704,
-   1.2423708741991315
+   1.202073936433249,
+   1.2336482668529938
   ],
   "verdict": "WIN",
-  "text": "1.21x"
+  "text": "1.22x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16571,17 +16571,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm",
-  "value": 118.29899999999999,
+  "value": 97.939,
   "ci": [
-   92.52,
-   174.713
+   90.907,
+   161.708
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "118"
+  "text": "98"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16589,17 +16589,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "warm-lexical-api",
-  "value": 604.9459999999999,
+  "value": 68.6165,
   "ci": [
-   592.128,
-   625.453
+   65.099,
+   99.874
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "605"
+  "text": "69"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16607,17 +16607,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "sqlite-fts5",
-  "value": 13510.411,
+  "value": 13399.854500000001,
   "ci": [
-   13262.92,
-   13585.219
+   13289.448,
+   13561.468
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "13,510"
+  "text": "13,400"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16625,17 +16625,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "lucene",
-  "value": 4246.567999999999,
+  "value": 4236.7595,
   "ci": [
-   4202.577,
-   4421.84
+   4219.965,
+   4346.1465
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "4,247"
+  "text": "4,237"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16643,17 +16643,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-py",
-  "value": 369.93449999999996,
+  "value": 305.7095,
   "ci": [
-   312.772,
-   417.452
+   244.503,
+   387.778
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "370"
+  "text": "306"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16661,17 +16661,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs",
-  "value": 643.3305,
+  "value": 633.8025,
   "ci": [
-   612.877,
-   654.152
+   613.409,
+   680.313
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "643"
+  "text": "634"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16679,17 +16679,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "p99_latency",
   "system": "tantivy-rs-count",
-  "value": 151.46949999999998,
+  "value": 195.75650000000002,
   "ci": [
-   139.812,
-   204.714
+   139.091,
+   213.963
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "151"
+  "text": "196"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16699,14 +16699,14 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs-count",
-  "factor": 1.2803954386765737,
+  "factor": 1.9987594318912796,
   "factor_infinite": false,
   "ci": [
-   0.8002381047775495,
-   2.2126459143968873
+   0.8601367897692137,
+   2.3536471338840794
   ],
   "verdict": "TIE",
-  "text": "1.28x"
+  "text": "2.00x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16714,17 +16714,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 0.23090147,
+  "value": 0.239519089,
   "ci": [
-   0.224264516,
-   0.231573218
+   0.235851974,
+   0.240868801
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.23"
+  "text": "0.24"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16732,17 +16732,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "warm-lexical-api",
-  "value": 0.227567473,
+  "value": 0.235813172,
   "ci": [
-   0.222347399,
-   0.236369917
+   0.234673831,
+   0.236003674
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.23"
+  "text": "0.24"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16750,17 +16750,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "sqlite-fts5",
-  "value": 0.20499236902105622,
+  "value": 0.2075620770046953,
   "ci": [
-   0.20137727801920846,
-   0.21215342002687976
+   0.20157115499023348,
+   0.21341445102007128
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.20"
+  "text": "0.21"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16768,17 +16768,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "lucene",
-  "value": 0.804132324,
+  "value": 0.792348099,
   "ci": [
-   0.783971379,
-   0.815209967
+   0.789689676,
+   0.812653362
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.80"
+  "text": "0.79"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16786,17 +16786,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-py",
-  "value": 0.3355376370018348,
+  "value": 0.33164723101072013,
   "ci": [
-   0.3270033169828821,
-   0.3459243020042777
+   0.3298335039871745,
+   0.3359714570106007
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.34"
+  "text": "0.33"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16804,10 +16804,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-rs",
-  "value": 0.330235831,
+  "value": 0.331207829,
   "ci": [
-   0.325199525,
-   0.331001415
+   0.33107741,
+   0.332376565
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
@@ -16822,10 +16822,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_seconds",
   "system": "tantivy-rs-count",
-  "value": 0.325799714,
+  "value": 0.327395486,
   "ci": [
-   0.323088113,
-   0.327921868
+   0.327311347,
+   0.336851924
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
@@ -16842,14 +16842,14 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 0.8877915286596323,
+  "factor": 0.8665784337744176,
   "factor_infinite": false,
   "ci": [
-   0.8696052149657845,
-   0.9459963787890535
+   0.8368504104864685,
+   0.9048660793488685
   ],
   "verdict": "LOSS",
-  "text": "0.89x"
+  "text": "0.87x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16857,10 +16857,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 60.33984375,
+  "value": 60.32421875,
   "ci": [
-   60.234375,
-   60.34765625
+   60.3203125,
+   60.3984375
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.build_runs",
@@ -16875,10 +16875,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "warm-lexical-api",
-  "value": 60.2578125,
+  "value": 60.30078125,
   "ci": [
-   60.2421875,
-   60.3359375
+   60.10546875,
+   60.48046875
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.build_runs",
@@ -16893,10 +16893,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "sqlite-fts5",
-  "value": 35.75,
+  "value": 35.86328125,
   "ci": [
-   35.65625,
-   35.7890625
+   35.8515625,
+   35.87890625
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.build_runs",
@@ -16911,17 +16911,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "lucene",
-  "value": 213.9375,
+  "value": 230.04296875,
   "ci": [
-   211.72265625,
-   223.4453125
+   227.36328125,
+   230.953125
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "214"
+  "text": "230"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16929,10 +16929,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-py",
-  "value": 67.9140625,
+  "value": 68.10546875,
   "ci": [
-   67.671875,
-   68.0546875
+   68.05859375,
+   68.16796875
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.build_runs",
@@ -16947,17 +16947,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs",
-  "value": 42.3984375,
+  "value": 42.69140625,
   "ci": [
-   42.38671875,
-   42.5546875
+   42.5078125,
+   42.69921875
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "42"
+  "text": "43"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16965,17 +16965,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 42.421875,
+  "value": 42.5078125,
   "ci": [
-   42.24609375,
-   42.58984375
+   42.4453125,
+   42.52734375
   ],
   "n": 3,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "42"
+  "text": "43"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -16985,11 +16985,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 0.5924775037224056,
+  "factor": 0.5945088389561614,
   "factor_infinite": false,
   "ci": [
-   0.5908473040326234,
-   0.5941634241245136
+   0.5935842711162851,
+   0.5948063722315762
   ],
   "verdict": "LOSS",
   "text": "0.59x"
@@ -17000,10 +17000,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 28.923828125,
+  "value": 28.947265625,
   "ci": [
-   28.84375,
-   28.97265625
+   28.91796875,
+   29.03125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].peak_rss_bytes",
@@ -17018,17 +17018,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "warm-lexical-api",
-  "value": 39.173828125,
+  "value": 15.814453125,
   "ci": [
-   39.12890625,
-   39.25
+   15.65234375,
+   15.8984375
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "39"
+  "text": "16"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17036,10 +17036,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "sqlite-fts5",
-  "value": 51.15234375,
+  "value": 51.10546875,
   "ci": [
-   50.99609375,
-   51.248046875
+   51.078125,
+   51.267578125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].peak_rss_bytes",
@@ -17054,17 +17054,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "lucene",
-  "value": 113.5546875,
+  "value": 113.373046875,
   "ci": [
-   111.6171875,
-   116.48828125
+   112.36328125,
+   113.94921875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].peak_rss_bytes",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "114"
+  "text": "113"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17072,10 +17072,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-py",
-  "value": 58.56640625,
+  "value": 58.658203125,
   "ci": [
-   58.55078125,
-   58.6015625
+   58.57421875,
+   58.69921875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].peak_rss_bytes",
@@ -17090,10 +17090,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs",
-  "value": 128.19140625,
+  "value": 128.341796875,
   "ci": [
-   128.06640625,
-   128.3671875
+   128.28515625,
+   128.44921875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].peak_rss_bytes",
@@ -17108,10 +17108,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 128.2890625,
+  "value": 128.341796875,
   "ci": [
-   128.1328125,
-   128.4140625
+   128.26171875,
+   128.42578125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].peak_rss_bytes",
@@ -17128,11 +17128,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 1.7685191437639274,
+  "factor": 1.7654679171445922,
   "factor_infinite": false,
   "ci": [
-   1.760145611433194,
-   1.7767470205850489
+   1.7594187298170076,
+   1.7728623531000947
   ],
   "verdict": "WIN",
   "text": "1.77x"
@@ -17283,10 +17283,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.006897532,
+  "value": 0.0068632395,
   "ci": [
-   0.006233956,
-   0.007569894
+   0.006525022,
+   0.007320015
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.serve_rounds[*].cold_start_s",
@@ -17301,17 +17301,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "warm-lexical-api",
-  "value": 0.048797539,
+  "value": 0.007201695,
   "ci": [
-   0.046463744,
-   0.052073705
+   0.006557567,
+   0.007520217
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.05"
+  "text": "0.01"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17319,10 +17319,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "sqlite-fts5",
-  "value": 0.027359111999999998,
+  "value": 0.02904033,
   "ci": [
-   0.026902382,
-   0.029295519
+   0.026970428,
+   0.032008923
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.serve_rounds[*].cold_start_s",
@@ -17337,17 +17337,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "lucene",
-  "value": 0.5548963025,
+  "value": 0.5556908065,
   "ci": [
-   0.541375824,
-   0.56677742
+   0.539333159,
+   0.567091914
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.serve_rounds[*].cold_start_s",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "0.55"
+  "text": "0.56"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17355,10 +17355,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-py",
-  "value": 0.028590549,
+  "value": 0.0285225665,
   "ci": [
-   0.026353581,
-   0.031182312
+   0.027262079,
+   0.029112905
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.serve_rounds[*].cold_start_s",
@@ -17373,10 +17373,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs",
-  "value": 0.037359246,
+  "value": 0.037870114499999996,
   "ci": [
-   0.036030482,
-   0.039711459
+   0.036519376,
+   0.039964265
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.serve_rounds[*].cold_start_s",
@@ -17391,10 +17391,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "cold_start_s",
   "system": "tantivy-rs-count",
-  "value": 0.037450367,
+  "value": 0.03694745,
   "ci": [
-   0.036495079,
-   0.039520365
+   0.036505881,
+   0.038402229
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.serve_rounds[*].cold_start_s",
@@ -17410,15 +17410,15 @@
   "metric": "cold_start_s",
   "derived": true,
   "warm": "warm",
-  "other": "sqlite-fts5",
-  "factor": 3.9665074406323884,
+  "other": "tantivy-py",
+  "factor": 4.1558460112021445,
   "factor_infinite": false,
   "ci": [
-   3.5538650871465305,
-   4.6993464503118085
+   3.724320100436953,
+   4.461732849329857
   ],
   "verdict": "WIN",
-  "text": "3.97x"
+  "text": "4.16x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17426,17 +17426,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm",
-  "value": 2.20021608,
+  "value": 2.1578584800000002,
   "ci": [
-   2.20021608,
-   2.20021608
+   2.1578584800000002,
+   2.1578584800000002
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "2.200"
+  "text": "2.158"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17444,17 +17444,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 2.22317171,
+  "value": 2.1959455899999996,
   "ci": [
-   2.22317171,
-   2.22317171
+   2.1959455899999996,
+   2.1959455899999996
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "2.223"
+  "text": "2.196"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17462,17 +17462,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 9.449182740063407,
+  "value": 9.613955859967973,
   "ci": [
-   9.449182740063407,
-   9.449182740063407
+   9.613955859967973,
+   9.613955859967973
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "9.449"
+  "text": "9.614"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17480,17 +17480,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "lucene",
-  "value": 38.84214008,
+  "value": 40.46819329,
   "ci": [
-   38.84214008,
-   38.84214008
+   40.46819329,
+   40.46819329
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "38.842"
+  "text": "40.468"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17498,17 +17498,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-py",
-  "value": 102.77562118979404,
+  "value": 105.08651474985527,
   "ci": [
-   102.77562118979404,
-   102.77562118979404
+   105.08651474985527,
+   105.08651474985527
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "102.776"
+  "text": "105.087"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17516,17 +17516,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs",
-  "value": 71.35982025999999,
+  "value": 71.18044563999999,
   "ci": [
-   71.35982025999999,
-   71.35982025999999
+   71.18044563999999,
+   71.18044563999999
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "71.360"
+  "text": "71.180"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17534,17 +17534,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "replace_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 70.95638305,
+  "value": 71.35934518,
   "ci": [
-   70.95638305,
-   70.95638305
+   71.35934518,
+   71.35934518
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "70.956"
+  "text": "71.359"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17554,11 +17554,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 4.294661249845699,
+  "factor": 4.455322695660733,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "4.29x"
+  "text": "4.46x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17566,17 +17566,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm",
-  "value": 1.5090953200000001,
+  "value": 1.43386754,
   "ci": [
-   1.5090953200000001,
-   1.5090953200000001
+   1.43386754,
+   1.43386754
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.509"
+  "text": "1.434"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17584,17 +17584,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "warm-lexical-api",
-  "value": 1.4878803299999999,
+  "value": 1.43782925,
   "ci": [
-   1.4878803299999999,
-   1.4878803299999999
+   1.43782925,
+   1.43782925
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.488"
+  "text": "1.438"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17602,17 +17602,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "sqlite-fts5",
-  "value": 9.29489776986884,
+  "value": 9.114038319967221,
   "ci": [
-   9.29489776986884,
-   9.29489776986884
+   9.114038319967221,
+   9.114038319967221
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.sqlite-fts5.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "9.295"
+  "text": "9.114"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17620,17 +17620,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "lucene",
-  "value": 17.406842779999998,
+  "value": 24.07495884,
   "ci": [
-   17.406842779999998,
-   17.406842779999998
+   24.07495884,
+   24.07495884
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.lucene.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "17.407"
+  "text": "24.075"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17638,17 +17638,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-py",
-  "value": 70.01721371983876,
+  "value": 72.4444279097952,
   "ci": [
-   70.01721371983876,
-   70.01721371983876
+   72.4444279097952,
+   72.4444279097952
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-py.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "70.017"
+  "text": "72.444"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17656,17 +17656,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs",
-  "value": 17.964626180000003,
+  "value": 17.92791658,
   "ci": [
-   17.964626180000003,
-   17.964626180000003
+   17.92791658,
+   17.92791658
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "17.965"
+  "text": "17.928"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17674,17 +17674,17 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "delete_ms_per_op",
   "system": "tantivy-rs-count",
-  "value": 21.847628760000003,
+  "value": 17.99761501,
   "ci": [
-   21.847628760000003,
-   21.847628760000003
+   17.99761501,
+   17.99761501
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.tantivy-rs-count.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "21.848"
+  "text": "17.998"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17694,11 +17694,11 @@
   "derived": true,
   "warm": "warm",
   "other": "sqlite-fts5",
-  "factor": 6.159251603715025,
+  "factor": 6.356262392248047,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "6.16x"
+  "text": "6.36x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
@@ -17706,10 +17706,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm.install",
@@ -17724,10 +17724,10 @@
   "hardware_class": "linux-x86_64-intel-ultra-9-185h-22c-27g",
   "metric": "install_mib",
   "system": "warm-lexical-api",
-  "value": 4.010002136230469,
+  "value": 3.9966354370117188,
   "ci": [
-   4.010002136230469,
-   4.010002136230469
+   3.9966354370117188,
+   3.9966354370117188
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-ultra-9-185h-22c-27g.json#systems.warm-lexical-api.install",
@@ -17834,11 +17834,11 @@
   "derived": true,
   "warm": "warm",
   "other": "tantivy-rs",
-  "factor": 1.5248354734312661,
+  "factor": 1.529935267358599,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.52x"
+  "text": "1.53x"
  },
  {
   "section": "beir:scifact (5,183 documents, 809 queries)",
