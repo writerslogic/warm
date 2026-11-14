@@ -124,7 +124,8 @@ fn write_stores_for_the_raw_image_scan() {
     remember(&memory, "keep", "RAWKEEPCONTROL");
     remember(&memory, "victim", &control);
     forget(&memory, "victim", false);
-    drop(memory);
+    // Closing a store compacts it, which would erase the control; leave it open.
+    std::mem::forget(memory);
 
     std::fs::write(
         out,
