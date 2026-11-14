@@ -1471,6 +1471,19 @@ pub(crate) fn encode_checkpoint(
 ) -> Result<Option<Vec<u8>>> {
     image::encode(store, generation, dimensions)
 }
+/// Streams the checkpoint of `store` (with the checkpoint under it, if any) to `destination`;
+/// see `image::merge`.
+pub(crate) fn merge_checkpoint(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+    destination: &std::path::Path,
+) -> Result<Option<u64>> {
+    let Some(base) = store.merge_base() else {
+        return Ok(None);
+    };
+    image::merge(base, store, generation, dimensions, destination)
+}
 #[cfg(test)]
 pub(crate) fn search(
     store: &DocumentStore,

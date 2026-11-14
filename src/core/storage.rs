@@ -1227,7 +1227,15 @@ impl Drop for PersistentArena {
 #[cfg(test)]
 pub(crate) fn compaction_crash_point(phase: &str) {
     if crate::compatibility::var("WARM_TEST_COMPACTION_PHASE").as_deref() == Ok(phase) {
-        std::process::exit(73);
+        // The nth hit of the phase (zero-based, `WARM_TEST_COMPACTION_SKIP`) is the one that dies.
+        static SEEN: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let skip = crate::compatibility::var("WARM_TEST_COMPACTION_SKIP")
+            .ok()
+            .and_then(|n| n.parse().ok())
+            .unwrap_or(0);
+        if SEEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) >= skip {
+            std::process::exit(73);
+        }
     }
 }
 

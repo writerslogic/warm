@@ -137,6 +137,7 @@ impl WarmCore {
             })
             .collect();
         self.commit_serialized(&mutations, &payload)?;
+        self.fold_if_over_budget();
         Ok(counts)
     }
 
