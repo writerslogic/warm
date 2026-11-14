@@ -188,6 +188,13 @@ class _Spawner:
 _SPAWNER = None
 
 
+# Cold-start clocks start when the child is about to be spawned: after the timing lock and load gate are
+# held. A command element containing T0_PLACEHOLDER gets that instant (ns since the epoch) substituted;
+# the same instant is left in LAST_T0_NS for callers that compute a start-to-event interval themselves.
+T0_PLACEHOLDER = "@T0_NS@"
+LAST_T0_NS = None
+
+
 def run_measured(command, env=None, timeout=3600, cwd=None):
     """Run `command`; return (stdout, stderr, wall_s, peak_rss_bytes) of that child alone: its
     own wait4 rusage, from a small helper on Linux (see `_Spawner`) and directly elsewhere.
@@ -196,6 +203,9 @@ def run_measured(command, env=None, timeout=3600, cwd=None):
     with timing_lock(), tempfile.TemporaryDirectory() as tmp:
         out_path, err_path = Path(tmp) / "out", Path(tmp) / "err"
         full_env = {**os.environ, **(env or {})}
+        global LAST_T0_NS
+        LAST_T0_NS = time.time_ns()
+        command = [str(c).replace(T0_PLACEHOLDER, str(LAST_T0_NS)) for c in command]
         start = time.perf_counter()
         if platform.system() == "Linux":
             if _SPAWNER is None or _SPAWNER.proc.poll() is not None:
