@@ -34,6 +34,8 @@ docs/benchmarks/BIG-ANN-STREAMING.md|7.51 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|7.57 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|recall 0.8768
 docs/benchmarks/BIG-ANN-STREAMING.md|recall@10 0.9942
+docs/benchmarks/LOCOMO-HEAD-TO-HEAD.md|1,155 x
+docs/benchmarks/LOCOMO-HEAD-TO-HEAD.md|1,540 x
 docs/benchmarks/NEIGHBOUR-BLOCKS.md|1.26x
 docs/benchmarks/NEIGHBOUR-BLOCKS.md|1.35x
 docs/benchmarks/README.md|1.26x
