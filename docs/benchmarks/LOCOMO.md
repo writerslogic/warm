@@ -9,6 +9,94 @@ evaluation protocol, and WARM is compared with the numbers in the Mem0 paper:
 Results: [`benchmarks/results/locomo_v1.json`](../../benchmarks/results/locomo_v1.json) (per arm,
 split and category, with per-pass J). Harness: [`benchmarks/public/locomo/`](../../benchmarks/public/locomo/).
 
+> The Mem0 and Zep figures in every section below the next one are the 2025 paper's numbers, measured under the paper-era
+> protocol (gpt-4o-mini, top 30 per speaker). Mem0 now publishes its own harness and Platform result file, and that is the
+> comparison to use. This page's older sections are kept as the record of that protocol, and their Mem0 and Zep rows are
+> superseded for comparison purposes by the section below.
+
+## Mem0's own harness, top 200, gpt-5 (2026-11-14)
+
+Evidence and commands: [`benchmarks/results/locomo_mem0_harness_v1/`](../../benchmarks/results/locomo_mem0_harness_v1/README.md).
+
+### What was compared
+
+- **WARM:** the local engine (`warm-server` 0.6.8, defaults, no tuning), run by us. Each turn is stored as one fact
+  (`"{speaker}: {text}"` plus Mem0's image tag), embedded with OpenAI `text-embedding-3-small` (1,536 dimensions); queries are
+  embedded the same way. No LLM runs at write time. Recall returns the top 200 facts of the conversation's one list.
+- **Mem0:** the hosted Mem0 Platform, taken from the per-question file Mem0 publishes in `mem0ai/memory-benchmarks`
+  (`results/platform/locomo_results.json`, sha256 `36338fa6…27911`, top 200 only). We did not run Mem0 and cannot check how
+  its memories were built. That file's metadata: provider azure, answerer and judge `gpt-5`, run `20260406_170942`.
+- **Harness:** Mem0's `benchmarks/locomo/run.py` at `memory-benchmarks` 4b61c5d, its answerer prompt, its judge rubric
+  (a list answer is CORRECT if any one item is right, dates within 14 days and durations within 50 percent pass, score >= 0.5)
+  and its scoring. Answerer and judge are `gpt-5-2025-08-07` (requested `gpt-5`) through the OpenAI API. All 1,540 questions
+  of categories 1 to 4 were answered and judged; the ingest gate passed for all ten conversations
+  (`ingest-gate.txt`: every dataset turn stored once, no failures).
+
+### Result
+
+| Category | n | WARM | Mem0 | Paired difference (95% bootstrap) |
+|---|---|---|---|---|
+| Overall | 1,540 | 92.0% | 91.6% | +0.5 pp [-1.0, +1.9] |
+| Multi-hop | 282 | 88.3% | 93.3% | -5.0 pp [-8.9, -1.1] |
+| Temporal | 321 | 94.4% | 92.8% | +1.6 pp [-0.9, +4.4] |
+| Open-domain | 96 | 75.0% | 76.0% | -1.0 pp [-8.3, +5.2] |
+| Single-hop | 841 | 94.3% | 92.3% | +2.0 pp [+0.2, +3.8] |
+
+Source: `full1540-analysis.txt`. Overall the two systems are a statistical tie: the interval includes zero. WARM is behind on
+multi-hop and ahead on single-hop; the temporal and open-domain intervals include zero. This is one WARM run, so
+answerer and judge variance is not measured; a second run could move any cell by a few questions. Mem0's README states
+92.5 percent (1,425 of 1,540); its own per-question file sums to 1,410 correct, 91.6 percent, with one error, and the
+comparison above uses the file.
+
+### Empty answers drive the multi-hop gap
+
+WARM's answerer returned no text for 22 questions: 20 multi-hop, 1 temporal and 1 open-domain. Each was a gpt-5 call that spent
+its whole 4,096-token completion limit (the harness default in `benchmarks/common/llm_client.py`) on reasoning
+(`all-usage.jsonl` has 23 answer calls that finished with `length`). Empty answers score 0. Mem0 answered 20 of those 22
+correctly, and its file has one empty answer. Of the 58 questions WARM misses and Mem0 gets right, 20 are empty
+answers: 18 of 23 multi-hop, and 10 of the 12 whose gold evidence is partly absent from the 200 retrieved facts
+(`empty_answers.txt`). Excluding the 22 after the fact, which is not a headline number, gives 93.3% against 91.6%
+overall (+1.8 pp [+0.5, +3.1]) and 95.0% against 93.5% on multi-hop (+1.5 pp [-1.1, +4.2]). So most of the measured multi-hop
+deficit is the reader's completion limit meeting WARM's longer raw-turn context (about 10,000 prompt tokens per answer), not a
+retrieval loss. A rerun of only these 22 questions would settle it; it has not been done.
+
+### Retrieval of the gold evidence
+
+Share of questions whose gold evidence turns are all among the 200 retrieved facts (`retrieval_multihop/phase0.txt`, 1,536
+questions with listed evidence): multi-hop 81.2 percent, temporal 96.9, open-domain 71.7, single-hop 97.3. The 12 multi-hop
+questions with partly absent gold are the retrieval-side part of the gap above; the study of why they lose a hop and what was
+tried is in `retrieval_multihop/` and summarised in the next subsection.
+
+### Multi-hop retrieval study (offline, no paid calls)
+
+Missing gold turns of multi-hop questions sit just beyond the cap (median rank 278 of a k=1000 list; 64 missing turns over 46
+questions at a fresh baseline), 44 percent of them are image-tagged turns against 21 percent of all turns, 69 percent have a
+neighbouring turn already in the top 200, and 6 percent share no content word with the question (`retrieval_multihop/diag.txt`).
+Candidates were pre-registered (`retrieval_multihop/PREREG.md`), tuned on conversations 0 to 2 and evaluated once on 3 to 9
+against a fresh baseline with the same cached query embeddings. The selected one, neighbour expansion of the top 20 hits, moved
+multi-hop all-gold by +1.4 pp [-2.4, +5.3] on the held-out conversations, with open-domain falling (-2.7 pp), so it was
+rejected and nothing shipped (`retrieval_multihop/stageA.txt`, `stageB.txt`). Raising the cap is the lever that works in
+this data: all-gold for multi-hop reaches 94.0 percent at 300 items and 97.2 at 400, against 82.3 at 200 on the same k=1000 list
+(`final.txt`), at the price of more reader context. That is a change of protocol and was not measured end to end.
+
+### Differences from Mem0's unmodified harness
+
+1. `WarmClient` (`benchmarks/public/locomo/mem0_harness_warm.py`) replaces `Mem0Client`. It has no extraction, no user profile
+   and no Mem0 retrieval; the answerer sees the 200 recalled facts sorted by time, as Mem0's formatter does.
+2. `run.py` runs a conversation's questions concurrently under a shared limit of 16 instead of one at a time (`run.py.diff`).
+   Prompts, retrieval and judging are unchanged.
+3. A wrapper around the OpenAI SDK (`run_pilot.py`) caps spend, logs usage and reuses the response to an identical prompt
+   (earlier calibration answers were reused, so some answers are from the 20-question calibration run). The wrapper does not alter requests.
+4. Provider: Mem0's published run used Azure; ours used the OpenAI API. Both name `gpt-5`; the snapshot behind Mem0's run is
+   not in its file.
+5. The server runs with `--max-top-k 200 --max-queue 1000`, and the client retries HTTP 429, 502, 503 and 504.
+6. Only the top-200 cutoff was run, as in Mem0's published file; the harness's other cutoffs were not.
+7. Mem0's file merges 156 questions from reruns (its metadata); ours is a single pass.
+8. Four questions have no evidence listed, and nine have evidence entries such as `D8:6; D9:17` that the evidence check
+   counts as absent; neither affects the accuracy figures.
+9. Cost: 41.55 USD, about 0.027 per question, over 2,962 paid calls.
+
+
 ## Setup
 
 | | |

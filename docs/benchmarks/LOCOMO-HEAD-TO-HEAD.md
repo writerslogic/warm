@@ -4,6 +4,9 @@ Status 2026-11-14. This page records free work only. No paid model call was made
 [LOCOMO.md](LOCOMO.md) changed. Per-question rows, scripts and logs are in the campaign evidence directory
 `locomo-20261114/`.
 
+Update: the paid run this page costed was made afterwards and is recorded in [LOCOMO.md](LOCOMO.md) ("Mem0's own harness, top 200, gpt-5"),
+with its evidence in `benchmarks/results/locomo_mem0_harness_v1/`. Its cost was 41.55 USD, not the 57.57 estimated in section 4.
+
 ## 1. Two protocols, two numbers
 
 [LOCOMO.md](LOCOMO.md) compares WARM with the Mem0 paper's 66.88 under the paper-era protocol. Mem0 now publishes its own harness

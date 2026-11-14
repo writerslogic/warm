@@ -1,0 +1,7 @@
+WARM empty answers 22 by category {'multi-hop': 20, 'temporal': 1, 'open-domain': 1}
+Mem0 empty answers 1
+of the WARM-empty questions Mem0 answered correctly 20
+empty answers by gold-evidence class {'some gold absent': 10, 'all gold present': 12}
+WARM wrong, Mem0 right: 58 of which empty 20 | multi-hop 23 of which empty 18 | partial-retrieval-miss class 12 of which empty 10
+overall excluding WARM-empty questions (post hoc, not a headline): n=1518 WARM 93.3 Mem0 91.6 diff +1.8 [+0.5, +3.1]
+multi-hop excluding WARM-empty questions (post hoc, not a headline): n=262 WARM 95.0 Mem0 93.5 diff +1.5 [-1.1, +4.2]

@@ -18,6 +18,7 @@ existing warm-server (WARM_HOST, which must allow --max-top-k of at least the ha
 """
 
 import asyncio
+import time
 import hashlib
 import json
 import os
@@ -33,8 +34,14 @@ EMBED_DIM = int(os.environ.get('WARM_EMBED_DIM', '1536'))
 
 def _post(url, body, headers, timeout=300):
     req = urllib.request.Request(url, data=json.dumps(body).encode(), method='POST', headers={'Content-Type': 'application/json', **headers})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read())
+    for attempt in range(6):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 502, 503, 504) or attempt == 5:
+                raise
+            time.sleep(2 ** attempt)
 
 
 class WarmClient:
@@ -46,7 +53,8 @@ class WarmClient:
         if not self.host:
             self.dir = tempfile.mkdtemp(prefix='locomo-warm-')
             self.proc = subprocess.Popen([os.environ['WARM_SERVER_BIN'], '--no-auth', '--bind', '127.0.0.1:0', '--data-dir',
-                                          os.path.join(self.dir, 'data'), '--input-dim', str(EMBED_DIM), '--max-top-k', os.environ.get('WARM_MAX_TOP_K', '200')],
+                                          os.path.join(self.dir, 'data'), '--input-dim', str(EMBED_DIM), '--max-top-k', os.environ.get('WARM_MAX_TOP_K', '200'),
+                                          '--max-queue', os.environ.get('WARM_MAX_QUEUE', '1000')],
                                          stdout=subprocess.PIPE, stderr=open(os.path.join(self.dir, 'server.log'), 'wb'))
             m = re.search(r'listening on (\S+)', self.proc.stdout.readline().decode())
             if not m:
