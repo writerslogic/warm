@@ -322,3 +322,20 @@ test('a dropped connection reports a transport error without replaying a mutatio
     error instanceof WarmError && error.code === 'network_error' && error.status === undefined && !String(error).includes(API_KEY))
   assert.equal(fixture.requests.length, 1)
 })
+
+test('a network error names the target URL and the underlying cause without the API key', async () => {
+  const { createServer } = await import('node:net')
+  const probe = createServer()
+  await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve))
+  const { port } = probe.address()
+  await new Promise(resolve => probe.close(resolve))
+  const url = `http://127.0.0.1:${port}`
+  const client = new WarmClient({ url, apiKey: API_KEY })
+  await assert.rejects(() => client.stats(), error =>
+    error instanceof WarmError && error.code === 'network_error' &&
+    error.message.includes(url) && error.message.includes('ECONNREFUSED') && !error.message.includes(API_KEY))
+  const leaky = new WarmClient({ url, apiKey: API_KEY, fetch: async () => {
+    throw new TypeError('fetch failed', { cause: Object.assign(new Error(`refused ${API_KEY}`), { code: 'ECONNREFUSED' }) })
+  } })
+  await assert.rejects(() => leaky.stats(), error => error.message.includes('ECONNREFUSED') && !error.message.includes(API_KEY))
+})

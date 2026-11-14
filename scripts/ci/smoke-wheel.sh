@@ -17,6 +17,8 @@ trap 'rm -rf "$work"' EXIT
 bin="$work/venv/bin"
 [ -d "$work/venv/Scripts" ] && bin="$work/venv/Scripts"
 
+# numpy is a declared dependency of the wheel; install it from the index so the local wheel resolves offline.
+"$bin/python" -m pip install --quiet "numpy>=1.26"
 "$bin/python" -m pip install --quiet --no-index --find-links "$dist" warm-python
 # -I: ignore the working directory, so the installed wheel is what gets imported.
 "$bin/python" -I scripts/ci/smoke_python.py --expect-version "$version"

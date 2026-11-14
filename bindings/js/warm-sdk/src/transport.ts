@@ -20,6 +20,8 @@ export class WarmError extends Error {
   }
 }
 
+const CAUSE_LIMIT = 200
+
 export class Transport {
   readonly url: string
   #fetch: typeof globalThis.fetch
@@ -56,6 +58,20 @@ export class Transport {
     if (typeof implementation !== 'function') throw new TypeError('A Fetch API implementation is required')
     const fetcher = implementation as typeof globalThis.fetch
     this.#fetch = config.fetch === undefined ? fetcher.bind(globalThis) : fetcher
+  }
+
+  /** The underlying failure (for Node, `ECONNREFUSED` and its message), with credentials removed. */
+  #cause(error: unknown): string {
+    let inner: unknown = error
+    for (let depth = 0; depth < 4 && typeof inner === 'object' && inner !== null && 'cause' in inner && (inner as { cause?: unknown }).cause; depth++) {
+      inner = (inner as { cause: unknown }).cause
+    }
+    if (typeof inner !== 'object' || inner === null) return ''
+    const { code, message } = inner as { code?: unknown; message?: unknown }
+    let text = [typeof code === 'string' ? code : '', typeof message === 'string' ? message : ''].filter(Boolean).join(' ')
+    if (!text) return ''
+    for (const secret of this.#secrets) text = text.split(secret).join('[redacted]')
+    return `: ${text.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, CAUSE_LIMIT)}`
   }
 
   #safe(value: unknown, fallback: string, max: number): string {
@@ -144,7 +160,7 @@ export class Transport {
     } catch (error) {
       if (error instanceof WarmError) throw error
       if (controller.signal.aborted) throw new WarmError(timedOut ? 'Request timed out' : 'Request was aborted', timedOut ? 'timeout' : 'aborted')
-      throw new WarmError('Unable to complete the WARM request', 'network_error')
+      throw new WarmError(`Unable to complete the WARM request to ${this.url}${path}${this.#cause(error)}`, 'network_error')
     } finally {
       clearTimeout(timer)
       signal?.removeEventListener('abort', abort)
