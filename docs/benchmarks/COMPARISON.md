@@ -8,7 +8,7 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |
 |---|---|---|---|---|---|---|---|
-| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 6 | 1 | 2 | 0 | 5 |
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 9 | 0 | 0 | 0 | 5 |
 | beir:fiqa (57,600 documents, 500 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `modal-x86_64-8vcpu-32g` | heavy | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
@@ -21,8 +21,6 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Metric | Best other | WARM disadvantage | Candidate lever (hypothesis unless a file is cited) |
 |---|---|---|---|---|
-| sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Build time | hnswlib | 2.16x worse | graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding |
-| sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | hnswlib | 1.03x worse | stream the build instead of holding the f32 matrix plus graph (ledger 1A target: peak build RSS <= 2x final index bytes) |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 | 1.08x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:fiqa (57,600 documents, 500 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 2.10x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | memory (4,559 documents, 100 queries) (modal-x86_64-8vcpu-32g) | Ingest/build time | SQLite FTS5 | 1.09x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
@@ -41,24 +39,24 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 ### sift-128-euclidean (1,000,000 vectors, 10,000 queries)
 
-Suite `heavy`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d9e8baebdb`, 2026-11-13. Raw results: [heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.44% bootstrap (Bonferroni family of 9 verdict metrics).
+Suite `heavy`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `d69407e589`, 2026-11-13. Raw results: [heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.44% bootstrap (Bonferroni family of 9 verdict metrics).
 
 Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; hnswlib: CPython binding call per query; hnswlib (native C++): native C++ searchKnn call per query from a C++ driver process (no Python in the timed region); same index file and queries as the hnswlib row.
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
-| QPS @ recall@10 >= 0.90 (QPS) | 32,454 | hnswlib 13,541 | 2.40x [1.89, 2.74] | **WIN** |
-| QPS @ recall@10 >= 0.95 (QPS) | 24,553 | hnswlib 7,862 | 3.12x [3.02, 5.82] | **WIN** |
-| QPS @ recall@10 >= 0.99 (QPS) | 12,056 | hnswlib 3,827 | 3.15x [2.83, 3.71] | **WIN** |
-| p50 latency @ 0.95 (us) | 41 | hnswlib 128 | 3.14x [3.04, 6.65] | **WIN** |
-| p99 latency @ 0.95 (us) | 71 | hnswlib (native C++) 205 | 2.88x [2.02, 3.13] | **WIN** |
-| Build time (s) | 121.23 | hnswlib 56.02 | 0.46x [0.46, 0.47] | **LOSS** |
-| Peak RSS, build (MiB) | 1,313 | hnswlib 1,278 | 0.97x [0.96, 0.98] | **LOSS** |
-| RSS, serving (MiB) | 490 | hnswlib 776 | 1.59x [1.58, 1.59] | **WIN** |
-| Index size (MiB) | 576.3 | hnswlib 630.0 | 1.09x (no CI) | **n/v** |
-| Cold start to first answer (s) | 0.21 | hnswlib (native C++) 0.63 | 2.97x [0.01, 3.54] | **TIE** |
-| Replace one vector (durable) (ms) | 3.329 | hnswlib 279.626 | 84.00x (no CI) | **n/v** |
-| Delete one vector (durable) (ms) | 3.312 | hnswlib 434.250 | 131.11x (no CI) | **n/v** |
+| QPS @ recall@10 >= 0.90 (QPS) | 35,668 | hnswlib (native C++) 14,025 | 2.54x [2.42, 2.62] | **WIN** |
+| QPS @ recall@10 >= 0.95 (QPS) | 26,688 | hnswlib (native C++) 9,266 | 2.88x [2.82, 2.90] | **WIN** |
+| QPS @ recall@10 >= 0.99 (QPS) | 13,059 | hnswlib (native C++) 4,254 | 3.07x [3.05, 3.18] | **WIN** |
+| p50 latency @ 0.95 (us) | 37 | hnswlib (native C++) 108 | 2.89x [2.86, 2.94] | **WIN** |
+| p99 latency @ 0.95 (us) | 67 | hnswlib 178 | 2.66x [2.41, 2.75] | **WIN** |
+| Build time (s) | 119.28 | hnswlib 162.87 | 1.37x [1.36, 1.37] | **WIN** |
+| Peak RSS, build (MiB) | 1,302 | hnswlib 1,376 | 1.06x [1.03, 1.08] | **WIN** |
+| RSS, serving (MiB) | 489 | hnswlib (native C++) 853 | 1.74x [1.73, 1.74] | **WIN** |
+| Index size (MiB) | 576.3 | hnswlib 751.8 | 1.30x (no CI) | **n/v** |
+| Cold start to first answer (s) | 0.18 | hnswlib (native C++) 0.50 | 2.72x [2.64, 3.58] | **WIN** |
+| Replace one vector (durable) (ms) | 3.339 | hnswlib 271.686 | 81.36x (no CI) | **n/v** |
+| Delete one vector (durable) (ms) | 3.342 | hnswlib 276.955 | 82.86x (no CI) | **n/v** |
 | Install size (MiB) | 5.1 | hnswlib 61.7 | 12.15x (no CI) | **n/v** |
 | Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
 
@@ -66,22 +64,22 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 
 | Metric | WARM | hnswlib | hnswlib (native C++) |
 |---|---|---|---|
-| QPS @ recall@10 >= 0.90 (QPS) | **32,454** | 13,541 | 11,529 |
-| QPS @ recall@10 >= 0.95 (QPS) | **24,553** | 7,862 | 7,791 |
-| QPS @ recall@10 >= 0.99 (QPS) | **12,056** | 3,827 | 3,463 |
-| p50 latency @ 0.95 (us) | **41** | 128 | 130 |
-| p99 latency @ 0.95 (us) | **71** | 206 | 205 |
-| Build time (s) | 121.23 | **56.02** | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) |
-| Peak RSS, build (MiB) | 1,313 | **1,278** | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) |
-| RSS, serving (MiB) | **490** | 776 | 853 |
-| Index size (MiB) | **576.3** | 630.0 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) |
-| Cold start to first answer (s) | **0.21** | 23.04 | 0.63 |
-| Replace one vector (durable) (ms) | **3.329** | 279.626 | n/m (serves the hnswlib row's index file; mutations are measured on the hnswlib row) |
-| Delete one vector (durable) (ms) | **3.312** | 434.250 | n/m (serves the hnswlib row's index file; mutations are measured on the hnswlib row) |
+| QPS @ recall@10 >= 0.90 (QPS) | **35,668** | 13,817 | 14,025 |
+| QPS @ recall@10 >= 0.95 (QPS) | **26,688** | 9,236 | 9,266 |
+| QPS @ recall@10 >= 0.99 (QPS) | **13,059** | 4,250 | 4,254 |
+| p50 latency @ 0.95 (us) | **37** | 109 | 108 |
+| p99 latency @ 0.95 (us) | **67** | 178 | 187 |
+| Build time (s) | **119.28** | 162.87 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) |
+| Peak RSS, build (MiB) | **1,302** | 1,376 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) |
+| RSS, serving (MiB) | **489** | 898 | 853 |
+| Index size (MiB) | **576.3** | 751.8 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) |
+| Cold start to first answer (s) | **0.18** | 0.64 | 0.50 |
+| Replace one vector (durable) (ms) | **3.339** | 271.686 | n/m (serves the hnswlib row's index file; mutations are measured on the hnswlib row) |
+| Delete one vector (durable) (ms) | **3.342** | 276.955 | n/m (serves the hnswlib row's index file; mutations are measured on the hnswlib row) |
 | Install size (MiB) | **5.1** | 61.7 |  |
 | Install distributions (count) | **0** | 2 |  |
 
-Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 24, 'rerank': 32} recall 0.956; hnswlib: m16 {'ef': 64} recall 0.964; hnswlib (native C++): m32e500 {'ef': 32} recall 0.952.
+Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 24, 'rerank': 64} recall 0.956; hnswlib: m32e500 {'ef': 32} recall 0.952; hnswlib (native C++): m32e500 {'ef': 32} recall 0.952.
 
 </details>
 
@@ -425,7 +423,7 @@ Bold marks the best value in the row.
 
 | System | Pinned version(s) |
 |---|---|
-| WARM | writerslogic-warm 0.6.8, commit d9e8baebdb7c54450921c74d36b4f9b6f1543c32; writerslogic-warm 0.6.8, commit d41fc94979319d40f0e285970a86b97df01e91c7; writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
+| WARM | writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit d41fc94979319d40f0e285970a86b97df01e91c7; writerslogic-warm 0.6.5, commit 7ba2d4fe3590b0be5e351a422714f0c147f804b9 |
 | hnswlib | hnswlib 0.8.0, python 3.13.15 |
 | hnswlib (native C++) | hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux) |
 | SQLite FTS5 | python-sqlite3 3.53.1 |
