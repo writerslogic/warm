@@ -44,6 +44,7 @@ pub(crate) use image::{
 pub(crate) use index::DocumentWithText;
 pub(crate) use index::{canonical_staging_path, opaque_counter_start, DocumentStore};
 pub(crate) use lexical::execute as execute_lexical;
+pub(crate) use lexical::plain_search as plain_lexical_search;
 pub use lexical::{LexicalExecution, LexicalHit, LexicalOptions, LexicalQuery, LexicalResults};
 pub(crate) use listing::{
     capture_chunk, count, get_info, get_record, list_info, list_records, CapturedDocumentRead,
@@ -1454,6 +1455,20 @@ pub(crate) fn overlay_serves(store: &DocumentStore, prepared: &[PreparedSearch])
 /// queries [`overlay_serves`] accepts.
 #[cfg(test)]
 pub(crate) use image::encode_v1 as encode_checkpoint_v1;
+
+/// The hits of [`plain_lexical_search`]'s `prepared` ranked from the checkpoint under `store`;
+/// `prepared` must pass [`overlay_serves`].
+pub(crate) fn rank_lexical_overlaid(
+    store: &DocumentStore,
+    prepared: &PreparedSearch,
+) -> LexicalResults {
+    search::rank_overlaid(store, prepared)
+}
+
+/// The hits of [`plain_lexical_search`]'s `prepared` ranked over a store holding its documents.
+pub(crate) fn rank_lexical(store: &DocumentStore, prepared: &PreparedSearch) -> LexicalResults {
+    search::rank_store(store, prepared)
+}
 
 pub(crate) fn capture_overlaid_search(
     store: &DocumentStore,

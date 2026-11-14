@@ -163,6 +163,57 @@ impl LexicalQuery {
     fn has_positive(&self) -> bool {
         self.clauses.iter().any(|c| c.occur != Occur::MustNot)
     }
+
+    /// The distinct terms per form of a query that is a bare disjunction of single words, the
+    /// terms [`super::query_words_with`] reads from the same text; `None` for a query with a
+    /// required, excluded or phrase clause.
+    fn disjunction_terms(&self) -> Option<[BTreeSet<String>; 2]> {
+        let mut terms: [BTreeSet<String>; 2] = Default::default();
+        for clause in &self.clauses {
+            if clause.occur != Occur::Should || clause.phrase {
+                return None;
+            }
+            for (form, set) in terms.iter_mut().enumerate() {
+                let [word] = clause.words[form].as_slice() else {
+                    return None;
+                };
+                set.insert(word.clone());
+            }
+        }
+        (!self.clauses.is_empty()).then_some(terms)
+    }
+}
+
+/// The search `WarmCore::search_documents` runs for the text of a bare disjunction, so both ranks one way: the same terms, per-slot BM25 sums and tie order.
+/// `None` when `query` is not such a disjunction or `options` ask for a count, a chosen
+/// execution strategy or a `k` outside 1 to 1000; those run through [`execute`].
+pub(crate) fn plain_search(
+    query: &LexicalQuery,
+    options: &LexicalOptions,
+) -> Result<Option<super::PreparedSearch>> {
+    if options.count
+        || options.execution != LexicalExecution::Auto
+        || !(1..=1000).contains(&options.k)
+    {
+        return Ok(None);
+    }
+    let Some(terms) = query.disjunction_terms() else {
+        return Ok(None);
+    };
+    prepare(options)?;
+    let defaults = LexicalOptions::default();
+    let custom = options.bm25_k1 != defaults.bm25_k1 || options.bm25_b != defaults.bm25_b;
+    super::search::prepare_terms(
+        terms,
+        &SearchOptions {
+            k: Some(options.k as u32),
+            candidate_limit: Some(options.k as u32),
+            bm25_k1: custom.then_some(options.bm25_k1),
+            bm25_b: custom.then_some(options.bm25_b),
+            ..Default::default()
+        },
+    )
+    .map(Some)
 }
 
 /// The clause's occurrences in `chunk`: a word's frequency, or a phrase's when `exact`,

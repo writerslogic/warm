@@ -14,6 +14,7 @@ use serde_json::Value;
 
 use super::dense::DenseIndex;
 use super::image::{MetadataCache, ServingImage};
+use super::lexical::{LexicalHit, LexicalResults};
 use super::overlay::Overlaid;
 use super::{
     matches_document_metadata, normalize_embedding, query_words_with, terms_with, top_ranked,
@@ -201,6 +202,16 @@ pub(crate) fn prepare_search_with(
         query_words_with(analyzer, text, false),
         query_words_with(analyzer, text, true),
     ];
+    Ok(prepared)
+}
+
+/// A lexical-only search of unfiltered `terms` (one set per form), validated as `options` are.
+pub(super) fn prepare_terms(
+    terms: [BTreeSet<String>; 2],
+    options: &SearchOptions,
+) -> Result<PreparedSearch> {
+    let mut prepared = validate_search("", options, None)?;
+    prepared.query_terms = terms;
     Ok(prepared)
 }
 
@@ -657,6 +668,42 @@ fn capture_overlaid(
         text: store.text_segment(),
         lexical_scores: Some(scores),
     })
+}
+
+/// The top `prepared.limit` chunks [`LexicalScratch::rank`] scores from the checkpoint under
+/// `store` and the store's own documents, as [`capture_overlaid`] ranks them but without
+/// decoding a result per hit. For a query [`overlay_serves`] accepts.
+pub(super) fn rank_overlaid(store: &DocumentStore, prepared: &PreparedSearch) -> LexicalResults {
+    let base = store.base.as_ref().expect("checked by overlay_serves");
+    if base.intact() && store.documents.is_empty() {
+        return ranked_hits(&*base.image, prepared, true);
+    }
+    ranked_hits(&Overlaid { base, store }, prepared, false)
+}
+
+/// [`rank_overlaid`] over a store holding its own documents.
+pub(super) fn rank_store(store: &DocumentStore, prepared: &PreparedSearch) -> LexicalResults {
+    ranked_hits(store, prepared, false)
+}
+
+fn ranked_hits<S: LexicalSource>(
+    source: &S,
+    prepared: &PreparedSearch,
+    hot: bool,
+) -> LexicalResults {
+    let ranked = LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(source, prepared, hot));
+    let hits = ranked
+        .into_iter()
+        .map(|(score, slot)| {
+            let (document, chunk_index) = source.slot_order(slot as usize);
+            LexicalHit {
+                document_id: document.to_owned(),
+                chunk_index,
+                score,
+            }
+        })
+        .collect();
+    LexicalResults { hits, count: None }
 }
 
 pub(super) fn capture_overlaid_search(
