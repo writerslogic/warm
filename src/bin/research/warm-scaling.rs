@@ -119,7 +119,7 @@ fn measure_at_n(
         .map(|i| EntangledHVec::new_with_density(dim, density_denom, i as u64 * 137 + 7))
         .collect();
 
-    let mut mem = HolographicBloomMemory::new(dim);
+    let mut mem = HolographicBloomMemory::with_expected_items(dim, n_items);
     mem.insert_batch(&items);
     let density = mem.density();
 
