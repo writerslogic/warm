@@ -4,8 +4,9 @@
 """Runs the README code blocks marked `quickstart-check` so the README cannot rot.
 
 A fenced block opened with ```js quickstart-check is run with Node from the repository root.
-A block opened with ```rust quickstart-check is placed in the body of a `main` returning
-`anyhow::Result<()>` inside the quickstart crate (examples/quickstart/rust) and run with cargo.
+A block opened with ```rust quickstart-check is a complete program (its own `fn main`); it is
+written verbatim as a bin of the quickstart crate (examples/quickstart/rust) and run with cargo.
+`cargo test` also compiles and runs it as a doctest of README.md (src/lib.rs).
 
 Usage: python scripts/check-readme-snippets.py [js|rust|all]
 """
@@ -19,7 +20,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FENCE = re.compile(r"^```(\w+) quickstart-check\n(.*?)^```$", re.S | re.M)
-RUST_WRAPPER = "fn main() -> anyhow::Result<()> {{\n{body}\n    Ok(())\n}}\n"
 
 
 def blocks(text: str, language: str) -> list[str]:
@@ -39,7 +39,7 @@ def run_rust(body: str) -> None:
     crate = ROOT / "examples" / "quickstart" / "rust"
     target = crate / "src" / "bin" / "readme_snippet.rs"
     target.parent.mkdir(exist_ok=True)
-    target.write_text(RUST_WRAPPER.format(body=body))
+    target.write_text(body)
     try:
         subprocess.run(
             ["cargo", "run", "--release", "--manifest-path", str(crate / "Cargo.toml"), "--bin", "readme_snippet"],
@@ -54,9 +54,9 @@ def run_rust(body: str) -> None:
 
 class ExtractionTests(unittest.TestCase):
     def test_only_marked_blocks_of_the_language_are_extracted(self):
-        text = "```js\nskip()\n```\n```js quickstart-check\nrun()\n```\n```rust quickstart-check\nlet x = 1;\n```\n"
+        text = "```js\nskip()\n```\n```js quickstart-check\nrun()\n```\n```rust quickstart-check\nfn main() {}\n```\n"
         self.assertEqual(blocks(text, "js"), ["run()\n"])
-        self.assertEqual(blocks(text, "rust"), ["let x = 1;\n"])
+        self.assertEqual(blocks(text, "rust"), ["fn main() {}\n"])
 
 
 def main() -> int:

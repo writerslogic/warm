@@ -54,3 +54,8 @@ pub use crate::core::provenance::TripleProvenanceParams;
 
 #[cfg(test)]
 mod tests;
+
+/// Compiles and runs the Rust blocks of the README so the documented quickstart cannot rot.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
