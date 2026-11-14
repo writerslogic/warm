@@ -24,12 +24,12 @@ pub(crate) mod decompose;
 pub(crate) mod diffusion;
 pub mod documents;
 pub(crate) mod durable_file;
-pub mod failpoint;
 #[cfg(feature = "local-embed")]
 pub mod embed;
 pub mod encoding;
 #[cfg(feature = "experimental")]
 pub mod experimental;
+pub mod failpoint;
 pub(crate) mod schema;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod vector_records;
