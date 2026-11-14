@@ -751,8 +751,8 @@ impl Inner {
             }
             None => 0,
         };
-        for slot in from..self.rows.len() {
-            if let Some((_, row)) = &self.rows[slot] {
+        for (slot, entry) in self.rows.iter().enumerate().skip(from) {
+            if let Some((_, row)) = entry {
                 let s = score(row);
                 if s > 0.0 {
                     scored.push((slot as u32, s));
