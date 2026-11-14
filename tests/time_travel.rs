@@ -523,7 +523,10 @@ fn purged_text_is_never_returned_at_any_position() {
             &ForgetScope::Ids {
                 ids: vec!["secret".into()],
             },
-            &ForgetOptions::default(),
+            &ForgetOptions {
+                purge: false,
+                ..ForgetOptions::default()
+            },
         )
         .unwrap();
     let after_delete = core.journal_position();
@@ -542,6 +545,7 @@ fn purged_text_is_never_returned_at_any_position() {
             },
             &ForgetOptions {
                 purge: true,
+                synchronous: true,
                 ..Default::default()
             },
         )

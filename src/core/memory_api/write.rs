@@ -494,9 +494,16 @@ impl Memory {
     /// removed and the same call finishes the rest.
     ///
     /// Without `include_chain` only the matched facts go, and a removed successor makes its
-    /// predecessor current again. Deleted text stays in the append-only journal until the
-    /// store compacts. The text segment is zeroed and synced once before this returns; `purge`
-    /// then compacts and overwrites what the compaction replaced.
+    /// predecessor current again. The text segment is zeroed and synced before this returns.
+    ///
+    /// With `purge` (the default) the delete is also recorded durably as a purge before it
+    /// commits, so a crash cannot leave the deleted text without an obligation to erase it.
+    /// With `synchronous` the store then compacts and overwrites what the compaction replaced
+    /// before returning (`purged` is `true`: no file keeps the deleted text). Otherwise the
+    /// scrub is deferred: it runs when `DEFERRED_BATCH` purges are waiting, at the next
+    /// `compact`, `compact_scrubbing` or open, whichever comes first, and covers every
+    /// deferred purge at once (`purged` is `false` unless this call ran it). Without `purge`
+    /// the journal keeps the deleted frames until some later compaction.
     pub fn forget(&self, scope: &ForgetScope, options: &ForgetOptions) -> Result<ForgetReport> {
         let mut completed = BTreeSet::new();
         for _ in 0..WRITE_ATTEMPTS {
@@ -513,6 +520,17 @@ impl Memory {
             "memory changed during forgetting; retry to finish any committed prefix".into(),
         )
         .into())
+    }
+
+    /// Ends a purge whose deletes committed: scrubs now when asked to, otherwise leaves the
+    /// durable ticket for the next scrubbing compaction. Whether the text is erased.
+    fn end_purge(&self, ticket: crate::core::PurgeTicket, options: &ForgetOptions) -> Result<bool> {
+        if options.synchronous {
+            self.core.finish_purge(ticket)?;
+            Ok(true)
+        } else {
+            self.core.defer_purge(ticket)
+        }
     }
 
     pub(super) fn forget_at_revision(
@@ -555,16 +573,21 @@ impl Memory {
                     "forgotten-text synchronization",
                     self.core.sync_text_segment(),
                 )?;
-                if options.purge {
+                let purged = if options.purge {
+                    // The deletes are already committed (an earlier attempt), so the purge
+                    // can be marked and ended in one step.
+                    let ticket = self.core.mark_purge_pending()?;
                     crate::core::error::after_commit(
                         "forgotten-data purge",
-                        self.core.compact_scrubbing(),
-                    )?;
-                }
+                        self.end_purge(ticket, options),
+                    )?
+                } else {
+                    false
+                };
                 if let Some(observer) = &self.observer {
                     observer.on_forgotten(&forgotten);
                 }
-                options.purge
+                purged
             } else {
                 false
             };
@@ -574,6 +597,13 @@ impl Memory {
                 purged,
             }));
         }
+        let ticket = if options.purge {
+            // Durable before the first delete commits, so a crash from here on is finished by
+            // the next open.
+            Some(self.core.mark_purge_pending()?)
+        } else {
+            None
+        };
         let rewrites = self.bridge_survivors(&forgotten)?;
         let mut revision = before;
         let mut commits = 0;
@@ -615,13 +645,14 @@ impl Memory {
             self.index.write().revision = None;
         }
         let mut purged = false;
-        if options.purge {
-            crate::core::error::after_commit(
+        if let Some(ticket) = ticket {
+            purged = crate::core::error::after_commit(
                 "forgotten-data purge",
-                self.core.compact_scrubbing(),
+                self.end_purge(ticket, options),
             )?;
-            self.index.write().revision = None;
-            purged = true;
+            if purged {
+                self.index.write().revision = None;
+            }
         }
         let forgotten: Vec<String> = completed.iter().cloned().collect();
         if let Some(observer) = &self.observer {

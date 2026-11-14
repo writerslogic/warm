@@ -267,7 +267,10 @@ class WarmServerText(WarmServer):
         self.http.call("POST", "/api/v1/memory/remember", {"id": doc["id"], "text": doc["text"] + " benchmarkrevision"})
 
     def delete_doc(self, doc, n):
-        self.http.call("POST", "/api/v1/memory/forget", {"scope": {"kind": "ids", "ids": [doc["id"]]}})
+        # The row times one durable commit. `forget` also records a pending purge by default,
+        # which is a second durable write plus a later scrubbing compaction, so ask for the
+        # logical delete explicitly.
+        self.http.call("POST", "/api/v1/memory/forget", {"scope": {"kind": "ids", "ids": [doc["id"]]}, "purge": False})
 
 
 # ------------------------------------------------------------------ Qdrant

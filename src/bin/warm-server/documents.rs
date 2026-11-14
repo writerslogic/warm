@@ -611,12 +611,14 @@ pub async fn delete_doc(
     req: Request,
 ) -> ApiResult {
     let (_, tenant) = admit(&state, &req, Scope::Write)?;
-    // `?purge=true` also rewrites the journal and scrubs what it replaced; without it the text
-    // segment is scrubbed but the deleted frame stays in the journal until compaction.
-    let purge = req
-        .uri()
-        .query()
-        .is_some_and(|q| q.split('&').any(|pair| pair == "purge=true"));
+    // The delete is recorded as a pending purge before it commits; the scrubbing compaction
+    // that erases the text runs later (the next compaction, the 64th waiting purge, or the next
+    // open) unless `?synchronous=true` asks for it before the response. `?purge=false` opts out:
+    // the text segment is scrubbed but the deleted frame stays in the journal until a later
+    // compaction.
+    let query = req.uri().query().unwrap_or("");
+    let purge = !query.split('&').any(|pair| pair == "purge=false");
+    let synchronous = query.split('&').any(|pair| pair == "synchronous=true");
     let identities: Vec<_> = req
         .uri()
         .query()
@@ -677,6 +679,11 @@ pub async fn delete_doc(
         };
         let before = core.revision();
         let result = (|| {
+            let ticket = if purge {
+                Some(core.mark_purge_pending().map_err(ApiError::from_core)?)
+            } else {
+                None
+            };
             if core.delete_document(&id).map_err(ApiError::from_core)? {
                 if let Some(vectors) = core.vectors() {
                     if let Err(error) = vectors.remove(&[id.as_str()]) {
@@ -684,8 +691,12 @@ pub async fn delete_doc(
                         return Err(ApiError::committed(error));
                     }
                 }
-                if purge {
-                    core.compact_scrubbing().map_err(ApiError::committed)?;
+                if let Some(ticket) = ticket {
+                    if synchronous {
+                        core.finish_purge(ticket).map_err(ApiError::committed)?;
+                    } else {
+                        core.defer_purge(ticket).map_err(ApiError::committed)?;
+                    }
                 }
                 Ok(())
             } else {
