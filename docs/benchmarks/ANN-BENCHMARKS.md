@@ -88,7 +88,7 @@ No full GloVe harness control is committed for this campaign. The v2 driver numb
 
 `perf record -e cpu-clock -F 4000` of the harness query loop (`index.query` per test query), pinned to one CPU outside the lock (attribution only, not timing; host load about 17). Raw reports are in `benchmarks/results/ann_benchmarks_v3_wl02/profiles/`.
 
-| Share of samples | sift (held-out, degree 32, ef 30, recall 0.953) | glove (degree 64, ef 240, recall 0.956) |
+| Share of samples | sift ([profiles](../../benchmarks/results/ann_benchmarks_v3_wl02/profiles/); held-out, degree 32, ef 30, recall 0.953) | glove (degree 64, ef 240, recall 0.956) |
 |---|---|---|
 | `search_inner` (traversal, admission, memory stalls) | 51% | 56% |
 | `dot_i8` (AVX-VNNI tier selected on this host) | 8.9% | 12.6% |

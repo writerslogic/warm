@@ -9,7 +9,6 @@ docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9045
 docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9067
 docs/benchmarks/BIG-ANN-FILTER.md|recall@10 **.906415
 docs/benchmarks/BIG-ANN-STREAMING.md|11.2 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|1493 MiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.55 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.69 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.70 GiB
@@ -61,7 +60,6 @@ docs/benchmarks/README.md|2.20x
 docs/benchmarks/README.md|2.28x
 docs/benchmarks/README.md|2.56x
 docs/benchmarks/README.md|2.57x
-docs/benchmarks/README.md|2.62x
 docs/benchmarks/README.md|2.71x
 docs/benchmarks/README.md|20.56x
 docs/benchmarks/README.md|25.02x

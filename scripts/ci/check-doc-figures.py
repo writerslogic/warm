@@ -113,16 +113,20 @@ def blocks(text: str):
         yield start, "\n".join(paragraph)
 
 
-def present(values: list, written: str, percent: bool) -> bool:
+SCALE = {"MiB": 2**20, "GiB": 2**30}
+
+
+def present(values: list, written: str, percent: bool, unit: str = "") -> bool:
     raw = written.replace(",", "")
     decimals = len(raw.split(".")[1]) if "." in raw else 0
     target = float(raw)
     tolerance = 0.5 * 10 ** -decimals + 1e-9
-    candidates = [target]
+    candidates = [(target, tolerance)]
     if percent:
-        candidates.append(target / 100)
-    for goal in candidates:
-        tol = tolerance / 100 if goal != target else tolerance
+        candidates.append((target / 100, tolerance / 100))
+    if unit in SCALE:
+        candidates.append((target * SCALE[unit], tolerance * SCALE[unit]))
+    for goal, tol in candidates:
         low = bisect.bisect_left(values, goal - tol)
         if low < len(values) and values[low] <= goal + tol:
             return True
@@ -165,7 +169,7 @@ def main() -> int:
             values.sort()
             for written, percent, context in figures(strip_noise(block)):
                 checked += 1
-                if not present(values, written, percent):
+                if not present(values, written, percent, next((u for u in SCALE if context.rstrip().endswith(u)), "")):
                     unsupported.append((relative, number, " ".join(context.split())))
     baseline_path = root / BASELINE
     if args.write_baseline:
