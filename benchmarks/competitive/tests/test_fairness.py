@@ -130,3 +130,17 @@ def test_null_dataset_digests_stop_the_run():
     with pytest.raises(RuntimeError):
         rawdata.require_digests({"train_sha256": None, "test_sha256": "x"}, ("train_sha256", "test_sha256"))
     rawdata.require_digests({"train_sha256": "a", "test_sha256": "b"}, ("train_sha256", "test_sha256"))
+
+
+def test_native_tantivy_rows_pass_their_own_collector(monkeypatch, tmp_path):
+    """The Count row must reach the binary as `--collector count`; a row that silently ran the other
+    collector would be a duplicate measurement labelled as a different configuration."""
+    from warmbench import runner
+    seen = {}
+    monkeypatch.setattr(runner, "warm_binary", lambda name, example=False: tmp_path / name)
+    monkeypatch.setattr(runner, "run_measured", lambda cmd, env=None, timeout=0: seen.setdefault("cmd", cmd) and ("", "", 0.0, 0))
+    for system, collector in (("tantivy-rs", "topk"), ("tantivy-rs-count", "count")):
+        seen.clear()
+        runner._text_cmd(system, "serve", tmp_path / "in.json", tmp_path / "store", tmp_path / "out.json", {})
+        cmd = seen["cmd"]
+        assert cmd[cmd.index("--collector") + 1] == collector

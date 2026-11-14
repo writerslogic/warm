@@ -494,7 +494,7 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None):
                "--out", str(out), "--t0-ns", str(t0), "--encode", registry.WARM_TEXT_ENCODE[system]]
     elif system in ("tantivy-rs", "tantivy-rs-count"):
         cmd = [str(warm_binary("competitive_text_tantivy", example=True)), phase, "--input", str(input_path), "--store", str(store),
-               "--out", str(out), "--t0-ns", str(t0)]
+               "--out", str(out), "--t0-ns", str(t0), "--collector", "count" if system == "tantivy-rs-count" else "topk"]
     elif system in ("lucene", "lucene-prev"):
         classpath, _ = jars.ensure(jars.VERSION if system == "lucene" else jars.PREVIOUS)
         cmd = ["java", *registry.LUCENE_JVM_FLAGS[phase], "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
