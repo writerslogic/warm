@@ -642,6 +642,7 @@ fn forget_with_chain_removes_every_version_and_purge_rewrites_the_journal() {
             &ForgetOptions {
                 include_chain: true,
                 purge: true,
+                synchronous: true,
                 ..Default::default()
             },
         )

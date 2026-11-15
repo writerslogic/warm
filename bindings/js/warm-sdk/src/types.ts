@@ -174,6 +174,8 @@ export interface ForgetOptions extends RequestOptions {
   includeChain?: boolean
   dryRun?: boolean
   purge?: boolean
+  /** With `purge`, scrub before returning, so `purged` is true; by default the scrub is deferred. */
+  synchronous?: boolean
 }
 export interface ConsolidateOptions extends RequestOptions { dryRun?: boolean; allowDestructive?: boolean }
 export interface ForgetReport { forgotten: string[]; dryRun: boolean; purged: boolean }
