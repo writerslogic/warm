@@ -130,7 +130,7 @@ def test_stored_rows_reach_their_binaries_with_the_stored_flags(monkeypatch, tmp
         ("warm-lexical-api", "build"): ["--store-text", "false"], ("warm-lexical-api", "serve"): ["--api", "lexical"],
         ("tantivy-rs-docs", "build"): ["--stored", "true", "--docstore", registry.TANTIVY_DOCSTORE],
         ("tantivy-rs-count-docs", "serve"): ["--stored", "true", "--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE), "--collector", "count"],
-        ("tantivy-rs", "serve"): ["--collector", "topk"], ("lucene-docs", "serve"): ["english", "stored"], ("lucene", "serve"): ["3", "100"],
+        ("tantivy-rs", "serve"): ["--collector", "topk"], ("lucene-docs", "serve"): ["english", "stored"], ("lucene-dv-docs", "serve"): ["english", "stored-dv"], ("lucene-dv-docs", "build"): ["english", "stored-dv"], ("lucene", "serve"): ["3", "100"],
     }
     for (system, phase), flags in expect.items():
         seen.clear()
@@ -168,3 +168,18 @@ def test_stored_variants_return_the_corpus_text_and_rank_like_their_ids_rows(tmp
     assert [h[0] for h in stored.search(stored.prepare("benchmarkrevision"))] == ["one/α"]
     stored.delete(DOCS[1])
     assert stored.search(stored.prepare("banana")) == []
+
+
+def test_cross_hardware_summary_lists_each_class_and_names_verdicts_that_differ():
+    """The same corpus on two hardware classes: WARM wins the ids contract on both, and wins the documents contract on one only."""
+    secs = []
+    for hw, comparator_rate in (("hw-a", 1200), ("hw-b", 2600)):
+        data = fake_text({"warm-lexical-api": 2000, "lucene": 1000, "warm": 2000, "lucene-docs": comparator_rate})
+        data["hardware"]["class"] = hw
+        for _, view in table.contract_views(Path("f.json"), data):
+            secs.append(table.section(Path("f.json"), view))
+    text = "\n".join(table.across_hardware_lines(secs))
+    assert "| x | ids | `hw-a` |" in text and "| x | ids | `hw-b` |" in text
+    assert "x, documents contract: `hw-a` WIN; `hw-b` LOSS" in text
+    assert "x, ids" not in text.split("differ between hardware classes:")[1]
+    assert table.across_hardware_lines(secs[:2]) == []
