@@ -60,6 +60,7 @@ The contract is [`server/openapi.json`](server/openapi.json). Every operation li
 | `GET /api/v1/documents/{id}/chunks/{index}` retained chunk, zero-based index | read | 200 `{"revision","document","index","id","startByte","endByte","text"}`; 404 if absent |
 | `GET /api/v1/stats` | read | 200 `{"tenant","documents","vectors","documentIndexTrained","usedBytes","capacityBytes"}` |
 | `POST /api/v1/query` | read | 200 `{"matches":[{"id","text","metadata","score"}]}` best first |
+| `POST /api/v1/query/vector` | read | 200 `{"matches":[{"id","score"}]}` best first; body is the query as raw little-endian `f32` |
 | `POST /api/v1/search` | read | 200 `{"hits":[{"id","score"}]}` best first (BM25; model stages when configured) |
 | `POST /api/v1/index/maintain` | write | 200 `{"documentIndexTrained": bool}` |
 | `POST /api/v1/memory/{remember,recall,explain,forget,get,history,applyForgetting,consolidate}` | write / read | the memory API, `docs/memory-api` |
@@ -98,6 +99,8 @@ If-None-Match for the complete returned representation.
 
 `POST /api/v1/query` takes `{"query_vector": [...], "top_k"?: 1..=max-top-k (default 3), "filter"?: object}`. `filter` keeps documents whose metadata contains every filter key with an equal JSON value; it is applied before ranking, so it never reduces the number of matches below `top_k` when enough documents match. `score` is the exact cosine similarity between the query and the stored embedding.
 
+`POST /api/v1/query/vector` takes the query vector as the raw request body (`--input-dim` little-endian `f32` values, `Content-Type: application/octet-stream`) and the options in the query string: `top_k` (default 10), `ef`, `index` (`auto`, `exact`, `graph`, as for `query`), and `id_gte` / `id_lt`, which keep documents whose id is an integer in that range. A body whose length differs from `--input-dim * 4` is refused with 422 before it is read, and one holding a non-finite or all-zero vector after it. The reply carries ids and cosine scores only (no stored text or metadata) and skips the per-hit document read of `query`. A range filter is applied inside the graph search: a selective range is scored directly from the index's codes, a permissive one by a wider search that keeps the allowed hits; it needs the vector graph (run `index/maintain` first), otherwise 409 `index_unavailable`.
+
 `POST /api/v1/search` takes `{"query": "...", "top_k"?: 1..=max-top-k (default 10), "include"?: ["text", "metadata"]}` and ranks the tenant's documents, memory facts included, by BM25 (through the on-device model stages instead when the server has them), one hit per document. Hits carry only `id` and `score` unless `include` names stored text or metadata; it applies no memory semantics (validity time, supersession), for which use `memory/recall`.
 
 Batch totals are limited to 8 MiB of ids and text, 8 MiB of metadata and 1,048,576 embedding values; the native prepared transaction is limited to 32 MiB. All documents are validated before one atomic commit; repeated ids keep their last occurrence while `added` stays the incoming count.
@@ -123,7 +126,7 @@ Stores open on first use. Simultaneous first requests share one initialization; 
 
 ## Limits and backpressure
 
-- `--max-concurrent-work` bounds admitted requests reading bodies or running engine work. When full, a request is answered 503 `server_busy` with `Retry-After` immediately, or, with `--max-queue` above zero, waits in a bounded queue for up to `--queue-timeout-ms` first. `warm_queue_depth` and `warm_work_slots_in_use` expose the saturation.
+- `--max-concurrent-work` bounds admitted requests reading bodies or running engine work. When full, a request is answered 503 `server_busy` with `Retry-After` immediately, or, with `--max-queue` above zero, waits in a bounded queue for up to `--queue-timeout-ms` first. The defaults are one slot per available core (at least 4), a queue of 4096 and a 10 s wait, so a closed-loop client count up to the queue size is queued, not shed; `--max-queue 0` restores immediate shedding. `warm_queue_depth` and `warm_work_slots_in_use` expose the saturation.
 - `--rate-limit-rps`/`--rate-limit-burst` is a per-tenant token bucket (429 `rate_limited`, `Retry-After`). `--max-documents-per-tenant` is a per-tenant document quota (429 `quota_exceeded`). Both are off by default.
 - `--max-connections` caps simultaneous connections; `--header-read-timeout-seconds` drops clients that dribble headers; `--body-timeout-seconds` bounds body reads. A disconnected client releases body admission immediately, but a running blocking operation keeps its work slot until it finishes.
 - Parsing, validation, store initialization, ingest, search and maintenance run on blocking workers; the async runtime only moves bytes.
