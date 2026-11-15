@@ -1969,6 +1969,8 @@ impl Drop for WarmCore {
     fn drop(&mut self) {
         if let Err(error) = self.checkpoint_if_due() {
             tracing::warn!(%error, "document checkpoint not written at close");
+        } else {
+            self.release_text_cache();
         }
     }
 }

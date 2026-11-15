@@ -82,10 +82,11 @@ All integers little endian; varints are LEB128.
 8    8  u64: CRC32 of bytes 16.. (low 32 bits)
 16   8  u64: CRC32 of the generation directory's name (low 32 bits)
 24   8  u64: vector dimensions of the store
-32   40 u64: reserved, zero
+32   8  u64: feature bits (bit 0: chunk text is in compressed blocks; any other bit is refused as newer than supported)
+40   32 u64: reserved, zero
 72   32 u64: slots, chunks, words, documents
 104  16 u64: terms per posting form (unstemmed, stemmed)
-120  160 (offset, length) of each section, in the order below; then reserved words to byte 328
+120  208 (offset, length) of each section, in the order below (the last three only with feature bit 0; unused words are not read), to byte 328
 328  sections, back to back, ending at the end of the file
 ```
 
@@ -117,12 +118,35 @@ Sections:
    bytes), metadata JSON, chunk count, and per chunk a flags byte (bit 0: the chunk id follows,
    otherwise it is the default id for its index; bit 1: its terms are stemmed; bit 2: its terms
    come from a non-legacy store analyzer), the byte span as
-   two varints, and its text (`0` none, `2` inline bytes).
+   two varints, and its text (`0` none, `2` inline bytes, `3` the text's offset, a varint, in the
+   compressed text stream; its length is the span).
+6. with feature bit 0 set, three more sections, in this order: the dictionary (at most 64 KiB), the
+    block table and the compressed blocks (below). Without the bit the header words of these
+    sections are not read.
+
+Compressed text (feature bit 0). The text of every chunk that has any is laid end to end in
+document order and cut at chunk boundaries into blocks. The writer makes every chunk a block of its own (a
+chunk is never split); a reader accepts any cut at chunk boundaries. Each block is an LZ4
+block compressed against the dictionary (LZ4 block format with an external dictionary, as
+`lz4_flex::block::compress_with_dict`), or stored as it is when that is not shorter. The
+dictionary is 512-byte pieces taken at even steps from the stream, an eighth of the stream and at
+most 64 KiB, and empty below 16 KiB of text. The table holds `u32` pairs (the block's offset in the stream, its offset in the block bytes),
+one per block and a last pair (stream length, block bytes length); a block whose byte length
+equals its stream length is stored. A reader checks that the table starts at (0, 0), that blocks
+are nonempty, at most 16 MiB and no longer than their stream bytes, that they follow each other and end
+at the section's end, and that a chunk's bytes lie in one block and are UTF-8. A hit decodes one block; the engine keeps decoded blocks in a
+lock-free cache bounded by `document_checkpoint.text_cache_bytes` (default 64 MiB, `0` decodes on every hit), so a block is decoded once while it fits. The dictionary is sampled from the live documents' text when the checkpoint is
+built, so a scrubbing compaction writes none of an erased document's text, in a block or in the
+dictionary. Without text (every chunk stored without it) the feature bit is clear and the file
+is byte for byte what version 2 wrote.
 
 Every compaction writes version 3, so an older checkpoint is replaced at the store's next
 compaction; until then it opens, serves and rebuilds the live store exactly as version 3 does,
 ranking it exhaustively where a version 3 checkpoint is pruned (the ranking is the same to the
-bit, and a version 1 or 2 checkpoint serves from the checkpoint only up to 2^19 slots).
+bit, and a version 1 or 2 checkpoint serves from the checkpoint only up to 2^19 slots). A checkpoint with
+inline text opens and serves as one with compressed blocks and is replaced by one at the next
+compaction. A release that predates feature bit 0 refuses a checkpoint that sets it (its section
+table does not end at the end of the file).
 
 ## Durability and crash safety
 
@@ -131,6 +155,13 @@ rename, directory sync, before the generation's segments are synced and before `
 replaced (CRASH-CONSISTENCY.md). A crash before the switch leaves the previous generation; after
 it, the new generation, checkpoint included. A published checkpoint is never written again; the
 next one goes to the next generation.
+
+## Text segment at close
+
+`documents.text` ([CACHES.md](CACHES.md)) is a cache of chunk text that every open which needs it
+recreates. A close that ends with a checkpoint and no frames after it cuts the file to its 8-byte
+header, so the text is on disk once, in the checkpoint. The cut is a truncation, not an
+overwrite, as at the next open.
 
 ## Purge and forget
 
