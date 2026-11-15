@@ -568,7 +568,12 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None, extra=()):
                 cmd += ["--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE)]
     elif system in ("lucene", "lucene-docs", "lucene-dv-docs", "lucene-prev"):
         classpath, _ = jars.ensure(jars.PREVIOUS if system == "lucene-prev" else jars.VERSION)
-        cmd = ["java", *registry.LUCENE_JVM_FLAGS[phase], "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
+        flags = list(registry.LUCENE_JVM_FLAGS[phase])
+        # The serve heap holds the docid-to-id table, which outgrows the fixed 128 MB heap near 8.8M documents;
+        # WARM_BENCH_LUCENE_SERVE_XMX (for example 3g) raises it for such a run, and the run notes record it.
+        if phase == "serve" and os.environ.get("WARM_BENCH_LUCENE_SERVE_XMX"):
+            flags = ["-Xmx" + os.environ["WARM_BENCH_LUCENE_SERVE_XMX"] if f.startswith("-Xmx") else f for f in flags]
+        cmd = ["java", *flags, "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
         if stored:
             cmd += ["english", "stored-dv" if system == "lucene-dv-docs" else "stored"]
     else:
