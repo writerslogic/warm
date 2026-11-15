@@ -400,6 +400,8 @@ pub(crate) struct ServingImage {
     dense: super::impact::DenseTables,
     /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
     word_classes: std::sync::OnceLock<Vec<u8>>,
+    /// Per slot, its word count capped at `u16::MAX`, built by the first pruned query.
+    word_counts: std::sync::OnceLock<Vec<u16>>,
 }
 
 /// One decoded chunk of a checkpoint record.
@@ -525,6 +527,7 @@ impl ServingImage {
             impacts,
             dense: Default::default(),
             word_classes: std::sync::OnceLock::new(),
+            word_counts: std::sync::OnceLock::new(),
         };
         image.check_documents()?;
         image.check_slots()?;
@@ -1177,6 +1180,16 @@ impl ServingImage {
         })
     }
 
+    /// Per slot its word count, `u16::MAX` for counts that do not fit (read the slot table then):
+    /// a table a sixth the size of the slot table, so it stays in cache where the slot table
+    /// does not.
+    pub(super) fn word_counts(&self) -> &[u16] {
+        self.word_counts.get_or_init(|| {
+            (0..self.slots)
+                .map(|slot| self.slot(slot).0.min(u32::from(u16::MAX)) as u16)
+                .collect()
+        })
+    }
     pub(super) fn dense(&self) -> &super::impact::DenseTables {
         &self.dense
     }

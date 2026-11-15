@@ -217,7 +217,7 @@ impl<'a> ImpactCursor<'a> {
 
 /// Asks the CPU to load the cache line holding `table[at]`; a hint, with no effect on results.
 #[inline(always)]
-fn prefetch(table: &[u8], at: usize) {
+fn prefetch<T>(table: &[T], at: usize) {
     #[cfg(target_arch = "x86_64")]
     if at < table.len() {
         // SAFETY: `at` is inside `table`, and a prefetch never faults or writes.
@@ -232,7 +232,7 @@ fn prefetch(table: &[u8], at: usize) {
 }
 
 /// Slot tables at least this large are prefetched (smaller ones stay in cache).
-const PREFETCH_BYTES: usize = 4 << 20;
+const PREFETCH_BYTES: usize = 1 << 20;
 
 /// Slots per accumulation window.
 const WINDOW: u32 = 4096;
@@ -435,7 +435,7 @@ impl<'a> ImpactCursor<'a> {
 
     /// Calls `f(slot, frequency)` for every posting below `hi` the cursor has not passed, and
     /// leaves it at the first posting at or after `hi`.
-    fn drain_below(&mut self, hi: u32, table: &[u8], mut f: impl FnMut(u32, u32)) {
+    fn drain_below(&mut self, hi: u32, table: &[u16], mut f: impl FnMut(u32, u32)) {
         loop {
             if self.ended || self.doc() >= hi {
                 return;
@@ -446,9 +446,9 @@ impl<'a> ImpactCursor<'a> {
             let end = self.current.count;
             let mut at = self.position;
             // The block's slots are known: start loading their word counts together.
-            if table.len() >= PREFETCH_BYTES {
+            if table.len() * 2 >= PREFETCH_BYTES {
                 for &slot in self.slots[at..end].iter().take_while(|&&slot| slot < hi) {
-                    prefetch(table, slot as usize * SLOT_BYTES);
+                    prefetch(table, slot as usize);
                 }
             }
             while at < end && self.slots[at] < hi {
@@ -564,6 +564,7 @@ pub(super) fn rank<S: LexicalSource>(
         ..
     } = scratch;
     let slot_table = image.slot_table();
+    let word_counts = image.word_counts();
     let classes8 = image.word_classes(&classes().1);
     by_bound.clear();
     by_bound.extend(0..count);
@@ -588,8 +589,13 @@ pub(super) fn rank<S: LexicalSource>(
         }
     };
     let norm_for = |norms: &mut Vec<f64>, slot: u32| -> f64 {
-        let at = slot as usize * SLOT_BYTES;
-        let words = u32::from_le_bytes(slot_table[at..at + 4].try_into().expect("four bytes"));
+        let words = match word_counts[slot as usize] {
+            u16::MAX => {
+                let at = slot as usize * SLOT_BYTES;
+                u32::from_le_bytes(slot_table[at..at + 4].try_into().expect("four bytes"))
+            }
+            short => u32::from(short),
+        };
         match norms.get_mut(words as usize) {
             Some(cached) => {
                 if *cached == 0.0 {
@@ -644,7 +650,7 @@ pub(super) fn rank<S: LexicalSource>(
             let log = &mut logs[position];
             log.clear();
             let mut taken = 0usize;
-            cursors[i].drain_below(hi, slot_table, |slot, frequency| {
+            cursors[i].drain_below(hi, word_counts, |slot, frequency| {
                 let offset = (slot - lo) as usize;
                 let norm = norm_for(norms, slot);
                 let weight = weigh(idf, f64::from(frequency), norm);
@@ -738,19 +744,25 @@ pub(super) fn rank<S: LexicalSource>(
                 let offset = (word << 6) | bits.trailing_zeros() as usize;
                 bits &= bits - 1;
                 let partial = std::mem::take(&mut acc[offset]);
-                let slot = (lo as usize) + offset;
-                let class = usize::from(classes8[slot]);
-                let mut upper = partial + untabled;
-                for &i in &first_pass[..first_passes] {
-                    let term = &terms[i];
-                    if let Some(table) = term.dense.as_ref() {
-                        upper += term.ub[usize::from(table.get(slot)) * CLASSES + class];
-                    }
-                }
-                if floor_score <= 0.0 || upper >= cut {
-                    cand.push((offset as u32, upper));
+                cand.push((offset as u32, partial + untabled));
+            }
+        }
+        // One table at a time over the window's candidates: each candidate still adds the
+        // tables' bounds in the same order, but the loop body is a tight lookup.
+        let window_classes = &classes8[lo as usize..];
+        for &i in &first_pass[..first_passes] {
+            let term = &terms[i];
+            if let Some(table) = term.dense.as_ref() {
+                let ub = &term.ub[..];
+                for entry in cand.iter_mut() {
+                    let offset = entry.0 as usize;
+                    let class = usize::from(window_classes[offset]);
+                    entry.1 += ub[usize::from(table.get(lo as usize + offset)) * CLASSES + class];
                 }
             }
+        }
+        if floor_score > 0.0 {
+            cand.retain(|&(_, upper)| upper >= cut);
         }
         // Second pass: the candidates, scored exactly.
         for &(offset, upper) in cand.iter() {
