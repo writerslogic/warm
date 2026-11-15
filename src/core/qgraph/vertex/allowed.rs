@@ -47,7 +47,7 @@ impl Allow<'_> {
             Self::Mask(words) => {
                 let whole = (n / 64).min(words.len());
                 let mut count: usize = words[..whole].iter().map(|w| w.count_ones() as usize).sum();
-                if n % 64 != 0 && whole < words.len() && whole == n / 64 {
+                if !n.is_multiple_of(64) && whole < words.len() && whole == n / 64 {
                     count += (words[whole] & ((1u64 << (n % 64)) - 1)).count_ones() as usize;
                 }
                 count
