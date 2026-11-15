@@ -17,7 +17,7 @@ lossy | concepts/lossy
 privacy limits | concepts/privacy-limits
 what does encryption protect | concepts/privacy-limits
 bm25 | glossary,quickstart,PUBLIC-BENCHMARKS
-ndcg | glossary
+ndcg | glossary, guides/evaluate-search, evaluation/
 recall@k | glossary
 hopfield | glossary
 resonator network | glossary,RESEARCH,DETERMINISTIC-RESONATOR

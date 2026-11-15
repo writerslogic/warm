@@ -10,11 +10,11 @@ fn mix(mut x: u64) -> u64 {
     x ^ (x >> 31)
 }
 
-fn probe<F: Filter<u64>>(f: &F, salt: u64, count: u64) -> (u64, f64) {
+fn probe<F: Filter<u64>>(f: &F, key_offset: u64, count: u64) -> (u64, f64) {
     let t = Instant::now();
     let mut hits = 0u64;
     for i in 0..count {
-        if f.contains(&mix(i ^ salt)) {
+        if f.contains(&mix(i ^ key_offset)) {
             hits += 1;
         }
     }
