@@ -183,10 +183,20 @@ impl Memory {
     }
 
     fn explain_once(&self, query: &str, id: &str, options: &RecallOptions) -> Result<Explanation> {
-        if let Some(region) = super::experience::region_id(id) {
+        // An id shaped like an experience id is one only when the experience store holds it;
+        // otherwise it may be a fact stored under that id.
+        if let Some(region) = super::experience::region_id(id).filter(|&r| {
+            self.core
+                .with_experience(|s| s.region_hit(r).is_some())
+                .unwrap_or(false)
+        }) {
             return self.explain_region(query, region, options);
         }
-        if let Some(effect) = super::experience::effect_id(id) {
+        if let Some(effect) = super::experience::effect_id(id).filter(|&e| {
+            self.core
+                .with_experience(|s| s.effect_hit(e).is_some())
+                .unwrap_or(false)
+        }) {
             return self.explain_effect(query, effect, options);
         }
         self.core

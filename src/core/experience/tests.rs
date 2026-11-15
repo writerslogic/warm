@@ -591,3 +591,108 @@ fn matches_the_reference_model_on_the_committed_fixture() {
         );
     }
 }
+
+fn props_step(episode: &str, step: u32, props: &str) -> OwnedObservation {
+    let mut tree = page("P", vec![btn("Open"), btn("Save")]);
+    tree.props = props.to_string();
+    OwnedObservation {
+        episode: episode.into(),
+        step,
+        tree,
+        url: None,
+        action: None,
+        goal: None,
+        outcome: None,
+    }
+}
+
+#[test]
+fn steps_differing_only_in_props_count_against_the_quota() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut s = store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None)
+        .unwrap();
+    s.ingest_many(vec![props_step("e", 0, "p0")]).unwrap();
+    let base = s.quota_units();
+    let budget = base + 2;
+    // limit - 1, limit, then limit + 1.
+    for step in 1..=2u32 {
+        let r = s
+            .ingest_many_within(vec![props_step("e", step, &format!("p{step}"))], Some(budget))
+            .unwrap();
+        assert_eq!(r, [Ingested::Applied]);
+    }
+    assert_eq!(s.quota_units(), budget);
+    let (at, err) = s
+        .ingest_many_within(vec![props_step("e", 3, "p3")], Some(budget))
+        .unwrap_err();
+    assert_eq!((at, matches!(err, ExperienceError::Quota(_))), (0, true));
+    assert_eq!(s.quota_units(), budget, "a refused step leaves nothing");
+    // A retry of a stored step adds nothing and is still accepted at the limit.
+    let r = s
+        .ingest_many_within(vec![props_step("e", 2, "p2")], Some(budget))
+        .unwrap();
+    assert_eq!(r, [Ingested::Duplicate]);
+}
+
+#[test]
+fn a_write_that_would_pass_the_snapshot_limit_is_refused_before_it_is_journaled() {
+    let big = "q".repeat(4000);
+    let steps = |n: u32| -> Vec<OwnedObservation> {
+        (0..n)
+            .map(|i| props_step("e", i, &format!("{big}{i}")))
+            .collect()
+    };
+    let n = 6;
+    let mut probe = Experience::new(ExperienceConfig::default());
+    for o in steps(n) {
+        probe.ingest(&o.as_observation()).unwrap();
+    }
+    let exact = probe.to_bytes_at(u64::MAX).unwrap().len() as u64 - 20;
+    for (cap, fits) in [(exact + 1, true), (exact, true), (exact - 1, false)] {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = ExperienceConfig {
+            max_snapshot_bytes: cap,
+            ..ExperienceConfig::default()
+        };
+        let mut s = store::ExperienceStore::create(dir.path(), cfg.clone(), None).unwrap();
+        let r = s.ingest_many(steps(n));
+        assert_eq!(r.is_ok(), fits, "cap {cap}");
+        let stored = if fits { n } else { n - 1 } as usize;
+        if !fits {
+            let (at, err) = r.unwrap_err();
+            assert_eq!(at, stored);
+            assert!(matches!(err, ExperienceError::Limit { .. }), "{err}");
+        } else {
+            assert!(s.ingest_many(vec![props_step("e", n, &format!("{big}{n}"))]).is_err());
+        }
+        // Checkpoint writes a snapshot the reader accepts, and the reopened store has every
+        // acknowledged step.
+        s.checkpoint().unwrap();
+        drop(s);
+        let s = store::ExperienceStore::open(dir.path(), cfg, None).unwrap();
+        assert_eq!(s.stats().steps, stored, "cap {cap}");
+    }
+}
+
+#[test]
+fn an_append_after_a_zeroed_header_is_damage_not_a_scrubbed_journal() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut s = store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None)
+        .unwrap();
+    s.ingest_many(vec![props_step("e", 0, "a")]).unwrap();
+    s.checkpoint().unwrap();
+    s.ingest_many(vec![props_step("e", 1, "b")]).unwrap();
+    drop(s);
+    let journal = dir.path().join(store::JOURNAL_FILE);
+    let mut bytes = std::fs::read(&journal).unwrap();
+    bytes[..8].fill(0);
+    std::fs::write(&journal, &bytes).unwrap();
+    let err = store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None)
+        .err()
+        .expect("acknowledged record after zeros");
+    assert!(matches!(err, ExperienceError::Snapshot(_)), "{err}");
+    // A journal scrubbed whole, which a finished checkpoint leaves behind, still opens.
+    bytes.fill(0);
+    std::fs::write(&journal, &bytes).unwrap();
+    store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+}

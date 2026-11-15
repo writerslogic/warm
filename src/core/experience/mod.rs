@@ -53,6 +53,9 @@ pub struct ExperienceConfig {
     pub max_goal_bytes: usize,
     /// Steps recorded for one episode.
     pub max_steps: usize,
+    /// Bytes of the snapshot payload. A snapshot over this is refused when it is read, so a
+    /// write that would take the store past it is refused before it is journaled.
+    pub max_snapshot_bytes: u64,
 }
 
 impl Default for ExperienceConfig {
@@ -64,6 +67,7 @@ impl Default for ExperienceConfig {
             max_id_bytes: 256,
             max_goal_bytes: 64 * 1024,
             max_steps: 1 << 20,
+            max_snapshot_bytes: snapshot::MAX_SNAPSHOT_BYTES,
         }
     }
 }
@@ -490,6 +494,9 @@ pub struct Experience {
     effect_docs: MemoryDocumentStore,
     episode_docs: MemoryDocumentStore,
     dirty: BTreeSet<u32>,
+    /// Steps stored over all episodes, and the region entries they carry.
+    step_count: usize,
+    step_region_count: usize,
 }
 
 fn doc(id: String, text: String) -> DocumentInput {
@@ -531,6 +538,7 @@ impl Experience {
     pub fn new(cfg: ExperienceConfig) -> Self {
         let mut cfg = cfg;
         cfg.max_depth = cfg.max_depth.clamp(1, HARD_MAX_DEPTH);
+        cfg.max_snapshot_bytes = cfg.max_snapshot_bytes.min(snapshot::MAX_SNAPSHOT_BYTES);
         Self {
             cfg,
             terms: TermStore::default(),
@@ -547,6 +555,8 @@ impl Experience {
             episode_docs: MemoryDocumentStore::new(INDEX_DIMENSIONS, None)
                 .expect("index dimensions are in range"),
             dirty: BTreeSet::new(),
+            step_count: 0,
+            step_region_count: 0,
         }
     }
 
@@ -788,6 +798,9 @@ impl Experience {
         collect_handles(o.tree, &mut handle_map);
         let e = self.episodes[eid as usize].as_mut().expect("live episode");
         e.handles = handle_map;
+        let regions: Vec<(u32, u32)> = counts.into_iter().collect();
+        self.step_count += 1;
+        self.step_region_count += regions.len();
         e.steps.push(StepRec {
             step: o.step,
             root,
@@ -795,7 +808,7 @@ impl Experience {
             frame: frame_id,
             label: label_sym,
             flags,
-            regions: counts.into_iter().collect(),
+            regions,
         });
         self.dirty.insert(eid);
         Ok(Ingested::Applied)
@@ -1044,10 +1057,42 @@ impl Experience {
         Ok(())
     }
 
-    /// What counts against a tenant quota: one unit per episode, region and effect row, the
-    /// entries the experience indexes hold.
+    /// What counts against a tenant quota: one unit per episode, step, region and effect row.
+    /// A step counts because regions are keyed by structure, so steps that differ only in
+    /// their props add no region yet each stores them.
     pub fn quota_units(&self) -> u64 {
-        (self.episode_map.len() + self.regions.live() + self.effects.rows.len()) as u64
+        (self.episode_map.len() + self.step_count + self.regions.live() + self.effects.rows.len())
+            as u64
+    }
+
+    /// Whether `step` of `episode` is already stored, so ingesting it again adds nothing.
+    pub fn has_step(&self, episode: &str, step: u32) -> bool {
+        self.episode_slot(episode)
+            .is_some_and(|id| self.ep(id).steps.binary_search_by_key(&step, |s| s.step).is_ok())
+    }
+
+    /// An over-estimate of the snapshot payload, from counters kept as the store changes.
+    fn snapshot_estimate(&self) -> u64 {
+        const NODE: usize = 64;
+        const SYMBOL: usize = 16;
+        const STEP: usize = 32;
+        const STEP_REGION: usize = 12;
+        const REGION: usize = 2048;
+        (self.terms.syms.live_bytes()
+            + SYMBOL * self.terms.syms.live()
+            + NODE * self.terms.live_nodes()
+            + STEP * self.step_count
+            + STEP_REGION * self.step_region_count
+            + REGION * self.regions.live()) as u64
+    }
+
+    /// Fails when the snapshot of the current state would exceed the snapshot limit. Cheap while
+    /// the estimate is well under the limit; near it, measures the real size.
+    pub fn check_snapshot_size(&self) -> Result<()> {
+        if self.snapshot_estimate() < self.cfg.max_snapshot_bytes / 4 * 3 {
+            return Ok(());
+        }
+        self.to_bytes_at(u64::MAX).map(drop)
     }
 
     pub fn has_effects(&self) -> bool {
@@ -1356,6 +1401,8 @@ impl Experience {
         let nodes_before = self.terms.live_nodes();
         let regions_before = self.regions.live();
         let e = self.episodes[eid as usize].take()?;
+        self.step_count -= e.steps.len();
+        self.step_region_count -= e.steps.iter().map(|s| s.regions.len()).sum::<usize>();
         self.episode_map.remove(id);
         self.free_episodes.push(eid);
         self.dirty.remove(&eid);

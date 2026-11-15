@@ -367,8 +367,8 @@ fn observations_over_http_are_routed_bounded_recalled_and_forgotten() {
 
 #[test]
 fn observations_count_against_the_tenant_quota() {
-    // The first observation stores one episode and one region (2 units); each further episode of
-    // the same shape shares the region and adds one.
+    // The first observation stores one episode, one step and one region (3 units); each further
+    // episode of the same shape shares the region and adds an episode and a step (2 units).
     let obs = |ep: &str| {
         json!({"episode": ep, "step": 0, "url": "http://q/p",
             "tree": {"role": "RootWebArea", "name": "Quota page", "children": [
@@ -381,21 +381,19 @@ fn observations_count_against_the_tenant_quota() {
             .map(|i| server.post("remember", "q", &obs(&format!("e{i}"))).0)
             .collect()
     };
-    // Each new episode adds an episode unit and shares the region, so units are 1 + 1 for the
-    // first, then +1 per further episode (same structure): 2, 3, 4.
     assert_eq!(
-        units_after("3", 3),
+        units_after("5", 3),
         vec![200, 200, 429],
         "quota is reached exactly"
     );
     assert_eq!(
-        units_after("4", 3),
+        units_after("7", 3),
         vec![200, 200, 200],
         "quota-1..quota admits"
     );
-    assert_eq!(units_after("2", 2), vec![200, 429], "quota+1 refuses");
+    assert_eq!(units_after("4", 2), vec![200, 429], "quota+1 refuses");
     let dir = tempfile::tempdir().unwrap();
-    let server = start(dir.path(), &["--max-documents-per-tenant", "3"]);
+    let server = start(dir.path(), &["--max-documents-per-tenant", "5"]);
     assert_eq!(server.post("remember", "q", &obs("a")).0, 200);
     assert_eq!(server.post("remember", "q", &obs("b")).0, 200);
     let (status, body) = server.post("remember", "q", &obs("c"));

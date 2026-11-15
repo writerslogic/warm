@@ -327,3 +327,52 @@ fn a_failed_journal_write_leaves_the_state_unchanged_and_the_store_usable() {
     let m = open(dir.path());
     assert_eq!(m.core().with_experience(|s| s.stats().steps).unwrap(), 2);
 }
+
+/// A checkpoint that fails anywhere must not make a later acknowledged write unrecoverable. The
+/// journal phase is the hard case: the snapshot is published and the old journal zeroed, and a
+/// failed unlink once left that file in place for the next append.
+#[test]
+fn a_write_acknowledged_after_a_failed_checkpoint_survives_reopen() {
+    use writerslogic_warm::core::experience::OwnedObservation;
+    use writerslogic_warm::core::failpoint::{arm, disarm, hits, Fault};
+    let _serial = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let obs =
+        |n: u32| -> OwnedObservation { serde_json::from_value(step("a", n, 0, None)).unwrap() };
+    let core = |dir: &Path| WarmCore::new(DIM, Some(dir.display().to_string()), None).unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let c = core(dir.path());
+    c.with_experience_mut(|s| s.ingest_many(vec![obs(0)]).unwrap())
+        .unwrap();
+    disarm();
+    c.with_experience_mut(|s| s.checkpoint().unwrap()).unwrap();
+    let points = hits();
+    drop(c);
+    assert!(points > 3, "{points}");
+    for at in 1..=points {
+        let dir = tempfile::tempdir().unwrap();
+        let c = core(dir.path());
+        c.with_experience_mut(|s| s.ingest_many(vec![obs(0)]).unwrap())
+            .unwrap();
+        arm(Fault::Io, at, false);
+        let failed = c.with_experience_mut(|s| s.checkpoint()).unwrap().is_err();
+        disarm();
+        let second = c
+            .with_experience_mut(|s| s.ingest_many(vec![obs(1)]))
+            .unwrap();
+        drop(c);
+        let c = core(dir.path());
+        let (zero, one) = c
+            .with_experience(|s| (s.has_step("a", 0), s.has_step("a", 1)))
+            .unwrap();
+        assert!(
+            zero,
+            "point {at} (checkpoint failed: {failed}): step 0 lost"
+        );
+        if second.is_ok() {
+            assert!(
+                one,
+                "point {at} (checkpoint failed: {failed}): acknowledged step 1 lost"
+            );
+        }
+    }
+}

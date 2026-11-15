@@ -620,3 +620,54 @@ fn action_effects_are_recalled_explained_and_survive_reopen() {
         "the row is gone with its last episode"
     );
 }
+
+#[test]
+fn a_failing_observation_leaves_the_facts_of_its_request_unstored() {
+    let dir = tempfile::tempdir().unwrap();
+    let m = open(dir.path());
+    remember(&m, step("ep", 0, "Checkout", &["Place order"], None));
+    let clash = m.call(
+        "remember",
+        json!({"facts": [
+            {"id": "f1", "text": "a fact sent with a clashing step"},
+            step("ep", 0, "Different page", &["Other"], None),
+        ]}),
+    );
+    assert!(clash.is_err());
+    assert!(
+        m.core().get_document("f1").unwrap().is_none(),
+        "the fact was stored although the request failed"
+    );
+    // The same request with a valid step stores both.
+    remember(
+        &m,
+        json!({"facts": [
+            {"id": "f1", "text": "a fact sent with a good step"},
+            step("ep", 1, "Checkout", &["Place order", "Done"], None),
+        ]}),
+    );
+    assert!(m.core().get_document("f1").unwrap().is_some());
+}
+
+#[test]
+fn a_fact_with_an_experience_shaped_id_explains_as_a_fact_and_unknown_episodes_forget_as_absent() {
+    let dir = tempfile::tempdir().unwrap();
+    let m = open(dir.path());
+    remember(
+        &m,
+        json!({"id": "experience:r1", "text": "apple pie recipe"}),
+    );
+    let e = m
+        .explain("apple pie", "experience:r1", &RecallOptions::default())
+        .unwrap();
+    assert!(e.retrieved);
+    let report = m
+        .call(
+            "forget",
+            json!({"scope": {"kind": "episode", "episode": "nope"}}),
+        )
+        .unwrap();
+    assert_eq!(report["forgotten"], json!([]));
+    assert_eq!(report["purged"], json!(false));
+    assert!(experience_files(dir.path()).is_empty());
+}

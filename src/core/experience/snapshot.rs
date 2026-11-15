@@ -25,7 +25,7 @@ const MAGIC: &[u8; 4] = b"WEXP";
 const VERSION: u8 = 2;
 const OLDEST_VERSION: u8 = 1;
 const HEADER: usize = 4 + 1 + 3 + 8 + 4;
-const MAX_SNAPSHOT_BYTES: u64 = 1 << 30;
+pub(super) const MAX_SNAPSHOT_BYTES: u64 = 1 << 30;
 
 #[derive(Serialize, Deserialize)]
 pub(super) struct SnapNode(pub u32, pub u32, pub u32, pub Vec<u32>);
@@ -160,6 +160,13 @@ impl Experience {
         };
         let mut payload = Vec::new();
         ciborium::into_writer(&snap, &mut payload).map_err(|e| bad(&e.to_string()))?;
+        if payload.len() as u64 > self.cfg.max_snapshot_bytes {
+            return Err(ExperienceError::Limit {
+                what: "experience snapshot bytes",
+                limit: self.cfg.max_snapshot_bytes as usize,
+                got: payload.len(),
+            });
+        }
         let mut out = Vec::with_capacity(HEADER + payload.len());
         out.extend_from_slice(MAGIC);
         out.push(VERSION);
@@ -184,7 +191,7 @@ impl Experience {
     pub fn open(dir: &Path, cfg: ExperienceConfig) -> Result<Self> {
         let path = dir.join(SNAPSHOT_FILE);
         match std::fs::metadata(&path) {
-            Ok(m) if m.len() > MAX_SNAPSHOT_BYTES => Err(bad("snapshot exceeds the size limit")),
+            Ok(m) if m.len() > cfg.max_snapshot_bytes.min(MAX_SNAPSHOT_BYTES) => Err(bad("snapshot exceeds the size limit")),
             Ok(_) => Self::from_bytes(
                 &std::fs::read(&path).map_err(|e| ExperienceError::Io(e.to_string()))?,
                 cfg,
@@ -209,7 +216,7 @@ impl Experience {
         let len = u64::from_le_bytes(bytes[8..16].try_into().expect("8 bytes"));
         let crc = u32::from_le_bytes(bytes[16..20].try_into().expect("4 bytes"));
         let payload = &bytes[HEADER..];
-        if len != payload.len() as u64 || len > MAX_SNAPSHOT_BYTES {
+        if len != payload.len() as u64 || len > cfg.max_snapshot_bytes.min(MAX_SNAPSHOT_BYTES) {
             return Err(bad("payload length does not match the header"));
         }
         if crc32fast::hash(payload) != crc {
@@ -377,6 +384,14 @@ impl Experience {
             x.episode_map.insert(e.key.clone(), i as u32);
             x.dirty.insert(i as u32);
         }
+        x.step_count = x.episodes.iter().flatten().map(|e| e.steps.len()).sum();
+        x.step_region_count = x
+            .episodes
+            .iter()
+            .flatten()
+            .flat_map(|e| &e.steps)
+            .map(|s| s.regions.len())
+            .sum();
         x.free_episodes = (0..x.episodes.len() as u32)
             .rev()
             .filter(|&i| x.episodes[i as usize].is_none())

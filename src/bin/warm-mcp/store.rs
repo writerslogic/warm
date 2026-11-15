@@ -581,6 +581,15 @@ impl WarmBackend {
     pub fn forget_episode(&self, namespace: &str, episode: &str) -> Res<Value> {
         let store = self.store(namespace)?;
         let _write = store.gate.lock();
+        // Read first: purging through the writer would create an experience store in a
+        // namespace that holds only documents.
+        if !store
+            .core
+            .with_experience(|s| s.has_episode(episode))
+            .unwrap_or(false)
+        {
+            return Ok(json!({"deleted": 0, "missing": [episode]}));
+        }
         let report = store
             .core
             .with_experience_mut(|s| s.purge_episode(episode))
@@ -612,7 +621,12 @@ impl WarmBackend {
             .core
             .search_documents(&req.query, &options)
             .map_err(|e| Fail::invalid(format!("search failed: {e:#}")))?;
-        let mut results = results;
+        // `min_score` applies to the document scores the caller can compare; once regions merge in
+        // every score is a rank-fused value relative to the best one.
+        let mut results: Vec<DocumentResult> = results
+            .into_iter()
+            .filter(|r| req.min_score.is_none_or(|min| r.score >= min))
+            .collect();
         // Regions of observations have no tags or metadata, so a filtered search skips them.
         let regions = if filter.as_object().is_none_or(|m| m.is_empty()) {
             store
@@ -670,7 +684,6 @@ impl WarmBackend {
         }
         Ok(results
             .into_iter()
-            .filter(|r| req.min_score.is_none_or(|min| r.score >= min))
             .map(|r| Hit {
                 memory: memory_from(&r.document_id, r.text.as_deref(), &r.metadata, &r.version),
                 score: r.score,
@@ -884,6 +897,64 @@ mod tests {
             },
         )
         .unwrap()
+    }
+
+    fn search_req(query: &str, min_score: Option<f64>) -> SearchReq {
+        SearchReq {
+            query: query.into(),
+            k: 10,
+            tags: Vec::new(),
+            filter: Map::new(),
+            min_score,
+            lexical_weight: None,
+            semantic_weight: None,
+            fusion: None,
+        }
+    }
+
+    #[test]
+    fn min_score_filters_documents_when_regions_merge_in() {
+        let dir = tempfile::tempdir().unwrap();
+        let b = backend(dir.path());
+        put(
+            &b,
+            "d1",
+            "checkout order policy for the place order button",
+            &[],
+        );
+        let q = "place order button";
+        let weak = b.search("t", search_req(q, None)).unwrap();
+        assert_eq!(weak.len(), 1);
+        let cutoff = weak[0].score * 1.01 + 1e-6;
+        b.observe(
+            "t",
+            json!({"episode": "e1", "step": 0, "url": "http://shop/c", "tree":
+                {"role": "RootWebArea", "name": "Checkout", "children": [
+                    {"role": "button", "name": "Place order"}]}}),
+        )
+        .unwrap();
+        let hits = b.search("t", search_req(q, Some(cutoff))).unwrap();
+        let found: Vec<&str> = hits.iter().map(|h| h.memory.id.as_str()).collect();
+        assert!(!found.contains(&"d1"), "{found:?}");
+        assert!(
+            found.iter().any(|i| i.starts_with("experience:")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn forgetting_an_unknown_episode_creates_no_experience_store() {
+        let dir = tempfile::tempdir().unwrap();
+        let b = backend(dir.path());
+        put(&b, "d1", "text", &[]);
+        let out = b.forget_episode("t", "nope").unwrap();
+        assert_eq!(out["deleted"], 0);
+        let found = std::fs::read_dir(dir.path())
+            .unwrap()
+            .flatten()
+            .flat_map(|e| std::fs::read_dir(e.path()).into_iter().flatten().flatten())
+            .any(|e| e.file_name().to_string_lossy().starts_with("experience."));
+        assert!(!found);
     }
 
     fn ids(page: &Page) -> Vec<&str> {

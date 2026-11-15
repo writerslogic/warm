@@ -129,8 +129,8 @@ impl Memory {
             .collect())
     }
 
-    /// `remember` for a JSON request that carries observations. Facts are stored first, in one
-    /// transaction; observations follow in order. The result lists every entry in input order.
+    /// `remember` for a JSON request that carries observations. Observations are stored first,
+    /// in order; facts follow in one transaction. The result lists every entry in input order.
     pub(super) fn remember_routed(
         &self,
         map: Map<String, Value>,
@@ -163,12 +163,25 @@ impl Memory {
                 facts.push(parse_fact(item)?);
             }
         }
+        // Observations first: a retried step is a no-op, so a request that fails after them can
+        // be sent again. Facts are one transaction and go last; if they fail once observations
+        // are stored the failure is reported as a committed mutation, never as a plain refusal.
+        let observation_results = if observations.is_empty() {
+            Vec::new()
+        } else {
+            self.remember_observations_within(observations, limit)?
+        };
         let fact_results = if facts.is_empty() {
             Vec::new()
         } else {
-            self.remember_many_with_limit(facts, limit)?
+            let stored = observation_results.iter().any(|r| r.created);
+            let result = self.remember_many_with_limit(facts, limit);
+            if stored {
+                crate::core::error::after_commit("fact write", result)?
+            } else {
+                result?
+            }
         };
-        let observation_results = self.remember_observations_within(observations, limit)?;
         Ok(slots
             .into_iter()
             .map(|(observed, i)| {
@@ -208,7 +221,7 @@ impl Memory {
         Ok(ForgetReport {
             forgotten,
             dry_run: options.dry_run,
-            purged: !options.dry_run,
+            purged: present && !options.dry_run,
         })
     }
 

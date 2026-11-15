@@ -87,6 +87,9 @@ pub struct ExperienceStore {
     /// Closed across a checkpoint, because the old journal is removed while it is replaced.
     journal: Option<File>,
     journal_bytes: u64,
+    /// A checkpoint published its snapshot but did not finish replacing the journal, so the
+    /// file on disk is scrubbed or covered by the snapshot and must not take another append.
+    journal_stale: bool,
 }
 
 impl std::ops::Deref for ExperienceStore {
@@ -153,7 +156,13 @@ impl ExperienceStore {
         match std::fs::read(&journal_path) {
             // Zeros: a checkpoint scrubbed the old journal and stopped before unlinking it. Its
             // records are all in the snapshot that checkpoint published.
-            Ok(bytes) if bytes.len() >= HEADER && bytes[..HEADER].iter().all(|&b| b == 0) => {}
+            Ok(bytes) if bytes.len() >= HEADER && bytes[..HEADER].iter().all(|&b| b == 0) => {
+                if acknowledged_after_scrub(&bytes, snapshot_seq, sealer.as_deref()) {
+                    return Err(snapshot_error(
+                        "journal holds records after a scrubbed region; they are not in the snapshot",
+                    ));
+                }
+            }
             Ok(bytes) if bytes.len() >= HEADER => {
                 if &bytes[..4] != MAGIC || bytes[4] != VERSION {
                     return Err(snapshot_error("not an experience journal"));
@@ -225,6 +234,7 @@ impl ExperienceStore {
                 snapshot_seq,
                 journal: Some(open_rw(&journal_path)?),
                 journal_bytes: valid_len,
+                journal_stale: false,
             }
         } else {
             Self::create_journal(dir, x, seq, snapshot_seq, sealer)?
@@ -255,6 +265,7 @@ impl ExperienceStore {
             snapshot_seq,
             journal: Some(journal),
             journal_bytes: HEADER as u64,
+            journal_stale: false,
         })
     }
 
@@ -346,6 +357,9 @@ impl ExperienceStore {
     /// Appends the frames and syncs them. On failure the journal is cut back to its length
     /// before the call.
     fn append(&mut self, frames: &[u8]) -> Result<()> {
+        if self.journal_stale {
+            self.reset_journal()?;
+        }
         let before = self.journal_bytes;
         let result = (|| -> std::io::Result<()> {
             use std::io::{Seek, SeekFrom};
@@ -384,13 +398,27 @@ impl ExperienceStore {
         let mut frames = Vec::new();
         let (start_seq, mut failed, mut ahead) = (self.seq, None, false);
         for (i, op) in ops.into_iter().enumerate() {
+            // A step that adds a unit and finds none left is refused before it touches the
+            // state, so the common rejection needs no reload.
+            if let (Op::Ingest(o), Some(b)) = (&op, budget) {
+                if self.x.quota_units() >= b && !self.x.has_step(&o.episode, o.step) {
+                    failed = Some((i, ExperienceError::Quota(b)));
+                    break;
+                }
+            }
             match Self::apply(&mut self.x, &op) {
                 Ok(Ingested::Duplicate) => outcomes.push(Ingested::Duplicate),
                 Ok(Ingested::Applied) => {
                     if let Some(b) = budget.filter(|b| self.x.quota_units() > *b) {
-                        // Over the quota: this step is applied in memory only, so reload.
+                        // Regions this step created took it over: applied in memory only.
                         ahead = true;
                         failed = Some((i, ExperienceError::Quota(b)));
+                        break;
+                    }
+                    if let Err(e) = self.x.check_snapshot_size() {
+                        // The snapshot could not be read back with this step in it.
+                        ahead = true;
+                        failed = Some((i, e));
                         break;
                     }
                     self.seq += 1;
@@ -525,13 +553,23 @@ impl ExperienceStore {
         failpoint::hit("experience-checkpoint-published").map_err(io)?;
         self.snapshot_seq = self.seq;
 
+        self.journal_stale = true;
+        self.reset_journal()
+    }
+
+    /// Replaces the journal with an empty one, scrubbing the file it replaces. Until this
+    /// succeeds `journal_stale` stays set and no append is accepted.
+    fn reset_journal(&mut self) -> Result<()> {
         let journal = self.dir.join(JOURNAL_FILE);
         self.journal = None;
-        scrub_remove_file(&journal).map_err(io)?;
+        if journal.exists() {
+            scrub_remove_file(&journal).map_err(io)?;
+        }
         failpoint::hit("experience-journal-removed").map_err(io)?;
         atomic_write(&journal, &journal_header()).map_err(io)?;
         self.journal = Some(open_rw(&journal)?);
         self.journal_bytes = HEADER as u64;
+        self.journal_stale = false;
         Ok(())
     }
 
@@ -539,6 +577,44 @@ impl ExperienceStore {
     pub fn is_dirty(&self) -> bool {
         self.seq != self.snapshot_seq
     }
+}
+
+/// Whether a journal that starts with a scrubbed header carries a valid record the snapshot does
+/// not cover. A scrub zeroes the file from the front, so a crash during it leaves zeros followed
+/// by old records, all of them in the snapshot; a record beyond the snapshot after zeros is an
+/// acknowledged append that open must not drop.
+fn acknowledged_after_scrub(bytes: &[u8], snapshot_seq: u64, sealer: Option<&dyn Sealer>) -> bool {
+    let Some(first) = bytes[HEADER..].iter().position(|&b| b != 0).map(|i| i + HEADER) else {
+        return false;
+    };
+    // The little-endian length may itself start with zero bytes.
+    (first.saturating_sub(3).max(HEADER)..=first).any(|at| {
+        let rest = &bytes[at..];
+        if rest.len() < FRAME_HEADER {
+            return false;
+        }
+        let len = u32::from_le_bytes(rest[..4].try_into().expect("4 bytes")) as usize;
+        let crc = u32::from_le_bytes(rest[4..8].try_into().expect("4 bytes"));
+        if len > MAX_FRAME_BYTES || FRAME_HEADER + len > rest.len() {
+            return false;
+        }
+        let body = &rest[FRAME_HEADER..FRAME_HEADER + len];
+        if crc32fast::hash(body) != crc {
+            return false;
+        }
+        let plain = match sealer {
+            Some(s) => match s.unseal(body) {
+                Ok(p) => p,
+                Err(_) => return false,
+            },
+            None => body.to_vec(),
+        };
+        ciborium::de::from_reader_with_recursion_limit::<Record, _>(
+            plain.as_slice(),
+            RECORD_RECURSION,
+        )
+        .is_ok_and(|r| r.seq > snapshot_seq)
+    })
 }
 
 fn open_rw(path: &Path) -> Result<File> {
