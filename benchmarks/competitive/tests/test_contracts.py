@@ -115,9 +115,22 @@ def test_documents_check_compares_a_chunk_with_its_byte_range():
 def test_pair_check_reports_order_and_score_differences():
     def row(ids):
         return {"id": "q", "results": [{"documentId": i, "lexicalScore": 2.0 - n} for n, i in enumerate(ids)]}
-    assert runner._pair_ids([row("abc")], [row("abc")]) == {"queries": 1, "queries_with_different_id_lists": 0, "max_abs_score_gap": 0.0}
+    assert runner._pair_ids([row("abc")], [row("abc")]) == {"queries": 1, "queries_with_different_id_lists": 0, "queries_differing_only_in_tie_order": 0, "max_abs_score_gap": 0.0}
     assert runner._pair_ids([row("abc")], [row("acb")])["queries_with_different_id_lists"] == 1
     assert runner._pair_ids([row("abc")], [row("ab")])["queries_with_different_id_lists"] == 1
+
+
+def test_pair_check_passes_a_reordering_of_equal_scores_and_nothing_else():
+    def row(ids, scores):
+        return {"id": "q", "results": [{"documentId": i, "lexicalScore": s} for i, s in zip(ids, scores)]}
+    tied = [3.0, 2.0, 2.0, 1.0]
+    swapped = runner._pair_ids([row("abcd", tied)], [row("acbd", tied)])
+    assert (swapped["queries_with_different_id_lists"], swapped["queries_differing_only_in_tie_order"]) == (0, 1)
+    assert runner._pair_ids([row("abcd", tied)], [row("bacd", tied)])["queries_with_different_id_lists"] == 1
+    assert runner._pair_ids([row("abcd", tied)], [row("axcd", tied)])["queries_with_different_id_lists"] == 1
+    assert runner._pair_ids([row("abcd", tied)], [row("acbd", [3.0, 2.0, 1.5, 1.0])])["queries_with_different_id_lists"] == 1
+    cut = [3.0, 2.0, 2.0]
+    assert runner._pair_ids([row("abc", cut)], [row("abd", cut)])["queries_differing_only_in_tie_order"] == 1
 
 
 def test_stored_rows_reach_their_binaries_with_the_stored_flags(monkeypatch, tmp_path):

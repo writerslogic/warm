@@ -297,6 +297,7 @@ jobs:
           shared-key: msrv
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo check --locked --no-default-features
+      - run: cargo check --locked --no-default-features --features experimental
 
   retrieval-quality:
     runs-on: ubuntu-latest

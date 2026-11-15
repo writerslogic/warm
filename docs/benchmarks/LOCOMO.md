@@ -122,6 +122,50 @@ this data: all-gold for multi-hop reaches 94.0 percent at 300 items and 97.2 at 
 9. Cost: 41.55 USD, about 0.027 per question, over 2,962 paid calls.
 
 
+## Context shaping on Mem0's harness (2026-11-14, conversations 5 to 9)
+
+Evidence and commands: [`benchmarks/results/locomo_mem0_harness_v1/context_shapes_20261114/`](../../benchmarks/results/locomo_mem0_harness_v1/context_shapes_20261114/)
+(`PREREG.md` is the pre-registration, written before any candidate metric or paid call). The harness, answerer, judge, top-200 cutoff and 4,096-token
+completion limit are unchanged; only what the WARM backend returns changed (`benchmarks/public/locomo/context_shapes.py`, selected by `WARM_CONTEXT`, default `turns` = the earlier run).
+
+What changed: the harness sorts the (at most 200) items by `created_at` and every turn of a session shares one timestamp, so the earlier run showed each
+session in descending retrieval-score order. Configuration `ordered` returns the same 200 turns with the turn index added to `created_at` as milliseconds,
+so each session reads in dialogue order, and the harness then prints its human-readable date form instead of the ISO date. Configuration `merged` joins consecutive turns of one session into one item
+(recall k=400, 300 turns, at most 200 items). Image-tag compaction and near-duplicate removal were not tried.
+
+### Offline (no spend, cached query embeddings)
+
+All-gold-in-context, all ten conversations, `offline.txt`: multi-hop 83.7 percent (200 turns), 92.6 percent for `merged` at 300 turns (13,928 mean prompt tokens against 10,474); open-domain 75.0 to 85.9; temporal 98.4 to 98.8; single-hop 98.2 to 99.2.
+The merge grid and its token rule (at most 1.35 times the baseline prompt) were fixed in advance and applied on conversations 0 to 4 only.
+
+### Development pilot (conversations 0 to 4, 130 questions, 9.11 USD)
+
+All 64 baseline-wrong questions plus 66 sampled baseline-correct ones (`pilot_questions.json`). Fixed share of the 64 failures and kept share of the 66 successes, estimated development accuracy by the registered rule (baseline 91.6):
+
+| Configuration | multi-hop fixed | temporal fixed | open-domain fixed | single-hop fixed | successes kept | estimated dev accuracy | mean prompt tokens | empty or length-finished answers |
+|---|---|---|---|---|---|---|---|---|
+| `ordered` | 8 of 20 | 2 of 6 | 3 of 11 | 9 of 27 | 66 of 66 | 94.5 | 10,989 | 7 |
+| `merged` | 7 of 20 | 2 of 6 | 3 of 11 | 10 of 27 | 65 of 66 | 94.1 | 13,939 | 8 |
+
+Both estimates are biased upward, because a failing question can pass on a rerun (9 of the 22 earlier empties did). The registered rule chose `ordered`. Merging raised the share of questions with all gold in context
+and did not reduce the reasoning-token exhaustion (mean reasoning 1,546 against 1,528 tokens per answer); coverage was not what limited accuracy.
+
+### Confirmation: conversations 5 to 9 (778 questions, 21.88 USD)
+
+The task budget (48 USD) did not cover a second batch for conversations 0 to 4 (registered rule in `PREREG.md`), so this is the held-out half, not the full 1,540. Ingest gate passed, with live turn order equal to the dataset's. Fresh run, no cache or checkpoint reuse.
+
+| Category | n | WARM `ordered` | WARM earlier run | Mem0 | `ordered` minus Mem0 (95% paired bootstrap) | Verdict |
+|---|---|---|---|---|---|---|
+| Overall | 778 | 92.3% | 92.4% | 93.1% | -0.8 pp [-2.4, +0.9] | tied, point estimate behind |
+| Multi-hop | 140 | 92.1% | 90.7% | 96.4% | -4.3 pp [-7.9, -1.4] | behind |
+| Temporal | 165 | 89.7% | 92.7% | 92.1% | -2.4 pp [-6.1, +1.2] | tied, point estimate behind |
+| Open-domain | 50 | 76.0% | 74.0% | 74.0% | +2.0 pp [-8.0, +12.0] | tied, point estimate ahead |
+| Single-hop | 423 | 95.3% | 95.0% | 94.6% | +0.7 pp [-1.4, +2.8] | tied, point estimate ahead |
+
+`ordered` minus the earlier WARM run: overall -0.1 pp [-1.4, +1.2], multi-hop +1.4 [-2.9, +5.7], temporal -3.0 [-6.1, +0.0]. On these five conversations the earlier run was already behind Mem0 on multi-hop (-5.7 pp [-10.0, -1.4]).
+Empty answers: 5 (the earlier run had 6 on the same questions; Mem0 has none here). Source: `final_analysis.txt`. Conclusion: reordering by dialogue did not change accuracy; WARM does not beat Mem0 in every category under this harness, and multi-hop remains behind.
+The earlier single-pass 1,540-question result above stays the record for all ten conversations.
+
 ## Setup
 
 | | |

@@ -34,8 +34,8 @@ use clap::{Parser, Subcommand};
 use rayon::prelude::*;
 use serde_json::{json, Value};
 use writerslogic_warm::core::qgraph::{
-    BuildParams, Graph, Metric, QGraph, Residency, RowStore, SearchParams, UpdatableVGraph, VGraph,
-    VSearchParams,
+    BuildParams, BuildProfile, Graph, Metric, QGraph, Residency, RowStore, SearchParams,
+    UpdatableVGraph, VGraph, VSearchParams,
 };
 use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{DocumentInput, EmbeddingSpace, EntangledHVec, SearchOptions, WarmCore};
@@ -115,6 +115,10 @@ enum Mode {
         max_exact: Vec<usize>,
         #[arg(long, default_value_t = 128)]
         build_ef: usize,
+        /// Construction schedule: max-recall (the default two passes), high, balanced or fast. A
+        /// graph cache or saved index built with another profile is rejected or must use a new path.
+        #[arg(long, default_value = "max-recall")]
+        build_profile: String,
         /// Score the construction search with 8-bit codes (exact prune).
         #[arg(long)]
         quantized_search: bool,
@@ -634,6 +638,7 @@ struct QgraphArgs {
     ef: Vec<usize>,
     max_exact: Vec<usize>,
     build_ef: usize,
+    build_profile: String,
     quantized_search: bool,
     alpha: f32,
     code_bits: usize,
@@ -821,17 +826,23 @@ fn ann_qgraph_count<const K: usize>(a: &QgraphArgs) -> Result<()> {
     let params = BuildParams {
         metric,
         build_ef: a.build_ef,
+        profile: BuildProfile::from_name(&a.build_profile)
+            .with_context(|| format!("unknown --build-profile {:?}", a.build_profile))?,
         quantized_search: a.quantized_search,
         alpha: a.alpha,
         code_bits: a.code_bits,
         degree: a.degree,
         ..BuildParams::default()
     };
-    let build_params = json!({"index": a.index, "metric": metric_name, "degree": a.degree, "build_ef": a.build_ef, "quantized_search": a.quantized_search,
+    let mut build_params = json!({"index": a.index, "metric": metric_name, "degree": a.degree, "build_ef": a.build_ef, "quantized_search": a.quantized_search,
                               "alpha": a.alpha, "code_bits": a.code_bits, "seed": params.seed,
                               "residual": a.residual, "residual_bits": a.residual_bits,
                               "vertex_bits": a.vertex_bits, "id_bytes": a.id_bytes, "screen": a.screen,
                               "block_bits": a.block_bits, "align_rows": a.align_rows, "reorder": a.reorder});
+    // Recorded only when it differs from the default, so records of earlier builds still match.
+    if params.profile != BuildProfile::MaxRecall {
+        build_params["build_profile"] = json!(params.profile.name());
+    }
     let wait = if a.sync.is_some() { 0 } else { a.max_wait_secs };
     let deadline = Instant::now() + std::time::Duration::from_secs(wait);
     let (load_before_build, build_gate) = wait_for_idle(a.max_load, deadline);
@@ -1819,6 +1830,7 @@ fn main() -> Result<()> {
             ef,
             max_exact,
             build_ef,
+            build_profile,
             quantized_search,
             alpha,
             code_bits,
@@ -1858,6 +1870,7 @@ fn main() -> Result<()> {
             ef,
             max_exact,
             build_ef,
+            build_profile,
             quantized_search,
             alpha,
             code_bits,

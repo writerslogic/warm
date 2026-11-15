@@ -4239,17 +4239,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "warm",
-  "value": 1066.316266610928,
+  "value": 1737.2774749817636,
   "ci": [
-   1062.6303669469658,
-   1080.4205691781751
+   1725.1742670121841,
+   1744.7614323137425
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,066"
+  "text": "1,737"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), documents contract",
@@ -4257,17 +4257,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "warm",
-  "value": 886.788,
+  "value": 540.508,
   "ci": [
-   880.393,
-   894.643
+   535.963,
+   543.326
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "887"
+  "text": "541"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), documents contract",
@@ -4275,17 +4275,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "warm",
-  "value": 2009.06,
+  "value": 1197.2735,
   "ci": [
-   1977.445,
-   2043.193
+   1176.636,
+   1206.203
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "2,009"
+  "text": "1,197"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), documents contract",
@@ -4293,17 +4293,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 2.39417552,
+  "value": 2.620971158,
   "ci": [
-   2.39417552,
-   2.39417552
+   2.620971158,
+   2.620971158
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "2.39"
+  "text": "2.62"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), documents contract",
@@ -4311,17 +4311,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 404.609375,
+  "value": 330.72265625,
   "ci": [
-   404.609375,
-   404.609375
+   330.72265625,
+   330.72265625
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "405"
+  "text": "331"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), documents contract",
@@ -4329,17 +4329,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 74.1484375,
+  "value": 77.06640625,
   "ci": [
-   74.05859375,
-   74.28515625
+   76.98828125,
+   77.13671875
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "74"
+  "text": "77"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), documents contract",
@@ -4347,10 +4347,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "disk_mib",
   "system": "warm",
-  "value": 94.08117866516113,
+  "value": 94.08117580413818,
   "ci": [
-   94.08117866516113,
-   94.08117866516113
+   94.08117580413818,
+   94.08117580413818
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs[0].disk_bytes",
@@ -4365,12 +4365,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.02403445,
+  "value": 0.023672006000000002,
   "ci": [
-   0.023618916,
-   0.027737663
+   0.023338493,
+   0.024080836
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -4413,17 +4413,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 4.1358489990234375,
+  "value": 4.186149597167969,
   "ci": [
-   4.1358489990234375,
-   4.1358489990234375
+   4.186149597167969,
+   4.186149597167969
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.install",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4.1"
+  "text": "4.2"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), documents contract",
@@ -4621,17 +4621,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "warm-lexical-api",
-  "value": 1209.3213444375606,
+  "value": 2118.2900106666502,
   "ci": [
-   1189.524556669848,
-   1224.935321393887
+   2109.399107795053,
+   2130.258245325751
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,209"
+  "text": "2,118"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4639,17 +4639,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "lucene",
-  "value": 1584.8435653691915,
+  "value": 1703.7191413134028,
   "ci": [
-   1567.2791926014543,
-   1744.5565700415634
+   1066.0832967894194,
+   1709.7526698796908
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,585"
+  "text": "1,704"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4657,17 +4657,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "tantivy-rs",
-  "value": 507.17147618442596,
+  "value": 505.0214725157598,
   "ci": [
-   506.60960275543425,
-   508.9863375332168
+   504.60974423982276,
+   507.2576841734993
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "507"
+  "text": "505"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4675,17 +4675,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "tantivy-rs-count",
-  "value": 1418.4213231095946,
+  "value": 1406.5134588225267,
   "ci": [
-   1415.6923454316166,
-   1420.0097596702778
+   1404.4452884150037,
+   1408.2811483224436
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,418"
+  "text": "1,407"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4707,17 +4707,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "warm-lexical-api",
-  "value": 783.5,
+  "value": 435.4325,
   "ci": [
-   771.355,
-   793.736
+   434.47,
+   437.41150000000005
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "784"
+  "text": "435"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4725,17 +4725,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "lucene",
-  "value": 526.688,
+  "value": 528.9755,
   "ci": [
-   514.261,
-   533.678
+   524.6065000000001,
+   581.432
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "527"
+  "text": "529"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4743,17 +4743,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "tantivy-rs",
-  "value": 1588.957,
+  "value": 1596.149,
   "ci": [
-   1581.348,
-   1590.689
+   1590.224,
+   1606.544
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,589"
+  "text": "1,596"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4761,17 +4761,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "tantivy-rs-count",
-  "value": 691.684,
+  "value": 696.127,
   "ci": [
-   688.983,
-   695.439
+   694.78,
+   698.152
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "692"
+  "text": "696"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4793,17 +4793,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "warm-lexical-api",
-  "value": 1858.705,
+  "value": 1071.606,
   "ci": [
-   1836.715,
-   1905.969
+   1061.071,
+   1089.2959999999998
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,859"
+  "text": "1,072"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4811,17 +4811,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "lucene",
-  "value": 2877.69,
+  "value": 1627.2440000000001,
   "ci": [
-   1433.245,
-   3606.252
+   1522.074,
+   4239.409
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "2,878"
+  "text": "1,627"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4829,17 +4829,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "tantivy-rs",
-  "value": 6190.839,
+  "value": 6196.4895,
   "ci": [
-   6127.757,
-   6227.416
+   6186.652,
+   6223.621
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "6,191"
+  "text": "6,196"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4847,17 +4847,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "tantivy-rs-count",
-  "value": 1404.419,
+  "value": 1419.3895,
   "ci": [
-   1389.928,
-   1405.634
+   1412.546,
+   1433.585
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,404"
+  "text": "1,419"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4879,17 +4879,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "warm-lexical-api",
-  "value": 1.954016319,
+  "value": 2.126548152,
   "ci": [
-   1.954016319,
-   1.954016319
+   2.126548152,
+   2.126548152
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "1.95"
+  "text": "2.13"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4897,17 +4897,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "lucene",
-  "value": 4.728523537,
+  "value": 4.77049405,
   "ci": [
-   4.728523537,
-   4.728523537
+   4.77049405,
+   4.77049405
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4.73"
+  "text": "4.77"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4915,17 +4915,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "tantivy-rs",
-  "value": 2.798717104,
+  "value": 2.9223693920000002,
   "ci": [
-   2.798717104,
-   2.798717104
+   2.9223693920000002,
+   2.9223693920000002
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "2.80"
+  "text": "2.92"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4933,17 +4933,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "tantivy-rs-count",
-  "value": 2.778935241,
+  "value": 2.87897141,
   "ci": [
-   2.778935241,
-   2.778935241
+   2.87897141,
+   2.87897141
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "2.78"
+  "text": "2.88"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4965,17 +4965,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "warm-lexical-api",
-  "value": 302.7734375,
+  "value": 231.0703125,
   "ci": [
-   302.7734375,
-   302.7734375
+   231.0703125,
+   231.0703125
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "303"
+  "text": "231"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -4983,17 +4983,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "lucene",
-  "value": 554.70703125,
+  "value": 547.46484375,
   "ci": [
-   554.70703125,
-   554.70703125
+   547.46484375,
+   547.46484375
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "555"
+  "text": "547"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -5001,10 +5001,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs",
-  "value": 155.78515625,
+  "value": 155.7890625,
   "ci": [
-   155.78515625,
-   155.78515625
+   155.7890625,
+   155.7890625
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.build_runs",
@@ -5019,10 +5019,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 155.953125,
+  "value": 155.8671875,
   "ci": [
-   155.953125,
-   155.953125
+   155.8671875,
+   155.8671875
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.build_runs",
@@ -5051,17 +5051,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "warm-lexical-api",
-  "value": 25.0390625,
+  "value": 28.201171875,
   "ci": [
-   24.86328125,
-   25.1796875
+   28.13671875,
+   28.23828125
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "25"
+  "text": "28"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -5069,12 +5069,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "lucene",
-  "value": 117.62890625,
+  "value": 118.40234375,
   "ci": [
-   114.37109375,
-   120.19140625
+   117.46875,
+   121.005859375
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -5087,12 +5087,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs",
-  "value": 91.77734375,
+  "value": 91.759765625,
   "ci": [
-   91.49609375,
-   91.921875
+   91.68359375,
+   91.8046875
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -5105,12 +5105,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 91.734375,
+  "value": 91.673828125,
   "ci": [
-   91.609375,
-   91.796875
+   91.54296875,
+   91.73828125
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -5137,10 +5137,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "disk_mib",
   "system": "warm-lexical-api",
-  "value": 9.521331787109375,
+  "value": 9.521328926086426,
   "ci": [
-   9.521331787109375,
-   9.521331787109375
+   9.521328926086426,
+   9.521328926086426
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs[0].disk_bytes",
@@ -5223,12 +5223,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "warm-lexical-api",
-  "value": 0.014880363,
+  "value": 0.014056427,
   "ci": [
-   0.014739821,
-   0.015290514
+   0.0137931675,
+   0.014301487000000002
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -5241,17 +5241,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "lucene",
-  "value": 1.111163139,
+  "value": 1.1647744465,
   "ci": [
-   1.105560057,
-   1.252919026
+   1.1594152919999998,
+   1.1815863114999998
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1.11"
+  "text": "1.16"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -5259,12 +5259,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "tantivy-rs",
-  "value": 0.912514156,
+  "value": 0.9087171195,
   "ci": [
-   0.907765374,
-   0.935633327
+   0.906531486,
+   0.925250318
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -5277,17 +5277,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "tantivy-rs-count",
-  "value": 0.905829165,
+  "value": 0.904262659,
   "ci": [
-   0.90286601,
-   0.932977589
+   0.901768762,
+   0.911112388
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "0.91"
+  "text": "0.90"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -5429,17 +5429,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "install_mib",
   "system": "warm-lexical-api",
-  "value": 4.1358489990234375,
+  "value": 4.186149597167969,
   "ci": [
-   4.1358489990234375,
-   4.1358489990234375
+   4.186149597167969,
+   4.186149597167969
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.install",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4.1"
+  "text": "4.2"
  },
  {
   "section": "beir:fiqa (57,600 documents, 500 queries), ids contract",
@@ -5714,8 +5714,8 @@
   "factor": 0.9908973566509144,
   "factor_infinite": false,
   "ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -5875,8 +5875,8 @@
   "factor": 0.9777746688642652,
   "factor_infinite": false,
   "ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -7881,8 +7881,8 @@
   "factor": 0.9908973566509144,
   "factor_infinite": false,
   "ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -8006,8 +8006,8 @@
   "factor": 0.9777746688642652,
   "factor_infinite": false,
   "ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -9598,8 +9598,8 @@
   "factor": 0.9908973566509144,
   "factor_infinite": false,
   "ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -9741,8 +9741,8 @@
   "factor": 0.9777746688642652,
   "factor_infinite": false,
   "ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -11531,8 +11531,8 @@
   "factor": 0.9908973566509144,
   "factor_infinite": false,
   "ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -11656,8 +11656,8 @@
   "factor": 0.9777746688642652,
   "factor_infinite": false,
   "ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -13266,8 +13266,8 @@
   "factor": 0.9908973566509144,
   "factor_infinite": false,
   "ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -13427,8 +13427,8 @@
   "factor": 0.9777746688642652,
   "factor_infinite": false,
   "ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -15433,8 +15433,8 @@
   "factor": 0.9908973566509144,
   "factor_infinite": false,
   "ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -15558,8 +15558,8 @@
   "factor": 0.9777746688642652,
   "factor_infinite": false,
   "ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -17168,8 +17168,8 @@
   "factor": 0.9859267230723582,
   "factor_infinite": false,
   "ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -17329,8 +17329,8 @@
   "factor": 0.9775571002979145,
   "factor_infinite": false,
   "ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -19335,8 +19335,8 @@
   "factor": 0.9859267230723582,
   "factor_infinite": false,
   "ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -19460,8 +19460,8 @@
   "factor": 0.9775571002979145,
   "factor_infinite": false,
   "ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -21052,8 +21052,8 @@
   "factor": 0.9859267230723582,
   "factor_infinite": false,
   "ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -21195,8 +21195,8 @@
   "factor": 0.9775571002979145,
   "factor_infinite": false,
   "ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -22985,8 +22985,8 @@
   "factor": 0.9859267230723582,
   "factor_infinite": false,
   "ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -23110,8 +23110,8 @@
   "factor": 0.9775571002979145,
   "factor_infinite": false,
   "ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -24720,8 +24720,8 @@
   "factor": 0.9859267230723582,
   "factor_infinite": false,
   "ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -24881,8 +24881,8 @@
   "factor": 0.9775571002979145,
   "factor_infinite": false,
   "ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -26887,8 +26887,8 @@
   "factor": 0.9859267230723582,
   "factor_infinite": false,
   "ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -27012,8 +27012,8 @@
   "factor": 0.9775571002979145,
   "factor_infinite": false,
   "ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "verdict": "TIE",
   "text": "0.98x"
@@ -28509,17 +28509,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "warm",
-  "value": 1516.0976956435422,
+  "value": 3117.764221530354,
   "ci": [
-   1506.7324898424872,
-   1521.8248740181627
+   3106.5427981416688,
+   3129.9413115581733
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,516"
+  "text": "3,118"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), documents contract",
@@ -28527,17 +28527,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "warm",
-  "value": 610.862,
+  "value": 291.839,
   "ci": [
-   608.055,
-   614.962
+   290.846,
+   293.99199999999996
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "611"
+  "text": "292"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), documents contract",
@@ -28545,17 +28545,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "warm",
-  "value": 1804.096,
+  "value": 785.0015000000001,
   "ci": [
-   1797.134,
-   1811.933
+   782.1005,
+   807.112
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,804"
+  "text": "785"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), documents contract",
@@ -28563,17 +28563,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 3.060533833,
+  "value": 3.491782028,
   "ci": [
-   3.060533833,
-   3.060533833
+   3.491782028,
+   3.491782028
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "3.06"
+  "text": "3.49"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), documents contract",
@@ -28581,17 +28581,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 477.390625,
+  "value": 384.57421875,
   "ci": [
-   477.390625,
-   477.390625
+   384.57421875,
+   384.57421875
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "477"
+  "text": "385"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), documents contract",
@@ -28599,17 +28599,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 79.12109375,
+  "value": 80.01171875,
   "ci": [
-   78.875,
-   79.20703125
+   79.93359375,
+   80.09765625
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "79"
+  "text": "80"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), documents contract",
@@ -28617,10 +28617,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "disk_mib",
   "system": "warm",
-  "value": 76.5923900604248,
+  "value": 76.59238719940186,
   "ci": [
-   76.5923900604248,
-   76.5923900604248
+   76.59238719940186,
+   76.59238719940186
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs[0].disk_bytes",
@@ -28635,12 +28635,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.024193388,
+  "value": 0.024317718000000002,
   "ci": [
-   0.023945074,
-   0.02514677
+   0.024100988,
+   0.024642354499999998
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -28683,17 +28683,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 4.1358489990234375,
+  "value": 4.186149597167969,
   "ci": [
-   4.1358489990234375,
-   4.1358489990234375
+   4.186149597167969,
+   4.186149597167969
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.install",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4.1"
+  "text": "4.2"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), documents contract",
@@ -28891,17 +28891,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "warm-lexical-api",
-  "value": 1721.5621653412265,
+  "value": 4097.247569308254,
   "ci": [
-   1689.6740028983213,
-   1749.2542942063205
+   4042.746611970138,
+   4122.529698799948
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,722"
+  "text": "4,097"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -28909,17 +28909,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "lucene",
-  "value": 2344.530012313448,
+  "value": 2185.4060261287914,
   "ci": [
-   2114.3610710808525,
-   4038.7238333808973
+   1737.5116148524864,
+   2842.2722753759826
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "2,345"
+  "text": "2,185"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -28927,17 +28927,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "tantivy-rs",
-  "value": 1629.5635417748797,
+  "value": 1617.7081924103843,
   "ci": [
-   1620.8365409688479,
-   1632.0728559934232
+   1614.540443838201,
+   1619.6576392114064
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,630"
+  "text": "1,618"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -28945,17 +28945,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "tantivy-rs-count",
-  "value": 1883.8965661284758,
+  "value": 1871.3204434771983,
   "ci": [
-   1875.7392206204875,
-   1891.0084275759457
+   1866.2422697375841,
+   1879.4069316486707
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,884"
+  "text": "1,871"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -28977,17 +28977,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "warm-lexical-api",
-  "value": 532.457,
+  "value": 217.54649999999998,
   "ci": [
-   525.718,
-   542.253
+   214.398,
+   219.7705
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "532"
+  "text": "218"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -28995,17 +28995,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "lucene",
-  "value": 231.416,
+  "value": 239.655,
   "ci": [
-   213.143,
-   236.013
+   227.914,
+   260.689
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "231"
+  "text": "240"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29013,17 +29013,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "tantivy-rs",
-  "value": 451.597,
+  "value": 456.64300000000003,
   "ci": [
-   451.256,
-   455.629
+   455.684,
+   457.784
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "452"
+  "text": "457"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29031,17 +29031,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "tantivy-rs-count",
-  "value": 508.138,
+  "value": 511.39549999999997,
   "ci": [
-   504.945,
-   514.246
+   508.354,
+   513.337
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "508"
+  "text": "511"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29063,17 +29063,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "warm-lexical-api",
-  "value": 1724.568,
+  "value": 710.909,
   "ci": [
-   1692.078,
-   1758.164
+   703.192,
+   722.1415
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,725"
+  "text": "711"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29081,17 +29081,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "lucene",
-  "value": 3628.277,
+  "value": 3579.2405,
   "ci": [
-   885.81,
-   3707.123
+   3494.3050000000003,
+   3843.756
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "3,628"
+  "text": "3,579"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29099,17 +29099,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "tantivy-rs",
-  "value": 2983.923,
+  "value": 3001.585,
   "ci": [
-   2949.041,
-   2990.946
+   2982.4905,
+   3018.6035
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "2,984"
+  "text": "3,002"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29117,17 +29117,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "tantivy-rs-count",
-  "value": 1315.74,
+  "value": 1325.9814999999999,
   "ci": [
-   1297.045,
-   1337.55
+   1322.907,
+   1331.9425
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,316"
+  "text": "1,326"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29149,17 +29149,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "warm-lexical-api",
-  "value": 2.497041559,
+  "value": 2.843130559,
   "ci": [
-   2.497041559,
-   2.497041559
+   2.843130559,
+   2.843130559
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "2.50"
+  "text": "2.84"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29167,17 +29167,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "lucene",
-  "value": 3.531420356,
+  "value": 3.636303485,
   "ci": [
-   3.531420356,
-   3.531420356
+   3.636303485,
+   3.636303485
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "3.53"
+  "text": "3.64"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29185,17 +29185,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "tantivy-rs",
-  "value": 2.496083644,
+  "value": 2.626440292,
   "ci": [
-   2.496083644,
-   2.496083644
+   2.626440292,
+   2.626440292
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "2.50"
+  "text": "2.63"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29203,17 +29203,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "tantivy-rs-count",
-  "value": 2.493696558,
+  "value": 2.644996461,
   "ci": [
-   2.493696558,
-   2.493696558
+   2.644996461,
+   2.644996461
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "2.49"
+  "text": "2.64"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29222,7 +29222,7 @@
   "metric": "build_seconds",
   "derived": true,
   "warm": "warm-lexical-api",
-  "other": "tantivy-rs-count",
+  "other": "tantivy-rs",
   "factor": null,
   "factor_infinite": false,
   "ci": null,
@@ -29235,17 +29235,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "warm-lexical-api",
-  "value": 405.33984375,
+  "value": 313.3359375,
   "ci": [
-   405.33984375,
-   405.33984375
+   313.3359375,
+   313.3359375
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "405"
+  "text": "313"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29253,17 +29253,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "lucene",
-  "value": 549.46875,
+  "value": 519.609375,
   "ci": [
-   549.46875,
-   549.46875
+   519.609375,
+   519.609375
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "549"
+  "text": "520"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29271,10 +29271,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs",
-  "value": 178.8671875,
+  "value": 178.61328125,
   "ci": [
-   178.8671875,
-   178.8671875
+   178.61328125,
+   178.61328125
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.build_runs",
@@ -29289,10 +29289,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 178.2578125,
+  "value": 177.98828125,
   "ci": [
-   178.2578125,
-   178.2578125
+   177.98828125,
+   177.98828125
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.build_runs",
@@ -29321,17 +29321,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "warm-lexical-api",
-  "value": 33.4296875,
+  "value": 34.49609375,
   "ci": [
-   33.34765625,
-   33.63671875
+   34.421875,
+   34.62109375
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "33"
+  "text": "34"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29339,17 +29339,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "lucene",
-  "value": 126.2578125,
+  "value": 130.595703125,
   "ci": [
-   124.25390625,
-   134.79296875
+   125.98828125,
+   134.234375
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "126"
+  "text": "131"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29357,12 +29357,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs",
-  "value": 168.39453125,
+  "value": 168.4609375,
   "ci": [
-   168.30078125,
-   168.59375
+   168.3984375,
+   168.6015625
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -29375,12 +29375,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 168.46875,
+  "value": 168.48046875,
   "ci": [
-   168.328125,
-   168.734375
+   168.35546875,
+   168.546875
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -29407,10 +29407,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "disk_mib",
   "system": "warm-lexical-api",
-  "value": 11.978532791137695,
+  "value": 11.978529930114746,
   "ci": [
-   11.978532791137695,
-   11.978532791137695
+   11.978529930114746,
+   11.978529930114746
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs[0].disk_bytes",
@@ -29493,12 +29493,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "warm-lexical-api",
-  "value": 0.017077251,
+  "value": 0.017075448,
   "ci": [
-   0.016978109,
-   0.017108886
+   0.016894236,
+   0.017302407
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -29511,17 +29511,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "lucene",
-  "value": 1.225759386,
+  "value": 1.278245018,
   "ci": [
-   1.219617524,
-   1.355362541
+   1.265122607,
+   1.296511314
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1.23"
+  "text": "1.28"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29529,12 +29529,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "tantivy-rs",
-  "value": 1.287726712,
+  "value": 1.2921365675,
   "ci": [
-   1.286419573,
-   1.301349479
+   1.2898625204999998,
+   1.296713314
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -29547,12 +29547,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "tantivy-rs-count",
-  "value": 1.285584104,
+  "value": 1.2920798445,
   "ci": [
-   1.284426133,
-   1.287799268
+   1.288903351,
+   1.2941747184999999
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -29699,17 +29699,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "install_mib",
   "system": "warm-lexical-api",
-  "value": 4.1358489990234375,
+  "value": 4.186149597167969,
   "ci": [
-   4.1358489990234375,
-   4.1358489990234375
+   4.186149597167969,
+   4.186149597167969
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-100k-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.install",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4.1"
+  "text": "4.2"
  },
  {
   "section": "msmarco:100k (100,000 documents, 1,000 queries), ids contract",
@@ -29871,17 +29871,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "warm",
-  "value": 229.72590605688634,
+  "value": 681.0306850208524,
   "ci": [
-   226.8249157598858,
-   230.59588247863113
+   670.4330181246015,
+   683.7194408690096
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "230"
+  "text": "681"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), documents contract",
@@ -29889,17 +29889,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "warm",
-  "value": 3067.419,
+  "value": 1263.304,
   "ci": [
-   3051.761,
-   3104.301
+   1253.313,
+   1273.1615
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "3,067"
+  "text": "1,263"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), documents contract",
@@ -29907,17 +29907,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "warm",
-  "value": 20294.725,
+  "value": 4866.967500000001,
   "ci": [
-   20162.993,
-   20779.801
+   4834.208,
+   4904.5740000000005
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "20,295"
+  "text": "4,867"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), documents contract",
@@ -29925,17 +29925,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 33.108144959,
+  "value": 39.670371254,
   "ci": [
-   33.108144959,
-   33.108144959
+   39.670371254,
+   39.670371254
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "33.11"
+  "text": "39.67"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), documents contract",
@@ -29943,17 +29943,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 4277.67578125,
+  "value": 3309.13671875,
   "ci": [
-   4277.67578125,
-   4277.67578125
+   3309.13671875,
+   3309.13671875
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4,278"
+  "text": "3,309"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), documents contract",
@@ -29961,17 +29961,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 463.890625,
+  "value": 498.689453125,
   "ci": [
-   463.83203125,
-   464.0703125
+   498.615234375,
+   498.78515625
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "464"
+  "text": "499"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), documents contract",
@@ -29997,12 +29997,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.145753127,
+  "value": 0.1475583715,
   "ci": [
-   0.144764516,
-   0.148578213
+   0.145498158,
+   0.150969788
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -30045,17 +30045,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 4.135772705078125,
+  "value": 4.186149597167969,
   "ci": [
-   4.135772705078125,
-   4.135772705078125
+   4.186149597167969,
+   4.186149597167969
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm.install",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4.1"
+  "text": "4.2"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), documents contract",
@@ -30253,17 +30253,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "warm-lexical-api",
-  "value": 233.4706340434548,
+  "value": 729.7395288501447,
   "ci": [
-   233.09052604799248,
-   235.00190996862318
+   720.772851232106,
+   732.9609989279041
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "233"
+  "text": "730"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30271,17 +30271,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "lucene",
-  "value": 807.8927038927957,
+  "value": 802.0704769812404,
   "ci": [
-   805.3847761970327,
-   809.7601760899296
+   797.8830089277325,
+   803.6065795219421
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "808"
+  "text": "802"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30289,17 +30289,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "tantivy-rs",
-  "value": 345.43201170598894,
+  "value": 340.3338351159007,
   "ci": [
-   344.8635126606241,
-   347.16772243483996
+   339.4351077624697,
+   341.38147672580294
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "345"
+  "text": "340"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30307,17 +30307,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "qps",
   "system": "tantivy-rs-count",
-  "value": 213.50722965413323,
+  "value": 210.98154023412707,
   "ci": [
-   212.43162243501953,
-   213.8431973764389
+   210.67098226076513,
+   211.68671952100655
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "214"
+  "text": "211"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30339,17 +30339,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "warm-lexical-api",
-  "value": 2999.02,
+  "value": 1162.7295,
   "ci": [
-   2961.685,
-   3044.01
+   1156.092,
+   1179.915
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "2,999"
+  "text": "1,163"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30357,17 +30357,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "lucene",
-  "value": 1028.261,
+  "value": 1042.336,
   "ci": [
-   1021.107,
-   1029.061
+   1037.788,
+   1049.7675
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,028"
+  "text": "1,042"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30375,17 +30375,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "tantivy-rs",
-  "value": 1904.34,
+  "value": 1935.5665,
   "ci": [
-   1897.893,
-   1917.904
+   1929.584,
+   1942.201
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "1,904"
+  "text": "1,936"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30393,17 +30393,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p50_latency",
   "system": "tantivy-rs-count",
-  "value": 4450.682,
+  "value": 4525.903,
   "ci": [
-   4425.701,
-   4470.909
+   4507.637000000001,
+   4533.934
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "4,451"
+  "text": "4,526"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30425,17 +30425,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "warm-lexical-api",
-  "value": 20176.799,
+  "value": 4744.0205000000005,
   "ci": [
-   20106.561,
-   20263.016
+   4702.234,
+   4774.532
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "20,177"
+  "text": "4,744"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30443,17 +30443,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "lucene",
-  "value": 4521.311,
+  "value": 4587.0064999999995,
   "ci": [
-   4511.29,
-   4760.942
+   4521.6900000000005,
+   4662.643
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "4,521"
+  "text": "4,587"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30461,17 +30461,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "tantivy-rs",
-  "value": 16325.203,
+  "value": 16426.995000000003,
   "ci": [
-   16237.484,
-   16374.58
+   16382.282,
+   16455.013
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "16,325"
+  "text": "16,427"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30479,17 +30479,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "p99_latency",
   "system": "tantivy-rs-count",
-  "value": 12218.974,
+  "value": 12262.6975,
   "ci": [
-   12201.231,
-   12298.4
+   12240.212,
+   12280.681499999999
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].passes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "12,219"
+  "text": "12,263"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30511,17 +30511,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "warm-lexical-api",
-  "value": 27.228313418,
+  "value": 31.428677687,
   "ci": [
-   27.228313418,
-   27.228313418
+   31.428677687,
+   31.428677687
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "27.23"
+  "text": "31.43"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30529,17 +30529,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "lucene",
-  "value": 27.174620567,
+  "value": 29.238254961,
   "ci": [
-   27.174620567,
-   27.174620567
+   29.238254961,
+   29.238254961
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "27.17"
+  "text": "29.24"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30547,17 +30547,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "tantivy-rs",
-  "value": 29.947427334,
+  "value": 32.518738440999996,
   "ci": [
-   29.947427334,
-   29.947427334
+   32.518738440999996,
+   32.518738440999996
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "29.95"
+  "text": "32.52"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30565,17 +30565,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_seconds",
   "system": "tantivy-rs-count",
-  "value": 29.643518733,
+  "value": 32.662056532,
   "ci": [
-   29.643518733,
-   29.643518733
+   32.662056532,
+   32.662056532
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "29.64"
+  "text": "32.66"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30597,17 +30597,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "warm-lexical-api",
-  "value": 3633.57421875,
+  "value": 2664.53515625,
   "ci": [
-   3633.57421875,
-   3633.57421875
+   2664.53515625,
+   2664.53515625
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "3,634"
+  "text": "2,665"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30615,17 +30615,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "lucene",
-  "value": 4242.84765625,
+  "value": 4265.0,
   "ci": [
-   4242.84765625,
-   4242.84765625
+   4265.0,
+   4265.0
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4,243"
+  "text": "4,265"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30633,10 +30633,10 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs",
-  "value": 1527.8515625,
+  "value": 1527.8828125,
   "ci": [
-   1527.8515625,
-   1527.8515625
+   1527.8828125,
+   1527.8828125
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.build_runs",
@@ -30651,17 +30651,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "build_peak_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 1527.3984375,
+  "value": 1527.8125,
   "ci": [
-   1527.3984375,
-   1527.3984375
+   1527.8125,
+   1527.8125
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.build_runs",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "1,527"
+  "text": "1,528"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30683,17 +30683,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "warm-lexical-api",
-  "value": 127.23046875,
+  "value": 161.947265625,
   "ci": [
-   127.21484375,
-   127.3046875
+   161.9140625,
+   162.03515625
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "127"
+  "text": "162"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30701,17 +30701,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "lucene",
-  "value": 235.78515625,
+  "value": 231.958984375,
   "ci": [
-   230.4609375,
-   237.2109375
+   230.951171875,
+   233.77734375
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "236"
+  "text": "232"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30719,12 +30719,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs",
-  "value": 272.203125,
+  "value": 272.251953125,
   "ci": [
-   272.0703125,
-   272.25390625
+   272.197265625,
+   272.3671875
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -30737,12 +30737,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "serving_rss_mib",
   "system": "tantivy-rs-count",
-  "value": 272.3125,
+  "value": 272.126953125,
   "ci": [
-   272.2578125,
-   272.37109375
+   272.072265625,
+   272.265625
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].peak_rss_bytes",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -30855,12 +30855,12 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "warm-lexical-api",
-  "value": 0.080207886,
+  "value": 0.075153052,
   "ci": [
-   0.077544008,
-   0.082291596
+   0.074999535,
+   0.07601519
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
@@ -30873,17 +30873,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "lucene",
-  "value": 2.905348068,
+  "value": 2.981624191,
   "ci": [
-   2.852297423,
-   2.926209137
+   2.966062925,
+   3.032912027
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.lucene.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "2.91"
+  "text": "2.98"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30891,17 +30891,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "tantivy-rs",
-  "value": 15.97580523,
+  "value": 16.0536971855,
   "ci": [
-   15.908249027,
-   16.270494639
+   15.982982843,
+   16.313893113
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "15.98"
+  "text": "16.05"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -30909,17 +30909,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "cold_start_s",
   "system": "tantivy-rs-count",
-  "value": 16.041326048,
+  "value": 15.9998136205,
   "ci": [
-   16.035972319,
-   16.318724896
+   15.91976297,
+   16.048775499
   ],
-  "n": 5,
+  "n": 10,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.tantivy-rs-count.serve_rounds[*].cold_start_s",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "sampled",
-  "text": "16.04"
+  "text": "16.00"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -31061,17 +31061,17 @@
   "hardware_class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
   "metric": "install_mib",
   "system": "warm-lexical-api",
-  "value": 4.135772705078125,
+  "value": 4.186149597167969,
   "ci": [
-   4.135772705078125,
-   4.135772705078125
+   4.186149597167969,
+   4.186149597167969
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/scale-text-msmarco-1m-linux-x86_64-intel-xeon-2-60ghz-8c-47g.json#systems.warm-lexical-api.install",
   "validity": "unverified",
   "validity_reason": "source revision is not pinned",
   "uncertainty": "unreplicated",
-  "text": "4.1"
+  "text": "4.2"
  },
  {
   "section": "msmarco:1m (1,000,000 documents, 1,000 queries), ids contract",
@@ -31346,8 +31346,8 @@
   "factor": 1.0005917871856855,
   "factor_infinite": false,
   "ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -31507,8 +31507,8 @@
   "factor": 0.9993578588085782,
   "factor_infinite": false,
   "ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -33513,8 +33513,8 @@
   "factor": 1.0005917871856855,
   "factor_infinite": false,
   "ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -33638,8 +33638,8 @@
   "factor": 0.9993578588085782,
   "factor_infinite": false,
   "ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -35230,8 +35230,8 @@
   "factor": 1.0005917871856855,
   "factor_infinite": false,
   "ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -35373,8 +35373,8 @@
   "factor": 0.9993578588085782,
   "factor_infinite": false,
   "ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -37163,8 +37163,8 @@
   "factor": 1.0005917871856855,
   "factor_infinite": false,
   "ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -37288,8 +37288,8 @@
   "factor": 0.9993578588085782,
   "factor_infinite": false,
   "ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -38898,8 +38898,8 @@
   "factor": 1.0005917871856855,
   "factor_infinite": false,
   "ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -39059,8 +39059,8 @@
   "factor": 0.9993578588085782,
   "factor_infinite": false,
   "ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -41065,8 +41065,8 @@
   "factor": 1.0005917871856855,
   "factor_infinite": false,
   "ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -41190,8 +41190,8 @@
   "factor": 0.9993578588085782,
   "factor_infinite": false,
   "ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -42800,8 +42800,8 @@
   "factor": 1.0007426180830101,
   "factor_infinite": false,
   "ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -42961,8 +42961,8 @@
   "factor": 0.9938118811881188,
   "factor_infinite": false,
   "ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -44967,8 +44967,8 @@
   "factor": 1.0007426180830101,
   "factor_infinite": false,
   "ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -45092,8 +45092,8 @@
   "factor": 0.9938118811881188,
   "factor_infinite": false,
   "ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -46684,8 +46684,8 @@
   "factor": 1.0007426180830101,
   "factor_infinite": false,
   "ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -46827,8 +46827,8 @@
   "factor": 0.9938118811881188,
   "factor_infinite": false,
   "ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -48617,8 +48617,8 @@
   "factor": 1.0007426180830101,
   "factor_infinite": false,
   "ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -48742,8 +48742,8 @@
   "factor": 0.9938118811881188,
   "factor_infinite": false,
   "ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -50352,8 +50352,8 @@
   "factor": 1.0007426180830101,
   "factor_infinite": false,
   "ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -50513,8 +50513,8 @@
   "factor": 0.9938118811881188,
   "factor_infinite": false,
   "ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "verdict": "TIE",
   "text": "0.99x"
@@ -52519,8 +52519,8 @@
   "factor": 1.0007426180830101,
   "factor_infinite": false,
   "ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "verdict": "TIE",
   "text": "1.00x"
@@ -52644,8 +52644,8 @@
   "factor": 0.9938118811881188,
   "factor_infinite": false,
   "ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "verdict": "TIE",
   "text": "0.99x"

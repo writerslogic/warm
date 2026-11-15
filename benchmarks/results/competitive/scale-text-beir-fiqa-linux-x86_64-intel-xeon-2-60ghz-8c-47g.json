@@ -2,8 +2,8 @@
   "schema_version": 1,
   "kind": "text",
   "suite": "scale",
-  "commit": "12f6501f",
-  "date": "2026-11-15T06:49:37+0000",
+  "commit": "3836860e",
+  "date": "2026-11-15T09:35:16+0000",
   "hardware": {
     "class": "linux-x86_64-intel-xeon-2-60ghz-8c-47g",
     "cpu": "Intel(R) Xeon(R) CPU @ 2.60GHz",
@@ -12,7 +12,7 @@
     "os": "Linux 7.0.0-1017-gcp",
     "machine": "x86_64",
     "hosted_runner": false,
-    "load_1m": 1.80224609375
+    "load_1m": 1.3125
   },
   "dataset": {
     "dataset": "fiqa",
@@ -29,7 +29,7 @@
     "measurement_version": 2,
     "resampling_unit": "independent process-round summaries",
     "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied",
-    "rounds": 5,
+    "rounds": 10,
     "build_repeats": 1,
     "k": 100,
     "passes_per_round": 3,
@@ -635,22 +635,22 @@
         {
           "documents": 57600,
           "encode": "lexical",
-          "ingest_s": 2.39417552,
+          "ingest_s": 2.620971158,
           "store_text": true,
-          "peak_rss_bytes": 424263680,
-          "wall_s": 3.198727050999878,
-          "disk_bytes": 98651266
+          "peak_rss_bytes": 346787840,
+          "wall_s": 3.431485609000447,
+          "disk_bytes": 98651263
         }
       ],
       "serve_rounds": [
         {
-          "open_s": 0.016964423,
-          "cold_start_s": 0.027737663,
+          "open_s": 0.017378849,
+          "cold_start_s": 0.024389074,
           "memory": {
-            "anonymous_kib": 17164,
-            "rss_file_kib": 58792,
-            "rss_kib": 75956,
-            "vm_hwm_kib": 75956
+            "anonymous_kib": 20148,
+            "rss_file_kib": 58944,
+            "rss_kib": 79092,
+            "vm_hwm_kib": 79092
           },
           "quality": {
             "ndcg_at_10": 0.26537791112001474,
@@ -1665,187 +1665,382 @@
           "passes": [
             {
               "queries": 500,
-              "total_ns": 475065571,
-              "p50_ns": 897638,
-              "p90_ns": 1547358,
-              "p99_ns": 2035541,
-              "max_ns": 2719741
+              "total_ns": 293713943,
+              "p50_ns": 548148,
+              "p90_ns": 909775,
+              "p99_ns": 1217904,
+              "max_ns": 1557461
             },
             {
               "queries": 500,
-              "total_ns": 470530502,
-              "p50_ns": 894643,
-              "p90_ns": 1539919,
-              "p99_ns": 2009060,
-              "max_ns": 2213913
+              "total_ns": 290922682,
+              "p50_ns": 546541,
+              "p90_ns": 887135,
+              "p99_ns": 1189938,
+              "max_ns": 1463048
             },
             {
               "queries": 500,
-              "total_ns": 470286997,
-              "p50_ns": 893107,
-              "p90_ns": 1539505,
-              "p99_ns": 1997028,
-              "max_ns": 2206848
+              "total_ns": 293312477,
+              "p50_ns": 547963,
+              "p90_ns": 902716,
+              "p99_ns": 1207248,
+              "max_ns": 1471859
             }
           ],
-          "peak_rss_bytes": 77766656,
-          "wall_s": 2.1139653279969934
+          "peak_rss_bytes": 80871424,
+          "wall_s": 1.36785915100063
         },
         {
-          "open_s": 0.015649824,
-          "cold_start_s": 0.023858183,
+          "open_s": 0.016716642,
+          "cold_start_s": 0.023723398,
           "memory": {
-            "anonymous_kib": 17168,
+            "anonymous_kib": 20148,
+            "rss_file_kib": 58772,
+            "rss_kib": 78920,
+            "vm_hwm_kib": 78920
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 289625307,
+              "p50_ns": 540222,
+              "p90_ns": 877483,
+              "p99_ns": 1206560,
+              "max_ns": 1545483
+            },
+            {
+              "queries": 500,
+              "total_ns": 285972016,
+              "p50_ns": 535963,
+              "p90_ns": 874758,
+              "p99_ns": 1176636,
+              "max_ns": 1418431
+            },
+            {
+              "queries": 500,
+              "total_ns": 285192144,
+              "p50_ns": 534939,
+              "p90_ns": 880233,
+              "p99_ns": 1175919,
+              "max_ns": 1430231
+            }
+          ],
+          "peak_rss_bytes": 80695296,
+          "wall_s": 1.3668607629997496
+        },
+        {
+          "open_s": 0.016507979,
+          "cold_start_s": 0.023220868,
+          "memory": {
+            "anonymous_kib": 20152,
+            "rss_file_kib": 58816,
+            "rss_kib": 78968,
+            "vm_hwm_kib": 78968
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 290793466,
+              "p50_ns": 543136,
+              "p90_ns": 878302,
+              "p99_ns": 1215461,
+              "max_ns": 1529915
+            },
+            {
+              "queries": 500,
+              "total_ns": 283894080,
+              "p50_ns": 527558,
+              "p90_ns": 877294,
+              "p99_ns": 1177814,
+              "max_ns": 1396967
+            },
+            {
+              "queries": 500,
+              "total_ns": 290647729,
+              "p50_ns": 535530,
+              "p90_ns": 893872,
+              "p99_ns": 1233002,
+              "max_ns": 1674095
+            }
+          ],
+          "peak_rss_bytes": 80740352,
+          "wall_s": 1.3807379879999644
+        },
+        {
+          "open_s": 0.01684737,
+          "cold_start_s": 0.023787052,
+          "memory": {
+            "anonymous_kib": 20148,
+            "rss_file_kib": 58920,
+            "rss_kib": 79068,
+            "vm_hwm_kib": 79068
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 293588295,
+              "p50_ns": 542924,
+              "p90_ns": 899829,
+              "p99_ns": 1212777,
+              "max_ns": 1573219
+            },
+            {
+              "queries": 500,
+              "total_ns": 287857174,
+              "p50_ns": 541740,
+              "p90_ns": 887168,
+              "p99_ns": 1189756,
+              "max_ns": 1423311
+            },
+            {
+              "queries": 500,
+              "total_ns": 285801519,
+              "p50_ns": 530764,
+              "p90_ns": 874725,
+              "p99_ns": 1183052,
+              "max_ns": 1395213
+            }
+          ],
+          "peak_rss_bytes": 80846848,
+          "wall_s": 1.3767442920006943
+        },
+        {
+          "open_s": 0.016950283,
+          "cold_start_s": 0.024080836,
+          "memory": {
+            "anonymous_kib": 20152,
+            "rss_file_kib": 58812,
+            "rss_kib": 78964,
+            "vm_hwm_kib": 78964
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 292291015,
+              "p50_ns": 547486,
+              "p90_ns": 901850,
+              "p99_ns": 1196501,
+              "max_ns": 1552374
+            },
+            {
+              "queries": 500,
+              "total_ns": 286531050,
+              "p50_ns": 536902,
+              "p90_ns": 887531,
+              "p99_ns": 1168030,
+              "max_ns": 1418398
+            },
+            {
+              "queries": 500,
+              "total_ns": 285026657,
+              "p50_ns": 533767,
+              "p90_ns": 873083,
+              "p99_ns": 1175371,
+              "max_ns": 1398812
+            }
+          ],
+          "peak_rss_bytes": 80736256,
+          "wall_s": 1.3692009889991823
+        },
+        {
+          "open_s": 0.01688051,
+          "cold_start_s": 0.023620614,
+          "memory": {
+            "anonymous_kib": 20152,
+            "rss_file_kib": 58792,
+            "rss_kib": 78944,
+            "vm_hwm_kib": 78944
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 293889899,
+              "p50_ns": 551636,
+              "p90_ns": 897255,
+              "p99_ns": 1211145,
+              "max_ns": 1552347
+            },
+            {
+              "queries": 500,
+              "total_ns": 286572130,
+              "p50_ns": 535766,
+              "p90_ns": 872653,
+              "p99_ns": 1170593,
+              "max_ns": 1450921
+            },
+            {
+              "queries": 500,
+              "total_ns": 285855407,
+              "p50_ns": 532396,
+              "p90_ns": 876041,
+              "p99_ns": 1169029,
+              "max_ns": 1433455
+            }
+          ],
+          "peak_rss_bytes": 80715776,
+          "wall_s": 1.3725955340005385
+        },
+        {
+          "open_s": 0.016321615,
+          "cold_start_s": 0.02320373,
+          "memory": {
+            "anonymous_kib": 20152,
+            "rss_file_kib": 58892,
+            "rss_kib": 79044,
+            "vm_hwm_kib": 79044
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 291244845,
+              "p50_ns": 546405,
+              "p90_ns": 903332,
+              "p99_ns": 1206203,
+              "max_ns": 1519324
+            },
+            {
+              "queries": 500,
+              "total_ns": 288283313,
+              "p50_ns": 540317,
+              "p90_ns": 885656,
+              "p99_ns": 1209407,
+              "max_ns": 1434287
+            },
+            {
+              "queries": 500,
+              "total_ns": 286747471,
+              "p50_ns": 537402,
+              "p90_ns": 889016,
+              "p99_ns": 1181758,
+              "max_ns": 1423527
+            }
+          ],
+          "peak_rss_bytes": 80883712,
+          "wall_s": 1.372169840999959
+        },
+        {
+          "open_s": 0.016641101,
+          "cold_start_s": 0.023338493,
+          "memory": {
+            "anonymous_kib": 20148,
             "rss_file_kib": 58848,
-            "rss_kib": 76016,
-            "vm_hwm_kib": 76016
+            "rss_kib": 78996,
+            "vm_hwm_kib": 78996
           },
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 466495732,
-              "p50_ns": 885982,
-              "p90_ns": 1521131,
-              "p99_ns": 1970697,
-              "max_ns": 2193805
+              "total_ns": 289294963,
+              "p50_ns": 543686,
+              "p90_ns": 877937,
+              "p99_ns": 1196718,
+              "max_ns": 1529667
             },
             {
               "queries": 500,
-              "total_ns": 482535227,
-              "p50_ns": 915422,
-              "p90_ns": 1572847,
-              "p99_ns": 2058208,
-              "max_ns": 2342168
+              "total_ns": 287169119,
+              "p50_ns": 540699,
+              "p90_ns": 875678,
+              "p99_ns": 1194494,
+              "max_ns": 1421006
             },
             {
               "queries": 500,
-              "total_ns": 468904035,
-              "p50_ns": 883620,
-              "p90_ns": 1538764,
-              "p99_ns": 2020301,
-              "max_ns": 2323247
+              "total_ns": 287756132,
+              "p50_ns": 540492,
+              "p90_ns": 876565,
+              "p99_ns": 1201565,
+              "max_ns": 1457861
             }
           ],
-          "peak_rss_bytes": 77721600,
-          "wall_s": 2.1277382250009396
+          "peak_rss_bytes": 80773120,
+          "wall_s": 1.3646941289998722
         },
         {
-          "open_s": 0.015419143,
-          "cold_start_s": 0.023618916,
+          "open_s": 0.01655835,
+          "cold_start_s": 0.02343605,
           "memory": {
-            "anonymous_kib": 17164,
-            "rss_file_kib": 58916,
-            "rss_kib": 76080,
-            "vm_hwm_kib": 76080
+            "anonymous_kib": 20152,
+            "rss_file_kib": 58936,
+            "rss_kib": 79088,
+            "vm_hwm_kib": 79088
           },
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 462782748,
-              "p50_ns": 880393,
-              "p90_ns": 1519023,
-              "p99_ns": 1977445,
-              "max_ns": 2180072
+              "total_ns": 293689346,
+              "p50_ns": 546647,
+              "p90_ns": 891622,
+              "p99_ns": 1208339,
+              "max_ns": 1564847
             },
             {
               "queries": 500,
-              "total_ns": 462768606,
-              "p50_ns": 882458,
-              "p90_ns": 1518223,
-              "p99_ns": 1979381,
-              "max_ns": 2179881
+              "total_ns": 289825793,
+              "p50_ns": 541831,
+              "p90_ns": 893714,
+              "p99_ns": 1191141,
+              "max_ns": 1429730
             },
             {
               "queries": 500,
-              "total_ns": 462850733,
-              "p50_ns": 876837,
-              "p90_ns": 1518981,
-              "p99_ns": 1968256,
-              "max_ns": 2179519
+              "total_ns": 288443354,
+              "p50_ns": 543456,
+              "p90_ns": 882044,
+              "p99_ns": 1197829,
+              "max_ns": 1811488
             }
           ],
-          "peak_rss_bytes": 77893632,
-          "wall_s": 2.075266408999596
+          "peak_rss_bytes": 80928768,
+          "wall_s": 1.3768214379997517
         },
         {
-          "open_s": 0.015896403,
-          "cold_start_s": 0.02403445,
+          "open_s": 0.017232344,
+          "cold_start_s": 0.024377558,
           "memory": {
-            "anonymous_kib": 17164,
-            "rss_file_kib": 58840,
-            "rss_kib": 76004,
-            "vm_hwm_kib": 76004
+            "anonymous_kib": 20148,
+            "rss_file_kib": 58928,
+            "rss_kib": 79076,
+            "vm_hwm_kib": 79076
           },
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 463060753,
-              "p50_ns": 884817,
-              "p90_ns": 1507381,
-              "p99_ns": 1959449,
-              "max_ns": 2172088
+              "total_ns": 293205828,
+              "p50_ns": 546353,
+              "p90_ns": 889817,
+              "p99_ns": 1203792,
+              "max_ns": 1525522
             },
             {
               "queries": 500,
-              "total_ns": 487662930,
-              "p50_ns": 928599,
-              "p90_ns": 1609959,
-              "p99_ns": 2113853,
-              "max_ns": 2310382
+              "total_ns": 286870547,
+              "p50_ns": 536902,
+              "p90_ns": 867750,
+              "p99_ns": 1212864,
+              "max_ns": 1409515
             },
             {
               "queries": 500,
-              "total_ns": 468298263,
-              "p50_ns": 886788,
-              "p90_ns": 1521915,
-              "p99_ns": 2043193,
-              "max_ns": 2348806
+              "total_ns": 286888470,
+              "p50_ns": 543326,
+              "p90_ns": 876697,
+              "p99_ns": 1179394,
+              "max_ns": 1449655
             }
           ],
-          "peak_rss_bytes": 77750272,
-          "wall_s": 2.096623074998206
-        },
-        {
-          "open_s": 0.016157031,
-          "cold_start_s": 0.024345149,
-          "memory": {
-            "anonymous_kib": 17168,
-            "rss_file_kib": 58684,
-            "rss_kib": 75852,
-            "vm_hwm_kib": 75852
-          },
-          "quality": null,
-          "passes": [
-            {
-              "queries": 500,
-              "total_ns": 469960862,
-              "p50_ns": 886075,
-              "p90_ns": 1533510,
-              "p99_ns": 1988804,
-              "max_ns": 2191856
-            },
-            {
-              "queries": 500,
-              "total_ns": 467659847,
-              "p50_ns": 888748,
-              "p90_ns": 1515211,
-              "p99_ns": 1978905,
-              "max_ns": 2202051
-            },
-            {
-              "queries": 500,
-              "total_ns": 469259098,
-              "p50_ns": 891220,
-              "p90_ns": 1529908,
-              "p99_ns": 2000601,
-              "max_ns": 2197312
-            }
-          ],
-          "peak_rss_bytes": 77656064,
-          "wall_s": 2.0972872259990254
+          "peak_rss_bytes": 80920576,
+          "wall_s": 1.3730281580001247
         }
       ],
       "ops": {
@@ -1853,11 +2048,11 @@
       },
       "version": {
         "writerslogic-warm": "0.6.8",
-        "commit": "12f6501f"
+        "commit": "3836860e"
       },
       "install": {
         "competitive_text": {
-          "bytes": 4336752,
+          "bytes": 4389496,
           "non_system_dynamic_libraries": 0,
           "profile": "dist",
           "symbols": "stripped"
@@ -1876,22 +2071,22 @@
         {
           "documents": 57600,
           "encode": "lexical",
-          "ingest_s": 1.954016319,
+          "ingest_s": 2.126548152,
           "store_text": false,
-          "peak_rss_bytes": 317480960,
-          "wall_s": 2.329171874996973,
-          "disk_bytes": 9983840
+          "peak_rss_bytes": 242294784,
+          "wall_s": 2.518805061999956,
+          "disk_bytes": 9983837
         }
       ],
       "serve_rounds": [
         {
-          "open_s": 0.007037247,
-          "cold_start_s": 0.015290514,
+          "open_s": 0.007388928,
+          "cold_start_s": 0.014283533,
           "memory": {
-            "anonymous_kib": 10232,
-            "rss_file_kib": 15592,
-            "rss_kib": 25824,
-            "vm_hwm_kib": 25824
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15492,
+            "rss_kib": 28804,
+            "vm_hwm_kib": 28804
           },
           "quality": {
             "ndcg_at_10": 0.26537791112001474,
@@ -2906,187 +3101,382 @@
           "passes": [
             {
               "queries": 500,
-              "total_ns": 420762722,
-              "p50_ns": 791311,
-              "p90_ns": 1432351,
-              "p99_ns": 1884916,
-              "max_ns": 2108596
+              "total_ns": 245878251,
+              "p50_ns": 449870,
+              "p90_ns": 805026,
+              "p99_ns": 1097942,
+              "max_ns": 1441294
             },
             {
               "queries": 500,
-              "total_ns": 415758427,
-              "p50_ns": 785019,
-              "p90_ns": 1421353,
-              "p99_ns": 1874736,
-              "max_ns": 2086563
+              "total_ns": 235616148,
+              "p50_ns": 431168,
+              "p90_ns": 764859,
+              "p99_ns": 1092396,
+              "max_ns": 1311063
             },
             {
               "queries": 500,
-              "total_ns": 419018523,
-              "p50_ns": 788190,
-              "p90_ns": 1424596,
-              "p99_ns": 1920441,
-              "max_ns": 2090307
+              "total_ns": 237021633,
+              "p50_ns": 432356,
+              "p90_ns": 771623,
+              "p99_ns": 1078841,
+              "max_ns": 1353808
             }
           ],
-          "peak_rss_bytes": 26255360,
-          "wall_s": 1.3018808509987139
+          "peak_rss_bytes": 29495296,
+          "wall_s": 0.7547157220005829
         },
         {
-          "open_s": 0.00685011,
-          "cold_start_s": 0.014969148,
+          "open_s": 0.007159181,
+          "cold_start_s": 0.014426347,
           "memory": {
-            "anonymous_kib": 10232,
-            "rss_file_kib": 15672,
-            "rss_kib": 25904,
-            "vm_hwm_kib": 25904
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15616,
+            "rss_kib": 28928,
+            "vm_hwm_kib": 28928
           },
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 422511286,
-              "p50_ns": 799388,
-              "p90_ns": 1441689,
-              "p99_ns": 1930750,
-              "max_ns": 2129788
+              "total_ns": 245306528,
+              "p50_ns": 449513,
+              "p90_ns": 794371,
+              "p99_ns": 1098110,
+              "max_ns": 1436082
             },
             {
               "queries": 500,
-              "total_ns": 419603116,
-              "p50_ns": 790318,
-              "p90_ns": 1442547,
-              "p99_ns": 1893373,
-              "max_ns": 2113995
+              "total_ns": 236261111,
+              "p50_ns": 435544,
+              "p90_ns": 771913,
+              "p99_ns": 1073129,
+              "max_ns": 1309160
             },
             {
               "queries": 500,
-              "total_ns": 420336005,
-              "p50_ns": 793736,
-              "p90_ns": 1434142,
-              "p99_ns": 1905969,
-              "max_ns": 2109180
+              "total_ns": 235602792,
+              "p50_ns": 436329,
+              "p90_ns": 774479,
+              "p99_ns": 1063586,
+              "max_ns": 1365119
             }
           ],
-          "peak_rss_bytes": 26402816,
-          "wall_s": 1.3091000389977125
+          "peak_rss_bytes": 29622272,
+          "wall_s": 0.7536193299993101
         },
         {
-          "open_s": 0.006757686,
-          "cold_start_s": 0.014739821,
+          "open_s": 0.006915024,
+          "cold_start_s": 0.013571998,
           "memory": {
-            "anonymous_kib": 10232,
-            "rss_file_kib": 15580,
-            "rss_kib": 25812,
-            "vm_hwm_kib": 25812
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15668,
+            "rss_kib": 28980,
+            "vm_hwm_kib": 28980
           },
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 411185174,
-              "p50_ns": 776237,
-              "p90_ns": 1400557,
-              "p99_ns": 1844889,
-              "max_ns": 2055595
+              "total_ns": 247220104,
+              "p50_ns": 455239,
+              "p90_ns": 801901,
+              "p99_ns": 1099534,
+              "max_ns": 1448771
             },
             {
               "queries": 500,
-              "total_ns": 407641505,
-              "p50_ns": 771355,
-              "p90_ns": 1391272,
-              "p99_ns": 1836836,
-              "max_ns": 2035926
+              "total_ns": 240116179,
+              "p50_ns": 445397,
+              "p90_ns": 778862,
+              "p99_ns": 1083688,
+              "max_ns": 1340725
             },
             {
               "queries": 500,
-              "total_ns": 408184817,
-              "p50_ns": 769461,
-              "p90_ns": 1394239,
-              "p99_ns": 1873649,
-              "max_ns": 2060380
+              "total_ns": 239413683,
+              "p50_ns": 440480,
+              "p90_ns": 781716,
+              "p99_ns": 1087177,
+              "max_ns": 1389846
             }
           ],
-          "peak_rss_bytes": 26308608,
-          "wall_s": 1.27241018100176
+          "peak_rss_bytes": 29609984,
+          "wall_s": 0.7621032800007015
         },
         {
-          "open_s": 0.006773607,
-          "cold_start_s": 0.014880363,
+          "open_s": 0.007156571,
+          "cold_start_s": 0.014098517,
           "memory": {
-            "anonymous_kib": 10232,
-            "rss_file_kib": 15412,
-            "rss_kib": 25644,
-            "vm_hwm_kib": 25644
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15708,
+            "rss_kib": 29020,
+            "vm_hwm_kib": 29020
           },
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 415982573,
-              "p50_ns": 786744,
-              "p90_ns": 1419951,
-              "p99_ns": 1868580,
-              "max_ns": 2100443
+              "total_ns": 243662625,
+              "p50_ns": 447253,
+              "p90_ns": 789283,
+              "p99_ns": 1092565,
+              "max_ns": 1446754
             },
             {
               "queries": 500,
-              "total_ns": 412729519,
-              "p50_ns": 783500,
-              "p90_ns": 1404842,
-              "p99_ns": 1856967,
-              "max_ns": 2085996
+              "total_ns": 234351353,
+              "p50_ns": 434779,
+              "p90_ns": 765595,
+              "p99_ns": 1061071,
+              "max_ns": 1315639
             },
             {
               "queries": 500,
-              "total_ns": 413455036,
-              "p50_ns": 782822,
-              "p90_ns": 1410730,
-              "p99_ns": 1858705,
-              "max_ns": 2071012
+              "total_ns": 233471327,
+              "p50_ns": 430660,
+              "p90_ns": 758551,
+              "p99_ns": 1042683,
+              "max_ns": 1326013
             }
           ],
-          "peak_rss_bytes": 26071040,
-          "wall_s": 1.2882158969987358
+          "peak_rss_bytes": 29650944,
+          "wall_s": 0.7471794220000447
         },
         {
-          "open_s": 0.006756989,
-          "cold_start_s": 0.014855509,
+          "open_s": 0.007434558,
+          "cold_start_s": 0.014644727,
           "memory": {
-            "anonymous_kib": 10232,
-            "rss_file_kib": 15492,
-            "rss_kib": 25724,
-            "vm_hwm_kib": 25724
+            "anonymous_kib": 13316,
+            "rss_file_kib": 15376,
+            "rss_kib": 28692,
+            "vm_hwm_kib": 28692
           },
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 412875440,
-              "p50_ns": 779900,
-              "p90_ns": 1403170,
-              "p99_ns": 1861184,
-              "max_ns": 2055738
+              "total_ns": 241566173,
+              "p50_ns": 444708,
+              "p90_ns": 788471,
+              "p99_ns": 1082141,
+              "max_ns": 1426647
             },
             {
               "queries": 500,
-              "total_ns": 408045435,
-              "p50_ns": 767804,
-              "p90_ns": 1391764,
-              "p99_ns": 1832890,
-              "max_ns": 2040451
+              "total_ns": 234161437,
+              "p50_ns": 433943,
+              "p90_ns": 769187,
+              "p99_ns": 1059827,
+              "max_ns": 1312832
             },
             {
               "queries": 500,
-              "total_ns": 410202117,
-              "p50_ns": 777255,
-              "p90_ns": 1396810,
-              "p99_ns": 1836715,
-              "max_ns": 2045354
+              "total_ns": 235039155,
+              "p50_ns": 435643,
+              "p90_ns": 764887,
+              "p99_ns": 1060580,
+              "max_ns": 1328430
             }
           ],
-          "peak_rss_bytes": 26152960,
-          "wall_s": 1.2769001429987838
+          "peak_rss_bytes": 29310976,
+          "wall_s": 0.7471716979998746
+        },
+        {
+          "open_s": 0.00708121,
+          "cold_start_s": 0.014014337,
+          "memory": {
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15524,
+            "rss_kib": 28836,
+            "vm_hwm_kib": 28836
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 244069145,
+              "p50_ns": 449256,
+              "p90_ns": 793874,
+              "p99_ns": 1103791,
+              "max_ns": 1445739
+            },
+            {
+              "queries": 500,
+              "total_ns": 234847609,
+              "p50_ns": 435409,
+              "p90_ns": 766114,
+              "p99_ns": 1063052,
+              "max_ns": 1336740
+            },
+            {
+              "queries": 500,
+              "total_ns": 235018183,
+              "p50_ns": 438494,
+              "p90_ns": 764612,
+              "p99_ns": 1060100,
+              "max_ns": 1373570
+            }
+          ],
+          "peak_rss_bytes": 29528064,
+          "wall_s": 0.749853986000744
+        },
+        {
+          "open_s": 0.006832801,
+          "cold_start_s": 0.013538707,
+          "memory": {
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15644,
+            "rss_kib": 28956,
+            "vm_hwm_kib": 28956
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 243386338,
+              "p50_ns": 443605,
+              "p90_ns": 791302,
+              "p99_ns": 1089681,
+              "max_ns": 1431299
+            },
+            {
+              "queries": 500,
+              "total_ns": 235818196,
+              "p50_ns": 433967,
+              "p90_ns": 765256,
+              "p99_ns": 1060086,
+              "max_ns": 1315994
+            },
+            {
+              "queries": 500,
+              "total_ns": 233185265,
+              "p50_ns": 430969,
+              "p90_ns": 761982,
+              "p99_ns": 1053099,
+              "max_ns": 1330292
+            }
+          ],
+          "peak_rss_bytes": 29585408,
+          "wall_s": 0.7474726860000374
+        },
+        {
+          "open_s": 0.007068322,
+          "cold_start_s": 0.013948026,
+          "memory": {
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15592,
+            "rss_kib": 28904,
+            "vm_hwm_kib": 28904
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 243876945,
+              "p50_ns": 450964,
+              "p90_ns": 796583,
+              "p99_ns": 1133089,
+              "max_ns": 1463506
+            },
+            {
+              "queries": 500,
+              "total_ns": 234149668,
+              "p50_ns": 435222,
+              "p90_ns": 766106,
+              "p99_ns": 1063863,
+              "max_ns": 1322872
+            },
+            {
+              "queries": 500,
+              "total_ns": 234388401,
+              "p50_ns": 431673,
+              "p90_ns": 759238,
+              "p99_ns": 1096735,
+              "max_ns": 1333385
+            }
+          ],
+          "peak_rss_bytes": 29597696,
+          "wall_s": 0.7486737389999689
+        },
+        {
+          "open_s": 0.007187604,
+          "cold_start_s": 0.014176627,
+          "memory": {
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15552,
+            "rss_kib": 28864,
+            "vm_hwm_kib": 28864
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 244317796,
+              "p50_ns": 451202,
+              "p90_ns": 802191,
+              "p99_ns": 1085032,
+              "max_ns": 1438675
+            },
+            {
+              "queries": 500,
+              "total_ns": 235686116,
+              "p50_ns": 432238,
+              "p90_ns": 770600,
+              "p99_ns": 1068234,
+              "max_ns": 1341437
+            },
+            {
+              "queries": 500,
+              "total_ns": 237675365,
+              "p50_ns": 437062,
+              "p90_ns": 789440,
+              "p99_ns": 1070083,
+              "max_ns": 1342109
+            }
+          ],
+          "peak_rss_bytes": 29556736,
+          "wall_s": 0.753924165999706
+        },
+        {
+          "open_s": 0.00705136,
+          "cold_start_s": 0.013842668,
+          "memory": {
+            "anonymous_kib": 13312,
+            "rss_file_kib": 15564,
+            "rss_kib": 28876,
+            "vm_hwm_kib": 28876
+          },
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 247119356,
+              "p50_ns": 449642,
+              "p90_ns": 809037,
+              "p99_ns": 1126080,
+              "max_ns": 1474147
+            },
+            {
+              "queries": 500,
+              "total_ns": 237034328,
+              "p50_ns": 434456,
+              "p90_ns": 773225,
+              "p99_ns": 1086196,
+              "max_ns": 1350659
+            },
+            {
+              "queries": 500,
+              "total_ns": 236884939,
+              "p50_ns": 434470,
+              "p90_ns": 773831,
+              "p99_ns": 1079691,
+              "max_ns": 1351860
+            }
+          ],
+          "peak_rss_bytes": 29503488,
+          "wall_s": 0.7568693729999723
         }
       ],
       "ops": {
@@ -3094,11 +3484,11 @@
       },
       "version": {
         "writerslogic-warm": "0.6.8",
-        "commit": "12f6501f"
+        "commit": "3836860e"
       },
       "install": {
         "competitive_text": {
-          "bytes": 4336752,
+          "bytes": 4389496,
           "non_system_dynamic_libraries": 0,
           "profile": "dist",
           "symbols": "stripped"
@@ -3116,19 +3506,19 @@
       "build_runs": [
         {
           "documents": 57600,
-          "ingest_s": 4.728523537,
-          "peak_rss_bytes_self": 563716096,
-          "peak_rss_bytes": 581652480,
-          "wall_s": 6.520374101000925,
+          "ingest_s": 4.77049405,
+          "peak_rss_bytes_self": 563273728,
+          "peak_rss_bytes": 574058496,
+          "wall_s": 6.691370430000461,
           "disk_bytes": 12713828
         }
       ],
       "serve_rounds": [
         {
-          "open_s": 0.910186769,
-          "cold_start_s": 1.252919026,
-          "warmup_passes": 14,
-          "peak_rss_bytes_self": 125853696,
+          "open_s": 0.925282324,
+          "cold_start_s": 1.327987055,
+          "warmup_passes": 5,
+          "peak_rss_bytes_self": 128114688,
           "quality": {
             "ndcg_at_10": 0.2656768159122737,
             "recall_at_10": 0.3189083638583639,
@@ -4142,171 +4532,346 @@
           "passes": [
             {
               "queries": 500,
-              "total_ns": 316078544,
-              "p50_ns": 527334,
-              "p90_ns": 990641,
-              "p99_ns": 3440574,
-              "max_ns": 3933441
+              "total_ns": 482267209,
+              "p50_ns": 581466,
+              "p90_ns": 3167023,
+              "p99_ns": 4447021,
+              "max_ns": 5278753
             },
             {
               "queries": 500,
-              "total_ns": 303915375,
-              "p50_ns": 526688,
-              "p90_ns": 965082,
-              "p99_ns": 1885715,
-              "max_ns": 3852249
+              "total_ns": 560651045,
+              "p50_ns": 605734,
+              "p90_ns": 3662850,
+              "p99_ns": 4608341,
+              "max_ns": 7152628
             },
             {
               "queries": 500,
-              "total_ns": 316880264,
-              "p50_ns": 523647,
-              "p90_ns": 977486,
-              "p99_ns": 2877690,
-              "max_ns": 5937000
+              "total_ns": 315110904,
+              "p50_ns": 532581,
+              "p90_ns": 982928,
+              "p99_ns": 3581974,
+              "max_ns": 4699487
             }
           ],
-          "peak_rss_bytes": 126029824,
-          "wall_s": 10.225852542000212
+          "peak_rss_bytes": 128323584,
+          "wall_s": 7.347576273999948
         },
         {
-          "open_s": 0.882299179,
-          "cold_start_s": 1.105560057,
+          "open_s": 0.906503558,
+          "cold_start_s": 1.16178298,
           "warmup_passes": 12,
-          "peak_rss_bytes_self": 123199488,
+          "peak_rss_bytes_self": 122994688,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 285442526,
-              "p50_ns": 513582,
-              "p90_ns": 916790,
-              "p99_ns": 1433245,
-              "max_ns": 3201044
+              "total_ns": 293361530,
+              "p50_ns": 521658,
+              "p90_ns": 938407,
+              "p99_ns": 1579984,
+              "max_ns": 3602439
             },
             {
               "queries": 500,
-              "total_ns": 286605782,
-              "p50_ns": 516690,
-              "p90_ns": 931256,
-              "p99_ns": 1388113,
-              "max_ns": 2248594
+              "total_ns": 290725543,
+              "p50_ns": 528190,
+              "p90_ns": 962836,
+              "p99_ns": 1431326,
+              "max_ns": 1963964
             },
             {
               "queries": 500,
-              "total_ns": 338090553,
-              "p50_ns": 545116,
-              "p90_ns": 1063967,
-              "p99_ns": 3577090,
-              "max_ns": 3923046
+              "total_ns": 413488731,
+              "p50_ns": 543767,
+              "p90_ns": 1430732,
+              "p99_ns": 3887266,
+              "max_ns": 5084172
             }
           ],
-          "peak_rss_bytes": 123342848,
-          "wall_s": 8.908409045001463
+          "peak_rss_bytes": 123215872,
+          "wall_s": 9.630603760999293
         },
         {
-          "open_s": 0.870957554,
-          "cold_start_s": 1.119182349,
-          "warmup_passes": 6,
-          "peak_rss_bytes_self": 123330560,
+          "open_s": 0.905469374,
+          "cold_start_s": 1.147387148,
+          "warmup_passes": 5,
+          "peak_rss_bytes_self": 128131072,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 420504976,
-              "p50_ns": 542705,
-              "p90_ns": 1523251,
-              "p99_ns": 3898921,
-              "max_ns": 4531680
+              "total_ns": 624441501,
+              "p50_ns": 637895,
+              "p90_ns": 3765819,
+              "p99_ns": 4835374,
+              "max_ns": 7066973
             },
             {
               "queries": 500,
-              "total_ns": 315488551,
-              "p50_ns": 529393,
-              "p90_ns": 966489,
-              "p99_ns": 3293351,
-              "max_ns": 3880227
+              "total_ns": 492444792,
+              "p50_ns": 587821,
+              "p90_ns": 3454158,
+              "p99_ns": 4239409,
+              "max_ns": 5220256
             },
             {
               "queries": 500,
-              "total_ns": 315377524,
-              "p50_ns": 520859,
-              "p90_ns": 988461,
-              "p99_ns": 3606252,
-              "max_ns": 5510832
+              "total_ns": 530560744,
+              "p50_ns": 597177,
+              "p90_ns": 3608738,
+              "p99_ns": 4186216,
+              "max_ns": 4949183
             }
           ],
-          "peak_rss_bytes": 123367424,
-          "wall_s": 7.17851642900132
+          "peak_rss_bytes": 128339968,
+          "wall_s": 7.661367973999404
         },
         {
-          "open_s": 0.882165147,
-          "cold_start_s": 1.111163139,
+          "open_s": 0.92856486,
+          "cold_start_s": 1.167392094,
           "warmup_passes": 12,
-          "peak_rss_bytes_self": 122454016,
+          "peak_rss_bytes_self": 123338752,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 289038609,
-              "p50_ns": 514261,
-              "p90_ns": 915168,
-              "p99_ns": 1551404,
-              "max_ns": 3660070
+              "total_ns": 292440498,
+              "p50_ns": 528351,
+              "p90_ns": 934121,
+              "p99_ns": 1505941,
+              "max_ns": 3261569
             },
             {
               "queries": 500,
-              "total_ns": 285001630,
-              "p50_ns": 509308,
-              "p90_ns": 927712,
-              "p99_ns": 1363616,
-              "max_ns": 2128016
+              "total_ns": 292724025,
+              "p50_ns": 529585,
+              "p90_ns": 942324,
+              "p99_ns": 1488050,
+              "max_ns": 1965093
             },
             {
               "queries": 500,
-              "total_ns": 306321882,
-              "p50_ns": 516558,
-              "p90_ns": 968597,
-              "p99_ns": 2546289,
-              "max_ns": 5119396
+              "total_ns": 319153799,
+              "p50_ns": 536244,
+              "p90_ns": 988320,
+              "p99_ns": 3451175,
+              "max_ns": 5453107
             }
           ],
-          "peak_rss_bytes": 122650624,
-          "wall_s": 8.828061992000585
+          "peak_rss_bytes": 123404288,
+          "wall_s": 9.485582125000292
         },
         {
-          "open_s": 0.876650883,
-          "cold_start_s": 1.106248275,
+          "open_s": 0.961949169,
+          "cold_start_s": 1.193308176,
+          "warmup_passes": 5,
+          "peak_rss_bytes_self": 123928576,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 562969579,
+              "p50_ns": 592204,
+              "p90_ns": 3669082,
+              "p99_ns": 4810881,
+              "max_ns": 9157169
+            },
+            {
+              "queries": 500,
+              "total_ns": 469006504,
+              "p50_ns": 581432,
+              "p90_ns": 3152150,
+              "p99_ns": 4258427,
+              "max_ns": 5192224
+            },
+            {
+              "queries": 500,
+              "total_ns": 325429021,
+              "p50_ns": 551352,
+              "p90_ns": 1004141,
+              "p99_ns": 3321357,
+              "max_ns": 3973288
+            }
+          ],
+          "peak_rss_bytes": 124010496,
+          "wall_s": 7.332885601000271
+        },
+        {
+          "open_s": 0.912660006,
+          "cold_start_s": 1.157047604,
+          "warmup_passes": 12,
+          "peak_rss_bytes_self": 125657088,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 290259985,
+              "p50_ns": 521023,
+              "p90_ns": 931465,
+              "p99_ns": 1424656,
+              "max_ns": 3396509
+            },
+            {
+              "queries": 500,
+              "total_ns": 292156443,
+              "p50_ns": 517202,
+              "p90_ns": 941513,
+              "p99_ns": 1669261,
+              "max_ns": 2137024
+            },
+            {
+              "queries": 500,
+              "total_ns": 329002637,
+              "p50_ns": 532314,
+              "p90_ns": 971063,
+              "p99_ns": 3726683,
+              "max_ns": 4809307
+            }
+          ],
+          "peak_rss_bytes": 125886464,
+          "wall_s": 9.471177919000183
+        },
+        {
+          "open_s": 0.921035691,
+          "cold_start_s": 1.160453775,
           "warmup_passes": 14,
-          "peak_rss_bytes_self": 119685120,
+          "peak_rss_bytes_self": 124145664,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 319024206,
-              "p50_ns": 545728,
-              "p90_ns": 989916,
-              "p99_ns": 3110485,
-              "max_ns": 3926602
+              "total_ns": 313589148,
+              "p50_ns": 542399,
+              "p90_ns": 981388,
+              "p99_ns": 2802763,
+              "max_ns": 3537947
             },
             {
               "queries": 500,
-              "total_ns": 291335635,
-              "p50_ns": 522254,
-              "p90_ns": 942090,
-              "p99_ns": 1541659,
-              "max_ns": 2107011
+              "total_ns": 292590581,
+              "p50_ns": 521920,
+              "p90_ns": 948483,
+              "p99_ns": 1618667,
+              "max_ns": 1938938
             },
             {
               "queries": 500,
-              "total_ns": 351301504,
-              "p50_ns": 533678,
-              "p90_ns": 1057411,
-              "p99_ns": 3770086,
-              "max_ns": 5061124
+              "total_ns": 311638815,
+              "p50_ns": 531591,
+              "p90_ns": 982213,
+              "p99_ns": 3267377,
+              "max_ns": 4690973
             }
           ],
-          "peak_rss_bytes": 119926784,
-          "wall_s": 9.681197355999757
+          "peak_rss_bytes": 124297216,
+          "wall_s": 10.520477261000451
+        },
+        {
+          "open_s": 0.933819833,
+          "cold_start_s": 1.162156799,
+          "warmup_passes": 12,
+          "peak_rss_bytes_self": 122777600,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 292651866,
+              "p50_ns": 520430,
+              "p90_ns": 931927,
+              "p99_ns": 1585227,
+              "max_ns": 3570199
+            },
+            {
+              "queries": 500,
+              "total_ns": 290026423,
+              "p50_ns": 520852,
+              "p90_ns": 927826,
+              "p99_ns": 1560523,
+              "max_ns": 2088840
+            },
+            {
+              "queries": 500,
+              "total_ns": 411073976,
+              "p50_ns": 561272,
+              "p90_ns": 1207171,
+              "p99_ns": 4191866,
+              "max_ns": 4784903
+            }
+          ],
+          "peak_rss_bytes": 122945536,
+          "wall_s": 9.547712488999423
+        },
+        {
+          "open_s": 0.926416554,
+          "cold_start_s": 1.169890242,
+          "warmup_passes": 12,
+          "peak_rss_bytes_self": 125202432,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 290575649,
+              "p50_ns": 521323,
+              "p90_ns": 937528,
+              "p99_ns": 1438817,
+              "max_ns": 3586376
+            },
+            {
+              "queries": 500,
+              "total_ns": 292090321,
+              "p50_ns": 527253,
+              "p90_ns": 961854,
+              "p99_ns": 1426716,
+              "max_ns": 2035858
+            },
+            {
+              "queries": 500,
+              "total_ns": 308926056,
+              "p50_ns": 536187,
+              "p90_ns": 989462,
+              "p99_ns": 2675532,
+              "max_ns": 3429985
+            }
+          ],
+          "peak_rss_bytes": 125444096,
+          "wall_s": 9.398994684999707
+        },
+        {
+          "open_s": 0.91475983,
+          "cold_start_s": 1.169864447,
+          "warmup_passes": 12,
+          "peak_rss_bytes_self": 121958400,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 292351366,
+              "p50_ns": 515071,
+              "p90_ns": 947129,
+              "p99_ns": 1433067,
+              "max_ns": 3252214
+            },
+            {
+              "queries": 500,
+              "total_ns": 293589762,
+              "p50_ns": 528366,
+              "p90_ns": 949322,
+              "p99_ns": 1522074,
+              "max_ns": 2545600
+            },
+            {
+              "queries": 500,
+              "total_ns": 349024178,
+              "p50_ns": 539847,
+              "p90_ns": 1053553,
+              "p99_ns": 3800407,
+              "max_ns": 4505497
+            }
+          ],
+          "peak_rss_bytes": 122245120,
+          "wall_s": 9.393530422000367
         }
       ],
       "ops": {
@@ -4330,23 +4895,23 @@
           "docstore": "default (lz4)",
           "documents": 57600,
           "heap_bytes": 200000000,
-          "ingest_s": 2.798717104,
+          "ingest_s": 2.9223693920000002,
           "segments": 1,
           "segments_before_merge": 1,
           "stored": false,
           "tantivy": "0.27.0",
           "threads": 1,
-          "peak_rss_bytes": 163352576,
-          "wall_s": 2.9151987090008333,
+          "peak_rss_bytes": 163356672,
+          "wall_s": 3.0446406119999665,
           "disk_bytes": 18061257
         }
       ],
       "serve_rounds": [
         {
-          "cold_start_s": 0.912514156,
+          "cold_start_s": 0.91587696,
           "collector": "top-100",
           "doc_cache_blocks": 10,
-          "open_s": 0.903724711,
+          "open_s": 0.90692163,
           "stored": false,
           "quality": {
             "ndcg_at_10": 0.264308794693361,
@@ -5361,175 +5926,355 @@
           "passes": [
             {
               "queries": 500,
-              "total_ns": 988956941,
-              "p50_ns": 1592736,
-              "p90_ns": 3801370,
-              "p99_ns": 6227416,
-              "max_ns": 8694201
+              "total_ns": 992554873,
+              "p50_ns": 1606396,
+              "p90_ns": 3800467,
+              "p99_ns": 6244480,
+              "max_ns": 8693161
             },
             {
               "queries": 500,
-              "total_ns": 981273923,
-              "p50_ns": 1589801,
-              "p90_ns": 3772600,
-              "p99_ns": 6172557,
-              "max_ns": 8661745
+              "total_ns": 989429557,
+              "p50_ns": 1594988,
+              "p90_ns": 3803853,
+              "p99_ns": 6185231,
+              "max_ns": 8681446
             },
             {
               "queries": 500,
-              "total_ns": 982344639,
-              "p50_ns": 1582784,
-              "p90_ns": 3774793,
-              "p99_ns": 6247900,
-              "max_ns": 8658877
+              "total_ns": 990274170,
+              "p50_ns": 1591008,
+              "p90_ns": 3809618,
+              "p99_ns": 6223621,
+              "max_ns": 8701284
             }
           ],
-          "peak_rss_bytes": 95940608,
-          "wall_s": 3.9939248909977323
+          "peak_rss_bytes": 96215040,
+          "wall_s": 4.022490889000437
         },
         {
-          "cold_start_s": 0.909790022,
+          "cold_start_s": 0.93769211,
           "collector": "top-100",
           "doc_cache_blocks": 10,
-          "open_s": 0.900950605,
+          "open_s": 0.928712996,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 990504427,
-              "p50_ns": 1588957,
-              "p90_ns": 3816141,
-              "p99_ns": 6251587,
-              "max_ns": 8803325
+              "total_ns": 997300217,
+              "p50_ns": 1610395,
+              "p90_ns": 3826727,
+              "p99_ns": 6239250,
+              "max_ns": 8728154
             },
             {
               "queries": 500,
-              "total_ns": 986446607,
-              "p50_ns": 1584436,
-              "p90_ns": 3798461,
-              "p99_ns": 6157593,
-              "max_ns": 8707375
+              "total_ns": 989489608,
+              "p50_ns": 1614649,
+              "p90_ns": 3805279,
+              "p99_ns": 6162853,
+              "max_ns": 8842846
             },
             {
               "queries": 500,
-              "total_ns": 983927890,
-              "p50_ns": 1595393,
-              "p90_ns": 3785973,
-              "p99_ns": 6190839,
-              "max_ns": 8688648
+              "total_ns": 990864734,
+              "p50_ns": 1604513,
+              "p90_ns": 3804027,
+              "p99_ns": 6186841,
+              "max_ns": 8882441
+            }
+          ],
+          "peak_rss_bytes": 96239616,
+          "wall_s": 4.05091683899991
+        },
+        {
+          "cold_start_s": 0.906531486,
+          "collector": "top-100",
+          "doc_cache_blocks": 10,
+          "open_s": 0.897389154,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 992182616,
+              "p50_ns": 1597553,
+              "p90_ns": 3816067,
+              "p99_ns": 6260683,
+              "max_ns": 8713242
+            },
+            {
+              "queries": 500,
+              "total_ns": 982770581,
+              "p50_ns": 1575177,
+              "p90_ns": 3806903,
+              "p99_ns": 6130207,
+              "max_ns": 8642782
+            },
+            {
+              "queries": 500,
+              "total_ns": 983819719,
+              "p50_ns": 1580097,
+              "p90_ns": 3798658,
+              "p99_ns": 6225099,
+              "max_ns": 8684878
+            }
+          ],
+          "peak_rss_bytes": 96120832,
+          "wall_s": 4.000708943000063
+        },
+        {
+          "cold_start_s": 0.938803807,
+          "collector": "top-100",
+          "doc_cache_blocks": 10,
+          "open_s": 0.929937933,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 994208012,
+              "p50_ns": 1604500,
+              "p90_ns": 3820969,
+              "p99_ns": 6246551,
+              "max_ns": 8749545
+            },
+            {
+              "queries": 500,
+              "total_ns": 992692106,
+              "p50_ns": 1623199,
+              "p90_ns": 3851985,
+              "p99_ns": 6195875,
+              "max_ns": 8727622
+            },
+            {
+              "queries": 500,
+              "total_ns": 988436954,
+              "p50_ns": 1601793,
+              "p90_ns": 3819874,
+              "p99_ns": 6169409,
+              "max_ns": 8736175
+            }
+          ],
+          "peak_rss_bytes": 96219136,
+          "wall_s": 4.0483164159995795
+        },
+        {
+          "cold_start_s": 0.906320007,
+          "collector": "top-100",
+          "doc_cache_blocks": 10,
+          "open_s": 0.897192728,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 994110159,
+              "p50_ns": 1607389,
+              "p90_ns": 3830821,
+              "p99_ns": 6291123,
+              "max_ns": 8698138
+            },
+            {
+              "queries": 500,
+              "total_ns": 990911159,
+              "p50_ns": 1607452,
+              "p90_ns": 3831686,
+              "p99_ns": 6172270,
+              "max_ns": 8744710
+            },
+            {
+              "queries": 500,
+              "total_ns": 989251126,
+              "p50_ns": 1592541,
+              "p90_ns": 3818223,
+              "p99_ns": 6208450,
+              "max_ns": 8743884
             }
           ],
           "peak_rss_bytes": 96235520,
-          "wall_s": 3.999140420000913
+          "wall_s": 4.013285216999975
         },
         {
-          "cold_start_s": 0.919777804,
+          "cold_start_s": 0.905071106,
           "collector": "top-100",
           "doc_cache_blocks": 10,
-          "open_s": 0.910994294,
+          "open_s": 0.8956236,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 987987602,
-              "p50_ns": 1585404,
-              "p90_ns": 3800209,
-              "p99_ns": 6185045,
-              "max_ns": 8718766
+              "total_ns": 992607628,
+              "p50_ns": 1610073,
+              "p90_ns": 3849168,
+              "p99_ns": 6181896,
+              "max_ns": 8754962
             },
             {
               "queries": 500,
-              "total_ns": 984326838,
-              "p50_ns": 1593657,
-              "p90_ns": 3810274,
-              "p99_ns": 6152643,
-              "max_ns": 8714980
+              "total_ns": 986494024,
+              "p50_ns": 1606544,
+              "p90_ns": 3841289,
+              "p99_ns": 6177508,
+              "max_ns": 8728569
             },
             {
               "queries": 500,
-              "total_ns": 981910032,
-              "p50_ns": 1590689,
-              "p90_ns": 3773524,
-              "p99_ns": 6098903,
-              "max_ns": 8677982
+              "total_ns": 987656080,
+              "p50_ns": 1591095,
+              "p90_ns": 3770720,
+              "p99_ns": 6193677,
+              "max_ns": 8782769
             }
           ],
-          "peak_rss_bytes": 96280576,
-          "wall_s": 4.007131585000025
+          "peak_rss_bytes": 96206848,
+          "wall_s": 4.005893026000194
         },
         {
-          "cold_start_s": 0.935633327,
+          "cold_start_s": 0.908057507,
           "collector": "top-100",
           "doc_cache_blocks": 10,
-          "open_s": 0.926817262,
+          "open_s": 0.899186031,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 986802285,
-              "p50_ns": 1581348,
-              "p90_ns": 3783427,
-              "p99_ns": 6221479,
-              "max_ns": 8673515
+              "total_ns": 998457770,
+              "p50_ns": 1608395,
+              "p90_ns": 3884449,
+              "p99_ns": 6197104,
+              "max_ns": 8705106
             },
             {
               "queries": 500,
-              "total_ns": 980862068,
-              "p50_ns": 1575890,
-              "p90_ns": 3796195,
-              "p99_ns": 6116894,
-              "max_ns": 8862256
+              "total_ns": 986682359,
+              "p50_ns": 1597310,
+              "p90_ns": 3805061,
+              "p99_ns": 6167273,
+              "max_ns": 8733118
             },
             {
               "queries": 500,
-              "total_ns": 985859859,
-              "p50_ns": 1594699,
-              "p90_ns": 3772218,
-              "p99_ns": 6127757,
-              "max_ns": 8963141
+              "total_ns": 989839751,
+              "p50_ns": 1590231,
+              "p90_ns": 3822309,
+              "p99_ns": 6202872,
+              "max_ns": 8709882
             }
           ],
-          "peak_rss_bytes": 96112640,
-          "wall_s": 4.0108765449986095
+          "peak_rss_bytes": 96382976,
+          "wall_s": 4.016073263999715
         },
         {
-          "cold_start_s": 0.907765374,
+          "cold_start_s": 0.908397686,
           "collector": "top-100",
           "doc_cache_blocks": 10,
-          "open_s": 0.898952151,
+          "open_s": 0.899302922,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 987008892,
-              "p50_ns": 1586335,
-              "p90_ns": 3807229,
-              "p99_ns": 6211859,
-              "max_ns": 8657868
+              "total_ns": 994602976,
+              "p50_ns": 1605751,
+              "p90_ns": 3827449,
+              "p99_ns": 6261237,
+              "max_ns": 8721489
             },
             {
               "queries": 500,
-              "total_ns": 986953262,
-              "p50_ns": 1588640,
-              "p90_ns": 3844843,
-              "p99_ns": 6199334,
-              "max_ns": 8699508
+              "total_ns": 983900754,
+              "p50_ns": 1583800,
+              "p90_ns": 3817102,
+              "p99_ns": 6142980,
+              "max_ns": 8694907
             },
             {
               "queries": 500,
-              "total_ns": 984297030,
-              "p50_ns": 1582491,
-              "p90_ns": 3821695,
-              "p99_ns": 6123960,
-              "max_ns": 8633991
+              "total_ns": 985692313,
+              "p50_ns": 1590293,
+              "p90_ns": 3787051,
+              "p99_ns": 6186652,
+              "max_ns": 8747155
             }
           ],
-          "peak_rss_bytes": 96387072,
-          "wall_s": 3.9948912779982493
+          "peak_rss_bytes": 96292864,
+          "wall_s": 4.005839859999469
+        },
+        {
+          "cold_start_s": 0.912808526,
+          "collector": "top-100",
+          "doc_cache_blocks": 10,
+          "open_s": 0.903991067,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 995207307,
+              "p50_ns": 1600347,
+              "p90_ns": 3844607,
+              "p99_ns": 6320528,
+              "max_ns": 8705974
+            },
+            {
+              "queries": 500,
+              "total_ns": 987684616,
+              "p50_ns": 1586163,
+              "p90_ns": 3826145,
+              "p99_ns": 6197803,
+              "max_ns": 8654329
+            },
+            {
+              "queries": 500,
+              "total_ns": 990510394,
+              "p50_ns": 1588959,
+              "p90_ns": 3859420,
+              "p99_ns": 6239859,
+              "max_ns": 8690617
+            }
+          ],
+          "peak_rss_bytes": 96137216,
+          "wall_s": 4.01938092599994
+        },
+        {
+          "cold_start_s": 0.909036553,
+          "collector": "top-100",
+          "doc_cache_blocks": 10,
+          "open_s": 0.900134493,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 991892569,
+              "p50_ns": 1595836,
+              "p90_ns": 3842100,
+              "p99_ns": 6215307,
+              "max_ns": 8715782
+            },
+            {
+              "queries": 500,
+              "total_ns": 985630961,
+              "p50_ns": 1575391,
+              "p90_ns": 3810553,
+              "p99_ns": 6181053,
+              "max_ns": 8730405
+            },
+            {
+              "queries": 500,
+              "total_ns": 985343456,
+              "p50_ns": 1590224,
+              "p90_ns": 3807301,
+              "p99_ns": 6137761,
+              "max_ns": 8677969
+            }
+          ],
+          "peak_rss_bytes": 95956992,
+          "wall_s": 4.005732564000027
         }
       ],
       "ops": {
@@ -5556,23 +6301,23 @@
           "docstore": "default (lz4)",
           "documents": 57600,
           "heap_bytes": 200000000,
-          "ingest_s": 2.778935241,
+          "ingest_s": 2.87897141,
           "segments": 1,
           "segments_before_merge": 1,
           "stored": false,
           "tantivy": "0.27.0",
           "threads": 1,
-          "peak_rss_bytes": 163528704,
-          "wall_s": 2.893916666998848,
+          "peak_rss_bytes": 163438592,
+          "wall_s": 3.001842912999564,
           "disk_bytes": 18061257
         }
       ],
       "serve_rounds": [
         {
-          "cold_start_s": 0.90286601,
+          "cold_start_s": 0.911372388,
           "collector": "top-100 + Count",
           "doc_cache_blocks": 10,
-          "open_s": 0.89722197,
+          "open_s": 0.905346953,
           "stored": false,
           "quality": {
             "ndcg_at_10": 0.264308794693361,
@@ -6587,175 +7332,355 @@
           "passes": [
             {
               "queries": 500,
-              "total_ns": 364279135,
-              "p50_ns": 716293,
-              "p90_ns": 1152561,
-              "p99_ns": 1435522,
-              "max_ns": 1561204
+              "total_ns": 367968852,
+              "p50_ns": 721353,
+              "p90_ns": 1164452,
+              "p99_ns": 1458227,
+              "max_ns": 1568891
             },
             {
               "queries": 500,
-              "total_ns": 351530351,
-              "p50_ns": 688742,
-              "p90_ns": 1112322,
-              "p99_ns": 1394326,
-              "max_ns": 1534096
+              "total_ns": 355993352,
+              "p50_ns": 695384,
+              "p90_ns": 1120167,
+              "p99_ns": 1432983,
+              "max_ns": 1586435
             },
             {
               "queries": 500,
-              "total_ns": 352110256,
-              "p50_ns": 689922,
-              "p90_ns": 1111646,
-              "p99_ns": 1399049,
-              "max_ns": 1551674
+              "total_ns": 354338171,
+              "p50_ns": 692152,
+              "p90_ns": 1121696,
+              "p99_ns": 1418245,
+              "max_ns": 1546942
             }
           ],
-          "peak_rss_bytes": 96153600,
-          "wall_s": 2.06852544800131
+          "peak_rss_bytes": 96194560,
+          "wall_s": 2.0917267369995898
         },
         {
-          "cold_start_s": 0.931614352,
+          "cold_start_s": 0.901768762,
           "collector": "top-100 + Count",
           "doc_cache_blocks": 10,
-          "open_s": 0.925944933,
+          "open_s": 0.896204708,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 364401838,
-              "p50_ns": 716339,
-              "p90_ns": 1146426,
-              "p99_ns": 1456703,
-              "max_ns": 1553922
+              "total_ns": 368088401,
+              "p50_ns": 720448,
+              "p90_ns": 1167010,
+              "p99_ns": 1445790,
+              "max_ns": 1579828
             },
             {
               "queries": 500,
-              "total_ns": 352067502,
-              "p50_ns": 692299,
-              "p90_ns": 1116699,
-              "p99_ns": 1405001,
-              "max_ns": 1544022
+              "total_ns": 355095398,
+              "p50_ns": 693165,
+              "p90_ns": 1129512,
+              "p99_ns": 1434187,
+              "max_ns": 1544050
             },
             {
               "queries": 500,
-              "total_ns": 352655984,
-              "p50_ns": 692244,
-              "p90_ns": 1117617,
-              "p99_ns": 1387408,
-              "max_ns": 1526711
+              "total_ns": 354704897,
+              "p50_ns": 694757,
+              "p90_ns": 1118538,
+              "p99_ns": 1395848,
+              "max_ns": 1525562
             }
           ],
-          "peak_rss_bytes": 96059392,
-          "wall_s": 2.0966436409980815
+          "peak_rss_bytes": 96137216,
+          "wall_s": 2.081034226999691
         },
         {
-          "cold_start_s": 0.9050839,
+          "cold_start_s": 0.902407786,
           "collector": "top-100 + Count",
           "doc_cache_blocks": 10,
-          "open_s": 0.899053974,
+          "open_s": 0.896659258,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 363827377,
-              "p50_ns": 708385,
-              "p90_ns": 1147439,
-              "p99_ns": 1468938,
-              "max_ns": 1543866
+              "total_ns": 367419241,
+              "p50_ns": 714890,
+              "p90_ns": 1154005,
+              "p99_ns": 1462441,
+              "max_ns": 1563605
             },
             {
               "queries": 500,
-              "total_ns": 352244122,
-              "p50_ns": 688983,
-              "p90_ns": 1110748,
-              "p99_ns": 1389928,
-              "max_ns": 1542099
+              "total_ns": 354982311,
+              "p50_ns": 698152,
+              "p90_ns": 1125889,
+              "p99_ns": 1410761,
+              "max_ns": 1569440
             },
             {
               "queries": 500,
-              "total_ns": 352504571,
-              "p50_ns": 688969,
-              "p90_ns": 1116863,
-              "p99_ns": 1387388,
-              "max_ns": 1517655
+              "total_ns": 354399472,
+              "p50_ns": 692339,
+              "p90_ns": 1118023,
+              "p99_ns": 1401773,
+              "max_ns": 1528867
             }
           ],
-          "peak_rss_bytes": 96256000,
-          "wall_s": 2.0708742380011245
+          "peak_rss_bytes": 95899648,
+          "wall_s": 2.0814967549995345
         },
         {
-          "cold_start_s": 0.905829165,
+          "cold_start_s": 0.911112388,
           "collector": "top-100 + Count",
           "doc_cache_blocks": 10,
-          "open_s": 0.900155554,
+          "open_s": 0.905346805,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 363336388,
-              "p50_ns": 707688,
-              "p90_ns": 1146445,
-              "p99_ns": 1443651,
-              "max_ns": 1542389
+              "total_ns": 369660921,
+              "p50_ns": 723508,
+              "p90_ns": 1166742,
+              "p99_ns": 1472544,
+              "max_ns": 1669505
             },
             {
               "queries": 500,
-              "total_ns": 353184081,
-              "p50_ns": 695439,
-              "p90_ns": 1119461,
-              "p99_ns": 1397394,
-              "max_ns": 1544074
+              "total_ns": 354661397,
+              "p50_ns": 693258,
+              "p90_ns": 1119421,
+              "p99_ns": 1415866,
+              "max_ns": 1557476
             },
             {
               "queries": 500,
-              "total_ns": 352086218,
-              "p50_ns": 688663,
-              "p90_ns": 1112612,
-              "p99_ns": 1404419,
-              "max_ns": 1528137
+              "total_ns": 354632877,
+              "p50_ns": 692982,
+              "p90_ns": 1123528,
+              "p99_ns": 1415833,
+              "max_ns": 1525469
             }
           ],
-          "peak_rss_bytes": 96190464,
-          "wall_s": 2.0715244689999963
+          "peak_rss_bytes": 96141312,
+          "wall_s": 2.092783174000033
         },
         {
-          "cold_start_s": 0.932977589,
+          "cold_start_s": 0.900372303,
           "collector": "top-100 + Count",
           "doc_cache_blocks": 10,
-          "open_s": 0.927298116,
+          "open_s": 0.894519514,
           "stored": false,
           "quality": null,
           "passes": [
             {
               "queries": 500,
-              "total_ns": 363234685,
-              "p50_ns": 712958,
-              "p90_ns": 1143076,
-              "p99_ns": 1454199,
-              "max_ns": 1555054
+              "total_ns": 368947538,
+              "p50_ns": 720159,
+              "p90_ns": 1170207,
+              "p99_ns": 1462982,
+              "max_ns": 1573563
             },
             {
               "queries": 500,
-              "total_ns": 352175960,
-              "p50_ns": 691684,
-              "p90_ns": 1119936,
-              "p99_ns": 1403843,
-              "max_ns": 1530814
+              "total_ns": 355231818,
+              "p50_ns": 694780,
+              "p90_ns": 1124004,
+              "p99_ns": 1411181,
+              "max_ns": 1558775
             },
             {
               "queries": 500,
-              "total_ns": 352277973,
-              "p50_ns": 688499,
-              "p90_ns": 1108981,
-              "p99_ns": 1405634,
-              "max_ns": 1551568
+              "total_ns": 355129925,
+              "p50_ns": 693017,
+              "p90_ns": 1123136,
+              "p99_ns": 1397852,
+              "max_ns": 1540507
+            }
+          ],
+          "peak_rss_bytes": 95928320,
+          "wall_s": 2.081263838000268
+        },
+        {
+          "cold_start_s": 0.90161472,
+          "collector": "top-100 + Count",
+          "doc_cache_blocks": 10,
+          "open_s": 0.895809992,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 367326469,
+              "p50_ns": 718778,
+              "p90_ns": 1164964,
+              "p99_ns": 1443633,
+              "max_ns": 1561758
+            },
+            {
+              "queries": 500,
+              "total_ns": 355831843,
+              "p50_ns": 697542,
+              "p90_ns": 1127572,
+              "p99_ns": 1438509,
+              "max_ns": 1557179
+            },
+            {
+              "queries": 500,
+              "total_ns": 354583847,
+              "p50_ns": 688346,
+              "p90_ns": 1131129,
+              "p99_ns": 1402745,
+              "max_ns": 1529981
+            }
+          ],
+          "peak_rss_bytes": 96022528,
+          "wall_s": 2.0767384129994753
+        },
+        {
+          "cold_start_s": 0.904370912,
+          "collector": "top-100 + Count",
+          "doc_cache_blocks": 10,
+          "open_s": 0.898457652,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 366584662,
+              "p50_ns": 724794,
+              "p90_ns": 1157183,
+              "p99_ns": 1462345,
+              "max_ns": 1564970
+            },
+            {
+              "queries": 500,
+              "total_ns": 354528484,
+              "p50_ns": 696620,
+              "p90_ns": 1129162,
+              "p99_ns": 1415479,
+              "max_ns": 1556414
+            },
+            {
+              "queries": 500,
+              "total_ns": 355103193,
+              "p50_ns": 695872,
+              "p90_ns": 1129185,
+              "p99_ns": 1412075,
+              "max_ns": 1558292
+            }
+          ],
+          "peak_rss_bytes": 96337920,
+          "wall_s": 2.082028980999894
+        },
+        {
+          "cold_start_s": 0.908322504,
+          "collector": "top-100 + Count",
+          "doc_cache_blocks": 10,
+          "open_s": 0.902698172,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 368644694,
+              "p50_ns": 717255,
+              "p90_ns": 1164522,
+              "p99_ns": 1454471,
+              "max_ns": 1585140
+            },
+            {
+              "queries": 500,
+              "total_ns": 356038773,
+              "p50_ns": 700948,
+              "p90_ns": 1117008,
+              "p99_ns": 1412546,
+              "max_ns": 1546331
+            },
+            {
+              "queries": 500,
+              "total_ns": 356656788,
+              "p50_ns": 696001,
+              "p90_ns": 1129253,
+              "p99_ns": 1400897,
+              "max_ns": 1522997
             }
           ],
           "peak_rss_bytes": 96206848,
-          "wall_s": 2.097653264998371
+          "wall_s": 2.0858160059997317
+        },
+        {
+          "cold_start_s": 0.904154406,
+          "collector": "top-100 + Count",
+          "doc_cache_blocks": 10,
+          "open_s": 0.898217555,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 367875905,
+              "p50_ns": 720475,
+              "p90_ns": 1155736,
+              "p99_ns": 1443546,
+              "max_ns": 1573476
+            },
+            {
+              "queries": 500,
+              "total_ns": 356193229,
+              "p50_ns": 695370,
+              "p90_ns": 1129897,
+              "p99_ns": 1422913,
+              "max_ns": 1551316
+            },
+            {
+              "queries": 500,
+              "total_ns": 355683309,
+              "p50_ns": 698744,
+              "p90_ns": 1137696,
+              "p99_ns": 1409357,
+              "max_ns": 1526361
+            }
+          ],
+          "peak_rss_bytes": 96116736,
+          "wall_s": 2.084512886000084
+        },
+        {
+          "cold_start_s": 0.912983633,
+          "collector": "top-100 + Count",
+          "doc_cache_blocks": 10,
+          "open_s": 0.907042421,
+          "stored": false,
+          "quality": null,
+          "passes": [
+            {
+              "queries": 500,
+              "total_ns": 367755158,
+              "p50_ns": 716668,
+              "p90_ns": 1161112,
+              "p99_ns": 1463666,
+              "max_ns": 1561584
+            },
+            {
+              "queries": 500,
+              "total_ns": 355746465,
+              "p50_ns": 695634,
+              "p90_ns": 1125483,
+              "p99_ns": 1406236,
+              "max_ns": 1551022
+            },
+            {
+              "queries": 500,
+              "total_ns": 355372690,
+              "p50_ns": 695324,
+              "p90_ns": 1122919,
+              "p99_ns": 1433322,
+              "max_ns": 1568756
+            }
+          ],
+          "peak_rss_bytes": 96051200,
+          "wall_s": 2.0947810569996363
         }
       ],
       "ops": {
@@ -6780,7 +7705,7 @@
   "verification": {
     "documents_checks": {
       "warm": {
-        "hits": 250000,
+        "hits": 500000,
         "text_mismatches": 0,
         "bucket_mismatches": 0,
         "unknown_ids": 0,
@@ -6793,15 +7718,16 @@
         "ids_row": "warm-lexical-api",
         "queries": 500,
         "queries_with_different_id_lists": 0,
+        "queries_differing_only_in_tie_order": 0,
         "max_abs_score_gap": 0.0
       }
     }
   },
   "raw_latency": {
     "file": "scale-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-47g.latency.npz",
-    "sha256": "d9421a66757ad50fb5295e9fc95040805924113d831ed93551dc3d7866e366a9",
-    "bytes": 143782,
-    "arrays": 75,
+    "sha256": "80bb4107f33e486170f2002c766e2256813342f8da93016390049599acc82f87",
+    "bytes": 285512,
+    "arrays": 150,
     "unit": "ns (uint32, clipped at 4.29 s)",
     "key_separator": "|",
     "format": "numpy npz; one array per timed pass or per-config hit counts"

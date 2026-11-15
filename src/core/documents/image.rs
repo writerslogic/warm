@@ -82,7 +82,7 @@ enum Section {
 const SECTIONS: usize = 10;
 const _: () = assert!(H_SECTIONS + 2 * SECTIONS <= HEADER_WORDS);
 
-const SLOT_BYTES: usize = 12;
+pub(super) const SLOT_BYTES: usize = 12;
 const FREE: u32 = u32::MAX;
 
 const TEXT_NONE: u8 = 0;
@@ -396,6 +396,10 @@ pub(crate) struct ServingImage {
     blocked: bool,
     /// Version 3: the block encoding with impacts.
     impacts: bool,
+    /// Direct frequency tables of the longest lists, built by queries (see `impact`).
+    dense: super::impact::DenseTables,
+    /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
+    word_classes: std::sync::OnceLock<Vec<u8>>,
 }
 
 /// One decoded chunk of a checkpoint record.
@@ -519,6 +523,8 @@ impl ServingImage {
             sections,
             blocked,
             impacts,
+            dense: Default::default(),
+            word_classes: std::sync::OnceLock::new(),
         };
         image.check_documents()?;
         image.check_slots()?;
@@ -1154,6 +1160,25 @@ impl ServingImage {
     /// Whether this checkpoint's postings carry the impacts block-max pruning reads.
     pub(super) fn has_impacts(&self) -> bool {
         self.impacts
+    }
+
+    /// The slot table: per slot its word count, document ordinal and chunk index, `u32`s.
+    pub(super) fn slot_table(&self) -> &[u8] {
+        self.section(Section::Slots)
+    }
+
+    /// Per slot the entry of `class_of` for its word count.
+    pub(super) fn word_classes(&self, class_of: &[u8]) -> &[u8] {
+        self.word_classes.get_or_init(|| {
+            let last = class_of.len() - 1;
+            (0..self.slots)
+                .map(|slot| class_of[(self.slot(slot).0 as usize).min(last)])
+                .collect()
+        })
+    }
+
+    pub(super) fn dense(&self) -> &super::impact::DenseTables {
+        &self.dense
     }
 }
 

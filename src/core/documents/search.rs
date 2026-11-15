@@ -134,10 +134,22 @@ enum SlotPositions {
 }
 
 const DENSE_SLOT_LIMIT: usize = 1 << 19;
-/// Below this many slots the exhaustive hot-list ranking is faster than the pruned traversal
-/// (measured on FiQA and 100k), so pruning serves only the stores that would otherwise hydrate.
-const PRUNE_SLOT_FLOOR: usize = if cfg!(test) { 0 } else { DENSE_SLOT_LIMIT };
-
+/// Below this many slots the exhaustive hot-list ranking beats the windowed pruned ranker
+/// (measured on scifact, nfcorpus and the memory set, where exhaustive is 1.7 to 2.4 times
+/// faster; the pruned ranker wins from FiQA's 57k documents up). Above `DENSE_SLOT_LIMIT` the
+/// pruned ranker is the only one that avoids hydrating the store.
+const PRUNE_SLOT_FLOOR_SERVING: usize = 1 << 15;
+const PRUNE_SLOT_FLOOR: usize = if cfg!(test) {
+    0
+} else {
+    PRUNE_SLOT_FLOOR_SERVING
+};
+fn prune_above(slots: usize, floor: usize) -> bool {
+    slots > floor
+}
+fn prune_wanted(slots: usize) -> bool {
+    prune_above(slots, PRUNE_SLOT_FLOOR)
+}
 impl SlotPositions {
     fn new(slot_count: usize) -> Self {
         if slot_count <= DENSE_SLOT_LIMIT {
@@ -827,7 +839,7 @@ impl LexicalScratch {
         if hot
             && store
                 .impact_image()
-                .is_some_and(|image| image.slot_total() > PRUNE_SLOT_FLOOR)
+                .is_some_and(|image| prune_wanted(image.slot_total()))
         {
             let limit = prepared.limit;
             if super::impact::rank(
@@ -3158,6 +3170,91 @@ mod tests {
         );
     }
 
+    /// The windowed ranker's block decoder and frequency tables at the block boundary: a list
+    /// of 127, 128 or 129 postings (and the same plus one block) with frequencies running past
+    /// the table's escape value ranks to the bit as the exhaustive ranking does.
+    #[test]
+    fn pruned_ranking_matches_exhaustive_at_block_boundaries() {
+        let options = [
+            SearchOptions {
+                k: Some(10),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(100),
+                candidate_limit: Some(100),
+                ..Default::default()
+            },
+        ];
+        for documents in [127usize, 128, 129, 255, 256, 257] {
+            let mut store = DocumentStore::default();
+            for id in 0..documents {
+                let repeats = 1 + id % 20;
+                let filler = 1 + (id * 7) % 11;
+                let mut words = vec!["edge"; repeats];
+                words.extend(std::iter::repeat_n("pad", filler));
+                if id % 3 == 0 {
+                    words.push("common");
+                }
+                let input = serde_json::from_value(json!({
+                    "id": format!("b{id:04}"), "text": words.join(" "), "chunkWords": 4096, "overlapWords": 0,
+                }))
+                .unwrap();
+                let mut document =
+                    super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+                for chunk in &mut document.chunks {
+                    chunk.vector_state = super::super::VectorState::Lexical;
+                    chunk.vector =
+                        crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+                }
+                store.insert(document.id.clone(), document);
+            }
+            type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+            let build = |encode: Encoder| {
+                ServingImage::new(super::super::Backing::Owned(
+                    encode(&store, 1, 1024).unwrap().unwrap(),
+                ))
+                .unwrap()
+            };
+            let (pruned, plain) = (
+                build(super::super::image::encode),
+                build(super::super::image::encode_v2),
+            );
+            for text in [
+                "edge",
+                "edge pad",
+                "edge common",
+                "common pad edge edge",
+                "pad",
+            ] {
+                for options in &options {
+                    let prepared = prepare_search(text, options, None).unwrap();
+                    let (fast, exact) = LEXICAL_SCRATCH.with(|scratch| {
+                        let mut scratch = scratch.borrow_mut();
+                        let fast = scratch.rank(&pruned, &prepared, true);
+                        (fast, scratch.rank(&plain, &prepared, true))
+                    });
+                    let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+                        ranked
+                            .iter()
+                            .map(|&(s, slot)| (s.to_bits(), slot))
+                            .collect()
+                    };
+                    assert_eq!(bits(&fast), bits(&exact), "{documents} documents, {text:?}");
+                }
+            }
+        }
+    }
+    /// The cost model switches to the pruned ranker exactly above the serving floor, and every
+    /// store too large for a dense slot table is above it.
+    #[test]
+    fn pruning_switches_on_above_the_serving_floor() {
+        let floor = PRUNE_SLOT_FLOOR_SERVING;
+        assert!(!prune_above(floor - 1, floor));
+        assert!(!prune_above(floor, floor));
+        assert!(prune_above(floor + 1, floor));
+        assert!(DENSE_SLOT_LIMIT > floor);
+    }
     /// Reports how much of a checkpoint's posting lists block-max pruning reads per query:
     /// `WARM_PRUNE_CKPT` the `documents.ckpt`, `WARM_PRUNE_QUERIES` the harness query file.
     #[test]
@@ -3177,7 +3274,7 @@ mod tests {
             candidate_limit: Some(100),
             ..Default::default()
         };
-        let mut total = [0usize; 4];
+        let mut total = [0usize; 10];
         for query in &queries {
             let text = query["text"].as_str().unwrap();
             let prepared = prepare_search(text, &options, None).unwrap();
@@ -3190,15 +3287,25 @@ mod tests {
             total[1] += stats.blocks_listed;
             total[2] += stats.blocks_decoded;
             total[3] += stats.scored;
+            total[4] += stats.windows;
+            total[6] += stats.accumulated;
+            total[7] += stats.survivors;
+            total[8] += stats.table_lookups;
+            total[9] += stats.cursor_lookups;
         }
         let n = queries.len() as f64;
         eprintln!(
-            "queries {} per query: postings listed {:.0} blocks listed {:.0} blocks decoded {:.0} chunks scored {:.0}",
+            "queries {} per query: postings listed {:.0} blocks listed {:.0} blocks decoded {:.0} chunks scored {:.0} windows {:.1} accumulated {:.0} survivors {:.0} table lookups {:.0} cursor lookups {:.0}",
             queries.len(),
             total[0] as f64 / n,
             total[1] as f64 / n,
             total[2] as f64 / n,
-            total[3] as f64 / n
+            total[3] as f64 / n,
+            total[4] as f64 / n,
+            total[6] as f64 / n,
+            total[7] as f64 / n,
+            total[8] as f64 / n,
+            total[9] as f64 / n
         );
     }
 
