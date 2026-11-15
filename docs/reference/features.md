@@ -19,6 +19,7 @@ can change in any release.
 | `local-embed-download` | First-use download of the pinned model pack into the cache; implies `local-embed` | stable | yes, the one download | [Embeddings](../embeddings/README.md) |
 | `local-models` | On-device embedding, re-ranking, fact extraction and query rewriting (candle, Qwen3); weights load from local directories only | experimental | no | [Embeddings](../embeddings/README.md) |
 | `conversation-memory` | Immutable original conversation turns, role-aware recall and bounded source premises | experimental | no | [Conversation evidence](../memory-api/README.md) |
+| `experience` | Experience core: hash-consed region store, per-action effect table and episode store for tree-structured agent observations; region search reuses the document lexical index | experimental | no | [Experience core](../concepts/experience-core.md), [Format](../file-format/EXPERIENCE.md) |
 | `cli` | `clap` argument parsing for the command-line binaries and examples (`warm-admin`, `warm-format`, `public-bench`, the benchmark drivers); implied by `server` and `mcp` | stable | no | [Evaluation](../evaluation.md) |
 | `failpoints` | Fault injection at the durability points, inert unless armed; used by the crash and disk-fault tests | test-only | no | [Crash consistency](../file-format/CRASH-CONSISTENCY.md) |
 | `mimalloc` | mimalloc as the global allocator of the `public-bench` binary (the library never sets one) | stable | no | [Public benchmarks](../PUBLIC-BENCHMARKS.md) |
