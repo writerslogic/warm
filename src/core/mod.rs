@@ -27,6 +27,8 @@ pub(crate) mod durable_file;
 #[cfg(feature = "local-embed")]
 pub mod embed;
 pub mod encoding;
+#[cfg(feature = "experience")]
+pub mod experience;
 #[cfg(feature = "experimental")]
 pub mod experimental;
 pub mod failpoint;
