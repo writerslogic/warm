@@ -271,7 +271,7 @@ fn ingest(
 
 fn main() -> Result<()> {
     let args = Args::parse()?;
-    let mut input: Input = serde_json::from_slice(&std::fs::read(&args.input)?)?;
+    let input: Input = serde_json::from_slice(&std::fs::read(&args.input)?)?;
     let store = args.store.display().to_string();
     let report = match args.phase.as_str() {
         "build" => {

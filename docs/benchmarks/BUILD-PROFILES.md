@@ -85,9 +85,9 @@ For each hnswlib build: the WARM profiles whose median build is no slower, the f
 | M=32 efC=200 | fast, balanced | fastest | fast | 2.27x (2.14-2.38) dominates | 1.81x (1.72-1.87) dominates | tie: neither reaches the recall |
 | M=32 efC=200 | fast, balanced | best_serving | balanced | 3.02x (2.82-3.13) dominates | 2.71x (2.55-2.77) dominates | tie: neither reaches the recall |
 | M=32 efC=500 | fast, balanced, high, max-recall | fastest | fast | 2.27x (2.11-2.37) dominates | 1.99x (1.89-2.07) dominates | WARM does not reach the recall |
-| M=32 efC=500 | fast, balanced, high, max-recall | best_serving | max-recall | 3.25x (3.01-3.37) dominates | 3.35x (3.21-3.47) dominates | 3.23x (3.15-3.29) dominates |
+| [M=32 efC=500](../../benchmarks/results/qgraph_build_profiles_gcp_v1.json) | fast, balanced, high, max-recall | best_serving | max-recall | 3.25x (3.01-3.37) dominates | 3.35x (3.21-3.47) dominates | 3.23x (3.15-3.29) dominates |
 | M=48 efC=500 | fast, balanced, high, max-recall | fastest | fast | 2.24x (2.14-2.33) dominates | 1.87x (1.74-1.92) dominates | WARM does not reach the recall |
-| M=48 efC=500 | fast, balanced, high, max-recall | best_serving | max-recall | 3.21x (3.05-3.31) dominates | 3.15x (2.96-3.23) dominates | 2.80x (2.74-2.85) dominates |
+| [M=48 efC=500](../../benchmarks/results/qgraph_build_profiles_gcp_v1.json) | fast, balanced, high, max-recall | best_serving | max-recall | 3.21x (3.05-3.31) dominates | 3.15x (2.96-3.23) dominates | 2.80x (2.74-2.85) dominates |
 
 ## Where WARM does not dominate
 
@@ -96,7 +96,7 @@ For each hnswlib build: the WARM profiles whose median build is no slower, the f
 - glove-100: `balanced` (166 s) is slower than hnswlib M=16 (122 s), so only `fast` competes with that
   build, and `fast` and `balanced` do not reach recall 0.99 within the swept `ef` (up to 1024). The two
   hnswlib builds they are compared with (M=16 and M=32 efC=200) do not reach it either, so those cells
-  are ties, not wins. `high` reaches 0.99 at 717 QPS but builds in 221 s, slower than hnswlib M=32
+  are ties, not wins. `high` reaches 0.99 at 717 QPS ([data](../../benchmarks/results/qgraph_build_profiles_gcp_v1.json)) but builds in 221 s, slower than hnswlib M=32
   efC=200 (197 s).
 - glove-100 has one build repeat per configuration.
 - Serving is single-thread QPS on 10,000 queries; one dataset per metric family.
@@ -111,7 +111,7 @@ Graphs are identical at 1, 2, 4 and 8 threads (hash `c299a33dd6161106` for the d
 | balanced | 88.9 | 43.8 | 21.8 | 16.3 |
 | fast | 38.4 | 19.5 | 9.7 | 7.6 |
 
-Scaling is linear to 4 threads (3.95-4.08x). From 4 to 8 threads it is 1.27-1.36x in every phase (both
+Scaling is linear to 4 threads (each 4-thread time is a quarter of the 1-thread time to within 2%). From 4 to 8 threads it is 1.27-1.36x in every phase (both
 passes, fill and upper layers), because the 8 vCPUs are 4 cores with two hyper-threads each. No phase
 is serial or contended: the reverse-edge merge is about 1 s of a 35 s build. Thread scaling is not the
 remaining lever on this VM; the passes are memory-latency bound.
