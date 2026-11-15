@@ -26,7 +26,8 @@ DATA = CACHE / "competitive" / "data"
 BEIR_URL = "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{name}.zip"
 LME_URL = ("https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/"
            "98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_s_cleaned.json")
-BEIR_SPLITS = {"scifact": "train", "nfcorpus": "dev", "fiqa": "dev"}
+# arguana and scidocs publish only test qrels; the hybrid contract reads them once, at its evaluation run.
+BEIR_SPLITS = {"scifact": "train", "nfcorpus": "dev", "fiqa": "dev", "arguana": "test", "scidocs": "test"}
 MAX_WORDS = 4000
 MSMARCO_SEED = 20261114
 QUERY_SAMPLE = 1000

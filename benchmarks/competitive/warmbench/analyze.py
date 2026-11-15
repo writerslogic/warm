@@ -178,7 +178,7 @@ def ann_metrics(path, results, level=0.95):
             best, closest = pick_config(builds, t)
             tag = f"{t:.2f}"
             if best is None:
-                put(f"qps@recall{tag}", system, cell(None, source=path, note=f"not reached (max recall {closest[0]:.3f})"))
+                put(f"qps@recall{tag}", system, cell(None, source=f"{path}#systems.{system}.builds", note=f"not reached (max recall {closest[0]:.3f})"))
                 continue
             _, build_id, idx, recall = best
             rounds = builds[build_id]["serve_rounds"]
@@ -228,7 +228,7 @@ def ann_metrics(path, results, level=0.95):
         put("cold_start_s", system, cell(_med(cold) if cold else None, ci(cold) if cold else None, len(cold), src + ".serve_rounds[*].cold_start_s", "s",
                                          "" if cold else "not measured"))
         ops = entry.get("ops", {})
-        for name in ("replace", "delete"):
+        for name in (("replace", "delete") if "ops" in entry else ()):  # a run without the ops phase has no operation cells
             o = ops.get(name)
             if o and o.get("supported"):
                 put(f"{name}_ms_per_op", system, _operation_cell(results, system, o["per_op_ms_durable"], None, 1, f"{path}#systems.{system}.ops.{name}", "ms",
@@ -287,7 +287,7 @@ def text_metrics(path, results, level=0.95):
         cs = [r["cold_start_s"] for r in rounds]
         put("cold_start_s", system, cell(_med(cs), ci(cs), len(cs), src + ".serve_rounds[*].cold_start_s", "s"))
         ops = entry.get("ops", {})
-        for name in ("replace", "delete"):
+        for name in (("replace", "delete") if "ops" in entry else ()):  # a run without the ops phase has no operation cells
             o = ops.get(name)
             if o and o.get("supported"):
                 put(f"{name}_ms_per_op", system, _operation_cell(results, system, o["per_op_ms_durable"], None, 1, f"{src}.ops.{name}", "ms"))
