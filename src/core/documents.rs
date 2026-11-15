@@ -1579,7 +1579,6 @@ pub(crate) fn overlay_serves(store: &DocumentStore, prepared: &[PreparedSearch])
 }
 
 #[cfg(test)]
-pub(crate) use image::encode_inline_text as encode_checkpoint_inline_text;
 /// [`capture_search`] over the checkpoint under `store` and the store's own documents, for
 /// queries [`overlay_serves`] accepts.
 #[cfg(test)]
@@ -1612,8 +1611,13 @@ pub(crate) fn encode_checkpoint(
     store: &DocumentStore,
     generation: u32,
     dimensions: usize,
+    compress_text: bool,
 ) -> Result<Option<Vec<u8>>> {
-    image::encode(store, generation, dimensions)
+    if compress_text {
+        image::encode_compressed(store, generation, dimensions)
+    } else {
+        image::encode(store, generation, dimensions)
+    }
 }
 #[cfg(test)]
 pub(crate) fn search(

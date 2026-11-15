@@ -134,8 +134,11 @@ most 64 KiB, and empty below 16 KiB of text. The table holds `u32` pairs (the bl
 one per block and a last pair (stream length, block bytes length); a block whose byte length
 equals its stream length is stored. A reader checks that the table starts at (0, 0), that blocks
 are nonempty, at most 16 MiB and no longer than their stream bytes, that they follow each other and end
-at the section's end, and that a chunk's bytes lie in one block and are UTF-8. A hit decodes one block; the engine keeps decoded blocks in a
-lock-free cache bounded by `document_checkpoint.text_cache_bytes` (default 64 MiB, `0` decodes on every hit), so a block is decoded once while it fits. The dictionary is sampled from the live documents' text when the checkpoint is
+at the section's end, and that a chunk's bytes lie in one block and are UTF-8. A hit decodes one block. The writer is opt-in (`document_checkpoint.compress_text`, off by
+default); the reader always accepts it. Decoded blocks are kept in a lock-free cache of at most
+`document_checkpoint.text_cache_bytes` (default 64 MiB) and never more than the compression
+saves on the open store (raw text bytes minus compressed bytes), so decoded plus compressed text
+stays within the raw text's size; `0` decodes on every hit. The dictionary is sampled from the live documents' text when the checkpoint is
 built, so a scrubbing compaction writes none of an erased document's text, in a block or in the
 dictionary. Without text (every chunk stored without it) the feature bit is clear and the file
 is byte for byte what version 2 wrote.
@@ -159,7 +162,7 @@ next one goes to the next generation.
 ## Text segment at close
 
 `documents.text` ([CACHES.md](CACHES.md)) is a cache of chunk text that every open which needs it
-recreates. A close that ends with a checkpoint and no frames after it cuts the file to its 8-byte
+recreates. With `compress_text` on, a close that ends with a checkpoint and no frames after it cuts the file to its 8-byte
 header, so the text is on disk once, in the checkpoint. The cut is a truncation, not an
 overwrite, as at the next open.
 

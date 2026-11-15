@@ -154,6 +154,15 @@ pub(crate) fn encode(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, 3, false)
+}
+
+/// [`encode`] with the chunk text in compressed blocks (feature bit 0).
+pub(crate) fn encode_compressed(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
     encode_as(store, generation, dimensions, 3, true)
 }
 
@@ -175,16 +184,6 @@ pub(crate) fn encode_v2(
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
     encode_as(store, generation, dimensions, 2, false)
-}
-
-/// [`encode`] with the chunk text inline, as every checkpoint before the text blocks held it.
-#[cfg(test)]
-pub(crate) fn encode_inline_text(
-    store: &DocumentStore,
-    generation: u32,
-    dimensions: usize,
-) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, 3, false)
 }
 
 /// [`encode`] with impact-carrying block postings (version 3), plain block postings (version
@@ -624,11 +623,13 @@ impl ServingImage {
         Ok(image)
     }
 
-    /// Keeps up to `bytes` of decoded text blocks for later hits (none by default).
-    pub(crate) fn with_text_cache(mut self, bytes: usize) -> Self {
+    /// Keeps decoded text blocks for later hits, up to `limit` bytes and no more than the
+    /// compression saves, so decoded plus compressed text stays within the raw text's size.
+    pub(crate) fn with_text_cache(mut self, limit: usize) -> Self {
         if self.text_blocks {
             let blocks = self.section(Section::TextTable).len() / 8 - 1;
-            self.decoded = DecodedBlocks::new(blocks, bytes);
+            let budget = limit.min(self.opened_text_stream().saved());
+            self.decoded = DecodedBlocks::new(blocks, budget);
         }
         self
     }

@@ -253,8 +253,12 @@ impl WarmCore {
         {
             return Ok(None);
         }
-        let Some(image) =
-            documents::encode_checkpoint(store, Self::generation_crc(generation), self.dimensions)?
+        let Some(image) = documents::encode_checkpoint(
+            store,
+            Self::generation_crc(generation),
+            self.dimensions,
+            self.config.document_checkpoint.compress_text,
+        )?
         else {
             return Ok(None);
         };
@@ -295,7 +299,8 @@ impl WarmCore {
     /// At close: when the live generation is a checkpoint with no frames after it, every
     /// document's text is in the checkpoint, so the text segment cache is cut to its header.
     pub(super) fn release_text_cache(&self) {
-        if !self.image.opened.load(Ordering::Acquire)
+        if !self.config.document_checkpoint.compress_text
+            || !self.image.opened.load(Ordering::Acquire)
             || self.arena.stats().used_bytes != 0
             || self.arena.data_dir().join(FILE).symlink_metadata().is_err()
         {
@@ -446,6 +451,7 @@ mod tests {
         let path = directory.path().display().to_string();
         let mut config = WarmConfig::default();
         config.document_checkpoint.min_journal_bytes = 0;
+        config.document_checkpoint.compress_text = true;
         let options = documents::IngestOptions {
             encode: documents::EncodeMode::Lexical,
             ..Default::default()
@@ -515,10 +521,11 @@ mod tests {
             .unwrap();
         let dimensions = documents::checkpoint_binding(&bytes).1 as usize;
         let store = ServingImage::new(Backing::Owned(bytes.clone()))?.hydrate(None)?;
-        let inline = documents::encode_checkpoint_inline_text(
+        let inline = documents::encode_checkpoint(
             &store,
             WarmCore::generation_crc(generation),
             dimensions,
+            false,
         )?
         .expect("lexical-only store");
         assert_eq!(feature_word(&inline), 0);
@@ -559,6 +566,7 @@ mod tests {
         let path = directory.path().display().to_string();
         let mut config = WarmConfig::default();
         config.document_checkpoint.min_journal_bytes = 0;
+        config.document_checkpoint.compress_text = true;
         let options = documents::IngestOptions {
             encode: documents::EncodeMode::Lexical,
             ..Default::default()

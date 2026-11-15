@@ -289,10 +289,13 @@ fn main() -> Result<()> {
                 }
             }
             let start = Instant::now();
-            let config = writerslogic_warm::core::WarmConfig {
+            let mut config = writerslogic_warm::core::WarmConfig {
                 analyzer: args.analyzer,
                 ..Default::default()
             };
+            // `WARM_COMPRESS_TEXT=1` builds the checkpoint with compressed chunk text.
+            config.document_checkpoint.compress_text =
+                std::env::var_os("WARM_COMPRESS_TEXT").is_some();
             let core = WarmCore::new(1024, Some(store), Some(config))?;
             ingest(&core, &mut documents, &options, args.batch)?;
             json!({"documents": count, "ingest_s": start.elapsed().as_secs_f64(),

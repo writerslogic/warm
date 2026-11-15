@@ -224,6 +224,13 @@ impl<'a> TextBlocks<'a> {
         Ok(())
     }
 
+    /// Bytes the compression saves over the raw text: a cache of decoded blocks this large keeps
+    /// the text resident no larger than the raw text a store without compression maps.
+    pub(super) fn saved(&self) -> usize {
+        let (raw, packed) = self.entry(self.count());
+        raw.saturating_sub(packed) as usize
+    }
+
     fn count(&self) -> usize {
         self.table.len() / 8 - 1
     }
