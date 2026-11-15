@@ -757,6 +757,7 @@
             "type": "array"
           },
           "purged": {
+            "description": "The deleted text is in no file of the store. `false` after a deferred purge (see\n[`ForgetOptions::synchronous`]) until the scrubbing compaction that covers it ends.",
             "type": "boolean"
           }
         },
@@ -781,12 +782,17 @@
             "type": "boolean"
           },
           "purge": {
-            "default": false,
-            "description": "Compact the store afterwards. Deleted text stays in the append-only journal until a\ncompaction rewrites it; this makes the removal physical.",
+            "default": true,
+            "description": "Purge what the delete leaves in the journal: the delete is recorded durably as a purge\nbefore it commits, so a crash cannot leave deleted text without an obligation to erase\nit, and a scrubbing compaction overwrites what the compaction replaced. Default: `true`.\nWith `false` the delete is logical: the append-only journal keeps the deleted frames\n(and time-travel reads them) until some later compaction.",
             "type": "boolean"
           },
           "scope": {
             "$ref": "#/components/schemas/ForgetScope"
+          },
+          "synchronous": {
+            "default": false,
+            "description": "With `purge`, run the scrubbing compaction before returning, so the text is in no file\nof the store when the call returns. Default: `false`, which defers the scrub: the call\nreturns once the delete and the pending purge are durable, and the next\n`compact`, `compact_scrubbing`, open, or the 64th waiting purge erases the text of every\ndeferred delete in one compaction. A compaction costs time that grows with the store, so\none per delete does not scale.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -2477,7 +2483,7 @@
             }
           },
           {
-            "description": "true also rewrites the journal and scrubs what the deleted document left behind.",
+            "description": "Default true: the journal is rewritten and what the deleted document left behind is scrubbed before the call returns. false leaves the deleted frame in the journal until a later compaction.",
             "in": "query",
             "name": "purge",
             "required": false,
@@ -2703,8 +2709,13 @@
                     "type": "boolean"
                   },
                   "purge": {
+                    "default": true,
+                    "description": "Purge what the delete leaves in the journal: the delete is recorded durably as a purge\nbefore it commits, so a crash cannot leave deleted text without an obligation to erase\nit, and a scrubbing compaction overwrites what the compaction replaced. Default: `true`.\nWith `false` the delete is logical: the append-only journal keeps the deleted frames\n(and time-travel reads them) until some later compaction.",
+                    "type": "boolean"
+                  },
+                  "synchronous": {
                     "default": false,
-                    "description": "Compact the store afterwards. Deleted text stays in the append-only journal until a\ncompaction rewrites it; this makes the removal physical.",
+                    "description": "With `purge`, run the scrubbing compaction before returning, so the text is in no file\nof the store when the call returns. Default: `false`, which defers the scrub: the call\nreturns once the delete and the pending purge are durable, and the next\n`compact`, `compact_scrubbing`, open, or the 64th waiting purge erases the text of every\ndeferred delete in one compaction. A compaction costs time that grows with the store, so\none per delete does not scale.",
                     "type": "boolean"
                   }
                 },

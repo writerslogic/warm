@@ -1,0 +1,30 @@
+N10
+  multi-hop    n= 74 all-gold 0.838 -> 0.824 diff -0.014 [-0.041,+0.000]  recall diff -0.002 [-0.007,+0.000]
+  temporal     n= 90 all-gold 1.000 -> 1.000 diff +0.000 [+0.000,+0.000]  recall diff +0.000 [+0.000,+0.000]
+  open-domain  n= 19 all-gold 0.737 -> 0.737 diff +0.000 [+0.000,+0.000]  recall diff +0.013 [+0.000,+0.039]
+  single-hop   n=200 all-gold 0.975 -> 0.985 diff +0.010 [+0.000,+0.025]  recall diff +0.007 [+0.000,+0.020]
+  ALL          n=383 all-gold 0.943 -> 0.945 diff +0.003 [-0.005,+0.013]  recall diff +0.004 [-0.000,+0.011]
+N20
+  multi-hop    n= 74 all-gold 0.838 -> 0.878 diff +0.041 [-0.014,+0.108]  recall diff +0.025 [+0.000,+0.061]
+  temporal     n= 90 all-gold 1.000 -> 1.000 diff +0.000 [+0.000,+0.000]  recall diff +0.000 [+0.000,+0.000]
+  open-domain  n= 19 all-gold 0.737 -> 0.737 diff +0.000 [+0.000,+0.000]  recall diff +0.026 [+0.000,+0.079]
+  single-hop   n=200 all-gold 0.975 -> 0.985 diff +0.010 [+0.000,+0.025]  recall diff +0.007 [+0.000,+0.020]
+  ALL          n=383 all-gold 0.943 -> 0.956 diff +0.013 [+0.000,+0.026]  recall diff +0.010 [+0.002,+0.020]
+N50
+  multi-hop    n= 74 all-gold 0.838 -> 0.851 diff +0.014 [-0.041,+0.081]  recall diff +0.015 [-0.015,+0.052]
+  temporal     n= 90 all-gold 1.000 -> 0.989 diff -0.011 [-0.033,+0.000]  recall diff -0.011 [-0.033,+0.000]
+  open-domain  n= 19 all-gold 0.737 -> 0.737 diff +0.000 [+0.000,+0.000]  recall diff +0.026 [+0.000,+0.079]
+  single-hop   n=200 all-gold 0.975 -> 0.985 diff +0.010 [-0.010,+0.030]  recall diff +0.007 [-0.010,+0.025]
+  ALL          n=383 all-gold 0.943 -> 0.948 diff +0.005 [-0.010,+0.021]  recall diff +0.005 [-0.007,+0.018]
+C400
+  multi-hop    n= 74 all-gold 0.838 -> 0.865 diff +0.027 [+0.000,+0.068]  recall diff +0.010 [+0.000,+0.027]
+  temporal     n= 90 all-gold 1.000 -> 1.000 diff +0.000 [+0.000,+0.000]  recall diff +0.000 [+0.000,+0.000]
+  open-domain  n= 19 all-gold 0.737 -> 0.737 diff +0.000 [+0.000,+0.000]  recall diff +0.000 [+0.000,+0.000]
+  single-hop   n=200 all-gold 0.975 -> 0.990 diff +0.015 [+0.000,+0.035]  recall diff +0.013 [+0.000,+0.030]
+  ALL          n=383 all-gold 0.943 -> 0.956 diff +0.013 [+0.003,+0.026]  recall diff +0.008 [+0.001,+0.018]
+C1000
+  multi-hop    n= 74 all-gold 0.838 -> 0.838 diff +0.000 [-0.054,+0.054]  recall diff +0.000 [-0.020,+0.020]
+  temporal     n= 90 all-gold 1.000 -> 1.000 diff +0.000 [+0.000,+0.000]  recall diff +0.000 [+0.000,+0.000]
+  open-domain  n= 19 all-gold 0.737 -> 0.737 diff +0.000 [+0.000,+0.000]  recall diff +0.013 [+0.000,+0.039]
+  single-hop   n=200 all-gold 0.975 -> 0.990 diff +0.015 [+0.000,+0.035]  recall diff +0.013 [+0.000,+0.030]
+  ALL          n=383 all-gold 0.943 -> 0.950 diff +0.008 [-0.005,+0.021]  recall diff +0.007 [-0.001,+0.017]

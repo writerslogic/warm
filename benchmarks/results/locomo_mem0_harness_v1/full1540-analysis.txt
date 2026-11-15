@@ -1,0 +1,39 @@
+WARM questions completed 1540 of 1540; matched to Mem0 1540
+overall        n=1540 WARM  92.0% Mem0  91.6% diff  +0.5 pp [ -1.0,  +1.9]
+multi-hop      n= 282 WARM  88.3% Mem0  93.3% diff  -5.0 pp [ -8.9,  -1.1]
+temporal       n= 321 WARM  94.4% Mem0  92.8% diff  +1.6 pp [ -0.9,  +4.4]
+open-domain    n=  96 WARM  75.0% Mem0  76.0% diff  -1.0 pp [ -8.3,  +5.2]
+single-hop     n= 841 WARM  94.3% Mem0  92.3% diff  +2.0 pp [ +0.2,  +3.8]
+per conversation
+conv 0         n= 152 WARM  92.8% Mem0  92.8% diff  +0.0 pp [ -4.6,  +4.6]
+conv 1         n=  81 WARM  96.3% Mem0  87.7% diff  +8.6 pp [ +1.2, +17.3]
+conv 2         n= 152 WARM  95.4% Mem0  96.1% diff  -0.7 pp [ -4.6,  +3.3]
+conv 3         n= 199 WARM  89.4% Mem0  86.9% diff  +2.5 pp [ -2.5,  +8.0]
+conv 4         n= 178 WARM  87.6% Mem0  87.1% diff  +0.6 pp [ -3.4,  +4.5]
+conv 5         n= 123 WARM  88.6% Mem0  91.1% diff  -2.4 pp [ -7.3,  +3.3]
+conv 6         n= 150 WARM  94.7% Mem0  92.0% diff  +2.7 pp [ +0.7,  +5.3]
+conv 7         n= 191 WARM  93.2% Mem0  95.8% diff  -2.6 pp [ -5.8,  +0.5]
+conv 8         n= 156 WARM  91.0% Mem0  91.7% diff  -0.6 pp [ -5.1,  +3.2]
+conv 9         n= 158 WARM  93.7% Mem0  93.7% diff  +0.0 pp [ -4.4,  +4.4]
+WARM wrong, Mem0 right: 58 (gold-evidence presence is measured in WARM's 200 items)
+   ('multi-hop', 'all gold present (reader/judge)') 11
+   ('multi-hop', 'some gold absent (partial retrieval miss)') 12
+   ('open-domain', 'all gold present (reader/judge)') 5
+   ('open-domain', 'no gold present (retrieval miss)') 1
+   ('single-hop', 'all gold present (reader/judge)') 20
+   ('single-hop', 'no gold present (retrieval miss)') 2
+   ('temporal', 'all gold present (reader/judge)') 6
+   ('temporal', 'no gold present (retrieval miss)') 1
+   totals {'all gold present (reader/judge)': 42, 'some gold absent (partial retrieval miss)': 12, 'no gold present (retrieval miss)': 4}
+Mem0 wrong, WARM right: 65 (gold-evidence presence is measured in WARM's 200 items)
+   ('multi-hop', 'all gold present (reader/judge)') 8
+   ('multi-hop', 'no gold present (retrieval miss)') 1
+   ('open-domain', 'all gold present (reader/judge)') 5
+   ('single-hop', 'all gold present (reader/judge)') 37
+   ('single-hop', 'no gold present (retrieval miss)') 2
+   ('temporal', 'all gold present (reader/judge)') 12
+   totals {'all gold present (reader/judge)': 62, 'no gold present (retrieval miss)': 3}
+answer paid calls logged 1891 prompt/call 9970 completion/call 1415 reasoning/call 1253 length-truncated 23
+judge paid calls logged 1845 prompt/call 744 completion/call 205 reasoning/call 161 length-truncated 0
+additional spend this task (all-usage.jsonl) usd 41.5538 calls 2962
+models returned ['gpt-5-2025-08-07'] requested ['gpt-5']

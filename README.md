@@ -32,7 +32,7 @@ through HTTP, or from an MCP client, with storage on infrastructure you control.
 WARM is a Rust library that stores text, vectors and facts in a
 directory on your machine and finds them again. It ships with optional Node.js, C, WASM and UniFFI
 bindings, an HTTP server with portable JavaScript and Python clients, and an MCP server.
-The embedded engine makes no service calls or telemetry requests. HTTP clients connect to the
+The embedded engine makes no service calls or telemetry requests: the `offline` job in [ci.yml](.github/workflows/ci.yml) runs the default-feature test suite in a network namespace without external interfaces and checks that the default dependency tree has no HTTP, TLS or socket client. HTTP clients connect to the
 server you configure; model stages are opt-in.
 
 | Capability | What you get |
@@ -56,7 +56,7 @@ server you configure; model stages are opt-in.
 
 For an editor or agent host, start with the [MCP integration](docs/integrations/mcp/README.md).
 For an application, choose the Rust library or HTTP server below. WARM runs locally or on your
-own infrastructure; this repository does not provide a managed cloud service.
+own infrastructure. This repository contains no hosted service. WritersLogic sells WARM Sync, a separate encrypted multi-device sync service with its own client package; the engine here does not contact it.
 
 To try the offline memory demo from source:
 
@@ -80,20 +80,26 @@ remains AGPL-3.0-or-later; it is available from that Git tag, not as a
 `warm-rust` 0.6.1 release on crates.io.
 
 ```rust quickstart-check
-use writerslogic_warm::{DocumentInput, WarmCore, SearchOptions};
+use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
-let dir = tempfile::tempdir()?;
-let warm = WarmCore::new(4096, Some(dir.path().display().to_string()), None)?;
-warm.memorize_document(DocumentInput {
-    id: "backups".into(),
-    text: "Restore deleted documents from verified backups.".into(),
-    source_uri: Some("operations.md".into()),
-    version: Some("1".into()),
-    metadata: Some(serde_json::json!({ "project": "alpha" })),
-    chunk_words: None, overlap_words: None, store_text: None, embeddings: None, title_weight: None,
-})?;
-let hits = warm.search_documents("restore backups", &SearchOptions::default())?;
-println!("{} {:?}", hits[0].document_id, hits[0].source_uri);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // A store is a directory; it persists there and reopens with the same arguments.
+    let dir = std::env::temp_dir().join(format!("warm-quickstart-{}", std::process::id()));
+    let warm = WarmCore::new(4096, Some(dir.display().to_string()), None)?;
+    warm.memorize_document(DocumentInput {
+        id: "backups".into(),
+        text: "Restore deleted documents from verified backups.".into(),
+        source_uri: Some("operations.md".into()),
+        version: Some("1".into()),
+        metadata: None,
+        chunk_words: None, overlap_words: None, store_text: None, embeddings: None, title_weight: None,
+    })?;
+    let hits = warm.search_documents("restore backups", &SearchOptions::default())?;
+    println!("{} {:?}", hits[0].document_id, hits[0].source_uri);
+    drop(warm);
+    std::fs::remove_dir_all(&dir)?;
+    Ok(())
+}
 ```
 
 Rust API change in 0.6.6 (0.6.5 returns these values directly): `WarmCore::query`, `query_batch`, and
@@ -119,7 +125,8 @@ npm install warm-sdk@0.2.1
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
-To build the client from this checkout:
+To build the client from this checkout (the build needs Node 20.19 or newer; the built client
+and the published package run on Node 18):
 
 ```sh
 npm ci --prefix bindings/js/warm-sdk
@@ -132,9 +139,13 @@ In your application, install that directory with
 Start the server in a separate terminal:
 
 ```sh
-cargo build --release --features server --bin warm-server
-WARM_API_KEY=change-me target/release/warm-server --input-dim 384
+curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+WARM_API_KEY=change-me warm-server --input-dim 384
 ```
+
+The installer downloads a prebuilt, checksum-verified binary from the `server-v<version>` GitHub
+release (Linux glibc x86_64 and aarch64, macOS, no Alpine). To build it yourself instead:
+`cargo build --release --features server --bin warm-server`.
 
 ```js
 import { WarmClient } from 'warm-sdk'
@@ -212,13 +223,14 @@ main().catch(error => { console.error(error); process.exit(1) })
 <summary><strong>Server and Python</strong></summary>
 
 The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores vectors you
-supply. For in-process use without a server, `warm-python` (imported as `writerslogic_warm`)
-provides `Warm`: document search, the memory API (`remember`, `recall`, `forget`, `explain`) and
-vector search, next to the native vector indexes and phase vectors.
+supply. `warm-python` (imported as `writerslogic_warm`) is the in-process native package: vector
+indexes and phase vectors in 0.6.8, which has no document search. The in-process `Warm` class
+(document search, `remember`, `recall`, `forget`, `explain`) is on `main` and ships with the
+release after 0.6.8; until then, `maturin develop --release` from a checkout provides it.
 
 ```sh
-cargo build --release --features server --bin warm-server
-WARM_API_KEY=change-me target/release/warm-server --input-dim 384 &
+curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+WARM_API_KEY=change-me warm-server --input-dim 384 &
 uv pip install warm-sdk
 ```
 
@@ -232,7 +244,7 @@ print(client.query([0.1] * 384, top_k=1)["matches"][0]["id"])
 
 Endpoints, flags, tenants and limits are in the
 [server docs](https://writerslogic.com/warm/docs/latest/server/). A runnable Python quickstart
-with a toy embedder is in [`examples/quickstart/python`](examples/quickstart/python/quickstart.py).
+(memory API plus a toy-embedder vector section; `uv run --no-project --with warm-sdk`) is in [`examples/quickstart/python`](examples/quickstart/python/quickstart.py).
 
 </details>
 
@@ -243,6 +255,7 @@ with a toy embedder is in [`examples/quickstart/python`](examples/quickstart/pyt
 
 ```sh
 npx -y writerslogic-warm-mcp                                # stdio; downloads a verified binary on first run
+uvx warm-mcp                                                # the same launcher from PyPI
 npx -y writerslogic-warm-mcp --transport http               # http://127.0.0.1:8765/mcp
 ```
 
@@ -282,16 +295,16 @@ provide the evidence for evaluating WARM on your own workload.
 | Hybrid document search (BM25 + exact cosine, filters, byte offsets) | Ships | Exact scan of eligible chunks; benchmark your corpus before assuming capacity ([guide](docs/production-readiness.md)) |
 | Boolean lexical search (`+required`, `-excluded`, quoted phrases) | Ships | Flat queries only, no nesting; an empty or only-excluded query matches nothing ([design](docs/benchmarks/lexical/DESIGN.md)) |
 | Atomic replace/delete, crash-safe journal, verified compaction, process lock | Ships | One writer per store; compaction is not secure erasure |
-| Vector index (`qgraph` vertex graph, memory-mapped) | Ships | Build time and serving RSS behind hnswlib on SIFT-1M ([gaps](docs/benchmarks/GAPS.md)) |
+| Vector index (`qgraph` vertex graph, memory-mapped) | Ships | Builds slower than hnswlib at M=16 and M=32 on SIFT-1M ([results](docs/benchmarks/EVALUATION.md)); behind ScaNN and faiss-ivfpqfs on single-core ann-benchmarks at recall 0.95: SIFT 2,819 against 3,787 QPS ([`ann_benchmarks_harness_wl02_v1.json`](benchmarks/results/ann_benchmarks_harness_wl02_v1.json)) |
 | Updatable vector index (durable delta for inserts and deletes) | Ships | Single writer; format in [VECTOR-UPDATES.md](docs/file-format/VECTOR-UPDATES.md) |
 | Query-aware graph routing (trained on sample queries) | Ships (opt-in) | Needs representative training queries; tested on VIBE llama and yi ([report](benchmarks/results/query_aware_graph_v1/README.md)) |
 | Memory API: remember, recall, forget, explain | Ships | Forgetting removes a fact from the store; it does not cover what a model inferred ([docs](docs/memory-api/README.md)) |
 | Conversation memory (`conversation-memory`) | Ships | Bounded context with exact source provenance; native recall not yet benchmarked on LongMemEval end to end |
 | Meaning memory: triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on synthetic and 2,120-fact sets ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
 | Union-bundle membership (`experimental`) | Research | At D = 16,384: positive gap to N = 500 (4% false positives), tested to 2,500 ([`benchmark_scaling_results.json`](benchmarks/results/benchmark_scaling_results.json)) |
-| Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS, below hnswlib's QPS ([results](docs/benchmarks/EVALUATION.md#where-its-behind)). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
+| Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS on one thread of an Apple M4, below hnswlib's QPS ([`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json), `hms` row). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
 | Encrypted stores (`security`) | Ships | AES-256-GCM, Argon2id; covers the log, index caches and the text segment. Metadata, file names and sizes are not encrypted |
-| Signed audit log, credential-gated access, COSE/SCITT/C2PA (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented |
+| Signed audit log, credential-gated access, COSE_Sign1 over Ed25519, `did:key`/`did:jwk` identities, SCITT-style signed statements (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented. Tests: `core::provenance::cose::tests::sign_verify_roundtrip`, `core::provenance::did::tests::did_key_roundtrip`, `tests/scitt_receipt_interop.rs`. Manifests use C2PA-style labels and are not C2PA Content Credentials ([standards](docs/reference/standards.md)) |
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |

@@ -78,6 +78,7 @@ function forgetOptions(options: Input, dryRun: boolean): Input {
     includeChain: options.includeChain === undefined ? false : v.boolean(options.includeChain, 'includeChain'),
     dryRun: options.dryRun === undefined ? dryRun : v.boolean(options.dryRun, 'dryRun'),
     purge: options.purge === undefined ? false : v.boolean(options.purge, 'purge'),
+    ...(options.synchronous === undefined ? {} : { synchronous: v.boolean(options.synchronous, 'synchronous') }),
   }
 }
 
@@ -232,7 +233,7 @@ export class MemoryClient {
       v.record(source, 'forget scope', ['kind', 'time'])
       chosen = { kind, time: time(source.time) }
     }
-    const settings = v.record(options, 'forget options', ['includeChain', 'dryRun', 'purge', 'signal'])
+    const settings = v.record(options, 'forget options', ['includeChain', 'dryRun', 'purge', 'synchronous', 'signal'])
     return this.#transport.request('POST', '/api/v1/memory/forget', { scope: chosen, ...forgetOptions(settings, false) }, v.signal(settings.signal), response<T.ForgetReport>(schemas.forgotten))
   }
 
@@ -245,7 +246,7 @@ export class MemoryClient {
   }
 
   async applyForgetting(options: T.ForgetOptions = {}): Promise<T.ForgetReport> {
-    const source = v.record(options, 'forgetting options', ['includeChain', 'dryRun', 'purge', 'signal'])
+    const source = v.record(options, 'forgetting options', ['includeChain', 'dryRun', 'purge', 'synchronous', 'signal'])
     return this.#transport.request('POST', '/api/v1/memory/applyForgetting', forgetOptions(source, true), v.signal(source.signal), response<T.ForgetReport>(schemas.forgotten))
   }
 

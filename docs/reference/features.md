@@ -20,6 +20,7 @@ can change in any release.
 | `local-models` | On-device embedding, re-ranking, fact extraction and query rewriting (candle, Qwen3); weights load from local directories only | experimental | no | [Embeddings](../embeddings/README.md) |
 | `conversation-memory` | Immutable original conversation turns, role-aware recall and bounded source premises | experimental | no | [Conversation evidence](../memory-api/README.md) |
 | `cli` | `clap` argument parsing for the command-line binaries and examples (`warm-admin`, `warm-format`, `public-bench`, the benchmark drivers); implied by `server` and `mcp` | stable | no | [Evaluation](../evaluation.md) |
+| `failpoints` | Fault injection at the durability points, inert unless armed; used by the crash and disk-fault tests | test-only | no | [Crash consistency](../file-format/CRASH-CONSISTENCY.md) |
 | `mimalloc` | mimalloc as the global allocator of the `public-bench` binary (the library never sets one) | stable | no | [Public benchmarks](../PUBLIC-BENCHMARKS.md) |
 | `node-api` | The Node.js bindings published to npm | stable | no | [Node API](../api/node/index.md) |
 | `python` | The `warm-python` Python wheel (vector search and phase vectors) | experimental | no | [Python API](../api/python/vsa.md) |

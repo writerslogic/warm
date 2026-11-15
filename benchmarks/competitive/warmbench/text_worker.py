@@ -14,6 +14,7 @@ import json
 import sqlite3
 import sys
 import time
+import zlib
 from pathlib import Path
 
 T_IMPORT = time.time_ns()
@@ -64,6 +65,17 @@ class SqliteFts5:
         # (JDK FileChannel.force); fullfsync holds SQLite to the same standard.
         self.db.execute("PRAGMA fullfsync = ON")
         self.db.execute("PRAGMA checkpoint_fullfsync = ON")
+        # rowid-to-id map held in Python, so the query is a bare MATCH with no join.
+        self.ids = dict(self.db.execute("SELECT rowid, id FROM identities"))
+
+    def open_serving(self):
+        """Documented read-side settings (sqlite.org pragma and FTS5 docs): a read-only connection, memory-mapped
+        reads and a larger page cache."""
+        self.open()
+        self.db.execute("PRAGMA query_only = ON")
+        self.db.execute("PRAGMA mmap_size = 1073741824")
+        self.db.execute("PRAGMA cache_size = -65536")
+        self.db.execute("PRAGMA temp_store = MEMORY")
 
     def prepare(self, text):
         return " OR ".join('"' + w + '"' for w in words(text))
@@ -71,10 +83,11 @@ class SqliteFts5:
     def search(self, expression):
         if not expression:
             return []
-        rows = self.db.execute(
-            "SELECT identities.id, bm25(docs) FROM docs JOIN identities ON docs.rowid=identities.rowid "
-            "WHERE docs MATCH ? ORDER BY 2, identities.id LIMIT ?", (expression, K)).fetchall()
-        return [(i, -s) for i, s in rows]
+        # The documented top-k form: ORDER BY rank (FTS5's hidden bm25 column) with LIMIT, no join and no
+        # tie-break the other arms do not pay; ids come from the table held in memory.
+        ids = self.ids
+        return [(ids[rowid], -score) for rowid, score in self.db.execute(
+            "SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT ?", (expression, K))]
 
     def replace(self, document):
         row = self.db.execute("SELECT rowid FROM identities WHERE id = ?", (document["id"],)).fetchone()[0]
@@ -87,6 +100,49 @@ class SqliteFts5:
         with self.db:
             self.db.execute("DELETE FROM docs WHERE rowid = ?", (row,))
             self.db.execute("DELETE FROM identities WHERE rowid = ?", (row,))
+
+
+def check(body, bucket):
+    """What a documents-contract hit carried: CRC-32 and byte length of the returned text, its byte range, and the bucket."""
+    raw = body.encode("utf-8")
+    return {"crc": zlib.crc32(raw), "len": len(raw), "start": 0, "end": len(raw), "bucket": bucket}
+
+
+class SqliteFts5Docs(SqliteFts5):
+    """Documents contract: the same contentless FTS5 index as the ids row plus a `docstore` table holding id, body and
+    bucket. One statement ranks the top-100 rowids and joins them to their stored columns by primary key."""
+
+    def build(self, documents):
+        super().build(documents)
+        db = sqlite3.connect(self.store / "fts.db")
+        db.execute("CREATE TABLE docstore (rowid INTEGER PRIMARY KEY, id TEXT NOT NULL, body TEXT NOT NULL, bucket INTEGER NOT NULL)")
+        with db:
+            for i, d in enumerate(documents, 1):
+                db.execute("INSERT INTO docstore(rowid, id, body, bucket) VALUES (?, ?, ?, ?)", (i, d["id"], d["text"], d.get("metadata", {}).get("bucket", 0)))
+        db.commit()
+        db.close()
+
+    def search(self, expression):
+        if not expression:
+            return []
+        # The measured-fastest of three fetch forms (join on the top-100 subquery, one IN statement, 100 point selects:
+        # evidence run10/micro_fts.log).
+        rows = self.db.execute(
+            "SELECT d.id, t.rank, d.body, d.bucket FROM (SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT ?) t "
+            "JOIN docstore d ON d.rowid = t.rowid ORDER BY t.rank", (expression, K)).fetchall()
+        return [(id_, -score, body, bucket) for id_, score, body, bucket in rows]
+
+    def replace(self, document):
+        super().replace(document)
+        row = self.db.execute("SELECT rowid FROM identities WHERE id = ?", (document["id"],)).fetchone()[0]
+        with self.db:
+            self.db.execute("UPDATE docstore SET body = ? WHERE rowid = ?", (document["text"] + " benchmarkrevision", row))
+
+    def delete(self, document):
+        row = self.db.execute("SELECT rowid FROM identities WHERE id = ?", (document["id"],)).fetchone()[0]
+        super().delete(document)
+        with self.db:
+            self.db.execute("DELETE FROM docstore WHERE rowid = ?", (row,))
 
 
 class Tantivy:
@@ -117,10 +173,11 @@ class Tantivy:
         self.searcher = self.index.searcher()
 
     def prepare(self, text):
-        return " ".join(words(text))
+        # Parsed inside the timer: every system receives the raw query string.
+        query, _ = self.index.parse_query_lenient(" ".join(words(text)), ["body"])
+        return query
 
-    def search(self, text):
-        query, _ = self.index.parse_query_lenient(text, ["body"])
+    def search(self, query):
         hits = self.searcher.search(query, K).hits
         return [(self.searcher.doc(addr)["id"][0], score) for score, addr in hits]
 
@@ -139,6 +196,53 @@ class Tantivy:
     def delete(self, document):
         writer = self._writer()
         writer.delete_documents("id", document["id"])
+        writer.commit()
+        self.index.reload()
+        self.searcher = self.index.searcher()
+
+
+class TantivyDocs(Tantivy):
+    """Documents contract: id, body and bucket are stored and every hit's stored document is read through
+    `searcher.doc` (the binding's only document access; it exposes no doc-store cache setting)."""
+
+    def _schema(self):
+        import tantivy
+        sb = tantivy.SchemaBuilder()
+        sb.add_text_field("id", stored=True, tokenizer_name="raw")
+        sb.add_text_field("body", stored=True, tokenizer_name="en_stem")
+        sb.add_unsigned_field("bucket", stored=True, indexed=True)
+        return sb.build()
+
+    def build(self, documents):
+        import tantivy
+        self.store.mkdir(parents=True)
+        index = tantivy.Index(self._schema(), path=str(self.store))
+        writer = index.writer(heap_size=200_000_000, num_threads=1)
+        for d in documents:
+            writer.add_document(self._document(d["id"], d["text"], d.get("metadata", {}).get("bucket", 0)))
+        writer.commit()
+        writer.wait_merging_threads()
+
+    @staticmethod
+    def _document(id_, text, bucket):
+        import tantivy
+        document = tantivy.Document(id=id_, body=text)
+        document.add_unsigned("bucket", bucket)
+        return document
+
+    def search(self, query):
+        hits = self.searcher.search(query, K).hits
+        out = []
+        for score, addr in hits:
+            d = self.searcher.doc(addr)
+            out.append((d["id"][0], score, d["body"][0], d["bucket"][0]))
+        return out
+
+    def replace(self, document):
+        import tantivy
+        writer = self._writer()
+        writer.delete_documents("id", document["id"])
+        writer.add_document(self._document(document["id"], document["text"] + " benchmarkrevision", document.get("metadata", {}).get("bucket", 0)))
         writer.commit()
         self.index.reload()
         self.searcher = self.index.searcher()
@@ -238,8 +342,8 @@ class Bm25s:
         raise Unsupported("immutable index; any change is a full rebuild")
 
 
-SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s,
-           "sqlite-fts5-prev": SqliteFts5, "tantivy-prev": Tantivy}
+SYSTEMS = {"sqlite-fts5": SqliteFts5, "tantivy-py": Tantivy, "tantivy": Tantivy, "whoosh": Whoosh, "bm25s": Bm25s,
+           "sqlite-fts5-prev": SqliteFts5, "tantivy-prev": Tantivy, "sqlite-fts5-docs": SqliteFts5Docs, "tantivy-py-docs": TantivyDocs}
 
 
 def main():
@@ -261,24 +365,34 @@ def main():
         report = {"documents": len(data["documents"]), "ingest_s": time.perf_counter() - start}
     elif a.mode == "serve":
         start = time.perf_counter()
-        system.open()
+        getattr(system, "open_serving", system.open)()
         open_s = time.perf_counter() - start
         queries = data["queries"]
-        prepared = [system.prepare(q["text"]) for q in queries]
-        system.search(prepared[0])
+        # One contract for every system: the raw query string goes in, the engine's own query analysis and
+        # construction (`prepare`) are inside the timed region, and the top-100 (id, score) pairs come out.
+        prepared = [q["text"] for q in queries]
+
+        def search(text):
+            return system.search(system.prepare(text))
+        search(prepared[0])
         cold_start_s = (time.time_ns() - a.t0_ns) / 1e9
         for text in prepared[:16]:
-            system.search(text)
+            search(text)
         rows, passes = [], []
+        documents = a.system.endswith("-docs")
         for n in range(a.passes):
             ns = []
             for q, text in zip(queries, prepared):
                 t = time.perf_counter_ns()
-                found = system.search(text)
+                found = search(text)
                 ns.append(time.perf_counter_ns() - t)
-                if n == 0:
+                if n == 0 and not documents:
                     rows.append({"id": q["id"], "results": [{"documentId": i, "lexicalScore": s} for i, s in found]})
             passes.append(ns)
+        if documents:
+            # Untimed: what each hit carried, for the orchestrator to compare with the corpus.
+            for q, text in zip(queries, prepared):
+                rows.append({"id": q["id"], "results": [{"documentId": i, "lexicalScore": s, "check": check(body, bucket)} for i, s, body, bucket in search(text)]})
         report = {"open_s": open_s, "cold_start_s": cold_start_s, "rows": rows, "passes_ns": passes}
     else:
         system.open()
