@@ -13,6 +13,7 @@ Read these in order:
 2. [What is lossy](lossy.md): where information is discarded, and what survives.
 3. [Capacity limits](capacity.md): how many items fit in one superposition, with the tested range only.
 4. [Privacy limits](privacy-limits.md): what the stored representation reveals, and what encryption does and does not cover.
+5. [Experience core](experience-core.md): hash-consed regions and an action effect table for tree-structured agent observations (feature `experience`).
 
 For the module map see [Architecture](../ARCHITECTURE.md); for storage, locking and migration see
 [Production readiness](../production-readiness.md).

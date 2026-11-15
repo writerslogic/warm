@@ -1,0 +1,73 @@
+{
+  "benchmark": "experience_ingest_synthetic",
+  "claims": "Measured on synthetic trees only. The snapshot-to-raw ratio depends on how often pages repeat and is not a prediction for other data.",
+  "machine": {
+    "build": "release",
+    "commit_base": "0c268b36",
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.80GHz",
+    "date": "2026-11-15",
+    "host": "GCP n2-standard-8, pd-standard",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)"
+  },
+  "runs": [
+    {
+      "episodes": 10,
+      "ingest_nodes_per_second": 258137.57725501538,
+      "ingest_seconds": 0.19059604,
+      "ingest_steps_per_second": 1574.0096174086304,
+      "raw_nodes": 49200,
+      "raw_text_bytes": 1495162,
+      "raw_text_bytes_per_step": 4983.873333333333,
+      "region_occurrences": 1200,
+      "region_query_ms_mean": 0.05548705999999999,
+      "regions": 472,
+      "snapshot_bytes": 521051,
+      "snapshot_bytes_per_step": 1736.8366666666666,
+      "snapshot_to_raw_ratio": 0.34849133404942073,
+      "steps": 300,
+      "stored_nodes": 3166
+    },
+    {
+      "episodes": 100,
+      "ingest_nodes_per_second": 501165.2065586778,
+      "ingest_seconds": 0.981712205,
+      "ingest_steps_per_second": 3055.885405845596,
+      "raw_nodes": 492000,
+      "raw_text_bytes": 14947632,
+      "raw_text_bytes_per_step": 4982.544,
+      "region_occurrences": 12000,
+      "region_query_ms_mean": 0.087425845,
+      "regions": 1194,
+      "snapshot_bytes": 1372115,
+      "snapshot_bytes_per_step": 457.37166666666667,
+      "snapshot_to_raw_ratio": 0.09179480736480534,
+      "steps": 3000,
+      "stored_nodes": 4249
+    },
+    {
+      "episodes": 1000,
+      "ingest_nodes_per_second": 610571.5089705772,
+      "ingest_seconds": 8.058024208,
+      "ingest_steps_per_second": 3722.9970059181533,
+      "raw_nodes": 4920000,
+      "raw_text_bytes": 149480032,
+      "raw_text_bytes_per_step": 4982.667733333334,
+      "region_occurrences": 120000,
+      "region_query_ms_mean": 0.09448104,
+      "regions": 1202,
+      "snapshot_bytes": 3229790,
+      "snapshot_bytes_per_step": 107.65966666666667,
+      "snapshot_to_raw_ratio": 0.021606832409562234,
+      "steps": 30000,
+      "stored_nodes": 4261
+    }
+  ],
+  "synthetic": {
+    "nav_links": 30,
+    "page_types": 12,
+    "records": 50,
+    "steps_per_episode": 30,
+    "table_rows": 25
+  },
+  "tested_range": "10, 100 and 1000 episodes of 30 steps; 12 page types; one machine"
+}

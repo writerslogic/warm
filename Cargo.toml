@@ -153,6 +153,10 @@ name = "vector_record_query"
 harness = false
 
 [[example]]
+name = "competitive_hybrid"
+required-features = ["local-embed-download"]
+
+[[example]]
 name = "supersession_probe"
 required-features = ["local-embed"]
 
@@ -185,6 +189,9 @@ failpoints = []
 # Global allocator of the public-bench binary only; never linked into the library.
 mimalloc = ["dep:mimalloc"]
 conversation-memory = ["sha2"]
+# Experience core: hash-consed region store, action effect table and episode store for
+# tree-structured agent observations. Search over regions reuses the document lexical index.
+experience = []
 node-api = ["napi", "napi-derive", "tokio", "tokio/rt", "napi-build", "dep:ts-rs"]
 # Python bindings (pyo3 + maturin). Exposes the quantized-phase substrate. Build
 # wheels with `maturin build --features python`; publishing is wired in
@@ -220,6 +227,10 @@ server = ["dep:parking_lot", "tokio", "tokio/rt-multi-thread", "tokio/macros", "
 # MCP server over stdio and streamable HTTP (`warm-mcp` binary). Encryption at rest needs `security`;
 # semantic recall needs `local-models`.
 mcp = ["dep:parking_lot", "dep:rmcp", "dep:tokio-util", "tokio", "tokio/rt-multi-thread", "tokio/macros", "tokio/net", "tokio/time", "tokio/sync", "tokio/signal", "cli", "axum", "subtle", "dep:hyper", "dep:hyper-util", "dep:tower-service", "dep:futures-util", "tokio/io-util", "ureq"]
+
+[[example]]
+name = "experience_ingest_bench"
+required-features = ["experience"]
 
 [[bin]]
 name = "warm-embed"
