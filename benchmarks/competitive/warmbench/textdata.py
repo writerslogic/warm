@@ -4,12 +4,16 @@
 
 beir:<name>   BEIR train/dev qrels (the existing document-competition protocol: SciFact train,
               NFCorpus dev, FiQA dev; the test qrels stay unread). One chunk per document.
+msmarco:<size> MS MARCO passage ranking (BEIR packaging), dev qrels. A fixed seeded sample of QUERY_SAMPLE dev
+              queries; the corpus is every passage those queries judge relevant plus a seeded fill, so 100k,
+              1m and full are nested. size is 100k, 1m or full (8,841,823 passages).
 memory        Agent-memory-shaped: every session of the 100 LongMemEval_S dev questions as one
               searchable memory (answer sessions are the relevant documents); the 400 held-out
               questions are never read.
 """
 
 import json
+import random
 import urllib.request
 import zipfile
 
@@ -21,6 +25,9 @@ LME_URL = ("https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resol
            "98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_s_cleaned.json")
 BEIR_SPLITS = {"scifact": "train", "nfcorpus": "dev", "fiqa": "dev"}
 MAX_WORDS = 4000
+MSMARCO_SEED = 20261114
+QUERY_SAMPLE = 1000
+MSMARCO_SIZES = {"100k": 100_000, "1m": 1_000_000, "full": None}
 K = 100
 
 
@@ -85,6 +92,63 @@ def beir(name):
     return folder
 
 
+def msmarco(size):
+    """Nested subsets of MS MARCO passage, written one document per line so loaders may stream a file
+    larger than 2 GiB: `{"documents":[`, one document per line, `],`, then the queries."""
+    target = MSMARCO_SIZES[size]
+    folder = DATA / f"text-msmarco-{size}-dev"
+    if (folder / "input.json").exists():
+        return folder
+    source = CACHE / "downloads" / "msmarco"
+    if not (source / "corpus.jsonl").exists():
+        archive = _fetch(BEIR_URL.format(name="msmarco"), CACHE / "downloads" / "msmarco.zip")
+        with zipfile.ZipFile(archive) as z:
+            z.extractall(CACHE / "downloads")
+    qrels_all = {}
+    with (source / "qrels" / "dev.tsv").open() as stream:
+        next(stream)
+        for line in stream:
+            qid, did, grade = line.rstrip().split("\t")
+            qrels_all.setdefault(qid, {})[did] = int(grade)
+    texts = {}
+    for line in (source / "queries.jsonl").open():
+        row = json.loads(line)
+        if row["_id"] in qrels_all:
+            texts[row["_id"]] = row["text"]
+    chosen = sorted(random.Random(MSMARCO_SEED).sample(sorted(texts), QUERY_SAMPLE))
+    qrels = {q: qrels_all[q] for q in chosen}
+    relevant = {d for judged in qrels.values() for d in judged}
+    ids = [json.loads(line)["_id"] for line in (source / "corpus.jsonl").open()]
+    if target is None:
+        keep = set(ids)
+    else:
+        others = [d for d in ids if d not in relevant]
+        random.Random(MSMARCO_SEED + 1).shuffle(others)
+        keep = relevant | set(others[: max(0, target - len(relevant))])
+    folder.mkdir(parents=True, exist_ok=True)
+    count = 0
+    with (folder / "input.json").open("w") as out:
+        out.write('{"documents":[\n')
+        for line in (source / "corpus.jsonl").open():
+            row = json.loads(line)
+            if row["_id"] not in keep:
+                continue
+            text = (row.get("title", "") + "\n" + row["text"]).strip()
+            if not text:
+                continue
+            out.write(("," if count else "") + json.dumps(_document(row["_id"], text, len(row["_id"]) % 17)) + "\n")
+            count += 1
+        queries = [{"id": q, "text": texts[q], "options": _options()} for q in chosen]
+        out.write('],\n"queries":' + json.dumps(queries) + "}\n")
+    (folder / "queries.json").write_text(json.dumps(queries) + "\n")
+    (folder / "qrels.json").write_text(json.dumps(qrels) + "\n")
+    (folder / "meta.json").write_text(json.dumps({
+        "dataset": f"msmarco-passage-dev-{size}", "split": "dev", "documents": count, "queries": len(queries),
+        "query_sample": QUERY_SAMPLE, "sample_seed": MSMARCO_SEED, "fill": "relevant passages of the sampled queries plus a seeded shuffle of the rest",
+        "corpus_passages": len(ids), "source": BEIR_URL.format(name="msmarco")}) + "\n")
+    return folder
+
+
 def memory():
     folder = DATA / "text-memory-lme-dev"
     if (folder / "input.json").exists():
@@ -116,6 +180,8 @@ def memory():
 def load(dataset):
     if dataset.startswith("beir:"):
         return beir(dataset.split(":", 1)[1])
+    if dataset.startswith("msmarco:"):
+        return msmarco(dataset.split(":", 1)[1])
     if dataset == "memory":
         return memory()
     raise ValueError(f"unknown text dataset {dataset}")

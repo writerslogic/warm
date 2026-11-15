@@ -38,6 +38,8 @@ SUITES = {
     "standard": {"ann": [("glove-100-angular", 250_000, 2_000), ("sift-128-euclidean", 250_000, 2_000)],
                  "text": ["beir:scifact", "beir:nfcorpus", "memory", "beir:fiqa"],
                  "rounds": 10, "build_repeats": 3, "threads": 4, "timeout_s": 2700},
+    # scale: lexical engines on MS MARCO passage subsets (see `warm-bench run --suite scale`); builds once, no ops phase.
+    "scale": {"ann": [], "text": ["beir:fiqa", "msmarco:100k", "msmarco:1m", "msmarco:full"], "rounds": 5, "build_repeats": 1, "threads": 8, "timeout_s": 21600},
     # heavy: self-hosted or Modal; full GloVe-100 (1.18M) and SIFT-1M.
     "heavy": {"ann": [("glove-100-angular", None, 10_000), ("sift-128-euclidean", None, 10_000)],
               "text": ["beir:scifact", "beir:nfcorpus", "memory", "beir:fiqa"], "rounds": 10, "build_repeats": 2, "threads": 8, "timeout_s": 3600},
@@ -428,7 +430,9 @@ def run_text(dataset, spec, systems, out_path=None):
     # Every system's serve phase reads the queries alone, so no worker's serving RSS includes
     # the parsed corpus it does not need.
     serve_input_path = folder / "serve-input.json"
-    serve_input_path.write_text(json.dumps({"documents": [], "queries": json.loads(input_path.read_text())["queries"]}))
+    queries_file = folder / "queries.json"
+    serve_queries = json.loads(queries_file.read_text()) if queries_file.exists() else json.loads(input_path.read_text())["queries"]
+    serve_input_path.write_text(json.dumps({"documents": [], "queries": serve_queries}))
     qrels = json.loads((folder / "qrels.json").read_text())
     results["qrels_queries"] = len(qrels)
     threads = {k: "1" for k in SINGLE_THREAD}

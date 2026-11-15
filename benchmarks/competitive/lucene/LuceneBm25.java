@@ -159,6 +159,10 @@ public final class LuceneBm25 {
 
   @SuppressWarnings("unchecked")
   static void load(Path input, List<Doc> docs, List<Q> queries) throws IOException {
+    if (Files.size(input) > (1L << 30)) {
+      loadLines(input, docs, queries);
+      return;
+    }
     Map<String, Object> root = (Map<String, Object>) new Json(Files.readString(input, StandardCharsets.UTF_8)).value();
     for (Object o : (List<Object>) root.get("documents")) {
       Map<String, Object> m = (Map<String, Object>) o;
@@ -169,6 +173,27 @@ public final class LuceneBm25 {
     for (Object o : (List<Object>) root.get("queries")) {
       Map<String, Object> m = (Map<String, Object>) o;
       queries.add(new Q((String) m.get("id"), (String) m.get("text")));
+    }
+  }
+
+  /** Input above 1 GiB cannot be read as one String: warm-bench writes such files with one document per line,
+   *  `{"documents":[`, the documents (comma-led after the first), `],`, then `"queries":[...]}`. */
+  @SuppressWarnings("unchecked")
+  static void loadLines(Path input, List<Doc> docs, List<Q> queries) throws IOException {
+    try (java.io.BufferedReader r = Files.newBufferedReader(input, StandardCharsets.UTF_8)) {
+      String line = r.readLine();
+      if (!"{\"documents\":[".equals(line)) throw new IOException("unexpected layout of " + input);
+      while ((line = r.readLine()) != null && !line.equals("],")) {
+        Map<String, Object> m = (Map<String, Object>) new Json(line.startsWith(",") ? line.substring(1) : line).value();
+        Object md = m.get("metadata");
+        int bucket = md instanceof Map<?, ?> mm && mm.get("bucket") != null ? Integer.parseInt((String) mm.get("bucket")) : 0;
+        docs.add(new Doc((String) m.get("id"), (String) m.get("text"), bucket));
+      }
+      Map<String, Object> root = (Map<String, Object>) new Json("{" + r.readLine()).value();
+      for (Object o : (List<Object>) root.get("queries")) {
+        Map<String, Object> m = (Map<String, Object>) o;
+        queries.add(new Q((String) m.get("id"), (String) m.get("text")));
+      }
     }
   }
 
