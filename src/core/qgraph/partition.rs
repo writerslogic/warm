@@ -256,6 +256,22 @@ fn balance_queries(
     (owner, local, members)
 }
 
+/// Packs a score and a slot into one `u64` whose integer order is the score's total order, then
+/// the slot's: the scan's candidate buffers select and sort on plain integers.
+#[inline(always)]
+fn score_key(score: f32, slot: u32) -> u64 {
+    let b = score.to_bits();
+    let ord = if b >> 31 == 1 { !b } else { b | 0x8000_0000 };
+    (u64::from(ord) << 32) | u64::from(slot)
+}
+
+/// The score of a [`score_key`].
+#[inline(always)]
+fn key_score(key: u64) -> f32 {
+    let o = (key >> 32) as u32;
+    f32::from_bits(if o >> 31 == 1 { o & 0x7fff_ffff } else { !o })
+}
+
 /// The u32 sums a scan admits under the running threshold `thr`: a code with sum `v` is kept when
 /// `v < ((thr - base) / scale).max(0)`, which for integer `v` is `v < ceil(..)`.
 #[inline]
@@ -1396,12 +1412,16 @@ impl PartitionTier {
                 if rule != ProbeRule::Fixed {
                     return select_probes(row, &radii, rule, nmin, nprobe);
                 }
-                let mut idx: Vec<u32> = (0..l as u32).collect();
-                idx.select_nth_unstable_by(nprobe - 1, |a, b| {
-                    row[*a as usize].total_cmp(&row[*b as usize])
-                });
-                idx.truncate(nprobe);
-                idx
+                // Distances are non-negative (`+ 0.0` turns -0.0 into 0.0), so their bits order
+                // like the floats; packing the list index beside them selects on integers.
+                let mut keys: Vec<u64> = row
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| (u64::from((v + 0.0).to_bits()) << 32) | i as u64)
+                    .collect();
+                keys.select_nth_unstable(nprobe - 1);
+                keys.truncate(nprobe);
+                keys.into_iter().map(|k| k as u32).collect()
             })
             .collect();
         let probes: u64 = probe.iter().map(|p| p.len() as u64).sum();
@@ -1447,7 +1467,7 @@ impl PartitionTier {
             .map(|th| {
                 let mine: &[u32] = &members[th];
                 let local = |q: u32| local_at[q as usize] as usize;
-                let mut bufs: Vec<Vec<(f32, u32)>> =
+                let mut bufs: Vec<Vec<u64>> =
                     vec![Vec::with_capacity(2 * reorder + BLOCK); mine.len()];
                 let mut thr = vec![f32::INFINITY; mine.len()];
                 let (mut ent, mut mins, mut lut) = (vec![0f32; e], vec![0f32; m], vec![0u8; e]);
@@ -1537,18 +1557,16 @@ impl PartitionTier {
                                         let c = mask.trailing_zeros() as usize;
                                         mask &= mask - 1;
                                         admitted += 1;
-                                        buf.push((
+                                        buf.push(score_key(
                                             base + outs[i][c] as f32 * scale,
                                             list.slots[blk * BLOCK + c],
                                         ));
                                     }
                                     if buf.len() >= 2 * reorder {
-                                        buf.select_nth_unstable_by(reorder - 1, |a, b| {
-                                            a.0.total_cmp(&b.0)
-                                        });
+                                        buf.select_nth_unstable(reorder - 1);
                                         buf.truncate(reorder);
                                         // The selected element is the largest kept score.
-                                        thr[j] = buf[reorder - 1].0;
+                                        thr[j] = key_score(buf[reorder - 1]);
                                         cs[i] = admit_cut(thr[j], base, scale);
                                         if thr[j] <= base {
                                             sel[i] = usize::MAX;
@@ -1604,15 +1622,15 @@ impl PartitionTier {
                                 let c = mask.trailing_zeros() as usize;
                                 mask &= mask - 1;
                                 admitted += 1;
-                                buf.push((
+                                buf.push(score_key(
                                     base + out[c] as f32 * scale,
                                     list.slots[blk * BLOCK + c],
                                 ));
                             }
                             if buf.len() >= 2 * reorder {
-                                buf.select_nth_unstable_by(reorder - 1, |a, b| a.0.total_cmp(&b.0));
+                                buf.select_nth_unstable(reorder - 1);
                                 buf.truncate(reorder);
-                                thr[j] = buf.iter().map(|x| x.0).fold(f32::NEG_INFINITY, f32::max);
+                                thr[j] = key_score(buf[reorder - 1]);
                                 cut = admit_cut(thr[j], base, scale);
                             }
                         }
@@ -1626,15 +1644,16 @@ impl PartitionTier {
                     .iter()
                     .zip(bufs)
                     .map(|(&q, mut buf)| {
-                        buf.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
+                        buf.sort_unstable();
                         let qv = &queries[q as usize * dim..(q as usize + 1) * dim];
                         // The best `reorder` distinct slots in score order.
                         seen.clear();
                         uniq.clear();
-                        for (_, s) in buf {
+                        for key in buf {
                             if uniq.len() == reorder {
                                 break;
                             }
+                            let s = key as u32;
                             if seen.insert(s) {
                                 uniq.push(s);
                             }
@@ -2051,6 +2070,32 @@ mod tests {
     /// The quad layout (AVX-512 VBMI/VNNI) and the LUT16 layout give the same results, blocks
     /// and admissions through deletes and reinserts, with a reorder small enough that the
     /// running threshold prunes and an `m` that pads the last quad.
+    #[test]
+    fn score_key_orders_like_total_cmp_and_round_trips() {
+        let vals = [
+            f32::NEG_INFINITY,
+            -3.5,
+            -0.0,
+            0.0,
+            1e-30,
+            2.0,
+            7e9,
+            f32::INFINITY,
+        ];
+        for &a in &vals {
+            assert_eq!(key_score(score_key(a, 9)).to_bits(), a.to_bits());
+            for &b in &vals {
+                assert_eq!(
+                    score_key(a, 5).cmp(&score_key(b, 5)),
+                    a.total_cmp(&b),
+                    "{a} vs {b}"
+                );
+            }
+        }
+        assert!(score_key(1.0, 3) < score_key(1.0, 4));
+        assert_eq!(score_key(1.5, 77) as u32, 77);
+    }
+
     #[test]
     fn fused_smallest_k_equals_scalar() {
         let mut rng = SplitMix(11);

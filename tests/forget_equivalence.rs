@@ -405,6 +405,7 @@ fn fact_view(memory: &Memory) -> Result<String> {
 fn truncation_after_a_purge_matches_the_never_stored_store() -> Result<()> {
     let purge = ForgetOptions {
         purge: true,
+        synchronous: true,
         ..ForgetOptions::default()
     };
     let x = ForgetScope::Ids {

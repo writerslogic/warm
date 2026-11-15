@@ -18,14 +18,15 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 use writerslogic_warm::core::documents::{
-    BatchTooLarge, EncodeMode, IngestOptions, MAX_BATCH_ITEMS,
+    BatchTooLarge, DocumentResult, EncodeMode, IngestOptions, LexicalOptions, LexicalQuery,
+    MAX_BATCH_ITEMS,
 };
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
 const USAGE: &str =
     "usage: competitive_text <build|serve|ops> --input FILE --store DIR --out FILE \
     [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--encode eager|deferred|lexical (eager)] [--analyzer NAME] \
-    [--batch N (0)]";
+    [--batch N (0)] [--api documents|lexical (documents)] [--store-text true|false (false)] [--digest true|false (false)]";
 
 /// Command line, parsed by hand: this binary is what the harness measures as WARM's install
 /// footprint, and an argument-parsing framework would be most of it.
@@ -46,6 +47,18 @@ struct Args {
     analyzer: Option<writerslogic_warm::core::documents::Analyzer>,
     /// `build` only: documents per atomic batch (0 = as many per batch as the engine accepts).
     batch: usize,
+    /// `serve` only: `documents` calls `search_documents` (the product path for document search) with the raw
+    /// query string; `lexical` calls `search_lexical` on the query's word set.
+    api: String,
+    /// `build` only: keep each document's text in the store (`DocumentInput::store_text`), as the
+    /// documents contract needs: `search_documents` then returns the text with every hit.
+    store_text: bool,
+    /// `serve` only: time passes that return the full results and drop them inside the timer, then
+    /// run one untimed pass that records a digest of each hit (documents contract; needs `--api documents`).
+    digest: bool,
+    /// `serve` with `--api lexical` only: BM25 parameters for development runs (the engine defaults when absent).
+    bm25_k1: Option<f64>,
+    bm25_b: Option<f64>,
 }
 
 impl Args {
@@ -64,6 +77,11 @@ impl Args {
             encode: "eager".into(),
             analyzer: None,
             batch: 0,
+            api: "documents".into(),
+            store_text: false,
+            digest: false,
+            bm25_k1: None,
+            bm25_b: None,
         };
         while let Some(flag) = words.next() {
             let value = words
@@ -80,6 +98,11 @@ impl Args {
                 "--encode" => args.encode = value,
                 "--analyzer" => args.analyzer = Some(value.parse()?),
                 "--batch" => args.batch = value.parse().with_context(number)?,
+                "--api" => args.api = value,
+                "--store-text" => args.store_text = value.parse().with_context(number)?,
+                "--digest" => args.digest = value.parse().with_context(number)?,
+                "--bm25-k1" => args.bm25_k1 = Some(value.parse().with_context(number)?),
+                "--bm25-b" => args.bm25_b = Some(value.parse().with_context(number)?),
                 _ => bail!("unknown argument {flag}; {USAGE}"),
             }
         }
@@ -103,6 +126,54 @@ struct Hit {
     document_id: String,
     #[serde(rename = "lexicalScore")]
     lexical_score: f64,
+    /// Untimed check of what the hit carried (documents contract): CRC-32 and byte length of the
+    /// returned text, the byte range of the document it covers, and the `bucket` metadata value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    check: Option<Check>,
+}
+
+#[derive(Serialize)]
+struct Check {
+    crc: u32,
+    len: usize,
+    start: u32,
+    end: u32,
+    bucket: Option<i64>,
+}
+
+/// CRC-32 (IEEE, reflected), the digest every arm of the documents contract records.
+const CRC_TABLE: [u32; 256] = {
+    let mut table = [0u32; 256];
+    let mut i = 0;
+    while i < 256 {
+        let mut c = i as u32;
+        let mut k = 0;
+        while k < 8 {
+            c = if c & 1 != 0 {
+                0xEDB8_8320 ^ (c >> 1)
+            } else {
+                c >> 1
+            };
+            k += 1;
+        }
+        table[i] = c;
+        i += 1;
+    }
+    table
+};
+
+fn crc32(bytes: &[u8]) -> u32 {
+    let mut c = !0u32;
+    for &b in bytes {
+        c = CRC_TABLE[((c ^ u32::from(b)) & 0xff) as usize] ^ (c >> 8);
+    }
+    !c
+}
+
+/// What `run` returns: the full results (digest mode, dropped by the caller) or ids and scores.
+enum Found {
+    Documents(Vec<DocumentResult>),
+    Ids(Vec<Hit>),
 }
 
 #[derive(Serialize)]
@@ -146,6 +217,20 @@ fn process_memory() -> serde_json::Value {
     serde_json::Value::Null
 }
 
+/// Lowercase alphanumeric word set, sorted: the reduction every arm applies to a raw query string
+/// (`text_worker.words`, the native tantivy arm).
+fn words(text: &str) -> Vec<String> {
+    let lowered = text.to_lowercase();
+    let mut out: Vec<String> = lowered
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .map(str::to_owned)
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 fn epoch_ns() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -159,7 +244,7 @@ fn epoch_ns() -> u128 {
 /// halve on a batch-limit error, keeping the size that worked. A fixed size takes `fixed`.
 fn ingest(
     core: &WarmCore,
-    documents: &[DocumentInput],
+    documents: &mut [DocumentInput],
     options: &IngestOptions,
     fixed: usize,
 ) -> Result<()> {
@@ -168,7 +253,15 @@ fn ingest(
     while at < documents.len() {
         let end = (at + size).min(documents.len());
         match core.memorize_documents_with(documents[at..end].to_vec(), options) {
-            Ok(_) => at = end,
+            Ok(_) => {
+                // The batch is committed; the corpus copy of its text is not read again, so
+                // release it instead of holding the whole input next to the growing index.
+                for document in &mut documents[at..end] {
+                    document.text = String::new();
+                    document.metadata = None;
+                }
+                at = end;
+            }
             Err(error) if fixed == 0 && size > 1 && error.is::<BatchTooLarge>() => size /= 2,
             Err(error) => return Err(error),
         }
@@ -189,15 +282,21 @@ fn main() -> Result<()> {
                 ..Default::default()
             };
             let count = input.documents.len();
+            let mut documents = input.documents;
+            if args.store_text {
+                for document in &mut documents {
+                    document.store_text = Some(true);
+                }
+            }
             let start = Instant::now();
             let config = writerslogic_warm::core::WarmConfig {
                 analyzer: args.analyzer,
                 ..Default::default()
             };
             let core = WarmCore::new(1024, Some(store), Some(config))?;
-            ingest(&core, &input.documents, &options, args.batch)?;
+            ingest(&core, &mut documents, &options, args.batch)?;
             json!({"documents": count, "ingest_s": start.elapsed().as_secs_f64(),
-                "encode": mode.name()})
+                "encode": mode.name(), "store_text": args.store_text})
         }
         "serve" => {
             ensure!(
@@ -207,11 +306,74 @@ fn main() -> Result<()> {
             let start = Instant::now();
             let core = WarmCore::new(1024, Some(store), None)?;
             let open_s = start.elapsed().as_secs_f64();
-            let first = &input.queries[0];
-            core.search_documents(&first.text, &first.options)?;
+            // One contract for every arm: the raw query string goes in, WARM's own query analysis is inside the
+            // timed region, and the top-100 (id, score) pairs come out. `documents` is the product path for
+            // document search and builds full documents per hit, more work than the contract needs (conservative);
+            // `lexical` is the id-and-score API on the query's word set.
+            ensure!(
+                matches!(args.api.as_str(), "documents" | "lexical"),
+                "--api takes documents or lexical, not {:?}",
+                args.api
+            );
+            let lexical_api = args.api == "lexical";
+            let defaults = LexicalOptions::default();
+            let lexical = LexicalOptions {
+                k: 100,
+                bm25_k1: args.bm25_k1.unwrap_or(defaults.bm25_k1),
+                bm25_b: args.bm25_b.unwrap_or(defaults.bm25_b),
+                ..defaults
+            };
+            ensure!(
+                !args.digest || !lexical_api,
+                "--digest needs --api documents (the documents contract)"
+            );
+            let digest = args.digest;
+            let run = |query: &Query| -> Result<Found> {
+                if lexical_api {
+                    let parsed = LexicalQuery::parse(&words(&query.text).join(" "))?;
+                    Ok(Found::Ids(
+                        core.search_lexical(&parsed, &lexical)?
+                            .hits
+                            .into_iter()
+                            .map(|h| Hit {
+                                document_id: h.document_id,
+                                lexical_score: h.score,
+                                check: None,
+                            })
+                            .collect(),
+                    ))
+                } else if digest {
+                    Ok(Found::Documents(
+                        core.search_documents(&query.text, &query.options)?,
+                    ))
+                } else {
+                    Ok(Found::Ids(
+                        core.search_documents(&query.text, &query.options)?
+                            .into_iter()
+                            .map(|r| Hit {
+                                document_id: r.document_id,
+                                lexical_score: r.lexical_score,
+                                check: None,
+                            })
+                            .collect(),
+                    ))
+                }
+            };
+            // The timed unit in digest mode is the call plus freeing what it returned; the hits are
+            // read back (`black_box`) so nothing is elided.
+            let search = |query: &Query| -> Result<Vec<Hit>> {
+                match run(query)? {
+                    Found::Ids(hits) => Ok(hits),
+                    Found::Documents(documents) => {
+                        std::hint::black_box(&documents);
+                        Ok(Vec::new())
+                    }
+                }
+            };
+            search(&input.queries[0])?;
             let cold_start_s = (epoch_ns().saturating_sub(args.t0_ns)) as f64 / 1e9;
             for query in input.queries.iter().take(16) {
-                core.search_documents(&query.text, &query.options)?;
+                search(query)?;
             }
             let mut rows = Vec::new();
             let mut passes = Vec::new();
@@ -219,17 +381,9 @@ fn main() -> Result<()> {
                 let mut ns = Vec::with_capacity(input.queries.len());
                 for query in &input.queries {
                     let t = Instant::now();
-                    let results = core.search_documents(&query.text, &query.options)?;
+                    let results = search(query)?;
                     ns.push(t.elapsed().as_nanos() as u64);
-                    if pass == 0 {
-                        // The same fields the Python workers keep: id and score per hit.
-                        let results = results
-                            .into_iter()
-                            .map(|r| Hit {
-                                document_id: r.document_id,
-                                lexical_score: r.score,
-                            })
-                            .collect();
+                    if pass == 0 && !digest {
                         rows.push(Row {
                             id: &query.id,
                             results,
@@ -237,6 +391,35 @@ fn main() -> Result<()> {
                     }
                 }
                 passes.push(ns);
+            }
+            if digest {
+                // Untimed: what each hit carried, for the orchestrator to compare with the corpus.
+                for query in &input.queries {
+                    let Found::Documents(found) = run(query)? else {
+                        bail!("digest pass without documents");
+                    };
+                    let results = found
+                        .into_iter()
+                        .map(|r| {
+                            let text = r.text.as_deref().unwrap_or("");
+                            Hit {
+                                check: Some(Check {
+                                    crc: crc32(text.as_bytes()),
+                                    len: text.len(),
+                                    start: r.start_byte,
+                                    end: r.end_byte,
+                                    bucket: r.metadata.get("bucket").and_then(|b| b.as_i64()),
+                                }),
+                                document_id: r.document_id,
+                                lexical_score: r.lexical_score,
+                            }
+                        })
+                        .collect();
+                    rows.push(Row {
+                        id: &query.id,
+                        results,
+                    });
+                }
             }
             // Streamed to the file: the report is never held as a JSON value tree.
             let report = ServeReport {

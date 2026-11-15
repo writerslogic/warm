@@ -1,0 +1,202 @@
+{
+ "corrupt=False|N=50|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=50|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=50|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=50|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=100|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.9933333333333333
+ },
+ "corrupt=False|N=100|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=100|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=100|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=200|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.9933333333333333
+ },
+ "corrupt=False|N=200|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=200|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=200|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=400|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.9899999999999999
+ },
+ "corrupt=False|N=400|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=400|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=400|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=800|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.9899999999999999
+ },
+ "corrupt=False|N=800|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=800|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=False|N=800|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 1.0
+ },
+ "corrupt=True|N=50|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.006666666666666667
+ },
+ "corrupt=True|N=50|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w4|k1.0",
+  "vsa": 0.013333333333333334
+ },
+ "corrupt=True|N=50|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w4|k1.0",
+  "vsa": 0.006666666666666667
+ },
+ "corrupt=True|N=50|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.0
+ },
+ "corrupt=True|N=100|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.006666666666666667
+ },
+ "corrupt=True|N=100|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k2.0",
+  "vsa": 0.0033333333333333335
+ },
+ "corrupt=True|N=100|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k1.0",
+  "vsa": 0.006666666666666667
+ },
+ "corrupt=True|N=100|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.006666666666666667
+ },
+ "corrupt=True|N=200|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.008333333333333333
+ },
+ "corrupt=True|N=200|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k2.0",
+  "vsa": 0.008333333333333333
+ },
+ "corrupt=True|N=200|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k1.0",
+  "vsa": 0.006666666666666667
+ },
+ "corrupt=True|N=200|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w4|k1.0",
+  "vsa": 0.01
+ },
+ "corrupt=True|N=400|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k1.0",
+  "vsa": 0.006666666666666667
+ },
+ "corrupt=True|N=400|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.005
+ },
+ "corrupt=True|N=400|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k2.0",
+  "vsa": 0.0033333333333333335
+ },
+ "corrupt=True|N=400|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.005
+ },
+ "corrupt=True|N=800|bits_mul=1": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k2.0",
+  "vsa": 0.005
+ },
+ "corrupt=True|N=800|bits_mul=2": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k1.0",
+  "vsa": 0.005
+ },
+ "corrupt=True|N=800|bits_mul=4": {
+  "table": 1.0,
+  "best_vsa": "vsa|w1|k1.0",
+  "vsa": 0.005
+ },
+ "corrupt=True|N=800|bits_mul=8": {
+  "table": 1.0,
+  "best_vsa": "vsa|w2|k1.0",
+  "vsa": 0.008333333333333333
+ }
+}

@@ -133,7 +133,7 @@ test('portable client against the actual warm-server HTTP API', { timeout: 60000
     assert.deepEqual(dry.forgotten.sort(), ['berlin', 'paris'])
     assert.equal(dry.dryRun, true)
     assert.notEqual(await memory.get('paris'), null)
-    const purged = await memory.forget({ kind: 'ids', ids: ['berlin'] }, { includeChain: true, purge: true })
+    const purged = await memory.forget({ kind: 'ids', ids: ['berlin'] }, { includeChain: true, purge: true, synchronous: true })
     assert.deepEqual(purged.forgotten.sort(), ['berlin', 'paris'])
     assert.equal(purged.purged, true)
     assert.equal(await memory.get('paris'), null)

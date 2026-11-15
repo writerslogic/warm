@@ -183,7 +183,8 @@
                   ]
                 },
                 "dryRun": false,
-                "purge": true
+                "purge": true,
+                "synchronous": true
               },
               "expect": {
                 "/forgotten": [
@@ -416,7 +417,8 @@
                   ]
                 },
                 "dryRun": false,
-                "purge": true
+                "purge": true,
+                "synchronous": true
               },
               "expect": {
                 "/forgotten": [
@@ -649,7 +651,8 @@
                   ]
                 },
                 "dryRun": false,
-                "purge": true
+                "purge": true,
+                "synchronous": true
               },
               "expect": {
                 "/forgotten": [
@@ -884,7 +887,8 @@
                   ]
                 },
                 "dryRun": false,
-                "purge": true
+                "purge": true,
+                "synchronous": true
               },
               "expect": {
                 "/forgotten": [
@@ -1117,7 +1121,8 @@
                   ]
                 },
                 "dryRun": false,
-                "purge": true
+                "purge": true,
+                "synchronous": true
               },
               "expect": {
                 "/forgotten": [
@@ -1350,7 +1355,8 @@
                   ]
                 },
                 "dryRun": false,
-                "purge": true
+                "purge": true,
+                "synchronous": true
               },
               "expect": {
                 "/forgotten": [

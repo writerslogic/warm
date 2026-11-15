@@ -42,6 +42,58 @@ sweep that meets each criterion, with the measured false-positive rate there.
 - **The sweep grid differs per row.** Each row's range is in the last column; nothing is
   claimed beyond it.
 
+## Membership: the bundle beside a Bloom filter
+
+The union bundle is a Bloom filter of `dim` bits whose hash positions are the item's active
+indices. `HolographicBloomMemory` now chooses how many of an item's indices to use from the number
+of items it is sized for (`with_expected_items(dim, n)`, probes = round(ln 2 * dim / n)). Before,
+every item used all of its indices (64 at D = 16,384), which is optimal only near N = 177 and left
+the memory at chance (AUC 0.587) at N = 1,500. `new(dim)` sizes for dim / 11 items (1,489 at
+D = 16,384). The probe count is fixed at construction and nothing is stored on disk, so no store
+format changed; with probes equal to the item size the answers are identical to the old union
+(tested).
+
+Member-vs-non-member AUC, D = 16,384, 20 seeds, 200 members and 200 non-members per seed
+([`bundle_k_from_n_20261114.json`](https://github.com/writerslogic/warm/blob/main/benchmarks/results/bundle_k_from_n_20261114.json),
+`cargo run --release --features experimental --bin bloom-wall -- --json PATH`). Tested range
+N = 100 to 20,000.
+
+| N | Old (64 probes), 16,384 bits | Sized from N, 16,384 bits | Bloom, 16,384 bits, tuned k | Bloom, 524,288 bits | Counting bundle, 524,288 bits |
+|--------|--------|--------|--------|--------|--------|
+| 700 | 0.993 | 1.000 | 1.000 | 1.000 | 1.000 |
+| 1,000 | 0.866 | 1.000 | 1.000 | 1.000 | 0.998 |
+| 1,500 | 0.587 | 0.999 | 0.996 | 1.000 | 0.991 |
+| 2,000 | 0.514 | 0.990 | 0.989 | 1.000 | 0.980 |
+| 3,000 | 0.500 | 0.965 | 0.959 | 1.000 | 0.953 |
+| 4,000 | 0.500 | 0.928 | 0.929 | 1.000 | 0.926 |
+| 8,000 | 0.500 | 0.807 | 0.804 | 1.000 | 0.844 |
+| 20,000 | 0.500 | 0.644 | 0.648 | 1.000 | 0.747 |
+
+- Sized from N, the bundle reaches AUC >= 0.99 up to N = 2,000 and falls below 0.95 at N = 4,000.
+  That is where 16,384 bits stop being enough (one probe per item from about N = 11,400); it is the
+  same cliff as a plain Bloom filter with the same bits, because it is the same structure. The
+  bundle does not beat a Bloom filter at equal bits; it ties it.
+- A Bloom filter given the counting bundle's 32 bits per index (524,288 bits) is at AUC 1.000 over
+  the whole range. The counting bundle has no membership advantage at equal bits. Use a Bloom
+  filter when membership is the job.
+- Past the sized N the AUC degrades along the tuned-k curve. The default constructor, tuned for
+  1,489 items, reaches 0.578 at N = 8,000 against 0.807 for a store sized for N; pass the expected N.
+
+## Binding: what the superposition buys
+
+The same binary measures retrieval of a value bound to a key from a superposition of K key-value
+pairs (D = 16,384 bipolar, 256 values, 8-bit counters, a 131,072-bit budget, key noise p flipping
+each coordinate, 5 seeds, 100 probes). The baselines use the same bits: a hash table on the exact
+key, and per-pair key sketches (as many sampled key bits as the budget allows) searched by Hamming
+distance.
+
+- The sketch table is at or above the superposition at every tested K and p. At K = 800,
+  p = 0.2 the superposition recovers 0.436 of the values and the sketch table 1.000.
+- The exact hash table is exact at p = 0 and at chance for any noisy key.
+- Measured here, bind and unbind give no accuracy advantage at equal bits on key-value retrieval.
+  Superposition is a linear compression and does not beat storing the pairs. What it keeps is
+  algebra (a merge is an elementwise sum, a record is composable) that these tests do not measure.
+
 ## What this does not establish
 
 - The test items are random vectors. Real text encodes to clustered, correlated vectors; the effect on

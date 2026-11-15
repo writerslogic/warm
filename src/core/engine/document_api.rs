@@ -363,6 +363,21 @@ impl WarmCore {
         options: &documents::LexicalOptions,
     ) -> Result<documents::LexicalResults> {
         let query = query.for_analyzer(self.analyzer)?;
+        if let Some(prepared) = documents::plain_lexical_search(&query, options)? {
+            // Ranked as `search_documents` ranks the same words, from the checkpoint when the
+            // store is served from one; a store that is not hydrates as any other query does.
+            let queries = std::slice::from_ref(&prepared);
+            let served = self.capture_from_checkpoint(|store| {
+                documents::overlay_serves(store, queries)
+                    .then(|| documents::rank_lexical_overlaid(store, &prepared))
+            });
+            if let Some(results) = served {
+                return Ok(results);
+            }
+            self.hydrate_documents()?;
+            let _transaction = self.mutation_gate.read();
+            return Ok(documents::rank_lexical(&self.documents.read(), &prepared));
+        }
         self.hydrate_documents()?;
         let _transaction = self.mutation_gate.read();
         documents::execute_lexical(&self.documents.read(), &query, options)

@@ -69,7 +69,7 @@ clap = { version = "4.4", features = ["derive", "env"], optional = true }
 foldhash = "0.2"
 nalgebra = { version = "0.35", features = ["serde-serialize"] }
 matrixmultiply = "0.3"
-gemm = { version = "0.19", default-features = false, features = ["std"], optional = true }
+gemm = { version = "0.19", default-features = false, features = ["std", "x86-v4"], optional = true }
 ed25519-dalek = { version = "3", features = ["rand_core"], optional = true }
 zeroize = { version = "1", features = ["derive"], optional = true }
 aes-gcm = { version = "0.11", optional = true }
@@ -180,6 +180,8 @@ base64 = []
 ciborium = []
 # Command-line parsing (clap) for the binaries and examples that take arguments.
 cli = ["dep:clap"]
+# Fault injection at the durability points (crash and ENOSPC/EIO tests); inert unless armed.
+failpoints = []
 # Global allocator of the public-bench binary only; never linked into the library.
 mimalloc = ["dep:mimalloc"]
 conversation-memory = ["sha2"]
@@ -475,6 +477,7 @@ path = "src/bin/research/binding-discriminator.rs"
 [[bin]]
 name = "bloom-wall"
 path = "src/bin/research/bloom-wall.rs"
+required-features = ["experimental"]
 
 [[bin]]
 name = "capacity-campaign"

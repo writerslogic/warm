@@ -70,7 +70,7 @@ best WARM configuration. Start at [Public benchmarks](../PUBLIC-BENCHMARKS.md).
 
 ## Which Rust version do I need?
 
-Rust 1.89 or newer (the MSRV). Node 22 or newer for the bindings, and Node 24 for the
+Rust 1.89 or newer (the MSRV). Node 18 or newer for the bindings, and Node 24 for the
 quickstart, which uses `node:sqlite`.
 
 ## Why is `npm run build` changing `index.d.ts`?

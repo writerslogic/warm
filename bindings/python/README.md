@@ -10,10 +10,10 @@ Native Python bindings for WARM's vector search and vector-symbolic algebra.
 
 ## Install
 
-Python 3.9 or newer is required. Install the native binding and NumPy for the vector-index API:
+Python 3.9 or newer is required. Install the native binding; NumPy (`>=1.26`, which the vector-index API needs) is installed with it:
 
 ```sh
-uv add warm-python numpy
+uv add warm-python
 ```
 
 The distribution is named `warm-python`; the import is `writerslogic_warm`.

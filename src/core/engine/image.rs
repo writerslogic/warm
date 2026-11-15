@@ -415,4 +415,118 @@ mod tests {
         assert_eq!(answers(&core)?, expected);
         Ok(())
     }
+
+    /// `search_lexical` of a bare word disjunction ranks as `search_documents` of the same
+    /// text (ids, scores to the bit, including words that share a stem), is served from the
+    /// checkpoint and its overlay without rebuilding the store, and a query it cannot rank that
+    /// way (a required clause) still hydrates and agrees afterwards.
+    #[test]
+    fn search_lexical_ranks_as_search_documents_without_hydrating() -> Result<()> {
+        use crate::core::documents::{LexicalOptions, LexicalQuery};
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().display().to_string();
+        let mut config = WarmConfig::default();
+        config.document_checkpoint.min_journal_bytes = 0;
+        let options = documents::IngestOptions {
+            encode: documents::EncodeMode::Lexical,
+            ..Default::default()
+        };
+        let words = [
+            "alpha", "beta", "gamma", "delta", "evidence", "run", "running", "runs", "runner",
+            "sparse",
+        ];
+        let text = |i: usize| -> String {
+            let text: Vec<&str> = (0..1 + i % 9)
+                .map(|j| words[(i * 7 + j * j + j) % words.len()])
+                .collect();
+            text.join(" ")
+        };
+        {
+            let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+            let documents = (0..400)
+                .map(|i| {
+                    serde_json::from_value(serde_json::json!({
+                        "id": format!("d{i:03}"), "text": text(i)
+                    }))
+                    .unwrap()
+                })
+                .collect();
+            core.memorize_documents_with(documents, &options)?;
+            core.compact()?;
+        }
+        let core = WarmCore::new(256, Some(path), Some(config))?;
+        assert!(core.serves_from_checkpoint());
+        let queries = [
+            "evidence",
+            "alpha beta",
+            "running run runs",
+            "runs runner evidence",
+            "gamma evidence delta beta",
+            "absent alpha",
+            "absent",
+        ];
+        let agree = |core: &WarmCore| -> Result<usize> {
+            let mut matched = 0;
+            for query in queries {
+                for k in [1usize, 7, 20, 100] {
+                    let lexical = core.search_lexical(
+                        &LexicalQuery::parse(query)?,
+                        &LexicalOptions {
+                            k,
+                            ..Default::default()
+                        },
+                    )?;
+                    let documents = core.search_documents(
+                        query,
+                        &SearchOptions {
+                            k: Some(k as u32),
+                            candidate_limit: Some(k as u32),
+                            semantic_weight: Some(0.0),
+                            ..Default::default()
+                        },
+                    )?;
+                    let a: Vec<_> = lexical
+                        .hits
+                        .iter()
+                        .map(|h| (h.document_id.as_str(), h.score.to_bits()))
+                        .collect();
+                    let b: Vec<_> = documents
+                        .iter()
+                        .map(|h| (h.document_id.as_str(), h.lexical_score.to_bits()))
+                        .collect();
+                    assert_eq!(a, b, "query {query:?} k {k}");
+                    matched += a.len();
+                }
+            }
+            Ok(matched)
+        };
+        assert!(agree(&core)? > 100);
+        assert!(core.serves_from_checkpoint(), "ranking hydrated the store");
+        // Writes since the checkpoint are ranked from the overlay.
+        assert!(core.delete_document("d003")?);
+        for (id, body) in [
+            ("d010", "alpha running runs"),
+            ("zz", "evidence evidence alpha"),
+        ] {
+            core.memorize_document_with(
+                serde_json::from_value(serde_json::json!({"id": id, "text": body}))?,
+                &options,
+            )?;
+        }
+        assert!(agree(&core)? > 100);
+        assert!(
+            core.serves_from_checkpoint(),
+            "overlay ranking hydrated the store"
+        );
+        // A required clause is outside the shared path: it hydrates, and the plain path then
+        // ranks the hydrated store as it ranked the overlay.
+        let required = core.search_lexical(
+            &LexicalQuery::parse("+alpha beta")?,
+            &LexicalOptions::default(),
+        )?;
+        assert!(!required.hits.is_empty());
+        assert!(!core.serves_from_checkpoint());
+        assert!(agree(&core)? > 100);
+        Ok(())
+    }
 }

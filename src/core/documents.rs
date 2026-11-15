@@ -44,6 +44,7 @@ pub(crate) use image::{
 pub(crate) use index::DocumentWithText;
 pub(crate) use index::{canonical_staging_path, opaque_counter_start, DocumentStore};
 pub(crate) use lexical::execute as execute_lexical;
+pub(crate) use lexical::plain_search as plain_lexical_search;
 pub use lexical::{LexicalExecution, LexicalHit, LexicalOptions, LexicalQuery, LexicalResults};
 pub(crate) use listing::{
     capture_chunk, count, get_info, get_record, list_info, list_records, CapturedDocumentRead,
@@ -804,12 +805,33 @@ pub(crate) fn query_words(text: &str, stem: bool) -> std::collections::BTreeSet<
 }
 
 /// [`query_words`] through `analyzer`.
+#[cfg(test)]
 pub(crate) fn query_words_with(
     analyzer: Analyzer,
     text: &str,
     stem: bool,
 ) -> std::collections::BTreeSet<String> {
     terms_with(analyzer, text, stem).into_keys().collect()
+}
+
+/// The distinct terms of `text` in both forms (unstemmed, stemmed) through `analyzer`: the
+/// keys of [`terms_with`] for each form, from one tokenization of the text.
+pub(crate) fn query_words_both(
+    analyzer: Analyzer,
+    text: &str,
+) -> [std::collections::BTreeSet<String>; 2] {
+    let mut sets: [std::collections::BTreeSet<String>; 2] = Default::default();
+    let mut lower = String::new();
+    let text = analyzer.prepare(text);
+    for word in analyzer.words(&text) {
+        for (form, set) in sets.iter_mut().enumerate() {
+            let term = analyzer.term(word, form == 1, &mut lower);
+            if !term.is_empty() && !set.contains(&*term) {
+                set.insert(term.into_owned());
+            }
+        }
+    }
+    sets
 }
 
 /// [`terms_with`] through [`Analyzer::Legacy`].
@@ -1454,6 +1476,20 @@ pub(crate) fn overlay_serves(store: &DocumentStore, prepared: &[PreparedSearch])
 /// queries [`overlay_serves`] accepts.
 #[cfg(test)]
 pub(crate) use image::encode_v1 as encode_checkpoint_v1;
+
+/// The hits of [`plain_lexical_search`]'s `prepared` ranked from the checkpoint under `store`;
+/// `prepared` must pass [`overlay_serves`].
+pub(crate) fn rank_lexical_overlaid(
+    store: &DocumentStore,
+    prepared: &PreparedSearch,
+) -> LexicalResults {
+    search::rank_overlaid(store, prepared)
+}
+
+/// The hits of [`plain_lexical_search`]'s `prepared` ranked over a store holding its documents.
+pub(crate) fn rank_lexical(store: &DocumentStore, prepared: &PreparedSearch) -> LexicalResults {
+    search::rank_store(store, prepared)
+}
 
 pub(crate) fn capture_overlaid_search(
     store: &DocumentStore,

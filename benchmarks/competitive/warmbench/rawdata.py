@@ -57,7 +57,6 @@ class RawStore:
         """Writes `<result stem>.latency.npz`; returns the metadata record for the result JSON."""
         result_path = Path(result_path)
         path = result_path.with_name(result_path.stem + ".latency.npz")
-        path.parent.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(path, **{k.replace("/", "|"): v for k, v in self.arrays.items()})
         return {"file": path.name, "sha256": sha256_file(path), "bytes": path.stat().st_size, "arrays": len(self.arrays),
                 "unit": "ns (uint32, clipped at 4.29 s)", "key_separator": "|", "format": "numpy npz; one array per timed pass or per-config hit counts"}

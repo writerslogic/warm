@@ -43,7 +43,7 @@ async function main() {
   } else if (phase === 'forget') {
     const before = { current: await recall(), asOf: await recall({ asOf }) }
     const forgotten = await memory.forget({ ids: [replacementId] }, {
-      includeChain: true, purge: true, dryRun: false,
+      includeChain: true, purge: true, synchronous: true, dryRun: false,
     })
     result = { before, forgotten, remaining: await recall({ history: 'all' }) }
   } else {
