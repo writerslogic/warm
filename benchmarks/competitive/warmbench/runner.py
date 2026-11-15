@@ -578,16 +578,36 @@ def _check_documents(rows, corpus):
     return counts
 
 
+def _tie_order_only(docs_hits, ids_hits):
+    """True when two ranked lists carry the same scores position by position and differ only in the order of hits that share
+    a score. The last score group may hold different ids when the list is cut inside it: both rows kept an arbitrary part of the tie."""
+    if len(docs_hits) != len(ids_hits) or [h["lexicalScore"] for h in docs_hits] != [h["lexicalScore"] for h in ids_hits]:
+        return False
+    start = 0
+    while start < len(docs_hits):
+        end = start
+        while end < len(docs_hits) and docs_hits[end]["lexicalScore"] == docs_hits[start]["lexicalScore"]:
+            end += 1
+        same = {h["documentId"] for h in docs_hits[start:end]} == {h["documentId"] for h in ids_hits[start:end]}
+        if not same and end < len(docs_hits):
+            return False
+        start = end
+    return True
+
+
 def _pair_ids(docs_rows, ids_rows):
-    """Queries whose ordered top-100 id list differs between an engine's documents row and its ids row, and the largest score gap."""
-    differing, gap = 0, 0.0
+    """Queries whose ordered top-100 id list differs between an engine's documents row and its ids row, and the largest score gap.
+    A difference confined to the order of equal-score hits is counted apart: neither order is wrong."""
+    differing, tie_order, gap = 0, 0, 0.0
     for d, i in zip(docs_rows, ids_rows):
         a, b = [h["documentId"] for h in d["results"]], [h["documentId"] for h in i["results"]]
-        if a != b or d["id"] != i["id"]:
+        if d["id"] == i["id"] and a != b and _tie_order_only(d["results"], i["results"]):
+            tie_order += 1
+        elif a != b or d["id"] != i["id"]:
             differing += 1
         else:
             gap = max([gap] + [abs(x["lexicalScore"] - y["lexicalScore"]) for x, y in zip(d["results"], i["results"])])
-    return {"queries": len(docs_rows), "queries_with_different_id_lists": differing, "max_abs_score_gap": gap}
+    return {"queries": len(docs_rows), "queries_with_different_id_lists": differing, "queries_differing_only_in_tie_order": tie_order, "max_abs_score_gap": gap}
 
 
 def _quality(rows, qrels):
