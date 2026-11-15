@@ -153,6 +153,10 @@ name = "vector_record_query"
 harness = false
 
 [[example]]
+name = "competitive_hybrid"
+required-features = ["local-embed-download"]
+
+[[example]]
 name = "supersession_probe"
 required-features = ["local-embed"]
 
