@@ -132,7 +132,7 @@ def contract_views(path, data):
 def display(system, data=None):
     """Name of a system as measured: Lucene carries the version recorded in the result file, never the current pin."""
     name = registry.system(system)["display"]
-    if system in ("lucene", "lucene-docs"):
+    if system in ("lucene", "lucene-docs", "lucene-dv-docs"):
         recorded = (((data or {}).get("systems") or {}).get(system) or {}).get("version") or {}
         if recorded.get("lucene"):
             return name.replace(f"Lucene {jars.VERSION}", f"Lucene {recorded['lucene']}")
@@ -532,6 +532,39 @@ def versions_table(results):
     return lines
 
 
+def across_hardware_lines(sections):
+    """Text QPS verdict of every (corpus, contract) on every hardware class, plus the groups whose verdict differs between classes.
+    Each row is the section's own verdict (same Bonferroni family); rows of different classes are listed side by side, never pooled."""
+    rows = {}
+    for sec in sections:
+        data = sec["data"]
+        if sec["kind"] != "text" or is_server(data) or not data.get("contract"):
+            continue
+        cells = sec["metrics"].get("qps")
+        mine = (cells or {}).get(reference(data))
+        name, other = best_other("qps", cells) if cells else (None, None)
+        if mine is None or mine["value"] is None or other is None:
+            continue
+        adv = advantage("qps", mine, other)
+        rows.setdefault((data["dataset"].get("id") or data["dataset"].get("name"), data["contract"]), []).append((sec["hw"]["class"], data, mine, name, other, adv, verdict(adv)))
+    rows = {k: sorted(v, key=lambda r: r[0]) for k, v in sorted(rows.items()) if len(v) > 1}
+    if not rows:
+        return []
+    out = ["## Text verdicts across hardware classes", "",
+           "The same campaign (suite `standard`, one pinned core, ten interleaved rounds) on each hardware class. Each row is that class's own single-thread QPS verdict "
+           "of the WARM reference row of the contract against the fastest comparator of the same contract; the rows are never pooled or compared as absolute values across classes.", "",
+           "| Dataset | Contract | Hardware class | WARM QPS | Fastest comparator | Comparator QPS | Advantage | Verdict |", "|---|---|---|---|---|---|---|---|"]
+    differ = []
+    for (ds, contract), group in rows.items():
+        for hw, data, mine, name, other, adv, v in group:
+            ci = f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv and adv["ci"] else ""
+            out.append(f"| {ds} | {contract} | `{hw}` | {fmt(mine['value'], 0)} | {display(name, data)} | {fmt(other['value'], 0)} | {fx(adv['factor']) if adv else 'n/m'}{ci} | **{v}** |")
+        if len({r[6] for r in group}) > 1:
+            differ.append(f"{ds}, {contract} contract: " + "; ".join(f"`{r[0]}` {r[6]}" for r in group))
+    out += ["", "Verdicts that differ between hardware classes: " + ("none." if not differ else ""), *[f"- {d}" for d in differ], ""]
+    return out
+
+
 def build():
     # Embedded sections first, then server-mode sections under their own heading: a server row is
     # never compared with an embedded one.
@@ -561,7 +594,8 @@ def build():
            "## Scoreboard", "", "| Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |", "|---|---|---|---|---|---|---|---|"]
     for sec, counts, _ in summary:
         out.append(f"| {sec['title']} | `{sec['hw']['class']}` | {sec['data']['suite']} | {counts['WIN']} | {counts['TIE']} | {counts['LOSS']} | {counts['n/m']} | {counts['n/v']} |")
-    out += ["", "## Where WARM loses", ""]
+    out += [""] + across_hardware_lines(sections)
+    out += ["## Where WARM loses", ""]
     if losses:
         out += ["| Dataset | Metric | Best other | WARM disadvantage | Candidate lever (hypothesis unless a file is cited) |", "|---|---|---|---|---|"]
         for sec, key, label, name, adv in losses:
