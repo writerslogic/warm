@@ -8,8 +8,8 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |
 |---|---|---|---|---|---|---|---|
-| glove-100-angular (1,183,514 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 5 | 0 | 0 | 2 | 7 |
-| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 5 | 0 | 0 | 2 | 7 |
+| glove-100-angular (1,183,514 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 5 | 0 | 0 | 0 | 7 |
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 5 | 0 | 0 | 0 | 7 |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 5 | 0 | 0 | 0 | 7 |
 | beir:fiqa (57,600 documents, 500 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
 | memory (4,559 documents, 100 queries) | `modal-x86_64-8vcpu-32g` | heavy | 6 | 2 | 2 | 0 | 4 |
@@ -60,8 +60,6 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | RSS, serving (MiB) | 505 | per build, see below | per build | **n/v** |
 | Index size (MiB) | 912.8 | FAISS IVF-PQ fast-scan (+refine) 490.3 | 0.54x (no CI) | **n/v** |
 | Cold start to first answer (s) | 0.12 | per build, see below | per build | **n/v** |
-| Replace one vector (durable) (ms) | n/m (not supported) | n/m | n/m | **n/m** |
-| Delete one vector (durable) (ms) | n/m (not supported) | n/m | n/m | **n/m** |
 | Install size (MiB) | 5.1 | hnswlib 62.2 | 12.23x (no CI) | **n/v** |
 | Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
 
@@ -79,8 +77,6 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | RSS, serving (MiB) | **505** | 929 | 878 | 830 | 571 | 939 | 551 | 2,420 | 927 |
 | Index size (MiB) | 912.8 | 763.3 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 758.6 | **490.3** | 763.3 | 495.5 | 2,150.3 | 1,194.7 |
 | Cold start to first answer (s) | **0.12** | 1.07 | 0.86 | 0.61 | 0.42 | 0.91 | 0.99 | 12.46 | 0.69 |
-| Replace one vector (durable) (ms) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) |
-| Delete one vector (durable) (ms) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) |
 | Install size (MiB) | **5.1** | 62.2 |  | 180.9 | 180.9 | 90.8 | 98.9 | 379.3 | 338.4 |
 | Install distributions (count) | **0** | 2 |  | 3 | 3 | 4 | 3 | 10 | 2 |
 
@@ -137,8 +133,6 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | RSS, serving (MiB) | 529 | per build, see below | per build | **n/v** |
 | Index size (MiB) | 576.3 | FAISS IVF-PQ fast-scan (+refine) 528.4 | 0.92x (no CI) | **n/v** |
 | Cold start to first answer (s) | 0.10 | per build, see below | per build | **n/v** |
-| Replace one vector (durable) (ms) | n/m (not supported) | n/m | n/m | **n/m** |
-| Delete one vector (durable) (ms) | n/m (not supported) | n/m | n/m | **n/m** |
 | Install size (MiB) | 5.1 | hnswlib 62.2 | 12.23x (no CI) | **n/v** |
 | Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
 
@@ -156,8 +150,6 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 | RSS, serving (MiB) | **529** | 904 | 853 | 699 | 616 | 797 | 594 | 2,261 | 860 |
 | Index size (MiB) | 576.3 | 751.8 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 625.9 | **528.4** | 630.0 | 534.4 | 1,987.2 | 1,198.2 |
 | Cold start to first answer (s) | **0.10** | 0.86 | 0.77 | 1.01 | 0.84 | 0.64 | 1.01 | 11.46 | 1.24 |
-| Replace one vector (durable) (ms) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) |
-| Delete one vector (durable) (ms) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) | n/m (not supported) |
 | Install size (MiB) | **5.1** | 62.2 |  | 180.9 | 180.9 | 90.8 | 98.9 | 379.3 | 338.4 |
 | Install distributions (count) | **0** | 2 |  | 3 | 3 | 4 | 3 | 10 | 2 |
 
