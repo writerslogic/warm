@@ -56,6 +56,9 @@ struct Args {
     /// `serve` only: time passes that return the full results and drop them inside the timer, then
     /// run one untimed pass that records a digest of each hit (documents contract; needs `--api documents`).
     digest: bool,
+    /// `serve` with `--api lexical` only: BM25 parameters for development runs (the engine defaults when absent).
+    bm25_k1: Option<f64>,
+    bm25_b: Option<f64>,
 }
 
 impl Args {
@@ -77,6 +80,8 @@ impl Args {
             api: "documents".into(),
             store_text: false,
             digest: false,
+            bm25_k1: None,
+            bm25_b: None,
         };
         while let Some(flag) = words.next() {
             let value = words
@@ -96,6 +101,8 @@ impl Args {
                 "--api" => args.api = value,
                 "--store-text" => args.store_text = value.parse().with_context(number)?,
                 "--digest" => args.digest = value.parse().with_context(number)?,
+                "--bm25-k1" => args.bm25_k1 = Some(value.parse().with_context(number)?),
+                "--bm25-b" => args.bm25_b = Some(value.parse().with_context(number)?),
                 _ => bail!("unknown argument {flag}; {USAGE}"),
             }
         }
@@ -301,9 +308,12 @@ fn main() -> Result<()> {
                 args.api
             );
             let lexical_api = args.api == "lexical";
+            let defaults = LexicalOptions::default();
             let lexical = LexicalOptions {
                 k: 100,
-                ..Default::default()
+                bm25_k1: args.bm25_k1.unwrap_or(defaults.bm25_k1),
+                bm25_b: args.bm25_b.unwrap_or(defaults.bm25_b),
+                ..defaults
             };
             ensure!(
                 !args.digest || !lexical_api,

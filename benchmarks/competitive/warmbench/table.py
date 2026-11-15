@@ -64,7 +64,7 @@ LEVERS = {
     "text:qps": "measured (M4, same process, identical results, 2026-11-05): ranking from the mapped checkpoint is 1.5x to 1.9x slower than from the live store on all four corpora. On FiQA the flat varint postings cost most of it: 56% of postings carry a frequency above 1 and missed the one-byte fast path; the two-byte window decoder recovers 1.09x, and the rest needs a block-packed checkpoint posting encoding (a checkpoint format change). On the small corpora, rebuilding a StoredDocument per hit was about 45% of a query; checkpoint hits now decode straight into their results (paired M4, identical results: NFCorpus 1.17x, SciFact 1.11x, memory and FiQA unchanged); the record's JSON metadata parse, 13% of that profile, was still paid per hit. Cut on 2026-11-06 (paired M4, same process, identical results, against main after the block-packed checkpoint): a hit now decodes its record without building the chunk vector and a per-query cache shares repeated metadata values; NFCorpus 1.18x, memory 1.08x, FiQA 1.00x QPS, since hit decode is about 10% of a FiQA query and the exhaustive rank() pass is 82%. Block-max MaxScore was slower than the exhaustive pass at k=100, and a larger hot-list budget doubles serving RSS",
     "text:p50_latency": "same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding",
     "text:disk_mib": "compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack",
-    "text:recall@100": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+    "text:recall@100": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
     "text:replace_ms_per_op": "batching commits (memorize_batch) or a group commit; the per-op figure is one durable commit",
     "text:delete_ms_per_op": "batching commits (memorize_batch) or a group commit; the per-op figure is one durable commit",
     "qps@recall0.90": "per-query estimate count and memory traffic of the vertex graph (the vertex-graph rows under benchmarks/results)",
@@ -166,6 +166,8 @@ def advantage(metric, mine, theirs):
         better = (mine["value"] > theirs["value"]) == higher
         return {"factor": float("inf") if better else 0.0, "ci": None,
                 "deterministic": mine.get("uncertainty") == theirs.get("uncertainty") == "deterministic"}
+    if metric in analyze.PAIRED and mine.get("per_query") and theirs.get("per_query"):
+        return analyze.paired_advantage(metric, mine, theirs)
     point = mine["value"] / theirs["value"] if higher else theirs["value"] / mine["value"]
     if _has_ci(mine) and _has_ci(theirs):
         (ml, mh), (tl, th) = mine["ci"], theirs["ci"]
@@ -330,7 +332,8 @@ def interval_text(sec):
     if rounds is not None and rounds < analyze.MIN_BOOTSTRAP_ROUNDS:
         return (f"Intervals: min-max range of the {rounds} process rounds, not a confidence interval (a bootstrap of fewer than "
                 f"{analyze.MIN_BOOTSTRAP_ROUNDS} rounds has too few distinct resamples).")
-    return f"Intervals: {sec['level'] * 100:.2f}% bootstrap over process rounds (Bonferroni family of {sec['family']} verdict metrics)."
+    return (f"Intervals: {sec['level'] * 100:.2f}% bootstrap over process rounds (Bonferroni family of {sec['family']} verdict metrics); "
+            "nDCG@10 and recall@100 are compared by a paired per-query bootstrap at the same level, since every system answers the same queries.")
 
 
 def render_section(sec, cells_out):
@@ -385,6 +388,9 @@ def render_section(sec, cells_out):
                               "factor_infinite": bool(adv and adv["factor"] == float("inf")), "ci": adv["ci"] if adv else None, "verdict": v,
                               "text": "n/m" if adv is None else fx(adv["factor"])})
         adv_text = "n/m" if adv is None else fx(adv["factor"]) + (f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv["ci"] else " (no CI)")
+        if adv and adv.get("paired"):
+            p_ = adv["paired"]
+            adv_text += f"; paired difference {p_['difference']:+.4f} [{p_['ci'][0]:+.4f}, {p_['ci'][1]:+.4f}]"
         best_text = "n/m" if other is None else f"{display(name, data)} {fmt(other['value'], dec)}{mark}"
         if analyze.no_verdict(sec["kind"], key, data.get("mode", "embedded")) and key in analyze.ANN_PER_BUILD:
             best_text, adv_text = "per build, see below", "per build"

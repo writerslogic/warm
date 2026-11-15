@@ -123,6 +123,33 @@ def ratio_ci(numerator, denominator, rounds=2000, seed=24731, level=0.95):
     return point, [draws[int(tail * rounds)], draws[min(rounds - 1, int((1 - tail) * rounds))]]
 
 
+def paired_bootstrap(first, second, rounds=2000, seed=24731, level=0.95):
+    """Paired per-query bootstrap of two systems scored on the same queries: queries are resampled with replacement, the
+    same draw for both systems. Returns the means, mean(first) - mean(second) with its percentile interval, and
+    mean(first) / mean(second) with its interval (None when a resampled mean of `second` is not positive)."""
+    first, second = list(first), list(second)
+    if len(first) != len(second):
+        raise ValueError(f"paired scores need the same queries: {len(first)} against {len(second)}")
+    n = len(first)
+    if n == 0:
+        raise ValueError("paired scores need at least one query")
+    rng = random.Random(seed)
+    population = range(n)
+    differences, ratios = [], []
+    for _ in range(rounds):
+        draw = rng.choices(population, k=n)
+        a, b = sum(map(first.__getitem__, draw)), sum(map(second.__getitem__, draw))
+        differences.append((a - b) / n)
+        ratios.append(a / b if b > 0 else math.nan)
+    tail = (1 - level) / 2
+    lo, hi = int(tail * rounds), min(rounds - 1, int((1 - tail) * rounds))
+    differences.sort()
+    ratio_interval = None if any(r != r for r in ratios) else [sorted(ratios)[lo], sorted(ratios)[hi]]
+    mean_first, mean_second = sum(first) / n, sum(second) / n
+    return {"means": [mean_first, mean_second], "difference": mean_first - mean_second, "difference_ci": [differences[lo], differences[hi]],
+            "ratio": mean_first / mean_second if mean_second > 0 else None, "ratio_ci": ratio_interval, "queries": n}
+
+
 def ndcg_at(found, relevant, k=10):
     gain = sum(relevant.get(key, 0) / math.log2(rank + 2) for rank, key in enumerate(found[:k]))
     ideal = sum(g / math.log2(rank + 2) for rank, g in enumerate(sorted(relevant.values(), reverse=True)[:k]))
