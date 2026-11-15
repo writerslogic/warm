@@ -134,6 +134,9 @@ enum SlotPositions {
 }
 
 const DENSE_SLOT_LIMIT: usize = 1 << 19;
+/// Below this many slots the exhaustive hot-list ranking is faster than the pruned traversal
+/// (measured on FiQA and 100k), so pruning serves only the stores that would otherwise hydrate.
+const PRUNE_SLOT_FLOOR: usize = if cfg!(test) { 0 } else { DENSE_SLOT_LIMIT };
 
 impl SlotPositions {
     fn new(slot_count: usize) -> Self {
@@ -503,6 +506,11 @@ pub(super) trait LexicalSource {
     fn slot_word_count(&self, slot: usize) -> u32;
     /// `(document id, chunk index)` of the chunk in `slot`, the tie order of equal scores.
     fn slot_order(&self, slot: usize) -> (&str, usize);
+    /// The checkpoint whose postings carry impacts, when this source is one: its queries may
+    /// be pruned by block-max bounds (see [`super::impact`]).
+    fn impact_image(&self) -> Option<&super::image::ServingImage> {
+        None
+    }
 }
 
 /// A term's postings as [`LexicalScratch::rank`] reads them.
@@ -609,7 +617,8 @@ pub(super) fn overlay_serves(prepared: &PreparedSearch, store: &DocumentStore) -
     store.base.as_ref().is_some_and(|base| {
         prepared.lexical_only
             && prepared.embedding.is_none()
-            && base.image.slot_total() + store.slot_count <= DENSE_SLOT_LIMIT
+            && (base.image.slot_total() + store.slot_count <= DENSE_SLOT_LIMIT
+                || (base.intact() && store.documents.is_empty() && base.image.has_impacts()))
     })
 }
 
@@ -749,6 +758,7 @@ struct LexicalScratch {
     /// zeroes every score first.
     dirty: bool,
     hot: HotLists,
+    pruned: super::impact::PruneScratch,
 }
 
 /// The most postings a thread keeps decoded and weighted (12 bytes each).
@@ -814,6 +824,32 @@ impl LexicalScratch {
         prepared: &PreparedSearch,
         hot: bool,
     ) -> Vec<(f64, u32)> {
+        if hot
+            && store
+                .impact_image()
+                .is_some_and(|image| image.slot_total() > PRUNE_SLOT_FLOOR)
+        {
+            let limit = prepared.limit;
+            if super::impact::rank(
+                store,
+                &prepared.query_terms,
+                prepared.bm25,
+                limit,
+                &mut self.pruned,
+            )
+            .is_some()
+            {
+                let candidates = &mut self.pruned.candidates;
+                top_ranked(candidates, limit, |a, b| {
+                    b.0.total_cmp(&a.0).then_with(|| {
+                        store
+                            .slot_order(a.1 as usize)
+                            .cmp(&store.slot_order(b.1 as usize))
+                    })
+                });
+                return candidates.clone();
+            }
+        }
         let slots = store.slot_count();
         if self.dirty {
             self.scores.fill(0.0);
@@ -2929,7 +2965,11 @@ mod tests {
         ];
         // Version 1 (flat postings) is still read: it serves, and rebuilds the store, as the
         // version written does.
-        let versions = [super::super::image::encode, super::super::image::encode_v1];
+        let versions = [
+            super::super::image::encode,
+            super::super::image::encode_v2,
+            super::super::image::encode_v1,
+        ];
         for ((first, every), encode) in [(0, 1), (1, 2)]
             .into_iter()
             .flat_map(|layout| versions.map(|encode| (layout, encode)))
@@ -2965,6 +3005,10 @@ mod tests {
                         );
                     }
                 }
+                // A version 3 checkpoint is pruned, not decoded into hot lists.
+                if image.has_impacts() {
+                    continue;
+                }
                 let kept = LEXICAL_SCRATCH.with(|scratch| {
                     let scratch = scratch.borrow();
                     (
@@ -2978,6 +3022,184 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// A store of `documents` one-chunk documents whose words follow a heavy-tailed
+    /// distribution over `vocabulary` terms, with lengths from 3 to 60 words, so some posting
+    /// lists run to many blocks and chunk lengths differ.
+    fn heavy_tailed_store(documents: usize, vocabulary: u64, state: &mut u64) -> DocumentStore {
+        let mut store = DocumentStore::default();
+        for id in 0..documents {
+            let length = 3 + xorshift(state) % 58;
+            let text: Vec<String> = (0..length)
+                .map(|_| {
+                    let u = (xorshift(state) % 1_000_000) as f64 / 1_000_000.0;
+                    format!("w{}", ((vocabulary as f64).powf(u) as u64).min(vocabulary))
+                })
+                .collect();
+            let input = serde_json::from_value(json!({
+                "id": format!("h{id:06}"), "text": text.join(" "), "chunkWords": 4096, "overlapWords": 0,
+            }))
+            .unwrap();
+            let mut document =
+                super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+            for chunk in &mut document.chunks {
+                chunk.vector_state = super::super::VectorState::Lexical;
+                chunk.vector =
+                    crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+            }
+            store.insert(document.id.clone(), document);
+        }
+        store
+    }
+
+    /// Block-max pruned ranking from a version 3 checkpoint returns the chunks, the scores to
+    /// the bit and the order the exhaustive ranking of a version 2 one does, for queries of one
+    /// to thirty terms at several depths and BM25 settings, and decodes fewer blocks than the
+    /// lists hold.
+    #[test]
+    fn pruned_ranking_matches_exhaustive_ranking_to_the_bit() {
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        let stores = [
+            prose_store(0, 1),
+            heavy_tailed_store(6000, 400, &mut state),
+            heavy_tailed_store(40, 6, &mut state),
+        ];
+        let options = [
+            SearchOptions {
+                k: Some(10),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(100),
+                candidate_limit: Some(100),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(3),
+                candidate_limit: Some(5),
+                bm25_k1: Some(1.6),
+                bm25_b: Some(0.4),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(50),
+                candidate_limit: Some(50),
+                bm25_k1: Some(0.0),
+                bm25_b: Some(1.0),
+                ..Default::default()
+            },
+        ];
+        let (mut listed, mut decoded, mut scored_total, mut queries_run) = (0, 0, 0, 0);
+        for (index, store) in stores.iter().enumerate() {
+            type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+            let build = |encode: Encoder| {
+                ServingImage::new(super::super::Backing::Owned(
+                    encode(store, 1, 1024).unwrap().unwrap(),
+                ))
+                .unwrap()
+            };
+            let (pruned, plain) = (
+                build(super::super::image::encode),
+                build(super::super::image::encode_v2),
+            );
+            assert!(pruned.has_impacts() && !plain.has_impacts());
+            let texts: Vec<String> = match index {
+                0 => include_str!("../../../CHANGELOG.md")
+                    .lines()
+                    .filter(|line| line.len() >= 20)
+                    .step_by(4)
+                    .map(str::to_owned)
+                    .collect(),
+                1 => (0..300)
+                    .map(|_| {
+                        let terms = 1 + xorshift(&mut state) % 30;
+                        (0..terms)
+                            .map(|_| {
+                                let u = (xorshift(&mut state) % 1_000_000) as f64 / 1_000_000.0;
+                                format!("w{}", (400f64.powf(u) as u64).min(400))
+                            })
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    })
+                    .collect(),
+                _ => (0..40)
+                    .map(|i| format!("w1 w2 w{} w{} nonsense", i % 7, (i * 3) % 7))
+                    .collect(),
+            };
+            for text in &texts {
+                for options in &options {
+                    let prepared = prepare_search(text, options, None).unwrap();
+                    let (fast, exact, stats) = LEXICAL_SCRATCH.with(|scratch| {
+                        let mut scratch = scratch.borrow_mut();
+                        let fast = scratch.rank(&pruned, &prepared, true);
+                        let stats = scratch.pruned.stats;
+                        let exact = scratch.rank(&plain, &prepared, true);
+                        (fast, exact, stats)
+                    });
+                    let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+                        ranked
+                            .iter()
+                            .map(|&(s, slot)| (s.to_bits(), slot))
+                            .collect()
+                    };
+                    assert_eq!(bits(&fast), bits(&exact), "{text:?}");
+                    listed += stats.blocks_listed;
+                    decoded += stats.blocks_decoded;
+                    scored_total += stats.scored;
+                    queries_run += 1;
+                }
+            }
+        }
+        assert!(queries_run > 1000 && scored_total > 0);
+        assert!(
+            decoded < listed,
+            "pruning decoded {decoded} of {listed} blocks"
+        );
+    }
+
+    /// Reports how much of a checkpoint's posting lists block-max pruning reads per query:
+    /// `WARM_PRUNE_CKPT` the `documents.ckpt`, `WARM_PRUNE_QUERIES` the harness query file.
+    #[test]
+    #[ignore = "measurement: needs WARM_PRUNE_CKPT and WARM_PRUNE_QUERIES"]
+    fn pruning_work_report() {
+        let (Ok(ckpt), Ok(queries)) = (
+            std::env::var("WARM_PRUNE_CKPT"),
+            std::env::var("WARM_PRUNE_QUERIES"),
+        ) else {
+            return;
+        };
+        let image =
+            ServingImage::new(super::super::Backing::Owned(std::fs::read(ckpt).unwrap())).unwrap();
+        let queries: Vec<Value> = serde_json::from_slice(&std::fs::read(queries).unwrap()).unwrap();
+        let options = SearchOptions {
+            k: Some(100),
+            candidate_limit: Some(100),
+            ..Default::default()
+        };
+        let mut total = [0usize; 4];
+        for query in &queries {
+            let text = query["text"].as_str().unwrap();
+            let prepared = prepare_search(text, &options, None).unwrap();
+            let stats = LEXICAL_SCRATCH.with(|scratch| {
+                let mut scratch = scratch.borrow_mut();
+                scratch.rank(&image, &prepared, true);
+                scratch.pruned.stats
+            });
+            total[0] += stats.listed;
+            total[1] += stats.blocks_listed;
+            total[2] += stats.blocks_decoded;
+            total[3] += stats.scored;
+        }
+        let n = queries.len() as f64;
+        eprintln!(
+            "queries {} per query: postings listed {:.0} blocks listed {:.0} blocks decoded {:.0} chunks scored {:.0}",
+            queries.len(),
+            total[0] as f64 / n,
+            total[1] as f64 / n,
+            total[2] as f64 / n,
+            total[3] as f64 / n
+        );
     }
 
     /// Rebuilding a checkpoint without the postings of its dead documents and then removing

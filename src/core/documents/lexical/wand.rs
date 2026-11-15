@@ -5,7 +5,7 @@ use super::execution::TopK;
 use super::*;
 use crate::core::documents::postings::{PostingCursor, PostingList, BLOCK_LEN, SUPER_LEN};
 
-pub(super) fn up(value: f64) -> f64 {
+pub(in crate::core::documents) fn up(value: f64) -> f64 {
     if value == 0.0 {
         0.0
     } else {
@@ -15,7 +15,7 @@ pub(super) fn up(value: f64) -> f64 {
 
 /// Bounds of one clause's weights under its inverse document frequency.
 #[derive(Clone, Copy)]
-pub(super) struct Bound {
+pub(in crate::core::documents) struct Bound {
     pub(super) idf: f64,
     average: f64,
     bm25: Bm25,
@@ -23,7 +23,7 @@ pub(super) struct Bound {
 }
 
 impl Bound {
-    pub(super) fn new(idf: f64, average: f64, bm25: Bm25) -> Option<Self> {
+    pub(in crate::core::documents) fn new(idf: f64, average: f64, bm25: Bm25) -> Option<Self> {
         if !idf.is_finite() || idf < 0.0 || !average.is_finite() || average < 1.0 {
             return None;
         }
@@ -49,7 +49,7 @@ impl Bound {
 
     /// A bound of the weight of any posting with at most `frequency` occurrences in a chunk
     /// of at least `words` words.
-    pub(super) fn at(self, frequency: u32, words: u32) -> f64 {
+    pub(in crate::core::documents) fn at(self, frequency: u32, words: u32) -> f64 {
         if frequency == 0 || self.idf == 0.0 {
             return 0.0;
         }
@@ -167,7 +167,7 @@ fn single_list(
     Ok(())
 }
 
-pub(super) fn sum_bound(sum: f64, clauses: usize) -> f64 {
+pub(in crate::core::documents) fn sum_bound(sum: f64, clauses: usize) -> f64 {
     up(sum * (1.0 + 2.0 * clauses as f64 * f64::EPSILON))
 }
 
