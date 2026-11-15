@@ -101,14 +101,26 @@ const BUILD_CODES_MIN_DIM: usize = 128;
 /// 0.90 and 0.95 and 1.4-1.7% more for 0.99 (benchmarks/results/qgraph_build_schedule_wl02_v1.json).
 const FIRST_PASS_EF: usize = 200;
 
+/// Candidate expansions of the standard profile's construction search. The search stops
+/// expanding once the best unexpanded candidate is farther than `BOUND_SLACK` times the
+/// `BOUND_RANK`-th best candidate in the pool (squared distances): the pool beyond that rank is
+/// kept to fill the lists, not to find the neighbours. Measured on glove-100 (distances there
+/// concentrate, so the unbounded search expands most of a 500-entry pool) and SIFT-1M.
+const BOUND_RANK: usize = 64;
+const BOUND_SLACK: f32 = 1.02;
+
 /// Insertion passes a build runs. Every profile searches the same way and prunes the same way;
 /// they differ in how many passes run and how wide the construction search is. Measured on
 /// SIFT-1M at 8 threads (benchmarks/results/qgraph_build_profiles_gcp_v1.json).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BuildProfile {
-    /// Two passes: the first at `build_ef` capped at 200, the second at `build_ef`. The
-    /// slowest build and the highest recall; the graphs of earlier releases.
+    /// Two passes at `build_ef` capped at 100 and then at `build_ef`, with a bounded
+    /// construction search (see [`BOUND_RANK`]).
     #[default]
+    Standard,
+    /// Two passes: the first at `build_ef` capped at 200, the second at `build_ef`, each
+    /// expanding its whole pool. The slowest build and the highest recall; the graphs of
+    /// earlier releases, byte for byte.
     MaxRecall,
     /// Two passes at `build_ef` capped at 100 and 300.
     High,
@@ -123,6 +135,7 @@ impl BuildProfile {
     fn passes(self, params: &BuildParams) -> Vec<(usize, f32)> {
         let cap = |ef: usize| params.build_ef.min(ef);
         match self {
+            Self::Standard => vec![(cap(100), 1.0), (params.build_ef, params.alpha)],
             Self::MaxRecall => vec![(cap(FIRST_PASS_EF), 1.0), (params.build_ef, params.alpha)],
             Self::High => vec![(cap(100), 1.0), (cap(300), params.alpha)],
             Self::Balanced => vec![(cap(100), 1.0), (cap(200), params.alpha)],
@@ -130,9 +143,15 @@ impl BuildProfile {
         }
     }
 
-    /// The profile named `name` (`max-recall`, `high`, `balanced`, `fast`), if any.
+    /// `(rank, slack)` of the construction search's expansion bound, if the profile has one.
+    fn bound(self) -> Option<(usize, f32)> {
+        matches!(self, Self::Standard).then_some((BOUND_RANK, BOUND_SLACK))
+    }
+
+    /// The profile named `name` (`standard`, `max-recall`, `high`, `balanced`, `fast`), if any.
     pub fn from_name(name: &str) -> Option<Self> {
         Some(match name {
+            "standard" => Self::Standard,
             "max-recall" => Self::MaxRecall,
             "high" => Self::High,
             "balanced" => Self::Balanced,
@@ -143,6 +162,7 @@ impl BuildProfile {
 
     pub fn name(self) -> &'static str {
         match self {
+            Self::Standard => "standard",
             Self::MaxRecall => "max-recall",
             Self::High => "high",
             Self::Balanced => "balanced",
@@ -208,7 +228,7 @@ impl Default for BuildParams {
             code_bits: 0,
             seed: 0x5EED,
             quantized_search: false,
-            profile: BuildProfile::MaxRecall,
+            profile: BuildProfile::default(),
         }
     }
 }
@@ -450,6 +470,9 @@ struct Rows<'a> {
     /// or, with `quantized`, the estimates that order the construction search's pool.
     codes: Option<&'a BuildCodes>,
     quantized: bool,
+    /// `(rank, slack)`: [`Rows::greedy_into`] stops expanding at a candidate farther than
+    /// `slack` times the `rank`-th best of the pool.
+    bound: Option<(usize, f32)>,
 }
 
 /// One 8-bit code per row (`x = scale q + e` with `|e| <= err`), giving bounds on the
@@ -753,6 +776,11 @@ impl Rows<'_> {
         expanded.clear();
         let mut cur = 0;
         while cur < pool.len() {
+            if let Some((rank, slack)) = self.bound {
+                if pool.len() >= rank && pool[cur].dist > slack * pool[rank - 1].dist {
+                    break;
+                }
+            }
             pool[cur].done = true;
             let v = pool[cur].id;
             expanded.push((pool[cur].dist, v));
@@ -1542,6 +1570,7 @@ impl Graph {
             norms: norms_opt(&self.norms),
             codes: None,
             quantized: false,
+            bound: None,
         }
     }
 
@@ -1687,6 +1716,7 @@ fn build_structure(
         norms: norms_opt(norms),
         codes: codes.as_ref(),
         quantized: params.quantized_search,
+        bound: params.profile.bound(),
     };
 
     let entry = medoid(&rows, n, metric);
@@ -1806,6 +1836,7 @@ fn upper_layers(rows: &Rows<'_>, order: &[u32], params: &BuildParams) -> Vec<Vec
             norms: norms_opt(&sub_norms),
             codes: sub_codes.as_ref(),
             quantized: params.quantized_search,
+            bound: None,
         };
         let local: Vec<u32> = (0..size as u32).collect();
         let mut g = Adjacency::new(size, UPPER_DEGREE);
@@ -2398,8 +2429,8 @@ mod tests {
         assert!(recall >= 0.9, "recall {recall}");
     }
 
-    /// Each profile builds a deterministic graph that still finds the neighbours, the named
-    /// default is the explicit `MaxRecall` schedule, and the faster profiles change the graph.
+    /// Each profile builds a deterministic graph that still finds the neighbours, the default
+    /// is the `Standard` schedule, and every other profile changes the graph.
     #[test]
     fn build_profiles_are_deterministic_and_searchable() {
         let d = 24;
@@ -2409,12 +2440,13 @@ mod tests {
             build_ef: 400,
             ..BuildParams::default()
         };
-        assert_eq!(base.profile, BuildProfile::MaxRecall);
+        assert_eq!(base.profile, BuildProfile::Standard);
         let default_hash = Graph::build(&data, d, &base)
             .expect("build")
             .structure_hash();
-        let mut seen = vec![default_hash];
+        let mut seen = Vec::new();
         for profile in [
+            BuildProfile::Standard,
             BuildProfile::MaxRecall,
             BuildProfile::High,
             BuildProfile::Balanced,
@@ -2434,9 +2466,8 @@ mod tests {
                     .expect("build")
                     .structure_hash()
             );
-            if profile == BuildProfile::MaxRecall {
+            if profile == BuildProfile::Standard {
                 assert_eq!(hash, default_hash);
-                continue;
             }
             assert!(
                 !seen.contains(&hash),
@@ -2477,6 +2508,7 @@ mod tests {
             dim: d,
             norms: None,
             quantized: false,
+            bound: None,
             codes: None,
         };
         let mut rng = SplitMix(11);
@@ -2539,6 +2571,7 @@ mod tests {
                         norms: norms_opt(&norms),
                         codes,
                         quantized: false,
+                        bound: None,
                     };
                     let order: Vec<u32> = (0..n as u32).rev().collect();
                     let mut graph = Adjacency::new(n, 12);
@@ -2564,6 +2597,7 @@ mod tests {
             norms: norms_opt(&norms),
             codes: None,
             quantized: false,
+            bound: None,
         };
         let order: Vec<u32> = (0..n as u32).rev().collect();
         let rank = rows.locality_rank(&order);
@@ -2623,6 +2657,7 @@ mod tests {
                 degree: 16,
                 build_ef: 48,
                 seed: 7,
+                profile: BuildProfile::MaxRecall,
                 ..BuildParams::default()
             };
             let g = Graph::build(&data, d, &params).expect("build");

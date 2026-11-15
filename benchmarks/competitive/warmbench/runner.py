@@ -308,9 +308,10 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
 WARM_ANN_BUILDS = {
     "angular": {"index": "vertex", "degree": 64, "build_ef": 500, "residual": True, "residual_bits": 8, "vertex_bits": 4,
                 "id_bytes": 3, "align_rows": True, "reorder": True, "rerank": "64", "quantized_search": True,
-                "ef": "64,96,128,192,256,384,512,736,1024",
+                "ef": "64,96,128,192,256,384,512,736,1024,1536,2048",
                 "source": "accepted configuration in benchmarks/results/qgraph_pool_paired_x86_glove_v4.json (tuned on a train holdout, not on these queries); "
-                          "quantized construction search per benchmarks/results/ann_modal_confirm_v1.json (equal recall, 2.3x faster build)"},
+                          "quantized construction search per benchmarks/results/ann_modal_confirm_v1.json (equal recall, 2.3x faster build); "
+                          "the default (standard) build profile bounds the construction search, which needs ef up to 2048 to reach recall 0.99 here"},
     # 8-bit vertex codes: with 4-bit codes the traversal misses true SIFT neighbours (recall stops
     # at 0.990 even re-ranking 128 candidates; 8-bit reaches 0.9999). Degree and build_ef by the
     # fewest estimates per query at recall 0.99 over degree {32, 48, 64} x build_ef {200, 500}.
