@@ -15,7 +15,7 @@ import sys
 import time
 from pathlib import Path
 
-from . import SCHEMA_VERSION, data, envs, jars, rawdata, registry, textdata
+from . import SCHEMA_VERSION, common, data, envs, jars, rawdata, registry, textdata
 from . import common
 from .common import T0_PLACEHOLDER, CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, pass_summary, run_measured, write_json
 
@@ -128,6 +128,32 @@ def _parse_result(stdout):
     raise RuntimeError("worker printed no RESULT line: " + stdout[-500:])
 
 
+LOAD_LOG = []
+REPEATS = os.environ.get("WARM_BENCH_REPEATS", "2")
+MAX_FOREIGN_PCT = float(os.environ.get("WARM_BENCH_MAX_FOREIGN_PCT", "2"))
+MAX_ATTEMPTS = 6
+
+
+def _clean(label, run):
+    """Run one pinned serve phase; reject and rerun it when anything but the benchmark process used more than
+    MAX_FOREIGN_PCT of the machine's CPU capacity or of the pinned core during its window."""
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        out = run()
+        load = common.LAST_LOAD
+        if load is None:
+            return out
+        core = None
+        if PIN["cpus"] and PIN["cpus"].isdigit():
+            core = max(0.0, load["core_busy_s"].get("cpu" + PIN["cpus"], 0.0) - load["child_cpu_s"]) / load["window_s"] * 100
+        worst = max(load["foreign_machine_pct_of_capacity"], core or 0.0)
+        ok = worst <= MAX_FOREIGN_PCT
+        LOAD_LOG.append({"phase": label, "attempt": attempt, "accepted": ok, "foreign_pinned_core_pct": core, "worst_foreign_pct": worst, **load})
+        log(f"load {label} attempt {attempt}: foreign machine {load['foreign_machine_pct_of_capacity']:.2f}% core {core if core is None else round(core, 2)}% {'ok' if ok else 'REJECTED'}")
+        if ok:
+            return out
+    raise RuntimeError(f"{label}: foreign CPU above {MAX_FOREIGN_PCT}% in {MAX_ATTEMPTS} attempts")
+
+
 def _worker(system, args, threads_env, timeout=None):
     timeout = timeout or _LIMITS["timeout"]
     env_name = registry.SYSTEMS[system]["env"]
@@ -162,7 +188,8 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                             "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems)},
                "facts": registry.FACTS, "timing_boundary": registry.TIMING_BOUNDARY, "not_run": registry.NOT_RUN, "systems": {}, "skipped": {}}
     rounds = spec["rounds"]
-    _LIMITS["timeout"] = spec.get("timeout_s", 7200)
+    LOAD_LOG.clear()
+    _LIMITS["timeout"] = int(os.environ.get("WARM_BENCH_TIMEOUT_S", spec.get("timeout_s", 7200)))
     big = meta["n_train"] > 200_000
     env1 = {**SINGLE_THREAD}
     envb = {k: str(threads) for k in SINGLE_THREAD}
@@ -210,7 +237,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                 continue
             if system == registry.WARM:
                 try:
-                    state[key]["serves"].append(rawdata.split_serve_round(_warm_ann_round(directory, meta, state[key]["workdir"]), raw, f"{system}/{build_id}/round{r}"))
+                    state[key]["serves"].append(rawdata.split_serve_round(_clean(f"{system}/{build_id}/round{r}", lambda: _warm_ann_round(directory, meta, state[key]["workdir"])), raw, f"{system}/{build_id}/round{r}"))
                 except Exception as error:
                     results["skipped"][f"{system}:{build_id}"] = str(error)[-600:]
                     log(f"warm round failed: {str(error)[-300:]}")
@@ -219,12 +246,14 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                 merged = None
                 for vi, variant in enumerate(_adapter_class(system).VARIANTS.get(build_id) or [None]):
                     args = ["serve", "--system", system, "--build", build_id, "--data", str(directory),
-                            "--workdir", str(state[key]["workdir"]), "--repeats", "2"]
+                            "--workdir", str(state[key]["workdir"]), "--repeats", REPEATS]
                     if big and system in QUERY_CAPS:
                         args += ["--queries", str(QUERY_CAPS[system])]
+                    elif os.environ.get("WARM_BENCH_SERVE_QUERIES"):  # screening runs: a prefix of the query file
+                        args += ["--queries", os.environ["WARM_BENCH_SERVE_QUERIES"]]
                     if variant:
                         args += ["--variant", json.dumps(variant)]
-                    one = rawdata.split_serve_round(_worker(system, args, env_cpp if system == "hnswlib-cpp" else env1), raw, f"{system}/{build_id}/round{r}/v{vi}")
+                    one = rawdata.split_serve_round(_clean(f"{system}/{build_id}/round{r}/v{vi}", lambda: _worker(system, args, env_cpp if system == "hnswlib-cpp" else env1)), raw, f"{system}/{build_id}/round{r}/v{vi}")
                     if merged is None:
                         merged = one
                     else:
@@ -238,7 +267,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                 state.pop(key, None)
     # --- ops, once per system on a copy of the first build
     seen = set()
-    for (system, build_id), st in list(state.items()):
+    for (system, build_id), st in ([] if os.environ.get("WARM_BENCH_SKIP_OPS") else list(state.items())):
         if system in seen:
             continue
         seen.add(system)
@@ -265,6 +294,8 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
         if "ops" in st:
             entry["ops"] = st["ops"]
     _attach_versions_and_footprints(results)
+    results["load_log"] = list(LOAD_LOG)
+    results["protocol"]["load_gate"] = {"max_foreign_pct": MAX_FOREIGN_PCT, "basis": "per serve phase: machine CPU busy time minus the benchmark child's own CPU, as a percent of machine capacity and of the pinned core; a phase over the limit is rerun", "repeats_per_config": REPEATS}
     if system_warm := results["systems"].get(registry.WARM):
         system_warm["install"] = warm_install_facts([warm_binary("public-bench")])
     out_path = out_path or _out_dir(spec) / f"{spec['name']}-ann-{dataset}-n{meta['n_train']}-{results['hardware']['class']}.json"
@@ -333,7 +364,7 @@ def _warm_ann_round(directory, meta, workdir):
     out.unlink(missing_ok=True)
     build = WARM_ANN_BUILDS[meta["metric"]]
     cmd = [str(warm_binary("public-bench")), "ann-updates", "--action", "serve", "--index", str(workdir / "index.updates"),
-           "--data", str(directory), "--out", str(out), "--ef", build["ef"], "--rerank", build["rerank"], "--repeats", "2"]
+           "--data", str(directory), "--out", str(out), "--ef", build["ef"], "--rerank", build["rerank"], "--repeats", REPEATS]
     stdout, stderr, wall, peak = run_measured(_pin(cmd, "serve"), env=SINGLE_THREAD, timeout=14400)
     t0 = common.LAST_T0_NS
     raw = json.loads(out.read_text())

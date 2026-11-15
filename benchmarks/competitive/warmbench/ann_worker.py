@@ -24,7 +24,7 @@ T_IMPORT = time.time_ns()
 import numpy as np  # noqa: E402
 
 K = 10
-EF_SWEEP = [10, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024]
+EF_SWEEP = [e for e in (10, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048) if e <= int(os.environ.get("WARM_BENCH_EF_MAX", "1024"))]
 NPROBE_SWEEP = [1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 
@@ -155,7 +155,7 @@ class Warm(Adapter):
 class Hnswlib(Adapter):
     # m32e500 and m48e500 match the build effort of the WARM graph (degree 64 at level 0 for
     # M=32, construction ef 500); analysis reports the best build per target recall.
-    BUILDS = {"m16": {"M": 16, "ef_construction": 200}, "m32": {"M": 32, "ef_construction": 200},
+    BUILDS = {"m16": {"M": 16, "ef_construction": 200}, "m32": {"M": 32, "ef_construction": 200}, "m16e500": {"M": 16, "ef_construction": 500},
               "m32e500": {"M": 32, "ef_construction": 500}, "m48e500": {"M": 48, "ef_construction": 500}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
     PERSISTENT_FLUSH = True
@@ -265,7 +265,7 @@ class FaissBase(Adapter):
 
 
 class FaissHnsw(FaissBase):
-    BUILDS = {"m16": {"M": 16, "efConstruction": 200}, "m32": {"M": 32, "efConstruction": 200},
+    BUILDS = {"m16": {"M": 16, "efConstruction": 200}, "m32": {"M": 32, "efConstruction": 200}, "m16e500": {"M": 16, "efConstruction": 500},
               "m32e500": {"M": 32, "efConstruction": 500}, "m48e500": {"M": 48, "efConstruction": 500}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
 
@@ -351,10 +351,38 @@ class FaissIvfpq(FaissBase):
         self.index.add_with_ids(vectors, np.asarray(ids, dtype=np.int64))
 
 
+class FaissIvfpqFs(FaissBase):
+    """FAISS IVFPQFastScan with exact refinement: the ann-benchmarks faiss-ivfpqfs construction
+    (`IVF{nlist},PQ{dim//2}x4fs` through index_factory, wrapped in a refine index over the raw vectors),
+    nlist from its config.yml (512, 1204, 2048, 4096; 2048 and 4096 here), nprobe and k_factor sweeps
+    from the same file. Every swept point refines (k_factor 10, 100 or 1000), so the refine store is
+    part of the index size and serving RSS."""
+    BUILDS = {"ab_nl2048": {"nlist": 2048}, "ab_nl4096": {"nlist": 4096}}
+    SWEEPS = {k: [{"nprobe": p, "k_factor": f} for f in (10, 100, 1000) for p in (1, 5, 10, 20, 50, 100, 200)] for k in BUILDS}
+    def build(self, train, params):
+        import faiss
+        faiss.omp_set_num_threads(self.threads)
+        metric = faiss.METRIC_INNER_PRODUCT if self.angular else faiss.METRIC_L2
+        ivf = faiss.index_factory(self.dim, f"IVF{params['nlist']},PQ{self.dim // 2}x4fs", metric)
+        ivf.train(train)
+        flat = faiss.IndexFlatIP(self.dim) if self.angular else faiss.IndexFlatL2(self.dim)
+        index = faiss.IndexRefine(ivf, flat)
+        index.add(train)
+        self._write(index)
+    def configure(self, sp):
+        import faiss
+        faiss.downcast_index(self.index.base_index).nprobe = sp["nprobe"]
+        self.index.k_factor = sp["k_factor"]
+    def replace(self, ids, vectors):
+        raise Unsupported("IndexRefine remove_ids is not defined for the refine store")
+    def delete(self, ids):
+        raise Unsupported("IndexRefine remove_ids is not defined for the refine store")
 class Usearch(Adapter):
     BUILDS = {"m16": {"connectivity": 16, "expansion_add": 200, "dtype": "f32"},
               "m32": {"connectivity": 32, "expansion_add": 200, "dtype": "f32"},
-              "m16_i8": {"connectivity": 16, "expansion_add": 200, "dtype": "i8"}}
+              "m16_i8": {"connectivity": 16, "expansion_add": 200, "dtype": "i8"},
+              "m16e500": {"connectivity": 16, "expansion_add": 500, "dtype": "f32"},
+              "m32e500": {"connectivity": 32, "expansion_add": 500, "dtype": "f32"}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
     PERSISTENT_FLUSH = True
 
@@ -657,7 +685,7 @@ class Duckdb(Adapter):
 
 SYSTEMS = {
     "warm": Warm,
-    "hnswlib": Hnswlib, "faiss-hnsw": FaissHnsw, "faiss-flat": FaissFlat, "faiss-ivfpq": FaissIvfpq,
+    "hnswlib": Hnswlib, "faiss-hnsw": FaissHnsw, "faiss-flat": FaissFlat, "faiss-ivfpq": FaissIvfpq, "faiss-ivfpqfs": FaissIvfpqFs,
     "usearch": Usearch, "annoy": Annoy, "sqlite-vec": SqliteVec, "lancedb": Lancedb, "chroma": Chroma,
     "qdrant-local": Qdrant, "milvus-lite": Milvus, "duckdb-vss": Duckdb,
 }
