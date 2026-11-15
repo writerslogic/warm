@@ -1,0 +1,26 @@
+base         dev   multi 0.838 tempo 0.994 open- 0.705 singl 0.976 ALL 0.938 | items 200 turns 200 tok 10455
+O            dev   multi 0.838 tempo 0.994 open- 0.705 singl 0.976 ALL 0.938 | items 200 turns 200 tok 11055
+M_g0_T250    dev   multi 0.873 tempo 0.994 open- 0.818 singl 0.990 ALL 0.959 | items 138 turns 250 tok 12224
+M_g0_T300    dev   multi 0.908 tempo 0.994 open- 0.841 singl 0.995 ALL 0.970 | items 144 turns 296 tok 13944
+M_g0_T400    dev   multi 0.958 tempo 0.994 open- 0.864 singl 0.995 ALL 0.980 | items 129 turns 377 tok 16674
+M_g1_T250    dev   multi 0.887 tempo 0.994 open- 0.750 singl 0.993 ALL 0.959 | items 73 turns 250 tok 11611
+M_g1_T300    dev   multi 0.901 tempo 0.994 open- 0.818 singl 0.993 ALL 0.966 | items 73 turns 300 tok 13395
+M_g1_T400    dev   multi 0.937 tempo 1.000 open- 0.932 singl 0.998 ALL 0.983 | items 65 turns 396 tok 16711
+
+base         held  multi 0.836 tempo 0.976 open- 0.792 singl 0.988 ALL 0.946 | items 200 turns 200 tok 10492
+O            held  multi 0.836 tempo 0.976 open- 0.792 singl 0.988 ALL 0.946 | items 200 turns 200 tok 11092
+M_g0_T250    held  multi 0.921 tempo 0.982 open- 0.854 singl 0.988 ALL 0.966 | items 147 turns 249 tok 12303
+M_g0_T300    held  multi 0.943 tempo 0.982 open- 0.875 singl 0.988 ALL 0.972 | items 157 turns 291 tok 13911
+M_g0_T400    held  multi 0.971 tempo 0.994 open- 0.896 singl 0.988 ALL 0.981 | items 157 turns 365 tok 16549
+M_g1_T250    held  multi 0.893 tempo 0.976 open- 0.833 singl 0.986 ALL 0.957 | items 78 turns 250 tok 11644
+M_g1_T300    held  multi 0.964 tempo 0.988 open- 0.854 singl 0.988 ALL 0.976 | items 80 turns 300 tok 13403
+M_g1_T400    held  multi 0.993 tempo 0.988 open- 0.896 singl 0.988 ALL 0.983 | items 75 turns 400 tok 16787
+
+base         all   multi 0.837 tempo 0.984 open- 0.750 singl 0.982 ALL 0.942 | items 200 turns 200 tok 10474
+O            all   multi 0.837 tempo 0.984 open- 0.750 singl 0.982 ALL 0.942 | items 200 turns 200 tok 11074
+M_g0_T250    all   multi 0.897 tempo 0.988 open- 0.837 singl 0.989 ALL 0.963 | items 143 turns 249 tok 12264
+M_g0_T300    all   multi 0.926 tempo 0.988 open- 0.859 singl 0.992 ALL 0.971 | items 150 turns 294 tok 13928
+M_g0_T400    all   multi 0.965 tempo 0.994 open- 0.880 singl 0.992 ALL 0.980 | items 143 turns 371 tok 16611
+M_g1_T250    all   multi 0.890 tempo 0.984 open- 0.793 singl 0.989 ALL 0.958 | items 76 turns 250 tok 11628
+M_g1_T300    all   multi 0.933 tempo 0.991 open- 0.837 singl 0.990 ALL 0.971 | items 77 turns 300 tok 13399
+M_g1_T400    all   multi 0.965 tempo 0.994 open- 0.913 singl 0.993 ALL 0.983 | items 70 turns 398 tok 16749

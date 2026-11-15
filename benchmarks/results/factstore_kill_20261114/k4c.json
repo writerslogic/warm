@@ -1,0 +1,596 @@
+{
+ "R=6|u=1|N=200|bits_per_rec=6": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.125
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.41041666666666665
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.19583333333333333
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.21458333333333335,
+   "ci95": [
+    -0.2583854166666667,
+    -0.17083333333333334
+   ]
+  }
+ },
+ "R=6|u=1|N=200|bits_per_rec=12": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.7645833333333334
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.4708333333333333
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.29375,
+   "ci95": [
+    -0.3291666666666667,
+    -0.2583333333333333
+   ]
+  }
+ },
+ "R=6|u=1|N=200|bits_per_rec=24": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9979166666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.8208333333333333
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.17708333333333331,
+   "ci95": [
+    -0.22291666666666668,
+    -0.13541666666666663
+   ]
+  }
+ },
+ "R=6|u=1|N=200|bits_per_rec=36": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.75
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9979166666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9645833333333333
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.03333333333333334,
+   "ci95": [
+    -0.05625000000000001,
+    -0.012499999999999997
+   ]
+  }
+ },
+ "R=6|u=1|N=200|bits_per_rec=48": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 1.0
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9895833333333334
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.010416666666666685,
+   "ci95": [
+    -0.018750000000000017,
+    -0.00208333333333334
+   ]
+  }
+ },
+ "R=6|u=1|N=200|bits_per_rec=60": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 1.0
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 1.0
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "R=6|u=1|N=200|bits_per_rec=96": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9979166666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 1.0
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "R=6|u=1|N=800|bits_per_rec=6": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.125
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.3833333333333333
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.19166666666666665
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.19166666666666665,
+   "ci95": [
+    -0.23124999999999998,
+    -0.15416666666666667
+   ]
+  }
+ },
+ "R=6|u=1|N=800|bits_per_rec=12": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.7645833333333334
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.50625
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.2583333333333333,
+   "ci95": [
+    -0.29374999999999996,
+    -0.22499999999999998
+   ]
+  }
+ },
+ "R=6|u=1|N=800|bits_per_rec=24": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9916666666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.8395833333333333
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.1520833333333333,
+   "ci95": [
+    -0.17291666666666664,
+    -0.13124999999999998
+   ]
+  }
+ },
+ "R=6|u=1|N=800|bits_per_rec=36": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.75
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9958333333333333
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9770833333333333
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.01875000000000003,
+   "ci95": [
+    -0.03333333333333337,
+    -0.006250000000000019
+   ]
+  }
+ },
+ "R=6|u=1|N=800|bits_per_rec=48": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9916666666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9958333333333333
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.00416666666666668,
+   "ci95": [
+    -0.010416666666666699,
+    0.0
+   ]
+  }
+ },
+ "R=6|u=1|N=800|bits_per_rec=60": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9979166666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 1.0
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "R=6|u=1|N=800|bits_per_rec=96": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9958333333333333
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 1.0
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "R=6|u=2|N=200|bits_per_rec=6": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.125
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.09791666666666668
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.018750000000000003
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.10625000000000001,
+   "ci95": [
+    -0.11458333333333334,
+    -0.09791666666666668
+   ]
+  }
+ },
+ "R=6|u=2|N=200|bits_per_rec=12": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.25625
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.07916666666666666
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.17708333333333334,
+   "ci95": [
+    -0.25416666666666665,
+    -0.11458333333333333
+   ]
+  }
+ },
+ "R=6|u=2|N=200|bits_per_rec=24": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.4291666666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.34791666666666665
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.15208333333333335,
+   "ci95": [
+    -0.18958333333333335,
+    -0.11249999999999999
+   ]
+  }
+ },
+ "R=6|u=2|N=200|bits_per_rec=36": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.75
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.6666666666666666
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.6770833333333333
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.07291666666666669,
+   "ci95": [
+    -0.11041666666666666,
+    -0.03541666666666671
+   ]
+  }
+ },
+ "R=6|u=2|N=200|bits_per_rec=48": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.8500000000000001
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.8958333333333333
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.10416666666666667,
+   "ci95": [
+    -0.12916666666666665,
+    -0.07916666666666669
+   ]
+  }
+ },
+ "R=6|u=2|N=200|bits_per_rec=60": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 1.0
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.95625
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.04375,
+   "ci95": [
+    -0.06458333333333333,
+    -0.02291666666666667
+   ]
+  }
+ },
+ "R=12|u=2|N=200|bits_per_rec=24": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.7291666666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.3666666666666667
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.36250000000000004,
+   "ci95": [
+    -0.42083333333333334,
+    -0.30833333333333335
+   ]
+  }
+ },
+ "R=12|u=2|N=200|bits_per_rec=36": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.375
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.8937499999999999
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.6625000000000001
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.23125,
+   "ci95": [
+    -0.25625,
+    -0.20208333333333334
+   ]
+  }
+ },
+ "R=12|u=2|N=200|bits_per_rec=48": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.975
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.875
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.09999999999999998,
+   "ci95": [
+    -0.1333333333333333,
+    -0.06666666666666662
+   ]
+  }
+ },
+ "R=12|u=2|N=200|bits_per_rec=60": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.625
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 1.0
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.96875
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.03125000000000003,
+   "ci95": [
+    -0.05000000000000003,
+    -0.01666666666666669
+   ]
+  }
+ },
+ "R=12|u=1|N=200|bits_per_rec=12": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.125
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.8520833333333334
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.4916666666666667
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.36041666666666666,
+   "ci95": [
+    -0.41874999999999996,
+    -0.30619791666666646
+   ]
+  }
+ },
+ "R=12|u=1|N=200|bits_per_rec=24": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 1.0
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.8583333333333334
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.14166666666666666,
+   "ci95": [
+    -0.17708333333333331,
+    -0.11041666666666668
+   ]
+  }
+ },
+ "R=12|u=1|N=200|bits_per_rec=48": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "pat": {
+   "arm": "pat",
+   "acc": 0.9958333333333333
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9875
+  },
+  "strongest_baseline": "pat",
+  "vsa_minus_strongest": {
+   "mean": -0.008333333333333345,
+   "ci95": [
+    -0.018750000000000044,
+    0.00416666666666668
+   ]
+  }
+ }
+}

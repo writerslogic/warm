@@ -1,0 +1,7 @@
+questions 778 of 1540; conversations [5, 6, 7, 8, 9]
+overall      n= 778 new  92.3% old  92.4% Mem0  93.1% | vs Mem0  -0.8 pp [ -2.4,  +0.9] tied, point estimate behind | vs old  -0.1 [ -1.4,  +1.2] | old vs Mem0  -0.6 [ -2.3,  +1.0]
+multi-hop    n= 140 new  92.1% old  90.7% Mem0  96.4% | vs Mem0  -4.3 pp [ -7.9,  -1.4] behind | vs old  +1.4 [ -2.9,  +5.7] | old vs Mem0  -5.7 [-10.0,  -1.4]
+temporal     n= 165 new  89.7% old  92.7% Mem0  92.1% | vs Mem0  -2.4 pp [ -6.1,  +1.2] tied, point estimate behind | vs old  -3.0 [ -6.1,  +0.0] | old vs Mem0  +0.6 [ -3.0,  +4.2]
+open-domain  n=  50 new  76.0% old  74.0% Mem0  74.0% | vs Mem0  +2.0 pp [ -8.0, +12.0] tied, point estimate ahead | vs old  +2.0 [ -4.0, +10.0] | old vs Mem0  +0.0 [ -8.0,  +8.0]
+single-hop   n= 423 new  95.3% old  95.0% Mem0  94.6% | vs Mem0  +0.7 pp [ -1.4,  +2.8] tied, point estimate ahead | vs old  +0.2 [ -0.9,  +1.4] | old vs Mem0  +0.5 [ -1.7,  +2.6]
+empty answers new: 5  old on same questions: 6  Mem0: 0

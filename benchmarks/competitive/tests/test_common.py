@@ -118,6 +118,15 @@ def test_run_measured_raises_on_failure_and_on_timeout():
         run_measured(["sleep", "30"], timeout=1)
 
 
+def test_cpu_model_falls_back_to_lscpu_when_cpuinfo_has_no_model_name(monkeypatch):
+    """arm64 Linux /proc/cpuinfo carries no `model name`; the hardware class must not collapse to the bare architecture."""
+    real_read_text = Path.read_text
+    monkeypatch.setattr(common.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(Path, "read_text", lambda self, *a, **k: "processor\t: 0\nBogoMIPS\t: 50.00\n" if str(self) == "/proc/cpuinfo" else real_read_text(self, *a, **k))
+    monkeypatch.setattr(common.subprocess, "run", lambda *a, **k: type("R", (), {"stdout": "Architecture: aarch64\nModel name: Neoverse-N1\n"})())
+    assert common.cpu_model() == "Neoverse-N1"
+
+
 def test_paired_bootstrap_resolves_a_small_consistent_gain_the_unpaired_intervals_cannot():
     """Per-query scores vary widely across queries but the second system beats the first by 0.01 on every query: the
     paired difference excludes 0 while the separate intervals of the two means overlap."""

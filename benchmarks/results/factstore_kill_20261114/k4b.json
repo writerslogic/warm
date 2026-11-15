@@ -1,0 +1,485 @@
+{
+ "N=200|bits_mul=0.0625": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.0625
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.004501946699862028
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.0975
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.035,
+   "ci95": [
+    0.015,
+    0.05800000000000001
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.13235883274163707
+ },
+ "N=200|bits_mul=0.125": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.125
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.00621861086339412
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.215
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.09,
+   "ci95": [
+    0.07249999999999998,
+    0.10799999999999998
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.2192722708510425
+ },
+ "N=200|bits_mul=0.25": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.010008568600841842
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.48250000000000004
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.23249999999999998,
+   "ci95": [
+    0.205,
+    0.26
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.3681955831416571
+ },
+ "N=200|bits_mul=0.5": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k3",
+   "acc": 0.026550834118444822
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.843
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.3429999999999999,
+   "ci95": [
+    0.33249999999999996,
+    0.354
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.6195223503050153
+ },
+ "N=200|bits_mul=0.75": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.75
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k4",
+   "acc": 0.06925696559614877
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9560000000000001
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.20600000000000002,
+   "ci95": [
+    0.1915,
+    0.219
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.8316011007175359
+ },
+ "N=200|bits_mul=1.0": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k6",
+   "acc": 0.18152411061161067
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.993
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.007000000000000006,
+   "ci95": [
+    -0.01200000000000001,
+    -0.0030000000000000027
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.999999
+ },
+ "N=200|bits_mul=2.0": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k8",
+   "acc": 0.9278333333333334
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 1.0
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.999999
+ },
+ "N=800|bits_mul=0.0625": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.0625
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.004509951609451364
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.10049999999999999
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.038,
+   "ci95": [
+    0.027500000000000004,
+    0.0495
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.13235883274163707
+ },
+ "N=800|bits_mul=0.125": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.125
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.006160287186699599
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.2105
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.08549999999999999,
+   "ci95": [
+    0.07150000000000001,
+    0.1
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.2192722708510425
+ },
+ "N=800|bits_mul=0.25": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.009950150160015086
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.49700000000000005
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.24700000000000003,
+   "ci95": [
+    0.22649999999999998,
+    0.265
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.3681955831416571
+ },
+ "N=800|bits_mul=0.5": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k3",
+   "acc": 0.026703637604808345
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.853
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.353,
+   "ci95": [
+    0.336,
+    0.3675
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.6195223503050153
+ },
+ "N=800|bits_mul=0.75": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.75
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k4",
+   "acc": 0.06896061983645836
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9620000000000001
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.21199999999999997,
+   "ci95": [
+    0.20349999999999993,
+    0.21999999999999997
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.8316011007175359
+ },
+ "N=800|bits_mul=1.0": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k6",
+   "acc": 0.1822656746031746
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9934999999999998
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.006500000000000006,
+   "ci95": [
+    -0.010000000000000009,
+    -0.0030000000000000027
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.999999
+ },
+ "N=800|bits_mul=2.0": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k8",
+   "acc": 0.9254166666666667
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 1.0
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.999999
+ },
+ "N=1600|bits_mul=0.0625": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.0625
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.004516161107027803
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.08249999999999999
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.02,
+   "ci95": [
+    0.0125,
+    0.026500000000000003
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.13235883274163707
+ },
+ "N=1600|bits_mul=0.125": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.125
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.00620940035309221
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.21399999999999997
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.089,
+   "ci95": [
+    0.07350000000000001,
+    0.1035
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.2192722708510425
+ },
+ "N=1600|bits_mul=0.25": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.25
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k1",
+   "acc": 0.009913394312202475
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.4885
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.2385,
+   "ci95": [
+    0.215,
+    0.259
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.3681955831416571
+ },
+ "N=1600|bits_mul=0.5": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.5
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k3",
+   "acc": 0.026531511817600217
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.8370000000000001
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.3369999999999999,
+   "ci95": [
+    0.33199999999999996,
+    0.34199999999999997
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.6195223503050153
+ },
+ "N=1600|bits_mul=0.75": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 0.75
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k4",
+   "acc": 0.06886532475532367
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9625
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.2125,
+   "ci95": [
+    0.2015,
+    0.2225
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.8316011007175359
+ },
+ "N=1600|bits_mul=1.0": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k6",
+   "acc": 0.18285016233766235
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 0.9935
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": -0.006500000000000006,
+   "ci95": [
+    -0.01200000000000001,
+    -0.0010000000000000009
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.999999
+ },
+ "N=1600|bits_mul=2.0": {
+  "table_subset": {
+   "arm": "table_subset",
+   "acc": 1.0
+  },
+  "bloomtriples": {
+   "arm": "bloomtriples|k8",
+   "acc": 0.932
+  },
+  "vsa": {
+   "arm": "vsa|w1|k1.0",
+   "acc": 1.0
+  },
+  "strongest_baseline": "table_subset",
+  "vsa_minus_strongest": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "rate_distortion_ceiling_acc": 0.999999
+ }
+}

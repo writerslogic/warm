@@ -372,7 +372,7 @@ def _attach_versions_and_footprints(results):
             entry["version"] = {"tantivy": registry.TANTIVY_CRATE, "rustc": subprocess.run(["rustc", "--version"], capture_output=True, text=True).stdout.strip()}
             entry["install"] = warm_install_facts([warm_binary("competitive_text_tantivy", example=True)], crates=False)
             continue
-        if system in ("lucene", "lucene-docs", "lucene-prev"):
+        if system in ("lucene", "lucene-docs", "lucene-dv-docs", "lucene-prev"):
             version = jars.PREVIOUS if system == "lucene-prev" else jars.VERSION
             entry["version"] = {"lucene": version, "jvm": jars.java_version()}
             entry["install"] = jars.footprint(version)
@@ -475,7 +475,7 @@ def run_text(dataset, spec, systems, out_path=None):
             except Exception as error:
                 results["skipped"][system] = str(error)[-600:]
     for system in live:
-        base = system.removesuffix("-docs") if system.endswith("-docs") else registry.WARM_LEXICAL_API if system in registry.WARM_TEXT_STORED else None
+        base = "lucene" if system == "lucene-dv-docs" else system.removesuffix("-docs") if system.endswith("-docs") else registry.WARM_LEXICAL_API if system in registry.WARM_TEXT_STORED else None
         if base in first_rows and system in first_rows:
             verification["pairs"][system] = {"ids_row": base} | _pair_ids(first_rows[system], first_rows[base])
     results["verification"] = verification
@@ -531,11 +531,11 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None, extra=()):
             cmd += ["--stored", "true", "--docstore", registry.TANTIVY_DOCSTORE]
             if phase == "serve":
                 cmd += ["--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE)]
-    elif system in ("lucene", "lucene-docs", "lucene-prev"):
+    elif system in ("lucene", "lucene-docs", "lucene-dv-docs", "lucene-prev"):
         classpath, _ = jars.ensure(jars.PREVIOUS if system == "lucene-prev" else jars.VERSION)
         cmd = ["java", *registry.LUCENE_JVM_FLAGS[phase], "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
         if stored:
-            cmd += ["english", "stored"]
+            cmd += ["english", "stored-dv" if system == "lucene-dv-docs" else "stored"]
     else:
         python = envs.ensure(registry.SYSTEMS[system]["env"])
         cmd = [str(python), "-I", str(WORKER_DIR / "text_worker.py"), phase, "--system", system, "--input", str(input_path),
@@ -578,16 +578,36 @@ def _check_documents(rows, corpus):
     return counts
 
 
+def _tie_order_only(docs_hits, ids_hits):
+    """True when two ranked lists carry the same scores position by position and differ only in the order of hits that share
+    a score. The last score group may hold different ids when the list is cut inside it: both rows kept an arbitrary part of the tie."""
+    if len(docs_hits) != len(ids_hits) or [h["lexicalScore"] for h in docs_hits] != [h["lexicalScore"] for h in ids_hits]:
+        return False
+    start = 0
+    while start < len(docs_hits):
+        end = start
+        while end < len(docs_hits) and docs_hits[end]["lexicalScore"] == docs_hits[start]["lexicalScore"]:
+            end += 1
+        same = {h["documentId"] for h in docs_hits[start:end]} == {h["documentId"] for h in ids_hits[start:end]}
+        if not same and end < len(docs_hits):
+            return False
+        start = end
+    return True
+
+
 def _pair_ids(docs_rows, ids_rows):
-    """Queries whose ordered top-100 id list differs between an engine's documents row and its ids row, and the largest score gap."""
-    differing, gap = 0, 0.0
+    """Queries whose ordered top-100 id list differs between an engine's documents row and its ids row, and the largest score gap.
+    A difference confined to the order of equal-score hits is counted apart: neither order is wrong."""
+    differing, tie_order, gap = 0, 0, 0.0
     for d, i in zip(docs_rows, ids_rows):
         a, b = [h["documentId"] for h in d["results"]], [h["documentId"] for h in i["results"]]
-        if a != b or d["id"] != i["id"]:
+        if d["id"] == i["id"] and a != b and _tie_order_only(d["results"], i["results"]):
+            tie_order += 1
+        elif a != b or d["id"] != i["id"]:
             differing += 1
         else:
             gap = max([gap] + [abs(x["lexicalScore"] - y["lexicalScore"]) for x, y in zip(d["results"], i["results"])])
-    return {"queries": len(docs_rows), "queries_with_different_id_lists": differing, "max_abs_score_gap": gap}
+    return {"queries": len(docs_rows), "queries_with_different_id_lists": differing, "queries_differing_only_in_tie_order": tie_order, "max_abs_score_gap": gap}
 
 
 def _quality(rows, qrels):
