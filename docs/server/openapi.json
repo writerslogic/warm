@@ -966,6 +966,38 @@
         ],
         "type": "object"
       },
+      "IdMatch": {
+        "description": "One vector match without stored text or metadata.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "score": {
+            "description": "Cosine similarity.",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "score"
+        ],
+        "type": "object"
+      },
+      "IdMatches": {
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/IdMatch"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "matches"
+        ],
+        "type": "object"
+      },
       "IdRequest": {
         "description": "`get` and `history` retain their legacy acceptance of extra request fields.",
         "properties": {
@@ -3379,6 +3411,113 @@
           }
         ],
         "summary": "Nearest documents to a vector, best first, with exact cosine scores.",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/v1/query/vector": {
+      "post": {
+        "operationId": "queryVector",
+        "parameters": [
+          {
+            "description": "Tenant whose store is used: 1..=64 of [A-Za-z0-9_-]. Defaults to the key's only tenant, else \"default\".",
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "1..=--max-top-k (default 10).",
+            "in": "query",
+            "name": "top_k",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Beam width of the graph query, 1..=4096 (default --query-ef).",
+            "in": "query",
+            "name": "ef",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "auto (default), exact or graph.",
+            "in": "query",
+            "name": "index",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Keep documents whose id is an integer at least this large.",
+            "in": "query",
+            "name": "id_gte",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Keep documents whose id is an integer smaller than this.",
+            "in": "query",
+            "name": "id_lt",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "description": "Exactly --input-dim * 4 bytes: little-endian f32 values",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdMatches"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error (RFC 9457 problem details)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Nearest documents to a vector sent as the raw body (--input-dim little-endian f32 values): ids and cosine scores only, optionally restricted to an integer id range.",
         "tags": [
           "documents"
         ]

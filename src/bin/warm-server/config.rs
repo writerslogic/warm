@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
+use writerslogic_warm::core::qgraph::BuildProfile;
 
 pub const MAX_ID_BYTES: usize = 256;
 /// One client vector describes one stored chunk, so a document must fit in one
@@ -22,6 +23,14 @@ pub const MAX_BATCH_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 pub const MAX_BATCH_METADATA_BYTES: usize = 8 * 1024 * 1024;
 pub const MAX_BATCH_EMBEDDING_VALUES: usize = 1_048_576;
 pub const MAX_CONCURRENT_WORK: usize = 256;
+
+/// The default number of work slots: one per available core, at least 4. A load generator at
+/// that many closed-loop clients then never sees a 503, and more clients wait in the queue.
+fn default_work_slots() -> usize {
+    std::thread::available_parallelism()
+        .map_or(4, std::num::NonZeroUsize::get)
+        .clamp(4, MAX_CONCURRENT_WORK)
+}
 
 #[derive(Parser)]
 #[command(
@@ -158,6 +167,15 @@ pub struct Config {
     /// stores answer from the exact scan, which is faster at that size.
     #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_GRAPH_MIN_ROWS", "HMS_GRAPH_MIN_ROWS"), default_value_t = 4096)]
     pub graph_min_rows: usize,
+    /// Out-degree of the vector graph maintenance builds.
+    #[arg(long, env = "WARM_GRAPH_DEGREE", default_value_t = 32)]
+    pub graph_degree: usize,
+    /// Construction beam of the vector graph build (larger builds slower and recalls more).
+    #[arg(long, env = "WARM_GRAPH_BUILD_EF", default_value_t = 300)]
+    pub graph_build_ef: usize,
+    /// Insertion schedule of the vector graph build: `max-recall`, `high`, `balanced` or `fast`.
+    #[arg(long, env = "WARM_GRAPH_PROFILE", default_value = "max-recall")]
+    pub graph_profile: String,
     /// When ingest computes chunk hypervectors (the text-vector channel of `WarmCore::query`):
     /// `eager` (at ingest, as before this flag), `deferred` (on the first vector query or
     /// index maintenance; needs stored text and a text encoder) or `lexical` (never: an
@@ -171,14 +189,15 @@ pub struct Config {
     /// Close a tenant store idle for this many seconds (flushed, reopened on demand). 0 keeps stores open.
     #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_TENANT_IDLE_SECONDS", "HMS_TENANT_IDLE_SECONDS"), default_value_t = 900)]
     pub tenant_idle_seconds: u64,
-    /// Admitted requests reading bodies or executing blocking work.
-    #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_MAX_CONCURRENT_WORK", "HMS_MAX_CONCURRENT_WORK"), default_value_t = 4)]
+    /// Admitted requests reading bodies or executing blocking work. Default: the number of
+    /// available cores, at least 4.
+    #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_MAX_CONCURRENT_WORK", "HMS_MAX_CONCURRENT_WORK"), default_value_t = default_work_slots())]
     pub max_concurrent_work: usize,
     /// Requests allowed to wait for a work slot. 0 rejects immediately with 503.
-    #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_MAX_QUEUE", "HMS_MAX_QUEUE"), default_value_t = 0)]
+    #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_MAX_QUEUE", "HMS_MAX_QUEUE"), default_value_t = 4096)]
     pub max_queue: usize,
     /// Longest a queued request waits for a work slot.
-    #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_QUEUE_TIMEOUT_MS", "HMS_QUEUE_TIMEOUT_MS"), default_value_t = 1000)]
+    #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_QUEUE_TIMEOUT_MS", "HMS_QUEUE_TIMEOUT_MS"), default_value_t = 10_000)]
     pub queue_timeout_ms: u64,
     /// After SIGTERM/SIGINT, keep serving this long with /readyz failing so load balancers can
     /// drain the instance before the listener closes. 0 closes immediately.
@@ -267,6 +286,12 @@ impl Config {
     pub fn validate(&self, credentials: bool) -> Result<()> {
         if self.dim < 256 || self.input_dim == 0 || self.input_dim > 65536 {
             bail!("--dim must be >= 256 and --input-dim 1..=65536");
+        }
+        if !(4..=128).contains(&self.graph_degree) || !(16..=4096).contains(&self.graph_build_ef) {
+            bail!("--graph-degree must be 4..=128 and --graph-build-ef 16..=4096");
+        }
+        if BuildProfile::from_name(&self.graph_profile).is_none() {
+            bail!("--graph-profile must be max-recall, high, balanced or fast");
         }
         if !(1..=MAX_CONCURRENT_WORK).contains(&self.max_concurrent_work) {
             bail!("--max-concurrent-work must be 1..=256");

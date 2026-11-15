@@ -35,7 +35,9 @@ use anyhow::{ensure, Context, Result};
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use writerslogic_warm::core::documents::MAX_EF;
-use writerslogic_warm::core::qgraph::{BuildParams, Graph, Residency, VGraph, VSearchParams};
+use writerslogic_warm::core::qgraph::{
+    Allow, BuildParams, BuildProfile, Graph, Residency, VGraph, VSearchParams, DEFAULT_DEGREE,
+};
 use writerslogic_warm::WarmCore;
 
 const LOG_MAGIC: &[u8; 8] = b"HMSSVLG1";
@@ -50,6 +52,37 @@ const DELETE: u8 = 2;
 /// Mutations since the snapshot after which scheduled maintenance rebuilds it (the engine's
 /// own threshold for its snapshot).
 pub const REBUILD_AFTER_MUTATIONS: usize = 64;
+/// How maintenance builds and encodes the graph. The defaults are the configuration the
+/// vector benchmarks measure through the Python `VectorIndex`: degree 32, construction beam
+/// 300 with the quantized construction search, 4-bit traversal codes with an 8-bit residual,
+/// cache-line aligned rows in breadth-first order.
+#[derive(Clone, Copy, Debug)]
+pub struct GraphBuild {
+    pub degree: usize,
+    pub build_ef: usize,
+    pub profile: BuildProfile,
+}
+
+impl Default for GraphBuild {
+    fn default() -> Self {
+        Self {
+            degree: DEFAULT_DEGREE,
+            build_ef: 300,
+            profile: BuildProfile::MaxRecall,
+        }
+    }
+}
+
+static GRAPH_BUILD: std::sync::OnceLock<GraphBuild> = std::sync::OnceLock::new();
+
+/// Sets the build configuration of this process (once, at startup).
+pub fn configure_build(build: GraphBuild) {
+    let _ = GRAPH_BUILD.set(build);
+}
+
+/// Neighbour ids take three bytes below this many vertices.
+const THREE_BYTE_IDS_BELOW: usize = (1 << 24) - 1;
+
 /// Prefix of the document version the server stamps on an indexed document; the memory API's
 /// stamps use another prefix.
 const VERSION_PREFIX: &str = "hv1:";
@@ -188,7 +221,13 @@ struct State {
     live: usize,
     base_dead: usize,
     mutations: usize,
+    /// Allow-masks of recent numeric id ranges over the snapshot's slots, built on first use.
+    /// The snapshot's slots never change; a deleted slot is skipped by its `ids` entry.
+    masks: Mutex<Vec<((i64, i64), Arc<Vec<u64>>)>>,
 }
+
+/// How many id-range masks one snapshot keeps.
+const MASK_CACHE: usize = 4;
 
 impl State {
     fn empty(dim: usize) -> Self {
@@ -203,7 +242,46 @@ impl State {
             live: 0,
             base_dead: 0,
             mutations: 0,
+            masks: Mutex::new(Vec::new()),
         }
+    }
+
+    /// The numeric value of a document id, when it is one.
+    fn numeric(id: &str) -> Option<i64> {
+        id.parse::<i64>().ok()
+    }
+
+    /// Slots of the snapshot whose id is an integer in `lo..hi`, as bits.
+    fn range_mask(&self, (lo, hi): (i64, i64)) -> Arc<Vec<u64>> {
+        let mut cache = self.masks.lock();
+        if let Some((_, mask)) = cache.iter().find(|(range, _)| *range == (lo, hi)) {
+            return mask.clone();
+        }
+        let mut words = vec![0u64; self.base_len.div_ceil(64)];
+        for (slot, id) in self.ids[..self.base_len].iter().enumerate() {
+            if id
+                .as_deref()
+                .and_then(Self::numeric)
+                .is_some_and(|v| v >= lo && v < hi)
+            {
+                words[slot >> 6] |= 1 << (slot & 63);
+            }
+        }
+        let mask = Arc::new(words);
+        if cache.len() == MASK_CACHE {
+            cache.remove(0);
+        }
+        cache.push(((lo, hi), mask.clone()));
+        mask
+    }
+
+    fn in_range(&self, slot: usize, range: Option<(i64, i64)>) -> bool {
+        range.is_none_or(|(lo, hi)| {
+            self.ids[slot]
+                .as_deref()
+                .and_then(Self::numeric)
+                .is_some_and(|v| v >= lo && v < hi)
+        })
     }
 
     fn tombstone(&mut self, slot: u32) {
@@ -630,6 +708,20 @@ impl VectorIndex {
     /// the graph's candidates re-scored exactly, merged with an exact pass over the rows the
     /// snapshot does not cover.
     pub fn search(&self, query: &[f32], k: usize, ef: usize) -> Result<Vec<(Arc<str>, f32)>> {
+        self.search_range(query, k, ef, None)
+    }
+
+    /// `search` restricted to documents whose id is an integer in `range` (low inclusive,
+    /// high exclusive). Rows of the snapshot are filtered inside the graph search (a
+    /// selective range is scored directly, a permissive one by a wider search); appended rows
+    /// are checked one by one.
+    pub fn search_range(
+        &self,
+        query: &[f32],
+        k: usize,
+        ef: usize,
+        range: Option<(i64, i64)>,
+    ) -> Result<Vec<(Arc<str>, f32)>> {
         ensure!(
             query.len() == self.dim,
             "query has {} dimensions, the index {}",
@@ -646,7 +738,12 @@ impl VectorIndex {
                 ..
             }) => {
                 let live = n - state.base_dead;
-                let mut take = if live == 0 {
+                let mask = range.map(|range| state.range_mask(range));
+                let allowed = mask
+                    .as_deref()
+                    .map(|words| Allow::Mask(words).count(*n).min(live));
+                let target = allowed.map_or(k.min(live), |allowed| k.min(allowed));
+                let mut take = if target == 0 {
                     0
                 } else if state.base_dead > 0 {
                     k.saturating_mul(4).min(*n)
@@ -661,15 +758,22 @@ impl VectorIndex {
                         ..VSearchParams::default()
                     };
                     let mut found = Vec::with_capacity(take);
-                    graph
-                        .searcher()
-                        .search(query, take, params, &mut found)
-                        .map_err(|e| anyhow::anyhow!("graph search: {e}"))?;
+                    match &mask {
+                        None => graph.search_cached(query, take, params, &mut found),
+                        Some(words) => graph.searcher().search_allowed(
+                            query,
+                            take,
+                            params,
+                            &Allow::Mask(words),
+                            &mut found,
+                        ),
+                    }
+                    .map_err(|e| anyhow::anyhow!("graph search: {e}"))?;
                     let enough = found
                         .iter()
                         .filter(|&&v| state.ids.get(v as usize).is_some_and(Option::is_some))
                         .count()
-                        >= k.min(live);
+                        >= target;
                     if !enough && take < *n {
                         take = take.saturating_mul(2).min(*n);
                         continue;
@@ -685,7 +789,9 @@ impl VectorIndex {
                 }
             }
             Some(_) => {
-                for slot in (0..state.base_len).filter(|&slot| state.ids[slot].is_some()) {
+                for slot in (0..state.base_len)
+                    .filter(|&slot| state.ids[slot].is_some() && state.in_range(slot, range))
+                {
                     state.row_into(slot, &mut row);
                     candidates.push((dot(query, &row), slot as u32));
                 }
@@ -694,7 +800,7 @@ impl VectorIndex {
         }
         for (i, vector) in state.delta.chunks_exact(self.dim).enumerate() {
             let slot = state.base_len + i;
-            if state.ids[slot].is_some() {
+            if state.ids[slot].is_some() && state.in_range(slot, range) {
                 candidates.push((dot(query, vector), slot as u32));
             }
         }
@@ -780,10 +886,19 @@ impl VectorIndex {
         let crc = crc32fast::hash(&ids_bytes);
         ids_bytes.extend_from_slice(&crc.to_le_bytes());
         write_atomic(&ids_path, &ids_bytes)?;
-        let built = Graph::build_owned(matrix, self.dim, &BuildParams::default())
+        let build = GRAPH_BUILD.get().copied().unwrap_or_default();
+        let params = BuildParams {
+            degree: build.degree,
+            build_ef: build.build_ef,
+            profile: build.profile,
+            quantized_search: true,
+            ..BuildParams::default()
+        };
+        let built = Graph::build_owned(matrix, self.dim, &params)
             .map_err(|e| anyhow::anyhow!("graph build: {e}"))?;
-        let graph =
-            VGraph::from_graph(&built, true).map_err(|e| anyhow::anyhow!("graph encode: {e}"))?;
+        let id_bytes = if n < THREE_BYTE_IDS_BELOW { 3 } else { 4 };
+        let graph = VGraph::from_graph_with(&built, 4, 8, true, true, id_bytes, false)
+            .map_err(|e| anyhow::anyhow!("graph encode: {e}"))?;
         drop(built);
         ensure!(
             graph.len() == n,
