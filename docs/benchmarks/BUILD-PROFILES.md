@@ -57,6 +57,47 @@ first at every recall level on both datasets with non-overlapping intervals. Sca
 0.99 on GloVe. GloVe index size is unchanged at 913 MiB (the exact f32 rows are 461 MiB), above
 FAISS IVF-PQ fast-scan at 490 MiB.
 
+### Attempts to recover QPS at the same build time
+
+Held-out GloVe (5,000 train rows as queries, 8 build threads, Ice Lake VM; estimates per query,
+lower is better; `NR` = recall not reached within the ef range of that run). Experimental
+environment switches only; none is in the library.
+
+| construction | build s | est/q @0.95 | est/q @0.99 |
+|---|---|---|---|
+| `standard` (pass 1 ef 100 bounded, pass 2 ef 500 bounded at rank 64, slack 1.02) | 112.9 | 11,905 | 42,315 |
+| `max-recall` | 337.5 | NR | 28,293 |
+| standard with pass 2 unbounded | 308.2 | 9,842 | 30,479 |
+| standard with pass 2 bound at rank 128, slack 1.05 | 216.6 | 9,785 | 31,712 |
+| standard with pass 1 bound at rank 48, slack 1.01 | 106.2 | 12,942 | 47,662 |
+| standard with pass 1 bound at rank 32, slack 1.0 | 89.7 | 14,381 | NR |
+| standard with a first pass at ef 200 | 120.1 | 12,006 | NR |
+| standard plus an unbounded ef 500 repair of the vertices with in-degree at most 0 / 2 / 5 (1 / 372 / 4,669 vertices) | 114.9 / 115.3 / 116.3 | 11,905 / 11,897 / 11,913 | NR |
+
+Recall at 0.99 is paid for by the bound of the second pass, and the price is linear in build
+time: every point that is cheaper than `standard` is worse at 0.95, and every point that is
+better at 0.99 costs 100 s or more. The repair of poorly connected vertices changes nothing, so
+the loss is not unreachable vertices. QPS within 3% of `max-recall` and a build 10% faster than
+FAISS IVF-PQ (114 s) do not hold together on GloVe. The reverse-edge re-prune with the
+`max-recall` rule was not tried: it only reorders candidates that the bound already dropped.
+
+### Index size
+
+GloVe 913 MiB is the vertex file (452 MiB) plus the exact f32 rows (461 MiB). A clean index
+serves from the vertex file alone (the rows are read only to rescore after updates or deletes), so
+changing the rows changes size but not QPS or the reachable recall of a clean index.
+
+| change | GloVe MiB | measured |
+|---|---|---|
+| delta-coded neighbour ids (`id_bytes` 0) | vertex 450 -> 393 | same graph hash; single-thread QPS at 0.99 on SIFT 7,513 -> 6,053 (-19%), GloVe at 0.95 about -30% |
+| f16 rows | rows 461 -> 230 | top-10 of exact search over 200,000 rows changes in 0.05% of slots (overlap 0.9995) |
+| byte-plane transposition plus zlib level 1 on the f32 rows | rows 461 -> 397 | ratio 0.861 (lzma 0.854) |
+
+The best combination (delta ids plus f16 rows) is still well above FAISS IVF-PQ's 490 MiB, and the
+delta ids cost 19-30% of QPS. None of these is shipped. Below 490 MiB the exact rows would have to
+be dropped or rebuilt from the vertex residual codes, which makes returned scores and rebuilds
+approximate; that is a format and semantics decision, not made here.
+
 Results that were produced with `max-recall` as the default and are not regenerated:
 `benchmarks/results/qgraph_build_profiles_gcp_v1.json`, the `qgraph_*` results, the
 `heavy-ann-sift-128-euclidean-...-intel-ultra-9-185h-22c-27g.json` file, and every tabulated number
