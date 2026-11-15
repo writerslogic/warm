@@ -115,9 +115,22 @@ def test_documents_check_compares_a_chunk_with_its_byte_range():
 def test_pair_check_reports_order_and_score_differences():
     def row(ids):
         return {"id": "q", "results": [{"documentId": i, "lexicalScore": 2.0 - n} for n, i in enumerate(ids)]}
-    assert runner._pair_ids([row("abc")], [row("abc")]) == {"queries": 1, "queries_with_different_id_lists": 0, "max_abs_score_gap": 0.0}
+    assert runner._pair_ids([row("abc")], [row("abc")]) == {"queries": 1, "queries_with_different_id_lists": 0, "queries_differing_only_in_tie_order": 0, "max_abs_score_gap": 0.0}
     assert runner._pair_ids([row("abc")], [row("acb")])["queries_with_different_id_lists"] == 1
     assert runner._pair_ids([row("abc")], [row("ab")])["queries_with_different_id_lists"] == 1
+
+
+def test_pair_check_passes_a_reordering_of_equal_scores_and_nothing_else():
+    def row(ids, scores):
+        return {"id": "q", "results": [{"documentId": i, "lexicalScore": s} for i, s in zip(ids, scores)]}
+    tied = [3.0, 2.0, 2.0, 1.0]
+    swapped = runner._pair_ids([row("abcd", tied)], [row("acbd", tied)])
+    assert (swapped["queries_with_different_id_lists"], swapped["queries_differing_only_in_tie_order"]) == (0, 1)
+    assert runner._pair_ids([row("abcd", tied)], [row("bacd", tied)])["queries_with_different_id_lists"] == 1
+    assert runner._pair_ids([row("abcd", tied)], [row("axcd", tied)])["queries_with_different_id_lists"] == 1
+    assert runner._pair_ids([row("abcd", tied)], [row("acbd", [3.0, 2.0, 1.5, 1.0])])["queries_with_different_id_lists"] == 1
+    cut = [3.0, 2.0, 2.0]
+    assert runner._pair_ids([row("abc", cut)], [row("abd", cut)])["queries_differing_only_in_tie_order"] == 1
 
 
 def test_stored_rows_reach_their_binaries_with_the_stored_flags(monkeypatch, tmp_path):
@@ -130,7 +143,7 @@ def test_stored_rows_reach_their_binaries_with_the_stored_flags(monkeypatch, tmp
         ("warm-lexical-api", "build"): ["--store-text", "false"], ("warm-lexical-api", "serve"): ["--api", "lexical"],
         ("tantivy-rs-docs", "build"): ["--stored", "true", "--docstore", registry.TANTIVY_DOCSTORE],
         ("tantivy-rs-count-docs", "serve"): ["--stored", "true", "--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE), "--collector", "count"],
-        ("tantivy-rs", "serve"): ["--collector", "topk"], ("lucene-docs", "serve"): ["english", "stored"], ("lucene", "serve"): ["3", "100"],
+        ("tantivy-rs", "serve"): ["--collector", "topk"], ("lucene-docs", "serve"): ["english", "stored"], ("lucene-dv-docs", "serve"): ["english", "stored-dv"], ("lucene-dv-docs", "build"): ["english", "stored-dv"], ("lucene", "serve"): ["3", "100"],
     }
     for (system, phase), flags in expect.items():
         seen.clear()
@@ -168,3 +181,18 @@ def test_stored_variants_return_the_corpus_text_and_rank_like_their_ids_rows(tmp
     assert [h[0] for h in stored.search(stored.prepare("benchmarkrevision"))] == ["one/α"]
     stored.delete(DOCS[1])
     assert stored.search(stored.prepare("banana")) == []
+
+
+def test_cross_hardware_summary_lists_each_class_and_names_verdicts_that_differ():
+    """The same corpus on two hardware classes: WARM wins the ids contract on both, and wins the documents contract on one only."""
+    secs = []
+    for hw, comparator_rate in (("hw-a", 1200), ("hw-b", 2600)):
+        data = fake_text({"warm-lexical-api": 2000, "lucene": 1000, "warm": 2000, "lucene-docs": comparator_rate})
+        data["hardware"]["class"] = hw
+        for _, view in table.contract_views(Path("f.json"), data):
+            secs.append(table.section(Path("f.json"), view))
+    text = "\n".join(table.across_hardware_lines(secs))
+    assert "| x | ids | `hw-a` |" in text and "| x | ids | `hw-b` |" in text
+    assert "x, documents contract: `hw-a` WIN; `hw-b` LOSS" in text
+    assert "x, ids" not in text.split("differ between hardware classes:")[1]
+    assert table.across_hardware_lines(secs[:2]) == []

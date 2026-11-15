@@ -1,0 +1,11 @@
+conv 0 turn order and epochs equal the dataset: True; sessions sharing a date_time: 0
+conv 0 tenant locomo_0_8ff3e589 dataset_turns=419 chunks_processed=419 server_remember_200=419 failed=0 spot_recall(D10:19)=PASS -> OK
+conv 1 turn order and epochs equal the dataset: True; sessions sharing a date_time: 0
+conv 1 tenant locomo_1_8ff3e589 dataset_turns=369 chunks_processed=369 server_remember_200=369 failed=0 spot_recall(D10:9)=PASS -> OK
+conv 2 turn order and epochs equal the dataset: True; sessions sharing a date_time: 0
+conv 2 tenant locomo_2_8ff3e589 dataset_turns=663 chunks_processed=663 server_remember_200=663 failed=0 spot_recall(D16:5)=PASS -> OK
+conv 3 turn order and epochs equal the dataset: True; sessions sharing a date_time: 0
+conv 3 tenant locomo_3_8ff3e589 dataset_turns=629 chunks_processed=629 server_remember_200=629 failed=0 spot_recall(D16:11)=PASS -> OK
+conv 4 turn order and epochs equal the dataset: True; sessions sharing a date_time: 0
+conv 4 tenant locomo_4_8ff3e589 dataset_turns=680 chunks_processed=680 server_remember_200=680 failed=0 spot_recall(D15:20)=PASS -> OK
+GATE PASSED
