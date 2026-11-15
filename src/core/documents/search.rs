@@ -430,7 +430,7 @@ fn capture_screened(
         let ranked = LEXICAL_SCRATCH.with(|scratch| {
             scratch
                 .borrow_mut()
-                .rank_with(store, &prepared, false, &candidates, &mut extras)
+                .rank_with(store, &prepared, true, &candidates, &mut extras)
         });
         (ranked, extras)
     } else {
@@ -653,6 +653,21 @@ pub(super) trait LexicalSource {
     fn impact_image(&self) -> Option<&super::image::ServingImage> {
         None
     }
+    /// The shortest posting list and the most postings a thread keeps decoded and weighted
+    /// for this source (see [`HotList`]).
+    fn hot_policy(&self) -> HotPolicy {
+        HotPolicy {
+            min_len: HOT_MIN_LEN.max(self.slot_count() / HOT_MIN_SLOTS),
+            postings: HOT_POSTINGS,
+        }
+    }
+}
+
+/// How much of a source's posting lists a thread keeps decoded and weighted.
+#[derive(Clone, Copy)]
+pub(super) struct HotPolicy {
+    pub(super) min_len: usize,
+    pub(super) postings: usize,
 }
 
 /// A term's postings as [`LexicalScratch::rank`] reads them.
@@ -710,6 +725,14 @@ impl LexicalSource for DocumentStore {
 
     fn slot_order(&self, slot: usize) -> (&str, usize) {
         DocumentStore::slot_order(self, slot)
+    }
+
+    /// A live store's lists are short and its queries long: keep every list of 16 postings or more.
+    fn hot_policy(&self) -> HotPolicy {
+        HotPolicy {
+            min_len: LIVE_HOT_MIN_LEN,
+            postings: LIVE_HOT_POSTINGS,
+        }
     }
 }
 
@@ -881,7 +904,8 @@ struct NormKey {
 /// Per-thread working memory of [`capture_ranked_lexical`], reused across queries so a query
 /// neither allocates nor clears a table per store slot. It grows to the largest store a thread
 /// queries (20 bytes per slot plus 4 per posting of the longest query: no more than the
-/// store's own owner and word-count tables per slot) and is not shrunk.
+/// store's own owner and word-count tables per slot) and is not shrunk. The decoded lists in
+/// `hot` are bounded by the source's [`HotPolicy`].
 #[derive(Default)]
 struct LexicalScratch {
     /// BM25 sum per slot; every entry is 0 between queries.
@@ -912,9 +936,12 @@ const HOT_POSTINGS: usize = 1 << 18;
 /// absolute floor.
 const HOT_MIN_LEN: usize = 32;
 const HOT_MIN_SLOTS: usize = 32;
+const LIVE_HOT_MIN_LEN: usize = 16;
+const LIVE_HOT_POSTINGS: usize = if cfg!(test) { 2200 } else { 1 << 20 };
 
-/// What a thread's decoded posting lists belong to: one immutable checkpoint under fixed BM25
-/// constants, so each list's idf and every posting's weight are fixed too.
+/// What a thread's decoded posting lists belong to: one immutable checkpoint, or one generation
+/// of a live store, under fixed BM25 constants, so each list's idf and every posting's weight
+/// are fixed too.
 #[derive(Clone, Copy, PartialEq)]
 struct HotKey {
     norm: NormKey,
@@ -930,8 +957,9 @@ struct HotList {
     weights: Box<[f64]>,
 }
 
-/// Per-thread decoded lists of an immutable checkpoint, by form and term, bounded by
-/// [`HOT_POSTINGS`] and dropped when the checkpoint or the BM25 constants change.
+/// Per-thread decoded lists of an immutable checkpoint or a live store generation, by form and
+/// term, bounded by the source's [`HotPolicy`] and dropped when the checkpoint, the generation
+/// or the BM25 constants change.
 #[derive(Default)]
 struct HotLists {
     key: Option<HotKey>,
@@ -960,8 +988,9 @@ impl LexicalScratch {
     /// `execute_chunks` computes from captured postings: the same terms in the same order
     /// (form 0 terms, then form 1 terms, each sorted), the same expressions, from 0.
     ///
-    /// With `hot` set, `store` is an immutable checkpoint whose long posting lists this thread
-    /// may keep decoded and weighted between queries (see [`HotList`]).
+    /// With `hot` set, `store` is an immutable checkpoint, or a live store whose generation
+    /// every mutation advances, and its long posting lists may be kept decoded and weighted by
+    /// this thread between queries (see [`HotList`]).
     fn rank<S: LexicalSource>(
         &mut self,
         store: &S,
@@ -1093,7 +1122,7 @@ impl LexicalScratch {
         self.touched.clear();
         if dense {
             let norms = &self.norms[..slots];
-            let admit_from = HOT_MIN_LEN.max(slots / HOT_MIN_SLOTS);
+            let policy = store.hot_policy();
             for listed in &lists {
                 match listed {
                     Listed::Hot(list) => {
@@ -1108,7 +1137,9 @@ impl LexicalScratch {
                         word,
                     } => {
                         let length = list.len();
-                        if hot && length >= admit_from && length <= HOT_POSTINGS - self.hot.postings
+                        if hot
+                            && length >= policy.min_len
+                            && length <= policy.postings.saturating_sub(self.hot.postings)
                         {
                             let mut kept_slots = Vec::with_capacity(length);
                             let mut kept_weights = Vec::with_capacity(length);
@@ -2928,6 +2959,94 @@ mod tests {
                     "the screen table serves {count}"
                 );
             }
+        }
+    }
+
+    /// A one-chunk document of `words` with a pseudo-random embedding.
+    fn chunk_document(id: usize, words: &str, state: &mut u64) -> StoredDocument {
+        let mut next = || {
+            *state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((*state >> 33) as f64 / (1u64 << 31) as f64) - 0.5
+        };
+        let vector: Vec<f64> = (0..8).map(|_| next()).collect();
+        let input = serde_json::from_value(json!({
+            "id": format!("h{id:05}"), "version": "1", "text": words,
+            "chunkWords": 32, "overlapWords": 0, "embeddings": [vector],
+        }))
+        .unwrap();
+        super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap()
+    }
+
+    /// A thread keeps a live store's decoded lists only from `LIVE_HOT_MIN_LEN` postings and within
+    /// `LIVE_HOT_POSTINGS`, and every ranking, cold or from kept lists, is the reference scan's, also after a
+    /// mutation of the store.
+    #[test]
+    fn live_hot_lists_rank_as_the_reference_scan_at_their_limits() {
+        const DOCUMENTS: usize = 2100;
+        let query = vec![0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25];
+        let options = SearchOptions {
+            k: Some(9),
+            candidate_limit: Some(10),
+            embedding: Some(query),
+            min_semantic_score: Some(-1.0),
+            ..Default::default()
+        };
+        let text = "alpha beta common delta";
+        // The budget left after beta and common is 2200 - (16 + 2100) = 84 postings.
+        for (alpha, beta, delta) in [
+            (LIVE_HOT_MIN_LEN - 1, LIVE_HOT_MIN_LEN, 83),
+            (LIVE_HOT_MIN_LEN, LIVE_HOT_MIN_LEN + 1, 84),
+            (LIVE_HOT_MIN_LEN + 1, LIVE_HOT_MIN_LEN - 1, 85),
+        ] {
+            let mut state = 0x2545_F491_4F6C_DD1Du64;
+            let mut store = DocumentStore::default();
+            let document = |id: usize, state: &mut u64| {
+                let mut words = format!("common rare{id}");
+                for (name, count) in [("alpha", alpha), ("beta", beta), ("delta", delta)] {
+                    if id < count {
+                        words.push_str(&format!(" {name}"));
+                    }
+                }
+                chunk_document(id, &words, state)
+            };
+            for id in 0..DOCUMENTS {
+                let document = document(id, &mut state);
+                store.insert(document.id.clone(), document);
+            }
+            let kept = || LEXICAL_SCRATCH.with(|scratch| scratch.borrow().hot.postings);
+            let check = |store: &DocumentStore, label: &str| {
+                let expected = serde_json::to_value(
+                    super::super::search_impl(store, text, &options, Some(8), false).unwrap(),
+                )
+                .unwrap();
+                for pass in 0..3 {
+                    let actual = serde_json::to_value(
+                        super::super::search_impl(store, text, &options, Some(8), true).unwrap(),
+                    )
+                    .unwrap();
+                    assert_eq!(
+                        actual, expected,
+                        "{label} {alpha} {beta} {delta} pass {pass}"
+                    );
+                }
+            };
+            LEXICAL_SCRATCH.with(|scratch| scratch.take());
+            check(&store, "built");
+            let admitted = |count: usize| if count >= LIVE_HOT_MIN_LEN { count } else { 0 };
+            let first = admitted(alpha)
+                + admitted(beta)
+                + DOCUMENTS
+                + if delta <= LIVE_HOT_POSTINGS - (admitted(alpha) + admitted(beta) + DOCUMENTS) {
+                    delta
+                } else {
+                    0
+                };
+            assert_eq!(kept(), first, "{alpha} {beta} {delta}");
+            let document = document(DOCUMENTS, &mut state);
+            store.insert(document.id.clone(), document);
+            check(&store, "grown");
         }
     }
 
