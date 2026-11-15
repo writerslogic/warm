@@ -1,0 +1,59 @@
+{
+ "benchmark": "big-ann-benchmarks NeurIPS'23 streaming track, msturing-30M-clustered, final_runbook.yaml (1,280 steps), mean recall@10 over 640 search checkpoints",
+ "status": "measured on Google Cloud Platform (GCP) n2-custom-8-16384 VMs, not the organisers' Azure D8lds_v5 VM; not official and not a leaderboard result",
+ "warm_commit": "5e2893f01b9803836c47d833ce621e3bd6aa6973",
+ "warm_wheel": "warm-python 0.6.8 (maturin --release --features python,experimental, built in the harness image)",
+ "comparison_commit": "0f81061b (previous pin of the same entry, same GCP host class, Docker mode): step-sum 3,563.1 s, run.py wall 3,566 s, one run, harness recall not exported",
+ "hardware": {
+  "platform": "GCP Compute Engine n2-custom-8-16384, us-east4 (r1b in us-east4-a, r2b in us-east4-b)",
+  "cpu": "Intel Xeon @ 2.60 GHz, Ice Lake (Xeon 8370C class), 8 vCPU, AVX-512 with VBMI and VNNI",
+  "memory_gib": 16,
+  "container_memory_limit_gib": 8
+ },
+ "harness": {
+  "fork": "github.com/dcondrey/big-ann-benchmarks branch streaming/warm (PR harsha-simhadri/big-ann-benchmarks#357), commit 561f9fe plus a local config.yaml change to nprobe 925",
+  "mode": "Docker (image built from the entry's Dockerfile with WARM_COMMIT set to 5e2893f0, plus RUN pip3 install \"numpy>=1.26,<2\" as the last layer)",
+  "command": "python -u run.py --neurips23track streaming --algorithm warm --dataset msturing-30M-clustered --runbook_path neurips23/runbooks/final_runbook.yaml",
+  "local_harness_changes": "benchmark/runner.py: container memory limit forced to 8 GiB and wait timeout raised from 1 h to 3 h, for measurement only, so a run over the hour limit would be recorded instead of killed",
+  "image_versions": "numpy 1.26.4, scipy 1.10.1, warm-python 0.6.8"
+ },
+ "algorithm_parameters": "warm(partition_l5000_np925_ro1000, {'nprobe': 925}); build {mode partition, lists 5000, train_at 1000000, reorder 1000, T 8}",
+ "runs": [
+  {
+   "tag": "r1b",
+   "started_utc": "2026-11-15T00:06:40Z",
+   "finished_utc": "2026-11-15T01:02:09Z",
+   "recall_at_10_mean": 0.998548375,
+   "step_sum_seconds": 3324.5,
+   "step_sum_split_seconds": {"insert": 197.1, "search": 3092.1, "delete": 35.3},
+   "run_py_seconds": 3329,
+   "run_py_exit": 0,
+   "steps_completed": 1280,
+   "cgroup_memory_peak_gib": 8.0,
+   "max_sampled_anon_gib": 6.34,
+   "oom": false,
+   "within_one_hour": true
+  },
+  {
+   "tag": "r2b",
+   "started_utc": "2026-11-15T00:07:28Z",
+   "finished_utc": "2026-11-15T01:03:51Z",
+   "recall_at_10_mean": 0.998548375,
+   "step_sum_seconds": 3378.8,
+   "step_sum_split_seconds": {"insert": 193.1, "search": 3149.2, "delete": 36.4},
+   "run_py_seconds": 3383,
+   "run_py_exit": 0,
+   "steps_completed": 1280,
+   "cgroup_memory_peak_gib": 8.0,
+   "max_sampled_anon_gib": 6.50,
+   "oom": false,
+   "within_one_hour": true
+  }
+ ],
+ "notes": [
+  "Recall is the harness compute_metrics_all_runs k-nn mean over the exported HDF5 results, recomputed after the runs from the saved result files against the harness ground truth.",
+  "The two runs ran on two different VMs; their step sums differ by 54 s. They are two data points, not a guarantee, and the margin to 3,600 s on the slower run is 217 s.",
+  "The cgroup memory peak reads at the 8 GiB limit because it includes page cache; no OOM kill occurred in either run.",
+  "Timing on the organisers' Azure D8lds_v5 VM was not measured."
+ ]
+}
