@@ -241,3 +241,58 @@ Cells where VSA RMSE is >10% lower: 2 of 30
 | R=12 u=1 N=200 bits_per_rec=24 | 0.250 | 1.000 | 0.858 | pat | -0.142 [-0.177, -0.110] |
 | R=12 u=1 N=200 bits_per_rec=48 | 0.500 | 0.996 | 0.988 | pat | -0.008 [-0.019, +0.004] |
 
+
+# Round 2: many unknown roles and real-text membership
+
+Pre-registered in `benchmarks/results/factstore_kill_20261114/PREREG.md` (commit bf620e4, amended before any report seed in 7dae104). Results, tables and harness: `benchmarks/results/factstore_kill_20261114/round2/`, `scripts/factstore_kill/round2/`. Hardware: GCP n2-standard-8, single-threaded timing where stated. Deviations from the registration are listed at the end; they limit the tested range and are not hidden.
+
+## Lead A: R >= 12 roles, u >= 3 unknown roles, arbitrary query subsets
+
+Task: N records, V=256 fillers per role, random u-subset unknown per query, return all u fillers exactly. Arms at equal total bits: resonator-decoded superposed record store (VSA-res), exact column store (COL), per-role inverted index with measured Elias-Fano cost (INV), per-record token Bloom filter (ROWBF), static binary-fuse fingerprint filter over full records decoded by enumerating V^u tuples (FPF; model validated against the real `xorf` crate), parity-address tables (PAT, analytic).
+
+Measurement, N=256, R=12, 20 report seeds, 100 queries per seed. Bits per record needed to reach accuracy 0.99 (grid 12..192; "n/r" = not reached):
+
+| (R,u) | VSA-res | COL | INV | ROWBF | FPF (model) | PAT (analytic) |
+|---|---|---|---|---|---|---|
+| (12,3) | n/r (accuracy 0.00 at 192) | 96 | 128 | n/r | 40 | 128 |
+| (12,4) | n/r | 96 | 128 | n/r | 48 | n/r |
+| (12,6) | n/r | 96 | 128 | n/r | 64 | n/r |
+| (16,3) | n/r | 128 | 160 | n/r | 40 | 128 |
+
+At 0.90 the thresholds are the same or 8 bits lower for FPF. VSA-res scored below 0.02 on the tuning seeds at 192 bits per record (D=49,152 at w=1) in every run cell, so by the registered monotone rule every lower grid point is dead. Criterion A: no bits win in any cell. Not run: (16,4), (16,8), N=1024, N=4096, the scaling probes and the timing runs (call budget and wall clock). The resonator pilot on tuning seeds (`dbg_a.log`, R=12, u=3) gave accuracy 0.44 at N=1, D=16,384; 0.19 at N=4, D=65,536; 0.00 at N=16, D=131,072, and the true tuple scored higher than the returned one in every failure, so the search, not the store, is what fails there. The registered strong-search rerun (16 restarts, 100 iterations) was not run because tuned accuracy was below its 0.05 trigger; the exhaustive-decode oracle below separates the store from the search instead.
+
+Oracle (all 256^3 tuples scored against the same bundle, N=64, R=12, u=3, 2 seeds, 8 queries; measurement): accuracy 0.31 at 32 bits per record, 0.94 at 64, 1.00 at 128 (w=1 counters; w=2 is worse: 0.06, 0.25, 1.00), at 1.3 to 4.3 s per query. So even with a perfect search the superposed store needs about 64 to 128 bits per record at N=64, against 96 for the exact column store and about 36 to 40 for the fingerprint filter, and the cost of an exhaustive decode is V^u dot products of length D.
+
+Real filter check (`fpf.jsonl`, xorf 0.11, MIT): BinaryFuse8/16 at n=20,000 keys use 9.83/19.66 bits per key (overhead 1.23, the model assumes 1.13); measured false-positive rates 3.90e-3 and 1.55e-5 match 2^-8 and 2^-16; enumerating the 16.7M tuples of a u=3 query took 136 to 154 ms under a loaded machine. u=4 would be extrapolated (about 256 times) and u>=5 is infeasible by enumeration. These timings were taken while other jobs ran and are upper bounds.
+
+Verdict A (inference from the measurements above): clean kill for the registered range. At R>=12, u>=3 a plain column store is exact at 8R bits and fast, the static fingerprint filter supports arbitrary subsets at about 1.13(u log2 V + 7) bits per record, and the resonator-decoded superposition did not reach 0.02 accuracy at 192 bits per record. A win for VSA on bits is not supported at any measured point, so the query-time axis never has to be traded against it. Where the filter's V^u enumeration becomes infeasible (u>=5), the column store still answers exactly at 96 to 128 bits per record in microseconds to milliseconds.
+
+## Lead B: real-text near-key membership
+
+Cells that round 1 reported: C1 = LoCoMo, N=100, B=2^14, 30% character substitution; C2 = N=300, B=2^14, 20%; C3 = N=300, B=2^16, 30%. All three used centred hashed char-3-gram TF-IDF keys (d=2048), noise was uniform character substitution, load was 164 to 655 bits per fact, and the strongest round-1 baselines were at AUC about 0.5. The noisy members were scored against clean non-members.
+
+Round-2 measurement (LoCoMo 6 report seeds, memory-lme-dev user-turn sentences 5 report seeds; 1000 positives and 4000 negatives per seed; N in {100,300,1000,3000}; B in {2^14,2^16}; character substitution 0.1/0.2/0.3 and word deletion 0.2/0.4/0.6; 96 cells; arms: VSA, SimHash signatures, distance-sensitive Bloom, global shingle Bloom, per-fact shingle Bloom, count-min over shingles, b-bit MinHash; encoders c3, c5, w12). All cells are in `b_tables_locomo.md` and `b_tables_lme.md`.
+
+- Protocol M (non-members corrupted the same way, the registered primary): VSA AUC win (CI lower bound above +0.01) with TPR@1% difference lower bound above 0 in 6 of 48 LoCoMo cells and 3 of 48 lme cells, all at substitution 0.1 to 0.3 with 16,384 to 65,536 bits and N=300 to 3000, and every one at near-chance operating points: VSA AUC 0.56 to 0.65, TPR@1% FPR 0.017 to 0.039 (LoCoMo) and 0.019 to 0.026 (lme), TPR@0.1% FPR at most 0.007. The gains over the best baseline are +0.04 to +0.07 AUC and +0.004 to +0.013 TPR@1%. The registered usefulness clause (VSA TPR@1% at least 0.10 in the winning cells) fails in every winning cell.
+- C1 to C3 under protocol M: C1 AUC +0.018 but TPR@1% -0.107; C2 AUC +0.020 (CI lower bound +0.008, below the margin) and TPR@1% -0.074; C3 AUC -0.023 and TPR@1% -0.129. Not wins. The round-1 edge came from comparing against baselines that collapse when clean non-members outscore corrupted members: under protocol C the best baselines reach AUC near 0.01 to 0.2 in these cells (corrupted members score below clean strangers), and the global shingle Bloom, count-min and MinHash baselines added in round 2 reach AUC 0.60 to 0.73 in the same cells.
+- Control K (corrupted vs clean non-members): VSA 0.50 to 0.52, i.e. the bundle does not detect corruption; several baselines are well below 0.5 on K, which is why protocol C is not a fair test for them.
+- Where VSA loses: 39 of 48 LoCoMo cells and 45 of 48 lme cells have no VSA win; at low noise and N<=300 b-bit MinHash and SimHash signatures are at AUC 0.99 to 1.00 with TPR@1% above 0.9 where VSA is at 0.83 to 0.99 and 0.2 to 0.8.
+
+Verdict B: kill. The AUC edge in the near-chance cells is real in the sense that it survives noise-matched non-members, more seeds and the shingle-Bloom, count-min and MinHash baselines, but it sits at TPR@1% FPR of 2 to 4%, which no user can operate at; it fails the registered usefulness clause and the round-1 cells themselves are not wins. Cells with a 99.9% interval view give the same count (6 and 3).
+
+## Deviations and limits (all reduce the tested range)
+
+- Lead B used 6 LoCoMo and 5 lme report seeds, not 20 (the jobs ran about 17 minutes per seed and were stopped at the call budget); B=2^18 was not run; streaming counters were not measured. With 5 to 6 seeds the intervals are wider than registered and 0.1% FPR figures rest on 20 to 24 pooled negative events.
+- Lead A: N=1024, N=4096, (16,4), (16,8), the scaling probes, the strong-search rerun, the oracle at N=256 and the timing runs were not completed. FPF accuracy is a model validated at 8 and 16 bit fingerprints; the 32-bit filter's false-positive rate is not measurable at the probe count used.
+- Query-time comparisons for the VSA arm are therefore not reported; the oracle's seconds per query and the filter's measured 0.14 s are the only timings.
+
+## Where the fact store is described as a space, speed or capacity advantage
+
+Searched README.md, docs/ (including docs/overrides website copy) for fact-store, vector-symbolic, bundle and holographic wording near faster, smaller, capacity, advantage, compress and graceful. Most pages already state the measured limits (docs/concepts/capacity.md lines 70-96 say the bundle ties a Bloom filter and has no accuracy advantage on key-value retrieval). Lines that can be read as an advantage:
+
+- docs/concepts/holographic.md:2 and :63 (frontmatter and the section "Graceful degradation, measured"): graceful degradation is a property of damaged vectors, not an advantage over a conventional structure at equal bits.
+- docs/SUPERPOSITION-FLOOR.md:9-13 and :214-217, :222-229: "coupled-encoder advantage" and "capacity beyond the floor" are synthetic encoder results, stated there as not a database compression claim; the round-2 oracle shows the store at about 64 to 128 bits per record for exact three-role recovery.
+- docs/PREREGISTRATION-binding-readout.md:317 and :1026: "verifies role-filler bindings at higher d' than dense HRR/MAP at matched D" and "holographic properties" are comparisons between VSA variants, not against conventional structures.
+- docs/COMPARISON.md:12 and docs/concepts/index.md:8 list the store as the tool for "structured facts" and "relational and multi-hop queries" without a space or speed claim.
+
+No page in README or the website copy states that the fact store is faster or smaller than a conventional structure. Proposed wording, for the owner to decide: "The vector-symbolic layer is an algebraic interface for composing and querying role-filler records (bind, bundle, unbind, merge by elementwise sum). At equal bits it ties a Bloom filter or count-sketch on membership and loses to stored signatures, b-bit MinHash, column stores and static fingerprint filters on retrieval; it offers no space, speed or capacity advantage over them."

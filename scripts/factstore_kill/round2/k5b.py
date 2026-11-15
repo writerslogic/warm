@@ -344,7 +344,7 @@ class Run:
                 off = np.concatenate([[0], np.cumsum(lens)[:-1]])
                 if typ == "sbfg":
                     hit = obj[bloom_pos(tok64(allt, 1), key[3], len(obj))].all(axis=1).astype(np.float64)
-                    sc = np.add.reduceat(hit, off) / np.maximum(lens, 1) if len(hit) else np.zeros(n)
+                    sc = np.bincount(np.repeat(np.arange(n), lens), weights=hit, minlength=n) / np.maximum(lens, 1)
                     sc[lens == 0] = 0
                     out[key] = sc
                 elif typ == "cms":
@@ -352,7 +352,7 @@ class Run:
                     for j, c in enumerate(obj):
                         v = c[(mix64(tok64(allt, 10 + j)) % np.uint64(len(c))).astype(np.int64)]
                         est = v if est is None else np.minimum(est, v)
-                    sc = np.add.reduceat(est.astype(np.float64), off) / np.maximum(lens, 1) if len(est) else np.zeros(n)
+                    sc = np.bincount(np.repeat(np.arange(n), lens), weights=est.astype(np.float64), minlength=n) / np.maximum(lens, 1)
                     sc[lens == 0] = 0
                     out[key] = sc
                 else:
