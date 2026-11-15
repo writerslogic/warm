@@ -53,3 +53,21 @@ with the RRF constant tuned on the same development data. Comparators are never 
 with RRF as the sqlite-vec documentation does; LanceDB embedded hybrid search with its full-text index and default
 `RRFReranker`; tantivy BM25 plus a usearch HNSW index with application-side RRF. Every lexical leg reads the lowercase
 alphanumeric query word set like the lexical contract.
+
+## WARM's hybrid path
+
+WARM scores the semantic list exactly: every ranked chunk carries `Embedding::cosine`, the sequential `f64` dot product.
+Scanning every chunk with that reduction cost 2 to 14 ms per query on these corpora. Unfiltered hybrid queries now read a
+quantized table of the store's embeddings first (`src/core/documents/screen.rs`): two `i8` planes per chunk and a 15-bit
+query code give each chunk an interval that provably contains its exact cosine (the row and query quantization residuals
+are measured when the table is built and when the query arrives, and Cauchy-Schwarz bounds their products). Only chunks
+whose interval can reach the `candidateLimit`-th best lower bound, or the `minSemanticScore` floor, are scored exactly,
+so the returned scores, ranking and ties are bit-identical to the exact scan; the table changes which chunks are read,
+never a score. The table is built for a store generation by its second unfiltered hybrid query and only above 2,048
+chunks; below that, and for filtered queries, an `f32` screen with the same guarantee (above 256 candidate chunks) or the
+plain exact scan runs. The table is a second copy of the embeddings at 2 bytes per value; it is dropped when the store
+changes and rebuilt on demand. Lexical-only and vector-only queries are unchanged.
+
+### Measured miss
+
+On ArguAna the engine change leaves WARM at 0.98 [0.96, 0.99] of the best comparator (lucene-hnsw tuned) on speed excluding embedding. Long queries spend about 1.9 ms in the lexical stage against about 0.55 ms in the semantic scan. Every other corpus is above 1.0 with its interval above 1.0. Results are from one VM and are not official.

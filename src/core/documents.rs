@@ -21,6 +21,7 @@ pub mod analysis;
 mod census;
 mod dense;
 mod image;
+mod screen;
 pub use analysis::Analyzer;
 mod index;
 mod lexical;
@@ -374,11 +375,97 @@ impl Embedding {
         [a, b, c, d].map(|sum| sum.clamp(-1.0, 1.0))
     }
 
+    /// Screening scores for `rows` against an `f32` query: per row the `f32` dot product and the squared `f32` norm of
+    /// the stored values, `(NaN, NaN)` for a row whose length differs from the query's. Both are inexact; see
+    /// [`ScreenBound`] for the error they carry relative to [`Embedding::cosine`].
+    pub(crate) fn screen(rows: &[&Self], query: &[f32], out: &mut Vec<(f32, f32)>) {
+        out.clear();
+        out.reserve(rows.len());
+        #[cfg(target_arch = "x86_64")]
+        if std::arch::is_x86_feature_detected!("avx2") {
+            // SAFETY: the CPU supports avx2, checked above.
+            unsafe { screen_avx2(rows, query, out) };
+            return;
+        }
+        screen_rows(rows, query, out);
+    }
+
     /// Whether both handles share one allocation (a snapshot row and the store's chunk).
     #[cfg(test)]
     pub(crate) fn shares_allocation(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
     }
+}
+
+/// Rigorous bound on `|screen dot - Embedding::cosine|` before the cosine's clamp (which only shrinks it).
+///
+/// With `n` terms, `u = 2^-24` and `q` the `f64` query: the `f32` accumulation errs by at most `gamma_n * sum|q32 v|`
+/// (any summation order, fused or not), rounding the query to `f32` adds `u * sum|q v|`, the sequential `f64`
+/// reference errs by `n * 2^-53 * sum|q v|`, and `sum|q v| <= |q| |v|` by Cauchy-Schwarz. `|v|` is the square root of
+/// the screened `f32` squared norm, itself within `(1 + gamma_n)`; the factor below covers it with room.
+pub(crate) struct ScreenBound {
+    scale: f64,
+}
+
+impl ScreenBound {
+    pub(crate) fn new(query: &[f64]) -> Self {
+        let n = query.len() as f64;
+        let u = 2f64.powi(-24);
+        let norm = query.iter().map(|q| q * q).sum::<f64>().sqrt();
+        Self {
+            scale: 1.05 * (n + 8.0) * u * (1.0 + 4.0 * n * u) * norm,
+        }
+    }
+
+    /// The bound for a row with the screened squared norm `norm_sq`; infinite when it is not finite.
+    pub(crate) fn of(&self, norm_sq: f32) -> f64 {
+        if norm_sq.is_finite() {
+            self.scale * f64::from(norm_sq).sqrt()
+        } else {
+            f64::INFINITY
+        }
+    }
+}
+
+#[inline(always)]
+fn screen_rows(rows: &[&Embedding], query: &[f32], out: &mut Vec<(f32, f32)>) {
+    for row in rows {
+        out.push(screen_row(&row.0, query));
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn screen_avx2(rows: &[&Embedding], query: &[f32], out: &mut Vec<(f32, f32)>) {
+    screen_rows(rows, query, out);
+}
+
+/// Sixteen independent `f32` lanes for the dot product and eight for the norm, so the loop vectorises on any target.
+#[inline(always)]
+fn screen_row(row: &[f32], query: &[f32]) -> (f32, f32) {
+    if row.len() != query.len() {
+        return (f32::NAN, f32::NAN);
+    }
+    let mut dot = [0f32; 16];
+    let mut norm = [0f32; 8];
+    let (rows, row_tail) = row.as_chunks::<16>();
+    let (queries, query_tail) = query.as_chunks::<16>();
+    for (r, q) in rows.iter().zip(queries) {
+        for j in 0..16 {
+            dot[j] += r[j] * q[j];
+        }
+        for j in 0..8 {
+            norm[j] += r[j] * r[j] + r[j + 8] * r[j + 8];
+        }
+    }
+    let (mut tail_dot, mut tail_norm) = (0f32, 0f32);
+    for (r, q) in row_tail.iter().zip(query_tail) {
+        tail_dot += r * q;
+        tail_norm += r * r;
+    }
+    let dot: f32 = dot.iter().sum::<f32>() + tail_dot;
+    let norm: f32 = norm.iter().sum::<f32>() + tail_norm;
+    (dot, norm)
 }
 
 impl Deref for Embedding {
