@@ -181,11 +181,40 @@ class _Spawner:
             os.kill(pid, signal.SIGKILL)
             self._line()
             raise TimeoutError(f"{job['argv'][0]} exceeded {timeout}s")
-        _, code, peak = line.split()
+        _, code, peak, cpu = line.split()
+        global LAST_CPU_S
+        LAST_CPU_S = float(cpu)
         return int(code), int(peak)
-
-
 _SPAWNER = None
+LAST_CPU_S = None
+LAST_LOAD = None  # CPU accounting of the last measured command: see _load_record
+
+
+def _cpu_snapshot():
+    try:
+        cores = {}
+        for line in Path("/proc/stat").read_text().splitlines():
+            if line.startswith("cpu"):
+                name, *v = line.split()
+                v = [int(x) for x in v]
+                cores[name] = (v[0] + v[1] + v[2] + v[5] + v[6], v[7] if len(v) > 7 else 0)  # user nice system irq softirq; steal
+        return {"t": time.perf_counter(), "cores": cores, "loadavg": Path("/proc/loadavg").read_text().split()[:3]}
+    except OSError:
+        return None
+
+
+def _load_record(pre, post, cpu_s):
+    """What ran on the machine besides the measured child during its window, from /proc/stat deltas.
+    Busy time = user + nice + system + irq + softirq; the child's own CPU (wait4 rusage, descendants included) is subtracted."""
+    hz = os.sysconf("SC_CLK_TCK")
+    window = post["t"] - pre["t"]
+    ncpu = len(pre["cores"]) - 1
+    busy = {c: (post["cores"][c][0] - pre["cores"][c][0]) / hz for c in pre["cores"]}
+    steal = (post["cores"]["cpu"][1] - pre["cores"]["cpu"][1]) / hz
+    return {"window_s": window, "child_cpu_s": cpu_s, "loadavg_before": pre["loadavg"], "loadavg_after": post["loadavg"],
+            "foreign_machine_pct_of_capacity": max(0.0, busy["cpu"] - cpu_s) / (window * ncpu) * 100,
+            "foreign_machine_pct_of_one_core": max(0.0, busy["cpu"] - cpu_s) / window * 100,
+            "core_busy_s": {c: v for c, v in busy.items() if c != "cpu"}, "steal_s": steal}
 
 
 # Cold-start clocks start when the child is about to be spawned: after the timing lock and load gate are
@@ -206,6 +235,8 @@ def run_measured(command, env=None, timeout=3600, cwd=None):
         global LAST_T0_NS
         LAST_T0_NS = time.time_ns()
         command = [str(c).replace(T0_PLACEHOLDER, str(LAST_T0_NS)) for c in command]
+        global LAST_LOAD
+        pre = _cpu_snapshot()
         start = time.perf_counter()
         if platform.system() == "Linux":
             if _SPAWNER is None or _SPAWNER.proc.poll() is not None:
@@ -229,6 +260,8 @@ def run_measured(command, env=None, timeout=3600, cwd=None):
                     time.sleep(0.05)
             code, peak = os.waitstatus_to_exitcode(status), max_rss_bytes(ru)
         wall = time.perf_counter() - start
+        post = _cpu_snapshot()
+        LAST_LOAD = _load_record(pre, post, LAST_CPU_S) if pre and post and platform.system() == "Linux" and LAST_CPU_S is not None else None
         stdout, stderr = out_path.read_text(errors="replace"), err_path.read_text(errors="replace")
     if code:
         raise RuntimeError(f"{command[0]} exited {code}: {stderr[-2000:]}")

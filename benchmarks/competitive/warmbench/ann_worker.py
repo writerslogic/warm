@@ -24,7 +24,7 @@ T_IMPORT = time.time_ns()
 import numpy as np  # noqa: E402
 
 K = 10
-EF_SWEEP = [e for e in (10, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024) if e <= int(os.environ.get("WARM_BENCH_EF_MAX", "1024"))]
+EF_SWEEP = [e for e in (10, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048) if e <= int(os.environ.get("WARM_BENCH_EF_MAX", "1024"))]
 NPROBE_SWEEP = [1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 
@@ -155,7 +155,7 @@ class Warm(Adapter):
 class Hnswlib(Adapter):
     # m32e500 and m48e500 match the build effort of the WARM graph (degree 64 at level 0 for
     # M=32, construction ef 500); analysis reports the best build per target recall.
-    BUILDS = {"m16": {"M": 16, "ef_construction": 200}, "m32": {"M": 32, "ef_construction": 200},
+    BUILDS = {"m16": {"M": 16, "ef_construction": 200}, "m32": {"M": 32, "ef_construction": 200}, "m16e500": {"M": 16, "ef_construction": 500},
               "m32e500": {"M": 32, "ef_construction": 500}, "m48e500": {"M": 48, "ef_construction": 500}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
     PERSISTENT_FLUSH = True
@@ -265,7 +265,7 @@ class FaissBase(Adapter):
 
 
 class FaissHnsw(FaissBase):
-    BUILDS = {"m16": {"M": 16, "efConstruction": 200}, "m32": {"M": 32, "efConstruction": 200},
+    BUILDS = {"m16": {"M": 16, "efConstruction": 200}, "m32": {"M": 32, "efConstruction": 200}, "m16e500": {"M": 16, "efConstruction": 500},
               "m32e500": {"M": 32, "efConstruction": 500}, "m48e500": {"M": 48, "efConstruction": 500}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
 
@@ -380,7 +380,9 @@ class FaissIvfpqFs(FaissBase):
 class Usearch(Adapter):
     BUILDS = {"m16": {"connectivity": 16, "expansion_add": 200, "dtype": "f32"},
               "m32": {"connectivity": 32, "expansion_add": 200, "dtype": "f32"},
-              "m16_i8": {"connectivity": 16, "expansion_add": 200, "dtype": "i8"}}
+              "m16_i8": {"connectivity": 16, "expansion_add": 200, "dtype": "i8"},
+              "m16e500": {"connectivity": 16, "expansion_add": 500, "dtype": "f32"},
+              "m32e500": {"connectivity": 32, "expansion_add": 500, "dtype": "f32"}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
     PERSISTENT_FLUSH = True
 
