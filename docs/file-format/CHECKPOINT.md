@@ -118,8 +118,8 @@ Sections:
    bytes), metadata JSON, chunk count, and per chunk a flags byte (bit 0: the chunk id follows,
    otherwise it is the default id for its index; bit 1: its terms are stemmed; bit 2: its terms
    come from a non-legacy store analyzer), the byte span as
-   two varints, and its text (`0` none, `2` inline bytes, `3` the text's offset, a varint, in the
-   compressed text stream; its length is the span).
+   two varints, and its text (`0` none, `2` inline bytes, `3` the text's block, a varint, and its offset in
+   that block's text, a varint; its length is the span).
 6. with feature bit 0 set, three more sections, in this order: the dictionary (at most 64 KiB), the
     block table and the compressed blocks (below). Without the bit the header words of these
     sections are not read.

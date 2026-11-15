@@ -382,11 +382,12 @@ fn encode_document(
         match super::index::try_text_of(chunk, segment)? {
             Some(text) => match texts.as_deref_mut() {
                 Some(texts) => {
-                    let Some(at) = texts.add(&text) else {
+                    let Some((block, from)) = texts.add(&text) else {
                         return Ok(false);
                     };
                     out.push(TEXT_BLOCK);
-                    put_varint(out, at);
+                    put_varint(out, block);
+                    put_varint(out, from);
                 }
                 None => {
                     out.push(TEXT_INLINE);
@@ -457,9 +458,10 @@ pub(crate) struct ServingImage {
 #[derive(Clone, Copy)]
 enum RecordText<'a> {
     Inline(&'a str),
-    /// `len` bytes at `at` in the compressed text stream.
+    /// `len` bytes at `from` in the text of one compressed block.
     Block {
-        at: u64,
+        block: u64,
+        from: u64,
         len: usize,
     },
 }
@@ -669,8 +671,8 @@ impl ServingImage {
         Ok(match text {
             None => None,
             Some(RecordText::Inline(text)) => Some(text.to_owned()),
-            Some(RecordText::Block { at, len }) => {
-                Some(self.opened_text_stream().read(at, len, cache)?)
+            Some(RecordText::Block { block, from, len }) => {
+                Some(self.opened_text_stream().read(block, from, len, cache)?)
             }
         })
     }
@@ -1009,7 +1011,8 @@ impl ServingImage {
                 TEXT_NONE => None,
                 TEXT_INLINE => Some(RecordText::Inline(reader.str()?)),
                 TEXT_BLOCK if self.text_blocks => Some(RecordText::Block {
-                    at: reader.varint()?,
+                    block: reader.varint()?,
+                    from: reader.varint()?,
                     len: (end_byte - start_byte) as usize,
                 }),
                 other => bail!("checkpoint text kind {other}"),
@@ -1086,11 +1089,10 @@ impl ServingImage {
         )?;
         let chunk = found.context("checkpoint chunk index")?;
         let text = match chunk.text {
-            Some(RecordText::Block { at, len }) => Some(self.opened_text_stream().read_shared(
-                at,
-                len,
-                &self.decoded,
-            )?),
+            Some(RecordText::Block { block, from, len }) => Some(
+                self.opened_text_stream()
+                    .read_shared(block, from, len, &self.decoded)?,
+            ),
             other => self.text_string(other, &mut BlockCache::default())?,
         };
         Ok(super::DocumentResult {

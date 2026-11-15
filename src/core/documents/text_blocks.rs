@@ -44,9 +44,9 @@ pub(super) struct TextBuilder {
 }
 
 impl TextBuilder {
-    /// Appends one chunk's text and returns its offset in the stream, `None` when the stream
-    /// would no longer fit the `u32` offsets.
-    pub(super) fn add(&mut self, text: &str) -> Option<u64> {
+    /// Appends one chunk's text and returns its block and its offset in the block's text,
+    /// `None` when the stream would no longer fit the `u32` offsets.
+    pub(super) fn add(&mut self, text: &str) -> Option<(u64, u64)> {
         let end = u32::try_from(self.stream.len().checked_add(text.len())?).ok()?;
         let at = self.stream.len();
         // A block ends once it holds a target's worth, and a chunk of a target or more starts
@@ -59,7 +59,8 @@ impl TextBuilder {
         }
         self.stream.extend_from_slice(text.as_bytes());
         debug_assert_eq!(self.stream.len(), end as usize);
-        Some(at as u64)
+        let start = *self.starts.last().expect("a block was started") as usize;
+        Some(((self.starts.len() - 1) as u64, (at - start) as u64))
     }
 
     pub(super) fn is_empty(&self) -> bool {
@@ -233,12 +234,8 @@ impl<'a> TextBlocks<'a> {
         let mut stream = Vec::new();
         let mut cache = BlockCache::default();
         for block in 0..self.count() {
-            let (start, end) = (
-                self.entry(block).0 as usize,
-                self.entry(block + 1).0 as usize,
-            );
-            let at = u64::from(self.entry(block).0);
-            let text = self.read(at, end - start, &mut cache)?;
+            let size = (self.entry(block + 1).0 - self.entry(block).0) as usize;
+            let text = self.read(block as u64, 0, size, &mut cache)?;
             stream.extend_from_slice(text.as_bytes());
         }
         Ok((self.dict.to_vec(), stream))
@@ -252,53 +249,44 @@ impl<'a> TextBlocks<'a> {
         )
     }
 
-    /// The block holding `len` bytes at `at`, and the offset of those bytes in it.
-    fn locate(&self, at: u64, len: usize) -> Result<(usize, usize)> {
-        let end = at
-            .checked_add(len as u64)
-            .context("checkpoint text offset")?;
-        let block = self
-            .partition(at)
-            .checked_sub(1)
+    /// Checks that `len` bytes at `from` lie in `block`, and returns the block's index.
+    fn locate(&self, block: u64, from: u64, len: usize) -> Result<usize> {
+        let block = usize::try_from(block)
+            .ok()
             .filter(|&block| block < self.count())
-            .context("checkpoint text offset")?;
-        let (raw_start, _) = self.entry(block);
+            .context("checkpoint text block")?;
+        let size = u64::from(self.entry(block + 1).0 - self.entry(block).0);
         ensure!(
-            end <= u64::from(self.entry(block + 1).0),
+            from.checked_add(len as u64).is_some_and(|end| end <= size),
             "checkpoint text crosses a block"
         );
-        Ok((block, (at - u64::from(raw_start)) as usize))
+        Ok(block)
     }
 
     /// [`Self::read`] through `shared`: a block already decoded there costs a copy of the
     /// bytes asked for; a block decoded now is offered to it.
     pub(super) fn read_shared(
         &self,
-        at: u64,
+        block: u64,
+        from: u64,
         len: usize,
         shared: &DecodedBlocks,
     ) -> Result<String> {
-        let (block, from) = self.locate(at, len)?;
+        let block = self.locate(block, from, len)?;
+        let (from, to) = (from as usize, from as usize + len);
+        let boundary = "checkpoint text is not on a character boundary";
         if let Some(text) = shared.get(block) {
-            return Ok(text
-                .get(from..from + len)
-                .context("checkpoint text is not on a character boundary")?
-                .to_owned());
+            return Ok(text.get(from..to).context(boundary)?.to_owned());
         }
         let mut cache = BlockCache::default();
-        let (raw_start, _) = self.entry(block);
-        let raw_len = (self.entry(block + 1).0 - raw_start) as usize;
         self.decode(block, &mut cache)?;
         let text = std::str::from_utf8(&cache.raw).context("checkpoint text is not UTF-8")?;
         shared.offer(block, text);
-        if from == 0 && len == raw_len {
+        if from == 0 && len == cache.raw.len() {
             cache.block = usize::MAX;
             return Ok(String::from_utf8(std::mem::take(&mut cache.raw)).expect("validated"));
         }
-        Ok(text
-            .get(from..from + len)
-            .context("checkpoint text is not on a character boundary")?
-            .to_owned())
+        Ok(text.get(from..to).context(boundary)?.to_owned())
     }
 
     /// Decodes `block` into `cache`.
@@ -322,9 +310,16 @@ impl<'a> TextBlocks<'a> {
         Ok(())
     }
 
-    /// The `len` bytes of the stream at `at`, as text.
-    pub(super) fn read(&self, at: u64, len: usize, cache: &mut BlockCache) -> Result<String> {
-        let (block, from) = self.locate(at, len)?;
+    /// The `len` bytes at `from` in `block`, as text.
+    pub(super) fn read(
+        &self,
+        block: u64,
+        from: u64,
+        len: usize,
+        cache: &mut BlockCache,
+    ) -> Result<String> {
+        let block = self.locate(block, from, len)?;
+        let (from, to) = (from as usize, from as usize + len);
         if cache.block != block {
             self.decode(block, cache)?;
         }
@@ -334,25 +329,9 @@ impl<'a> TextBlocks<'a> {
             return String::from_utf8(std::mem::take(&mut cache.raw))
                 .context("checkpoint text is not UTF-8");
         }
-        let bytes = &cache.raw[from..from + len];
-        Ok(std::str::from_utf8(bytes)
+        Ok(std::str::from_utf8(&cache.raw[from..to])
             .context("checkpoint text is not UTF-8")?
             .to_owned())
-    }
-
-    /// Number of blocks whose first stream offset is at or before `at`, entries counted up to
-    /// and including the final one.
-    fn partition(&self, at: u64) -> usize {
-        let (mut low, mut high) = (0, self.count() + 1);
-        while low < high {
-            let mid = low + (high - low) / 2;
-            if u64::from(self.entry(mid).0) <= at {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
-        }
-        low
     }
 }
 
@@ -373,24 +352,25 @@ mod tests {
             .collect()
     }
 
-    fn build(texts: &[String]) -> (Vec<u64>, Encoded) {
+    fn build(texts: &[String]) -> (Vec<(u64, u64)>, Encoded) {
         let mut builder = TextBuilder::default();
-        let offsets = texts
+        let places = texts
             .iter()
             .map(|text| builder.add(text).expect("fits"))
             .collect();
-        (offsets, builder.finish().expect("fits"))
+        (places, builder.finish().expect("fits"))
     }
 
     #[test]
     fn every_chunk_reads_back_whatever_the_block_boundaries() {
         for chunks in [1usize, 2, 5, 40, 700] {
             let texts = corpus(chunks);
-            let (offsets, encoded) = build(&texts);
+            let (places, encoded) = build(&texts);
             let blocks = TextBlocks::new(&encoded.dict, &encoded.table, &encoded.blocks).unwrap();
             let mut cache = BlockCache::default();
-            for (text, &at) in texts.iter().zip(&offsets).rev() {
-                assert_eq!(blocks.read(at, text.len(), &mut cache).unwrap(), *text);
+            for (text, &(block, from)) in texts.iter().zip(&places).rev() {
+                let read = blocks.read(block, from, text.len(), &mut cache).unwrap();
+                assert_eq!(read, *text);
             }
         }
     }
@@ -402,34 +382,38 @@ mod tests {
             "b".repeat(10),
             "c".repeat(BLOCK_TARGET),
         ];
-        let (offsets, encoded) = build(&texts);
+        let (places, encoded) = build(&texts);
         let blocks = TextBlocks::new(&encoded.dict, &encoded.table, &encoded.blocks).unwrap();
         assert_eq!(blocks.count(), 3);
         let mut cache = BlockCache::default();
-        for (text, &at) in texts.iter().zip(&offsets) {
-            assert_eq!(blocks.read(at, text.len(), &mut cache).unwrap(), *text);
+        for (text, &(block, from)) in texts.iter().zip(&places) {
+            let read = blocks.read(block, from, text.len(), &mut cache).unwrap();
+            assert_eq!(read, *text);
         }
     }
 
     #[test]
-    fn reads_outside_a_chunk_boundary_block_or_the_stream_are_errors() {
+    fn reads_outside_a_chunk_a_block_or_the_table_are_errors() {
         let texts = corpus(40);
-        let (offsets, encoded) = build(&texts);
+        let (places, encoded) = build(&texts);
         let blocks = TextBlocks::new(&encoded.dict, &encoded.table, &encoded.blocks).unwrap();
         let mut cache = BlockCache::default();
-        let total = u64::from(blocks.entry(blocks.count()).0);
-        let last = offsets.len() - 1;
-        let last_len = texts[last].len();
-        // limit, limit + 1 at the end of the stream
-        assert!(blocks.read(offsets[last], last_len, &mut cache).is_ok());
-        assert!(blocks.read(total, 1, &mut cache).is_err());
+        let last = places.len() - 1;
+        let (block, from) = places[last];
+        let len = texts[last].len();
+        // limit, limit + 1 at the end of a block
+        assert!(blocks.read(block, from, len, &mut cache).is_ok());
+        assert!(blocks.read(block, from, len + 1, &mut cache).is_err());
+        assert!(blocks.read(block, from + 1, len, &mut cache).is_err());
+        // the last block and one past it
         assert!(blocks
-            .read(offsets[last], last_len + 1, &mut cache)
+            .read(blocks.count() as u64 - 1, 0, 1, &mut cache)
+            .is_ok());
+        assert!(blocks
+            .read(blocks.count() as u64, 0, 1, &mut cache)
             .is_err());
-        assert!(blocks.read(u64::MAX, 1, &mut cache).is_err());
-        // a span that runs from one block into the next
-        let second = u64::from(blocks.entry(1).0);
-        assert!(blocks.read(second - 1, 2, &mut cache).is_err());
+        assert!(blocks.read(u64::MAX, 0, 1, &mut cache).is_err());
+        assert!(blocks.read(0, u64::MAX, 1, &mut cache).is_err());
     }
 
     #[test]
@@ -444,9 +428,9 @@ mod tests {
             .for_each(|byte| *byte = byte.wrapping_add(0x5b));
         let blocks = TextBlocks::new(&encoded.dict, &encoded.table, &damaged).unwrap();
         let mut cache = BlockCache::default();
-        let reads_wrong = (0..blocks.count()).any(|i| {
+        let reads_wrong = (0..blocks.count() as u64).any(|block| {
             blocks
-                .read(u64::from(blocks.entry(i).0), 1, &mut cache)
+                .read(block, 0, 1, &mut cache)
                 .map_or(true, |text| text != "c")
         });
         assert!(reads_wrong);
