@@ -770,6 +770,7 @@ impl VGraph {
             upper_ids,
             layers,
             ids,
+            inverse: std::sync::OnceLock::new(),
             screen: view!(10, u64),
             screen_words,
             screen_rot,
