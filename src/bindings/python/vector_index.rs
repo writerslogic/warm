@@ -19,8 +19,8 @@ use rayon::prelude::*;
 use crate::core::error::WarmError;
 use crate::core::qgraph::connectivity::ConnectivityStats;
 use crate::core::qgraph::{
-    BuildParams, BuildProfile, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph, Metric, Residency,
-    UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
+    BuildParams, BuildProfile, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph,
+    Metric, Residency, UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
 };
 
 /// Graphs below this many vertices store neighbour ids in three bytes.
@@ -261,7 +261,9 @@ impl PyVectorIndex {
         build_profile: &str,
     ) -> PyResult<Self> {
         let profile = BuildProfile::from_name(build_profile).ok_or_else(|| {
-            PyValueError::new_err("build_profile must be standard, max-recall, high, balanced or fast")
+            PyValueError::new_err(
+                "build_profile must be standard, max-recall, high, balanced or fast",
+            )
         })?;
         let metric = match metric {
             "angular" => Distance::Angular,
