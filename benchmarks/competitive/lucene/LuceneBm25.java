@@ -255,7 +255,9 @@ public final class LuceneBm25 {
     String analyzerName = a.length > 7 ? a[7] : "english";
     rawQueries = !analyzerName.equals("english");
     Analyzer analyzer = analyzer(analyzerName);
-    boolean stored = a.length > 8 && a[8].equals("stored");
+    boolean stored = a.length > 8 && a[8].startsWith("stored");
+    // `stored-dv`: documents contract with id, body and bucket held in doc values instead of stored fields (see searchDocsDv).
+    DV = a.length > 8 && a[8].equals("stored-dv");
     StringBuilder json = new StringBuilder("{");
     switch (phase) {
       case "build" -> {
@@ -286,7 +288,7 @@ public final class LuceneBm25 {
         // documented access path), inside the timed region; the id comes from the stored document.
         java.util.function.Function<String, ScoreDoc[]> run = q -> {
           try {
-            return stored ? searchDocs(searcher, analyzer, q, storedFields) : search(searcher, analyzer, q, ids);
+            return DV ? searchDocsDv(searcher, analyzer, q) : stored ? searchDocs(searcher, analyzer, q, storedFields) : search(searcher, analyzer, q, ids);
           } catch (IOException e) {
             throw new java.io.UncheckedIOException(e);
           }
@@ -335,12 +337,13 @@ public final class LuceneBm25 {
               ScoreDoc[] hits = searcher.search(query(analyzer, prepared[i]), K).scoreDocs;
               for (int h = 0; h < hits.length; h++) {
                 if (h > 0) w.write(',');
-                Document d = storedFields.document(hits[h].doc);
-                byte[] body = d.get("body").getBytes(StandardCharsets.UTF_8);
+                String[] dvFields = DV ? fetchDv(searcher.getIndexReader(), hits[h].doc) : null;
+                Document d = DV ? null : storedFields.document(hits[h].doc);
+                byte[] body = (DV ? dvFields[1] : d.get("body")).getBytes(StandardCharsets.UTF_8);
                 java.util.zip.CRC32 crc = new java.util.zip.CRC32();
                 crc.update(body);
-                w.write("{\"documentId\":" + esc(d.get("id")) + ",\"lexicalScore\":" + hits[h].score + ",\"check\":{\"crc\":" + crc.getValue()
-                    + ",\"len\":" + body.length + ",\"start\":0,\"end\":" + body.length + ",\"bucket\":" + d.getField("bucket").numericValue() + "}}");
+                w.write("{\"documentId\":" + esc(DV ? dvFields[0] : d.get("id")) + ",\"lexicalScore\":" + hits[h].score + ",\"check\":{\"crc\":" + crc.getValue()
+                    + ",\"len\":" + body.length + ",\"start\":0,\"end\":" + body.length + ",\"bucket\":" + (DV ? dvFields[2] : d.getField("bucket").numericValue()) + "}}");
               }
             } else {
               for (int h = 0; h < first[i].length; h++) {
@@ -397,6 +400,15 @@ public final class LuceneBm25 {
 
   static Document doc(Doc doc, boolean stored) {
     Document d = new Document();
+    if (DV) {
+      // Payload kept in doc values (O(1) per-document access, no block decompression) instead of stored fields.
+      d.add(new StringField("id", doc.id, Field.Store.NO));
+      d.add(new TextField("body", doc.text, Field.Store.NO));
+      d.add(new org.apache.lucene.document.BinaryDocValuesField("idv", new org.apache.lucene.util.BytesRef(doc.id)));
+      d.add(new org.apache.lucene.document.BinaryDocValuesField("bodydv", new org.apache.lucene.util.BytesRef(doc.text)));
+      d.add(new org.apache.lucene.document.NumericDocValuesField("bucketdv", doc.bucket));
+      return d;
+    }
     d.add(new StringField("id", doc.id, Field.Store.YES));
     d.add(new TextField("body", doc.text, stored ? Field.Store.YES : Field.Store.NO));
     if (stored) d.add(new org.apache.lucene.document.StoredField("bucket", doc.bucket));
@@ -420,6 +432,62 @@ public final class LuceneBm25 {
       SINK_NUM = d.getField("bucket").numericValue();
     }
     return hits;
+  }
+
+  static boolean DV;
+
+  /** Documents contract with the payload in doc values: fresh iterators per query, hits read in docid order (advanceExact only moves forward), results kept by rank. */
+  static ScoreDoc[] searchDocsDv(IndexSearcher searcher, Analyzer analyzer, String text) throws IOException {
+    ScoreDoc[] hits = searcher.search(query(analyzer, text), K).scoreDocs;
+    int n = hits.length;
+    long[] order = new long[n];
+    for (int r = 0; r < n; r++) order[r] = ((long) hits[r].doc << 32) | r;
+    Arrays.sort(order);
+    java.util.List<org.apache.lucene.index.LeafReaderContext> leaves = searcher.getIndexReader().leaves();
+    String[] ids = new String[n], bodies = new String[n];
+    long[] buckets = new long[n];
+    int leafIdx = -1;
+    org.apache.lucene.index.BinaryDocValues idv = null, bodydv = null;
+    org.apache.lucene.index.NumericDocValues bucketdv = null;
+    org.apache.lucene.index.LeafReaderContext ctx = null;
+    for (int i = 0; i < n; i++) {
+      int r = (int) (order[i] & 0xffffffffL), doc = hits[r].doc;
+      int want = org.apache.lucene.index.ReaderUtil.subIndex(doc, leaves);
+      if (want != leafIdx) {
+        leafIdx = want;
+        ctx = leaves.get(want);
+        idv = ctx.reader().getBinaryDocValues("idv");
+        bodydv = ctx.reader().getBinaryDocValues("bodydv");
+        bucketdv = ctx.reader().getNumericDocValues("bucketdv");
+      }
+      int local = doc - ctx.docBase;
+      idv.advanceExact(local);
+      org.apache.lucene.util.BytesRef b = idv.binaryValue();
+      ids[r] = new String(b.bytes, b.offset, b.length, StandardCharsets.UTF_8);
+      bodydv.advanceExact(local);
+      b = bodydv.binaryValue();
+      bodies[r] = new String(b.bytes, b.offset, b.length, StandardCharsets.UTF_8);
+      bucketdv.advanceExact(local);
+      buckets[r] = bucketdv.longValue();
+    }
+    if (n > 0) {
+      SINK = ids[n - 1];
+      SINK = bodies[n - 1];
+      SINK_NUM = buckets[n - 1];
+    }
+    return hits;
+  }
+
+  /** Untimed: id, body and bucket of one document from doc values. */
+  static String[] fetchDv(org.apache.lucene.index.IndexReader reader, int doc) throws IOException {
+    org.apache.lucene.index.LeafReaderContext ctx = reader.leaves().get(org.apache.lucene.index.ReaderUtil.subIndex(doc, reader.leaves()));
+    int local = doc - ctx.docBase;
+    org.apache.lucene.index.BinaryDocValues idv = ctx.reader().getBinaryDocValues("idv"), bodydv = ctx.reader().getBinaryDocValues("bodydv");
+    org.apache.lucene.index.NumericDocValues bucketdv = ctx.reader().getNumericDocValues("bucketdv");
+    idv.advanceExact(local);
+    bodydv.advanceExact(local);
+    bucketdv.advanceExact(local);
+    return new String[] {idv.binaryValue().utf8ToString(), bodydv.binaryValue().utf8ToString(), Long.toString(bucketdv.longValue())};
   }
 
   // Keeps the id reads observable so the JIT cannot drop them.

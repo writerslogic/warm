@@ -372,7 +372,7 @@ def _attach_versions_and_footprints(results):
             entry["version"] = {"tantivy": registry.TANTIVY_CRATE, "rustc": subprocess.run(["rustc", "--version"], capture_output=True, text=True).stdout.strip()}
             entry["install"] = warm_install_facts([warm_binary("competitive_text_tantivy", example=True)], crates=False)
             continue
-        if system in ("lucene", "lucene-docs", "lucene-prev"):
+        if system in ("lucene", "lucene-docs", "lucene-dv-docs", "lucene-prev"):
             version = jars.PREVIOUS if system == "lucene-prev" else jars.VERSION
             entry["version"] = {"lucene": version, "jvm": jars.java_version()}
             entry["install"] = jars.footprint(version)
@@ -475,7 +475,7 @@ def run_text(dataset, spec, systems, out_path=None):
             except Exception as error:
                 results["skipped"][system] = str(error)[-600:]
     for system in live:
-        base = system.removesuffix("-docs") if system.endswith("-docs") else registry.WARM_LEXICAL_API if system in registry.WARM_TEXT_STORED else None
+        base = "lucene" if system == "lucene-dv-docs" else system.removesuffix("-docs") if system.endswith("-docs") else registry.WARM_LEXICAL_API if system in registry.WARM_TEXT_STORED else None
         if base in first_rows and system in first_rows:
             verification["pairs"][system] = {"ids_row": base} | _pair_ids(first_rows[system], first_rows[base])
     results["verification"] = verification
@@ -530,11 +530,11 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None):
             cmd += ["--stored", "true", "--docstore", registry.TANTIVY_DOCSTORE]
             if phase == "serve":
                 cmd += ["--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE)]
-    elif system in ("lucene", "lucene-docs", "lucene-prev"):
+    elif system in ("lucene", "lucene-docs", "lucene-dv-docs", "lucene-prev"):
         classpath, _ = jars.ensure(jars.PREVIOUS if system == "lucene-prev" else jars.VERSION)
         cmd = ["java", *registry.LUCENE_JVM_FLAGS[phase], "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
         if stored:
-            cmd += ["english", "stored"]
+            cmd += ["english", "stored-dv" if system == "lucene-dv-docs" else "stored"]
     else:
         python = envs.ensure(registry.SYSTEMS[system]["env"])
         cmd = [str(python), "-I", str(WORKER_DIR / "text_worker.py"), phase, "--system", system, "--input", str(input_path),

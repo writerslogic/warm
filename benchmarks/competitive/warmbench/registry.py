@@ -74,6 +74,7 @@ SYSTEMS = {
     # them back inside the timer.
     "sqlite-fts5-docs": {"display": "SQLite FTS5 (documents contract: docstore table read per hit)", "kind": "text", "env": "stdlib", "package": "sqlite3", "family": "lexical"},
     "lucene-docs": {"display": f"Apache Lucene {jars.VERSION} (JVM, documents contract: stored fields read per hit)", "kind": "text", "env": None, "package": "lucene-core", "family": "lexical"},
+    "lucene-dv-docs": {"display": f"Apache Lucene {jars.VERSION} (JVM, documents contract: payload in doc values instead of stored fields)", "kind": "text", "env": None, "package": "lucene-core", "family": "lexical"},
     "tantivy-py-docs": {"display": "tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit)", "kind": "text", "env": "tantivy", "package": "tantivy", "family": "lexical"},
     "tantivy-rs-docs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, pruning collector, documents contract)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
     "tantivy-rs-count-docs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, exhaustive collector with Count, documents contract)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
@@ -102,6 +103,7 @@ TIMING_BOUNDARY = {
     "tantivy-rs-docs": "native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer",
     "tantivy-rs-count-docs": "native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer",
     "lucene-docs": "in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer",
+    "lucene-dv-docs": "in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer",
     "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open",
 }
 
@@ -155,6 +157,8 @@ COMPARATOR_SETTINGS["tantivy-py-docs"] = {"query": COMPARATOR_SETTINGS["tantivy-
 COMPARATOR_SETTINGS["lucene-docs"] = {**COMPARATOR_SETTINGS["lucene"], "id_resolution": "id read from the fetched stored document (no id table)",
                                       "stored_fields": "id, body, bucket stored; StoredFields.document(hit) per hit inside the timer, one StoredFields instance reused",
                                       "codec": "Lucene104Codec with Mode.BEST_SPEED stored fields (the default mode, the faster of the two documented modes), set explicitly"}
+COMPARATOR_SETTINGS["lucene-dv-docs"] = {**COMPARATOR_SETTINGS["lucene-docs"], "id_resolution": "id read from the doc-values payload of each fetched hit (no id table)",
+                                           "stored_fields": "no stored fields: id and body as BinaryDocValues, bucket as NumericDocValues (default doc-values format, uncompressed binary); advanceExact per hit in docid order inside the timer", "codec": "Lucene104Codec default doc-values format; the index is larger than lucene-docs because the body is not block-compressed"}
 COMPARATOR_SETTINGS["sqlite-fts5-docs"] = {**COMPARATOR_SETTINGS["sqlite-fts5"],
                                            "query": "SELECT d.id, t.rank, d.body, d.bucket FROM (SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT 100) t JOIN docstore d ON d.rowid = t.rowid ORDER BY t.rank (the stored columns of the top-100 only; fastest of join, IN and point selects in evidence run10/micro_fts.log)",
                                            "id_resolution": "id read from the docstore row", "stored_fields": "docstore(rowid, id, body, bucket) table beside the contentless FTS5 index"}
@@ -207,6 +211,7 @@ FACTS[WARM_EAGER] = FACTS[WARM]
 FACTS[WARM_LEXICAL_API] = FACTS[WARM]
 for _base in ("sqlite-fts5", "tantivy-py", "tantivy-rs", "tantivy-rs-count", "lucene"):
     FACTS[_base + "-docs"] = FACTS.get(_base, {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}})
+FACTS["lucene-dv-docs"] = FACTS["lucene-docs"]
 
 SYSTEMS.update({
     "ngt": {"display": "NGT (ONNG)", "kind": "ann", "env": "ngt", "package": "ngt", "family": "graph"},
@@ -264,6 +269,7 @@ COMMIT_CONTRACT = {
     "tantivy-rs-docs": (INCREMENTAL, "writer commit per operation (segment and meta.json synced)"),
     "tantivy-rs-count-docs": (INCREMENTAL, "writer commit per operation (segment and meta.json synced)"),
     "lucene-docs": (INCREMENTAL, "IndexWriter commit per operation (FileChannel.force)"),
+    "lucene-dv-docs": (INCREMENTAL, "IndexWriter commit per operation (FileChannel.force)"),
     "whoosh": (INCREMENTAL, "writer commit per operation"),
     "hnswlib": (REWRITE, "save_index of the whole index plus fsync per operation; the library has no incremental durable API"),
     "faiss-hnsw": (REWRITE, "write_index of the whole index plus fsync per operation"),

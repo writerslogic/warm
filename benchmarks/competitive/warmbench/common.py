@@ -39,6 +39,11 @@ def cpu_model():
         for line in Path("/proc/cpuinfo").read_text().splitlines():
             if line.startswith("model name"):
                 return line.split(":", 1)[1].strip()
+    # arm64 Linux /proc/cpuinfo has no "model name"; lscpu reads the core name (for example Neoverse-N1) from the MIDR.
+    with suppress(OSError, subprocess.SubprocessError):
+        for line in subprocess.run(["lscpu"], capture_output=True, text=True, check=True, env={**os.environ, "LC_ALL": "C"}).stdout.splitlines():
+            if line.startswith("Model name:") and line.split(":", 1)[1].strip():
+                return line.split(":", 1)[1].strip()
     return platform.processor() or platform.machine()
 
 
