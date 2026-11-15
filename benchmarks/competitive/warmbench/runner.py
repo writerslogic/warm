@@ -38,6 +38,8 @@ SUITES = {
     "standard": {"ann": [("glove-100-angular", 250_000, 2_000), ("sift-128-euclidean", 250_000, 2_000)],
                  "text": ["beir:scifact", "beir:nfcorpus", "memory", "beir:fiqa"],
                  "rounds": 10, "build_repeats": 3, "threads": 4, "timeout_s": 2700},
+    # scale: lexical engines on MS MARCO passage subsets (see `warm-bench run --suite scale`); builds once, no ops phase.
+    "scale": {"ann": [], "text": ["beir:fiqa", "msmarco:100k", "msmarco:1m", "msmarco:full"], "rounds": 5, "build_repeats": 1, "threads": 8, "timeout_s": 21600},
     # heavy: self-hosted or Modal; full GloVe-100 (1.18M) and SIFT-1M.
     "heavy": {"ann": [("glove-100-angular", None, 10_000), ("sift-128-euclidean", None, 10_000)],
               "text": ["beir:scifact", "beir:nfcorpus", "memory", "beir:fiqa"], "rounds": 10, "build_repeats": 2, "threads": 8, "timeout_s": 3600},
@@ -460,7 +462,9 @@ def run_text(dataset, spec, systems, out_path=None):
     # Every system's serve phase reads the queries alone, so no worker's serving RSS includes
     # the parsed corpus it does not need.
     serve_input_path = folder / "serve-input.json"
-    serve_input_path.write_text(json.dumps({"documents": [], "queries": json.loads(input_path.read_text())["queries"]}))
+    queries_file = folder / "queries.json"
+    serve_queries = json.loads(queries_file.read_text()) if queries_file.exists() else json.loads(input_path.read_text())["queries"]
+    serve_input_path.write_text(json.dumps({"documents": [], "queries": serve_queries}))
     qrels = json.loads((folder / "qrels.json").read_text())
     results["qrels_queries"] = len(qrels)
     threads = {k: "1" for k in SINGLE_THREAD}
@@ -565,7 +569,12 @@ def _text_cmd(system, phase, input_path, store, out, env, t0=None, extra=()):
                 cmd += ["--digest", "true", "--doc-cache", str(registry.TANTIVY_DOC_CACHE)]
     elif system in ("lucene", "lucene-docs", "lucene-dv-docs", "lucene-prev"):
         classpath, _ = jars.ensure(jars.PREVIOUS if system == "lucene-prev" else jars.VERSION)
-        cmd = ["java", *registry.LUCENE_JVM_FLAGS[phase], "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
+        flags = list(registry.LUCENE_JVM_FLAGS[phase])
+        # The serve heap holds the docid-to-id table, which outgrows the fixed 128 MB heap near 8.8M documents;
+        # WARM_BENCH_LUCENE_SERVE_XMX (for example 3g) raises it for such a run, and the run notes record it.
+        if phase == "serve" and os.environ.get("WARM_BENCH_LUCENE_SERVE_XMX"):
+            flags = ["-Xmx" + os.environ["WARM_BENCH_LUCENE_SERVE_XMX"] if f.startswith("-Xmx") else f for f in flags]
+        cmd = ["java", *flags, "-cp", classpath, "LuceneBm25", phase, str(input_path), str(store), str(out), str(t0), "3", "100"]
         if stored:
             cmd += ["english", "stored-dv" if system == "lucene-dv-docs" else "stored"]
     else:

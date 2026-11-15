@@ -13,7 +13,6 @@ docs/benchmarks/BIG-ANN-STREAMING.md|4.69 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.70 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.85 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.93 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|518 MiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.02 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.04 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.41 GiB
@@ -28,7 +27,6 @@ docs/benchmarks/LOCOMO-HEAD-TO-HEAD.md|1,540 x
 docs/benchmarks/README.md|10.14x
 docs/benchmarks/README.md|10.34x
 docs/benchmarks/README.md|10.77x
-docs/benchmarks/README.md|15.97x
 docs/benchmarks/README.md|16.07x
 docs/benchmarks/README.md|19.88x
 docs/benchmarks/README.md|2.56x

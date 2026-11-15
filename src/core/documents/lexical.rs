@@ -515,7 +515,7 @@ fn exhaustive(
 }
 
 pub(super) mod execution;
-mod wand;
+pub(in crate::core::documents) mod wand;
 use execution::document_at_a_time;
 
 #[cfg(test)]
