@@ -86,6 +86,8 @@ pub enum ExperienceError {
     },
     #[error("step {step} of episode {episode:?} was already ingested with different content")]
     Conflict { episode: String, step: u32 },
+    #[error("experience quota of {0} units would be exceeded")]
+    Quota(u64),
     #[error("lexical index: {0}")]
     Index(String),
     #[error("snapshot: {0}")]
@@ -977,13 +979,18 @@ impl Experience {
     fn effect_view(&self, (t, l): (u32, Sym), r: &effects::EffectRow, top: usize) -> EffectView {
         let syms = &self.terms.syms;
         let ranked = |m: &HashMap<Sym, u32>| {
-            let mut v: Vec<(String, u32)> = m
-                .iter()
-                .map(|(&s, &c)| (syms.get(s).to_string(), c))
-                .collect();
-            v.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
-            v.truncate(top);
-            v
+            let mut v: Vec<(&str, u32)> = m.iter().map(|(&s, &c)| (syms.get(s), c)).collect();
+            let order = |a: &(&str, u32), b: &(&str, u32)| b.1.cmp(&a.1).then_with(|| a.0.cmp(b.0));
+            if top == 0 {
+                return Vec::new();
+            }
+            // Only the first `top` are kept, so the rest are never sorted or copied.
+            if v.len() > top {
+                v.select_nth_unstable_by(top - 1, order);
+                v.truncate(top);
+            }
+            v.sort_by(order);
+            v.into_iter().map(|(t, c)| (t.to_string(), c)).collect()
         };
         let mut next: Vec<(TemplateInfo, u32)> =
             r.nxt.iter().map(|(&n, &c)| (self.info(n), c)).collect();
@@ -1037,6 +1044,12 @@ impl Experience {
         Ok(())
     }
 
+    /// What counts against a tenant quota: one unit per episode, region and effect row, the
+    /// entries the experience indexes hold.
+    pub fn quota_units(&self) -> u64 {
+        (self.episode_map.len() + self.regions.live() + self.effects.rows.len()) as u64
+    }
+
     pub fn has_effects(&self) -> bool {
         !self.effects.rows.is_empty()
     }
@@ -1051,60 +1064,79 @@ impl Experience {
             ..Default::default()
         };
         let found = self.effect_docs.search(query, &opts).map_err(index_err)?;
-        Ok(found
+        let mut hits: Vec<EffectHit> = found
             .into_iter()
             .filter_map(|d| {
                 let (template, action) = parse_effect_doc_id(&d.document_id)?;
-                let view = self
-                    .effects(template, Some(&action), EFFECT_INDEX_TOP)
-                    .pop()?;
-                let provenance = self.effect_provenance(template, &action);
+                let view = self.effect_view_of(template, &action)?;
                 Some(EffectHit {
                     id: d.document_id,
                     score: d.score,
                     view,
-                    provenance,
+                    provenance: Vec::new(),
                 })
             })
-            .collect())
+            .collect();
+        self.fill_effect_provenance(&mut hits);
+        Ok(hits)
+    }
+
+    /// The row for (`template`, `action`), found by key.
+    fn effect_view_of(&self, template: u32, action: &str) -> Option<EffectView> {
+        let l = self.terms.syms.lookup(action)?;
+        let r = self.effects.rows.get(&(template, l))?;
+        Some(self.effect_view((template, l), r, EFFECT_INDEX_TOP))
     }
 
     /// One effect row by its index id, with score 0.
     pub fn effect_hit(&self, id: &str) -> Option<EffectHit> {
         let (template, action) = parse_effect_doc_id(id)?;
-        let view = self
-            .effects(template, Some(&action), EFFECT_INDEX_TOP)
-            .pop()?;
-        let provenance = self.effect_provenance(template, &action);
-        Some(EffectHit {
+        let view = self.effect_view_of(template, &action)?;
+        let mut hits = vec![EffectHit {
             id: id.to_string(),
             score: 0.0,
             view,
-            provenance,
-        })
+            provenance: Vec::new(),
+        }];
+        self.fill_effect_provenance(&mut hits);
+        hits.pop()
     }
 
-    /// Where an action was taken from a template: a scan of the stored steps, for explain.
-    fn effect_provenance(&self, template: u32, action: &str) -> Vec<Provenance> {
-        let Some(label) = self.terms.syms.lookup(action) else {
-            return Vec::new();
-        };
-        let mut out = Vec::new();
-        for e in self.episodes.iter().flatten() {
+    /// Fills the first transitions of each hit's row in one pass over the stored steps, however
+    /// many hits there are.
+    fn fill_effect_provenance(&self, hits: &mut [EffectHit]) {
+        let mut by_key: HashMap<(u32, Sym), usize> = HashMap::new();
+        for (i, h) in hits.iter().enumerate() {
+            let Some((t, a)) = parse_effect_doc_id(&h.id) else {
+                continue;
+            };
+            if let Some(l) = self.terms.syms.lookup(&a) {
+                by_key.insert((t, l), i);
+            }
+        }
+        let mut open = by_key.len();
+        'scan: for e in self.episodes.iter().flatten() {
             for w in e.steps.windows(2) {
-                if w[1].label == Some(label) && w[0].template == template {
-                    out.push(Provenance {
+                let Some(l) = w[1].label else { continue };
+                let Some(&i) = by_key.get(&(w[0].template, l)) else {
+                    continue;
+                };
+                let p = &mut hits[i].provenance;
+                if p.len() < MAX_PROVENANCE {
+                    p.push(Provenance {
                         episode: e.key.clone(),
                         step: w[1].step,
                         count: 1,
                     });
-                    if out.len() >= MAX_PROVENANCE {
-                        return out;
+                    if p.len() == MAX_PROVENANCE {
+                        open -= 1;
+                        if open == 0 {
+                            break 'scan;
+                        }
                     }
                 }
             }
         }
-        out
     }
 
     /// Episodes whose goal, outcome or action path matches the text.

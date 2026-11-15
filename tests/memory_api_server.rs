@@ -296,12 +296,29 @@ fn observations_over_http_are_routed_bounded_recalled_and_forgotten() {
     for _ in 0..600 {
         deep = json!({"role": "group", "name": "g", "children": [deep]});
     }
-    let (status, _) = server.post(
+    let (status, body) = server.post(
         "remember",
         "t1",
         &json!({"episode": "e2", "step": 0, "tree": deep}),
     );
-    assert!(status == 400 || status == 422, "{status}");
+    assert_eq!(status, 400, "{body}");
+    assert_eq!(body["error"]["code"], "nesting_too_deep", "{body}");
+    // 63 levels is accepted: the parser's limit is the only bound below the library's 128.
+    let mut ok = json!({"role": "button", "name": "leaf"});
+    for _ in 0..61 {
+        ok = json!({"role": "group", "name": "g", "children": [ok]});
+    }
+    let (status, body) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e2", "step": 0, "tree": ok}),
+    );
+    assert_eq!(status, 200, "{body}");
+    server.post(
+        "forget",
+        "t1",
+        &json!({"scope": {"kind": "episode", "episode": "e2"}}),
+    );
     // Byte limits are checked on the raw value, before allocation.
     let (status, _) = server.post(
         "remember",
@@ -346,4 +363,37 @@ fn observations_over_http_are_routed_bounded_recalled_and_forgotten() {
         !ids(&body).iter().any(|i| i.starts_with("experience:")),
         "{body}"
     );
+}
+
+#[test]
+fn observations_count_against_the_tenant_quota() {
+    // The first observation stores one episode and one region (2 units); each further episode of
+    // the same shape shares the region and adds one.
+    let obs = |ep: &str| {
+        json!({"episode": ep, "step": 0, "url": "http://q/p",
+            "tree": {"role": "RootWebArea", "name": "Quota page", "children": [
+                {"role": "button", "name": "press the shared button"}]}})
+    };
+    let units_after = |quota: &str, n: usize| -> Vec<u16> {
+        let dir = tempfile::tempdir().unwrap();
+        let server = start(dir.path(), &["--max-documents-per-tenant", quota]);
+        (0..n)
+            .map(|i| server.post("remember", "q", &obs(&format!("e{i}"))).0)
+            .collect()
+    };
+    // Each new episode adds an episode unit and shares the region, so units are 1 + 1 for the
+    // first, then +1 per further episode (same structure): 2, 3, 4.
+    assert_eq!(units_after("3", 3), vec![200, 200, 429], "quota is reached exactly");
+    assert_eq!(units_after("4", 3), vec![200, 200, 200], "quota-1..quota admits");
+    assert_eq!(units_after("2", 2), vec![200, 429], "quota+1 refuses");
+    let dir = tempfile::tempdir().unwrap();
+    let server = start(dir.path(), &["--max-documents-per-tenant", "3"]);
+    assert_eq!(server.post("remember", "q", &obs("a")).0, 200);
+    assert_eq!(server.post("remember", "q", &obs("b")).0, 200);
+    let (status, body) = server.post("remember", "q", &obs("c"));
+    assert_eq!(status, 429, "{body}");
+    assert_eq!(body["error"]["code"], "quota_exceeded");
+    // The refused step left nothing: a fact still cannot fit, and the episode is not stored.
+    let (status, _) = server.post("remember", "q", &json!({"id": "f", "text": "a fact"}));
+    assert_eq!(status, 429);
 }

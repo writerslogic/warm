@@ -75,6 +75,16 @@ impl Memory {
         &self,
         observations: Vec<OwnedObservation>,
     ) -> Result<Vec<Remembered>> {
+        self.remember_observations_within(observations, None)
+    }
+
+    /// With a document `limit`, a step that would take the documents plus the experience units
+    /// past it is refused with [`DocumentQuotaExceeded`](super::DocumentQuotaExceeded).
+    pub(super) fn remember_observations_within(
+        &self,
+        observations: Vec<OwnedObservation>,
+        limit: Option<u64>,
+    ) -> Result<Vec<Remembered>> {
         check!(
             !observations.is_empty(),
             "remember requires 1.. observations"
@@ -86,9 +96,15 @@ impl Memory {
             .collect();
         let outcomes = self
             .core
-            .with_experience_mut(|store| store.ingest_many(observations))
+            .with_experience_mut(|store| {
+                let budget = limit.map(|l| l.saturating_sub(self.core.document_count() as u64));
+                store.ingest_many_within(observations, budget)
+            })
             .map_err(experience_error)?
             .map_err(|(position, error)| {
+                if let (ExperienceError::Quota(_), Some(limit)) = (&error, limit) {
+                    return anyhow::Error::new(super::DocumentQuotaExceeded { limit });
+                }
                 let error = experience_error(error);
                 match error.downcast_ref::<MemoryError>() {
                     Some(MemoryError::Invalid(m)) => anyhow::Error::new(MemoryError::Invalid(
@@ -152,7 +168,7 @@ impl Memory {
         } else {
             self.remember_many_with_limit(facts, limit)?
         };
-        let observation_results = self.remember_observations(observations)?;
+        let observation_results = self.remember_observations_within(observations, limit)?;
         Ok(slots
             .into_iter()
             .map(|(observed, i)| {

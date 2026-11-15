@@ -378,6 +378,7 @@ impl ExperienceStore {
     fn run(
         &mut self,
         ops: Vec<Op>,
+        budget: Option<u64>,
     ) -> std::result::Result<Vec<Ingested>, (usize, ExperienceError)> {
         let mut outcomes = Vec::with_capacity(ops.len());
         let mut frames = Vec::new();
@@ -386,6 +387,12 @@ impl ExperienceStore {
             match Self::apply(&mut self.x, &op) {
                 Ok(Ingested::Duplicate) => outcomes.push(Ingested::Duplicate),
                 Ok(Ingested::Applied) => {
+                    if let Some(b) = budget.filter(|b| self.x.quota_units() > *b) {
+                        // Over the quota: this step is applied in memory only, so reload.
+                        ahead = true;
+                        failed = Some((i, ExperienceError::Quota(b)));
+                        break;
+                    }
                     self.seq += 1;
                     let record = Record { seq: self.seq, op };
                     match self.frame(&record) {
@@ -449,7 +456,17 @@ impl ExperienceStore {
         &mut self,
         observations: Vec<OwnedObservation>,
     ) -> std::result::Result<Vec<Ingested>, (usize, ExperienceError)> {
-        self.run(observations.into_iter().map(Op::Ingest).collect())
+        self.ingest_many_within(observations, None)
+    }
+
+    /// [`Self::ingest_many`] that refuses a step which would take [`Experience::quota_units`]
+    /// past `budget`; steps before it stay stored and nothing of it remains.
+    pub fn ingest_many_within(
+        &mut self,
+        observations: Vec<OwnedObservation>,
+        budget: Option<u64>,
+    ) -> std::result::Result<Vec<Ingested>, (usize, ExperienceError)> {
+        self.run(observations.into_iter().map(Op::Ingest).collect(), budget)
     }
 
     pub fn describe_episode(&mut self, episode: &str, goal: &str, outcome: &str) -> Result<()> {
@@ -457,7 +474,7 @@ impl ExperienceStore {
             episode: episode.into(),
             goal: goal.into(),
             outcome: outcome.into(),
-        }])
+        }], None)
         .map(|_| ())
         .map_err(|(_, e)| e)
     }

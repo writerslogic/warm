@@ -218,6 +218,19 @@ fn region_texts(m: &Memory, query: &str, k: usize, lat: &mut Vec<f64>) -> Vec<(S
         .collect()
 }
 
+/// Effect rows only, straight from the experience core.
+fn effect_texts(m: &Memory, query: &str, k: usize, lat: &mut Vec<f64>) -> Vec<(String, String)> {
+    let started = Instant::now();
+    let hits = m
+        .core()
+        .with_experience(|s| s.search_effects(query, k).unwrap())
+        .unwrap();
+    lat.push(started.elapsed().as_secs_f64() * 1000.0);
+    hits.into_iter()
+        .map(|h| (h.id, h.view.render()))
+        .collect()
+}
+
 /// The document store searched directly, bypassing the memory layer.
 fn direct_texts(m: &Memory, query: &str, k: u32, lat: &mut Vec<f64>) -> Vec<(String, String)> {
     let started = Instant::now();
@@ -321,6 +334,7 @@ fn main() {
             for (arm, m, k, whole) in [
                 ("R_experience", &r, 200u32, false),
                 ("R_regions_only", &r, 200, false),
+                ("R_effects_only", &r, 200, false),
                 ("D_documents", &d, 300, true),
                 ("D_direct", &d, 300, true),
                 ("M_merged", &mixed, 300, false),
@@ -328,6 +342,7 @@ fn main() {
                 let lat = latency.entry(arm.to_string()).or_default();
                 let hits = match arm {
                     "R_regions_only" => region_texts(m, &q.question, k as usize, lat),
+                    "R_effects_only" => effect_texts(m, &q.question, k as usize, lat),
                     "D_direct" => direct_texts(m, &q.question, k, lat),
                     _ => recall_texts(m, &q.question, k, lat),
                 };

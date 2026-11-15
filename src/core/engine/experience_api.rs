@@ -71,6 +71,11 @@ impl WarmCore {
         self.experience.read().as_ref().map(f)
     }
 
+    /// Units the experience core holds against a tenant quota (episodes, regions, effect rows).
+    pub fn experience_units(&self) -> u64 {
+        self.with_experience(|s| s.quota_units()).unwrap_or(0)
+    }
+
     /// The configured bounds on one observation.
     pub fn experience_limits(&self) -> ExperienceConfig {
         ExperienceConfig::default()

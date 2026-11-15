@@ -110,7 +110,11 @@ No flag and no separate API are needed.
   tree is built from it (`ExperienceConfig`), and `warm-server` checks them before the core sees
   the request. Over HTTP the JSON parser refuses nesting past 128 levels, and a tree level takes
   two (an object and a `children` array), so a request can carry 63 tree levels; the depth limit
-  of 128 applies to the library and the bindings. The shape and limits of every entry in a batch are
+  of 128 applies to the library and the bindings. A request nested deeper than the parser allows is
+  refused with 400 `nesting_too_deep`. `warm-server`'s `--max-documents-per-tenant` counts one unit
+  per stored document plus one per episode, region and effect row; a step that would pass it
+  gets 429 `quota_exceeded` and leaves nothing stored (steps before it in the same call stay).
+  The quota counts entries, not bytes. The shape and limits of every entry in a batch are
   checked before anything in it is stored; an out-of-order or conflicting step is still found only
   when it is applied.
 - `recall`: the best regions and the best action-effect rows merge with the fact results into one

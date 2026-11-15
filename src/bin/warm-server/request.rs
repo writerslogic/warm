@@ -119,6 +119,13 @@ pub async fn blocking<T: Send + 'static>(
 
 pub fn parse<T: for<'de> Deserialize<'de>>(bytes: &[u8]) -> Result<T, ApiError> {
     serde_json::from_slice(bytes).map_err(|e| {
+        if e.to_string().contains("recursion limit") {
+            return ApiError::new(
+                StatusCode::BAD_REQUEST,
+                "nesting_too_deep",
+                "request nests deeper than 128 JSON levels (at most 63 levels of an observation tree)",
+            );
+        }
         ApiError::new(
             StatusCode::BAD_REQUEST,
             "invalid_json",

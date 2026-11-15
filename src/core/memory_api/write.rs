@@ -165,7 +165,7 @@ impl Memory {
                 .iter()
                 .filter(|fact| !fact.idempotent && !fact.replaces)
                 .count() as u64;
-            let count = self.core.document_count() as u64;
+            let count = self.core.document_count() as u64 + self.core.experience_units();
             if !self.core.memory_revision_matches(before) {
                 return Ok(None);
             }
