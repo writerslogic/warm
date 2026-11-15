@@ -77,7 +77,7 @@ records with a store that never checkpointed, through writes and reopens.
 
 A checkpoint is also written while documents are still arriving. After each committed
 document batch, an engine whose live index has reached `document_checkpoint.index_memory_budget`
-(32 MiB by default; 0 turns folding off) compacts, and the compaction writes the checkpoint by
+(64 MiB by default; 0 turns folding off) compacts, and the compaction writes the checkpoint by
 merging instead of encoding the whole store in memory:
 
 1. the checkpoint under the store (if there is one) and the live store are read side by side;
@@ -106,6 +106,12 @@ checkpoint's document, and the next compaction then rebuilds the full store as b
 A crash at any point of a fold leaves the previous generation current: its checkpoint plus the
 frames of every committed batch, which is the state the next open replays. The scratch directory
 beside the staging generation (`gen-*.fold`) is removed by the next compaction.
+
+Each fold rewrites the whole checkpoint, so a fixed budget does quadratic work. The trigger is
+therefore `max(index_memory_budget, index_fold_fraction * checkpoint bytes)` (fraction 20.0 by
+default; 0 keeps the fixed budget): the live index may grow to a multiple of the checkpoint
+before the next rewrite and the number of rewrites is logarithmic in the corpus. A larger
+fraction folds less and holds more memory; the MS MARCO sweep is in the pull request.
 
 The estimate that `index_memory_budget` is compared with is the sum, over the chunks installed
 since the store was created or last folded, of 512 bytes plus 40 bytes per distinct term plus the

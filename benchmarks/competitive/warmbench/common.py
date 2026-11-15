@@ -39,6 +39,11 @@ def cpu_model():
         for line in Path("/proc/cpuinfo").read_text().splitlines():
             if line.startswith("model name"):
                 return line.split(":", 1)[1].strip()
+    # arm64 Linux /proc/cpuinfo has no "model name"; lscpu reads the core name (for example Neoverse-N1) from the MIDR.
+    with suppress(OSError, subprocess.SubprocessError):
+        for line in subprocess.run(["lscpu"], capture_output=True, text=True, check=True, env={**os.environ, "LC_ALL": "C"}).stdout.splitlines():
+            if line.startswith("Model name:") and line.split(":", 1)[1].strip():
+                return line.split(":", 1)[1].strip()
     return platform.processor() or platform.machine()
 
 
@@ -118,6 +123,33 @@ def ratio_ci(numerator, denominator, rounds=2000, seed=24731, level=0.95):
     return point, [draws[int(tail * rounds)], draws[min(rounds - 1, int((1 - tail) * rounds))]]
 
 
+def paired_bootstrap(first, second, rounds=2000, seed=24731, level=0.95):
+    """Paired per-query bootstrap of two systems scored on the same queries: queries are resampled with replacement, the
+    same draw for both systems. Returns the means, mean(first) - mean(second) with its percentile interval, and
+    mean(first) / mean(second) with its interval (None when a resampled mean of `second` is not positive)."""
+    first, second = list(first), list(second)
+    if len(first) != len(second):
+        raise ValueError(f"paired scores need the same queries: {len(first)} against {len(second)}")
+    n = len(first)
+    if n == 0:
+        raise ValueError("paired scores need at least one query")
+    rng = random.Random(seed)
+    population = range(n)
+    differences, ratios = [], []
+    for _ in range(rounds):
+        draw = rng.choices(population, k=n)
+        a, b = sum(map(first.__getitem__, draw)), sum(map(second.__getitem__, draw))
+        differences.append((a - b) / n)
+        ratios.append(a / b if b > 0 else math.nan)
+    tail = (1 - level) / 2
+    lo, hi = int(tail * rounds), min(rounds - 1, int((1 - tail) * rounds))
+    differences.sort()
+    ratio_interval = None if any(r != r for r in ratios) else [sorted(ratios)[lo], sorted(ratios)[hi]]
+    mean_first, mean_second = sum(first) / n, sum(second) / n
+    return {"means": [mean_first, mean_second], "difference": mean_first - mean_second, "difference_ci": [differences[lo], differences[hi]],
+            "ratio": mean_first / mean_second if mean_second > 0 else None, "ratio_ci": ratio_interval, "queries": n}
+
+
 def ndcg_at(found, relevant, k=10):
     gain = sum(relevant.get(key, 0) / math.log2(rank + 2) for rank, key in enumerate(found[:k]))
     ideal = sum(g / math.log2(rank + 2) for rank, g in enumerate(sorted(relevant.values(), reverse=True)[:k]))
@@ -181,11 +213,40 @@ class _Spawner:
             os.kill(pid, signal.SIGKILL)
             self._line()
             raise TimeoutError(f"{job['argv'][0]} exceeded {timeout}s")
-        _, code, peak = line.split()
+        _, code, peak, cpu = line.split()
+        global LAST_CPU_S
+        LAST_CPU_S = float(cpu)
         return int(code), int(peak)
-
-
 _SPAWNER = None
+LAST_CPU_S = None
+LAST_LOAD = None  # CPU accounting of the last measured command: see _load_record
+
+
+def _cpu_snapshot():
+    try:
+        cores = {}
+        for line in Path("/proc/stat").read_text().splitlines():
+            if line.startswith("cpu"):
+                name, *v = line.split()
+                v = [int(x) for x in v]
+                cores[name] = (v[0] + v[1] + v[2] + v[5] + v[6], v[7] if len(v) > 7 else 0)  # user nice system irq softirq; steal
+        return {"t": time.perf_counter(), "cores": cores, "loadavg": Path("/proc/loadavg").read_text().split()[:3]}
+    except OSError:
+        return None
+
+
+def _load_record(pre, post, cpu_s):
+    """What ran on the machine besides the measured child during its window, from /proc/stat deltas.
+    Busy time = user + nice + system + irq + softirq; the child's own CPU (wait4 rusage, descendants included) is subtracted."""
+    hz = os.sysconf("SC_CLK_TCK")
+    window = post["t"] - pre["t"]
+    ncpu = len(pre["cores"]) - 1
+    busy = {c: (post["cores"][c][0] - pre["cores"][c][0]) / hz for c in pre["cores"]}
+    steal = (post["cores"]["cpu"][1] - pre["cores"]["cpu"][1]) / hz
+    return {"window_s": window, "child_cpu_s": cpu_s, "loadavg_before": pre["loadavg"], "loadavg_after": post["loadavg"],
+            "foreign_machine_pct_of_capacity": max(0.0, busy["cpu"] - cpu_s) / (window * ncpu) * 100,
+            "foreign_machine_pct_of_one_core": max(0.0, busy["cpu"] - cpu_s) / window * 100,
+            "core_busy_s": {c: v for c, v in busy.items() if c != "cpu"}, "steal_s": steal}
 
 
 # Cold-start clocks start when the child is about to be spawned: after the timing lock and load gate are
@@ -206,6 +267,8 @@ def run_measured(command, env=None, timeout=3600, cwd=None):
         global LAST_T0_NS
         LAST_T0_NS = time.time_ns()
         command = [str(c).replace(T0_PLACEHOLDER, str(LAST_T0_NS)) for c in command]
+        global LAST_LOAD
+        pre = _cpu_snapshot()
         start = time.perf_counter()
         if platform.system() == "Linux":
             if _SPAWNER is None or _SPAWNER.proc.poll() is not None:
@@ -229,6 +292,8 @@ def run_measured(command, env=None, timeout=3600, cwd=None):
                     time.sleep(0.05)
             code, peak = os.waitstatus_to_exitcode(status), max_rss_bytes(ru)
         wall = time.perf_counter() - start
+        post = _cpu_snapshot()
+        LAST_LOAD = _load_record(pre, post, LAST_CPU_S) if pre and post and platform.system() == "Linux" and LAST_CPU_S is not None else None
         stdout, stderr = out_path.read_text(errors="replace"), err_path.read_text(errors="replace")
     if code:
         raise RuntimeError(f"{command[0]} exited {code}: {stderr[-2000:]}")

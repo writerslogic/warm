@@ -104,8 +104,8 @@ def digest(*parts):
 
 
 class Llm:
-    def __init__(self, cache, usage, dry_run=False):
-        self.client = OpenAI(max_retries=8, timeout=120)
+    def __init__(self, cache, usage, dry_run=False, base_url=None, api_key_env='OPENAI_API_KEY'):
+        self.client = OpenAI(max_retries=8, timeout=120, base_url=base_url, api_key=os.environ.get(api_key_env))
         self.cache, self.usage, self.dry_run = cache, usage, dry_run
         self.enc = tiktoken.get_encoding('o200k_base')
         self.lock = threading.Lock()
@@ -153,13 +153,14 @@ class Llm:
 
 
 class Server:
-    def __init__(self, binary, dim, config):
+    def __init__(self, binary, dim, config, extra=()):
         self.dir = tempfile.mkdtemp(prefix='locomo-warm-')
         self.log = open(os.path.join(self.dir, 'server.log'), 'wb')
         cmd = [binary, '--no-auth', '--bind', '127.0.0.1:0', '--data-dir', os.path.join(self.dir, 'data'),
                '--input-dim', str(dim)]
         if config:
             cmd += ['--memory-config', config]
+        cmd += list(extra)
         self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=self.log)
         line = self.proc.stdout.readline().decode()
         m = re.search(r'listening on (\S+)', line)
@@ -325,6 +326,27 @@ def answer_full_context(llm, sample, qa, args, enc):
             'context_tokens': len(enc.encode(context)), 'prompt_tokens_local': len(enc.encode(prompt))}
 
 
+def answer_system(system, llm, sample, qa, args, enc):
+    """Answer through a head-to-head system (mem0ai or Graphiti): same cap, prompt and token accounting as WARM."""
+    conv = sample['conversation']
+    question = qa['question']
+    t0 = time.perf_counter()
+    lists = {side: system.search(sample, side, question, args.k) for side in ('a', 'b')}
+    search_ms = 1000 * (time.perf_counter() - t0)
+    if args.token_budget:
+        lists = cap_tokens(lists, enc, args.token_budget)
+    mem_a, mem_b = json.dumps(lists['a'], indent=4), json.dumps(lists['b'], indent=4)
+    prompt = Template(ANSWER_PROMPT).render(
+        speaker_1_user_id=conv['speaker_a'], speaker_2_user_id=conv['speaker_b'],
+        speaker_1_memories=mem_a, speaker_2_memories=mem_b, question=question)
+    responses = [] if args.retrieval_only else [
+        llm.chat(READER_MODEL, [{'role': 'system', 'content': prompt}], 'reader' if run == 0 else f'reader-{run}')
+        for run in range(args.runs)]
+    return {'retrieved_a': [], 'retrieved_b': [], 'responses': responses, 'search_ms': round(search_ms, 1),
+            'context_tokens': len(enc.encode(mem_a)) + len(enc.encode(mem_b)),
+            'prompt_tokens_local': len(enc.encode(prompt))}
+
+
 def answer(server, llm, sample, dates, qa, args, enc):
     conv = sample['conversation']
     question = qa['question']
@@ -376,7 +398,8 @@ def summarize(rows, runs):
             return None
         def runwise(key):
             return [statistics.fmean(r[key][i] for r in rs) for i in range(runs)]
-        out = {'n': len(rs), 'evidence_recall': round(statistics.fmean(r['evidence_recall'] for r in rs), 4),
+        recalls = [r['evidence_recall'] for r in rs if r['evidence_recall'] is not None]
+        out = {'n': len(rs), 'evidence_recall': round(statistics.fmean(recalls), 4) if recalls else None,
                'context_tokens_mean': round(statistics.fmean(r['context_tokens'] for r in rs), 1)}
         if not runs:
             return out
@@ -413,6 +436,14 @@ def main():
                          'by query cosine across both, or merging the ranked lists by query cosine')
     ap.add_argument('--captions', action='store_true',
                     help='append image captions to turn text as mem0ai/memory-benchmarks does (not the paper-era protocol)')
+    ap.add_argument('--system', choices=('warm', 'mem0ai', 'graphiti'), default='warm',
+                    help='memory system under test; mem0ai and graphiti need the locomo_systems extras and an LLM endpoint')
+    ap.add_argument('--llm-base-url', default=None, help='OpenAI-compatible endpoint for reader, judge and the systems (stub_llm.py for a free run)')
+    ap.add_argument('--llm-api-key-env', default='OPENAI_API_KEY', help='name of the env var holding the key; the key is never printed')
+    ap.add_argument('--system-model', default=READER_MODEL, help='LLM a system uses during ingestion')
+    ap.add_argument('--system-embed-dim', type=int, default=EMBED_DIM)
+    ap.add_argument('--graphiti-reranker', choices=('rrf', 'cross_encoder'), default='rrf')
+    ap.add_argument('--stats-out', default=None, help='write the stub call tally here after the run (stub_llm only)')
     ap.add_argument('--workers', type=int, default=16)
     ap.add_argument('--warm-sha', default='')
     ap.add_argument('--dry-run', action='store_true',
@@ -431,19 +462,35 @@ def main():
     samples = [s for s in data if s['sample_id'] in wanted]
     assert len(samples) == len(wanted), 'unknown sample id'
     usage, cache = Usage(args.prior_spend, args.max_spend), Cache(args.cache)
-    llm, enc = Llm(cache, usage, args.dry_run), tiktoken.get_encoding('o200k_base')
-    server = None if args.full_context else Server(args.server_bin, EMBED_DIM, args.memory_config)
+    llm, enc = Llm(cache, usage, args.dry_run, args.llm_base_url, args.llm_api_key_env), tiktoken.get_encoding('o200k_base')
+    system = None
+    if args.system != 'warm':
+        import locomo_systems
+        key = os.environ.get(args.llm_api_key_env, '')
+        make = locomo_systems.Mem0System if args.system == 'mem0ai' else locomo_systems.GraphitiSystem
+        extra = {'reranker': args.graphiti_reranker} if args.system == 'graphiti' else {}
+        system = make(args.llm_base_url, key, args.system_model, EMBED_MODEL, args.system_embed_dim, **extra)
+    server = None if args.full_context or system else Server(args.server_bin, EMBED_DIM, args.memory_config)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     rows, t0 = [], time.time()
     try:
         for sample in samples:
-            dates = None if args.full_context else ingest(server, llm, sample, args.embed, args.captions)
+            if system:
+                t_ing = time.time()
+                system.ingest(sample)
+                print(f"{sample['sample_id']}: ingested into {system.name} in {time.time() - t_ing:.0f}s", file=sys.stderr)
+            dates = None if args.full_context or system else ingest(server, llm, sample, args.embed, args.captions)
             qas = [(i, qa) for i, qa in enumerate(sample['qa']) if int(qa['category']) != 5]
-            with ThreadPoolExecutor(args.workers) as pool:
-                results = list(pool.map(lambda iq: answer_full_context(llm, sample, iq[1], args, enc) if args.full_context
-                                        else answer(server, llm, sample, dates, iq[1], args, enc),
-                                        qas))
+            def one(iq):
+                if args.full_context:
+                    return answer_full_context(llm, sample, iq[1], args, enc)
+                if system:
+                    return answer_system(system, llm, sample, iq[1], args, enc)
+                return answer(server, llm, sample, dates, iq[1], args, enc)
+            # the embedded stores of mem0ai and Graphiti are not safe for concurrent readers
+            with ThreadPoolExecutor(1 if system else args.workers) as pool:
+                results = list(pool.map(one, qas))
             for (i, qa), res in zip(qas, results):
                 gold = str(qa['answer'])
                 evidence = set(DIA.findall(' '.join(map(str, qa.get('evidence', [])))))
@@ -451,13 +498,16 @@ def main():
                 rows.append({'sample_id': sample['sample_id'], 'qa_index': i, 'category': int(qa['category']),
                              'question': qa['question'], 'answer': gold, **res,
                              'evidence': sorted(evidence),
-                             'evidence_recall': 1.0 if args.full_context or not evidence else len(evidence & got) / len(evidence),
+                             'evidence_recall': (None if system else 1.0 if args.full_context or not evidence
+                                                 else len(evidence & got) / len(evidence)),
                              'f1': [f1_score(x, gold) for x in res['responses']],
                              'bleu1': [bleu1(x, gold) for x in res['responses']]})
             print(f"{sample['sample_id']}: {len(qas)} questions, {time.time() - t0:.0f}s", file=sys.stderr)
     finally:
         if server:
             server.close()
+        if system and hasattr(system, 'close'):
+            system.close()
     labels = [None] * len(rows)
     if args.dry_run:
         print('dry_run', json.dumps(llm.probe), 'embed_spend_usd', usage.usd())
@@ -490,9 +540,13 @@ def main():
         'memory_config': json.loads(Path(args.memory_config).read_text()) if args.memory_config else None,
         'runs': 0 if args.retrieval_only else args.runs, 'conversations': sorted(ran), 'split': SPLIT, 'warm_sha': args.warm_sha,
         'new_api_tokens': {m: list(t) for m, t in usage.tokens.items()}, 'new_api_spend_usd': usage.usd(),
-        'wall_seconds': round(time.time() - t0, 1),
+        'wall_seconds': round(time.time() - t0, 1), 'system': args.system,
+        'system_settings': system.settings() if system else None,
         'results': {name: summarize(rs, 0 if args.retrieval_only else args.runs) for name, rs in groups.items()},
     }
+    if args.stats_out and args.llm_base_url:
+        with urllib.request.urlopen(args.llm_base_url.rsplit('/v1', 1)[0] + '/stats', timeout=30) as resp:
+            Path(args.stats_out).write_text(json.dumps(json.loads(resp.read()), indent=2) + '\n')
     (out / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
     for name, res in summary['results'].items():
         print(name, json.dumps(res['overall']))

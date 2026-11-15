@@ -34,8 +34,8 @@ use clap::{Parser, Subcommand};
 use rayon::prelude::*;
 use serde_json::{json, Value};
 use writerslogic_warm::core::qgraph::{
-    BuildParams, Graph, Metric, QGraph, Residency, RowStore, SearchParams, UpdatableVGraph, VGraph,
-    VSearchParams,
+    BuildParams, BuildProfile, Graph, Metric, QGraph, Residency, RowStore, SearchParams,
+    UpdatableVGraph, VGraph, VSearchParams,
 };
 use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{DocumentInput, EmbeddingSpace, EntangledHVec, SearchOptions, WarmCore};
@@ -115,6 +115,10 @@ enum Mode {
         max_exact: Vec<usize>,
         #[arg(long, default_value_t = 128)]
         build_ef: usize,
+        /// Construction schedule: max-recall (the default two passes), high, balanced or fast. A
+        /// graph cache or saved index built with another profile is rejected or must use a new path.
+        #[arg(long, default_value = "max-recall")]
+        build_profile: String,
         /// Score the construction search with 8-bit codes (exact prune).
         #[arg(long)]
         quantized_search: bool,
@@ -634,6 +638,7 @@ struct QgraphArgs {
     ef: Vec<usize>,
     max_exact: Vec<usize>,
     build_ef: usize,
+    build_profile: String,
     quantized_search: bool,
     alpha: f32,
     code_bits: usize,
@@ -821,17 +826,23 @@ fn ann_qgraph_count<const K: usize>(a: &QgraphArgs) -> Result<()> {
     let params = BuildParams {
         metric,
         build_ef: a.build_ef,
+        profile: BuildProfile::from_name(&a.build_profile)
+            .with_context(|| format!("unknown --build-profile {:?}", a.build_profile))?,
         quantized_search: a.quantized_search,
         alpha: a.alpha,
         code_bits: a.code_bits,
         degree: a.degree,
         ..BuildParams::default()
     };
-    let build_params = json!({"index": a.index, "metric": metric_name, "degree": a.degree, "build_ef": a.build_ef, "quantized_search": a.quantized_search,
+    let mut build_params = json!({"index": a.index, "metric": metric_name, "degree": a.degree, "build_ef": a.build_ef, "quantized_search": a.quantized_search,
                               "alpha": a.alpha, "code_bits": a.code_bits, "seed": params.seed,
                               "residual": a.residual, "residual_bits": a.residual_bits,
                               "vertex_bits": a.vertex_bits, "id_bytes": a.id_bytes, "screen": a.screen,
                               "block_bits": a.block_bits, "align_rows": a.align_rows, "reorder": a.reorder});
+    // Recorded only when it differs from the default, so records of earlier builds still match.
+    if params.profile != BuildProfile::MaxRecall {
+        build_params["build_profile"] = json!(params.profile.name());
+    }
     let wait = if a.sync.is_some() { 0 } else { a.max_wait_secs };
     let deadline = Instant::now() + std::time::Duration::from_secs(wait);
     let (load_before_build, build_gate) = wait_for_idle(a.max_load, deadline);
@@ -1696,27 +1707,35 @@ fn ann_updates(
                         ..Default::default()
                     };
                     let mut hits = 0;
+                    // Per-query hit counts: the harness scores recall on a half of the queries
+                    // apart from the half that selected this configuration.
+                    let mut hits_per_query = Vec::with_capacity(test.len());
                     for (q, truth) in test.iter().zip(&truth) {
                         index.search_into(q, 10, p, &mut found)?;
-                        hits += found
+                        let query_hits = found
                             .iter()
                             .filter(|&&id| truth[..10.min(truth.len())].contains(&(id as i32)))
                             .count();
+                        hits += query_hits;
+                        hits_per_query.push(query_hits);
                     }
                     let mut timings = Vec::new();
                     for _ in 0..repeats {
                         let mut lat = Vec::with_capacity(test.len());
+                        let mut lat_ns = Vec::with_capacity(test.len());
                         for q in &test {
                             let t = Instant::now();
                             index.search_into(q, 10, p, &mut found)?;
                             std::hint::black_box(&found);
-                            lat.push(t.elapsed().as_secs_f64() * 1e6);
+                            let elapsed = t.elapsed();
+                            lat.push(elapsed.as_secs_f64() * 1e6);
+                            lat_ns.push(elapsed.as_nanos() as u64);
                         }
                         let qps = test.len() as f64 / (lat.iter().sum::<f64>() * 1e-6);
                         lat.sort_by(f64::total_cmp);
-                        timings.push(json!({"qps":qps, "p50_us":percentile(&lat,0.5), "p99_us":percentile(&lat,0.99)}));
+                        timings.push(json!({"qps":qps, "p50_us":percentile(&lat,0.5), "p99_us":percentile(&lat,0.99), "lat_ns":lat_ns}));
                     }
-                    configs.push(json!({"params":{"ef":ef,"rerank":rerank}, "recall_at_10":hits as f64/(test.len()*10) as f64, "repeats":timings, "load_1m":load_1m(), "load_gate_met":null}));
+                    configs.push(json!({"params":{"ef":ef,"rerank":rerank}, "recall_at_10":hits as f64/(test.len()*10) as f64, "repeats":timings, "load_1m":load_1m(), "load_gate_met":null, "hits_per_query":hits_per_query}));
                 }
             }
             json!({"n":index.len(), "row_blocks":row_blocks, "n_queries":test.len(), "configs":configs, "open_s":open_s, "cold_start_s":cold_start_s, "first_query_unix_ns":first_query_unix_ns, "rss_steady":rss_bytes(), "rss_after_open":rss_after_open, "memory_phases":[{"phase":"serve_end","memory":memory()}]})
@@ -1811,6 +1830,7 @@ fn main() -> Result<()> {
             ef,
             max_exact,
             build_ef,
+            build_profile,
             quantized_search,
             alpha,
             code_bits,
@@ -1850,6 +1870,7 @@ fn main() -> Result<()> {
             ef,
             max_exact,
             build_ef,
+            build_profile,
             quantized_search,
             alpha,
             code_bits,

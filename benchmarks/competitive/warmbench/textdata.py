@@ -4,12 +4,16 @@
 
 beir:<name>   BEIR train/dev qrels (the existing document-competition protocol: SciFact train,
               NFCorpus dev, FiQA dev; the test qrels stay unread). One chunk per document.
+beir:<name>:<split>  any other split, development data for choosing settings (quality_runs.py).
 memory        Agent-memory-shaped: every session of the 100 LongMemEval_S dev questions as one
               searchable memory (answer sessions are the relevant documents); the 400 held-out
-              questions are never read.
+              questions are never read, except by `memory-selection`.
+memory-selection  100 of those 400 held-out questions (seed 20261114), development data for choosing
+              settings; the remaining 300 stay unread.
 """
 
 import json
+import random
 import urllib.request
 import zipfile
 
@@ -21,6 +25,7 @@ LME_URL = ("https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resol
            "98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_s_cleaned.json")
 BEIR_SPLITS = {"scifact": "train", "nfcorpus": "dev", "fiqa": "dev"}
 MAX_WORDS = 4000
+SELECTION_SEED = 20261114
 K = 100
 
 
@@ -45,8 +50,9 @@ def _document(identifier, text, bucket):
             "chunkWords": 4096, "overlapWords": 0, "storeText": False}
 
 
-def beir(name):
-    split = BEIR_SPLITS[name]
+def beir(name, split=None):
+    """`split` None is the reported evaluation split; any other split is development data for selecting settings."""
+    split = split or BEIR_SPLITS[name]
     folder = DATA / f"text-{name}-{split}"
     if (folder / "input.json").exists():
         return folder
@@ -85,12 +91,15 @@ def beir(name):
     return folder
 
 
-def memory():
-    folder = DATA / "text-memory-lme-dev"
+def memory(selection=False):
+    """The reported 100-question dev set, or with `selection` a seeded sample of 100 questions of the other 400, so
+    that settings are chosen on questions the reported set does not contain."""
+    folder = DATA / ("text-memory-lme-selection" if selection else "text-memory-lme-dev")
     if (folder / "input.json").exists():
         return folder
     raw = _fetch(LME_URL, CACHE / "downloads" / "longmemeval_s_cleaned.json")
-    dev = set(json.loads((ROOT / "benchmarks/public/longmemeval_split.json").read_text())["dev"])
+    split = json.loads((ROOT / "benchmarks/public/longmemeval_split.json").read_text())
+    dev = set(random.Random(SELECTION_SEED).sample(sorted(split["heldout"]), 100)) if selection else set(split["dev"])
     sessions, queries, qrels = {}, [], {}
     for entry in json.loads(raw.read_text()):
         if entry["question_id"] not in dev:
@@ -108,14 +117,17 @@ def memory():
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "input.json").write_text(json.dumps({"documents": documents, "queries": queries}) + "\n")
     (folder / "qrels.json").write_text(json.dumps(qrels) + "\n")
-    (folder / "meta.json").write_text(json.dumps({"dataset": "longmemeval-s-dev-sessions", "documents": len(documents),
+    (folder / "meta.json").write_text(json.dumps({"dataset": "longmemeval-s-selection-sessions" if selection else "longmemeval-s-dev-sessions", "documents": len(documents),
                                                   "queries": len(queries), "truncated_words": MAX_WORDS, "source": LME_URL}) + "\n")
     return folder
 
 
 def load(dataset):
     if dataset.startswith("beir:"):
-        return beir(dataset.split(":", 1)[1])
+        name, _, split = dataset.split(":", 1)[1].partition(":")
+        return beir(name, split or None)
     if dataset == "memory":
         return memory()
+    if dataset == "memory-selection":
+        return memory(selection=True)
     raise ValueError(f"unknown text dataset {dataset}")

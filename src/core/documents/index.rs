@@ -636,6 +636,11 @@ impl DocumentStore {
             && super::image::representable(self)
     }
 
+    /// Bytes of the checkpoint under this store; 0 when there is none.
+    pub(crate) fn base_bytes(&self) -> usize {
+        self.base.as_ref().map_or(0, |base| base.image.byte_len())
+    }
+
     /// Whether the store is served from a checkpoint (see [`Self::over`]).
     pub(crate) fn has_base(&self) -> bool {
         self.base.is_some()
@@ -1295,6 +1300,7 @@ impl DocumentStore {
             ..Self::default()
         };
         rebuilt.insert_batch(documents)?;
+        crate::core::failpoint::hit("text-rename")?;
         std::fs::rename(&staging, path)?;
         *self = rebuilt;
         if let Some(parent) = path.parent() {

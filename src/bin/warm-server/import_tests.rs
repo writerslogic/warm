@@ -69,7 +69,7 @@ async fn committed_cleanup_failure_invalidates_cached_document_reads() {
                 "POST",
                 "/api/v1/memory/forget",
                 json!({
-                    "scope":{"kind":"ids", "ids":["doc"]}, "purge":true, "dryRun":false
+                    "scope":{"kind":"ids", "ids":["doc"]}, "purge":true, "synchronous":true, "dryRun":false
                 }),
             )
             .await
@@ -77,7 +77,7 @@ async fn committed_cleanup_failure_invalidates_cached_document_reads() {
             call(
                 state.clone(),
                 "DELETE",
-                "/api/v1/documents/doc?purge=true",
+                "/api/v1/documents/doc?purge=true&synchronous=true",
                 Value::Null,
             )
             .await

@@ -132,11 +132,7 @@ fn manifest_geometry_boundaries_fail_before_segment_mutation() -> Result<()> {
                 assert_eq!(inspection.format_version, version);
                 assert_eq!(
                     inspection.allocated_bytes,
-                    if version == 4 && INCREMENTAL_ALLOCATION {
-                        GROWTH_STEP
-                    } else {
-                        expected
-                    } as u64
+                    if version == 4 { GROWTH_STEP } else { expected } as u64
                 );
             } else {
                 let segment = arena_path.join("seg_0.bin");
@@ -362,7 +358,6 @@ fn active_segment_growth_doubles_to_the_fixed_step() {
     }
 }
 
-#[cfg(unix)]
 #[test]
 fn journal_starts_at_the_growth_step_and_earlier_segments_open_unchanged() -> Result<()> {
     let root = tempdir()?;

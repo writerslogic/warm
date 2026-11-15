@@ -20,6 +20,8 @@ fn config(budget: usize) -> WarmConfig {
     let mut config = WarmConfig::default();
     config.document_checkpoint.min_journal_bytes = 0;
     config.document_checkpoint.index_memory_budget = budget;
+    // A fold after every batch that crosses the budget: the crash tests count folds by batch.
+    config.document_checkpoint.index_fold_fraction = 0.0;
     config
 }
 
@@ -45,7 +47,10 @@ fn document(i: usize, retain: bool) -> DocumentInput {
 fn ingest(core: &WarmCore, documents: usize, batch: usize, retain: bool) -> Result<()> {
     for start in (0..documents).step_by(batch) {
         let end = (start + batch).min(documents);
-        core.memorize_documents_with((start..end).map(|i| document(i, retain)).collect(), &options())?;
+        core.memorize_documents_with(
+            (start..end).map(|i| document(i, retain)).collect(),
+            &options(),
+        )?;
     }
     Ok(())
 }
@@ -54,10 +59,20 @@ fn answers(core: &WarmCore) -> Result<Vec<String>> {
     let search: SearchOptions = serde_json::from_value(
         json!({"k": 200, "candidateLimit": 200, "lexicalWeight": 1, "semanticWeight": 0}),
     )?;
-    ["common", "amber1 binary2", "cedar delta5 juniper", "lantern0", "absent"]
-        .iter()
-        .map(|query| Ok(serde_json::to_string(&core.search_documents(query, &search)?)?))
-        .collect()
+    [
+        "common",
+        "amber1 binary2",
+        "cedar delta5 juniper",
+        "lantern0",
+        "absent",
+    ]
+    .iter()
+    .map(|query| {
+        Ok(serde_json::to_string(
+            &core.search_documents(query, &search)?,
+        )?)
+    })
+    .collect()
 }
 
 fn checkpoint(directory: &std::path::Path) -> Vec<u8> {
@@ -66,7 +81,10 @@ fn checkpoint(directory: &std::path::Path) -> Vec<u8> {
             let path = entry.unwrap().path();
             if path.is_dir() {
                 find(&path, found);
-            } else if path.file_name().is_some_and(|name| name == "documents.ckpt") {
+            } else if path
+                .file_name()
+                .is_some_and(|name| name == "documents.ckpt")
+            {
                 found.push(path);
             }
         }
@@ -88,14 +106,21 @@ fn folded_ingest_writes_the_checkpoint_of_a_single_pass() -> Result<()> {
         let whole = tempfile::tempdir()?;
         let folded = tempfile::tempdir()?;
         let expected = {
-            let core = WarmCore::new(256, Some(whole.path().display().to_string()), Some(config(0)))?;
+            let core = WarmCore::new(
+                256,
+                Some(whole.path().display().to_string()),
+                Some(config(0)),
+            )?;
             ingest(&core, 70, 7, retain)?;
             assert!(!core.serves_from_checkpoint(), "a zero budget never folds");
             answers(&core)?
         };
         {
-            let core =
-                WarmCore::new(256, Some(folded.path().display().to_string()), Some(config(1)))?;
+            let core = WarmCore::new(
+                256,
+                Some(folded.path().display().to_string()),
+                Some(config(1)),
+            )?;
             ingest(&core, 70, 7, retain)?;
             assert!(core.serves_from_checkpoint(), "retain={retain}: folded");
             assert_eq!(answers(&core)?, expected, "retain={retain}: live answers");
@@ -105,9 +130,17 @@ fn folded_ingest_writes_the_checkpoint_of_a_single_pass() -> Result<()> {
             body(&checkpoint(folded.path())),
             "retain={retain}: the checkpoints differ"
         );
-        let reopened = WarmCore::new(256, Some(folded.path().display().to_string()), Some(config(1)))?;
+        let reopened = WarmCore::new(
+            256,
+            Some(folded.path().display().to_string()),
+            Some(config(1)),
+        )?;
         assert!(reopened.serves_from_checkpoint());
-        assert_eq!(answers(&reopened)?, expected, "retain={retain}: reopened answers");
+        assert_eq!(
+            answers(&reopened)?,
+            expected,
+            "retain={retain}: reopened answers"
+        );
     }
     Ok(())
 }
@@ -193,5 +226,25 @@ fn a_crash_during_a_fold_reopens_to_the_committed_batches() -> Result<()> {
         }
     }
     assert!(crashed >= 20, "only {crashed} crash points were reached");
+    Ok(())
+}
+#[test]
+fn geometric_folds_answer_as_a_single_pass() -> Result<()> {
+    let run = |budget: usize, fraction: f64| -> Result<Vec<String>> {
+        let directory = tempfile::tempdir()?;
+        let mut config = config(budget);
+        config.document_checkpoint.index_fold_fraction = fraction;
+        let core = WarmCore::new(
+            256,
+            Some(directory.path().display().to_string()),
+            Some(config),
+        )?;
+        ingest(&core, 60, 5, false)?;
+        answers(&core)
+    };
+    let whole = run(0, 0.0)?;
+    for fraction in [0.5, 2.0, 20.0] {
+        assert_eq!(run(1, fraction)?, whole, "fraction {fraction}");
+    }
     Ok(())
 }

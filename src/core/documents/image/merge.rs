@@ -16,10 +16,10 @@ use anyhow::{ensure, Context, Result};
 
 use super::{
     encode_document, put_bytes, put_varint, DocumentStore, Reader, ServingImage, BLOCK, FREE,
-    H_CHUNKS, H_DIMENSIONS, H_DOCS, H_GENERATION, H_SECTIONS, H_SLOTS, H_TERMS, H_WORDS,
-    HEADER_LEN, HEADER_WORDS, MAGIC, SECTIONS, SLOT_BYTES,
+    HEADER_LEN, HEADER_WORDS, H_CHUNKS, H_DIMENSIONS, H_DOCS, H_GENERATION, H_SECTIONS, H_SLOTS,
+    H_TERMS, H_WORDS, MAGIC, SECTIONS, SLOT_BYTES,
 };
-use super::{Section, u32_at};
+use super::{u32_at, Section};
 use crate::core::documents::postings::{CheckpointPacker, Postings};
 use crate::core::durable_file::{BlockWriter, Spool};
 
@@ -163,7 +163,9 @@ fn merge_form(
     postings: &mut BlockWriter,
 ) -> Result<Option<()>> {
     let (terms, offsets, lists) = store.postings[form].sorted_terms();
-    let mut live = (0..lists.len()).filter(|&i| !lists[i].is_empty()).peekable();
+    let mut live = (0..lists.len())
+        .filter(|&i| !lists[i].is_empty())
+        .peekable();
     let mut checkpoint = base.map(|image| BaseTerms::new(image, form));
     let mut pending = match checkpoint.as_mut() {
         Some(source) => source.next()?,
@@ -312,8 +314,7 @@ pub(crate) fn merge(
                 order == std::cmp::Ordering::Less
             }
         };
-        let (Ok(id_at), Ok(doc_at)) = (u32::try_from(ids.len()), u32::try_from(docs.len()))
-        else {
+        let (Ok(id_at), Ok(doc_at)) = (u32::try_from(ids.len()), u32::try_from(docs.len())) else {
             return Ok(None);
         };
         id_offsets.write(&id_at.to_le_bytes())?;
@@ -343,7 +344,9 @@ pub(crate) fn merge(
             encode_document(&mut record, document, segment.as_deref())?;
             docs.write(&record)?;
         }
-        ordinal = ordinal.checked_add(1).context("checkpoint document count")?;
+        ordinal = ordinal
+            .checked_add(1)
+            .context("checkpoint document count")?;
     }
     let (Ok(id_end), Ok(doc_end)) = (u32::try_from(ids.len()), u32::try_from(docs.len())) else {
         return Ok(None);
