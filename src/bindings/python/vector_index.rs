@@ -19,7 +19,7 @@ use rayon::prelude::*;
 use crate::core::error::WarmError;
 use crate::core::qgraph::connectivity::ConnectivityStats;
 use crate::core::qgraph::{
-    BuildParams, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph, Metric, Residency,
+    BuildParams, BuildProfile, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph, Metric, Residency,
     UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
 };
 
@@ -134,6 +134,7 @@ struct PyVectorIndex {
     metric: Distance,
     degree: usize,
     build_ef: usize,
+    profile: BuildProfile,
     code_bits: u8,
     residual_bits: u8,
     compact_adjacency: bool,
@@ -243,8 +244,10 @@ impl PyVectorIndex {
     /// 4-bit or no residual storage (0); smaller codes may reduce recall. Reranking still
     /// scores the primary codes with a float query when no residual is stored.
     /// `direct_ip` serves original coordinates with negative-IP scores on the lifted graph.
+    /// `build_profile` is the insertion schedule: "standard" (default), "max-recall", "high",
+    /// "balanced" or "fast"; "max-recall" is the slowest build and the highest recall.
     #[new]
-    #[pyo3(signature = (metric="angular", degree=64, build_ef=500, threads=0, code_bits=4, compact_adjacency=false, direct_ip=false, residual_bits=8))]
+    #[pyo3(signature = (metric="angular", degree=64, build_ef=500, threads=0, code_bits=4, compact_adjacency=false, direct_ip=false, residual_bits=8, build_profile="standard"))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         metric: &str,
@@ -255,7 +258,11 @@ impl PyVectorIndex {
         compact_adjacency: bool,
         direct_ip: bool,
         residual_bits: u8,
+        build_profile: &str,
     ) -> PyResult<Self> {
+        let profile = BuildProfile::from_name(build_profile).ok_or_else(|| {
+            PyValueError::new_err("build_profile must be standard, max-recall, high, balanced or fast")
+        })?;
         let metric = match metric {
             "angular" => Distance::Angular,
             "euclidean" => Distance::Euclidean,
@@ -300,6 +307,7 @@ impl PyVectorIndex {
             metric,
             degree,
             build_ef,
+            profile,
             code_bits,
             residual_bits,
             compact_adjacency,
@@ -397,6 +405,7 @@ impl PyVectorIndex {
             metric: self.metric.graph_metric(),
             degree: self.degree,
             build_ef: self.build_ef,
+            profile: self.profile,
             quantized_search: true,
             ..BuildParams::default()
         };
