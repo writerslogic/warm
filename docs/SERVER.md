@@ -42,6 +42,8 @@ from writerslogic_warm_sdk import WarmClient
 client = WarmClient(url="http://127.0.0.1:8080", api_key="<token>", tenant_id="acme")
 ```
 
+The release binaries are built with `--features server,mimalloc`: the server installs `writerslogic_warm::allocator::Tuned`, mimalloc with arenas committed on demand and an immediate purge. A build without the feature (`cargo build --features server`) uses the system allocator; results are identical, ingest is slower by about the allocator's share (roughly 15% at 250k documents) and the peak resident size is the same. `MIMALLOC_ARENA_EAGER_COMMIT` and `MIMALLOC_PURGE_DELAY` override the options.
+
 ## API keys
 
 Every request carries an API key. `WARM_API_KEY` sets one key valid for every tenant; `--keys-file` loads per-tenant API keys with read, write or admin scopes, created with `warm-server keygen`. Key format, scopes and rotation are in [server/auth.md](server/auth.md).

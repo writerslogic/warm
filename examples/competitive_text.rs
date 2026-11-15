@@ -22,6 +22,18 @@ use writerslogic_warm::core::documents::{
 };
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
+/// The shipped artifacts' allocator (`--features mimalloc`); without the feature the system allocator
+/// runs, and the row says which.
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
+
+const ALLOCATOR: &str = if cfg!(feature = "mimalloc") {
+    "mimalloc-tuned"
+} else {
+    "system"
+};
+
 const USAGE: &str =
     "usage: competitive_text <build|serve|ops> --input FILE --store DIR --out FILE \
     [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--encode eager|deferred|lexical (eager)] [--analyzer NAME] \
@@ -367,7 +379,7 @@ fn main() -> Result<()> {
             drop(core);
             json!({"documents": count, "ingest_s": ingest_s,
                 "close_s": closing.elapsed().as_secs_f64(),
-                "encode": mode.name(), "store_text": args.store_text})
+                "encode": mode.name(), "store_text": args.store_text, "allocator": ALLOCATOR})
         }
         "serve" => {
             let input = load()?;

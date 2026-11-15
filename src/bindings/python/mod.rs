@@ -198,6 +198,11 @@ fn resonator_factorize(
         .collect())
 }
 
+/// The wheel is its own shared object, so its allocations stay inside it; see `crate::allocator`.
+#[cfg(all(feature = "mimalloc", warm_wheel_allocator))]
+#[global_allocator]
+static GLOBAL: crate::allocator::Tuned = crate::allocator::Tuned;
+
 #[pymodule]
 fn writerslogic_warm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add(

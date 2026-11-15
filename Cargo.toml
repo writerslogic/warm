@@ -186,7 +186,8 @@ ciborium = []
 cli = ["dep:clap"]
 # Fault injection at the durability points (crash and ENOSPC/EIO tests); inert unless armed.
 failpoints = []
-# Global allocator of the public-bench binary only; never linked into the library.
+# Tuned mimalloc (`allocator::Tuned`) that warm-server, warm-mcp, warm-admin, public-bench and the Python
+# wheel declare as their global allocator; the library itself never installs one.
 mimalloc = ["dep:mimalloc"]
 conversation-memory = ["sha2"]
 # Experience core: hash-consed region store, action effect table and episode store for
@@ -409,7 +410,7 @@ required-features = ["experimental", "cli"]
 
 # cargo-fuzz compiles with --cfg fuzzing (see src/bin/warm-server.rs and fuzz/).
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)"] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)", "cfg(warm_wheel_allocator)"] }
 
 [[bench]]
 name = "vector_updates"

@@ -2084,10 +2084,71 @@ fn bucket_of(term: &str, buckets: usize) -> usize {
     (hash % buckets as u64) as usize
 }
 
+/// [`scan_range`] for a range whose chunks all take their terms from one dictionary: a term is
+/// found by its dictionary id in a table, not by hashing its text, and only each distinct term
+/// reaches the maps. `false`, with `maps` untouched, when the range does not qualify.
+fn scan_shared<'a>(
+    range: &[(usize, &'a StoredChunk)],
+    buckets: usize,
+    maps: &mut [Vec<RunMap<'a>>; 2],
+) -> bool {
+    let Some(&(_, first)) = range.first() else {
+        return false;
+    };
+    let Some((dictionary, _)) = first.terms.shared_ids() else {
+        return false;
+    };
+    let same = range.iter().all(|(_, chunk)| {
+        chunk
+            .terms
+            .shared_ids()
+            .is_some_and(|(other, _)| std::sync::Arc::ptr_eq(other, dictionary))
+    });
+    if !same {
+        return false;
+    }
+    const NONE: u32 = u32::MAX;
+    let words = dictionary.len();
+    let mut tables: [Vec<u32>; 2] = [Vec::new(), Vec::new()];
+    let mut runs: [Vec<TermRun<'a>>; 2] = [Vec::new(), Vec::new()];
+    for &(slot, chunk) in range {
+        let form = usize::from(chunk.stemmed);
+        if tables[form].is_empty() {
+            tables[form] = vec![NONE; words];
+        }
+        let (_, ids) = chunk.terms.shared_ids().expect("checked above");
+        for (id, frequency) in ids {
+            let at = &mut tables[form][id as usize];
+            if *at == NONE {
+                *at = runs[form].len() as u32;
+                runs[form].push(TermRun {
+                    term: dictionary.term(id as usize),
+                    postings: Vec::new(),
+                    ordinals: Vec::new(),
+                });
+            }
+            runs[form][*at as usize].postings.push((slot, frequency));
+        }
+    }
+    for (form, runs) in runs.into_iter().enumerate() {
+        for run in runs {
+            let bucket = if buckets == 1 {
+                0
+            } else {
+                bucket_of(run.term, buckets)
+            };
+            maps[form][bucket].insert(run.term, run);
+        }
+    }
+    true
+}
 /// Scans one chunk range into per-form, per-bucket maps.
 fn scan_range<'a>(range: &[(usize, &'a StoredChunk)], buckets: usize) -> [Vec<RunMap<'a>>; 2] {
     let mut maps: [Vec<RunMap<'a>>; 2] =
         std::array::from_fn(|_| (0..buckets).map(|_| RunMap::default()).collect());
+    if scan_shared(range, buckets, &mut maps) {
+        return maps;
+    }
     for &(slot, chunk) in range {
         let form = &mut maps[usize::from(chunk.stemmed)];
         for (index, (term, &frequency)) in (&chunk.terms).into_iter().enumerate() {

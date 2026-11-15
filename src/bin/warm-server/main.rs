@@ -6,6 +6,10 @@
 //! The API contract is in `docs/server/openapi.json` (also served at `/openapi.json`); operation
 //! and configuration docs are in `docs/SERVER.md` and `docs/server/`.
 
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
+
 mod admin;
 mod auth;
 mod config;
