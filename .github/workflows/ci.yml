@@ -243,7 +243,7 @@ jobs:
       - name: The shipped binaries build with the tuned allocator
         run: cargo build --locked --features server,mcp,cli,mimalloc --bin warm-server --bin warm-mcp --bin warm-admin
       - name: The allocator sets its footprint options before the first allocation
-        run: cargo test --locked --lib --features mimalloc allocator::
+        run: cargo test --locked --lib --features mimalloc allocator
 
   test-windows:
     name: test (windows-latest)
