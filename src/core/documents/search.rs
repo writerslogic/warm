@@ -18,8 +18,8 @@ use super::lexical::{LexicalHit, LexicalResults};
 use super::overlay::Overlaid;
 use super::{
     matches_document_metadata, normalize_embedding, query_words_both, terms_with, top_ranked,
-    Analyzer, Bm25, DocumentResult, DocumentStore, SearchOptions, StoredChunk, StoredDocument,
-    MAX_DOCUMENT_BYTES,
+    Analyzer, Bm25, DocumentResult, DocumentStore, Embedding, SearchOptions, StoredChunk,
+    StoredDocument, MAX_DOCUMENT_BYTES,
 };
 
 pub(crate) struct PreparedSearch {
@@ -1720,29 +1720,46 @@ fn execute_query(captured: &CapturedQuery) -> Vec<RankedHit> {
     execute_chunks(captured, &captured.chunks)
 }
 
+/// The semantic score of every chunk: its cached score, else the cosine of its stored embedding with the query.
+/// Four chunks are scored at once so the four sequential `f64` reductions overlap in the pipeline; each chunk's
+/// own summation order is unchanged, so every score is bit-identical to `Embedding::cosine`.
+fn semantic_scores(chunks: &[CapturedChunk], query: Option<&[f64]>) -> Vec<Option<f64>> {
+    let mut scores: Vec<Option<f64>> = chunks.iter().map(|chunk| chunk.semantic_cache).collect();
+    let Some(query) = query else {
+        return scores;
+    };
+    let rows: Vec<(usize, &Embedding)> = chunks
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| scores[*i].is_none())
+        .filter_map(|(i, chunk)| Some((i, chunk.stored()?.embedding.as_ref()?)))
+        .collect();
+    let (groups, remainder) = rows.as_chunks::<4>();
+    for group in groups {
+        let batch = [group[0].1, group[1].1, group[2].1, group[3].1];
+        for (&(i, _), score) in group.iter().zip(Embedding::cosine4(batch, query)) {
+            scores[i] = Some(score);
+        }
+    }
+    for &(i, embedding) in remainder {
+        scores[i] = Some(embedding.cosine(query));
+    }
+    scores
+}
+
 fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<RankedHit> {
     if chunks.is_empty() {
         return Vec::new();
     }
     let prepared = &captured.prepared;
-    let semantic = |captured_chunk: &CapturedChunk| {
-        captured_chunk.semantic_cache.or_else(|| {
-            prepared.embedding.as_ref().and_then(|q| {
-                captured_chunk
-                    .stored()?
-                    .embedding
-                    .as_ref()
-                    .map(|values| values.cosine(q))
-            })
-        })
-    };
+    let semantic = semantic_scores(chunks, prepared.embedding.as_deref());
     let scores: Vec<(f64, Option<f64>)> = match &captured.lexical_scores {
-        Some(lexical) => chunks
+        Some(lexical) => lexical
             .iter()
-            .zip(lexical)
-            .map(|(chunk, &score)| (score, semantic(chunk)))
+            .zip(&semantic)
+            .map(|(&score, &semantic)| (score, semantic))
             .collect(),
-        None => score_chunks(captured, chunks, semantic),
+        None => score_chunks(captured, chunks, &semantic),
     };
     let order = |a: usize, b: usize| chunks[a].order().cmp(&chunks[b].order());
     // Scores travel with their indices so the selection compares without indirection.
@@ -1863,7 +1880,7 @@ const LIVE_ONLY: &str = "a capture scored here holds only live chunks";
 fn score_chunks(
     captured: &CapturedQuery,
     chunks: &[CapturedChunk],
-    semantic: impl Fn(&CapturedChunk) -> Option<f64>,
+    semantic: &[Option<f64>],
 ) -> Vec<(f64, Option<f64>)> {
     let prepared = &captured.prepared;
     let n = captured.count as f64;
@@ -1896,7 +1913,8 @@ fn score_chunks(
     });
     let mut scores: Vec<(f64, Option<f64>)> = chunks
         .iter()
-        .map(|captured_chunk| {
+        .zip(semantic)
+        .map(|(captured_chunk, &semantic)| {
             let norm = prepared
                 .bm25
                 .norm(captured_chunk.word_count as f64, average);
@@ -1913,7 +1931,7 @@ fn score_chunks(
                     })
                     .sum()
             };
-            (lexical, semantic(captured_chunk))
+            (lexical, semantic)
         })
         .collect();
     if captured.use_postings {
