@@ -413,6 +413,10 @@ pub(crate) fn served(
     if !base.intact() || !store.documents.is_empty() {
         return None;
     }
+    // One term ranked by its blocks' frontiers stays with the live store's pruned ranker.
+    if options.k > 0 && query.clauses.len() == 1 && !query.clauses[0].phrase {
+        return None;
+    }
     let bm25 = match prepare(options) {
         Ok(bm25) => bm25,
         Err(error) => return Some(Err(error)),
