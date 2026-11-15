@@ -39,14 +39,16 @@ use super::text::TextSegment;
 use super::{StoredChunk, StoredDocument, VectorState};
 use crate::core::entangled::EntangledHVec;
 
-/// The magic of the version written: block-encoded postings.
-pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x02";
+/// The magic of the version written: block-encoded postings with per-list and per-block impacts.
+pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x03";
+/// Version 2, still read: block-encoded postings without impacts.
+const MAGIC_V2: &[u8; 8] = b"HMSCKP\x00\x02";
 /// Version 1, still read: flat varint postings.
 const MAGIC_V1: &[u8; 8] = b"HMSCKP\x00\x01";
 
 /// Whether `magic` opens a plaintext checkpoint of a version this build reads.
 pub(crate) fn known_magic(magic: &[u8]) -> bool {
-    magic == MAGIC || magic == MAGIC_V1
+    magic == MAGIC || magic == MAGIC_V2 || magic == MAGIC_V1
 }
 const HEADER_WORDS: usize = 40;
 pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;
@@ -80,7 +82,7 @@ enum Section {
 const SECTIONS: usize = 10;
 const _: () = assert!(H_SECTIONS + 2 * SECTIONS <= HEADER_WORDS);
 
-const SLOT_BYTES: usize = 12;
+pub(super) const SLOT_BYTES: usize = 12;
 const FREE: u32 = u32::MAX;
 
 const TEXT_NONE: u8 = 0;
@@ -140,7 +142,7 @@ pub(crate) fn encode(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, true)
+    encode_as(store, generation, dimensions, 3)
 }
 
 /// [`encode`] in version 1, for tests of reading it.
@@ -150,16 +152,28 @@ pub(crate) fn encode_v1(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, false)
+    encode_as(store, generation, dimensions, 1)
 }
 
-/// [`encode`] with block-encoded postings (version 2) or flat ones (version 1).
+/// [`encode`] in version 2, for tests of reading it.
+#[cfg(test)]
+pub(crate) fn encode_v2(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, 2)
+}
+
+/// [`encode`] with impact-carrying block postings (version 3), plain block postings (version
+/// 2) or flat ones (version 1).
 fn encode_as(
     store: &DocumentStore,
     generation: u32,
     dimensions: usize,
-    blocked: bool,
+    version: u8,
 ) -> Result<Option<Vec<u8>>> {
+    let (blocked, impacts) = (version >= 2, version >= 3);
     if !representable(store) {
         return Ok(None);
     }
@@ -196,7 +210,8 @@ fn encode_as(
             put_bytes(&mut dict, &term[prefix..]);
             let start = postings.len();
             if blocked {
-                super::postings::pack_checkpoint(list, &mut postings);
+                let words = |slot: usize| DocumentStore::slot_word_count(store, slot);
+                super::postings::pack_checkpoint(list, &words, impacts, &mut postings);
             } else {
                 #[cfg(test)]
                 super::postings::pack_checkpoint_flat(list, &mut postings);
@@ -271,7 +286,11 @@ fn encode_as(
         at += section.len() as u64;
     }
     let mut out = Vec::with_capacity(at as usize);
-    out.extend_from_slice(if blocked { MAGIC } else { MAGIC_V1 });
+    out.extend_from_slice(match version {
+        3 => MAGIC,
+        2 => MAGIC_V2,
+        _ => MAGIC_V1,
+    });
     for value in words {
         out.extend_from_slice(&value.to_le_bytes());
     }
@@ -373,8 +392,16 @@ pub(crate) struct ServingImage {
     dimensions: usize,
     dictionaries: [Dictionary; 2],
     sections: [(usize, usize); SECTIONS],
-    /// Version 2: postings in the block encoding (see `postings::Postings`).
+    /// Versions 2 and 3: postings in the block encoding (see `postings::Postings`).
     blocked: bool,
+    /// Version 3: the block encoding with impacts.
+    impacts: bool,
+    /// Direct frequency tables of the longest lists, built by queries (see `impact`).
+    dense: super::impact::DenseTables,
+    /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
+    word_classes: std::sync::OnceLock<Vec<u8>>,
+    /// Per slot, its word count capped at `u16::MAX`, built by the first pruned query.
+    word_counts: std::sync::OnceLock<Vec<u16>>,
 }
 
 /// One decoded chunk of a checkpoint record.
@@ -459,7 +486,8 @@ impl ServingImage {
             bytes.len() >= HEADER_LEN && known_magic(&bytes[..8]),
             "not a document checkpoint of this version"
         );
-        let blocked = &bytes[..8] == MAGIC;
+        let impacts = &bytes[..8] == MAGIC;
+        let blocked = impacts || &bytes[..8] == MAGIC_V2;
         let count = |index: usize| usize::try_from(word(&bytes, index)).ok();
         let mut sections = [(0usize, 0usize); SECTIONS];
         let mut end = HEADER_LEN;
@@ -496,6 +524,10 @@ impl ServingImage {
             dictionaries: [Dictionary::default(); 2],
             sections,
             blocked,
+            impacts,
+            dense: Default::default(),
+            word_classes: std::sync::OnceLock::new(),
+            word_counts: std::sync::OnceLock::new(),
         };
         image.check_documents()?;
         image.check_slots()?;
@@ -631,7 +663,8 @@ impl ServingImage {
             let len = usize::try_from(reader.varint()?)?;
             ensure!(
                 count > 0
-                    && super::postings::checkpoint_min_len(count, self.blocked) <= len as u64
+                    && super::postings::checkpoint_min_len(count, self.blocked, self.impacts)
+                        <= len as u64
                     && count <= u64::from(u32::MAX),
                 "checkpoint posting count"
             );
@@ -1029,23 +1062,33 @@ impl ServingImage {
                     bytes,
                     count,
                     blocked: self.blocked,
+                    impacts: self.impacts,
                 }
-                .try_for_each(|slot, frequency| {
-                    let fits = slot < self.slots
-                        && form_of[slot] == form as u8
-                        && (seen == 0 || slot > last);
-                    if !fits {
-                        failure = Some(slot);
-                        return false;
-                    }
-                    if dead_slot.get(slot) != Some(&true) {
-                        forward[slot].push((position, frequency));
-                        live.push((slot, frequency));
-                    }
-                    last = slot;
-                    seen += 1;
-                    true
-                })?;
+                .try_for_each(
+                    &|slot| {
+                        if slot < self.slots {
+                            self.slot(slot).0
+                        } else {
+                            0
+                        }
+                    },
+                    |slot, frequency| {
+                        let fits = slot < self.slots
+                            && form_of[slot] == form as u8
+                            && (seen == 0 || slot > last);
+                        if !fits {
+                            failure = Some(slot);
+                            return false;
+                        }
+                        if dead_slot.get(slot) != Some(&true) {
+                            forward[slot].push((position, frequency));
+                            live.push((slot, frequency));
+                        }
+                        last = slot;
+                        seen += 1;
+                        true
+                    },
+                )?;
                 ensure!(
                     failure.is_none() && seen == count,
                     "checkpoint posting list for a slot it cannot hold"
@@ -1116,8 +1159,48 @@ impl ServingImage {
     }
 }
 
+impl ServingImage {
+    /// Whether this checkpoint's postings carry the impacts block-max pruning reads.
+    pub(super) fn has_impacts(&self) -> bool {
+        self.impacts
+    }
+
+    /// The slot table: per slot its word count, document ordinal and chunk index, `u32`s.
+    pub(super) fn slot_table(&self) -> &[u8] {
+        self.section(Section::Slots)
+    }
+
+    /// Per slot the entry of `class_of` for its word count.
+    pub(super) fn word_classes(&self, class_of: &[u8]) -> &[u8] {
+        self.word_classes.get_or_init(|| {
+            let last = class_of.len() - 1;
+            (0..self.slots)
+                .map(|slot| class_of[(self.slot(slot).0 as usize).min(last)])
+                .collect()
+        })
+    }
+
+    /// Per slot its word count, `u16::MAX` for counts that do not fit (read the slot table then):
+    /// a table a sixth the size of the slot table, so it stays in cache where the slot table
+    /// does not.
+    pub(super) fn word_counts(&self) -> &[u16] {
+        self.word_counts.get_or_init(|| {
+            (0..self.slots)
+                .map(|slot| self.slot(slot).0.min(u32::from(u16::MAX)) as u16)
+                .collect()
+        })
+    }
+    pub(super) fn dense(&self) -> &super::impact::DenseTables {
+        &self.dense
+    }
+}
+
 impl LexicalSource for ServingImage {
     type List<'a> = Postings<'a>;
+
+    fn impact_image(&self) -> Option<&ServingImage> {
+        self.impacts.then_some(self)
+    }
 
     fn slot_count(&self) -> usize {
         self.slots
@@ -1177,6 +1260,7 @@ impl LexicalSource for ServingImage {
                         bytes: &postings[at..at + len],
                         count,
                         blocked: self.blocked,
+                        impacts: self.impacts,
                     })
                 }
                 std::cmp::Ordering::Greater => return None,

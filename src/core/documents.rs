@@ -21,6 +21,7 @@ pub mod analysis;
 mod census;
 mod dense;
 mod image;
+mod impact;
 mod screen;
 pub use analysis::Analyzer;
 mod index;

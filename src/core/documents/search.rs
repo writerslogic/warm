@@ -166,7 +166,22 @@ enum SlotPositions {
 }
 
 const DENSE_SLOT_LIMIT: usize = 1 << 19;
-
+/// Below this many slots the exhaustive hot-list ranking beats the windowed pruned ranker
+/// (measured on scifact, nfcorpus and the memory set, where exhaustive is 1.7 to 2.4 times
+/// faster; the pruned ranker wins from FiQA's 57k documents up). Above `DENSE_SLOT_LIMIT` the
+/// pruned ranker is the only one that avoids hydrating the store.
+const PRUNE_SLOT_FLOOR_SERVING: usize = 1 << 15;
+const PRUNE_SLOT_FLOOR: usize = if cfg!(test) {
+    0
+} else {
+    PRUNE_SLOT_FLOOR_SERVING
+};
+fn prune_above(slots: usize, floor: usize) -> bool {
+    slots > floor
+}
+fn prune_wanted(slots: usize) -> bool {
+    prune_above(slots, PRUNE_SLOT_FLOOR)
+}
 impl SlotPositions {
     fn new(slot_count: usize) -> Self {
         if slot_count <= DENSE_SLOT_LIMIT {
@@ -415,7 +430,7 @@ fn capture_screened(
         let ranked = LEXICAL_SCRATCH.with(|scratch| {
             scratch
                 .borrow_mut()
-                .rank_with(store, &prepared, false, &candidates, &mut extras)
+                .rank_with(store, &prepared, true, &candidates, &mut extras)
         });
         (ranked, extras)
     } else {
@@ -633,6 +648,26 @@ pub(super) trait LexicalSource {
     fn slot_word_count(&self, slot: usize) -> u32;
     /// `(document id, chunk index)` of the chunk in `slot`, the tie order of equal scores.
     fn slot_order(&self, slot: usize) -> (&str, usize);
+    /// The checkpoint whose postings carry impacts, when this source is one: its queries may
+    /// be pruned by block-max bounds (see [`super::impact`]).
+    fn impact_image(&self) -> Option<&super::image::ServingImage> {
+        None
+    }
+    /// The shortest posting list and the most postings a thread keeps decoded and weighted
+    /// for this source (see [`HotList`]).
+    fn hot_policy(&self) -> HotPolicy {
+        HotPolicy {
+            min_len: HOT_MIN_LEN.max(self.slot_count() / HOT_MIN_SLOTS),
+            postings: HOT_POSTINGS,
+        }
+    }
+}
+
+/// How much of a source's posting lists a thread keeps decoded and weighted.
+#[derive(Clone, Copy)]
+pub(super) struct HotPolicy {
+    pub(super) min_len: usize,
+    pub(super) postings: usize,
 }
 
 /// A term's postings as [`LexicalScratch::rank`] reads them.
@@ -691,6 +726,14 @@ impl LexicalSource for DocumentStore {
     fn slot_order(&self, slot: usize) -> (&str, usize) {
         DocumentStore::slot_order(self, slot)
     }
+
+    /// A live store's lists are short and its queries long: keep every list of 16 postings or more.
+    fn hot_policy(&self) -> HotPolicy {
+        HotPolicy {
+            min_len: LIVE_HOT_MIN_LEN,
+            postings: LIVE_HOT_POSTINGS,
+        }
+    }
 }
 
 /// [`capture_ranked_lexical`] over a serving image, for queries [`overlay_serves`] accepts.
@@ -740,7 +783,8 @@ pub(super) fn overlay_serves(prepared: &PreparedSearch, store: &DocumentStore) -
     store.base.as_ref().is_some_and(|base| {
         prepared.lexical_only
             && prepared.embedding.is_none()
-            && base.image.slot_total() + store.slot_count <= DENSE_SLOT_LIMIT
+            && (base.image.slot_total() + store.slot_count <= DENSE_SLOT_LIMIT
+                || (base.intact() && store.documents.is_empty() && base.image.has_impacts()))
     })
 }
 
@@ -860,7 +904,8 @@ struct NormKey {
 /// Per-thread working memory of [`capture_ranked_lexical`], reused across queries so a query
 /// neither allocates nor clears a table per store slot. It grows to the largest store a thread
 /// queries (20 bytes per slot plus 4 per posting of the longest query: no more than the
-/// store's own owner and word-count tables per slot) and is not shrunk.
+/// store's own owner and word-count tables per slot) and is not shrunk. The decoded lists in
+/// `hot` are bounded by the source's [`HotPolicy`].
 #[derive(Default)]
 struct LexicalScratch {
     /// BM25 sum per slot; every entry is 0 between queries.
@@ -881,6 +926,7 @@ struct LexicalScratch {
     /// zeroes every score first.
     dirty: bool,
     hot: HotLists,
+    pruned: super::impact::PruneScratch,
 }
 
 /// The most postings a thread keeps decoded and weighted (12 bytes each).
@@ -890,9 +936,12 @@ const HOT_POSTINGS: usize = 1 << 18;
 /// absolute floor.
 const HOT_MIN_LEN: usize = 32;
 const HOT_MIN_SLOTS: usize = 32;
+const LIVE_HOT_MIN_LEN: usize = 16;
+const LIVE_HOT_POSTINGS: usize = if cfg!(test) { 2200 } else { 1 << 20 };
 
-/// What a thread's decoded posting lists belong to: one immutable checkpoint under fixed BM25
-/// constants, so each list's idf and every posting's weight are fixed too.
+/// What a thread's decoded posting lists belong to: one immutable checkpoint, or one generation
+/// of a live store, under fixed BM25 constants, so each list's idf and every posting's weight
+/// are fixed too.
 #[derive(Clone, Copy, PartialEq)]
 struct HotKey {
     norm: NormKey,
@@ -908,8 +957,9 @@ struct HotList {
     weights: Box<[f64]>,
 }
 
-/// Per-thread decoded lists of an immutable checkpoint, by form and term, bounded by
-/// [`HOT_POSTINGS`] and dropped when the checkpoint or the BM25 constants change.
+/// Per-thread decoded lists of an immutable checkpoint or a live store generation, by form and
+/// term, bounded by the source's [`HotPolicy`] and dropped when the checkpoint, the generation
+/// or the BM25 constants change.
 #[derive(Default)]
 struct HotLists {
     key: Option<HotKey>,
@@ -938,8 +988,9 @@ impl LexicalScratch {
     /// `execute_chunks` computes from captured postings: the same terms in the same order
     /// (form 0 terms, then form 1 terms, each sorted), the same expressions, from 0.
     ///
-    /// With `hot` set, `store` is an immutable checkpoint whose long posting lists this thread
-    /// may keep decoded and weighted between queries (see [`HotList`]).
+    /// With `hot` set, `store` is an immutable checkpoint, or a live store whose generation
+    /// every mutation advances, and its long posting lists may be kept decoded and weighted by
+    /// this thread between queries (see [`HotList`]).
     fn rank<S: LexicalSource>(
         &mut self,
         store: &S,
@@ -959,6 +1010,33 @@ impl LexicalScratch {
         extra: &[usize],
         extras: &mut Vec<f64>,
     ) -> Vec<(f64, u32)> {
+        if hot
+            && extra.is_empty()
+            && store
+                .impact_image()
+                .is_some_and(|image| prune_wanted(image.slot_total()))
+        {
+            let limit = prepared.limit;
+            if super::impact::rank(
+                store,
+                &prepared.query_terms,
+                prepared.bm25,
+                limit,
+                &mut self.pruned,
+            )
+            .is_some()
+            {
+                let candidates = &mut self.pruned.candidates;
+                top_ranked(candidates, limit, |a, b| {
+                    b.0.total_cmp(&a.0).then_with(|| {
+                        store
+                            .slot_order(a.1 as usize)
+                            .cmp(&store.slot_order(b.1 as usize))
+                    })
+                });
+                return candidates.clone();
+            }
+        }
         let slots = store.slot_count();
         if self.dirty {
             self.scores.fill(0.0);
@@ -1044,7 +1122,7 @@ impl LexicalScratch {
         self.touched.clear();
         if dense {
             let norms = &self.norms[..slots];
-            let admit_from = HOT_MIN_LEN.max(slots / HOT_MIN_SLOTS);
+            let policy = store.hot_policy();
             for listed in &lists {
                 match listed {
                     Listed::Hot(list) => {
@@ -1059,7 +1137,9 @@ impl LexicalScratch {
                         word,
                     } => {
                         let length = list.len();
-                        if hot && length >= admit_from && length <= HOT_POSTINGS - self.hot.postings
+                        if hot
+                            && length >= policy.min_len
+                            && length <= policy.postings.saturating_sub(self.hot.postings)
                         {
                             let mut kept_slots = Vec::with_capacity(length);
                             let mut kept_weights = Vec::with_capacity(length);
@@ -2882,6 +2962,94 @@ mod tests {
         }
     }
 
+    /// A one-chunk document of `words` with a pseudo-random embedding.
+    fn chunk_document(id: usize, words: &str, state: &mut u64) -> StoredDocument {
+        let mut next = || {
+            *state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((*state >> 33) as f64 / (1u64 << 31) as f64) - 0.5
+        };
+        let vector: Vec<f64> = (0..8).map(|_| next()).collect();
+        let input = serde_json::from_value(json!({
+            "id": format!("h{id:05}"), "version": "1", "text": words,
+            "chunkWords": 32, "overlapWords": 0, "embeddings": [vector],
+        }))
+        .unwrap();
+        super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap()
+    }
+
+    /// A thread keeps a live store's decoded lists only from `LIVE_HOT_MIN_LEN` postings and within
+    /// `LIVE_HOT_POSTINGS`, and every ranking, cold or from kept lists, is the reference scan's, also after a
+    /// mutation of the store.
+    #[test]
+    fn live_hot_lists_rank_as_the_reference_scan_at_their_limits() {
+        const DOCUMENTS: usize = 2100;
+        let query = vec![0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25];
+        let options = SearchOptions {
+            k: Some(9),
+            candidate_limit: Some(10),
+            embedding: Some(query),
+            min_semantic_score: Some(-1.0),
+            ..Default::default()
+        };
+        let text = "alpha beta common delta";
+        // The budget left after beta and common is 2200 - (16 + 2100) = 84 postings.
+        for (alpha, beta, delta) in [
+            (LIVE_HOT_MIN_LEN - 1, LIVE_HOT_MIN_LEN, 83),
+            (LIVE_HOT_MIN_LEN, LIVE_HOT_MIN_LEN + 1, 84),
+            (LIVE_HOT_MIN_LEN + 1, LIVE_HOT_MIN_LEN - 1, 85),
+        ] {
+            let mut state = 0x2545_F491_4F6C_DD1Du64;
+            let mut store = DocumentStore::default();
+            let document = |id: usize, state: &mut u64| {
+                let mut words = format!("common rare{id}");
+                for (name, count) in [("alpha", alpha), ("beta", beta), ("delta", delta)] {
+                    if id < count {
+                        words.push_str(&format!(" {name}"));
+                    }
+                }
+                chunk_document(id, &words, state)
+            };
+            for id in 0..DOCUMENTS {
+                let document = document(id, &mut state);
+                store.insert(document.id.clone(), document);
+            }
+            let kept = || LEXICAL_SCRATCH.with(|scratch| scratch.borrow().hot.postings);
+            let check = |store: &DocumentStore, label: &str| {
+                let expected = serde_json::to_value(
+                    super::super::search_impl(store, text, &options, Some(8), false).unwrap(),
+                )
+                .unwrap();
+                for pass in 0..3 {
+                    let actual = serde_json::to_value(
+                        super::super::search_impl(store, text, &options, Some(8), true).unwrap(),
+                    )
+                    .unwrap();
+                    assert_eq!(
+                        actual, expected,
+                        "{label} {alpha} {beta} {delta} pass {pass}"
+                    );
+                }
+            };
+            LEXICAL_SCRATCH.with(|scratch| scratch.take());
+            check(&store, "built");
+            let admitted = |count: usize| if count >= LIVE_HOT_MIN_LEN { count } else { 0 };
+            let first = admitted(alpha)
+                + admitted(beta)
+                + DOCUMENTS
+                + if delta <= LIVE_HOT_POSTINGS - (admitted(alpha) + admitted(beta) + DOCUMENTS) {
+                    delta
+                } else {
+                    0
+                };
+            assert_eq!(kept(), first, "{alpha} {beta} {delta}");
+            let document = document(DOCUMENTS, &mut state);
+            store.insert(document.id.clone(), document);
+            check(&store, "grown");
+        }
+    }
+
     /// The screen table serves from `SCREEN_TABLE_MIN_CHUNKS` chunks (the second query of a generation builds it) and
     /// ranks identically to the exact scan on both sides of that size.
     #[test]
@@ -3370,7 +3538,11 @@ mod tests {
         ];
         // Version 1 (flat postings) is still read: it serves, and rebuilds the store, as the
         // version written does.
-        let versions = [super::super::image::encode, super::super::image::encode_v1];
+        let versions = [
+            super::super::image::encode,
+            super::super::image::encode_v2,
+            super::super::image::encode_v1,
+        ];
         for ((first, every), encode) in [(0, 1), (1, 2)]
             .into_iter()
             .flat_map(|layout| versions.map(|encode| (layout, encode)))
@@ -3406,6 +3578,10 @@ mod tests {
                         );
                     }
                 }
+                // A version 3 checkpoint is pruned, not decoded into hot lists.
+                if image.has_impacts() {
+                    continue;
+                }
                 let kept = LEXICAL_SCRATCH.with(|scratch| {
                     let scratch = scratch.borrow();
                     (
@@ -3419,6 +3595,279 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// A store of `documents` one-chunk documents whose words follow a heavy-tailed
+    /// distribution over `vocabulary` terms, with lengths from 3 to 60 words, so some posting
+    /// lists run to many blocks and chunk lengths differ.
+    fn heavy_tailed_store(documents: usize, vocabulary: u64, state: &mut u64) -> DocumentStore {
+        let mut store = DocumentStore::default();
+        for id in 0..documents {
+            let length = 3 + xorshift(state) % 58;
+            let text: Vec<String> = (0..length)
+                .map(|_| {
+                    let u = (xorshift(state) % 1_000_000) as f64 / 1_000_000.0;
+                    format!("w{}", ((vocabulary as f64).powf(u) as u64).min(vocabulary))
+                })
+                .collect();
+            let input = serde_json::from_value(json!({
+                "id": format!("h{id:06}"), "text": text.join(" "), "chunkWords": 4096, "overlapWords": 0,
+            }))
+            .unwrap();
+            let mut document =
+                super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+            for chunk in &mut document.chunks {
+                chunk.vector_state = super::super::VectorState::Lexical;
+                chunk.vector =
+                    crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+            }
+            store.insert(document.id.clone(), document);
+        }
+        store
+    }
+
+    /// Block-max pruned ranking from a version 3 checkpoint returns the chunks, the scores to
+    /// the bit and the order the exhaustive ranking of a version 2 one does, for queries of one
+    /// to thirty terms at several depths and BM25 settings, and decodes fewer blocks than the
+    /// lists hold.
+    #[test]
+    fn pruned_ranking_matches_exhaustive_ranking_to_the_bit() {
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        let stores = [
+            prose_store(0, 1),
+            heavy_tailed_store(6000, 400, &mut state),
+            heavy_tailed_store(40, 6, &mut state),
+        ];
+        let options = [
+            SearchOptions {
+                k: Some(10),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(100),
+                candidate_limit: Some(100),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(3),
+                candidate_limit: Some(5),
+                bm25_k1: Some(1.6),
+                bm25_b: Some(0.4),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(50),
+                candidate_limit: Some(50),
+                bm25_k1: Some(0.0),
+                bm25_b: Some(1.0),
+                ..Default::default()
+            },
+        ];
+        let (mut listed, mut decoded, mut scored_total, mut queries_run) = (0, 0, 0, 0);
+        for (index, store) in stores.iter().enumerate() {
+            type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+            let build = |encode: Encoder| {
+                ServingImage::new(super::super::Backing::Owned(
+                    encode(store, 1, 1024).unwrap().unwrap(),
+                ))
+                .unwrap()
+            };
+            let (pruned, plain) = (
+                build(super::super::image::encode),
+                build(super::super::image::encode_v2),
+            );
+            assert!(pruned.has_impacts() && !plain.has_impacts());
+            let texts: Vec<String> = match index {
+                0 => include_str!("../../../CHANGELOG.md")
+                    .lines()
+                    .filter(|line| line.len() >= 20)
+                    .step_by(4)
+                    .map(str::to_owned)
+                    .collect(),
+                1 => (0..300)
+                    .map(|_| {
+                        let terms = 1 + xorshift(&mut state) % 30;
+                        (0..terms)
+                            .map(|_| {
+                                let u = (xorshift(&mut state) % 1_000_000) as f64 / 1_000_000.0;
+                                format!("w{}", (400f64.powf(u) as u64).min(400))
+                            })
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    })
+                    .collect(),
+                _ => (0..40)
+                    .map(|i| format!("w1 w2 w{} w{} nonsense", i % 7, (i * 3) % 7))
+                    .collect(),
+            };
+            for text in &texts {
+                for options in &options {
+                    let prepared = prepare_search(text, options, None).unwrap();
+                    let (fast, exact, stats) = LEXICAL_SCRATCH.with(|scratch| {
+                        let mut scratch = scratch.borrow_mut();
+                        let fast = scratch.rank(&pruned, &prepared, true);
+                        let stats = scratch.pruned.stats;
+                        let exact = scratch.rank(&plain, &prepared, true);
+                        (fast, exact, stats)
+                    });
+                    let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+                        ranked
+                            .iter()
+                            .map(|&(s, slot)| (s.to_bits(), slot))
+                            .collect()
+                    };
+                    assert_eq!(bits(&fast), bits(&exact), "{text:?}");
+                    listed += stats.blocks_listed;
+                    decoded += stats.blocks_decoded;
+                    scored_total += stats.scored;
+                    queries_run += 1;
+                }
+            }
+        }
+        assert!(queries_run > 1000 && scored_total > 0);
+        assert!(
+            decoded < listed,
+            "pruning decoded {decoded} of {listed} blocks"
+        );
+    }
+
+    /// The windowed ranker's block decoder and frequency tables at the block boundary: a list
+    /// of 127, 128 or 129 postings (and the same plus one block) with frequencies running past
+    /// the table's escape value ranks to the bit as the exhaustive ranking does.
+    #[test]
+    fn pruned_ranking_matches_exhaustive_at_block_boundaries() {
+        let options = [
+            SearchOptions {
+                k: Some(10),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(100),
+                candidate_limit: Some(100),
+                ..Default::default()
+            },
+        ];
+        for documents in [127usize, 128, 129, 255, 256, 257] {
+            let mut store = DocumentStore::default();
+            for id in 0..documents {
+                let repeats = 1 + id % 20;
+                let filler = 1 + (id * 7) % 11;
+                let mut words = vec!["edge"; repeats];
+                words.extend(std::iter::repeat_n("pad", filler));
+                if id % 3 == 0 {
+                    words.push("common");
+                }
+                let input = serde_json::from_value(json!({
+                    "id": format!("b{id:04}"), "text": words.join(" "), "chunkWords": 4096, "overlapWords": 0,
+                }))
+                .unwrap();
+                let mut document =
+                    super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+                for chunk in &mut document.chunks {
+                    chunk.vector_state = super::super::VectorState::Lexical;
+                    chunk.vector =
+                        crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+                }
+                store.insert(document.id.clone(), document);
+            }
+            type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+            let build = |encode: Encoder| {
+                ServingImage::new(super::super::Backing::Owned(
+                    encode(&store, 1, 1024).unwrap().unwrap(),
+                ))
+                .unwrap()
+            };
+            let (pruned, plain) = (
+                build(super::super::image::encode),
+                build(super::super::image::encode_v2),
+            );
+            for text in [
+                "edge",
+                "edge pad",
+                "edge common",
+                "common pad edge edge",
+                "pad",
+            ] {
+                for options in &options {
+                    let prepared = prepare_search(text, options, None).unwrap();
+                    let (fast, exact) = LEXICAL_SCRATCH.with(|scratch| {
+                        let mut scratch = scratch.borrow_mut();
+                        let fast = scratch.rank(&pruned, &prepared, true);
+                        (fast, scratch.rank(&plain, &prepared, true))
+                    });
+                    let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+                        ranked
+                            .iter()
+                            .map(|&(s, slot)| (s.to_bits(), slot))
+                            .collect()
+                    };
+                    assert_eq!(bits(&fast), bits(&exact), "{documents} documents, {text:?}");
+                }
+            }
+        }
+    }
+    /// The cost model switches to the pruned ranker exactly above the serving floor, and every
+    /// store too large for a dense slot table is above it.
+    #[test]
+    fn pruning_switches_on_above_the_serving_floor() {
+        let floor = PRUNE_SLOT_FLOOR_SERVING;
+        assert!(!prune_above(floor - 1, floor));
+        assert!(!prune_above(floor, floor));
+        assert!(prune_above(floor + 1, floor));
+        assert!(DENSE_SLOT_LIMIT > floor);
+    }
+    /// Reports how much of a checkpoint's posting lists block-max pruning reads per query:
+    /// `WARM_PRUNE_CKPT` the `documents.ckpt`, `WARM_PRUNE_QUERIES` the harness query file.
+    #[test]
+    #[ignore = "measurement: needs WARM_PRUNE_CKPT and WARM_PRUNE_QUERIES"]
+    fn pruning_work_report() {
+        let (Ok(ckpt), Ok(queries)) = (
+            std::env::var("WARM_PRUNE_CKPT"),
+            std::env::var("WARM_PRUNE_QUERIES"),
+        ) else {
+            return;
+        };
+        let image =
+            ServingImage::new(super::super::Backing::Owned(std::fs::read(ckpt).unwrap())).unwrap();
+        let queries: Vec<Value> = serde_json::from_slice(&std::fs::read(queries).unwrap()).unwrap();
+        let options = SearchOptions {
+            k: Some(100),
+            candidate_limit: Some(100),
+            ..Default::default()
+        };
+        let mut total = [0usize; 10];
+        for query in &queries {
+            let text = query["text"].as_str().unwrap();
+            let prepared = prepare_search(text, &options, None).unwrap();
+            let stats = LEXICAL_SCRATCH.with(|scratch| {
+                let mut scratch = scratch.borrow_mut();
+                scratch.rank(&image, &prepared, true);
+                scratch.pruned.stats
+            });
+            total[0] += stats.listed;
+            total[1] += stats.blocks_listed;
+            total[2] += stats.blocks_decoded;
+            total[3] += stats.scored;
+            total[4] += stats.windows;
+            total[6] += stats.accumulated;
+            total[7] += stats.survivors;
+            total[8] += stats.table_lookups;
+            total[9] += stats.cursor_lookups;
+        }
+        let n = queries.len() as f64;
+        eprintln!(
+            "queries {} per query: postings listed {:.0} blocks listed {:.0} blocks decoded {:.0} chunks scored {:.0} windows {:.1} accumulated {:.0} survivors {:.0} table lookups {:.0} cursor lookups {:.0}",
+            queries.len(),
+            total[0] as f64 / n,
+            total[1] as f64 / n,
+            total[2] as f64 / n,
+            total[3] as f64 / n,
+            total[4] as f64 / n,
+            total[6] as f64 / n,
+            total[7] as f64 / n,
+            total[8] as f64 / n,
+            total[9] as f64 / n
+        );
     }
 
     /// Rebuilding a checkpoint without the postings of its dead documents and then removing
