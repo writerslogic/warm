@@ -1,0 +1,84 @@
+{
+ "pilotO": {
+  "est_dev_acc": 0.9448818897637795,
+  "cats": {
+   "multi-hop": {
+    "fail_n": 20,
+    "fixed": 0.4,
+    "succ_n": 20,
+    "kept": 1.0,
+    "empty": 6
+   },
+   "temporal": {
+    "fail_n": 6,
+    "fixed": 0.333,
+    "succ_n": 8,
+    "kept": 1.0,
+    "empty": 1
+   },
+   "open-domain": {
+    "fail_n": 11,
+    "fixed": 0.273,
+    "succ_n": 11,
+    "kept": 1.0,
+    "empty": 0
+   },
+   "single-hop": {
+    "fail_n": 27,
+    "fixed": 0.333,
+    "succ_n": 27,
+    "kept": 1.0,
+    "empty": 0
+   }
+  },
+  "usage": {
+   "usd": 4.3394449999999996,
+   "answer_calls": 130,
+   "length": 7,
+   "mean_prompt": 10988.738461538462,
+   "mean_reasoning": 1546.3384615384616
+  },
+  "answered": 130
+ },
+ "pilotM": {
+  "est_dev_acc": 0.9407062753519445,
+  "cats": {
+   "multi-hop": {
+    "fail_n": 20,
+    "fixed": 0.35,
+    "succ_n": 20,
+    "kept": 1.0,
+    "empty": 7
+   },
+   "temporal": {
+    "fail_n": 6,
+    "fixed": 0.333,
+    "succ_n": 8,
+    "kept": 1.0,
+    "empty": 1
+   },
+   "open-domain": {
+    "fail_n": 11,
+    "fixed": 0.273,
+    "succ_n": 11,
+    "kept": 0.909,
+    "empty": 0
+   },
+   "single-hop": {
+    "fail_n": 27,
+    "fixed": 0.37,
+    "succ_n": 27,
+    "kept": 1.0,
+    "empty": 0
+   }
+  },
+  "usage": {
+   "usd": 4.772306,
+   "answer_calls": 130,
+   "length": 8,
+   "mean_prompt": 13939.361538461539,
+   "mean_reasoning": 1527.6307692307691
+  },
+  "answered": 130
+ }
+}

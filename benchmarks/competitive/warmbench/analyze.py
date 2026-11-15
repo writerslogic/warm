@@ -13,7 +13,7 @@ import statistics
 from enum import Enum
 
 from . import registry
-from .common import bootstrap_ci, pass_summary
+from .common import bootstrap_ci, pass_summary, paired_bootstrap
 
 TARGETS = (0.90, 0.95, 0.99)
 HIGHER = "higher"
@@ -264,9 +264,10 @@ def text_metrics(path, results, level=0.95):
         if q:
             qsrc = src + ".serve_rounds[0].quality"
             per = q["per_query_ndcg_at_10"]
-            put("ndcg@10", system, cell(q["ndcg_at_10"], bootstrap_ci(per, statistics.fmean, rounds=1000, level=level), q["queries"], qsrc, "nDCG"))
+            put("ndcg@10", system, cell(q["ndcg_at_10"], bootstrap_ci(per, statistics.fmean, rounds=1000, level=level), q["queries"], qsrc, "nDCG")
+                | {"per_query": per, "level": level})
             put("recall@100", system, cell(q["recall_at_100"], bootstrap_ci(q["per_query_recall_at_100"], statistics.fmean, rounds=1000, level=level),
-                                           q["queries"], qsrc, "recall"))
+                                           q["queries"], qsrc, "recall") | {"per_query": q["per_query_recall_at_100"], "level": level})
         qps, p50, p99 = [], [], []
         for r in rounds:
             passes = _passes(r)
@@ -294,6 +295,20 @@ def text_metrics(path, results, level=0.95):
                 put(f"{name}_ms_per_op", system, cell(None, None, 0, f"{src}.ops", "ms", (o or ops).get("reason") or (o or ops).get("error") or "not supported"))
         _install_cells(put, system, entry, src)
     return out
+
+
+# Quality metrics are scored on the same queries for every system, so two systems are compared by a paired per-query
+# bootstrap (common.paired_bootstrap), not by the intervals of their separate means.
+PAIRED = ("ndcg@10", "recall@100")
+
+
+def paired_advantage(metric, mine, theirs):
+    """Advantage of `mine` over `theirs` on a paired metric: the ratio of the means with the interval of the paired
+    resampling, and the paired difference. Both metrics are higher-is-better."""
+    if len(mine["per_query"]) != len(theirs["per_query"]):
+        raise ValueError(f"{metric}: {len(mine['per_query'])} and {len(theirs['per_query'])} per-query scores are not the same queries")
+    r = paired_bootstrap(mine["per_query"], theirs["per_query"], level=mine["level"])
+    return {"factor": r["ratio"], "ci": r["ratio_ci"], "paired": {"difference": r["difference"], "ci": r["difference_ci"], "queries": r["queries"], "level": mine["level"]}}
 
 
 DIRECTIONS = {"qps": HIGHER, "ndcg@10": HIGHER, "recall@100": HIGHER, **{f"qps@recall{t:.2f}": HIGHER for t in TARGETS}}

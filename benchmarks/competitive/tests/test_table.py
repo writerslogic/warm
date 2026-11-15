@@ -283,3 +283,27 @@ def test_audit_text_uncertainty_counts_process_rounds_not_passes():
     cells = analyze.text_metrics("x", data)
     assert cells["qps"]["warm"]["n"] == 3
     assert cells["p99_latency"]["warm"]["n"] == 3
+
+
+def test_quality_verdict_is_a_paired_comparison_of_the_same_queries():
+    """A system 0.005 ahead of another on every query is a WIN under the paired interval; the unpaired intervals of
+    the two means overlap and would call it a TIE."""
+    import numpy as np
+    base = list(np.random.default_rng(5).uniform(0, 1, 300))
+    ahead = [v + 0.005 for v in base]
+    cells = {name: analyze.cell(float(np.mean(per)), common_ci(per), 300, "x", "nDCG") | {"per_query": per, "level": 0.95}
+             for name, per in (("ahead", ahead), ("base", base))}
+    adv = table.advantage("ndcg@10", cells["ahead"], cells["base"])
+    assert table.verdict(adv) == "WIN"
+    assert adv["paired"]["difference"] == pytest.approx(0.005)
+    assert adv["paired"]["ci"][0] > 0
+    unpaired = {k: {key: v for key, v in c.items() if key != "per_query"} for k, c in cells.items()}
+    assert table.verdict(table.advantage("ndcg@10", unpaired["ahead"], unpaired["base"])) == "TIE"
+    with pytest.raises(ValueError):
+        table.advantage("ndcg@10", cells["ahead"], cells["base"] | {"per_query": base[:10]})
+
+
+def common_ci(values):
+    from warmbench.common import bootstrap_ci
+    import statistics
+    return bootstrap_ci(values, statistics.fmean, rounds=1000)
