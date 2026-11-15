@@ -312,6 +312,9 @@ impl Drop for TenantInitialization<'_> {
 }
 
 pub struct AppState {
+    /// How many chunks a text search asks the engine for per requested document: 1 until a
+    /// search finds fewer distinct documents than asked (documents of several chunks), then 4.
+    pub search_chunk_factor: std::sync::atomic::AtomicU32,
     pub cfg: Config,
     pub auth: Authenticator,
     pub work: WorkLimit,
@@ -359,6 +362,7 @@ impl AppState {
                 cfg.idempotency_capacity,
                 cfg.idempotency_max_bytes,
             )?,
+            search_chunk_factor: std::sync::atomic::AtomicU32::new(1),
             ready: AtomicBool::new(false),
             started: Instant::now(),
             epoch: rand::random(),

@@ -365,3 +365,117 @@ fn graph_and_exact_routes_agree_and_track_deletes_and_replaces() {
         .send();
     assert_eq!(resp.status, 422, "{}", resp.text());
 }
+
+fn binary_query(server: &Server, vector: &[f64], params: &str) -> Resp {
+    let body: Vec<u8> = vector
+        .iter()
+        .flat_map(|v| (*v as f32).to_le_bytes())
+        .collect();
+    raw_binary_query(server, body, params)
+}
+
+fn raw_binary_query(server: &Server, body: Vec<u8>, params: &str) -> Resp {
+    server
+        .req("POST", &format!("/api/v1/query/vector?{params}"))
+        .tenant(TENANT)
+        .header("Content-Type", "application/octet-stream")
+        .body(body)
+        .send()
+}
+
+/// The binary route answers like the JSON route, restricts to an integer id range inside the
+/// graph search, and refuses a body that is not exactly `--input-dim` finite nonzero f32s.
+#[test]
+fn binary_vector_query_agrees_with_json_filters_ids_and_validates_the_body() {
+    let (docs, queries) = corpus();
+    let server = Server::open(&["--graph-min-rows", "512"]);
+    for (batch, chunk) in docs.chunks(1000).enumerate() {
+        let body: Vec<Value> = chunk
+            .iter()
+            .enumerate()
+            .map(|(i, v)| {
+                let index = batch * 1000 + i;
+                document(&index.to_string(), index, v)
+            })
+            .collect();
+        let resp = server
+            .req("POST", "/api/v1/documents/batch")
+            .tenant(TENANT)
+            .json(&json!(body))
+            .send();
+        assert_eq!(resp.status, 200, "{}", resp.text());
+    }
+    assert_eq!(maintain(&server)["graph"], true);
+
+    let mut agree = 0;
+    for q in queries.iter().take(10) {
+        let json_ids = top_ids(&server, q, "graph");
+        let resp = binary_query(&server, q, &format!("top_k={K}&index=graph"));
+        assert_eq!(resp.status, 200, "{}", resp.text());
+        let body = resp.json();
+        assert!(
+            body["matches"][0].get("text").is_none(),
+            "ids and scores only"
+        );
+        agree += overlap(&ids(&body), &json_ids);
+    }
+    assert!(
+        agree >= 10 * K - 5,
+        "binary and JSON routes disagree: {agree}"
+    );
+
+    let reference = |q: &[f64], low: usize, high: usize| -> Vec<String> {
+        let mut scored: Vec<(f64, usize)> = (low..high)
+            .map(|i| (docs[i].iter().zip(q).map(|(a, b)| a * b).sum::<f64>(), i))
+            .collect();
+        scored.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+        scored.iter().take(K).map(|(_, i)| i.to_string()).collect()
+    };
+    for (low, high, params) in [
+        (2000, DOCS, "id_gte=2000".to_string()),
+        (100, 160, "id_gte=100&id_lt=160".to_string()),
+        (0, 2970, "id_lt=2970".to_string()),
+    ] {
+        let (mut found, mut wanted) = (0, 0);
+        for q in queries.iter().take(20) {
+            let resp = binary_query(&server, q, &format!("top_k={K}&{params}"));
+            assert_eq!(resp.status, 200, "{}", resp.text());
+            let got = ids(&resp.json());
+            assert!(
+                got.iter()
+                    .all(|id| (low..high).contains(&id.parse::<usize>().unwrap())),
+                "{params}: out-of-range ids {got:?}"
+            );
+            let want = reference(q, low, high);
+            wanted += want.len();
+            found += overlap(&got, &want);
+        }
+        assert!(
+            found as f64 >= 0.9 * wanted as f64,
+            "{params}: recall {found}/{wanted}"
+        );
+    }
+
+    let good: Vec<u8> = queries[0]
+        .iter()
+        .flat_map(|v| (*v as f32).to_le_bytes())
+        .collect();
+    assert_eq!(good.len(), DIM * 4);
+    for bad in [
+        Vec::new(),
+        good[..good.len() - 4].to_vec(),
+        [good.clone(), vec![0; 4]].concat(),
+        vec![0u8; DIM * 4],
+        f32::NAN
+            .to_le_bytes()
+            .iter()
+            .copied()
+            .chain(good[4..].iter().copied())
+            .collect(),
+    ] {
+        let resp = raw_binary_query(&server, bad, "top_k=5");
+        assert_eq!(resp.status, 422, "{}", resp.text());
+    }
+    let resp = raw_binary_query(&server, good, "top_k=5&bogus=1");
+    assert_eq!(resp.status, 422, "unknown parameters are refused");
+}

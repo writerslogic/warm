@@ -179,6 +179,12 @@ async fn serve_main(config: Config) -> Result<()> {
         config.keys_file.clone(),
     )?;
     config.validate(authenticator.has_credentials())?;
+    vindex::configure_build(vindex::GraphBuild {
+        degree: config.graph_degree,
+        build_ef: config.graph_build_ef,
+        profile: writerslogic_warm::core::qgraph::BuildProfile::from_name(&config.graph_profile)
+            .unwrap_or_default(),
+    });
     log::init(config.log_format, config.log_level);
     std::fs::create_dir_all(&config.data_dir).context("cannot create --data-dir")?;
     #[cfg(feature = "local-models")]

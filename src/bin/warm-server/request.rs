@@ -77,9 +77,18 @@ pub async fn acquire(state: &AppState) -> Result<OwnedSemaphorePermit, ApiError>
 }
 
 pub async fn read_body(state: &AppState, body: Body) -> Result<Vec<u8>, ApiError> {
+    read_body_max(state, body, state.cfg.max_body_bytes).await
+}
+
+/// `read_body` with a tighter limit than `--max-body-bytes`.
+pub async fn read_body_max(
+    state: &AppState,
+    body: Body,
+    limit: usize,
+) -> Result<Vec<u8>, ApiError> {
     tokio::time::timeout(
         Duration::from_secs(state.cfg.body_timeout_seconds),
-        to_bytes(body, state.cfg.max_body_bytes),
+        to_bytes(body, limit),
     )
     .await
     .map_err(|_| {
@@ -97,7 +106,7 @@ pub async fn read_body(state: &AppState, body: Body) -> Result<Vec<u8>, ApiError
             ApiError::new(
                 StatusCode::PAYLOAD_TOO_LARGE,
                 "payload_too_large",
-                format!("request body exceeds {} bytes", state.cfg.max_body_bytes),
+                format!("request body exceeds {limit} bytes"),
             )
         } else {
             ApiError::invalid_body()
