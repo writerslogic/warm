@@ -6,7 +6,7 @@ Usage: python generate_parity_fixture.py PATH_TO_PROTOTYPE_DIR OUTPUT.json
 Python's hash() is randomized per process, so only hash-independent quantities are recorded:
 unit text, breadcrumb, occurrence counts, value-line counts, effect counters, inventories.
 """
-import json, sys, collections
+import json, sys
 sys.path.insert(0, sys.argv[1])
 import envmodel as em
 
@@ -85,5 +85,6 @@ effects = sorted(({'template': tk(k[0]), 'action': k[1], 'n': e['n'], 'loops': e
                 key=lambda e: (e['template'], e['action']))
 templates = sorted(({'template': tk(k), 'obs': v['n'], 'inventory': dict(v['inv'])} for k, v in m.tmpl.items()), key=lambda x: x['template'])
 episodes = {k: v.split('\n', 1)[1] for k, v in m.eps.items()}
-json.dump(dict(trajectories=trajs, units=units, effects=effects, templates=templates, episodes=episodes), open(sys.argv[2], 'w'), indent=1, sort_keys=True)
+with open(sys.argv[2], 'w') as out:
+    json.dump(dict(trajectories=trajs, units=units, effects=effects, templates=templates, episodes=episodes), out, indent=1, sort_keys=True)
 print(len(units), 'units', len(effects), 'effect rows', len(templates), 'templates')
