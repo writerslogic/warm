@@ -52,7 +52,9 @@ fn files_with(dir: &Path, needle: &str) -> Vec<String> {
     let mut found = Vec::new();
     for entry in std::fs::read_dir(dir).unwrap().flatten() {
         let p = entry.path();
+        // The store's lock file is held open, and Windows refuses to read it.
         if p.is_file()
+            && p.extension().is_none_or(|x| x != "lock")
             && std::fs::read(&p)
                 .unwrap()
                 .windows(needle.len())

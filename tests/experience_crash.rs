@@ -147,6 +147,8 @@ fn leaked(dir: &Path, needle: &str) -> bool {
         .unwrap()
         .flatten()
         .filter(|e| e.path().is_file())
+        // The store's lock file is held open, and Windows refuses to read it.
+        .filter(|e| e.path().extension().is_none_or(|x| x != "lock"))
         .any(|e| {
             std::fs::read(e.path())
                 .unwrap()
