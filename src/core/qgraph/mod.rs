@@ -115,7 +115,7 @@ const BOUND_SLACK: f32 = 1.02;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BuildProfile {
     /// Two passes at `build_ef` capped at 100 and then at `build_ef`, with a bounded
-    /// construction search (see [`BOUND_RANK`]).
+    /// construction search (see `BOUND_RANK`).
     #[default]
     Standard,
     /// Two passes: the first at `build_ef` capped at 200, the second at `build_ef`, each
