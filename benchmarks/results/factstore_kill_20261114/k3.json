@@ -1,0 +1,215 @@
+{
+ "results": {
+  "n=100|B=256|J=0.1": {
+   "best_minhash": "mh4",
+   "rmse_minhash": 0.04787838825877125,
+   "best_vsa": "vsa_w2_k2.0",
+   "rmse_vsa": 0.03790414230708006,
+   "vsa_over_minhash": 0.7916754027353057
+  },
+  "n=100|B=256|J=0.3": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.053086482343124373,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.08326047621534695,
+   "vsa_over_minhash": 1.5683931679102983
+  },
+  "n=100|B=256|J=0.5": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.04551443108297726,
+   "best_vsa": "vsa_w4_k2.0",
+   "rmse_vsa": 0.08505762566479197,
+   "vsa_over_minhash": 1.8688056434172187
+  },
+  "n=100|B=256|J=0.7": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.04246992991134794,
+   "best_vsa": "vsa_w4_k3.0",
+   "rmse_vsa": 0.054585831017127225,
+   "vsa_over_minhash": 1.2852818719284471
+  },
+  "n=100|B=256|J=0.9": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.026883450574448815,
+   "best_vsa": "vsa_w8_k1.0",
+   "rmse_vsa": 0.02755100295073508,
+   "vsa_over_minhash": 1.0248313502181425
+  },
+  "n=100|B=1024|J=0.1": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.026758538651718917,
+   "best_vsa": "vsa_w2_k1.0",
+   "rmse_vsa": 0.0320193805452768,
+   "vsa_over_minhash": 1.1966042302246553
+  },
+  "n=100|B=1024|J=0.3": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.025117391236288887,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.028419482412036904,
+   "vsa_over_minhash": 1.1314663272425063
+  },
+  "n=100|B=1024|J=0.5": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.02620719245328503,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.03457064070871198,
+   "vsa_over_minhash": 1.3191279748998295
+  },
+  "n=100|B=1024|J=0.7": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.021922850672637852,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.030282193082520763,
+   "vsa_over_minhash": 1.381307273160251
+  },
+  "n=100|B=1024|J=0.9": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.014130960615443921,
+   "best_vsa": "vsa_w8_k1.0",
+   "rmse_vsa": 0.014509135200499368,
+   "vsa_over_minhash": 1.0267621285875028
+  },
+  "n=100|B=4096|J=0.1": {
+   "best_minhash": "mh8",
+   "rmse_minhash": 0.011214712503067534,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.012808217256714043,
+   "vsa_over_minhash": 1.142090557667942
+  },
+  "n=100|B=4096|J=0.3": {
+   "best_minhash": "mh4",
+   "rmse_minhash": 0.012432579560873715,
+   "best_vsa": "vsa_w4_k3.0",
+   "rmse_vsa": 0.021148215172203565,
+   "vsa_over_minhash": 1.7010319595105288
+  },
+  "n=100|B=4096|J=0.5": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.01354267307596662,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.01833100042605757,
+   "vsa_over_minhash": 1.3535732807866796
+  },
+  "n=100|B=4096|J=0.7": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.012254092916482436,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.015163555942261129,
+   "vsa_over_minhash": 1.2374278574194018
+  },
+  "n=100|B=4096|J=0.9": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.005669492880009618,
+   "best_vsa": "vsa_w8_k1.0",
+   "rmse_vsa": 0.007112349653814725,
+   "vsa_over_minhash": 1.2544948559495606
+  },
+  "n=1000|B=256|J=0.1": {
+   "best_minhash": "mh8",
+   "rmse_minhash": 0.05123100369165761,
+   "best_vsa": "vsa_w2_k1.0",
+   "rmse_vsa": 0.05320990723655498,
+   "vsa_over_minhash": 1.0386270695926187
+  },
+  "n=1000|B=256|J=0.3": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.05888856093849623,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.06796030455354615,
+   "vsa_over_minhash": 1.154049334377937
+  },
+  "n=1000|B=256|J=0.5": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.061996300890794366,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.0638400132896852,
+   "vsa_over_minhash": 1.0297390710800391
+  },
+  "n=1000|B=256|J=0.7": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.03867685141260973,
+   "best_vsa": "vsa_w4_k3.0",
+   "rmse_vsa": 0.05381702798057247,
+   "vsa_over_minhash": 1.3914531823297958
+  },
+  "n=1000|B=256|J=0.9": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.03395510023197381,
+   "best_vsa": "vsa_w4_k2.0",
+   "rmse_vsa": 0.02467718289599612,
+   "vsa_over_minhash": 0.7267592416870222
+  },
+  "n=1000|B=1024|J=0.1": {
+   "best_minhash": "mh4",
+   "rmse_minhash": 0.02497453119291635,
+   "best_vsa": "vsa_w2_k1.0",
+   "rmse_vsa": 0.032140703912956335,
+   "vsa_over_minhash": 1.286939228796117
+  },
+  "n=1000|B=1024|J=0.3": {
+   "best_minhash": "mh4",
+   "rmse_minhash": 0.024308297882392787,
+   "best_vsa": "vsa_w4_k2.0",
+   "rmse_vsa": 0.04179103165605126,
+   "vsa_over_minhash": 1.7192084718659686
+  },
+  "n=1000|B=1024|J=0.5": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.025295248875621245,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.03657503489616472,
+   "vsa_over_minhash": 1.4459250856161598
+  },
+  "n=1000|B=1024|J=0.7": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.017281531784472587,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.02979683405264774,
+   "vsa_over_minhash": 1.7242009808077385
+  },
+  "n=1000|B=1024|J=0.9": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.015633627205382486,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.01638104472272612,
+   "vsa_over_minhash": 1.0478083241671712
+  },
+  "n=1000|B=4096|J=0.1": {
+   "best_minhash": "mh4",
+   "rmse_minhash": 0.013018547590622374,
+   "best_vsa": "vsa_w4_k2.0",
+   "rmse_vsa": 0.015986434549573176,
+   "vsa_over_minhash": 1.2279737381064424
+  },
+  "n=1000|B=4096|J=0.3": {
+   "best_minhash": "mh2",
+   "rmse_minhash": 0.013783591835848348,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.01692718045584868,
+   "vsa_over_minhash": 1.228067448415332
+  },
+  "n=1000|B=4096|J=0.5": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.014826977959221554,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.015705773824213648,
+   "vsa_over_minhash": 1.0592700594422568
+  },
+  "n=1000|B=4096|J=0.7": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.011397785319754378,
+   "best_vsa": "vsa_w1_k1.0",
+   "rmse_vsa": 0.015807073725391994,
+   "vsa_over_minhash": 1.3868548390708446
+  },
+  "n=1000|B=4096|J=0.9": {
+   "best_minhash": "mh1",
+   "rmse_minhash": 0.006983460276143198,
+   "best_vsa": "vsa_w8_k1.0",
+   "rmse_vsa": 0.007557969029372725,
+   "vsa_over_minhash": 1.0822670611003768
+  }
+ },
+ "note": "tuning on the same pairs (selects min RMSE per arm: favours both arms)"
+}
