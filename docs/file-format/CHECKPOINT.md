@@ -124,7 +124,7 @@ to `3 B`), so the parameter bounds the index, not the process.
 All integers little endian; varints are LEB128.
 
 ```
-0    8  magic "HMSCKP\0\x02" (version 2; version 1, "HMSCKP\0\x01", is still read)
+0    8  magic "HMSCKP\0\x03" (version 3; versions 2, "HMSCKP\0\x02", and 1, "HMSCKP\0\x01", are still read)
 8    8  u64: CRC32 of bytes 16.. (low 32 bits)
 16   8  u64: CRC32 of the generation directory's name (low 32 bits)
 24   8  u64: vector dimensions of the store
@@ -140,7 +140,15 @@ Sections:
 1. per posting form, a dictionary of the sorted terms in blocks of 32 front-coded entries
    (prefix length, suffix bytes, posting count, posting byte length) and a block table of `u32`
    pairs (the block's dictionary offset, the posting offset of its first term);
-2. the posting lists of every term, form 0 then form 1 in dictionary order. Version 2: blocks
+2. the posting lists of every term, form 0 then form 1 in dictionary order. Version 3: version 2
+   plus impacts. The list starts with two varints, its largest frequency and the smallest word
+   count of any chunk it holds. Each block carries three more varints after its two width
+   bytes: its last slot minus its first, its largest frequency and the smallest word count among
+   its chunks (a list is at least two bytes plus six per block). A reader bounds the BM25 weight
+   of every posting in a block, or in the list, by that frequency at that word count, and skips
+   the blocks whose bound cannot reach the current `k`-th best score without decoding them.
+   Opening for a rebuild checks every recorded value against the postings and the slot word
+   counts. Version 2: blocks
    of 128 postings, the last one shorter; per block a varint of its first slot minus the
    previous block's last slot (the first block's is the slot itself), a byte of slot-gap bits,
    a byte of frequency bits, then the block's slot gaps (the first one zero) and its
@@ -157,8 +165,10 @@ Sections:
    come from a non-legacy store analyzer), the byte span as
    two varints, and its text (`0` none, `2` inline bytes).
 
-Every compaction writes version 2, so a version 1 checkpoint is replaced at the store's next
-compaction; until then it opens, serves and rebuilds the live store exactly as version 2 does.
+Every compaction writes version 3, so an older checkpoint is replaced at the store's next
+compaction; until then it opens, serves and rebuilds the live store exactly as version 3 does,
+ranking it exhaustively where a version 3 checkpoint is pruned (the ranking is the same to the
+bit, and a version 1 or 2 checkpoint serves from the checkpoint only up to 2^19 slots).
 
 ## Durability and crash safety
 

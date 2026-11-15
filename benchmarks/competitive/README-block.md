@@ -16,6 +16,18 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency @ 0.95 (us) | 67 | hnswlib 178 | 2.66x | W |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Index size (MiB) | 576.3 | hnswlib 751.8 | 1.30x | - |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W 10 / T 0 / L 2 | |
+| beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | nDCG@10 | 0.2654 | n/m | n/m | - |
+| beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | QPS (single thread) (QPS) | 1,802 | n/m | n/m | - |
+| beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | p99 latency (us) | 1,156 | n/m | n/m | - |
+| beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Ingest/build time (s) | 2.99 | n/m | n/m | - |
+| beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Peak RSS, serving (MiB) | 77 | n/m | n/m | - |
+| beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | On-disk size (MiB) | 94.1 | n/m | n/m | - |
+| beir:fiqa (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | nDCG@10 | 0.2654 | Apache Lucene 10.6.0 (JVM) 0.2657 | n/v | - |
+| beir:fiqa (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | QPS (single thread) (QPS) | 2,199 | Apache Lucene 10.6.0 (JVM) 1,623 | n/v | - |
+| beir:fiqa (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | p99 latency (us) | 1,041 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 1,419 | n/v | - |
+| beir:fiqa (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Ingest/build time (s) | 2.17 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 2.87 | n/v | - |
+| beir:fiqa (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Peak RSS, serving (MiB) | 28 | tantivy 0.27.0 (native Rust, pruning collector) 92 | n/v | - |
+| beir:fiqa (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | On-disk size (MiB) | 9.5 | Apache Lucene 10.6.0 (JVM) 12.1 | n/v | - |
 | beir:fiqa (documents) | `linux-aarch64-neoverse-n1-8c-31g` | nDCG@10 | 0.2654 | SQLite FTS5 (documents contract: docstore table read per hit) 0.2678 | 0.99x | T |
 | beir:fiqa (documents) | `linux-aarch64-neoverse-n1-8c-31g` | QPS (single thread) (QPS) | 1,011 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) 1,164 | 0.87x | T |
 | beir:fiqa (documents) | `linux-aarch64-neoverse-n1-8c-31g` | QPS (single thread) (QPS), WARM with eager ingest (reference, feeds no verdict) | 632 | - | - | - |
@@ -94,6 +106,30 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | memory (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | Ingest/build time (s) | 1.31 | SQLite FTS5 1.38 | 1.05x | W |
 | memory (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | Peak RSS, serving (MiB) | 13 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 26 | 1.94x | W |
 | memory (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | On-disk size (MiB) | 3.1 | Apache Lucene 10.6.0 (JVM) 10.3 | 3.29x | W |
+| msmarco:100k (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | nDCG@10 | 0.7283 | n/m | n/m | - |
+| msmarco:100k (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | QPS (single thread) (QPS) | 3,284 | n/m | n/m | - |
+| msmarco:100k (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | p99 latency (us) | 783 | n/m | n/m | - |
+| msmarco:100k (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Ingest/build time (s) | 3.60 | n/m | n/m | - |
+| msmarco:100k (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Peak RSS, serving (MiB) | 80 | n/m | n/m | - |
+| msmarco:100k (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | On-disk size (MiB) | 76.6 | n/m | n/m | - |
+| msmarco:100k (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | nDCG@10 | 0.7283 | tantivy 0.27.0 (native Rust, pruning collector) 0.7279 | n/v | - |
+| msmarco:100k (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | QPS (single thread) (QPS) | 4,395 | Apache Lucene 10.6.0 (JVM) 2,574 | n/v | - |
+| msmarco:100k (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | p99 latency (us) | 704 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 1,329 | n/v | - |
+| msmarco:100k (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Ingest/build time (s) | 2.91 | tantivy 0.27.0 (native Rust, pruning collector) 2.60 | n/v | - |
+| msmarco:100k (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Peak RSS, serving (MiB) | 35 | Apache Lucene 10.6.0 (JVM) 126 | n/v | - |
+| msmarco:100k (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | On-disk size (MiB) | 12.0 | Apache Lucene 10.6.0 (JVM) 10.8 | n/v | - |
+| msmarco:1m (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | nDCG@10 | 0.4746 | n/m | n/m | - |
+| msmarco:1m (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | QPS (single thread) (QPS) | 768 | n/m | n/m | - |
+| msmarco:1m (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | p99 latency (us) | 4,304 | n/m | n/m | - |
+| msmarco:1m (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Ingest/build time (s) | 40.24 | n/m | n/m | - |
+| msmarco:1m (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Peak RSS, serving (MiB) | 500 | n/m | n/m | - |
+| msmarco:1m (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | On-disk size (MiB) | 755.8 | n/m | n/m | - |
+| msmarco:1m (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | nDCG@10 | 0.4746 | tantivy 0.27.0 (native Rust, pruning collector) 0.4779 | n/v | - |
+| msmarco:1m (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | QPS (single thread) (QPS) | 830 | Apache Lucene 10.6.0 (JVM) 799 | n/v | - |
+| msmarco:1m (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | p99 latency (us) | 4,181 | Apache Lucene 10.6.0 (JVM) 4,578 | n/v | - |
+| msmarco:1m (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Ingest/build time (s) | 32.06 | Apache Lucene 10.6.0 (JVM) 29.42 | n/v | - |
+| msmarco:1m (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | Peak RSS, serving (MiB) | 164 | Apache Lucene 10.6.0 (JVM) 233 | n/v | - |
+| msmarco:1m (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | On-disk size (MiB) | 110.6 | Apache Lucene 10.6.0 (JVM) 98.5 | n/v | - |
 | beir:nfcorpus (documents) | `linux-aarch64-neoverse-n1-8c-31g` | nDCG@10 | 0.2916 | SQLite FTS5 (documents contract: docstore table read per hit) 0.2914 | 1.00x | T |
 | beir:nfcorpus (documents) | `linux-aarch64-neoverse-n1-8c-31g` | QPS (single thread) (QPS) | 9,693 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 6,694 | 1.45x | W |
 | beir:nfcorpus (documents) | `linux-aarch64-neoverse-n1-8c-31g` | QPS (single thread) (QPS), WARM with eager ingest (reference, feeds no verdict) | 4,595 | - | - | - |

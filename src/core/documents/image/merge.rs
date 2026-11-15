@@ -173,6 +173,17 @@ fn merge_form(
     };
     let mut scratch = Vec::new();
     let mut read = 0usize;
+    // The impact bounds of a list come from the word count of each slot it holds: the checkpoint's
+    // for its own slots, the store's for those written since.
+    let slot_table = base.map_or(&[][..], |image| image.section(Section::Slots));
+    let words = |slot: usize| {
+        if slot < split {
+            u32_at(slot_table, slot * SLOT_BYTES)
+        } else {
+            DocumentStore::slot_word_count(store, slot - split)
+        }
+    };
+    let mut packer = CheckpointPacker::new(true, &words);
     loop {
         let live_term = live
             .peek()
@@ -194,7 +205,6 @@ fn merge_form(
             std::cmp::Ordering::Greater => {
                 let i = live.next().expect("ordered by a live term");
                 scratch.clear();
-                let mut packer = CheckpointPacker::new();
                 lists[i].for_each(|slot, frequency| {
                     packer.push(slot + split, frequency, &mut scratch);
                 });
@@ -209,11 +219,11 @@ fn merge_form(
                 let b = pending.take().expect("equal terms");
                 let i = live.next().expect("equal terms");
                 scratch.clear();
-                let mut packer = CheckpointPacker::new();
                 Postings {
                     bytes: b.bytes,
                     count: b.count,
                     blocked: true,
+                    impacts: true,
                 }
                 .for_each(|slot, frequency| packer.push(slot, frequency, &mut scratch));
                 lists[i].for_each(|slot, frequency| {
@@ -257,7 +267,9 @@ pub(crate) fn merge(
     if !super::representable(store) {
         return Ok(None);
     }
-    if base.is_some_and(|image| !image.blocked || image.dimensions != dimensions) {
+    if base.is_some_and(|image| {
+        !image.blocked || !image.has_impacts() || image.dimensions != dimensions
+    }) {
         return Ok(None);
     }
     let directory = destination.parent().unwrap_or_else(|| Path::new("."));

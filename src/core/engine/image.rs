@@ -426,7 +426,7 @@ mod tests {
     /// A store whose checkpoint is version 1 (flat postings) opens from it, answers exactly
     /// as it did from version 2, and its next compaction writes version 2.
     #[test]
-    fn version_1_checkpoint_serves_unchanged_and_compacts_to_version_2() -> Result<()> {
+    fn version_1_checkpoint_serves_unchanged_and_compacts_to_version_3() -> Result<()> {
         let directory = tempfile::tempdir()?;
         let path = directory.path().display().to_string();
         let mut config = WarmConfig::default();
@@ -466,7 +466,7 @@ mod tests {
         };
         let [file] = checkpoint_files(directory.path()).try_into().unwrap();
         let bytes = std::fs::read(&file)?;
-        assert_eq!(&bytes[..8], b"HMSCKP\x00\x02");
+        assert_eq!(&bytes[..8], b"HMSCKP\x00\x03");
         let generation = file
             .parent()
             .unwrap()
@@ -490,7 +490,7 @@ mod tests {
         core.compact()?;
         drop(core);
         let [file] = checkpoint_files(directory.path()).try_into().unwrap();
-        assert_eq!(&std::fs::read(&file)?[..8], b"HMSCKP\x00\x02");
+        assert_eq!(&std::fs::read(&file)?[..8], b"HMSCKP\x00\x03");
         let core = WarmCore::new(256, Some(path), Some(config))?;
         assert!(core.serves_from_checkpoint());
         assert_eq!(answers(&core)?, expected);

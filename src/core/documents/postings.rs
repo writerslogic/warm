@@ -47,7 +47,7 @@ pub(super) type RestoredList = (String, Vec<Posting>);
 
 /// Decodes one varint at `*at`, advancing it, from checkpoint postings the open checked.
 #[inline(always)]
-fn get_varint(bytes: &[u8], at: &mut usize) -> u64 {
+pub(super) fn get_varint(bytes: &[u8], at: &mut usize) -> u64 {
     let first = bytes[*at];
     *at += 1;
     if first < 0x80 {
@@ -331,6 +331,13 @@ pub(super) const CHECKPOINT_BLOCK: usize = 128;
 /// block's slot gaps (the first one zero) and its frequencies, each packed as a little-endian
 /// bit string at its width.
 ///
+/// Blocked with impacts (checkpoint version 3): the list starts with two varints, the largest
+/// frequency of the list and the smallest word count of any chunk it holds. Each block then
+/// carries, after its two width bytes, three varints: its last slot minus its first (`span`),
+/// its largest frequency and the smallest word count among its chunks. A weight of any
+/// posting in the block is at most the BM25 weight of that frequency at that word count, so a
+/// reader may skip a block it cannot need without decoding it (see `impact.rs`).
+///
 /// Flat (version 1): per posting one varint `gap << 1 | (frequency != 1)`, followed by the
 /// frequency as a varint only when it is not 1 (the first gap is the slot itself).
 #[derive(Clone, Copy)]
@@ -338,20 +345,34 @@ pub(super) struct Postings<'a> {
     pub(super) bytes: &'a [u8],
     pub(super) count: u32,
     pub(super) blocked: bool,
+    /// Checkpoint version 3: the blocked encoding plus the impact fields (see below).
+    pub(super) impacts: bool,
 }
 
-/// Packs postings pushed in ascending slot order into the checkpoint's block encoding.
-#[derive(Default)]
-pub(super) struct CheckpointPacker {
+/// Packs postings pushed in ascending slot order into the checkpoint's block encoding; with
+/// `impacts`, the version 3 form whose bounds come from `words`, the word count of a slot. One
+/// packer writes one list at a time, whether its postings come from one in-memory list or from a
+/// checkpoint's list merged with a live one, so both produce the same bytes.
+pub(super) struct CheckpointPacker<'w> {
     block: Vec<Posting>,
     last: usize,
+    impacts: bool,
+    words: &'w dyn Fn(usize) -> u32,
+    list_start: Option<usize>,
+    list_frequency: u32,
+    list_words: u32,
 }
 
-impl CheckpointPacker {
-    pub(super) fn new() -> Self {
+impl<'w> CheckpointPacker<'w> {
+    pub(super) fn new(impacts: bool, words: &'w dyn Fn(usize) -> u32) -> Self {
         Self {
             block: Vec::with_capacity(CHECKPOINT_BLOCK),
             last: 0,
+            impacts,
+            words,
+            list_start: None,
+            list_frequency: 0,
+            list_words: u32::MAX,
         }
     }
 
@@ -362,15 +383,25 @@ impl CheckpointPacker {
         }
     }
 
-    /// Writes the last, shorter block; the packer then starts a new list.
+    /// Writes the last, shorter block and the list header; the packer then starts a new list.
     pub(super) fn finish(&mut self, out: &mut Vec<u8>) {
         if !self.block.is_empty() {
             self.flush(out);
         }
+        if let (true, Some(start)) = (self.impacts, self.list_start) {
+            let mut header = Vec::with_capacity(8);
+            put_varint(&mut header, u64::from(self.list_frequency));
+            put_varint(&mut header, u64::from(self.list_words));
+            out.splice(start..start, header);
+        }
         self.last = 0;
+        self.list_start = None;
+        self.list_frequency = 0;
+        self.list_words = u32::MAX;
     }
 
     fn flush(&mut self, out: &mut Vec<u8>) {
+        self.list_start.get_or_insert(out.len());
         let block = &self.block;
         let first = block[0].0;
         put_varint(out, (first - self.last) as u64);
@@ -383,6 +414,18 @@ impl CheckpointPacker {
         let gap_bits = (64 - gap.leading_zeros()) as u8;
         let frequency_bits = (32 - frequency.leading_zeros()) as u8;
         out.extend_from_slice(&[gap_bits, frequency_bits]);
+        if self.impacts {
+            let least = block
+                .iter()
+                .map(|p| (self.words)(p.0))
+                .min()
+                .expect("nonempty block");
+            put_varint(out, (block[block.len() - 1].0 - first) as u64);
+            put_varint(out, u64::from(frequency));
+            put_varint(out, u64::from(least));
+            self.list_frequency = self.list_frequency.max(frequency);
+            self.list_words = self.list_words.min(least);
+        }
         let mut previous = first;
         pack(
             out,
@@ -399,9 +442,15 @@ impl CheckpointPacker {
     }
 }
 
-/// Appends `list`'s postings to `out` in the checkpoint's block encoding.
-pub(super) fn pack_checkpoint(list: &PostingList, out: &mut Vec<u8>) {
-    let mut packer = CheckpointPacker::new();
+/// Appends `list`'s postings to `out` in the checkpoint's block encoding; with `impacts`, the
+/// version 3 form whose bounds come from `words`, the word count of a slot.
+pub(super) fn pack_checkpoint(
+    list: &PostingList,
+    words: &dyn Fn(usize) -> u32,
+    impacts: bool,
+    out: &mut Vec<u8>,
+) {
+    let mut packer = CheckpointPacker::new(impacts, words);
     list.for_each(|slot, frequency| packer.push(slot, frequency, out));
     packer.finish(out);
 }
@@ -422,10 +471,14 @@ pub(super) fn pack_checkpoint_flat(list: &PostingList, out: &mut Vec<u8>) {
     });
 }
 
-/// The smallest byte length of a blocked list of `count` postings: three bytes per block.
-pub(super) fn checkpoint_min_len(count: u64, blocked: bool) -> u64 {
-    if blocked {
-        3 * count.div_ceil(CHECKPOINT_BLOCK as u64)
+/// The smallest byte length of a list of `count` postings: three bytes per block when blocked,
+/// six and a two byte list header with impacts, one per posting when flat.
+pub(super) fn checkpoint_min_len(count: u64, blocked: bool, impacts: bool) -> u64 {
+    let blocks = count.div_ceil(CHECKPOINT_BLOCK as u64);
+    if impacts {
+        2 + 6 * blocks
+    } else if blocked {
+        3 * blocks
     } else {
         count
     }
@@ -454,17 +507,37 @@ impl Postings<'_> {
 
     /// Calls `f(slot, frequency)` for every posting in slot order, checking every field and
     /// that the list ends exactly after `count` postings; `f` returning false stops early.
-    pub(super) fn try_for_each(&self, f: impl FnMut(usize, u32) -> bool) -> anyhow::Result<()> {
+    ///
+    /// A list with impacts also has every recorded bound checked against its postings; `words`
+    /// gives the word count of a slot for the word count bounds.
+    pub(super) fn try_for_each(
+        &self,
+        words: &dyn Fn(usize) -> u32,
+        f: impl FnMut(usize, u32) -> bool,
+    ) -> anyhow::Result<()> {
         if self.blocked {
-            self.try_for_each_blocked(f)
+            self.try_for_each_blocked(words, f)
         } else {
             self.try_for_each_flat(f)
         }
     }
 
-    fn try_for_each_blocked(&self, mut f: impl FnMut(usize, u32) -> bool) -> anyhow::Result<()> {
+    fn try_for_each_blocked(
+        &self,
+        words: &dyn Fn(usize) -> u32,
+        mut f: impl FnMut(usize, u32) -> bool,
+    ) -> anyhow::Result<()> {
         let bytes = self.bytes;
         let (mut at, mut last, mut left) = (0usize, 0u64, self.count as usize);
+        let recorded = if self.impacts {
+            Some((
+                checked_varint(bytes, &mut at)?,
+                checked_varint(bytes, &mut at)?,
+            ))
+        } else {
+            None
+        };
+        let (mut list_frequency, mut list_words) = (0u64, u64::from(u32::MAX));
         let (mut gaps, mut frequencies) = ([0u64; CHECKPOINT_BLOCK], [0u64; CHECKPOINT_BLOCK]);
         while left > 0 {
             let count = left.min(CHECKPOINT_BLOCK);
@@ -478,6 +551,15 @@ impl Postings<'_> {
                 "posting block bit widths"
             );
             at += 2;
+            let block_impacts = if self.impacts {
+                Some((
+                    checked_varint(bytes, &mut at)?,
+                    checked_varint(bytes, &mut at)?,
+                    checked_varint(bytes, &mut at)?,
+                ))
+            } else {
+                None
+            };
             let gap_len = (count * usize::from(gap_bits)).div_ceil(8);
             let frequency_len = (count * usize::from(frequency_bits)).div_ceil(8);
             let end = at + gap_len + frequency_len;
@@ -498,6 +580,8 @@ impl Postings<'_> {
                 left == self.count as usize || delta > 0,
                 "posting blocks out of order"
             );
+            let first = slot;
+            let (mut most, mut least) = (0u64, u64::from(u32::MAX));
             for (index, (&gap, &frequency)) in
                 gaps[..count].iter().zip(&frequencies[..count]).enumerate()
             {
@@ -505,13 +589,29 @@ impl Postings<'_> {
                 slot = slot
                     .checked_add(gap)
                     .ok_or_else(|| anyhow::anyhow!("posting slot overflow"))?;
+                most = most.max(frequency);
+                if block_impacts.is_some() {
+                    least = least.min(u64::from(words(usize::try_from(slot)?)));
+                }
                 if !f(usize::try_from(slot)?, u32::try_from(frequency)?) {
                     return Ok(());
                 }
             }
+            if let Some((span, frequency, smallest)) = block_impacts {
+                anyhow::ensure!(
+                    span == slot - first && frequency == most && smallest == least,
+                    "posting block impacts"
+                );
+                list_frequency = list_frequency.max(most);
+                list_words = list_words.min(least);
+            }
             last = slot;
             left -= count;
         }
+        anyhow::ensure!(
+            recorded.is_none_or(|bounds| bounds == (list_frequency, list_words)),
+            "posting list impacts"
+        );
         anyhow::ensure!(at == bytes.len(), "posting list has trailing bytes");
         Ok(())
     }
@@ -553,12 +653,21 @@ impl Postings<'_> {
     fn for_each_blocked(&self, mut f: impl FnMut(usize, u32)) {
         let bytes = self.bytes;
         let (mut at, mut last, mut left) = (0usize, 0u64, self.count as usize);
+        if self.impacts {
+            get_varint(bytes, &mut at);
+            get_varint(bytes, &mut at);
+        }
         let (mut gaps, mut frequencies) = ([0u64; CHECKPOINT_BLOCK], [0u64; CHECKPOINT_BLOCK]);
         while left > 0 {
             let count = left.min(CHECKPOINT_BLOCK);
             let delta = get_varint(bytes, &mut at);
             let (gap_bits, frequency_bits) = (bytes[at], bytes[at + 1]);
             at += 2;
+            if self.impacts {
+                for _ in 0..3 {
+                    get_varint(bytes, &mut at);
+                }
+            }
             let gap_len = (count * usize::from(gap_bits)).div_ceil(8);
             // The decoders read whole 8-byte windows while they stay inside the slice they
             // are given, so each gets the rest of the list and uses only its own values.
@@ -913,7 +1022,7 @@ unsafe fn unpack_avx2<const BITS: usize>(bytes: &[u8], out: &mut [u64]) -> usize
 
 /// `count` values of `bits` bits from the start of `bytes` into `out`: a constant-width
 /// loop for widths up to 32, the general window loop above that.
-fn unpack_values(bytes: &[u8], count: usize, bits: u8, out: &mut [u64]) {
+pub(super) fn unpack_values(bytes: &[u8], count: usize, bits: u8, out: &mut [u64]) {
     match bits {
         0 => out[..count].fill(0),
         1 => unpack_fixed::<1>(bytes, count, out),
@@ -2304,8 +2413,8 @@ mod tests {
                 let mut plain = PostingList::default();
                 plain.append_run(&model.iter().map(|(&s, &(f, _))| (s, f)).collect::<Vec<_>>());
                 let (mut actual, mut expected) = (Vec::new(), Vec::new());
-                pack_checkpoint(list, &mut actual);
-                pack_checkpoint(&plain, &mut expected);
+                pack_checkpoint(list, &|_| 1, true, &mut actual);
+                pack_checkpoint(&plain, &|_| 1, true, &mut expected);
                 assert_eq!(actual, expected);
             };
             for i in 0..count {
@@ -2439,43 +2548,62 @@ mod tests {
     /// `list` packed in the block (`blocked`) or flat checkpoint encoding, decoded by the fast
     /// and the checked decoder, which must agree.
     fn decode_both(list: &PostingList, blocked: bool) -> Vec<Posting> {
-        let mut bytes = Vec::new();
-        if blocked {
-            pack_checkpoint(list, &mut bytes);
-        } else {
-            pack_checkpoint_flat(list, &mut bytes);
-        }
-        let packed = Postings {
-            bytes: &bytes,
-            count: list.len() as u32,
-            blocked,
-        };
-        assert!(checkpoint_min_len(list.len() as u64, blocked) <= bytes.len() as u64);
-        let mut fast = Vec::new();
-        packed.for_each(|slot, frequency| fast.push((slot, frequency)));
-        let mut checked = Vec::new();
-        packed
-            .try_for_each(|slot, frequency| {
-                checked.push((slot, frequency));
-                true
-            })
-            .unwrap();
-        assert_eq!(fast, checked, "blocked {blocked}");
-        // A list cut short or extended by a byte fails the checked decoder.
-        for broken in [
-            &bytes[..bytes.len() - 1],
-            &[bytes.as_slice(), &[0]].concat()[..],
-        ] {
-            let broken = Postings {
-                bytes: broken,
-                ..packed
+        let words = |slot: usize| (slot % 7) as u32 + 1;
+        let mut result = Vec::new();
+        for impacts in [false, true] {
+            if impacts && !blocked {
+                continue;
+            }
+            let mut bytes = Vec::new();
+            if blocked {
+                pack_checkpoint(list, &words, impacts, &mut bytes);
+            } else {
+                pack_checkpoint_flat(list, &mut bytes);
+            }
+            let packed = Postings {
+                bytes: &bytes,
+                count: list.len() as u32,
+                blocked,
+                impacts,
             };
-            assert!(
-                broken.try_for_each(|_, _| true).is_err(),
-                "blocked {blocked}"
-            );
+            assert!(checkpoint_min_len(list.len() as u64, blocked, impacts) <= bytes.len() as u64);
+            let mut fast = Vec::new();
+            packed.for_each(|slot, frequency| fast.push((slot, frequency)));
+            let mut checked = Vec::new();
+            packed
+                .try_for_each(&words, |slot, frequency| {
+                    checked.push((slot, frequency));
+                    true
+                })
+                .unwrap();
+            assert_eq!(fast, checked, "blocked {blocked} impacts {impacts}");
+            // A list cut short or extended by a byte fails the checked decoder.
+            for broken in [
+                &bytes[..bytes.len() - 1],
+                &[bytes.as_slice(), &[0]].concat()[..],
+            ] {
+                let broken = Postings {
+                    bytes: broken,
+                    ..packed
+                };
+                assert!(
+                    broken.try_for_each(&words, |_, _| true).is_err(),
+                    "blocked {blocked} impacts {impacts}"
+                );
+            }
+            if impacts {
+                // A recorded bound that the postings do not meet fails it.
+                let mut lied = bytes.clone();
+                lied[1] = lied[1].wrapping_add(1);
+                let lied = Postings {
+                    bytes: &lied,
+                    ..packed
+                };
+                assert!(lied.try_for_each(&words, |_, _| true).is_err());
+            }
+            result = checked;
         }
-        checked
+        result
     }
 
     /// The packed checkpoint decoder agrees with the checked one for every mix of one-byte
