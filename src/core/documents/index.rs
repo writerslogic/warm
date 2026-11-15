@@ -9,6 +9,7 @@ use anyhow::Context;
 use super::dense::{DenseChange, DenseIndex, MAX_ROWS, MIN_ROWS};
 use super::positions::Positions;
 use super::postings::PostingLists;
+use super::screen::ScreenTable;
 use super::text::TextSegment;
 use super::{SearchOptions, StoredChunk, StoredDocument, VectorState};
 
@@ -152,6 +153,27 @@ pub(crate) struct DocumentStore {
     /// The checkpoint this store is served from, whose live documents count as the store's
     /// (`overlay`): the store holds only documents written since.
     pub(super) base: Option<super::overlay::Base>,
+    /// Quantized embeddings for unfiltered hybrid queries, built on demand for one generation.
+    screen: ScreenCache,
+}
+
+/// Rows of embedded chunks below which a store is scored by a plain scan and keeps no screen table.
+const SCREEN_TABLE_MIN_CHUNKS: usize = 2048;
+
+#[derive(Default)]
+struct ScreenState {
+    generation: u64,
+    dimensions: usize,
+    queries: u32,
+    table: Option<Arc<ScreenTable>>,
+}
+
+struct ScreenCache(crate::core::sync::Mutex<ScreenState>);
+
+impl Default for ScreenCache {
+    fn default() -> Self {
+        Self(crate::core::sync::Mutex::new(ScreenState::default()))
+    }
 }
 
 #[cfg(test)]
@@ -644,6 +666,44 @@ impl DocumentStore {
             .write()
             .record(previous, self.generation, [id]);
         true
+    }
+
+    /// The screen table of this generation for queries of `dimensions`, once a second query has asked for it (a store
+    /// written between queries never pays for a table it would not reuse). `None` below `SCREEN_TABLE_MIN_CHUNKS`
+    /// chunks, for a store served over a checkpoint, and until built.
+    pub(super) fn screen_table(&self, dimensions: usize) -> Option<Arc<ScreenTable>> {
+        if self.base.is_some()
+            || self.chunk_count < SCREEN_TABLE_MIN_CHUNKS
+            || dimensions == 0
+            || dimensions > super::screen::MAX_DIMENSIONS
+        {
+            return None;
+        }
+        let mut state = self.screen.0.lock();
+        if state.generation != self.generation || state.dimensions != dimensions {
+            *state = ScreenState {
+                generation: self.generation,
+                dimensions,
+                ..ScreenState::default()
+            };
+        }
+        if let Some(table) = &state.table {
+            return Some(Arc::clone(table));
+        }
+        state.queries = state.queries.saturating_add(1);
+        if state.queries < 2 {
+            return None;
+        }
+        let table = ScreenTable::build(
+            self.owners.len(),
+            dimensions,
+            self.owners.iter().enumerate().filter_map(|(slot, owner)| {
+                let (document, chunk) = owner.as_ref()?;
+                Some((slot, document.chunks[*chunk].embedding.as_ref()?))
+            }),
+        );
+        state.table = Some(Arc::clone(&table));
+        Some(table)
     }
 
     pub(crate) fn get(&self, id: &str) -> Option<&Arc<StoredDocument>> {
