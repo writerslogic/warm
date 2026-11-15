@@ -3,6 +3,7 @@
 """`warm-bench` command line."""
 
 import argparse
+import os
 import sys
 
 from . import envs, registry, runner, server_registry, server_runner, table
@@ -71,7 +72,7 @@ def main(argv=None):
         if mode == "server":
             return 0
         if a.only in ("ann", "both"):
-            systems = [registry.WARM] + [s for s in registry.ANN_SYSTEMS if s not in registry.NOT_RUN and (wanted is None or s in wanted)]
+            systems = ([] if os.environ.get("WARM_BENCH_NO_WARM") else [registry.WARM]) + [s for s in registry.ANN_SYSTEMS if s not in registry.NOT_RUN and (wanted is None or s in wanted)]
             for dataset, n_train, n_test in spec["ann"]:
                 if a.datasets and dataset not in a.datasets:
                     continue

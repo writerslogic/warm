@@ -88,3 +88,6 @@ benchmarks/results/research/ann/*.graph
 
 /_legacy-docs/
 /.hms-local/
+
+# raw per-query latency sidecars stay out of git; the result JSON records their sha256 (raw_latency)
+benchmarks/results/**/*.latency.npz

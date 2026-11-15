@@ -8,6 +8,8 @@ Rows are never compared across hardware classes: each section is one dataset on 
 
 | Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |
 |---|---|---|---|---|---|---|---|
+| glove-100-angular (1,183,514 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 5 | 0 | 0 | 0 | 7 |
+| sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 5 | 0 | 0 | 0 | 7 |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 5 | 0 | 0 | 0 | 7 |
 | beir:fiqa (57,600 documents, 500 queries), documents contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 2 | 3 | 5 | 0 | 4 |
 | beir:fiqa (57,600 documents, 500 queries), ids contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 4 | 3 | 3 | 0 | 4 |
@@ -148,6 +150,159 @@ Verdicts that differ between hardware classes:
 | beir:scifact (5,183 documents, 809 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 | 1.69x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 
 ## Results
+
+### glove-100-angular (1,183,514 vectors, 10,000 queries)
+
+Suite `heavy`, hardware class `linux-x86_64-gcp-n2-icelake-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 6.8.0-1073-gcp), commit `9451728915`, 2026-11-14. Raw results: [heavy-ann-glove-100-angular-n1183514-linux-x86_64-gcp-n2-icelake-8c-16g.json](../../benchmarks/results/competitive/heavy-ann-glove-100-angular-n1183514-linux-x86_64-gcp-n2-icelake-8c-16g.json). Intervals: min-max range of the 5 process rounds, not a confidence interval (a bootstrap of fewer than 8 rounds has too few distinct resamples).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; hnswlib: CPython binding call per query; hnswlib (native C++): native C++ searchKnn call per query from a C++ driver process (no Python in the timed region); same index file and queries as the hnswlib row; FAISS HNSW: CPython (SWIG) call per query; FAISS IVF-PQ fast-scan (+refine): CPython (SWIG) call per query; USearch: CPython binding call per query; ScaNN: CPython (pybind11) call per query; the ScaNN searcher runs its own thread pool for training only; PyNNDescent: CPython + numba-compiled kernel per query (JIT compile inside cold start); DiskANN (in-memory Vamana): CPython 3.11 binding call per query (diskannpy StaticMemoryIndex).
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| QPS @ recall@10 >= 0.90 (QPS) | 4,328 | ScaNN 2,025 | 2.14x [2.09, 2.16] | **WIN** |
+| QPS @ recall@10 >= 0.95 (QPS) | 2,372 | FAISS IVF-PQ fast-scan (+refine) 1,402 | 1.69x [1.66, 1.70] | **WIN** |
+| QPS @ recall@10 >= 0.99 (QPS) | 667 | DiskANN (in-memory Vamana) 318 | 2.10x [2.05, 2.12] | **WIN** |
+| p50 latency @ 0.95 (us) | 434 | FAISS IVF-PQ fast-scan (+refine) 713 | 1.64x [1.61, 1.65] | **WIN** |
+| p99 latency @ 0.95 (us) | 559 | FAISS IVF-PQ fast-scan (+refine) 793 | 1.42x [1.39, 1.45] | **WIN** |
+| Build time (s) | 360.16 | per build, see below | per build | **n/v** |
+| Peak RSS, build (MiB) | 1,371 | per build, see below | per build | **n/v** |
+| RSS, serving (MiB) | 505 | per build, see below | per build | **n/v** |
+| Index size (MiB) | 912.8 | FAISS IVF-PQ fast-scan (+refine) 490.3 | 0.54x (no CI) | **n/v** |
+| Cold start to first answer (s) | 0.12 | per build, see below | per build | **n/v** |
+| Install size (MiB) | 5.1 | hnswlib 62.2 | 12.23x (no CI) | **n/v** |
+| Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | hnswlib | hnswlib (native C++) | FAISS HNSW | FAISS IVF-PQ fast-scan (+refine) | USearch | ScaNN | PyNNDescent | DiskANN (in-memory Vamana) |
+|---|---|---|---|---|---|---|---|---|---|
+| QPS @ recall@10 >= 0.90 (QPS) | **4,328** | 1,610 | 1,622 | 1,484 | 2,016 | 511 | 2,025 | 926 | 1,543 |
+| QPS @ recall@10 >= 0.95 (QPS) | **2,372** | 859 | 869 | 823 | 1,402 | 272 | 1,233 | 609 | 856 |
+| QPS @ recall@10 >= 0.99 (QPS) | **667** | 238 | 238 | 235 | n/m (not reached (max recall 0.965)) | 101 | n/m (not reached (max recall 0.989)) | 193 | 318 |
+| p50 latency @ 0.95 (us) | **434** | 1,205 | 1,190 | 1,259 | 713 | 3,781 | 810 | 1,118 | 1,206 |
+| p99 latency @ 0.95 (us) | **559** | 1,603 | 1,575 | 1,633 | 793 | 5,426 | 925 | 6,581 | 1,526 |
+| Build time (s) | 360.16 | 170.30 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 587.27 | 126.81 | 349.36 | **31.08** | 340.97 | 607.59 |
+| Peak RSS, build (MiB) | **1,371** | 1,398 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 1,398 | 1,398 | 1,427 | 1,509 | 4,719 | 1,479 |
+| RSS, serving (MiB) | **505** | 929 | 878 | 830 | 571 | 939 | 551 | 2,420 | 927 |
+| Index size (MiB) | 912.8 | 763.3 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 758.6 | **490.3** | 763.3 | 495.5 | 2,150.3 | 1,194.7 |
+| Cold start to first answer (s) | **0.12** | 1.07 | 0.86 | 0.61 | 0.42 | 0.91 | 0.99 | 12.46 | 0.69 |
+| Install size (MiB) | **5.1** | 62.2 |  | 180.9 | 180.9 | 90.8 | 98.9 | 379.3 | 338.4 |
+| Install distributions (count) | **0** | 2 |  | 3 | 3 | 4 | 3 | 10 | 2 |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 256, 'rerank': 64} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.957; hnswlib: m32 {'ef': 384} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.955; hnswlib (native C++): m32 {'ef': 384} recall 0.953; FAISS HNSW: m32e500 {'ef': 256} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.953; FAISS IVF-PQ fast-scan (+refine): ab_nl2048 {'nprobe': 200, 'k_factor': 100} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.966; USearch: m32 {'ef': 384} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.955; ScaNN: ab_scann4 {'leaves': 250, 'reorder': 500} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.966; PyNNDescent: ab_nn80_fast {'epsilon': 0.28} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.961; DiskANN (in-memory Vamana): r64_l500 {'L': 256} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.960.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| hnswlib | full-index-rewrite | save_index of the whole index plus fsync per operation; the library has no incremental durable API |
+| hnswlib (native C++) | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| FAISS HNSW | full-index-rewrite | write_index of the whole index plus fsync per operation |
+| FAISS IVF-PQ fast-scan (+refine) | full-index-rewrite | write_index of the whole index plus fsync per operation |
+| USearch | full-index-rewrite | save of the whole index plus fsync per operation |
+| ScaNN | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| PyNNDescent | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| DiskANN (in-memory Vamana) | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+
+Per-build comparison. Each row is one comparator build; every figure in it, and WARM's factor against it, comes from that build alone (QPS at a recall target uses only that build's sweep). Intervals 99.88% bootstrap or the range of rounds as above.
+
+| Comparator build | QPS @ recall@10 >= 0.90 (QPS) | QPS @ recall@10 >= 0.95 (QPS) | QPS @ recall@10 >= 0.99 (QPS) | Build time (s) | Peak RSS, build (MiB) | RSS, serving (MiB) | Index size (MiB) | Cold start to first answer (s) |
+|---|---|---|---|---|---|---|---|---|
+| DiskANN (in-memory Vamana) r64_l500 | 1,543; WARM 4,328, 2.80x [2.74, 2.82] **WIN** | 856; WARM 2,372, 2.77x [2.71, 2.82] **WIN** | 318; WARM 667, 2.10x [2.05, 2.12] **WIN** | 607.59; WARM 360.16, 1.69x **n/v** | 1,479; WARM 1,371, 1.08x **n/v** | 927; WARM 505, 1.84x [1.84, 1.84] **WIN** | 1,194.7; WARM 912.8 | 0.69; WARM 0.12, 5.57x [5.04, 7.90] **WIN** |
+| FAISS HNSW m32e500 | 1,484; WARM 4,328, 2.92x [2.85, 2.98] **WIN** | 823; WARM 2,372, 2.88x [2.81, 2.94] **WIN** | 235; WARM 667, 2.84x [2.77, 2.88] **WIN** | 587.27; WARM 360.16, 1.63x **n/v** | 1,398; WARM 1,371, 1.02x **n/v** | 830; WARM 505, 1.64x [1.64, 1.65] **WIN** | 758.6; WARM 912.8 | 0.61; WARM 0.12, 4.99x [4.39, 7.75] **WIN** |
+| FAISS IVF-PQ fast-scan (+refine) ab_nl2048 | 2,016; WARM 4,328, 2.15x [2.08, 2.16] **WIN** | 1,402; WARM 2,372, 1.69x [1.66, 1.70] **WIN** | n/m | 126.81; WARM 360.16, 0.35x **n/v** | 1,398; WARM 1,371, 1.02x **n/v** | 571; WARM 505, 1.13x [1.13, 1.13] **WIN** | 490.3; WARM 912.8 | 0.42; WARM 0.12, 3.41x [3.07, 4.99] **WIN** |
+| hnswlib m32 | 1,610; WARM 4,328, 2.69x [2.63, 2.70] **WIN** | 859; WARM 2,372, 2.76x [2.68, 2.81] **WIN** | 238; WARM 667, 2.80x [2.73, 2.82] **WIN** | 170.30; WARM 360.16, 0.47x **n/v** | 1,398; WARM 1,371, 1.02x **n/v** | 929; WARM 505, 1.84x [1.84, 1.84] **WIN** | 763.3; WARM 912.8 | 1.07; WARM 0.12, 8.75x [7.67, 10.12] **WIN** |
+| hnswlib (native C++) m32 | 1,622; WARM 4,328, 2.67x [2.60, 2.68] **WIN** | 869; WARM 2,372, 2.73x [2.68, 2.78] **WIN** | 238; WARM 667, 2.80x [2.73, 2.86] **WIN** | n/m | n/m | 878; WARM 505, 1.74x [1.74, 1.74] **WIN** | n/m | 0.86; WARM 0.12, 7.00x [6.20, 8.58] **WIN** |
+| PyNNDescent ab_nn80_fast | 926; WARM 4,328, 4.67x [4.51, 4.76] **WIN** | 609; WARM 2,372, 3.89x [3.83, 3.96] **WIN** | 193; WARM 667, 3.46x [3.37, 3.50] **WIN** | 340.97; WARM 360.16, 0.95x **n/v** | 4,719; WARM 1,371, 3.44x **n/v** | 2,420; WARM 505, 4.79x [4.79, 4.79] **WIN** | 2,150.3; WARM 912.8 | 12.46; WARM 0.12, 101.35x [85.29, 111.62] **WIN** |
+| ScaNN ab_scann4 | 2,025; WARM 4,328, 2.14x [2.09, 2.16] **WIN** | 1,233; WARM 2,372, 1.92x [1.89, 1.95] **WIN** | n/m | 31.08; WARM 360.16, 0.09x **n/v** | 1,509; WARM 1,371, 1.10x **n/v** | 551; WARM 505, 1.09x [1.09, 1.09] **WIN** | 495.5; WARM 912.8 | 0.99; WARM 0.12, 8.02x [7.19, 9.71] **WIN** |
+| USearch m32 | 511; WARM 4,328, 8.47x [8.28, 8.53] **WIN** | 272; WARM 2,372, 8.73x [8.58, 8.86] **WIN** | 77; WARM 667, 8.66x [8.46, 8.73] **WIN** | 349.36; WARM 360.16, 0.97x **n/v** | 1,427; WARM 1,371, 1.04x **n/v** | 939; WARM 505, 1.86x [1.86, 1.86] **WIN** | 763.3; WARM 912.8 | 0.91; WARM 0.12, 7.43x [6.67, 8.88] **WIN** |
+| USearch m32e500 | 467; WARM 4,328, 9.28x [9.10, 9.40] **WIN** | 247; WARM 2,372, 9.62x [9.46, 9.76] **WIN** | 101; WARM 667, 6.61x [6.44, 6.78] **WIN** | 824.74; WARM 360.16, 2.29x **n/v** | 1,429; WARM 1,371, 1.04x **n/v** | 939; WARM 505, 1.86x [1.86, 1.86] **WIN** | 763.3; WARM 912.8 | 1.03; WARM 0.12, 8.41x [7.60, 9.36] **WIN** |
+
+Per-build verdicts: WARM wins 43, ties 0, losses 0. Index size carries no verdict.
+
+### sift-128-euclidean (1,000,000 vectors, 10,000 queries)
+
+Suite `heavy`, hardware class `linux-x86_64-gcp-n2-icelake-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 6.8.0-1073-gcp), commit `9451728915`, 2026-11-14. Raw results: [heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json). Intervals: 99.00% bootstrap over process rounds (Bonferroni family of 5 verdict metrics); nDCG@10 and recall@100 are compared by a paired per-query bootstrap at the same level, since every system answers the same queries.
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; hnswlib: CPython binding call per query; hnswlib (native C++): native C++ searchKnn call per query from a C++ driver process (no Python in the timed region); same index file and queries as the hnswlib row; FAISS HNSW: CPython (SWIG) call per query; FAISS IVF-PQ fast-scan (+refine): CPython (SWIG) call per query; USearch: CPython binding call per query; ScaNN: CPython (pybind11) call per query; the ScaNN searcher runs its own thread pool for training only; PyNNDescent: CPython + numba-compiled kernel per query (JIT compile inside cold start); DiskANN (in-memory Vamana): CPython 3.11 binding call per query (diskannpy StaticMemoryIndex).
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| QPS @ recall@10 >= 0.90 (QPS) | 22,424 | hnswlib (native C++) 11,152 | 2.01x [1.91, 2.13] | **WIN** |
+| QPS @ recall@10 >= 0.95 (QPS) | 16,856 | hnswlib (native C++) 7,427 | 2.27x [2.18, 2.35] | **WIN** |
+| QPS @ recall@10 >= 0.99 (QPS) | 8,262 | hnswlib (native C++) 3,487 | 2.37x [2.28, 2.41] | **WIN** |
+| p50 latency @ 0.95 (us) | 60 | PyNNDescent 133 | 2.22x [2.13, 2.28] | **WIN** |
+| p99 latency @ 0.95 (us) | 85 | hnswlib (native C++) 194 | 2.28x [2.19, 2.36] | **WIN** |
+| Build time (s) | 184.72 | per build, see below | per build | **n/v** |
+| Peak RSS, build (MiB) | 1,291 | per build, see below | per build | **n/v** |
+| RSS, serving (MiB) | 529 | per build, see below | per build | **n/v** |
+| Index size (MiB) | 576.3 | FAISS IVF-PQ fast-scan (+refine) 528.4 | 0.92x (no CI) | **n/v** |
+| Cold start to first answer (s) | 0.10 | per build, see below | per build | **n/v** |
+| Install size (MiB) | 5.1 | hnswlib 62.2 | 12.23x (no CI) | **n/v** |
+| Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | hnswlib | hnswlib (native C++) | FAISS HNSW | FAISS IVF-PQ fast-scan (+refine) | USearch | ScaNN | PyNNDescent | DiskANN (in-memory Vamana) |
+|---|---|---|---|---|---|---|---|---|---|
+| QPS @ recall@10 >= 0.90 (QPS) | **22,424** | 10,780 | 11,152 | 6,690 | 7,467 | 4,549 | 5,766 | 9,177 | 6,804 |
+| QPS @ recall@10 >= 0.95 (QPS) | **16,856** | 7,223 | 7,427 | 5,056 | 4,701 | 2,750 | 2,162 | 6,673 | 5,152 |
+| QPS @ recall@10 >= 0.99 (QPS) | **8,262** | 3,389 | 3,487 | 2,701 | 1,865 | 1,511 | 1,233 | 3,424 | 3,150 |
+| p50 latency @ 0.95 (us) | **60** | 142 | 138 | 201 | 206 | 372 | 463 | 133 | 197 |
+| p99 latency @ 0.95 (us) | **85** | 199 | 194 | 254 | 376 | 488 | 547 | 412 | 254 |
+| Build time (s) | 184.72 | 257.05 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 230.46 | 152.35 | 130.51 | **34.86** | 194.87 | 390.25 |
+| Peak RSS, build (MiB) | 1,291 | 1,400 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 1,176 | **1,103** | 1,272 | 1,472 | 4,665 | 1,454 |
+| RSS, serving (MiB) | **529** | 904 | 853 | 699 | 616 | 797 | 594 | 2,261 | 860 |
+| Index size (MiB) | 576.3 | 751.8 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 625.9 | **528.4** | 630.0 | 534.4 | 1,987.2 | 1,198.2 |
+| Cold start to first answer (s) | **0.10** | 0.86 | 0.77 | 1.01 | 0.84 | 0.64 | 1.01 | 11.46 | 1.24 |
+| Install size (MiB) | **5.1** | 62.2 |  | 180.9 | 180.9 | 90.8 | 98.9 | 379.3 | 338.4 |
+| Install distributions (count) | **0** | 2 |  | 3 | 3 | 4 | 3 | 10 | 2 |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 24, 'rerank': 32} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.957; hnswlib: m32e500 {'ef': 32} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.951; hnswlib (native C++): m32e500 {'ef': 32} recall 0.952; FAISS HNSW: m16e500 {'ef': 48} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.956; FAISS IVF-PQ fast-scan (+refine): ab_nl2048 {'nprobe': 50, 'k_factor': 10} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.969; USearch: m16 {'ef': 64} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.964; ScaNN: ab_scann4 {'leaves': 110, 'reorder': 120} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.956; PyNNDescent: ab_nn80_fast {'epsilon': 0.16} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.970; DiskANN (in-memory Vamana): r64_l500 {'L': 24} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.964.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| hnswlib | full-index-rewrite | save_index of the whole index plus fsync per operation; the library has no incremental durable API |
+| hnswlib (native C++) | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| FAISS HNSW | full-index-rewrite | write_index of the whole index plus fsync per operation |
+| FAISS IVF-PQ fast-scan (+refine) | full-index-rewrite | write_index of the whole index plus fsync per operation |
+| USearch | full-index-rewrite | save of the whole index plus fsync per operation |
+| ScaNN | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| PyNNDescent | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| DiskANN (in-memory Vamana) | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+
+Per-build comparison. Each row is one comparator build; every figure in it, and WARM's factor against it, comes from that build alone (QPS at a recall target uses only that build's sweep). Intervals 99.94% bootstrap or the range of rounds as above.
+
+| Comparator build | QPS @ recall@10 >= 0.90 (QPS) | QPS @ recall@10 >= 0.95 (QPS) | QPS @ recall@10 >= 0.99 (QPS) | Build time (s) | Peak RSS, build (MiB) | RSS, serving (MiB) | Index size (MiB) | Cold start to first answer (s) |
+|---|---|---|---|---|---|---|---|---|
+| DiskANN (in-memory Vamana) r64_l500 | 6,804; WARM 22,424, 3.30x [3.12, 3.71] **WIN** | 5,152; WARM 16,856, 3.27x [3.06, 3.63] **WIN** | 3,150; WARM 8,262, 2.62x [2.45, 2.93] **WIN** | 390.25; WARM 184.72, 2.11x **n/v** | 1,454; WARM 1,291, 1.13x **n/v** | 860; WARM 529, 1.63x [1.62, 1.63] **WIN** | 1,198.2; WARM 576.3 | 1.24; WARM 0.10, 12.97x [1.56, 13.94] **WIN** |
+| FAISS HNSW m16e500 | 6,578; WARM 22,424, 3.41x [3.18, 3.60] **WIN** | 5,056; WARM 16,856, 3.33x [3.13, 3.50] **WIN** | 2,533; WARM 8,262, 3.26x [3.06, 3.48] **WIN** | 230.46; WARM 184.72, 1.25x **n/v** | 1,176; WARM 1,291, 0.91x **n/v** | 699; WARM 529, 1.32x [1.32, 1.32] **WIN** | 625.9; WARM 576.3 | 1.01; WARM 0.10, 10.56x [0.69, 23.71] **TIE** |
+| FAISS HNSW m32 | 6,690; WARM 22,424, 3.35x [3.16, 3.51] **WIN** | 4,400; WARM 16,856, 3.83x [3.61, 4.11] **WIN** | 2,701; WARM 8,262, 3.06x [2.85, 3.26] **WIN** | 116.06; WARM 184.72, 0.63x **n/v** | 1,297; WARM 1,291, 1.00x **n/v** | 822; WARM 529, 1.55x [1.55, 1.55] **WIN** | 747.8; WARM 576.3 | 1.18; WARM 0.10, 12.31x [0.78, 28.96] **TIE** |
+| FAISS IVF-PQ fast-scan (+refine) ab_nl2048 | 7,467; WARM 22,424, 3.00x [2.72, 3.13] **WIN** | 4,701; WARM 16,856, 3.59x [3.27, 3.86] **WIN** | 1,865; WARM 8,262, 4.43x [4.07, 4.60] **WIN** | 152.35; WARM 184.72, 0.82x **n/v** | 1,103; WARM 1,291, 0.85x **n/v** | 616; WARM 529, 1.16x [1.16, 1.16] **WIN** | 528.4; WARM 576.3 | 0.84; WARM 0.10, 8.82x [0.61, 19.92] **TIE** |
+| hnswlib m16 | 10,780; WARM 22,424, 2.08x [1.94, 2.18] **WIN** | 6,232; WARM 16,856, 2.70x [2.54, 2.88] **WIN** | 2,458; WARM 8,262, 3.36x [3.14, 3.53] **WIN** | 82.73; WARM 184.72, 0.45x **n/v** | 1,279; WARM 1,291, 0.99x **n/v** | 786; WARM 529, 1.48x [1.48, 1.48] **WIN** | 630.0; WARM 576.3 | 0.84; WARM 0.10, 8.79x [1.11, 24.14] **WIN** |
+| hnswlib m16e500 | 10,513; WARM 22,424, 2.13x [1.99, 2.35] **WIN** | 6,033; WARM 16,856, 2.79x [2.61, 3.05] **WIN** | 3,389; WARM 8,262, 2.44x [2.27, 2.58] **WIN** | 185.79; WARM 184.72, 1.01x **n/v** | 1,279; WARM 1,291, 0.99x **n/v** | 786; WARM 529, 1.48x [1.48, 1.48] **WIN** | 630.0; WARM 576.3 | 0.87; WARM 0.10, 9.07x [1.12, 24.90] **WIN** |
+| hnswlib m32 | 9,730; WARM 22,424, 2.30x [2.14, 2.56] **WIN** | 5,724; WARM 16,856, 2.94x [2.74, 3.28] **WIN** | 3,225; WARM 8,262, 2.56x [2.36, 2.76] **WIN** | 105.10; WARM 184.72, 0.57x **n/v** | 1,400; WARM 1,291, 1.08x **n/v** | 905; WARM 529, 1.71x [1.71, 1.71] **WIN** | 751.8; WARM 576.3 | 0.96; WARM 0.10, 10.10x [1.16, 28.72] **WIN** |
+| hnswlib m32e500 | 8,947; WARM 22,424, 2.51x [2.35, 2.70] **WIN** | 7,223; WARM 16,856, 2.33x [2.19, 2.55] **WIN** | 2,948; WARM 8,262, 2.80x [2.61, 3.01] **WIN** | 257.05; WARM 184.72, 1.39x **n/v** | 1,400; WARM 1,291, 1.08x **n/v** | 904; WARM 529, 1.71x [1.71, 1.71] **WIN** | 751.8; WARM 576.3 | 0.86; WARM 0.10, 8.96x [1.14, 27.38] **WIN** |
+| hnswlib (native C++) m16 | 11,152; WARM 22,424, 2.01x [1.89, 2.13] **WIN** | 6,453; WARM 16,856, 2.61x [2.45, 2.79] **WIN** | 2,507; WARM 8,262, 3.29x [3.09, 3.50] **WIN** | n/m | n/m | 731; WARM 529, 1.38x [1.38, 1.38] **WIN** | n/m | 0.74; WARM 0.10, 7.74x [0.98, 7.95] **TIE** |
+| hnswlib (native C++) m16e500 | 10,855; WARM 22,424, 2.07x [1.94, 2.19] **WIN** | 6,286; WARM 16,856, 2.68x [2.53, 2.79] **WIN** | 3,487; WARM 8,262, 2.37x [2.23, 2.46] **WIN** | n/m | n/m | 731; WARM 529, 1.38x [1.38, 1.38] **WIN** | n/m | 0.74; WARM 0.10, 7.72x [0.98, 7.88] **TIE** |
+| hnswlib (native C++) m32 | 10,172; WARM 22,424, 2.20x [2.05, 2.35] **WIN** | 5,999; WARM 16,856, 2.81x [2.63, 3.02] **WIN** | 3,392; WARM 8,262, 2.44x [2.30, 2.59] **WIN** | n/m | n/m | 853; WARM 529, 1.61x [1.61, 1.61] **WIN** | n/m | 0.76; WARM 0.10, 7.99x [1.02, 8.16] **WIN** |
+| hnswlib (native C++) m32e500 | 9,071; WARM 22,424, 2.47x [2.29, 2.61] **WIN** | 7,427; WARM 16,856, 2.27x [2.13, 2.42] **WIN** | 2,997; WARM 8,262, 2.76x [2.58, 3.06] **WIN** | n/m | n/m | 853; WARM 529, 1.61x [1.61, 1.61] **WIN** | n/m | 0.77; WARM 0.10, 8.03x [1.02, 8.21] **WIN** |
+| PyNNDescent ab_nn80_fast | 9,177; WARM 22,424, 2.44x [2.27, 2.68] **WIN** | 6,673; WARM 16,856, 2.53x [2.35, 2.72] **WIN** | 3,424; WARM 8,262, 2.41x [2.26, 2.59] **WIN** | 194.87; WARM 184.72, 1.05x **n/v** | 4,665; WARM 1,291, 3.61x **n/v** | 2,261; WARM 529, 4.27x [4.27, 4.27] **WIN** | 1,987.2; WARM 576.3 | 11.46; WARM 0.10, 120.00x [14.97, 127.52] **WIN** |
+| ScaNN ab_scann4 | 5,766; WARM 22,424, 3.89x [3.64, 4.07] **WIN** | 2,162; WARM 16,856, 7.80x [7.36, 8.20] **WIN** | 1,233; WARM 8,262, 6.70x [6.29, 6.88] **WIN** | 34.86; WARM 184.72, 0.19x **n/v** | 1,472; WARM 1,291, 1.14x **n/v** | 594; WARM 529, 1.12x [1.12, 1.12] **WIN** | 534.4; WARM 576.3 | 1.01; WARM 0.10, 10.61x [1.31, 24.72] **WIN** |
+| USearch m16 | 4,549; WARM 22,424, 4.93x [4.57, 5.20] **WIN** | 2,750; WARM 16,856, 6.13x [5.72, 6.48] **WIN** | 1,132; WARM 8,262, 7.30x [6.88, 8.06] **WIN** | 130.51; WARM 184.72, 0.71x **n/v** | 1,272; WARM 1,291, 0.99x **n/v** | 797; WARM 529, 1.51x [1.51, 1.51] **WIN** | 630.0; WARM 576.3 | 0.64; WARM 0.10, 6.76x [0.85, 21.65] **TIE** |
+| USearch m32 | 4,252; WARM 22,424, 5.27x [4.94, 5.70] **WIN** | 2,591; WARM 16,856, 6.50x [6.12, 6.94] **WIN** | 1,511; WARM 8,262, 5.47x [5.12, 5.78] **WIN** | 165.02; WARM 184.72, 0.89x **n/v** | 1,394; WARM 1,291, 1.08x **n/v** | 917; WARM 529, 1.73x [1.73, 1.73] **WIN** | 751.8; WARM 576.3 | 0.71; WARM 0.10, 7.48x [0.95, 24.77] **TIE** |
+
+Per-build verdicts: WARM wins 73, ties 7, losses 0. Index size carries no verdict.
 
 ### sift-128-euclidean (1,000,000 vectors, 10,000 queries)
 
@@ -1842,6 +1997,12 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 | WARM | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | hnswlib | no | no | documentation (not exercised) |
 | hnswlib (native C++) | no | no | documentation (not exercised) |
+| FAISS HNSW | no | no | documentation (not exercised) |
+| FAISS IVF-PQ fast-scan (+refine) | no | no | documentation (not exercised) |
+| USearch | no | no | documentation (not exercised) |
+| ScaNN | no | no | documentation (not exercised) |
+| PyNNDescent | no | no | documentation (not exercised) |
+| DiskANN (in-memory Vamana) | no | no | documentation (not exercised) |
 | WARM (eager hypervectors, informational) | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | SQLite FTS5 (documents contract: docstore table read per hit) | no | no (SQLCipher is a separate build) | documentation (not exercised) |
 | Apache Lucene (JVM, documents contract: stored fields read per hit) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
@@ -1860,9 +2021,15 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 
 | System | Pinned version(s) |
 |---|---|
-| WARM | writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
-| hnswlib | hnswlib 0.8.0, python 3.13.15 |
-| hnswlib (native C++) | hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux) |
+| WARM | writerslogic-warm 0.6.8, commit 9451728915243f4029b10fa95ce6449b8ae0a9eb; writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
+| hnswlib | hnswlib 0.8.0, python 3.13.18; hnswlib 0.8.0, python 3.13.15 |
+| hnswlib (native C++) | hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux); hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux) |
+| FAISS HNSW | faiss-cpu 1.12.0, python 3.13.18 |
+| FAISS IVF-PQ fast-scan (+refine) | faiss-cpu 1.12.0, python 3.13.18 |
+| USearch | usearch 2.26.5, python 3.13.18 |
+| ScaNN | scann 1.4.2, python 3.13.18 |
+| PyNNDescent | pynndescent 0.6.0, python 3.13.18 |
+| DiskANN (in-memory Vamana) | diskannpy 0.7.0, python 3.11.18 |
 | WARM (eager hypervectors, informational) | writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
 | SQLite FTS5 (documents contract: docstore table read per hit) | python-sqlite3 3.53.1 |
 | Apache Lucene (JVM, documents contract: stored fields read per hit) | lucene 10.6.0, jvm openjdk version "21.0.13.0.3" 2026-10-24; lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22 |
