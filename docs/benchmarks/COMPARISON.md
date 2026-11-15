@@ -9,14 +9,65 @@ Rows are never compared across hardware classes: each section is one dataset on 
 | Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |
 |---|---|---|---|---|---|---|---|
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 5 | 0 | 0 | 0 | 7 |
+| beir:fiqa (57,600 documents, 500 queries), documents contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 2 | 3 | 5 | 0 | 4 |
+| beir:fiqa (57,600 documents, 500 queries), ids contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 4 | 3 | 3 | 0 | 4 |
 | beir:fiqa (57,600 documents, 500 queries), documents contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 4 | 3 | 3 | 0 | 4 |
 | beir:fiqa (57,600 documents, 500 queries), ids contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
+| beir:fiqa (57,600 documents, 500 queries), documents contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 1 | 3 | 6 | 0 | 4 |
+| beir:fiqa (57,600 documents, 500 queries), ids contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 3 | 3 | 4 | 0 | 4 |
+| memory (4,559 documents, 100 queries), documents contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 5 | 2 | 3 | 0 | 4 |
+| memory (4,559 documents, 100 queries), ids contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 6 | 3 | 1 | 0 | 4 |
 | memory (4,559 documents, 100 queries), documents contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 4 | 2 | 4 | 0 | 4 |
 | memory (4,559 documents, 100 queries), ids contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 3 | 1 | 0 | 4 |
+| memory (4,559 documents, 100 queries), documents contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 5 | 2 | 3 | 0 | 4 |
+| memory (4,559 documents, 100 queries), ids contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 7 | 2 | 1 | 0 | 4 |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 4 | 2 | 4 | 0 | 4 |
+| beir:nfcorpus (3,633 documents, 324 queries), ids contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 6 | 2 | 2 | 0 | 4 |
 | beir:nfcorpus (3,633 documents, 324 queries), documents contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 3 | 4 | 3 | 0 | 4 |
 | beir:nfcorpus (3,633 documents, 324 queries), ids contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 4 | 2 | 4 | 0 | 4 |
+| beir:nfcorpus (3,633 documents, 324 queries), ids contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 6 | 2 | 2 | 0 | 4 |
+| beir:scifact (5,183 documents, 809 queries), documents contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 4 | 2 | 4 | 0 | 4 |
+| beir:scifact (5,183 documents, 809 queries), ids contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 6 | 2 | 2 | 0 | 4 |
 | beir:scifact (5,183 documents, 809 queries), documents contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 3 | 4 | 3 | 0 | 4 |
 | beir:scifact (5,183 documents, 809 queries), ids contract | `linux-x86_64-intel-ultra-9-185h-22c-27g` | standard | 6 | 2 | 2 | 0 | 4 |
+| beir:scifact (5,183 documents, 809 queries), documents contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 4 | 2 | 4 | 0 | 4 |
+| beir:scifact (5,183 documents, 809 queries), ids contract | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | standard | 6 | 2 | 2 | 0 | 4 |
+
+## Text verdicts across hardware classes
+
+The same campaign (suite `standard`, one pinned core, ten interleaved rounds) on each hardware class. Each row is that class's own single-thread QPS verdict of the WARM reference row of the contract against the fastest comparator of the same contract; the rows are never pooled or compared as absolute values across classes.
+
+| Dataset | Contract | Hardware class | WARM QPS | Fastest comparator | Comparator QPS | Advantage | Verdict |
+|---|---|---|---|---|---|---|---|
+| beir:fiqa | documents | `linux-aarch64-neoverse-n1-8c-31g` | 1,011 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | 1,164 | 0.87x [0.74, 1.42] | **TIE** |
+| beir:fiqa | documents | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 2,760 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1,969 | 1.40x [1.32, 1.44] | **WIN** |
+| beir:fiqa | documents | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 1,032 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | 1,439 | 0.72x [0.69, 1.40] | **TIE** |
+| beir:fiqa | ids | `linux-aarch64-neoverse-n1-8c-31g` | 1,159 | Apache Lucene 10.6.0 (JVM) | 1,184 | 0.98x [0.68, 1.57] | **TIE** |
+| beir:fiqa | ids | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 3,458 | Apache Lucene 10.6.0 (JVM) | 2,975 | 1.16x [1.06, 2.09] | **WIN** |
+| beir:fiqa | ids | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 1,168 | Apache Lucene 10.6.0 (JVM) | 1,684 | 0.69x [0.68, 1.10] | **TIE** |
+| beir:nfcorpus | documents | `linux-aarch64-neoverse-n1-8c-31g` | 9,693 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 6,694 | 1.45x [1.42, 1.54] | **WIN** |
+| beir:nfcorpus | documents | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 20,489 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 15,058 | 1.36x [1.18, 1.48] | **WIN** |
+| beir:nfcorpus | documents | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 11,605 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 8,814 | 1.32x [1.23, 1.37] | **WIN** |
+| beir:nfcorpus | ids | `linux-aarch64-neoverse-n1-8c-31g` | 33,428 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 22,438 | 1.49x [1.44, 1.52] | **WIN** |
+| beir:nfcorpus | ids | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 62,518 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 42,293 | 1.48x [1.23, 1.71] | **WIN** |
+| beir:nfcorpus | ids | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 40,574 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 27,155 | 1.49x [1.46, 1.52] | **WIN** |
+| beir:scifact | documents | `linux-aarch64-neoverse-n1-8c-31g` | 4,959 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 2,893 | 1.71x [1.67, 1.74] | **WIN** |
+| beir:scifact | documents | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 10,251 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 6,606 | 1.55x [1.49, 1.71] | **WIN** |
+| beir:scifact | documents | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 5,920 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 3,856 | 1.54x [1.50, 1.56] | **WIN** |
+| beir:scifact | ids | `linux-aarch64-neoverse-n1-8c-31g` | 11,437 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 5,566 | 2.05x [2.01, 2.08] | **WIN** |
+| beir:scifact | ids | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 22,711 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 11,709 | 1.94x [1.74, 2.13] | **WIN** |
+| beir:scifact | ids | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 13,922 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 7,322 | 1.90x [1.86, 1.92] | **WIN** |
+| memory | documents | `linux-aarch64-neoverse-n1-8c-31g` | 2,550 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1,065 | 2.39x [2.26, 2.46] | **WIN** |
+| memory | documents | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 4,140 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 2,190 | 1.89x [1.69, 2.06] | **WIN** |
+| memory | documents | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 2,631 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1,250 | 2.10x [1.94, 2.18] | **WIN** |
+| memory | ids | `linux-aarch64-neoverse-n1-8c-31g` | 8,104 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 3,933 | 2.06x [2.03, 2.11] | **WIN** |
+| memory | ids | `linux-x86_64-intel-ultra-9-185h-22c-27g` | 18,016 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 8,657 | 2.08x [1.55, 2.31] | **WIN** |
+| memory | ids | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | 9,360 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 5,373 | 1.74x [1.71, 1.77] | **WIN** |
+
+Verdicts that differ between hardware classes: 
+- beir:fiqa, documents contract: `linux-aarch64-neoverse-n1-8c-31g` TIE; `linux-x86_64-intel-ultra-9-185h-22c-27g` WIN; `linux-x86_64-intel-xeon-2-60ghz-8c-16g` TIE
+- beir:fiqa, ids contract: `linux-aarch64-neoverse-n1-8c-31g` TIE; `linux-x86_64-intel-ultra-9-185h-22c-27g` WIN; `linux-x86_64-intel-xeon-2-60ghz-8c-16g` TIE
 
 ## Where WARM loses
 
@@ -25,26 +76,76 @@ Rows are never compared across hardware classes: each section is one dataset on 
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Build time, per build | hnswlib m16 | 2.23x worse | graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build, per build | hnswlib m16 | 1.02x worse | stream the build instead of holding the f32 matrix plus graph (ledger 1A target: peak build RSS <= 2x final index bytes) |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Build time, per build | hnswlib m32 | 1.75x worse | graph construction cost: parallel build with a cheaper construction search (quantized_search) and a smaller build_ef, at a recall cost to be measured; for text, a lexical-only ingest path that skips dense-slot encoding |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | p50 latency | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | 1.35x worse | same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.07x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.74x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.27x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 2.68x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| beir:fiqa (57,600 documents, 500 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | p50 latency | Apache Lucene 10.6.0 (JVM) | 1.35x worse | same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding |
+| beir:fiqa (57,600 documents, 500 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | Ingest/build time | SQLite FTS5 | 1.06x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:fiqa (57,600 documents, 500 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 | 2.05x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.23x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.80x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.27x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
 | beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 | 1.08x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 2.09x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | p50 latency | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | 1.47x worse | same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | p99 latency | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1.26x worse | tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.05x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.81x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.27x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| beir:fiqa (57,600 documents, 500 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 2.99x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | p50 latency | Apache Lucene 10.6.0 (JVM) | 1.52x worse | same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding |
+| beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | p99 latency | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 1.35x worse | tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate |
+| beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Ingest/build time | SQLite FTS5 | 1.04x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 | 2.10x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| memory (4,559 documents, 100 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 1.92x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| memory (4,559 documents, 100 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.60x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| memory (4,559 documents, 100 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 2.13x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| memory (4,559 documents, 100 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 | 1.15x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | memory (4,559 documents, 100 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.12x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | memory (4,559 documents, 100 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 1.98x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | memory (4,559 documents, 100 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.60x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
 | memory (4,559 documents, 100 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1.87x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
 | memory (4,559 documents, 100 queries), ids contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 1.18x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| memory (4,559 documents, 100 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 1.99x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| memory (4,559 documents, 100 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.60x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| memory (4,559 documents, 100 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 2.39x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| memory (4,559 documents, 100 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 | 1.19x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.15x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.19x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.47x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1.19x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| beir:nfcorpus (3,633 documents, 324 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | Ingest/build time | SQLite FTS5 | 1.19x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:nfcorpus (3,633 documents, 324 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 | 1.45x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.14x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.36x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.47x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
 | beir:nfcorpus (3,633 documents, 324 queries), ids contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 | 1.11x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:nfcorpus (3,633 documents, 324 queries), ids contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 1.58x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.14x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.39x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.47x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| beir:nfcorpus (3,633 documents, 324 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1.23x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| beir:nfcorpus (3,633 documents, 324 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Ingest/build time | SQLite FTS5 | 1.15x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:nfcorpus (3,633 documents, 324 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 | 1.59x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.18x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.30x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.43x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-aarch64-neoverse-n1-8c-31g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1.29x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| beir:scifact (5,183 documents, 809 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | Ingest/build time | SQLite FTS5 | 1.15x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:scifact (5,183 documents, 809 queries), ids contract (linux-aarch64-neoverse-n1-8c-31g) | Peak RSS, build | SQLite FTS5 | 1.53x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:scifact (5,183 documents, 809 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.14x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:scifact (5,183 documents, 809 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.50x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 | beir:scifact (5,183 documents, 809 queries), documents contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.43x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
 | beir:scifact (5,183 documents, 809 queries), ids contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Ingest/build time | SQLite FTS5 | 1.09x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
 | beir:scifact (5,183 documents, 809 queries), ids contract (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build | SQLite FTS5 | 1.67x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Ingest/build time | SQLite FTS5 (documents contract: docstore table read per hit) | 1.17x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 (documents contract: docstore table read per hit) | 2.53x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | On-disk size | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | 2.43x worse | compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack |
+| beir:scifact (5,183 documents, 809 queries), documents contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Cold start to first answer | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | 1.33x worse | the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever |
+| beir:scifact (5,183 documents, 809 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Ingest/build time | SQLite FTS5 | 1.15x worse | profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch |
+| beir:scifact (5,183 documents, 809 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-16g) | Peak RSS, build | SQLite FTS5 | 1.69x worse | measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits |
 
 ## Results
 
@@ -117,6 +218,141 @@ Per-build comparison. Each row is one comparator build; every figure in it, and 
 | hnswlib (native C++) m48e500 | 10,019; WARM 35,668, 3.56x [3.45, 3.71] **WIN** | 8,193; WARM 26,688, 3.26x [3.20, 3.28] **WIN** | 3,313; WARM 13,059, 3.94x [3.84, 4.11] **WIN** | n/m | n/m | 975; WARM 489, 1.99x [1.98, 1.99] **WIN** | n/m | 0.67; WARM 0.18, 3.60x [2.87, 4.18] **WIN** |
 
 Per-build verdicts: WARM wins 45, ties 0, losses 3. Index size carries no verdict.
+
+### beir:fiqa (57,600 documents, 500 queries), documents contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2654 | SQLite FTS5 (documents contract: docstore table read per hit) 0.2678 | 0.99x [0.69, 1.42] | **TIE** |
+| recall@100 | 0.5422 | SQLite FTS5 (documents contract: docstore table read per hit) 0.5546 | 0.98x [0.80, 1.20] | **TIE** |
+| QPS (single thread) (QPS) | 1,011 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) 1,164 | 0.87x [0.74, 1.42] | **TIE** |
+| p50 latency (us) | 942 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) 696 | 0.74x [0.71, 0.83] | **LOSS** |
+| p99 latency (us) | 1,976 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 2,333 | 1.18x [1.16, 1.19] | **WIN** |
+| Ingest/build time (s) | 3.19 | SQLite FTS5 (documents contract: docstore table read per hit) 2.97 | 0.93x [0.92, 0.94] | **LOSS** |
+| Peak RSS, build (MiB) | 401 | SQLite FTS5 (documents contract: docstore table read per hit) 147 | 0.37x [0.36, 0.37] | **LOSS** |
+| Peak RSS, serving (MiB) | 72 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 108 | 1.50x [1.49, 1.50] | **WIN** |
+| On-disk size (MiB) | 93.6 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 41.2 | 0.44x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.03 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.37x [0.37, 0.39] | **LOSS** |
+| Replace one document (durable) (ms) | 1.917 | SQLite FTS5 (documents contract: docstore table read per hit) 17.440 | 9.10x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 1.174 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 9.586 | 8.17x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | 0.2654 | 0.2654 | **0.2678** | 0.2657 | 0.2657 | 0.2643 | 0.2643 | 0.2643 |
+| recall@100 | 0.5422 | 0.5422 | **0.5546** | 0.5445 | 0.5445 | 0.5406 | 0.5406 | 0.5406 |
+| QPS (single thread) (QPS) | 1,011 | 632 | 7 | 293 | **1,164** | 373 | 403 | 783 |
+| p50 latency (us) | 942 | 1,516 | 132,457 | 3,282 | **696** | 2,670 | 2,046 | 1,261 |
+| p99 latency (us) | **1,976** | 3,089 | 259,178 | 6,521 | 3,917 | 3,798 | 7,176 | 2,333 |
+| Ingest/build time (s) | 3.19 | 33.70 | **2.97** | 6.18 | 6.01 | 3.91 | 3.68 | 3.65 |
+| Peak RSS, build (MiB) | 401 | 358 | **147** | 631 | 664 | 173 | 156 | 156 |
+| Peak RSS, serving (MiB) | **72** | 161 | 148 | 142 | 158 | 108 | 243 | 243 |
+| On-disk size (MiB) | 93.6 | 80.4 | 72.2 | **41.2** | 54.6 | 46.5 | 46.5 | 46.5 |
+| Cold start to first answer (s) | 0.03 | 2.33 | 0.27 | 1.01 | 0.98 | 0.05 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 1.917 | **1.811** | 17.440 | 41.202 | 45.149 | 57.091 | 36.543 | 37.230 |
+| Delete one document (durable) (ms) | **1.174** | 1.611 | 13.397 | 11.456 | 10.795 | 38.561 | 9.586 | 9.682 |
+| Install size (MiB) | 3.6 | 3.6 | **0.0** | 6.3 | 6.3 | 16.0 | 5.5 | 5.5 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 1,011 | 632 | 0.63x |
+| p50 latency (us) | 942 | 1,516 | 1.61x |
+| p99 latency (us) | 1,976 | 3,089 | 1.56x |
+| Ingest/build time (s) | 3.19 | 33.70 | 10.55x |
+| Peak RSS, serving (MiB) | 72 | 161 | 2.24x |
+| On-disk size (MiB) | 93.6 | 80.4 | 0.86x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### beir:fiqa (57,600 documents, 500 queries), ids contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x [0.69, 1.42] | **TIE** |
+| recall@100 | 0.5422 | SQLite FTS5 0.5546 | 0.98x [0.80, 1.20] | **TIE** |
+| QPS (single thread) (QPS) | 1,159 | Apache Lucene 10.6.0 (JVM) 1,184 | 0.98x [0.68, 1.57] | **TIE** |
+| p50 latency (us) | 815 | Apache Lucene 10.6.0 (JVM) 606 | 0.74x [0.65, 0.85] | **LOSS** |
+| p99 latency (us) | 1,854 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 2,101 | 1.13x [1.11, 1.16] | **WIN** |
+| Ingest/build time (s) | 2.65 | SQLite FTS5 2.49 | 0.94x [0.92, 0.95] | **LOSS** |
+| Peak RSS, build (MiB) | 300 | SQLite FTS5 147 | 0.49x [0.49, 0.49] | **LOSS** |
+| Peak RSS, serving (MiB) | 23 | tantivy-py 0.27.0 (CPython binding) 56 | 2.43x [2.40, 2.43] | **WIN** |
+| On-disk size (MiB) | 9.0 | Apache Lucene 10.6.0 (JVM) 12.1 | 1.34x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.02 | tantivy-py 0.27.0 (CPython binding) 0.04 | 2.53x [2.48, 2.58] | **WIN** |
+| Replace one document (durable) (ms) | 1.938 | SQLite FTS5 11.586 | 5.98x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 1.241 | SQLite FTS5 6.050 | 4.87x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | 0.2654 | **0.2678** | 0.2657 | 0.2643 | 0.2643 | 0.2643 |
+| recall@100 | 0.5422 | **0.5546** | 0.5445 | 0.5406 | 0.5406 | 0.5406 |
+| QPS (single thread) (QPS) | 1,159 | 7 | **1,184** | 680 | 442 | 937 |
+| p50 latency (us) | 815 | 132,063 | **606** | 1,467 | 1,819 | 1,053 |
+| p99 latency (us) | **1,854** | 260,580 | 4,037 | 2,572 | 6,942 | 2,101 |
+| Ingest/build time (s) | 2.65 | **2.49** | 5.28 | 3.69 | 3.45 | 3.45 |
+| Peak RSS, build (MiB) | 300 | **147** | 602 | 173 | 154 | 154 |
+| Peak RSS, serving (MiB) | **23** | 76 | 117 | 56 | 91 | 91 |
+| On-disk size (MiB) | **9.0** | 27.1 | 12.1 | 17.4 | 17.2 | 17.2 |
+| Cold start to first answer (s) | **0.02** | 0.26 | 1.54 | 0.04 | 1.02 | 1.01 |
+| Replace one document (durable) (ms) | **1.938** | 11.586 | 40.451 | 55.793 | 37.252 | 36.425 |
+| Delete one document (durable) (ms) | **1.241** | 6.050 | 9.949 | 37.804 | 9.722 | 9.517 |
+| Install size (MiB) | 3.6 | **0.0** | 6.3 | 16.0 | 5.5 | 5.5 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 
 ### beir:fiqa (57,600 documents, 500 queries), documents contract
 
@@ -234,6 +470,276 @@ Timing boundary (where each query is timed): WARM (lexical-only API search_lexic
 | Replace one document (durable) (ms) | **1.887** | 9.327 | 39.469 | 92.451 | 69.539 | 68.828 |
 | Delete one document (durable) (ms) | **1.459** | 8.938 | 16.711 | 48.463 | 17.403 | 17.438 |
 | Install size (MiB) | 4.0 | **0.0** | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+### beir:fiqa (57,600 documents, 500 queries), documents contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2654 | SQLite FTS5 (documents contract: docstore table read per hit) 0.2678 | 0.99x [0.69, 1.42] | **TIE** |
+| recall@100 | 0.5422 | SQLite FTS5 (documents contract: docstore table read per hit) 0.5546 | 0.98x [0.80, 1.20] | **TIE** |
+| QPS (single thread) (QPS) | 1,032 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) 1,439 | 0.72x [0.69, 1.40] | **TIE** |
+| p50 latency (us) | 921 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) 628 | 0.68x [0.67, 0.79] | **LOSS** |
+| p99 latency (us) | 2,047 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 1,624 | 0.79x [0.78, 0.83] | **LOSS** |
+| Ingest/build time (s) | 2.59 | SQLite FTS5 (documents contract: docstore table read per hit) 2.46 | 0.95x [0.94, 0.96] | **LOSS** |
+| Peak RSS, build (MiB) | 404 | SQLite FTS5 (documents contract: docstore table read per hit) 144 | 0.36x [0.36, 0.36] | **LOSS** |
+| Peak RSS, serving (MiB) | 74 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 107 | 1.46x [1.45, 1.46] | **WIN** |
+| On-disk size (MiB) | 93.6 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 41.2 | 0.44x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.03 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.33x [0.32, 0.37] | **LOSS** |
+| Replace one document (durable) (ms) | 1.623 | SQLite FTS5 (documents contract: docstore table read per hit) 16.887 | 10.41x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 1.029 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 7.894 | 7.67x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | 0.2654 | 0.2654 | **0.2678** | 0.2657 | 0.2657 | 0.2643 | 0.2643 | 0.2643 |
+| recall@100 | 0.5422 | 0.5422 | **0.5546** | 0.5445 | 0.5445 | 0.5406 | 0.5406 | 0.5406 |
+| QPS (single thread) (QPS) | 1,032 | 659 | 9 | 367 | **1,439** | 450 | 461 | 1,116 |
+| p50 latency (us) | 921 | 1,453 | 104,191 | 2,631 | **628** | 2,216 | 1,789 | 875 |
+| p99 latency (us) | 2,047 | 3,102 | 219,091 | 5,676 | 1,728 | 3,033 | 6,403 | **1,624** |
+| Ingest/build time (s) | 2.59 | 22.85 | **2.46** | 4.97 | 4.95 | 3.09 | 3.08 | 3.08 |
+| Peak RSS, build (MiB) | 404 | 360 | **144** | 544 | 680 | 173 | 158 | 158 |
+| Peak RSS, serving (MiB) | **74** | 166 | 146 | 146 | 158 | 107 | 244 | 244 |
+| On-disk size (MiB) | 93.6 | 80.7 | 72.2 | **41.2** | 54.6 | 46.5 | 46.5 | 46.5 |
+| Cold start to first answer (s) | 0.03 | 2.04 | 0.21 | 0.85 | 0.81 | 0.04 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 1.623 | **1.529** | 16.887 | 36.440 | 40.147 | 48.816 | 33.148 | 31.027 |
+| Delete one document (durable) (ms) | **1.029** | 1.427 | 13.106 | 9.960 | 9.222 | 32.057 | 7.901 | 7.894 |
+| Install size (MiB) | 4.0 | 4.0 | **0.0** | 6.3 | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 1,032 | 659 | 0.64x |
+| p50 latency (us) | 921 | 1,453 | 1.58x |
+| p99 latency (us) | 2,047 | 3,102 | 1.52x |
+| Ingest/build time (s) | 2.59 | 22.85 | 8.82x |
+| Peak RSS, serving (MiB) | 74 | 166 | 2.25x |
+| On-disk size (MiB) | 93.6 | 80.7 | 0.86x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### beir:fiqa (57,600 documents, 500 queries), ids contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2654 | SQLite FTS5 0.2678 | 0.99x [0.69, 1.42] | **TIE** |
+| recall@100 | 0.5422 | SQLite FTS5 0.5546 | 0.98x [0.80, 1.20] | **TIE** |
+| QPS (single thread) (QPS) | 1,168 | Apache Lucene 10.6.0 (JVM) 1,684 | 0.69x [0.68, 1.10] | **TIE** |
+| p50 latency (us) | 808 | Apache Lucene 10.6.0 (JVM) 530 | 0.66x [0.64, 0.72] | **LOSS** |
+| p99 latency (us) | 1,907 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 1,416 | 0.74x [0.73, 0.76] | **LOSS** |
+| Ingest/build time (s) | 2.15 | SQLite FTS5 2.07 | 0.96x [0.96, 0.97] | **LOSS** |
+| Peak RSS, build (MiB) | 302 | SQLite FTS5 144 | 0.48x [0.48, 0.48] | **LOSS** |
+| Peak RSS, serving (MiB) | 24 | tantivy-py 0.27.0 (CPython binding) 55 | 2.24x [2.23, 2.25] | **WIN** |
+| On-disk size (MiB) | 9.0 | Apache Lucene 10.6.0 (JVM) 12.1 | 1.34x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.02 | tantivy-py 0.27.0 (CPython binding) 0.04 | 2.43x [2.29, 2.49] | **WIN** |
+| Replace one document (durable) (ms) | 1.627 | SQLite FTS5 11.229 | 6.90x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 1.017 | SQLite FTS5 5.877 | 5.78x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | 0.2654 | **0.2678** | 0.2657 | 0.2643 | 0.2643 | 0.2643 |
+| recall@100 | 0.5422 | **0.5546** | 0.5445 | 0.5406 | 0.5406 | 0.5406 |
+| QPS (single thread) (QPS) | 1,168 | 9 | **1,684** | 911 | 505 | 1,405 |
+| p50 latency (us) | 808 | 104,500 | **530** | 1,100 | 1,597 | 699 |
+| p99 latency (us) | 1,907 | 220,985 | 1,633 | 1,884 | 6,182 | **1,416** |
+| Ingest/build time (s) | 2.15 | **2.07** | 4.14 | 2.88 | 2.86 | 2.86 |
+| Peak RSS, build (MiB) | 302 | **144** | 498 | 172 | 156 | 156 |
+| Peak RSS, serving (MiB) | **24** | 74 | 119 | 55 | 92 | 92 |
+| On-disk size (MiB) | **9.0** | 27.1 | 12.1 | 17.4 | 17.2 | 17.2 |
+| Cold start to first answer (s) | **0.02** | 0.21 | 1.17 | 0.04 | 0.91 | 0.91 |
+| Replace one document (durable) (ms) | **1.627** | 11.229 | 36.301 | 49.423 | 38.209 | 30.939 |
+| Delete one document (durable) (ms) | **1.017** | 5.877 | 8.740 | 31.441 | 7.779 | 7.640 |
+| Install size (MiB) | 4.0 | **0.0** | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+### memory (4,559 documents, 100 queries), documents contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-15. Raw results: [standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 0.4627 | 0.99x [0.59, 1.71] | **TIE** |
+| recall@100 | 0.8203 | SQLite FTS5 (documents contract: docstore table read per hit) 0.8392 | 0.98x [0.78, 1.24] | **TIE** |
+| QPS (single thread) (QPS) | 2,550 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 1,065 | 2.39x [2.26, 2.46] | **WIN** |
+| p50 latency (us) | 378 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 912 | 2.41x [2.25, 2.50] | **WIN** |
+| p99 latency (us) | 577 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 1,343 | 2.33x [2.18, 2.40] | **WIN** |
+| Ingest/build time (s) | 1.78 | SQLite FTS5 (documents contract: docstore table read per hit) 1.97 | 1.11x [1.09, 1.11] | **WIN** |
+| Peak RSS, build (MiB) | 232 | SQLite FTS5 (documents contract: docstore table read per hit) 121 | 0.52x [0.52, 0.52] | **LOSS** |
+| Peak RSS, serving (MiB) | 60 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 69 | 1.16x [1.15, 1.22] | **WIN** |
+| On-disk size (MiB) | 92.8 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 35.6 | 0.38x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.02 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.47x [0.45, 0.49] | **LOSS** |
+| Replace one document (durable) (ms) | 7.359 | SQLite FTS5 (documents contract: docstore table read per hit) 32.796 | 4.46x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.937 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 10.608 | 11.32x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | 0.4561 | 0.4561 | 0.4489 | **0.4627** | 0.4627 | 0.4532 | 0.4532 | 0.4532 |
+| recall@100 | 0.8203 | 0.8203 | **0.8392** | 0.8237 | 0.8237 | 0.8203 | 0.8203 | 0.8203 |
+| QPS (single thread) (QPS) | **2,550** | 912 | 24 | 154 | 467 | 387 | 721 | 1,065 |
+| p50 latency (us) | **378** | 1,075 | 33,546 | 6,332 | 1,110 | 2,556 | 1,269 | 912 |
+| p99 latency (us) | **577** | 1,471 | 142,451 | 12,095 | 5,690 | 3,097 | 3,081 | 1,343 |
+| Ingest/build time (s) | **1.78** | 26.07 | 1.97 | 5.52 | 5.51 | 3.24 | 3.17 | 3.19 |
+| Peak RSS, build (MiB) | 232 | 173 | **121** | 435 | 622 | 206 | 154 | 156 |
+| Peak RSS, serving (MiB) | 60 | **55** | 97 | 134 | 151 | 69 | 109 | 109 |
+| On-disk size (MiB) | 92.8 | 71.2 | 63.1 | **35.6** | 55.2 | 37.5 | 37.5 | 37.5 |
+| Cold start to first answer (s) | 0.02 | 0.64 | 0.08 | 0.98 | 0.95 | 0.05 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 7.359 | **6.835** | 32.796 | 51.468 | 55.447 | 519.729 | 53.731 | 50.734 |
+| Delete one document (durable) (ms) | **0.937** | 2.284 | 15.449 | 10.819 | 11.293 | 604.977 | 10.608 | 10.825 |
+| Install size (MiB) | 3.6 | 3.6 | **0.0** | 6.3 | 6.3 | 16.0 | 5.5 | 5.5 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 2,550 | 912 | 0.36x |
+| p50 latency (us) | 378 | 1,075 | 2.85x |
+| p99 latency (us) | 577 | 1,471 | 2.55x |
+| Ingest/build time (s) | 1.78 | 26.07 | 14.66x |
+| Peak RSS, serving (MiB) | 60 | 55 | 0.93x |
+| On-disk size (MiB) | 92.8 | 71.2 | 0.77x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### memory (4,559 documents, 100 queries), ids contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-15. Raw results: [standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x [0.59, 1.71] | **TIE** |
+| recall@100 | 0.8203 | SQLite FTS5 0.8392 | 0.98x [0.78, 1.24] | **TIE** |
+| QPS (single thread) (QPS) | 8,104 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 3,933 | 2.06x [2.03, 2.11] | **WIN** |
+| p50 latency (us) | 109 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 235 | 2.16x [2.10, 2.19] | **WIN** |
+| p99 latency (us) | 295 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 563 | 1.91x [1.78, 2.05] | **WIN** |
+| Ingest/build time (s) | 1.55 | SQLite FTS5 1.62 | 1.04x [0.97, 1.06] | **TIE** |
+| Peak RSS, build (MiB) | 139 | SQLite FTS5 121 | 0.87x [0.87, 0.87] | **LOSS** |
+| Peak RSS, serving (MiB) | 12 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 25 | 2.08x [2.08, 2.09] | **WIN** |
+| On-disk size (MiB) | 3.1 | Apache Lucene 10.6.0 (JVM) 10.3 | 3.29x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.04 | 3.79x [3.67, 3.90] | **WIN** |
+| Replace one document (durable) (ms) | 7.244 | SQLite FTS5 19.045 | 2.63x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.926 | SQLite FTS5 6.261 | 6.76x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | 0.4561 | 0.4489 | **0.4627** | 0.4532 | 0.4532 | 0.4532 |
+| recall@100 | 0.8203 | **0.8392** | 0.8237 | 0.8203 | 0.8203 | 0.8203 |
+| QPS (single thread) (QPS) | **8,104** | 25 | 1,086 | 2,142 | 1,522 | 3,933 |
+| p50 latency (us) | **109** | 32,787 | 426 | 443 | 537 | 235 |
+| p99 latency (us) | **295** | 141,690 | 4,220 | 824 | 2,300 | 563 |
+| Ingest/build time (s) | **1.55** | 1.62 | 4.60 | 3.09 | 3.02 | 3.04 |
+| Peak RSS, build (MiB) | 139 | **121** | 431 | 206 | 138 | 139 |
+| Peak RSS, serving (MiB) | **12** | 41 | 96 | 35 | 25 | 25 |
+| On-disk size (MiB) | **3.1** | 19.3 | 10.3 | 13.7 | 13.7 | 13.7 |
+| Cold start to first answer (s) | **0.01** | 0.08 | 1.05 | 0.04 | 0.06 | 0.06 |
+| Replace one document (durable) (ms) | **7.244** | 19.045 | 47.569 | 321.149 | 47.831 | 47.114 |
+| Delete one document (durable) (ms) | **0.926** | 6.261 | 10.020 | 378.843 | 10.201 | 10.287 |
+| Install size (MiB) | 3.6 | **0.0** | 6.3 | 16.0 | 5.5 | 5.5 |
 | Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
 
 n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
@@ -386,6 +892,276 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 | tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 
+### memory (4,559 documents, 100 queries), documents contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 0.4627 | 0.99x [0.59, 1.71] | **TIE** |
+| recall@100 | 0.8203 | SQLite FTS5 (documents contract: docstore table read per hit) 0.8392 | 0.98x [0.78, 1.24] | **TIE** |
+| QPS (single thread) (QPS) | 2,631 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 1,250 | 2.10x [1.94, 2.18] | **WIN** |
+| p50 latency (us) | 364 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 786 | 2.16x [2.00, 2.27] | **WIN** |
+| p99 latency (us) | 576 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 1,112 | 1.93x [1.73, 2.01] | **WIN** |
+| Ingest/build time (s) | 1.55 | SQLite FTS5 (documents contract: docstore table read per hit) 1.75 | 1.13x [1.11, 1.14] | **WIN** |
+| Peak RSS, build (MiB) | 234 | SQLite FTS5 (documents contract: docstore table read per hit) 118 | 0.50x [0.50, 0.50] | **LOSS** |
+| Peak RSS, serving (MiB) | 61 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 68 | 1.12x [1.11, 1.12] | **WIN** |
+| On-disk size (MiB) | 92.8 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 35.6 | 0.38x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.02 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.42x [0.40, 0.44] | **LOSS** |
+| Replace one document (durable) (ms) | 5.813 | SQLite FTS5 (documents contract: docstore table read per hit) 32.255 | 5.55x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.842 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 8.254 | 9.80x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | 0.4561 | 0.4561 | 0.4489 | **0.4627** | 0.4627 | 0.4532 | 0.4532 | 0.4532 |
+| recall@100 | 0.8203 | 0.8203 | **0.8392** | 0.8237 | 0.8237 | 0.8203 | 0.8203 | 0.8203 |
+| QPS (single thread) (QPS) | **2,631** | 1,089 | 30 | 174 | 473 | 442 | 808 | 1,250 |
+| p50 latency (us) | **364** | 882 | 27,389 | 5,644 | 1,111 | 2,228 | 1,132 | 786 |
+| p99 latency (us) | **576** | 1,455 | 108,756 | 7,951 | 5,709 | 2,674 | 2,840 | 1,112 |
+| Ingest/build time (s) | **1.55** | 19.50 | 1.75 | 4.42 | 4.51 | 2.64 | 2.63 | 2.66 |
+| Peak RSS, build (MiB) | 234 | 175 | **118** | 434 | 559 | 205 | 155 | 157 |
+| Peak RSS, serving (MiB) | 61 | **58** | 95 | 140 | 149 | 68 | 110 | 110 |
+| On-disk size (MiB) | 92.8 | 71.3 | 63.1 | **35.6** | 55.2 | 37.5 | 37.5 | 37.5 |
+| Cold start to first answer (s) | 0.02 | 0.54 | 0.06 | 0.83 | 0.78 | 0.04 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 5.813 | **5.547** | 32.255 | 52.370 | 58.138 | 448.738 | 47.295 | 41.911 |
+| Delete one document (durable) (ms) | **0.842** | 2.271 | 14.744 | 8.254 | 9.841 | 498.849 | 9.267 | 9.008 |
+| Install size (MiB) | 4.0 | 4.0 | **0.0** | 6.3 | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 2,631 | 1,089 | 0.41x |
+| p50 latency (us) | 364 | 882 | 2.42x |
+| p99 latency (us) | 576 | 1,455 | 2.53x |
+| Ingest/build time (s) | 1.55 | 19.50 | 12.58x |
+| Peak RSS, serving (MiB) | 61 | 58 | 0.95x |
+| On-disk size (MiB) | 92.8 | 71.3 | 0.77x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### memory (4,559 documents, 100 queries), ids contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.4561 | Apache Lucene 10.6.0 (JVM) 0.4627 | 0.99x [0.59, 1.71] | **TIE** |
+| recall@100 | 0.8203 | SQLite FTS5 0.8392 | 0.98x [0.78, 1.24] | **TIE** |
+| QPS (single thread) (QPS) | 9,360 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 5,373 | 1.74x [1.71, 1.77] | **WIN** |
+| p50 latency (us) | 92 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 172 | 1.87x [1.83, 1.91] | **WIN** |
+| p99 latency (us) | 272 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 396 | 1.46x [1.39, 1.52] | **WIN** |
+| Ingest/build time (s) | 1.31 | SQLite FTS5 1.38 | 1.05x [1.04, 1.07] | **WIN** |
+| Peak RSS, build (MiB) | 140 | SQLite FTS5 118 | 0.84x [0.84, 0.84] | **LOSS** |
+| Peak RSS, serving (MiB) | 13 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 26 | 1.94x [1.92, 1.97] | **WIN** |
+| On-disk size (MiB) | 3.1 | Apache Lucene 10.6.0 (JVM) 10.3 | 3.29x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.03 | 3.65x [3.47, 3.80] | **WIN** |
+| Replace one document (durable) (ms) | 5.968 | SQLite FTS5 19.312 | 3.24x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.864 | SQLite FTS5 6.128 | 7.10x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | 0.4561 | 0.4489 | **0.4627** | 0.4532 | 0.4532 | 0.4532 |
+| recall@100 | 0.8203 | **0.8392** | 0.8237 | 0.8203 | 0.8203 | 0.8203 |
+| QPS (single thread) (QPS) | **9,360** | 31 | 1,337 | 2,837 | 1,718 | 5,373 |
+| p50 latency (us) | **92** | 26,659 | 335 | 337 | 473 | 172 |
+| p99 latency (us) | **272** | 107,999 | 4,016 | 614 | 2,091 | 396 |
+| Ingest/build time (s) | **1.31** | 1.38 | 3.54 | 2.49 | 2.50 | 2.50 |
+| Peak RSS, build (MiB) | 140 | **118** | 423 | 205 | 139 | 140 |
+| Peak RSS, serving (MiB) | **13** | 39 | 99 | 34 | 26 | 26 |
+| On-disk size (MiB) | **3.1** | 19.3 | 10.3 | 13.7 | 13.7 | 13.7 |
+| Cold start to first answer (s) | **0.01** | 0.06 | 0.86 | 0.03 | 0.05 | 0.05 |
+| Replace one document (durable) (ms) | **5.968** | 19.312 | 50.580 | 258.630 | 43.099 | 38.584 |
+| Delete one document (durable) (ms) | **0.864** | 6.128 | 8.501 | 289.102 | 7.865 | 8.209 |
+| Install size (MiB) | 4.0 | **0.0** | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+### beir:nfcorpus (3,633 documents, 324 queries), documents contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2916 | SQLite FTS5 (documents contract: docstore table read per hit) 0.2914 | 1.00x [0.70, 1.44] | **TIE** |
+| recall@100 | 0.2274 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 0.2276 | 1.00x [0.66, 1.50] | **TIE** |
+| QPS (single thread) (QPS) | 9,693 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 6,694 | 1.45x [1.42, 1.54] | **WIN** |
+| p50 latency (us) | 129 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 178 | 1.37x [1.32, 1.51] | **WIN** |
+| p99 latency (us) | 198 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 305 | 1.54x [1.49, 1.70] | **WIN** |
+| Ingest/build time (s) | 0.33 | SQLite FTS5 (documents contract: docstore table read per hit) 0.29 | 0.87x [0.84, 0.87] | **LOSS** |
+| Peak RSS, build (MiB) | 77 | SQLite FTS5 (documents contract: docstore table read per hit) 35 | 0.46x [0.46, 0.46] | **LOSS** |
+| Peak RSS, serving (MiB) | 18 | SQLite FTS5 (documents contract: docstore table read per hit) 49 | 2.74x [2.74, 2.74] | **WIN** |
+| On-disk size (MiB) | 12.0 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 4.8 | 0.40x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.01 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.84x [0.80, 0.88] | **LOSS** |
+| Replace one document (durable) (ms) | 2.488 | SQLite FTS5 (documents contract: docstore table read per hit) 11.573 | 4.65x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.910 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) 8.180 | 8.99x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | **0.2916** | 0.2916 | 0.2914 | 0.2897 | 0.2897 | 0.2903 | 0.2903 | 0.2903 |
+| recall@100 | 0.2274 | 0.2274 | 0.2271 | **0.2276** | 0.2276 | 0.2269 | 0.2269 | 0.2269 |
+| QPS (single thread) (QPS) | **9,693** | 4,595 | 375 | 553 | 2,238 | 1,362 | 5,712 | 6,694 |
+| p50 latency (us) | **129** | 270 | 1,056 | 2,474 | 231 | 988 | 191 | 178 |
+| p99 latency (us) | **198** | 418 | 9,159 | 3,391 | 4,030 | 1,253 | 438 | 305 |
+| Ingest/build time (s) | 0.33 | 3.91 | **0.29** | 1.42 | 1.31 | 0.47 | 0.46 | 0.46 |
+| Peak RSS, build (MiB) | 77 | 100 | **35** | 173 | 193 | 63 | 39 | 39 |
+| Peak RSS, serving (MiB) | **18** | 32 | 49 | 113 | 109 | 53 | 85 | 85 |
+| On-disk size (MiB) | 12.0 | 9.6 | 9.3 | **4.8** | 7.0 | 5.3 | 5.3 | 5.3 |
+| Cold start to first answer (s) | 0.01 | 0.18 | 0.05 | 0.95 | 0.90 | 0.04 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 2.488 | **2.378** | 11.573 | 41.026 | 43.701 | 141.405 | 42.160 | 41.021 |
+| Delete one document (durable) (ms) | **0.910** | 1.474 | 14.251 | 9.465 | 8.180 | 150.837 | 9.667 | 9.209 |
+| Install size (MiB) | 3.6 | 3.6 | **0.0** | 6.3 | 6.3 | 16.0 | 5.5 | 5.5 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 9,693 | 4,595 | 0.47x |
+| p50 latency (us) | 129 | 270 | 2.09x |
+| p99 latency (us) | 198 | 418 | 2.11x |
+| Ingest/build time (s) | 0.33 | 3.91 | 11.85x |
+| Peak RSS, serving (MiB) | 18 | 32 | 1.81x |
+| On-disk size (MiB) | 12.0 | 9.6 | 0.81x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### beir:nfcorpus (3,633 documents, 324 queries), ids contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x [0.70, 1.44] | **TIE** |
+| recall@100 | 0.2274 | Apache Lucene 10.6.0 (JVM) 0.2276 | 1.00x [0.66, 1.50] | **TIE** |
+| QPS (single thread) (QPS) | 33,428 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 22,438 | 1.49x [1.44, 1.52] | **WIN** |
+| p50 latency (us) | 26 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 30 | 1.12x [1.08, 1.17] | **WIN** |
+| p99 latency (us) | 84 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 138 | 1.64x [1.56, 1.81] | **WIN** |
+| Ingest/build time (s) | 0.27 | SQLite FTS5 0.23 | 0.84x [0.84, 0.86] | **LOSS** |
+| Peak RSS, build (MiB) | 51 | SQLite FTS5 35 | 0.69x [0.69, 0.69] | **LOSS** |
+| Peak RSS, serving (MiB) | 9 | SQLite FTS5 31 | 3.39x [3.39, 3.40] | **WIN** |
+| On-disk size (MiB) | 0.9 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.63x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.04 | 5.33x [5.06, 5.57] | **WIN** |
+| Replace one document (durable) (ms) | 2.570 | SQLite FTS5 6.695 | 2.60x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.936 | SQLite FTS5 7.019 | 7.50x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | **0.2916** | 0.2914 | 0.2897 | 0.2903 | 0.2903 | 0.2903 |
+| recall@100 | 0.2274 | 0.2271 | **0.2276** | 0.2269 | 0.2269 | 0.2269 |
+| QPS (single thread) (QPS) | **33,428** | 399 | 4,051 | 6,163 | 14,776 | 22,438 |
+| p50 latency (us) | **26** | 846 | 113 | 186 | 40 | 30 |
+| p99 latency (us) | **84** | 8,913 | 3,276 | 337 | 271 | 138 |
+| Ingest/build time (s) | 0.27 | **0.23** | 1.23 | 0.45 | 0.44 | 0.44 |
+| Peak RSS, build (MiB) | 51 | **35** | 162 | 63 | 37 | 37 |
+| Peak RSS, serving (MiB) | **9** | 31 | 101 | 37 | 40 | 40 |
+| On-disk size (MiB) | **0.9** | 4.0 | 1.5 | 2.0 | 2.0 | 2.0 |
+| Cold start to first answer (s) | **0.01** | 0.05 | 1.03 | 0.04 | 0.06 | 0.06 |
+| Replace one document (durable) (ms) | **2.570** | 6.695 | 39.915 | 112.816 | 39.122 | 39.476 |
+| Delete one document (durable) (ms) | **0.936** | 7.019 | 9.341 | 121.948 | 9.326 | 9.425 |
+| Install size (MiB) | 3.6 | **0.0** | 6.3 | 16.0 | 5.5 | 5.5 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
 ### beir:nfcorpus (3,633 documents, 324 queries), documents contract
 
 Suite `standard`, hardware class `linux-x86_64-intel-ultra-9-185h-22c-27g` (Intel(R) Core(TM) Ultra 9 185H, 22 logical cores, 27 GiB, Linux 6.18.33.2-microsoft-standard-WSL2), commit `5f5d72a330`, 2026-11-14. Raw results: [standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json](../../benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-ultra-9-185h-22c-27g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
@@ -502,6 +1278,276 @@ Timing boundary (where each query is timed): WARM (lexical-only API search_lexic
 | Replace one document (durable) (ms) | **2.153** | 10.357 | 38.770 | 103.245 | 71.056 | 69.514 |
 | Delete one document (durable) (ms) | **1.437** | 9.599 | 16.889 | 59.605 | 18.024 | 17.911 |
 | Install size (MiB) | 4.0 | **0.0** | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+### beir:nfcorpus (3,633 documents, 324 queries), documents contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2916 | SQLite FTS5 (documents contract: docstore table read per hit) 0.2914 | 1.00x [0.70, 1.44] | **TIE** |
+| recall@100 | 0.2274 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 0.2276 | 1.00x [0.66, 1.50] | **TIE** |
+| QPS (single thread) (QPS) | 11,605 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 8,814 | 1.32x [1.23, 1.37] | **WIN** |
+| p50 latency (us) | 107 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 138 | 1.28x [1.22, 1.31] | **WIN** |
+| p99 latency (us) | 157 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 229 | 1.46x [1.06, 1.61] | **WIN** |
+| Ingest/build time (s) | 0.27 | SQLite FTS5 (documents contract: docstore table read per hit) 0.24 | 0.88x [0.86, 0.88] | **LOSS** |
+| Peak RSS, build (MiB) | 78 | SQLite FTS5 (documents contract: docstore table read per hit) 33 | 0.42x [0.42, 0.42] | **LOSS** |
+| Peak RSS, serving (MiB) | 19 | SQLite FTS5 (documents contract: docstore table read per hit) 47 | 2.43x [2.41, 2.44] | **WIN** |
+| On-disk size (MiB) | 12.0 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 4.8 | 0.40x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.01 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.81x [0.77, 0.86] | **LOSS** |
+| Replace one document (durable) (ms) | 2.249 | SQLite FTS5 (documents contract: docstore table read per hit) 10.996 | 4.89x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.759 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 7.288 | 9.60x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | **0.2916** | 0.2916 | 0.2914 | 0.2897 | 0.2897 | 0.2903 | 0.2903 | 0.2903 |
+| recall@100 | 0.2274 | 0.2274 | 0.2271 | **0.2276** | 0.2276 | 0.2269 | 0.2269 | 0.2269 |
+| QPS (single thread) (QPS) | **11,605** | 5,931 | 500 | 552 | 2,603 | 1,602 | 7,374 | 8,814 |
+| p50 latency (us) | **107** | 207 | 761 | 1,977 | 197 | 840 | 146 | 138 |
+| p99 latency (us) | **157** | 323 | 7,111 | 5,579 | 3,794 | 1,071 | 364 | 229 |
+| Ingest/build time (s) | 0.27 | 2.64 | **0.24** | 1.10 | 1.00 | 0.39 | 0.38 | 0.38 |
+| Peak RSS, build (MiB) | 78 | 102 | **33** | 168 | 171 | 62 | 40 | 40 |
+| Peak RSS, serving (MiB) | **19** | 34 | 47 | 124 | 117 | 52 | 86 | 86 |
+| On-disk size (MiB) | 12.0 | 10.0 | 9.3 | **4.8** | 7.0 | 5.3 | 5.3 | 5.3 |
+| Cold start to first answer (s) | 0.01 | 0.16 | 0.04 | 0.79 | 0.75 | 0.04 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 2.249 | **2.013** | 10.996 | 37.226 | 38.580 | 117.895 | 34.193 | 34.527 |
+| Delete one document (durable) (ms) | **0.759** | 1.327 | 14.314 | 9.303 | 8.200 | 122.581 | 7.288 | 8.042 |
+| Install size (MiB) | 4.0 | 4.0 | **0.0** | 6.3 | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 11,605 | 5,931 | 0.51x |
+| p50 latency (us) | 107 | 207 | 1.94x |
+| p99 latency (us) | 157 | 323 | 2.06x |
+| Ingest/build time (s) | 0.27 | 2.64 | 9.76x |
+| Peak RSS, serving (MiB) | 19 | 34 | 1.77x |
+| On-disk size (MiB) | 12.0 | 10.0 | 0.84x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### beir:nfcorpus (3,633 documents, 324 queries), ids contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.2916 | SQLite FTS5 0.2914 | 1.00x [0.70, 1.44] | **TIE** |
+| recall@100 | 0.2274 | Apache Lucene 10.6.0 (JVM) 0.2276 | 1.00x [0.66, 1.50] | **TIE** |
+| QPS (single thread) (QPS) | 40,574 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 27,155 | 1.49x [1.46, 1.52] | **WIN** |
+| p50 latency (us) | 23 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 27 | 1.20x [1.17, 1.24] | **WIN** |
+| p99 latency (us) | 62 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 109 | 1.75x [1.69, 1.85] | **WIN** |
+| Ingest/build time (s) | 0.22 | SQLite FTS5 0.19 | 0.87x [0.86, 0.90] | **LOSS** |
+| Peak RSS, build (MiB) | 52 | SQLite FTS5 33 | 0.63x [0.63, 0.63] | **LOSS** |
+| Peak RSS, serving (MiB) | 11 | SQLite FTS5 29 | 2.71x [2.69, 2.73] | **WIN** |
+| On-disk size (MiB) | 0.9 | Apache Lucene 10.6.0 (JVM) 1.5 | 1.63x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.03 | 5.13x [4.98, 5.40] | **WIN** |
+| Replace one document (durable) (ms) | 2.271 | SQLite FTS5 5.715 | 2.52x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.743 | SQLite FTS5 5.424 | 7.30x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | **0.2916** | 0.2914 | 0.2897 | 0.2903 | 0.2903 | 0.2903 |
+| recall@100 | 0.2274 | 0.2271 | **0.2276** | 0.2269 | 0.2269 | 0.2269 |
+| QPS (single thread) (QPS) | **40,574** | 535 | 5,886 | 7,931 | 17,198 | 27,155 |
+| p50 latency (us) | **23** | 599 | 71 | 145 | 35 | 27 |
+| p99 latency (us) | **62** | 6,861 | 3,191 | 257 | 246 | 109 |
+| Ingest/build time (s) | 0.22 | **0.19** | 0.95 | 0.37 | 0.37 | 0.36 |
+| Peak RSS, build (MiB) | 52 | **33** | 169 | 62 | 39 | 39 |
+| Peak RSS, serving (MiB) | **11** | 29 | 99 | 36 | 41 | 41 |
+| On-disk size (MiB) | **0.9** | 4.0 | 1.5 | 2.0 | 2.0 | 2.0 |
+| Cold start to first answer (s) | **0.01** | 0.04 | 0.84 | 0.03 | 0.06 | 0.06 |
+| Replace one document (durable) (ms) | **2.271** | 5.715 | 36.645 | 91.848 | 34.746 | 35.261 |
+| Delete one document (durable) (ms) | **0.743** | 5.424 | 11.163 | 96.348 | 7.778 | 8.485 |
+| Install size (MiB) | 4.0 | **0.0** | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+### beir:scifact (5,183 documents, 809 queries), documents contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 0.7022 | 1.00x [0.90, 1.12] | **TIE** |
+| recall@100 | 0.9264 | SQLite FTS5 (documents contract: docstore table read per hit) 0.9322 | 0.99x [0.94, 1.05] | **TIE** |
+| QPS (single thread) (QPS) | 4,959 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 2,893 | 1.71x [1.67, 1.74] | **WIN** |
+| p50 latency (us) | 198 | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) 334 | 1.68x [1.34, 1.81] | **WIN** |
+| p99 latency (us) | 269 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 496 | 1.84x [1.79, 1.92] | **WIN** |
+| Ingest/build time (s) | 0.47 | SQLite FTS5 (documents contract: docstore table read per hit) 0.40 | 0.85x [0.83, 0.86] | **LOSS** |
+| Peak RSS, build (MiB) | 89 | SQLite FTS5 (documents contract: docstore table read per hit) 39 | 0.43x [0.43, 0.43] | **LOSS** |
+| Peak RSS, serving (MiB) | 35 | SQLite FTS5 (documents contract: docstore table read per hit) 102 | 2.87x [2.87, 2.87] | **WIN** |
+| On-disk size (MiB) | 16.1 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 6.6 | 0.41x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.01 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.77x [0.74, 0.79] | **LOSS** |
+| Replace one document (durable) (ms) | 2.453 | SQLite FTS5 (documents contract: docstore table read per hit) 10.825 | 4.41x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.833 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 7.799 | 9.36x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | **0.7027** | 0.7027 | 0.7009 | 0.7022 | 0.7022 | 0.7011 | 0.7011 | 0.7011 |
+| recall@100 | 0.9264 | 0.9264 | **0.9322** | 0.9295 | 0.9295 | 0.9283 | 0.9283 | 0.9283 |
+| QPS (single thread) (QPS) | **4,959** | 2,266 | 73 | 329 | 1,427 | 772 | 1,831 | 2,893 |
+| p50 latency (us) | **198** | 437 | 13,437 | 3,009 | 334 | 1,363 | 500 | 343 |
+| p99 latency (us) | **269** | 620 | 26,257 | 3,707 | 4,178 | 1,598 | 1,270 | 496 |
+| Ingest/build time (s) | 0.47 | 5.39 | **0.40** | 1.61 | 1.54 | 0.63 | 0.62 | 0.62 |
+| Peak RSS, build (MiB) | 89 | 108 | **39** | 200 | 242 | 71 | 47 | 47 |
+| Peak RSS, serving (MiB) | **35** | 42 | 102 | 117 | 121 | 104 | 269 | 269 |
+| On-disk size (MiB) | 16.1 | 13.2 | 12.5 | **6.6** | 9.4 | 7.2 | 7.2 | 7.2 |
+| Cold start to first answer (s) | 0.01 | 0.26 | 0.05 | 0.96 | 0.91 | 0.04 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 2.453 | **2.368** | 10.825 | 39.752 | 42.898 | 179.992 | 41.016 | 42.325 |
+| Delete one document (durable) (ms) | **0.833** | 1.704 | 10.155 | 7.799 | 8.413 | 193.458 | 9.541 | 10.114 |
+| Install size (MiB) | 3.6 | 3.6 | **0.0** | 6.3 | 6.3 | 16.0 | 5.5 | 5.5 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 4,959 | 2,266 | 0.46x |
+| p50 latency (us) | 198 | 437 | 2.20x |
+| p99 latency (us) | 269 | 620 | 2.31x |
+| Ingest/build time (s) | 0.47 | 5.39 | 11.50x |
+| Peak RSS, serving (MiB) | 35 | 42 | 1.19x |
+| On-disk size (MiB) | 16.1 | 13.2 | 0.82x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### beir:scifact (5,183 documents, 809 queries), ids contract
+
+Suite `standard`, hardware class `linux-aarch64-neoverse-n1-8c-31g` (Neoverse-N1, 8 logical cores, 31 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x [0.90, 1.12] | **TIE** |
+| recall@100 | 0.9264 | SQLite FTS5 0.9322 | 0.99x [0.94, 1.05] | **TIE** |
+| QPS (single thread) (QPS) | 11,437 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 5,566 | 2.05x [2.01, 2.08] | **WIN** |
+| p50 latency (us) | 85 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 176 | 2.07x [2.03, 2.10] | **WIN** |
+| p99 latency (us) | 140 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 315 | 2.25x [2.16, 2.36] | **WIN** |
+| Ingest/build time (s) | 0.39 | SQLite FTS5 0.33 | 0.87x [0.85, 0.87] | **LOSS** |
+| Peak RSS, build (MiB) | 60 | SQLite FTS5 39 | 0.65x [0.65, 0.77] | **LOSS** |
+| Peak RSS, serving (MiB) | 17 | SQLite FTS5 53 | 3.05x [3.05, 3.41] | **WIN** |
+| On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.60x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.04 | 4.75x [4.54, 4.88] | **WIN** |
+| Replace one document (durable) (ms) | 2.410 | SQLite FTS5 7.339 | 3.04x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.839 | SQLite FTS5 5.473 | 6.53x (no CI) | **n/v** |
+| Install size (MiB) | 3.6 | tantivy 0.27.0 (native Rust, pruning collector) 5.5 | 1.54x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | **0.7027** | 0.7009 | 0.7022 | 0.7011 | 0.7011 | 0.7011 |
+| recall@100 | 0.9264 | **0.9322** | 0.9295 | 0.9283 | 0.9283 | 0.9283 |
+| QPS (single thread) (QPS) | **11,437** | 73 | 2,165 | 2,619 | 2,688 | 5,566 |
+| p50 latency (us) | **85** | 13,299 | 211 | 378 | 327 | 176 |
+| p99 latency (us) | **140** | 26,239 | 3,714 | 545 | 1,087 | 315 |
+| Ingest/build time (s) | 0.39 | **0.33** | 1.39 | 0.61 | 0.59 | 0.59 |
+| Peak RSS, build (MiB) | 60 | **39** | 190 | 71 | 45 | 45 |
+| Peak RSS, serving (MiB) | **17** | 53 | 113 | 62 | 128 | 128 |
+| On-disk size (MiB) | **1.3** | 5.9 | 2.0 | 2.6 | 2.6 | 2.6 |
+| Cold start to first answer (s) | **0.01** | 0.05 | 1.07 | 0.04 | 0.06 | 0.06 |
+| Replace one document (durable) (ms) | **2.410** | 7.339 | 39.061 | 140.858 | 40.725 | 41.037 |
+| Delete one document (durable) (ms) | **0.839** | 5.473 | 9.130 | 155.760 | 9.376 | 9.573 |
+| Install size (MiB) | 3.6 | **0.0** | 6.3 | 16.0 | 5.5 | 5.5 |
 | Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
 
 n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
@@ -654,6 +1700,141 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 | tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 
+### beir:scifact (5,183 documents, 809 queries), documents contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **documents contract: top-100 hits with stored text and metadata**. Every verdict in this section is the `warm` row (WARM) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5 (documents contract: docstore table read per hit); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit); Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields); tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit); tantivy 0.27.0 (native Rust, pruning collector, documents contract); tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text, documents contract: BM25 index only (`--encode lexical`) with the document text stored at ingest, `search_documents` (the document-search product path, served from the checkpoint) on the raw query string, its own query analysis inside the timer, the 100 returned `DocumentResult` values (id, scores, stored text, metadata, byte range) freed inside the timer; feeds the documents-contract verdicts; ANN: public-bench loop; WARM (eager hypervectors, informational): native Rust API call in the engine process (no language binding); text, documents contract: BM25 index plus chunk hypervectors at ingest (`--encode eager`) with the text stored, `search_documents` on the raw query string inside the timer, the returned documents freed inside the timer; reference only; SQLite FTS5 (documents contract: docstore table read per hit): CPython sqlite3 call per query (one statement: top-100 rowids by rank joined to the docstore table for id, body and bucket, inside the timer); Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit): in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer; Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields): in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer; tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit): CPython tantivy-py call per query; `searcher.doc` for each hit and its id, body and bucket read as Python objects, inside the timer; tantivy 0.27.0 (native Rust, pruning collector, documents contract): native Rust API call in its own process, TopDocs only; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer; tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract): native Rust API call in its own process, TopDocs plus Count; `Searcher::doc` for each hit with id, body and bucket read, the documents freed, all inside the timer.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 0.7022 | 1.00x [0.90, 1.12] | **TIE** |
+| recall@100 | 0.9264 | SQLite FTS5 (documents contract: docstore table read per hit) 0.9322 | 0.99x [0.94, 1.05] | **TIE** |
+| QPS (single thread) (QPS) | 5,920 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 3,856 | 1.54x [1.50, 1.56] | **WIN** |
+| p50 latency (us) | 168 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 258 | 1.53x [1.49, 1.56] | **WIN** |
+| p99 latency (us) | 221 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 371 | 1.68x [1.60, 1.70] | **WIN** |
+| Ingest/build time (s) | 0.39 | SQLite FTS5 (documents contract: docstore table read per hit) 0.33 | 0.85x [0.84, 0.86] | **LOSS** |
+| Peak RSS, build (MiB) | 91 | SQLite FTS5 (documents contract: docstore table read per hit) 36 | 0.39x [0.39, 0.40] | **LOSS** |
+| Peak RSS, serving (MiB) | 37 | SQLite FTS5 (documents contract: docstore table read per hit) 100 | 2.69x [2.68, 2.70] | **WIN** |
+| On-disk size (MiB) | 16.1 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 6.6 | 0.41x (no CI) | **LOSS** |
+| Cold start to first answer (s) | 0.01 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) 0.01 | 0.75x [0.70, 0.80] | **LOSS** |
+| Replace one document (durable) (ms) | 2.156 | SQLite FTS5 (documents contract: docstore table read per hit) 10.072 | 4.67x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.704 | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) 6.540 | 9.28x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | WARM (eager hypervectors, informational) | SQLite FTS5 (documents contract: docstore table read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) |
+|---|---|---|---|---|---|---|---|---|
+| nDCG@10 | **0.7027** | 0.7027 | 0.7009 | 0.7022 | 0.7022 | 0.7011 | 0.7011 | 0.7011 |
+| recall@100 | 0.9264 | 0.9264 | **0.9322** | 0.9295 | 0.9295 | 0.9283 | 0.9283 | 0.9283 |
+| QPS (single thread) (QPS) | **5,920** | 2,768 | 93 | 462 | 1,627 | 895 | 2,199 | 3,856 |
+| p50 latency (us) | **168** | 362 | 10,346 | 2,129 | 289 | 1,184 | 414 | 258 |
+| p99 latency (us) | **221** | 535 | 21,563 | 2,653 | 4,177 | 1,381 | 1,135 | 371 |
+| Ingest/build time (s) | 0.39 | 3.73 | **0.33** | 1.21 | 1.14 | 0.51 | 0.51 | 0.51 |
+| Peak RSS, build (MiB) | 91 | 110 | **36** | 172 | 191 | 70 | 49 | 48 |
+| Peak RSS, serving (MiB) | **37** | 44 | 100 | 121 | 125 | 103 | 270 | 270 |
+| On-disk size (MiB) | 16.1 | 13.4 | 12.5 | **6.6** | 9.4 | 7.2 | 7.2 | 7.2 |
+| Cold start to first answer (s) | 0.01 | 0.23 | 0.04 | 0.82 | 0.77 | 0.04 | 0.01 | **0.01** |
+| Replace one document (durable) (ms) | 2.156 | **2.123** | 10.072 | 36.918 | 38.002 | 149.610 | 37.687 | 38.946 |
+| Delete one document (durable) (ms) | **0.704** | 1.589 | 9.181 | 6.540 | 7.827 | 156.999 | 7.856 | 8.023 |
+| Install size (MiB) | 4.0 | 4.0 | **0.0** | 6.3 | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 0 | 2 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| WARM (eager hypervectors, informational) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 (documents contract: docstore table read per hit) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM, documents contract: stored fields read per hit) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| Apache Lucene 10.6.0 (JVM, documents contract: payload in doc values instead of stored fields) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
+WARM ingest modes. Verdicts above use `warm` (lexical-only ingest with the document text stored). `warm-eager` (chunk hypervectors built at ingest) is reported for reference and never feeds a verdict:
+
+| Metric | warm (feeds verdicts) | warm-eager (reference) | eager / warm |
+|---|---|---|---|
+| QPS (single thread) (QPS) | 5,920 | 2,768 | 0.47x |
+| p50 latency (us) | 168 | 362 | 2.15x |
+| p99 latency (us) | 221 | 535 | 2.42x |
+| Ingest/build time (s) | 0.39 | 3.73 | 9.66x |
+| Peak RSS, serving (MiB) | 37 | 44 | 1.20x |
+| On-disk size (MiB) | 16.1 | 13.4 | 0.83x |
+
+The two QPS intervals do not overlap although both rows run the same lexical search over the same index: the variance between ingest modes is unexplained, so neither figure alone is the engine's speed.
+
+### beir:scifact (5,183 documents, 809 queries), ids contract
+
+Suite `standard`, hardware class `linux-x86_64-intel-xeon-2-60ghz-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 7.0.0-1017-gcp), commit `14ca7ff3b1`, 2026-11-14. Raw results: [standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json](../../benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json). Intervals: 99.75% bootstrap over process rounds (Bonferroni family of 20 verdict metrics).
+
+Timing contract: **ids contract: top-100 (id, score)**. Every verdict in this section is the `warm-lexical-api` row (WARM (lexical-only API search_lexical; reference)) against the fastest comparator of this contract, named in the Best other column. Comparators in this contract: SQLite FTS5; Apache Lucene 10.6.0 (JVM); tantivy-py 0.27.0 (CPython binding); tantivy 0.27.0 (native Rust, pruning collector); tantivy 0.27.0 (native Rust, exhaustive collector with Count).
+
+Timing boundary (where each query is timed): WARM (lexical-only API search_lexical; reference): native Rust API call in the engine process; ids contract: BM25 index only (`--encode lexical`, no text stored), `search_lexical` on the word set parsed inside the timer, (id, score) out; feeds the ids-contract verdicts; SQLite FTS5: CPython sqlite3 call per query (query string built inside the timer from the raw text); Apache Lucene 10.6.0 (JVM): in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open; tantivy-py 0.27.0 (CPython binding): CPython tantivy-py call per query (raw text reduced to its word set and parsed inside the timer; stored id fetched per hit through Python objects); tantivy 0.27.0 (native Rust, pruning collector): native Rust API call in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM; tantivy 0.27.0 (native Rust, exhaustive collector with Count): native Rust API call, top-100 plus Count collector, in its own process (raw text reduced to its word set and parsed inside the timer; id from an array built at open), same process model as WARM.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| nDCG@10 | 0.7027 | Apache Lucene 10.6.0 (JVM) 0.7022 | 1.00x [0.90, 1.12] | **TIE** |
+| recall@100 | 0.9264 | SQLite FTS5 0.9322 | 0.99x [0.94, 1.05] | **TIE** |
+| QPS (single thread) (QPS) | 13,922 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 7,322 | 1.90x [1.86, 1.92] | **WIN** |
+| p50 latency (us) | 70 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 133 | 1.89x [1.87, 1.92] | **WIN** |
+| p99 latency (us) | 112 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) 233 | 2.08x [1.97, 2.16] | **WIN** |
+| Ingest/build time (s) | 0.32 | SQLite FTS5 0.28 | 0.87x [0.87, 0.88] | **LOSS** |
+| Peak RSS, build (MiB) | 61 | SQLite FTS5 36 | 0.59x [0.59, 0.59] | **LOSS** |
+| Peak RSS, serving (MiB) | 19 | SQLite FTS5 51 | 2.73x [2.71, 2.74] | **WIN** |
+| On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.60x (no CI) | **WIN** |
+| Cold start to first answer (s) | 0.01 | tantivy-py 0.27.0 (CPython binding) 0.04 | 4.48x [4.34, 4.74] | **WIN** |
+| Replace one document (durable) (ms) | 2.278 | SQLite FTS5 7.238 | 3.18x (no CI) | **n/v** |
+| Delete one document (durable) (ms) | 0.742 | SQLite FTS5 4.882 | 6.58x (no CI) | **n/v** |
+| Install size (MiB) | 4.0 | tantivy 0.27.0 (native Rust, pruning collector) 6.2 | 1.55x (no CI) | **n/v** |
+| Install distributions (count) | 0 | tantivy-py 0.27.0 (CPython binding) 1 | inf (no CI) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM (lexical-only API search_lexical; reference) | SQLite FTS5 | Apache Lucene 10.6.0 (JVM) | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0 (native Rust, exhaustive collector with Count) |
+|---|---|---|---|---|---|---|
+| nDCG@10 | **0.7027** | 0.7009 | 0.7022 | 0.7011 | 0.7011 | 0.7011 |
+| recall@100 | 0.9264 | **0.9322** | 0.9295 | 0.9283 | 0.9283 | 0.9283 |
+| QPS (single thread) (QPS) | **13,922** | 94 | 2,382 | 3,393 | 3,068 | 7,322 |
+| p50 latency (us) | **70** | 10,209 | 191 | 291 | 287 | 133 |
+| p99 latency (us) | **112** | 21,500 | 3,641 | 412 | 1,009 | 233 |
+| Ingest/build time (s) | 0.32 | **0.28** | 1.04 | 0.50 | 0.49 | 0.49 |
+| Peak RSS, build (MiB) | 61 | **36** | 173 | 70 | 47 | 47 |
+| Peak RSS, serving (MiB) | **19** | 51 | 118 | 61 | 129 | 129 |
+| On-disk size (MiB) | **1.3** | 5.9 | 2.0 | 2.6 | 2.6 | 2.6 |
+| Cold start to first answer (s) | **0.01** | 0.04 | 0.90 | 0.04 | 0.06 | 0.06 |
+| Replace one document (durable) (ms) | **2.278** | 7.238 | 36.265 | 112.141 | 37.605 | 37.003 |
+| Delete one document (durable) (ms) | **0.742** | 4.882 | 10.429 | 120.530 | 8.231 | 8.088 |
+| Install size (MiB) | 4.0 | **0.0** | 6.3 | 16.9 | 6.2 | 6.2 |
+| Install distributions (count) | **0** | 0 | 2 | 1 |  |  |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM (lexical-only API search_lexical; reference) | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| SQLite FTS5 | incremental-durable-commit | one SQLite transaction per operation with fullfsync on |
+| Apache Lucene 10.6.0 (JVM) | incremental-durable-commit | IndexWriter commit per operation (FileChannel.force) |
+| tantivy-py 0.27.0 (CPython binding) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
+
 ## Operational facts
 
 | System | Service needed | Encrypted at rest | Basis |
@@ -664,6 +1845,7 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 | WARM (eager hypervectors, informational) | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | SQLite FTS5 (documents contract: docstore table read per hit) | no | no (SQLCipher is a separate build) | documentation (not exercised) |
 | Apache Lucene (JVM, documents contract: stored fields read per hit) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
+| Apache Lucene (JVM, documents contract: payload in doc values instead of stored fields) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | no | no | documentation (not exercised) |
 | tantivy 0.27.0 (native Rust, pruning collector, documents contract) | no | no | documentation (not exercised) |
 | tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | no | no | documentation (not exercised) |
@@ -678,21 +1860,22 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 
 | System | Pinned version(s) |
 |---|---|
-| WARM | writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
+| WARM | writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
 | hnswlib | hnswlib 0.8.0, python 3.13.15 |
 | hnswlib (native C++) | hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux) |
-| WARM (eager hypervectors, informational) | writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
+| WARM (eager hypervectors, informational) | writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
 | SQLite FTS5 (documents contract: docstore table read per hit) | python-sqlite3 3.53.1 |
-| Apache Lucene (JVM, documents contract: stored fields read per hit) | lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22 |
+| Apache Lucene (JVM, documents contract: stored fields read per hit) | lucene 10.6.0, jvm openjdk version "21.0.13.0.3" 2026-10-24; lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22 |
+| Apache Lucene (JVM, documents contract: payload in doc values instead of stored fields) | lucene 10.6.0, jvm openjdk version "21.0.13.0.3" 2026-10-24 |
 | tantivy-py 0.27.0 (CPython binding, documents contract: stored document read per hit) | tantivy 0.27.0, python 3.13.15 |
-| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
-| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
-| WARM (lexical-only API search_lexical; reference) | writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
+| tantivy 0.27.0 (native Rust, pruning collector, documents contract) | tantivy 0.27.0, rustc rustc 1.100.0 (0ef1bc386 2026-11-09); tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count, documents contract) | tantivy 0.27.0, rustc rustc 1.100.0 (0ef1bc386 2026-11-09); tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
+| WARM (lexical-only API search_lexical; reference) | writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
 | SQLite FTS5 | python-sqlite3 3.53.1 |
-| Apache Lucene (JVM) | lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22 |
+| Apache Lucene (JVM) | lucene 10.6.0, jvm openjdk version "21.0.13.0.3" 2026-10-24; lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22 |
 | tantivy-py 0.27.0 (CPython binding) | tantivy 0.27.0, python 3.13.15 |
-| tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
-| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
+| tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0, rustc rustc 1.100.0 (0ef1bc386 2026-11-09); tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
+| tantivy 0.27.0 (native Rust, exhaustive collector with Count) | tantivy 0.27.0, rustc rustc 1.100.0 (0ef1bc386 2026-11-09); tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
 
 ## Not run
 
