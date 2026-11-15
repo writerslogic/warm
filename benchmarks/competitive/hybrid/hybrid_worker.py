@@ -13,7 +13,6 @@ import resource
 import sqlite3
 import struct
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -300,7 +299,7 @@ def serve(a):
             ns = []
             for i in range(timed):
                 t0 = clock()
-                hits = system.hybrid(queries[i]["text"], vectors[i], constant)
+                system.hybrid(queries[i]["text"], vectors[i], constant)
                 ns.append(clock() - t0)
             passes.append(ns)
         report["configs"][str(constant)] = {"rows": rows, "including_ns": including_ns, "embed_ns": embed_ns,
