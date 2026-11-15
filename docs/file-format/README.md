@@ -25,6 +25,7 @@ polynomial (the `crc32fast` / zlib CRC).
 | [ANCILLARY.md](ANCILLARY.md) | `audit.bin`, `audit.effects.bin`, keys, provenance files, standalone qgraph/IVF files, memory-API stamps |
 | [CRASH-CONSISTENCY.md](CRASH-CONSISTENCY.md) | what survives a crash, per file, and the test that shows it |
 | [ENCODERS.md](ENCODERS.md) | text encoder names, determinism contract, embedding spaces |
+| [EXPERIENCE.md](EXPERIENCE.md) | `experience.wexp`: the experience-core snapshot (feature `experience`; separate from the document store) |
 | [VERIFY.md](VERIFY.md) | `warm-format verify` / `upgrade`, finding codes, exit codes |
 
 Compatibility promises are in [../STABILITY.md](../STABILITY.md).
