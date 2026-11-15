@@ -900,6 +900,11 @@ impl DocumentStore {
         self.word_counts[slot]
     }
 
+    /// The positional record of the chunk in `slot`, when it has one.
+    pub(super) fn position_source(&self, slot: usize) -> Option<&Positions> {
+        self.position_sources.get(slot)?.as_deref()
+    }
+
     #[cfg(test)]
     pub(super) fn slot_positions(&self, slot: usize) -> &Positions {
         self.position_sources[slot]

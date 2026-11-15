@@ -22,6 +22,7 @@ mod census;
 mod dense;
 mod image;
 mod impact;
+mod lists;
 mod screen;
 pub use analysis::Analyzer;
 mod index;
@@ -47,6 +48,7 @@ pub(crate) use index::DocumentWithText;
 pub(crate) use index::{canonical_staging_path, opaque_counter_start, DocumentStore};
 pub(crate) use lexical::execute as execute_lexical;
 pub(crate) use lexical::plain_search as plain_lexical_search;
+pub(crate) use lexical::served as served_lexical;
 pub use lexical::{LexicalExecution, LexicalHit, LexicalOptions, LexicalQuery, LexicalResults};
 pub(crate) use listing::{
     capture_chunk, count, get_info, get_record, list_info, list_records, CapturedDocumentRead,
@@ -1589,6 +1591,13 @@ pub(crate) fn rank_lexical_overlaid(
     prepared: &PreparedSearch,
 ) -> LexicalResults {
     search::rank_overlaid(store, prepared)
+}
+
+/// Whether a store holding its documents is too large for the exhaustive per-slot ranking of
+/// [`rank_lexical`], so a plain top-k query runs through the pruned [`execute_lexical`] instead
+/// (the same hits, scores to the bit and tie order).
+pub(crate) fn prefers_pruned_lexical(store: &DocumentStore) -> bool {
+    store.slot_count > search::DENSE_SLOT_LIMIT
 }
 
 /// The hits of [`plain_lexical_search`]'s `prepared` ranked over a store holding its documents.

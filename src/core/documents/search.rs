@@ -165,7 +165,7 @@ enum SlotPositions {
     Sparse(FastMap<usize, u32>),
 }
 
-const DENSE_SLOT_LIMIT: usize = 1 << 19;
+pub(super) const DENSE_SLOT_LIMIT: usize = 1 << 19;
 /// Below this many slots the exhaustive hot-list ranking beats the windowed pruned ranker
 /// (measured on scifact, nfcorpus and the memory set, where exhaustive is 1.7 to 2.4 times
 /// faster; the pruned ranker wins from FiQA's 57k documents up). Above `DENSE_SLOT_LIMIT` the
@@ -3421,6 +3421,7 @@ mod tests {
         // version written does.
         let versions = [
             super::super::image::encode,
+            super::super::image::encode_v3,
             super::super::image::encode_v2,
             super::super::image::encode_v1,
         ];

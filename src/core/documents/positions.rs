@@ -252,7 +252,7 @@ impl Positions {
         Ok(())
     }
 
-    fn bytes(&self, index: usize) -> &[u8] {
+    pub(super) fn bytes(&self, index: usize) -> &[u8] {
         &self.data[self.offsets.get(index) as usize..self.offsets.get(index + 1) as usize]
     }
 

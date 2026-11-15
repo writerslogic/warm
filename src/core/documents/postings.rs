@@ -42,8 +42,9 @@ const NONE: u32 = u32::MAX;
 /// `(slot, frequency)`.
 pub(super) type Posting = (usize, u32);
 
-/// One restored list: its term and postings in slot order.
-pub(super) type RestoredList = (String, Vec<Posting>);
+/// One restored list: its term, its postings in slot order and, for positional postings, each
+/// posting's chunk-term ordinal plus one (empty for a list of non-positional postings).
+pub(super) type RestoredList = (String, Vec<Posting>, Vec<u32>);
 
 /// Decodes one varint at `*at`, advancing it, from checkpoint postings the open checked.
 #[inline(always)]
@@ -351,13 +352,16 @@ pub(super) fn pack_checkpoint(
     words: &dyn Fn(usize) -> u32,
     impacts: bool,
     out: &mut Vec<u8>,
+    mut info: Option<&mut Vec<BlockInfo>>,
 ) {
     let list_start = out.len();
+    let info_start = info.as_deref().map_or(0, Vec::len);
     let (mut list_frequency, mut list_words) = (0u32, u32::MAX);
     let mut block: Vec<Posting> = Vec::with_capacity(CHECKPOINT_BLOCK);
     let mut last = 0usize;
     let mut flush = |block: &mut Vec<Posting>, out: &mut Vec<u8>| {
         let first = block[0].0;
+        let block_offset = out.len() - list_start;
         put_varint(out, (first - last) as u64);
         let gap = block
             .windows(2)
@@ -379,6 +383,14 @@ pub(super) fn pack_checkpoint(
             put_varint(out, u64::from(least));
             list_frequency = list_frequency.max(frequency);
             list_words = list_words.min(least);
+            if let Some(info) = info.as_deref_mut() {
+                info.push(BlockInfo {
+                    last: block[block.len() - 1].0 as u32,
+                    offset: block_offset as u32,
+                    max_frequency: frequency,
+                    min_words: least,
+                });
+            }
         }
         let mut previous = first;
         pack(
@@ -407,8 +419,23 @@ pub(super) fn pack_checkpoint(
         let mut header = Vec::with_capacity(8);
         put_varint(&mut header, u64::from(list_frequency));
         put_varint(&mut header, u64::from(list_words));
+        if let Some(info) = info {
+            for entry in &mut info[info_start..] {
+                entry.offset += header.len() as u32;
+            }
+        }
         out.splice(list_start..list_start, header);
     }
+}
+
+/// What the checkpoint's skip table records of one posting block: its last slot, the offset of
+/// its header within the list's bytes, its largest frequency and its least word count.
+#[derive(Clone, Copy)]
+pub(super) struct BlockInfo {
+    pub(super) last: u32,
+    pub(super) offset: u32,
+    pub(super) max_frequency: u32,
+    pub(super) min_words: u32,
 }
 
 /// Appends `list`'s postings to `out` in the version 1 flat encoding, for tests of reading it.
@@ -1130,6 +1157,25 @@ impl PostingList {
             }
         }
     }
+    /// `f(slot, frequency, ordinal)` for every posting in slot order; `ordinal` is the chunk-term
+    /// ordinal plus one of a positional posting, zero otherwise.
+    pub(super) fn for_each_with_ordinal(&self, mut f: impl FnMut(usize, u32, u32)) {
+        let mut decoded = [(0, 0); BLOCK_LEN];
+        let mut ordinals = [0u32; BLOCK_LEN];
+        for block in &self.blocks {
+            self.decode_values(block, &mut decoded);
+            if block.ordinal_bits > 0 {
+                self.decode_ordinals(block, &mut ordinals);
+            } else {
+                ordinals = [0; BLOCK_LEN];
+            }
+            for (&(slot, frequency), &ordinal) in
+                decoded[..usize::from(block.count)].iter().zip(&ordinals)
+            {
+                f(slot, frequency, ordinal);
+            }
+        }
+    }
     pub(super) fn mark_slots(&self, matched: &mut [u64]) {
         if self.positive_count != self.count {
             self.for_each(|slot, frequency| {
@@ -1318,6 +1364,7 @@ impl PostingList {
 
     /// Rewrites the list as `postings`, with each block's length bounds taken from `words`
     /// as appends take them, so a rewrite keeps block-max pruning as tight as a fresh build.
+    #[cfg(test)]
     fn encode(&mut self, postings: &[Posting], words: impl Fn(usize) -> u32) {
         self.encode_with_ordinals(postings, &[], words);
     }
@@ -1932,7 +1979,7 @@ impl PostingLists {
         let mut lists = Vec::with_capacity(entries.len());
         dictionary.offsets.reserve_exact(entries.len() + 1);
         dictionary.offsets.push(0);
-        for (id, (term, postings)) in entries.into_iter().enumerate() {
+        for (id, (term, postings, ordinals)) in entries.into_iter().enumerate() {
             debug_assert!(!postings.is_empty(), "empty posting list");
             dictionary.bytes.extend_from_slice(term.as_bytes());
             dictionary
@@ -1942,7 +1989,9 @@ impl PostingLists {
                 .base_ids
                 .push(u32::try_from(id).expect("term count over u32"));
             let mut list = PostingList::default();
-            list.encode(&postings, |slot| words.get(slot).copied().unwrap_or(0));
+            list.encode_with_ordinals(&postings, &ordinals, |slot| {
+                words.get(slot).copied().unwrap_or(0)
+            });
             lists.push(list);
         }
         debug_assert!(
@@ -2290,8 +2339,8 @@ mod tests {
                 let mut plain = PostingList::default();
                 plain.append_run(&model.iter().map(|(&s, &(f, _))| (s, f)).collect::<Vec<_>>());
                 let (mut actual, mut expected) = (Vec::new(), Vec::new());
-                pack_checkpoint(list, &|_| 1, true, &mut actual);
-                pack_checkpoint(&plain, &|_| 1, true, &mut expected);
+                pack_checkpoint(list, &|_| 1, true, &mut actual, None);
+                pack_checkpoint(&plain, &|_| 1, true, &mut expected, None);
                 assert_eq!(actual, expected);
             };
             for i in 0..count {
@@ -2433,7 +2482,7 @@ mod tests {
             }
             let mut bytes = Vec::new();
             if blocked {
-                pack_checkpoint(list, &words, impacts, &mut bytes);
+                pack_checkpoint(list, &words, impacts, &mut bytes, None);
             } else {
                 pack_checkpoint_flat(list, &mut bytes);
             }
