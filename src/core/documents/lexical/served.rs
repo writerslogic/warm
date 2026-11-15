@@ -17,7 +17,7 @@ use std::collections::BinaryHeap;
 use super::wand::{sum_bound, Bound};
 use super::*;
 use crate::core::documents::image::ServingImage;
-use crate::core::documents::lists::{Cursor, ListRef, PositionIter, NO_DOC};
+use crate::core::documents::lists::{Cursor, ListRef, PositionIter, NO_DOC, RUN_BLOCKS};
 use crate::core::documents::search::LexicalSource;
 
 /// One clause with its cursors: a single word, or a phrase's words rarest first.
@@ -199,18 +199,40 @@ impl<'a> Rt<'a> {
     /// A bound of an optional clause's weight at every slot from `doc` through the slot it
     /// also returns: zero before the clause's next posting, else from the block that holds `doc`.
     fn optional_bound(&mut self, doc: u32) -> (f64, u32) {
-        let (Some(bound), false) = (self.bound, self.phrase) else {
+        if self.bound.is_none() || self.phrase {
             return (self.ceiling, NO_DOC);
+        }
+        let (weight, until, live) = self.frontier_bound(doc, false);
+        (weight, if live { until } else { NO_DOC })
+    }
+
+    /// A bound of a term clause's weight in the block its cursor is in, from the block's
+    /// frontier; a phrase's is that of [`Self::block_bound`].
+    fn tight_block_bound(&self) -> f64 {
+        let (Some(bound), false) = (self.bound, self.phrase) else {
+            return self.block_bound();
         };
+        self.cursors[0].block_weight(bound)
+    }
+
+    /// For a term clause with a bound: a bound of its weight at every slot from `doc` through the
+    /// slot it also returns, from the frontier of the run (`runs`) or of the block that holds
+    /// `doc`; zero up to the slot before its next posting. The cursor ends when it has nothing
+    /// at or after `doc`, which the second value `false` reports.
+    fn frontier_bound(&mut self, doc: u32, runs: bool) -> (f64, u32, bool) {
+        let bound = self.bound.expect("a bounded term");
         let cursor = &mut self.cursors[0];
         if !cursor.advance_block(doc) {
-            return (0.0, NO_DOC);
+            return (0.0, NO_DOC, false);
         }
         if cursor.block_first() > doc {
-            return (0.0, cursor.block_first() - 1);
+            return (0.0, cursor.block_first() - 1, true);
         }
-        let (frequency, words) = cursor.block_bounds();
-        (bound.at(frequency, words), cursor.block_last())
+        if runs && cursor.runs() >= 2 {
+            let run = cursor.run();
+            return (cursor.run_weight(run, bound), cursor.run_last(run), true);
+        }
+        (cursor.block_weight(bound), cursor.block_last(), true)
     }
 
     /// The last slot of the blocks the clause's cursors are in, the lowest of them.
@@ -338,14 +360,14 @@ fn exact_score(
 }
 
 /// Answers `query` from `image`, or `None` when this executor does not serve it (the caller
-/// then builds the live store). `ranked` holds the hits of a bare disjunction already ranked
-/// by the checkpoint's pruned ranker.
+/// then builds the live store). `ranker` ranks a bare disjunction with the checkpoint's windowed
+/// ranker, for the shapes the block-max executor does not take.
 pub(in crate::core::documents) fn execute(
     image: &ServingImage,
     query: &LexicalQuery,
     options: &LexicalOptions,
     bm25: Bm25,
-    ranked: Option<Vec<LexicalHit>>,
+    ranker: Option<&dyn Fn() -> Vec<LexicalHit>>,
 ) -> Result<Option<LexicalResults>> {
     if options.execution == LexicalExecution::Exhaustive
         || !image.has_skips()
@@ -412,11 +434,20 @@ pub(in crate::core::documents) fn execute(
         return Ok(Some(empty));
     }
     let all_terms = optional.iter().all(|rt| !rt.phrase);
-    if required.is_empty() && optional.len() == 1 && ranked.is_none() {
+    let k = options.k;
+    // One long bounded term is ranked by its runs' frontiers; more terms go to the windowed
+    // ranker, which measured an order of magnitude faster than document-at-a-time WAND here.
+    let pruned_union = required.is_empty()
+        && k > 0
+        && all_terms
+        && optional.len() == 1
+        && excluded.is_empty()
+        && optional[0].cursors[0].block_count() >= 2
+        && optional.iter().all(|rt| rt.bound.is_some());
+    if required.is_empty() && optional.len() == 1 && ranker.is_none() && !pruned_union {
         // A lone optional clause is what the documents must match.
         required = std::mem::take(&mut optional);
     }
-    let k = options.k;
     let mut run = Run {
         image,
         query,
@@ -425,6 +456,7 @@ pub(in crate::core::documents) fn execute(
         k,
         count: options.count,
         frequencies: vec![0; query.clauses.len()],
+        word_counts: image.word_counts(),
     };
     let solo =
         required.len() == 1 && !required[0].phrase && excluded.is_empty() && optional.is_empty();
@@ -439,14 +471,32 @@ pub(in crate::core::documents) fn execute(
         // Every posting counts, so the ranking may skip blocks.
         run.count = false;
     }
+    if k == 0
+        && required.len() >= 2
+        && excluded.is_empty()
+        && optional.is_empty()
+        && required.iter().all(|rt| !rt.phrase)
+    {
+        required.sort_by_key(Rt::rarest);
+        let count = intersect_count(&mut required);
+        return Ok(Some(LexicalResults {
+            hits: Vec::new(),
+            count: options.count.then_some(count),
+        }));
+    }
     let (hits, count) = if required.is_empty() {
-        if excluded.is_empty() && all_terms && (ranked.is_some() || k == 0) {
-            // Ranked by the checkpoint's pruned ranker, or only counted.
+        if pruned_union {
+            let count = options.count.then(|| optional[0].rarest());
+            let hits = run.single_top(optional.pop().expect("one term"))?;
+            return Ok(Some(LexicalResults { hits, count }));
+        }
+        if excluded.is_empty() && all_terms && (ranker.is_some() || k == 0) {
+            // Ranked by the checkpoint's windowed ranker, or only counted.
             let count = options
                 .count
                 .then(|| union_count(&mut optional, image.slot_count()));
             return Ok(Some(LexicalResults {
-                hits: ranked.unwrap_or_default(),
+                hits: ranker.map(|rank| rank()).unwrap_or_default(),
                 count,
             }));
         }
@@ -470,18 +520,18 @@ struct Run<'a, 'q> {
     k: usize,
     count: bool,
     frequencies: Vec<u32>,
+    /// Per slot its word count, `u16::MAX` where the slot table holds it.
+    word_counts: &'a [u16],
 }
 
 impl<'a> Run<'a, '_> {
     /// Scores the chunk in `slot` from the frequencies set in `self.frequencies`.
     fn score(&self, slot: u32) -> Result<f64> {
-        exact_score(
-            self.query,
-            &self.frequencies,
-            self.idfs,
-            self.image.slot_word_count(slot as usize),
-            self.shape,
-        )
+        let words = match self.word_counts[slot as usize] {
+            u16::MAX => self.image.slot_word_count(slot as usize),
+            short => u32::from(short),
+        };
+        exact_score(self.query, &self.frequencies, self.idfs, words, self.shape)
     }
 
     /// Documents every required clause matches, none excluded, scored with the optional ones.
@@ -548,11 +598,16 @@ impl<'a> Run<'a, '_> {
                 if let Some(floor) = top.floor() {
                     let mut sum: f64 = required.iter().map(Rt::block_bound).sum();
                     let mut valid = required.iter().map(Rt::block_last).min().unwrap_or(doc);
+                    let mut extra = 0.0;
                     for rt in &mut optional {
                         let (weight, until) = rt.optional_bound(doc);
-                        sum += weight;
+                        extra += weight;
                         valid = valid.min(until);
                     }
+                    if sum_bound(sum + extra, clauses) >= floor {
+                        sum = required.iter().map(Rt::tight_block_bound).sum();
+                    }
+                    sum += extra;
                     if sum_bound(sum, clauses) < floor {
                         if !self.count {
                             // No document in these blocks can enter the top k.
@@ -596,6 +651,45 @@ impl<'a> Run<'a, '_> {
         Ok((top.finish(), count))
     }
 
+    /// The top `k` of one long term's postings: its runs strongest first by their frontiers, and
+    /// within a run the blocks whose own bound reaches the k-th best score, so the floor rises
+    /// before the weak runs are reached and most of them are never read.
+    fn single_top(&mut self, mut rt: Rt<'a>) -> Result<Vec<LexicalHit>> {
+        let bound = rt.bound.expect("a bounded term");
+        let clause = rt.clause;
+        let cursor = &mut rt.cursors[0];
+        let blocks = cursor.block_count();
+        let mut runs: Vec<(f64, usize)> = (0..cursor.runs())
+            .map(|run| (cursor.run_weight(run, bound), run))
+            .collect();
+        runs.sort_unstable_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+        let mut top = Top::new(self.image, self.k);
+        for (run_bound, run) in runs {
+            if top
+                .floor()
+                .is_some_and(|floor| sum_bound(run_bound, 1) < floor)
+            {
+                break;
+            }
+            for block in run * RUN_BLOCKS..((run + 1) * RUN_BLOCKS).min(blocks) {
+                cursor.goto_block(block);
+                if top
+                    .floor()
+                    .is_some_and(|floor| sum_bound(cursor.block_weight(bound), 1) < floor)
+                {
+                    continue;
+                }
+                let (slots, frequencies) = cursor.block_postings();
+                for (&slot, &frequency) in slots.iter().zip(frequencies) {
+                    self.frequencies[clause] = frequency;
+                    let score = self.score(slot)?;
+                    top.offer(score, slot);
+                }
+            }
+        }
+        Ok(top.finish())
+    }
+
     /// Documents any of the optional clauses matches and none of the excluded ones does, in
     /// slot order, without pruning.
     fn union_scan(
@@ -632,6 +726,27 @@ impl<'a> Run<'a, '_> {
     }
 }
 
+/// Documents every term clause has, by leapfrogging from the rarest list; `terms` is sorted
+/// rarest first.
+fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
+    let (lead, rest) = terms.split_first_mut().expect("two or more lists");
+    let mut count = 0;
+    let mut doc = lead.cursors[0].doc();
+    'lead: while doc != NO_DOC {
+        for rt in rest.iter_mut() {
+            let at = rt.cursors[0].advance_to(doc);
+            if at != doc {
+                doc = lead.cursors[0].advance_to(at);
+                continue 'lead;
+            }
+        }
+        count += 1;
+        lead.cursors[0].next();
+        doc = lead.cursors[0].doc();
+    }
+    count
+}
+
 /// Documents with any of the term clauses' words: the largest list's postings, plus the
 /// documents of the others that it lacks, probed through its skip table; or, when the lists
 /// are of similar size, a bitmap over all slots.
@@ -643,7 +758,7 @@ fn union_count(optional: &mut [Rt<'_>], slots: usize) -> usize {
     let (big, rest) = optional.split_first_mut().expect("two or more lists");
     let rest_total: usize = rest.iter().map(|rt| rt.cursors[0].len()).sum();
     let big_len = big.cursors[0].len();
-    if big_len >= 4 * rest_total {
+    if big_len >= 16 * rest_total {
         let mut count = big_len;
         loop {
             let doc = rest
@@ -794,6 +909,99 @@ mod tests {
             assert!(served.count.unwrap() > 0, "{text}");
             assert!(assert_same(&image, &live, &query, &options), "{text}");
         }
+    }
+
+    /// Lists of several runs: the block-max executor's skips are taken, and the result is still
+    /// the exhaustive scorer's to the bit.
+    #[test]
+    fn long_lists_prune_without_changing_the_result() {
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(13)
+                .wrapping_mul(40503)
+        };
+        let docs: Vec<Vec<u8>> = (0..9000u32)
+            .map(|i| {
+                let len = 3 + hash(i) % 90;
+                (0..len)
+                    .map(|j| {
+                        let h = hash(i * 131 + j);
+                        ((h >> 8) % 12).min((h >> 20) % 12) as u8
+                    })
+                    .collect()
+            })
+            .collect();
+        let live = corpus(&docs, true);
+        let image = image_of(&live);
+        assert!(image.list(0, "w0").unwrap().blocks() > 2 * RUN_BLOCKS);
+        for text in [
+            "w0",
+            "w3",
+            "w0 w1",
+            "w1 w2 w3",
+            "w0 w5 w9",
+            "w2 w7 -w1",
+            "+w0 +w1",
+            "+w1 +w2 w3",
+            "+w0 +w2 +w4",
+            "\"w1 w2\"",
+            "+\"w0 w1\" w2",
+            "w4 \"w1 w0\"",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [1usize, 10, 100] {
+                for count in [false, true] {
+                    let options = LexicalOptions {
+                        k,
+                        count,
+                        ..Default::default()
+                    };
+                    assert!(assert_same(&image, &live, &query, &options), "{text}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn frontiers_dominate_every_posting_of_their_block_and_run() {
+        let docs: Vec<Vec<u8>> = (0..9000u32)
+            .map(|i| {
+                let len = 2 + (i.wrapping_mul(2654435761) >> 7) % 60;
+                (0..len)
+                    .map(|j| ((i / 3 + j * j + j / 2) % 5) as u8)
+                    .collect()
+            })
+            .collect();
+        let live = corpus(&docs, false);
+        let image = image_of(&live);
+        let mut multi_point = 0;
+        for term in ["w0", "w1", "w2", "w3", "w4"] {
+            let list = image.list(0, term).expect("term");
+            let mut cursor = Cursor::open(list);
+            assert!(list.blocks() >= 2 * RUN_BLOCKS, "{term}");
+            while !cursor.is_end() {
+                let (slot, frequency) = (cursor.doc(), cursor.frequency());
+                let words = image.slot_word_count(slot as usize);
+                let (max_frequency, min_words) = cursor.block_bounds();
+                let block: Vec<(u32, u32)> = cursor.block_points().collect();
+                multi_point += usize::from(block.len() > 1);
+                let run: Vec<(u32, u32)> = cursor.run_points(cursor.run()).collect();
+                assert!(!run.is_empty());
+                let covered = |points: &[(u32, u32)], fallback: (u32, u32)| {
+                    let points = if points.is_empty() {
+                        &[fallback][..]
+                    } else {
+                        points
+                    };
+                    points.iter().any(|&(f, w)| f >= frequency && w <= words)
+                };
+                assert!(covered(&block, (max_frequency, min_words)), "{term} {slot}");
+                assert!(covered(&run, (max_frequency, min_words)), "{term} {slot}");
+                assert!(block.windows(2).all(|p| p[0].0 > p[1].0 && p[0].1 > p[1].1));
+                cursor.next();
+            }
+        }
+        assert!(multi_point > 0, "some block has a real frontier");
     }
 
     proptest! {

@@ -252,6 +252,52 @@ fn pack_positions(
     Ok(outcome? && u32::try_from(out.len() - base).is_ok())
 }
 
+/// Appends a list's frontier directory and frontier bytes (see `lists`) after its skip arrays;
+/// false when the frontier bytes outgrow the `u32` offsets.
+fn pack_frontiers(infos: &[super::postings::BlockInfo], skips: &mut Vec<u8>) -> bool {
+    use super::lists::RUN_BLOCKS;
+    let runs = infos.len().div_ceil(RUN_BLOCKS);
+    let mut data: Vec<u8> = Vec::new();
+    let mut directory: Vec<u32> = Vec::with_capacity(infos.len() + runs + 1);
+    let put = |data: &mut Vec<u8>, points: &[(u32, u32)]| {
+        put_varint(data, points.len() as u64);
+        for &(frequency, words) in points {
+            put_varint(data, u64::from(frequency));
+            put_varint(data, u64::from(words));
+        }
+    };
+    for info in infos {
+        let Ok(at) = u32::try_from(data.len()) else {
+            return false;
+        };
+        directory.push(at);
+        put(&mut data, info.frontier.as_deref().unwrap_or(&[]));
+    }
+    for run in infos.chunks(RUN_BLOCKS) {
+        let Ok(at) = u32::try_from(data.len()) else {
+            return false;
+        };
+        directory.push(at);
+        let points: Vec<(u32, u32)> = run
+            .iter()
+            .flat_map(|info| match info.frontier.as_deref() {
+                Some(points) => points.to_vec(),
+                None => vec![(info.max_frequency, info.min_words)],
+            })
+            .collect();
+        put(&mut data, &super::postings::pareto(points));
+    }
+    let Ok(end) = u32::try_from(data.len()) else {
+        return false;
+    };
+    directory.push(end);
+    for at in directory {
+        skips.extend_from_slice(&at.to_le_bytes());
+    }
+    skips.extend_from_slice(&data);
+    true
+}
+
 /// [`encode`] with a skip table and word positions per list (version 4), impact-carrying block
 /// postings (version 3), plain block postings (version 2) or flat ones (version 1).
 fn encode_as(
@@ -313,7 +359,8 @@ fn encode_as(
             };
             put_varint(&mut dict, prefix as u64);
             put_bytes(&mut dict, &term[prefix..]);
-            let (start, positions_start) = (postings.len(), positions.len());
+            let (start, positions_start, skips_start) =
+                (postings.len(), positions.len(), skips.len());
             if blocked {
                 let slot_words = |slot: usize| DocumentStore::slot_word_count(store, slot);
                 infos.clear();
@@ -344,6 +391,9 @@ fn encode_as(
                                 skips.extend_from_slice(&value.to_le_bytes());
                             }
                         }
+                        if !pack_frontiers(&infos, &mut skips) {
+                            return Ok(None);
+                        }
                     }
                 }
             } else {
@@ -354,6 +404,7 @@ fn encode_as(
             put_varint(&mut dict, (postings.len() - start) as u64);
             if extended {
                 put_varint(&mut dict, (positions.len() - positions_start) as u64);
+                put_varint(&mut dict, (skips.len() - skips_start) as u64);
             }
             count += 1;
         }
@@ -536,6 +587,7 @@ struct Entry {
     count: u64,
     len: usize,
     pos_len: usize,
+    skip_len: usize,
 }
 
 /// One posting form's dictionary.
@@ -854,15 +906,19 @@ impl ServingImage {
     fn read_entry(&self, reader: &mut Reader<'_>) -> Result<Entry> {
         let count = reader.varint()?;
         let len = usize::try_from(reader.varint()?)?;
-        let pos_len = if self.extended {
-            usize::try_from(reader.varint()?)?
+        let (pos_len, skip_len) = if self.extended {
+            (
+                usize::try_from(reader.varint()?)?,
+                usize::try_from(reader.varint()?)?,
+            )
         } else {
-            0
+            (0, 0)
         };
         Ok(Entry {
             count,
             len,
             pos_len,
+            skip_len,
         })
     }
 
@@ -941,7 +997,12 @@ impl ServingImage {
             base.posting += entry.len;
             base.pos += entry.pos_len;
             if self.extended {
-                base.skip += super::lists::skip_len(entry.count);
+                let minimum = super::lists::skip_min_len(entry.count);
+                ensure!(
+                    entry.skip_len >= minimum && (minimum > 0 || entry.skip_len == 0),
+                    "checkpoint skip table length"
+                );
+                base.skip += entry.skip_len;
             }
             previous = term;
         }
@@ -1341,11 +1402,7 @@ impl ServingImage {
                 let count = u32::try_from(entry.count)?;
                 let len = entry.len;
                 let bytes = &postings[base.posting..base.posting + len];
-                let skip_len = if self.extended {
-                    super::lists::skip_len(entry.count)
-                } else {
-                    0
-                };
+                let skip_len = entry.skip_len;
                 let list = ListRef {
                     bytes,
                     count,
@@ -1560,11 +1617,7 @@ impl ServingImage {
             let entry = self
                 .read_entry(&mut reader)
                 .expect("dictionary checked at open");
-            let skip_len = if self.extended {
-                super::lists::skip_len(entry.count)
-            } else {
-                0
-            };
+            let skip_len = entry.skip_len;
             match current.as_slice().cmp(target) {
                 std::cmp::Ordering::Equal => {
                     return Some(ListRef {

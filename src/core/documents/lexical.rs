@@ -413,16 +413,13 @@ pub(crate) fn served(
     if !base.intact() || !store.documents.is_empty() {
         return None;
     }
-    // One term ranked by its blocks' frontiers stays with the live store's pruned ranker.
-    if options.k > 0 && query.clauses.len() == 1 && !query.clauses[0].phrase {
-        return None;
-    }
     let bm25 = match prepare(options) {
         Ok(bm25) => bm25,
         Err(error) => return Some(Err(error)),
     };
-    // A bare disjunction is ranked as `search_documents` ranks the same words.
-    let mut ranked = None;
+    // A bare disjunction the block-max executor does not take is ranked as `search_documents`
+    // ranks the same words.
+    let mut prepared_search = None;
     if query.disjunction_terms().is_some() {
         match plain_search(
             query,
@@ -435,13 +432,23 @@ pub(crate) fn served(
                 if !super::overlay_serves(store, std::slice::from_ref(&prepared)) {
                     return None;
                 }
-                ranked = Some(super::rank_lexical_overlaid(store, &prepared).hits);
+                prepared_search = Some(prepared);
             }
             Ok(None) => {}
             Err(error) => return Some(Err(error)),
         }
     }
-    served::execute(&base.image, query, options, bm25, ranked).transpose()
+    let ranker = prepared_search
+        .as_ref()
+        .map(|prepared| move || super::rank_lexical_overlaid(store, prepared).hits);
+    served::execute(
+        &base.image,
+        query,
+        options,
+        bm25,
+        ranker.as_ref().map(|f| f as &dyn Fn() -> Vec<LexicalHit>),
+    )
+    .transpose()
 }
 
 pub(crate) fn execute(

@@ -389,6 +389,7 @@ pub(super) fn pack_checkpoint(
                     offset: block_offset as u32,
                     max_frequency: frequency,
                     min_words: least,
+                    frontier: frontier(block.iter().map(|p| (p.1, words(p.0)))),
                 });
             }
         }
@@ -429,13 +430,15 @@ pub(super) fn pack_checkpoint(
 }
 
 /// What the checkpoint's skip table records of one posting block: its last slot, the offset of
-/// its header within the list's bytes, its largest frequency and its least word count.
-#[derive(Clone, Copy)]
+/// its header within the list's bytes, its largest frequency, its least word count and its
+/// frontier (`None` when the block's postings have one undominated point, the two maxima).
+#[derive(Clone)]
 pub(super) struct BlockInfo {
     pub(super) last: u32,
     pub(super) offset: u32,
     pub(super) max_frequency: u32,
     pub(super) min_words: u32,
+    pub(super) frontier: Option<Box<[(u32, u32)]>>,
 }
 
 /// Appends `list`'s postings to `out` in the version 1 flat encoding, for tests of reading it.
@@ -788,7 +791,7 @@ const SUMMARY_MIN_BLOCKS: usize = 2 * SUPER_LEN;
 
 /// The points of `points` no other point dominates (a larger frequency at no greater
 /// length), by frequency descending; never empty for a nonempty input.
-fn pareto(mut points: Vec<(u32, u32)>) -> Box<[(u32, u32)]> {
+pub(super) fn pareto(mut points: Vec<(u32, u32)>) -> Box<[(u32, u32)]> {
     points.sort_unstable_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
     let mut kept: Vec<(u32, u32)> = Vec::new();
     for point in points {

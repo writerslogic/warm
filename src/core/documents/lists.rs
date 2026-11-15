@@ -7,29 +7,66 @@
 //! A list of `count` postings has `ceil(count / 128)` blocks. With two or more blocks its skip
 //! table holds five little-endian `u32` arrays of that length, one after the other: each
 //! block's last slot, the offset of its header in the list's bytes, the offset of its positions
-//! in the list's positions bytes, its largest frequency and its least word count. A one block
-//! list has no table (its block starts after the list header and its positions at zero).
+//! in the list's positions bytes, its largest frequency and its least word count. Then come
+//! the frontier directory, `blocks + runs + 1` `u32` byte offsets (runs are [`RUN_BLOCKS`]
+//! blocks each, the last one shorter), and the frontier bytes: per block, then per run, a
+//! varint point count and that many `(frequency, words)` varint pairs, frequency descending.
+//! A block with count zero has one undominated point, its two maxima. A one block list has no
+//! table (its block starts after the list header and its positions at zero).
 //!
 //! A block's positions are one width byte `w`, the byte length of each posting's positions
 //! packed at `w` bits, then those positions end to end: each posting's token positions as
 //! gaps (the first absolute) in unsigned LEB128, the bytes the chunk's own positional record
 //! holds for the term.
 
+use super::lexical::wand::Bound;
 use super::postings::{get_varint, unpack_values, CHECKPOINT_BLOCK};
 
 /// The slot of a cursor with no posting left.
 pub(super) const NO_DOC: u32 = u32::MAX;
 
-/// Bytes of skip table per block of a list of two or more blocks.
+/// Bytes of skip table per block of a list of two or more blocks, before the frontiers.
 const SKIP_ENTRY: usize = 20;
 
-/// Bytes of skip table a list of `count` postings has.
-pub(super) fn skip_len(count: u64) -> usize {
+/// Blocks per run, the unit of a list's coarser frontier.
+pub(super) const RUN_BLOCKS: usize = 32;
+
+/// The fewest bytes of skip table a list of `count` postings has: the arrays and the frontier
+/// directory, with no frontier bytes.
+pub(super) fn skip_min_len(count: u64) -> usize {
     let blocks = count.div_ceil(CHECKPOINT_BLOCK as u64) as usize;
     if blocks >= 2 {
-        blocks * SKIP_ENTRY
+        blocks * SKIP_ENTRY + 4 * (blocks + blocks.div_ceil(RUN_BLOCKS) + 1)
     } else {
         0
+    }
+}
+
+/// The points of one frontier, as written: `(frequency, words)` by frequency descending.
+pub(super) struct Points<'a> {
+    bytes: &'a [u8],
+    at: usize,
+    left: usize,
+}
+
+impl Points<'_> {
+    pub(super) fn is_empty(&self) -> bool {
+        self.left == 0
+    }
+}
+
+impl Iterator for Points<'_> {
+    type Item = (u32, u32);
+
+    #[inline]
+    fn next(&mut self) -> Option<(u32, u32)> {
+        if self.left == 0 {
+            return None;
+        }
+        self.left -= 1;
+        let frequency = get_varint(self.bytes, &mut self.at) as u32;
+        let words = get_varint(self.bytes, &mut self.at) as u32;
+        Some((frequency, words))
     }
 }
 
@@ -70,6 +107,7 @@ pub(super) struct Cursor<'a> {
     list_frequency: u32,
     list_words: u32,
     block: usize,
+    runs: usize,
     first: u32,
     last: u32,
     count: usize,
@@ -89,6 +127,10 @@ pub(super) struct Cursor<'a> {
     positions_ready: bool,
     positions_at: usize,
     starts: [u32; CHECKPOINT_BLOCK + 1],
+    /// The block whose [`Self::block_weight`] is cached, and that weight: a cursor is used with
+    /// one bound.
+    weight_block: std::cell::Cell<usize>,
+    weight: std::cell::Cell<f64>,
 }
 
 impl<'a> Cursor<'a> {
@@ -103,6 +145,7 @@ impl<'a> Cursor<'a> {
         let mut cursor = Self {
             list,
             blocks: list.blocks(),
+            runs: list.blocks().div_ceil(RUN_BLOCKS),
             list_frequency,
             list_words,
             block: 0,
@@ -124,6 +167,8 @@ impl<'a> Cursor<'a> {
             positions_ready: false,
             positions_at: 0,
             starts: [0; CHECKPOINT_BLOCK + 1],
+            weight_block: std::cell::Cell::new(usize::MAX),
+            weight: std::cell::Cell::new(0.0),
         };
         cursor.load(0, first_at, 0);
         cursor
@@ -256,6 +301,135 @@ impl<'a> Cursor<'a> {
         }
     }
 
+    /// The points of item `item`'s frontier (blocks first, then runs), empty for a malformed
+    /// table.
+    fn points(&self, item: usize) -> Points<'a> {
+        let skips = self.list.skips;
+        let directory = SKIP_ENTRY * self.blocks;
+        let data = directory + 4 * (self.blocks + self.runs + 1);
+        let empty = Points {
+            bytes: &[],
+            at: 0,
+            left: 0,
+        };
+        let offset = |index: usize| -> Option<usize> {
+            let at = directory + 4 * index;
+            let word = skips.get(at..at + 4)?;
+            Some(u32::from_le_bytes([word[0], word[1], word[2], word[3]]) as usize)
+        };
+        let (Some(start), Some(end)) = (offset(item), offset(item + 1)) else {
+            return empty;
+        };
+        let Some(bytes) = skips.get(data + start..data + end) else {
+            return empty;
+        };
+        let mut at = 0;
+        if bytes.is_empty() {
+            return empty;
+        }
+        let left = get_varint(bytes, &mut at) as usize;
+        Points { bytes, at, left }
+    }
+
+    /// The current block's frontier, empty when it has the one point of its two maxima (and
+    /// for a list of one block).
+    #[inline]
+    pub(super) fn block_points(&self) -> Points<'a> {
+        if self.blocks < 2 {
+            return Points {
+                bytes: &[],
+                at: 0,
+                left: 0,
+            };
+        }
+        self.points(self.block)
+    }
+
+    /// A bound of the weights in the current block from its frontier, never above the bound
+    /// of its two maxima.
+    pub(super) fn block_weight(&self, bound: Bound) -> f64 {
+        if self.weight_block.get() == self.block {
+            return self.weight.get();
+        }
+        let weight = self.block_weight_uncached(bound);
+        self.weight_block.set(self.block);
+        self.weight.set(weight);
+        weight
+    }
+
+    fn block_weight_uncached(&self, bound: Bound) -> f64 {
+        let (frequency, words) = self.block_bounds();
+        let loose = bound.at(frequency, words);
+        let mut points = self.block_points();
+        if points.is_empty() {
+            return loose;
+        }
+        let mut best = 0.0f64;
+        for (f, w) in &mut points {
+            best = best.max(bound.at(f, w));
+            if best >= loose {
+                break;
+            }
+        }
+        best.min(loose)
+    }
+
+    /// A bound of the weights in run `run` from its frontier.
+    pub(super) fn run_weight(&self, run: usize, bound: Bound) -> f64 {
+        self.run_points(run)
+            .fold(0.0f64, |best, (f, w)| best.max(bound.at(f, w)))
+    }
+
+    /// The blocks of the list.
+    pub(super) fn block_count(&self) -> usize {
+        self.blocks
+    }
+
+    /// Moves to block `block`, in either direction, without decoding it.
+    pub(super) fn goto_block(&mut self, block: usize) {
+        if block == 0 {
+            let (_, _, first_at) = self.list.header();
+            self.ended = false;
+            self.load(0, first_at, 0);
+        } else {
+            let (at, previous) = (self.skip(1, block) as usize, self.skip(0, block - 1));
+            self.ended = false;
+            self.load(block, at, previous);
+        }
+    }
+
+    /// The slots and frequencies of the current block.
+    pub(super) fn block_postings(&mut self) -> (&[u32], &[u32]) {
+        if !self.decoded {
+            self.decode();
+        }
+        if !self.frequencies_ready {
+            self.decode_frequencies();
+        }
+        (&self.slots[..self.count], &self.frequencies[..self.count])
+    }
+
+    /// The run holding the current block.
+    #[inline]
+    pub(super) fn run(&self) -> usize {
+        self.block / RUN_BLOCKS
+    }
+
+    /// The runs of the list.
+    pub(super) fn runs(&self) -> usize {
+        self.runs
+    }
+
+    /// Run `run`'s frontier (a list of at least two blocks).
+    pub(super) fn run_points(&self, run: usize) -> Points<'a> {
+        self.points(self.blocks + run)
+    }
+
+    /// The last slot of run `run`.
+    pub(super) fn run_last(&self, run: usize) -> u32 {
+        self.skip(0, ((run + 1) * RUN_BLOCKS).min(self.blocks) - 1)
+    }
+
     /// Moves to the first posting after the current one.
     pub(super) fn next(&mut self) {
         if self.ended {
@@ -339,15 +513,20 @@ impl<'a> Cursor<'a> {
         if !self.decoded {
             self.decode();
         }
-        // Leapfrogging mostly moves a few postings: scan a short run before searching.
-        let end = self.count;
+        // Count the postings below `target`, a block of sixteen at a time: sorted slots make the
+        // count the distance to the first posting at or after it, and the compare vectorizes.
         let mut at = self.index + 1;
-        let near = (at + 8).min(end);
-        while at < near && self.slots[at] < target {
-            at += 1;
-        }
-        if at == near && at < end && self.slots[at] < target {
-            at += self.slots[at..end].partition_point(|&s| s < target);
+        let end = self.count;
+        while at < end {
+            let chunk = (end - at).min(16);
+            let below: usize = self.slots[at..at + chunk]
+                .iter()
+                .map(|&slot| usize::from(slot < target))
+                .sum();
+            at += below;
+            if below < chunk {
+                break;
+            }
         }
         self.index = at;
         self.slots[at]

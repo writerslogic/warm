@@ -135,7 +135,14 @@ Version 4 adds, after the version 3 sections, two more:
     little-endian `u32` arrays one after the other, each as long as the list has blocks: the last
     slot of each block, the offset of the block's header in the list's bytes, the offset of the
     block's positions in the list's positions bytes, the block's largest frequency and the block's
-    least word count. A list of one block has no table;
+    least word count. Then the frontier directory, `blocks + runs + 1` `u32` byte offsets into the
+    frontier bytes that follow it (a run is 32 blocks, the last one shorter): the offset of each
+    block's frontier, of each run's, and the end. A frontier is a varint point count and that many
+    `(frequency, words)` varint pairs, by frequency descending: the points of the block's (run's)
+    postings that no other point dominates with a larger frequency at no greater word count. A
+    reader bounds the BM25 weight of every posting in the block (run) by the largest weight of any
+    point, which is tighter than the block's two maxima; a block whose count is zero has the single
+    point of its two maxima. A list of one block has no table;
 7. positions: for each list, in dictionary order, one region per block when the flags say
     positional: a width byte `w` (the bits needed for the longest posting's byte length), the
     byte length of each posting's positions packed at `w` bits (the packing of the frequencies),
@@ -144,8 +151,8 @@ Version 4 adds, after the version 3 sections, two more:
     chunk's positional record for the term (LEXICAL.md). There are no more of them than the
     posting's frequency.
 
-A dictionary entry gains a final varint, the byte length of its list's positions (zero without
-positions), and a block table entry is four `u64`s: the offsets of the block's first entry in the
+A dictionary entry gains two final varints, the byte length of its list's positions (zero without
+positions) and the byte length of its skip table (zero for a list of one block), and a block table entry is four `u64`s: the offsets of the block's first entry in the
 dictionary and of its first list in the postings, skip tables and positions. The `WHOLE` chunk
 flag (bit 3) marks a chunk whose positions are a whole article's (positional record version 2).
 Opening checks the dictionary, every offset it implies and the section totals, not the
