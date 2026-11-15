@@ -1,63 +1,38 @@
-docs/benchmarks/BIG-ANN-FILTER.md|11.6 GiB
 docs/benchmarks/BIG-ANN-FILTER.md|14.3846 GiB
-docs/benchmarks/BIG-ANN-FILTER.md|15 GiB
 docs/benchmarks/BIG-ANN-FILTER.md|24,187 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|45,282 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|53,972.75 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|60k QPS
 docs/benchmarks/BIG-ANN-FILTER.md|88.2k QPS
 docs/benchmarks/BIG-ANN-FILTER.md|9,245 QPS
-docs/benchmarks/BIG-ANN-FILTER.md|9.34 GiB
 docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9045
 docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9067
 docs/benchmarks/BIG-ANN-FILTER.md|recall@10 **.906415
-docs/benchmarks/BIG-ANN-STREAMING.md|11.2 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.55 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.69 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.70 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.85 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|4.87 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|4.93 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|4.98 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|5.28 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|5.57 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|518 MiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.02 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.04 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.41 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.47 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|6.53 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|6.56 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|7.26 GiB
-docs/benchmarks/BIG-ANN-STREAMING.md|7.47 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|7.51 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|7.57 GiB
 docs/benchmarks/BIG-ANN-STREAMING.md|recall 0.8768
 docs/benchmarks/BIG-ANN-STREAMING.md|recall@10 0.9942
 docs/benchmarks/LOCOMO-HEAD-TO-HEAD.md|1,155 x
 docs/benchmarks/LOCOMO-HEAD-TO-HEAD.md|1,540 x
-docs/benchmarks/NEIGHBOUR-BLOCKS.md|1.26x
-docs/benchmarks/NEIGHBOUR-BLOCKS.md|1.35x
-docs/benchmarks/README.md|1.26x
-docs/benchmarks/README.md|1.31x
-docs/benchmarks/README.md|1.47x
-docs/benchmarks/README.md|1.54x
-docs/benchmarks/README.md|1.56x
-docs/benchmarks/README.md|1.61x
-docs/benchmarks/README.md|1.62x
-docs/benchmarks/README.md|1.76x
-docs/benchmarks/README.md|10.11x
 docs/benchmarks/README.md|10.14x
 docs/benchmarks/README.md|10.34x
-docs/benchmarks/README.md|10.61x
 docs/benchmarks/README.md|10.77x
 docs/benchmarks/README.md|15.97x
 docs/benchmarks/README.md|16.07x
 docs/benchmarks/README.md|19.88x
-docs/benchmarks/README.md|2.28x
-docs/benchmarks/README.md|2.29x
 docs/benchmarks/README.md|2.56x
-docs/benchmarks/README.md|2.57x
 docs/benchmarks/README.md|20.56x
 docs/benchmarks/README.md|25.02x
 docs/benchmarks/README.md|25.11x
@@ -65,16 +40,11 @@ docs/benchmarks/README.md|28.52x
 docs/benchmarks/README.md|28.70x
 docs/benchmarks/README.md|3.15x
 docs/benchmarks/README.md|3.38x
-docs/benchmarks/README.md|3.57x
-docs/benchmarks/README.md|3.68x
-docs/benchmarks/README.md|3.80x
 docs/benchmarks/README.md|4.26x
 docs/benchmarks/README.md|4.66x
 docs/benchmarks/README.md|41.25x
 docs/benchmarks/README.md|47.84x
-docs/benchmarks/README.md|5.37x
 docs/benchmarks/README.md|5.38x
-docs/benchmarks/README.md|5.40x
 docs/benchmarks/README.md|5.56x
 docs/benchmarks/README.md|5.61x
 docs/benchmarks/README.md|6.31x
@@ -85,12 +55,7 @@ docs/benchmarks/README.md|7.38x
 docs/benchmarks/README.md|7.40x
 docs/benchmarks/README.md|7.68x
 docs/benchmarks/README.md|9.09x
-docs/benchmarks/VIBE.md|1.01x
-docs/benchmarks/VIBE.md|1.33x
-docs/benchmarks/VIBE.md|1.54x
-docs/benchmarks/VIBE.md|1.62x
 docs/benchmarks/VIBE.md|1.72x
-docs/benchmarks/VIBE.md|1.76x
 docs/benchmarks/VIBE.md|3,740 QPS
 docs/benchmarks/VIBE.md|4,002 QPS
 docs/benchmarks/VIBE.md|549 QPS

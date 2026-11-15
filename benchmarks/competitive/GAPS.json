@@ -114,8 +114,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9908973566509144,
   "advantage_ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -135,12 +135,12 @@
   "unit": "recall",
   "advantage_factor": 0.9777746688642652,
   "advantage_ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -240,8 +240,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9908973566509144,
   "advantage_ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -261,12 +261,12 @@
   "unit": "recall",
   "advantage_factor": 0.9777746688642652,
   "advantage_ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -633,8 +633,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9908973566509144,
   "advantage_ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -654,12 +654,12 @@
   "unit": "recall",
   "advantage_factor": 0.9777746688642652,
   "advantage_ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -780,8 +780,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9908973566509144,
   "advantage_ci": [
-   0.6868425334852687,
-   1.415209364705616
+   0.9515191655734414,
+   1.0309793728003347
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -801,12 +801,12 @@
   "unit": "recall",
   "advantage_factor": 0.9777746688642652,
   "advantage_ci": [
-   0.7952072682533653,
-   1.2009674952633824
+   0.9455875341001052,
+   1.007030910809663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-fiqa-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -903,8 +903,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9859267230723582,
   "advantage_ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -924,12 +924,12 @@
   "unit": "recall",
   "advantage_factor": 0.9775571002979145,
   "advantage_ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -966,8 +966,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9859267230723582,
   "advantage_ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -987,12 +987,12 @@
   "unit": "recall",
   "advantage_factor": 0.9775571002979145,
   "advantage_ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -1296,8 +1296,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9859267230723582,
   "advantage_ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -1317,12 +1317,12 @@
   "unit": "recall",
   "advantage_factor": 0.9775571002979145,
   "advantage_ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -1359,8 +1359,8 @@
   "unit": "nDCG",
   "advantage_factor": 0.9859267230723582,
   "advantage_ci": [
-   0.5863661209554932,
-   1.7115849053375807
+   0.909324149026844,
+   1.0423444244910849
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -1380,12 +1380,12 @@
   "unit": "recall",
   "advantage_factor": 0.9775571002979145,
   "advantage_ci": [
-   0.7781995661605206,
-   1.2384823848238482
+   0.9043198181129215,
+   1.0319394830846815
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-memory-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -1482,8 +1482,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0005917871856855,
   "advantage_ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -1503,12 +1503,12 @@
   "unit": "recall",
   "advantage_factor": 0.9993578588085782,
   "advantage_ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -1566,8 +1566,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0005917871856855,
   "advantage_ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -1587,12 +1587,12 @@
   "unit": "recall",
   "advantage_factor": 0.9993578588085782,
   "advantage_ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -1917,8 +1917,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0005917871856855,
   "advantage_ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -1938,12 +1938,12 @@
   "unit": "recall",
   "advantage_factor": 0.9993578588085782,
   "advantage_ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -2001,8 +2001,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0005917871856855,
   "advantage_ci": [
-   0.697305228868484,
-   1.4372579007721404
+   0.9859027870935253,
+   1.0140624554704663
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -2022,12 +2022,12 @@
   "unit": "recall",
   "advantage_factor": 0.9993578588085782,
   "advantage_ci": [
-   0.6635054962097233,
-   1.4991496541933793
+   0.9828168246075895,
+   1.0227036499186772
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-nfcorpus-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -2124,8 +2124,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0007426180830101,
   "advantage_ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -2145,12 +2145,12 @@
   "unit": "recall",
   "advantage_factor": 0.9938118811881188,
   "advantage_ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -2208,8 +2208,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0007426180830101,
   "advantage_ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json",
@@ -2229,12 +2229,12 @@
   "unit": "recall",
   "advantage_factor": 0.9938118811881188,
   "advantage_ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-aarch64-neoverse-n1-8c-31g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -2559,8 +2559,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0007426180830101,
   "advantage_ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -2580,12 +2580,12 @@
   "unit": "recall",
   "advantage_factor": 0.9938118811881188,
   "advantage_ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
@@ -2643,8 +2643,8 @@
   "unit": "nDCG",
   "advantage_factor": 1.0007426180830101,
   "advantage_ci": [
-   0.8969990949315977,
-   1.1158108977856072
+   0.9921039116761099,
+   1.0110871731742437
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
@@ -2664,12 +2664,12 @@
   "unit": "recall",
   "advantage_factor": 0.9938118811881188,
   "advantage_ci": [
-   0.9401930368838332,
-   1.0484512419607754
+   0.982773851590106,
+   1.003540606328834
   ],
   "level": 0.9975,
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
-  "hypothesis": "none: a rounding-level difference in analyzer details (stemmer, stop words), not a lever",
+  "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
  },
  {
