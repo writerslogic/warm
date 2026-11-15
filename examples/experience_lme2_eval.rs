@@ -226,9 +226,7 @@ fn effect_texts(m: &Memory, query: &str, k: usize, lat: &mut Vec<f64>) -> Vec<(S
         .with_experience(|s| s.search_effects(query, k).unwrap())
         .unwrap();
     lat.push(started.elapsed().as_secs_f64() * 1000.0);
-    hits.into_iter()
-        .map(|h| (h.id, h.view.render()))
-        .collect()
+    hits.into_iter().map(|h| (h.id, h.view.render())).collect()
 }
 
 /// The document store searched directly, bypassing the memory layer.

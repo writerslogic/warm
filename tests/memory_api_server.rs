@@ -383,8 +383,16 @@ fn observations_count_against_the_tenant_quota() {
     };
     // Each new episode adds an episode unit and shares the region, so units are 1 + 1 for the
     // first, then +1 per further episode (same structure): 2, 3, 4.
-    assert_eq!(units_after("3", 3), vec![200, 200, 429], "quota is reached exactly");
-    assert_eq!(units_after("4", 3), vec![200, 200, 200], "quota-1..quota admits");
+    assert_eq!(
+        units_after("3", 3),
+        vec![200, 200, 429],
+        "quota is reached exactly"
+    );
+    assert_eq!(
+        units_after("4", 3),
+        vec![200, 200, 200],
+        "quota-1..quota admits"
+    );
     assert_eq!(units_after("2", 2), vec![200, 429], "quota+1 refuses");
     let dir = tempfile::tempdir().unwrap();
     let server = start(dir.path(), &["--max-documents-per-tenant", "3"]);

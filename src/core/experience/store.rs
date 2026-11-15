@@ -470,11 +470,14 @@ impl ExperienceStore {
     }
 
     pub fn describe_episode(&mut self, episode: &str, goal: &str, outcome: &str) -> Result<()> {
-        self.run(vec![Op::Describe {
-            episode: episode.into(),
-            goal: goal.into(),
-            outcome: outcome.into(),
-        }], None)
+        self.run(
+            vec![Op::Describe {
+                episode: episode.into(),
+                goal: goal.into(),
+                outcome: outcome.into(),
+            }],
+            None,
+        )
         .map(|_| ())
         .map_err(|(_, e)| e)
     }
