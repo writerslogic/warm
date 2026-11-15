@@ -252,3 +252,16 @@ def test_capability_negotiation_preserves_service_errors():
             with pytest.raises(memory_module.MemoryError):
                 await client.memory.capabilities(2)
     asyncio.run(run())
+
+
+def test_observations_and_episode_forget_use_the_memory_wire_format():
+    requests = []
+    memory = MemoryClient(WarmClient(transport=transport(requests)))
+    step = {"episode": "e1", "step": 0, "tree": {"role": "button", "name": "Go"}}
+    out = memory.remember_observations([step])
+    assert out[0].id == "f1"
+    sent = body(requests[0])
+    assert sent == {"facts": [step]}
+    memory.forget(episode="e1", dry_run=True)
+    sent = body(requests[1])
+    assert sent["scope"] == {"kind": "episode", "episode": "e1"} and sent["dryRun"] is True

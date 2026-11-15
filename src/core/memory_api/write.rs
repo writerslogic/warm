@@ -505,6 +505,9 @@ impl Memory {
     /// deferred purge at once (`purged` is `false` unless this call ran it). Without `purge`
     /// the journal keeps the deleted frames until some later compaction.
     pub fn forget(&self, scope: &ForgetScope, options: &ForgetOptions) -> Result<ForgetReport> {
+        if let ForgetScope::Episode { episode } = scope {
+            return self.forget_episode(episode, options);
+        }
         let mut completed = BTreeSet::new();
         for _ in 0..WRITE_ATTEMPTS {
             let Some(before) = self.planning_revision()? else {
@@ -731,6 +734,7 @@ impl Memory {
 
     fn resolve_scope(&self, scope: &ForgetScope) -> Result<BTreeSet<String>> {
         match scope {
+            ForgetScope::Episode { .. } => Ok(BTreeSet::new()),
             ForgetScope::Ids { ids } => {
                 check!(
                     ids.iter().all(|id| valid_id(id)),

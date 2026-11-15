@@ -391,9 +391,9 @@ fn snapshot_round_trips_and_rejects_damage() {
     assert!(
         Experience::from_bytes(&bytes[..bytes.len() - 1], ExperienceConfig::default()).is_err()
     );
-    let mut v2 = bytes.clone();
-    v2[4] = 2;
-    assert!(Experience::from_bytes(&v2, ExperienceConfig::default()).is_err());
+    let mut future = bytes.clone();
+    future[4] = 3;
+    assert!(Experience::from_bytes(&future, ExperienceConfig::default()).is_err());
     assert!(Experience::from_bytes(b"WEXP", ExperienceConfig::default()).is_err());
 
     let dir = tempfile::tempdir().unwrap();

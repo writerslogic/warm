@@ -270,3 +270,80 @@ fn invalid_memory_config_stops_the_server_at_startup() {
         .unwrap();
     assert!(!status.success());
 }
+
+#[test]
+fn observations_over_http_are_routed_bounded_recalled_and_forgotten() {
+    let dir = tempfile::tempdir().unwrap();
+    let server = start(dir.path(), &[]);
+    let tree = json!({"role": "RootWebArea", "name": "Checkout", "children": [
+        {"role": "button", "name": "Place order"}, {"role": "button", "name": "Cancel"}]});
+    let (status, body) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e1", "step": 0, "url": "http://shop/c", "tree": tree}),
+    );
+    assert_eq!(status, 200, "{body}");
+    let (status, body) = server.post("recall", "t1", &json!({"query": "Place order button"}));
+    assert_eq!(status, 200, "{body}");
+    assert!(
+        ids(&body).iter().any(|i| i.starts_with("experience:r")),
+        "{body}"
+    );
+
+    // Nesting is refused before any tree is built: the JSON parser stops at 128 levels, which is
+    // 63 tree levels, so the experience depth limit of 128 is not reachable over HTTP.
+    let mut deep = json!({"role": "button", "name": "leaf"});
+    for _ in 0..600 {
+        deep = json!({"role": "group", "name": "g", "children": [deep]});
+    }
+    let (status, _) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e2", "step": 0, "tree": deep}),
+    );
+    assert!(status == 400 || status == 422, "{status}");
+    // Byte limits are checked on the raw value, before allocation.
+    let (status, _) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e3", "step": 0,
+                "tree": {"role": "button", "name": "x".repeat(16 * 1024 + 1)}}),
+    );
+    assert_eq!(status, 422);
+    let (status, _) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e4", "step": 0, "tree": {"role": "", "name": "x"}}),
+    );
+    assert_eq!(status, 422);
+    let (status, _) = server.post(
+        "remember",
+        "t1",
+        &json!({"facts": [
+            {"id": "f", "text": "a fact in the same batch"},
+            {"episode": "e5", "step": 0, "tree": {"role": "", "name": "x"}}]}),
+    );
+    assert_eq!(status, 422);
+    let (_, body) = server.post(
+        "recall",
+        "t1",
+        &json!({"query": "a fact in the same batch"}),
+    );
+    assert!(
+        ids(&body).is_empty(),
+        "a refused batch stores nothing: {body}"
+    );
+
+    let (status, body) = server.post(
+        "forget",
+        "t1",
+        &json!({"scope": {"kind": "episode", "episode": "e1"}}),
+    );
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["forgotten"][0], "experience:episode:e1");
+    let (_, body) = server.post("recall", "t1", &json!({"query": "Place order button"}));
+    assert!(
+        !ids(&body).iter().any(|i| i.starts_with("experience:")),
+        "{body}"
+    );
+}

@@ -10,6 +10,9 @@ use std::sync::Arc;
 use axum::extract::{Request, State};
 use axum::http::StatusCode;
 use serde_json::{json, Value};
+use writerslogic_warm::core::experience::{
+    check_observation_value, is_observation_shape, ExperienceConfig,
+};
 use writerslogic_warm::core::memory_api::{DocumentQuotaExceeded, MemoryError};
 
 use crate::auth::Scope;
@@ -41,6 +44,12 @@ fn validate_memory_request(op: &str, request: &Value, state: &AppState) -> Resul
         let Value::Object(map) = fact else {
             return Err(ApiError::bad("a fact must be a JSON object"));
         };
+        // An observation is bounded by the experience core's limits (depth, nodes, bytes)
+        // before any tree is built from it.
+        if is_observation_shape(fact) {
+            return check_observation_value(fact, &ExperienceConfig::default())
+                .map_err(|error| ApiError::bad(error.to_string()));
+        }
         if let Some(Value::String(id)) = map.get("id") {
             if id.len() > MAX_ID_BYTES {
                 return Err(ApiError::bad(format!("id exceeds {MAX_ID_BYTES} bytes")));

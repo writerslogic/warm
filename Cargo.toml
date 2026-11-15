@@ -189,8 +189,8 @@ failpoints = []
 # Global allocator of the public-bench binary only; never linked into the library.
 mimalloc = ["dep:mimalloc"]
 conversation-memory = ["sha2"]
-# Experience core: hash-consed region store, action effect table and episode store for
-# tree-structured agent observations. Search over regions reuses the document lexical index.
+# Accepted and ignored: the experience core (hash-consed region store, action effect table and
+# episode store for tree-structured agent observations) is part of the engine and always built.
 experience = []
 node-api = ["napi", "napi-derive", "tokio", "tokio/rt", "napi-build", "dep:ts-rs"]
 # Python bindings (pyo3 + maturin). Exposes the quantized-phase substrate. Build
@@ -230,7 +230,6 @@ mcp = ["dep:parking_lot", "dep:rmcp", "dep:tokio-util", "tokio", "tokio/rt-multi
 
 [[example]]
 name = "experience_ingest_bench"
-required-features = ["experience"]
 
 [[bin]]
 name = "warm-embed"

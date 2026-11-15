@@ -202,7 +202,19 @@ impl WarmCore {
             .rebuild_canonical(&self.storage_path.join("documents.text"))
     }
 
+    /// Compacts the documents, then writes the experience checkpoint in the same step.
     pub(super) fn compact_impl(
+        &self,
+        after_snapshot: impl FnOnce(),
+        before_publication: impl FnOnce(),
+        scrub: bool,
+        job: &JobState,
+    ) -> Result<()> {
+        self.compact_documents(after_snapshot, before_publication, scrub, job)?;
+        self.experience_checkpoint()
+    }
+
+    fn compact_documents(
         &self,
         after_snapshot: impl FnOnce(),
         before_publication: impl FnOnce(),

@@ -18,6 +18,7 @@ mod document_api;
 mod document_batch;
 #[cfg(feature = "local-embed")]
 mod embed_api;
+mod experience_api;
 mod governance;
 mod history;
 mod image;
@@ -174,6 +175,9 @@ pub struct WarmCore {
     /// Serializes scrubbing compactions, so a purge whose ticket another one already cleared
     /// does not compact again.
     scrub_gate: crate::core::sync::Mutex<()>,
+    /// The experience store of tree-structured observations; absent until the store holds
+    /// one, so a store that never receives an observation has no experience files.
+    experience: RwLock<Option<super::experience::store::ExperienceStore>>,
     _store_lock: StoreLock,
 }
 
@@ -387,6 +391,7 @@ impl WarmCore {
             phase_graph: crate::core::sync::Mutex::new(None),
             purge,
             scrub_gate: crate::core::sync::Mutex::new(()),
+            experience: RwLock::new(None),
             _store_lock: store_lock,
         };
 
@@ -417,6 +422,7 @@ impl WarmCore {
         }
         // Only a completely opened engine may write an image when it closes.
         core.flush_audit()?;
+        core.open_experience()?;
         core.mark_opened();
         // A purge that died between its delete commit and the end of its compaction left the
         // deleted text in the journal; finish it before the store is handed out.

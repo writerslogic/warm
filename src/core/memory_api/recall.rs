@@ -98,7 +98,7 @@ pub(super) struct ExplainTerms {
     words: Vec<(String, String)>,
 }
 
-fn query_terms(analyzer: Analyzer, query: &str) -> ExplainTerms {
+pub(super) fn query_terms(analyzer: Analyzer, query: &str) -> ExplainTerms {
     let text = analyzer.prepare(query);
     let mut lower = String::new();
     let words = analyzer
@@ -114,7 +114,7 @@ fn query_terms(analyzer: Analyzer, query: &str) -> ExplainTerms {
     ExplainTerms { analyzer, words }
 }
 
-fn matched_terms(query: &ExplainTerms, text: &str) -> Vec<String> {
+pub(super) fn matched_terms(query: &ExplainTerms, text: &str) -> Vec<String> {
     let stems = terms_with(query.analyzer, text, true);
     let raw = terms_with(query.analyzer, text, false);
     let mut matched: Vec<String> = Vec::new();
@@ -138,6 +138,11 @@ impl Memory {
     }
 
     fn recall_once(&self, query: &str, options: &RecallOptions) -> Result<Vec<Recalled>> {
+        let documents = self.recall_documents(query, options)?;
+        self.merge_regions(query, options, documents)
+    }
+
+    fn recall_documents(&self, query: &str, options: &RecallOptions) -> Result<Vec<Recalled>> {
         let k = options.k.unwrap_or(self.config.default_k);
         self.core
             .validate_document_search(query, &options.search_options(k))
@@ -178,6 +183,12 @@ impl Memory {
     }
 
     fn explain_once(&self, query: &str, id: &str, options: &RecallOptions) -> Result<Explanation> {
+        if let Some(region) = super::experience::region_id(id) {
+            return self.explain_region(query, region, options);
+        }
+        if let Some(effect) = super::experience::effect_id(id) {
+            return self.explain_effect(query, effect, options);
+        }
         self.core
             .validate_document_search(
                 query,
@@ -239,6 +250,7 @@ impl Memory {
                 s.valid_from.is_none_or(|from| from <= now) && s.valid_to.is_none_or(|to| now < to)
             }),
             chain: self.chain(&index, id)?,
+            provenance: None,
         })
     }
 
@@ -666,6 +678,7 @@ impl Memory {
                     && s.valid_to.is_none_or(|to| run.now < to)
             }),
             chain: self.chain(index, id)?,
+            provenance: None,
         })
     }
 

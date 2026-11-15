@@ -1,9 +1,10 @@
 # Experience core
 
 The experience core is memory for observations that are trees and that repeat: the accessibility
-tree of a web page an agent looks at after every action, a UI hierarchy, a directory listing. It
-is off by default and sits behind the `experience` cargo feature. Search over documents is not
-changed by it.
+tree of a web page an agent looks at after every action, a UI hierarchy, a directory listing. It is
+part of the engine and always built: the memory API's `remember` sends an observation to it by
+shape, and `recall`, `explain` and `forget` cover it (see below). A store that never receives an
+observation has no experience files, and search over documents and facts is not changed by it.
 
 ## What it stores
 
@@ -87,18 +88,71 @@ per tree (200000), bytes per string (16384), episode id bytes (256), goal bytes 
 per episode (1048576); a tree over a limit is rejected before anything is stored.
 
 `Action::Call` takes a call such as `click('12')` and resolves the handle against the previous
-observation of the same episode in this process; after a reload that map is empty and an
-unresolved handle is labelled `bid 12`. Pass `Action::Label` to give the label yourself.
+observation of the same episode. The handle map of each episode's latest observation is stored in
+the snapshot, so a call after a reload resolves as it would have without one; a version 1 snapshot
+has no map, and its first call after opening labels an unresolved handle `bid 12`. Pass
+`Action::Label` to give the label yourself.
 
 `detect_observation` recognizes a JSON object with `episode`, `step` and `tree` fields, and
-`RegionHit::into_document_result` turns a hit into the `DocumentResult` the document store returns,
-so a caller can merge both rankings.
+`RegionHit::into_document_result` turns a hit into the `DocumentResult` the document store returns.
+
+## On the memory path
+
+No flag and no separate API are needed.
+
+- `remember`: a request (or an entry of `facts`) that is an object with an `episode` string, a
+  `step` number and a `tree` object is an observation: `{"episode", "step", "tree", "url"?,
+  "action"?, "goal"?, "outcome"?}`. `tree` nodes are `{"role", "name", "props"?, "handle"?,
+  "children"?}`. Everything else is a fact and is handled exactly as before. Facts in one call are
+  stored in one transaction first; observations follow in order, each durable when the call
+  returns, and a failing observation leaves the ones before it stored. `Memory::remember_observations`
+  is the typed form. Depth, node count and string bytes are checked on the JSON value before a
+  tree is built from it (`ExperienceConfig`), and `warm-server` checks them before the core sees
+  the request. Over HTTP the JSON parser refuses nesting past 128 levels, and a tree level takes
+  two (an object and a `children` array), so a request can carry 63 tree levels; the depth limit
+  of 128 applies to the library and the bindings. The shape and limits of every entry in a batch are
+  checked before anything in it is stored; an out-of-order or conflicting step is still found only
+  when it is applied.
+- `recall`: the best regions and the best action-effect rows merge with the fact results into one
+  list. Regions, effect rows and facts are ranked by three lexical indexes (the effect index holds
+  each row as rendered text, `On page 'P': click X (x3) -> now shown: ...`); they have separate
+  corpus statistics, so their scores are not on one scale and are not compared. The merge uses
+  ranks only: a result at position `r` of its list contributes `1 / (60 + r)`, results are ordered
+  by that value (a fact before a region on a tie, a better rank before a worse one) and `score` is
+  the merged value. A recall without regions, or one that sets `subject`, `entities`, `filter`,
+  `knownAt` or historical mode (which regions do not have), returns the fact results unchanged,
+  with their own scores. Region results have the id `experience:r<N>`, the page text and
+  breadcrumb as `text`, and `metadata.provenance` listing up to eight `{episode, step, count}`.
+  Effect rows have the id `experience:x<template>:<action>` and the rendered row as `text`; their
+  provenance lists the first transitions that produced the row (found by scanning the stored
+  steps, so `explain` on an effect row is linear in the stored steps).
+  Region ids are stable while the store stays open and across a snapshot reload; a purge followed
+  by new observations can reuse a freed id.
+- `explain`: for an id `experience:r<N>` or `experience:x<template>:<action>`, rank among the best 100 regions, lexical score, matched
+  terms and `provenance`.
+- `forget` with `{"kind": "episode", "episode": "<id>"}` removes the episode and everything only it
+  held. It is always a scrubbing purge: the purge is journaled, the snapshot is rewritten without
+  the episode, and the old snapshot and journal are overwritten with zeros before the call
+  returns (`dryRun` lists what would go; `purge` and `synchronous` do not apply). A region that
+  other episodes also show is kept, but what the episode contributed to it (its value variants and
+  the page title, breadcrumb and text taken from its first occurrence) is re-derived from the
+  episodes that remain, so no text of the forgotten episode stays in the snapshot.
 
 ## Persistence
 
-`Experience::save` writes one checksummed snapshot atomically; see
-[the format](../file-format/EXPERIENCE.md). It is a snapshot, not a journal: a crash loses the
-steps ingested since the last save. The snapshot is not part of the document store's checkpoint.
+Experience state lives in the store directory (`experience.wexp`, `experience.wexj`), created on
+the first observation. Each accepted change (a step, an episode description, a purge) is one
+journal record, synced before its call returns; a checkpoint writes the snapshot and empties the
+journal. Checkpoints run with every document checkpoint (`compact`, background compaction),
+with `flush`, when the journal passes 64 MiB, and after a purge. In an encrypted store both files
+are sealed with the store's key. Opening a store replays the journal over the snapshot, drops a
+record the crash cut short, and finishes an interrupted purge. See
+[the format](../file-format/EXPERIENCE.md). The standalone `Experience::save` and `open` still
+write and read a snapshot with no journal.
+
+Not measured or not done: the whole snapshot is rewritten at each checkpoint, so its cost grows
+with the store; only a kill of the process is tested, not power loss; scrubbing overwrites files in
+place and cannot reach copies that a copy-on-write or wear-levelled disk keeps.
 
 ## Not built
 

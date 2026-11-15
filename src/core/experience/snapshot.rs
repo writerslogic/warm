@@ -20,7 +20,10 @@ use crate::core::documents::MemoryDocumentStore;
 
 pub const SNAPSHOT_FILE: &str = "experience.wexp";
 const MAGIC: &[u8; 4] = b"WEXP";
-const VERSION: u8 = 1;
+/// Version 2 adds the journal sequence the snapshot covers and each episode's latest handle
+/// map. Version 1 files open with sequence 0 and empty handle maps.
+const VERSION: u8 = 2;
+const OLDEST_VERSION: u8 = 1;
 const HEADER: usize = 4 + 1 + 3 + 8 + 4;
 const MAX_SNAPSHOT_BYTES: u64 = 1 << 30;
 
@@ -52,6 +55,9 @@ struct SnapEpisode {
     goal: String,
     outcome: String,
     steps: Vec<SnapStep>,
+    /// Handle to element label of the latest observation, sorted by handle.
+    #[serde(default)]
+    handles: Vec<(String, String)>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -62,6 +68,9 @@ pub(super) struct Snap {
     frames: Vec<Option<Vec<u32>>>,
     regions: Vec<Option<SnapRegion>>,
     episodes: Vec<Option<SnapEpisode>>,
+    /// The last journal sequence number folded into this snapshot.
+    #[serde(default)]
+    seq: u64,
 }
 
 fn bad(msg: &str) -> ExperienceError {
@@ -72,6 +81,11 @@ impl Experience {
     /// The versioned, checksummed snapshot: a 20-byte header (magic, version, payload length,
     /// CRC32 of the payload) and a CBOR payload.
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        self.to_bytes_at(0)
+    }
+
+    /// [`Self::to_bytes`] recording that the journal is folded in through `seq`.
+    pub fn to_bytes_at(&self, seq: u64) -> Result<Vec<u8>> {
         let snap = Snap {
             symbols: self
                 .terms
@@ -118,6 +132,15 @@ impl Experience {
                         key: e.key.clone(),
                         goal: e.goal.clone(),
                         outcome: e.outcome.clone(),
+                        handles: {
+                            let mut h: Vec<(String, String)> = e
+                                .handles
+                                .iter()
+                                .map(|(k, v)| (k.clone(), v.clone()))
+                                .collect();
+                            h.sort();
+                            h
+                        },
                         steps: e
                             .steps
                             .iter()
@@ -133,6 +156,7 @@ impl Experience {
                     })
                 })
                 .collect(),
+            seq,
         };
         let mut payload = Vec::new();
         ciborium::into_writer(&snap, &mut payload).map_err(|e| bad(&e.to_string()))?;
@@ -171,10 +195,15 @@ impl Experience {
     }
 
     pub fn from_bytes(bytes: &[u8], cfg: ExperienceConfig) -> Result<Self> {
+        Self::from_bytes_at(bytes, cfg).map(|(x, _)| x)
+    }
+
+    /// [`Self::from_bytes`] with the journal sequence the snapshot covers (0 for version 1).
+    pub fn from_bytes_at(bytes: &[u8], cfg: ExperienceConfig) -> Result<(Self, u64)> {
         if bytes.len() < HEADER || &bytes[..4] != MAGIC {
             return Err(bad("not an experience snapshot"));
         }
-        if bytes[4] != VERSION {
+        if !(OLDEST_VERSION..=VERSION).contains(&bytes[4]) {
             return Err(bad("unsupported snapshot version"));
         }
         let len = u64::from_le_bytes(bytes[8..16].try_into().expect("8 bytes"));
@@ -187,7 +216,8 @@ impl Experience {
             return Err(bad("checksum mismatch"));
         }
         let snap: Snap = ciborium::from_reader(payload).map_err(|e| bad(&e.to_string()))?;
-        Self::rebuild(snap, cfg)
+        let seq = if bytes[4] >= 2 { snap.seq } else { 0 };
+        Self::rebuild(snap, cfg).map(|x| (x, seq))
     }
 
     pub(super) fn rebuild(snap: Snap, cfg: ExperienceConfig) -> Result<Self> {
@@ -342,7 +372,7 @@ impl Experience {
                 goal: e.goal.clone(),
                 outcome: e.outcome.clone(),
                 steps,
-                handles: HashMap::new(),
+                handles: e.handles.iter().cloned().collect(),
             });
             x.episode_map.insert(e.key.clone(), i as u32);
             x.dirty.insert(i as u32);
@@ -423,6 +453,7 @@ impl Experience {
             }
             d
         };
+        self.rebuild_effect_docs()?;
         Ok(())
     }
 }
