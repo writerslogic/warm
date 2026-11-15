@@ -22,44 +22,6 @@ use writerslogic_warm::core::documents::{
 };
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
 
-/// The same allocator the other benchmark binaries use: ingest allocates a term table per chunk, and the
-/// system allocator is about a sixth of the build profile.
-#[cfg(feature = "mimalloc")]
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
-/// mimalloc's defaults commit whole arenas and purge freed pages after 1 s, which holds the build's peak
-/// resident size at about twice the system allocator's. Committing arenas on demand and purging after 10 ms
-/// keeps the speed and the footprint (`MIMALLOC_ARENA_EAGER_COMMIT=0 MIMALLOC_PURGE_DELAY=10` does the same
-/// from the environment). The options are set in a constructor, before the first allocation, because
-/// mimalloc reads the arena option when it reserves its first arena. The option numbers are those of the
-/// mimalloc 2 header that `libmimalloc-sys` 0.1 vendors; the defaults are checked first so a different
-/// numbering leaves the allocator alone.
-#[cfg(all(feature = "mimalloc", any(target_os = "linux", target_os = "macos")))]
-mod allocator_tuning {
-    use std::os::raw::{c_int, c_long};
-    const ARENA_EAGER_COMMIT: c_int = 4;
-    const PURGE_DELAY: c_int = 15;
-    extern "C" {
-        fn mi_option_get(option: c_int) -> c_long;
-        fn mi_option_set(option: c_int, value: c_long);
-    }
-    extern "C" fn tune() {
-        // SAFETY: both functions are mimalloc's own option accessors, called once before `main`
-        // while the process is single-threaded.
-        unsafe {
-            if mi_option_get(ARENA_EAGER_COMMIT) == 2 && mi_option_get(PURGE_DELAY) == 1000 {
-                mi_option_set(ARENA_EAGER_COMMIT, 0);
-                mi_option_set(PURGE_DELAY, 10);
-            }
-        }
-    }
-    #[used]
-    #[cfg_attr(target_os = "linux", link_section = ".init_array")]
-    #[cfg_attr(target_os = "macos", link_section = "__DATA,__mod_init_func")]
-    static TUNE: extern "C" fn() = tune;
-}
-
 const USAGE: &str =
     "usage: competitive_text <build|serve|ops> --input FILE --store DIR --out FILE \
     [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--encode eager|deferred|lexical (eager)] [--analyzer NAME] \

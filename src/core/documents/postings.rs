@@ -71,6 +71,11 @@ fn get_varint(bytes: &[u8], at: &mut usize) -> u64 {
 const MERGE_BUCKETS: usize = 16;
 /// Batches below this many chunks are scanned as one range into one bucket.
 const PARALLEL_CHUNKS: usize = 64;
+/// Postings after which `index_chunks` closes a group of chunks and packs it.
+const GROUP_POSTINGS: usize = 1 << 18;
+/// The group grows with the slots already indexed, so a large index is packed in few groups: the
+/// transient is small beside it and each group repeats the per-term work.
+const GROUP_POSTINGS_PER_SLOT: usize = 256;
 /// Smallest chunk range one thread scans.
 const MIN_RANGE: usize = 32;
 /// Run counts below this look their terms up on the calling thread.
@@ -2155,18 +2160,36 @@ fn merge_bucket<'a>(maps: Vec<RunMap<'a>>) -> Vec<TermRun<'a>> {
 /// Indexes `chunks`, given as `(slot, chunk)` in strictly ascending slot order with every
 /// slot absent from the lists, into the unstemmed (`postings[0]`) and stemmed (`postings[1]`)
 /// lists. See the module head for the phases.
-pub(super) fn index_chunks<'a>(
+pub(super) fn index_chunks(
     postings: &mut [PostingLists; 2],
-    chunks: &[(usize, &'a StoredChunk)],
+    chunks: &[(usize, &StoredChunk)],
     word_counts: &[u32],
 ) {
     debug_assert!(
         chunks.windows(2).all(|pair| pair[0].0 < pair[1].0),
         "chunks out of slot order"
     );
-    if chunks.is_empty() {
-        return;
+    // Runs hold 16 bytes per posting until they are packed into the lists, so a large batch is
+    // indexed in slot-ordered groups: the peak is the lists plus one group, not the whole batch.
+    let mut rest = chunks;
+    while !rest.is_empty() {
+        let mut postings_in_group = 0usize;
+        let group_cap = GROUP_POSTINGS.max(rest[0].0.saturating_mul(GROUP_POSTINGS_PER_SLOT));
+        let mut end = 0;
+        while end < rest.len() && (end == 0 || postings_in_group < group_cap) {
+            postings_in_group += rest[end].1.terms.keys().len();
+            end += 1;
+        }
+        let (group, tail) = rest.split_at(end);
+        index_group(postings, group, word_counts);
+        rest = tail;
     }
+}
+fn index_group<'a>(
+    postings: &mut [PostingLists; 2],
+    chunks: &[(usize, &'a StoredChunk)],
+    word_counts: &[u32],
+) {
     let buckets = if chunks.len() < PARALLEL_CHUNKS {
         1
     } else {

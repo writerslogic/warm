@@ -137,6 +137,8 @@ impl WarmCore {
             })
             .collect();
         self.commit_serialized(&mutations, &payload)?;
+        // The fold's working set should not add to the batch's.
+        drop((mutations, payload));
         self.fold_if_over_budget();
         Ok(counts)
     }
