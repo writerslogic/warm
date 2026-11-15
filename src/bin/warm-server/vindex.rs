@@ -223,8 +223,11 @@ struct State {
     mutations: usize,
     /// Allow-masks of recent numeric id ranges over the snapshot's slots, built on first use.
     /// The snapshot's slots never change; a deleted slot is skipped by its `ids` entry.
-    masks: Mutex<Vec<((i64, i64), Arc<Vec<u64>>)>>,
+    masks: Mutex<Vec<MaskEntry>>,
 }
+
+/// An id range and its allow-mask over the snapshot's slots.
+type MaskEntry = ((i64, i64), Arc<Vec<u64>>);
 
 /// How many id-range masks one snapshot keeps.
 const MASK_CACHE: usize = 4;
