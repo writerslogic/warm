@@ -9,6 +9,12 @@
 //! options the caller gave, so its ranking and scores are document search's own. Otherwise it
 //! resolves temporal eligibility before candidate selection, then applies recency policies
 //! within the caller's candidate budget.
+//!
+//! Recall is hybrid whenever the store has vectors to compare: with an installed embedder
+//! (or a caller-supplied `embedding`) document search blends BM25 with exact cosine, so no
+//! separate fusion exists here. A store without an embedder and a query without an embedding
+//! ranks lexically, exactly as before. `semanticWeight: 0` asks for lexical ranking even when
+//! vectors exist; `fusion: "rrf"` selects reciprocal-rank fusion.
 
 use anyhow::Result;
 use std::collections::{BTreeSet, HashSet};
@@ -134,7 +140,15 @@ impl Memory {
     /// ranks them. `options` selects history, an `as_of` or `known_at` time, a subject or
     /// entities, and per-result explanations.
     pub fn recall(&self, query: &str, options: &RecallOptions) -> Result<Vec<Recalled>> {
+        self.check_recall_embedding(options)?;
         self.with_revision(|| self.recall_once(query, options))
+    }
+
+    fn check_recall_embedding(&self, options: &RecallOptions) -> Result<()> {
+        if let Some(embedding) = &options.embedding {
+            self.check_embedding(embedding, "query embedding")?;
+        }
+        Ok(())
     }
 
     fn recall_once(&self, query: &str, options: &RecallOptions) -> Result<Vec<Recalled>> {
@@ -179,6 +193,7 @@ impl Memory {
     /// the position in a current-only recall. A fact outside the candidates is still
     /// explained, with `retrieved: false`.
     pub fn explain(&self, query: &str, id: &str, options: &RecallOptions) -> Result<Explanation> {
+        self.check_recall_embedding(options)?;
         self.with_revision(|| self.explain_once(query, id, options))
     }
 

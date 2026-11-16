@@ -556,3 +556,268 @@ fn replacing_a_fact_leaves_the_index_equal_to_a_rebuild() {
     memory.ensure_fresh().unwrap();
     assert!(tracked(&memory));
 }
+
+mod hybrid {
+    use super::*;
+    use crate::core::config::WarmConfig;
+    use crate::core::schema::EmbeddingSpace;
+
+    fn space(dimensions: usize) -> EmbeddingSpace {
+        EmbeddingSpace {
+            model: "test".into(),
+            revision: "1".into(),
+            dimensions,
+            normalization: "l2".into(),
+            metric: "cosine".into(),
+        }
+    }
+
+    fn store(dir: &std::path::Path, dimensions: Option<usize>) -> Memory {
+        let config = WarmConfig {
+            embedding_space: dimensions.map(space),
+            ..WarmConfig::default()
+        };
+        let core = WarmCore::new(256, Some(dir.display().to_string()), Some(config)).unwrap();
+        Memory::new(Arc::new(core))
+    }
+
+    fn with_vector(id: &str, text: &str, embedding: [f64; 3]) -> RememberInput {
+        RememberInput {
+            embedding: Some(embedding.to_vec()),
+            ..fact(id, text)
+        }
+    }
+
+    fn ids(results: Vec<Recalled>) -> Vec<String> {
+        results.into_iter().map(|r| r.id).collect()
+    }
+
+    fn fixture(dir: &std::path::Path) -> Memory {
+        let memory = store(dir, Some(3));
+        memory
+            .remember_many(vec![
+                with_vector("car", "the car broke down on the highway", [1.0, 0.0, 0.0]),
+                with_vector("auto", "my automobile stopped working", [0.9, 0.1, 0.0]),
+                with_vector("order", "order zx81q7 shipped on monday", [0.0, 1.0, 0.0]),
+                with_vector(
+                    "garden",
+                    "tomatoes need watering twice a week",
+                    [0.0, 0.0, 1.0],
+                ),
+            ])
+            .unwrap();
+        memory
+    }
+
+    fn options(embedding: [f64; 3], k: u32) -> RecallOptions {
+        RecallOptions {
+            k: Some(k),
+            embedding: Some(embedding.to_vec()),
+            ..RecallOptions::default()
+        }
+    }
+
+    #[test]
+    fn dense_finds_a_paraphrase_lexical_misses() {
+        let dir = tempfile::tempdir().unwrap();
+        let memory = fixture(dir.path());
+        let query = "the vehicle failed";
+        let lexical = RecallOptions {
+            semantic_weight: Some(0.0),
+            ..options([1.0, 0.0, 0.0], 2)
+        };
+        let lexical = ids(memory.recall(query, &lexical).unwrap());
+        assert!(!lexical.contains(&"auto".to_string()), "{lexical:?}");
+        let hybrid = ids(memory.recall(query, &options([1.0, 0.0, 0.0], 2)).unwrap());
+        assert_eq!(hybrid.len(), 2);
+        assert!(hybrid.contains(&"auto".to_string()), "{hybrid:?}");
+        assert!(hybrid.contains(&"car".to_string()), "{hybrid:?}");
+    }
+
+    #[test]
+    fn lexical_finds_an_exact_term_dense_misses_and_fusion_keeps_both() {
+        let dir = tempfile::tempdir().unwrap();
+        let memory = fixture(dir.path());
+        // The query vector points at the gardening fact; the exact term is in the order fact.
+        let query_vector = [0.0, 0.2, 1.0];
+        let dense = RecallOptions {
+            lexical_weight: Some(0.0),
+            ..options(query_vector, 1)
+        };
+        assert_eq!(ids(memory.recall("zx81q7", &dense).unwrap()), ["garden"]);
+        let lexical = RecallOptions {
+            semantic_weight: Some(0.0),
+            ..options(query_vector, 1)
+        };
+        assert_eq!(ids(memory.recall("zx81q7", &lexical).unwrap()), ["order"]);
+        let fused = RecallOptions {
+            fusion: Some("rrf".into()),
+            ..options(query_vector, 2)
+        };
+        let fused = ids(memory.recall("zx81q7", &fused).unwrap());
+        assert_eq!(fused, ["order", "garden"]);
+    }
+
+    #[test]
+    fn caller_embeddings_are_validated_with_clear_errors() {
+        let dir = tempfile::tempdir().unwrap();
+        let memory = store(dir.path(), Some(3));
+        let invalid = |result: Result<_>| -> String {
+            let error = result.expect_err("rejected");
+            match error.downcast_ref::<MemoryError>() {
+                Some(MemoryError::Invalid(message)) => message.clone(),
+                other => panic!("not an invalid-request error: {other:?} {error:#}"),
+            }
+        };
+        for (embedding, expected) in [
+            (
+                vec![1.0, 0.0],
+                "2 values; the store's embedding space has 3 dimensions",
+            ),
+            (vec![1.0, 0.0, 0.0, 0.0], "4 values"),
+            (vec![1.0, f64::NAN, 0.0], "finite"),
+            (vec![f64::INFINITY, 0.0, 0.0], "finite"),
+            (vec![0.0, 0.0, 0.0], "all zeros"),
+        ] {
+            let write = RememberInput {
+                embedding: Some(embedding.clone()),
+                ..fact("x", "some text")
+            };
+            let message = invalid(memory.remember(write).map(drop));
+            assert!(message.contains(expected), "{message}");
+            let read = RecallOptions {
+                embedding: Some(embedding),
+                ..RecallOptions::default()
+            };
+            let message = invalid(memory.recall("some", &read).map(drop));
+            assert!(message.contains(expected), "{message}");
+        }
+        assert!(memory.get("x").unwrap().is_none());
+        // No embedding space at all.
+        let plain_dir = tempfile::tempdir().unwrap();
+        let plain = store(plain_dir.path(), None);
+        let message = invalid(
+            plain
+                .remember(with_vector("x", "some text", [1.0, 0.0, 0.0]))
+                .map(drop),
+        );
+        assert!(message.contains("embedding space"), "{message}");
+        let message = invalid(plain.recall("some", &options([1.0, 0.0, 0.0], 1)).map(drop));
+        assert!(message.contains("embedding space"), "{message}");
+    }
+
+    #[test]
+    fn a_remember_call_caps_its_embedding_values() {
+        const DIMENSIONS: usize = 1024;
+        let dir = tempfile::tempdir().unwrap();
+        let memory = store(dir.path(), Some(DIMENSIONS));
+        let batch = |count: usize| -> Vec<RememberInput> {
+            (0..count)
+                .map(|i| RememberInput {
+                    embedding: Some(vec![1.0; DIMENSIONS]),
+                    ..fact(&format!("f{i}"), &format!("fact number {i}"))
+                })
+                .collect()
+        };
+        let limit = super::super::write::MAX_BATCH_EMBEDDING_VALUES / DIMENSIONS;
+        let error = memory.remember_many(batch(limit + 1)).unwrap_err();
+        assert!(
+            format!("{error:#}").contains("embedding values"),
+            "{error:#}"
+        );
+        assert!(memory.get("f0").unwrap().is_none());
+        assert_eq!(
+            memory.remember_many(batch(limit - 1)).unwrap().len(),
+            limit - 1
+        );
+        assert_eq!(memory.remember_many(batch(limit)).unwrap().len(), limit);
+    }
+
+    #[test]
+    fn stores_without_vectors_recall_exactly_as_document_search() {
+        let texts = [
+            "alpha beta gamma",
+            "beta gamma delta delta",
+            "gamma epsilon zeta",
+            "the quick brown fox",
+            "brown fox jumps over beta",
+        ];
+        let open = |dimensions| {
+            let dir = tempfile::tempdir().unwrap();
+            let memory = store(dir.path(), dimensions);
+            for (i, text) in texts.iter().enumerate() {
+                memory.remember(fact(&format!("f{i}"), text)).unwrap();
+            }
+            (dir, memory)
+        };
+        let (_plain_dir, plain) = open(None);
+        // An embedding space with no embedder and no vectors must not change any ranking.
+        let (_space_dir, with_space) = open(Some(3));
+        for query in ["beta", "gamma delta", "brown fox", "unseen words only"] {
+            let expected = plain
+                .core()
+                .search_documents(
+                    query,
+                    &crate::core::documents::SearchOptions {
+                        k: Some(10),
+                        ..Default::default()
+                    },
+                )
+                .unwrap();
+            for memory in [&plain, &with_space] {
+                let got = memory.recall(query, &RecallOptions::default()).unwrap();
+                assert_eq!(got.len(), expected.len(), "{query}");
+                for (got, expected) in got.iter().zip(&expected) {
+                    assert_eq!(got.id, expected.document_id, "{query}");
+                    assert_eq!(got.score.to_bits(), expected.score.to_bits(), "{query}");
+                }
+            }
+        }
+    }
+
+    #[cfg(feature = "local-embed")]
+    #[test]
+    fn an_installed_embedder_makes_recall_hybrid_without_caller_vectors() {
+        use crate::core::embed::testing::write_tiny;
+        use crate::core::embed::{EmbedOptions, Embedder, Pooling, Quantization};
+        let models = tempfile::tempdir().unwrap();
+        let (pack, sha) = write_tiny(models.path(), Quantization::F32, Pooling::Mean);
+        let embedder =
+            Arc::new(Embedder::from_pack(&pack, Some(&sha), &EmbedOptions::default()).unwrap());
+        let dir = tempfile::tempdir().unwrap();
+        let config = WarmConfig {
+            embedding_space: Some(embedder.space()),
+            ..WarmConfig::default()
+        };
+        let core = Arc::new(
+            WarmCore::new(256, Some(dir.path().display().to_string()), Some(config)).unwrap(),
+        );
+        core.set_text_embedder(Some(embedder.clone())).unwrap();
+        let memory = Memory::new(core);
+        memory
+            .remember(fact("cat", "the cat sat on the mat"))
+            .unwrap();
+        memory
+            .remember(fact("dog", "the dog ran in the park"))
+            .unwrap();
+        let explained = RecallOptions {
+            explain: true,
+            ..RecallOptions::default()
+        };
+        let hits = memory.recall("cat mat", &explained).unwrap();
+        assert_eq!(hits[0].id, "cat");
+        let semantic = hits[0].explanation.as_ref().unwrap().semantic_score;
+        assert!(semantic.is_some_and(f64::is_finite), "{semantic:?}");
+        let lexical = RecallOptions {
+            semantic_weight: Some(0.0),
+            ..explained
+        };
+        let hits = memory.recall("cat mat", &lexical).unwrap();
+        assert!(hits[0]
+            .explanation
+            .as_ref()
+            .unwrap()
+            .semantic_score
+            .is_none());
+    }
+}
