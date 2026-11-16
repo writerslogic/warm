@@ -35,6 +35,7 @@ mod positions;
 mod postings;
 mod search;
 mod text;
+mod text_blocks;
 #[cfg(not(target_arch = "wasm32"))]
 mod vector_index;
 pub(crate) use dense::{build_dense_index, capture_dense_index, publish_dense_index};
@@ -1621,6 +1622,7 @@ pub(crate) fn overlay_serves(store: &DocumentStore, prepared: &[PreparedSearch])
         .all(|query| search::overlay_serves(query, store))
 }
 
+#[cfg(test)]
 /// [`capture_search`] over the checkpoint under `store` and the store's own documents, for
 /// queries [`overlay_serves`] accepts.
 #[cfg(test)]
@@ -1653,8 +1655,13 @@ pub(crate) fn encode_checkpoint(
     store: &DocumentStore,
     generation: u32,
     dimensions: usize,
+    compress_text: bool,
 ) -> Result<Option<Vec<u8>>> {
-    image::encode(store, generation, dimensions)
+    if compress_text {
+        image::encode_compressed(store, generation, dimensions)
+    } else {
+        image::encode(store, generation, dimensions)
+    }
 }
 /// Streams the checkpoint of `store` (with the checkpoint under it, if any) to `destination`;
 /// see `image::merge`.
