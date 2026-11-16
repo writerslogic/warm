@@ -367,10 +367,6 @@ pub(super) struct CheckpointPacker<'w> {
 }
 
 impl<'w> CheckpointPacker<'w> {
-    pub(super) fn new(impacts: bool, words: &'w dyn Fn(usize) -> u32) -> Self {
-        Self::with_info(impacts, words, false)
-    }
-
     /// A packer that also records each block's [`BlockInfo`] (see [`Self::take_infos`]).
     pub(super) fn with_info(impacts: bool, words: &'w dyn Fn(usize) -> u32, collect: bool) -> Self {
         Self {
