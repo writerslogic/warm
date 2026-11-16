@@ -36,6 +36,8 @@ pub(crate) fn state_with(
         "2".into(),
         "--max-concurrent-work".into(),
         limit.to_string(),
+        "--max-queue".into(),
+        "0".into(),
     ];
     args.extend(extra.iter().map(|s| s.to_string()));
     let cli = Cli::try_parse_from(args).unwrap();

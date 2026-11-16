@@ -37,10 +37,12 @@ thread_local! {
     static SNAPSHOT_SCRATCH: std::cell::RefCell<Option<SearchScratch>> = const { std::cell::RefCell::new(None) };
 }
 
+mod allowed;
 mod file;
 mod gated;
 #[cfg(feature = "experimental")]
 mod navigation;
+pub use allowed::Allow;
 pub use file::Residency;
 use file::Slab;
 
@@ -459,6 +461,9 @@ pub struct VGraph {
     layers: Vec<Vec<Vec<u32>>>,
     /// Original id of each stored vertex when the vertices were renumbered; empty otherwise.
     ids: Slab<u32>,
+    /// The stored vertex of each original id, built on the first filtered search; unused when
+    /// the vertices were not renumbered.
+    inverse: OnceLock<Vec<u32>>,
     /// 1-bit screen rows: `screen_words` u64 of sign bits of the rotated centred vector, then
     /// one u64 holding the f32 factor (low half) and the popcount (high half); empty without
     /// a screen.
@@ -1169,6 +1174,7 @@ impl VGraph {
             upper_ids,
             layers: g.layers.clone(),
             ids: ids.into(),
+            inverse: OnceLock::new(),
             screen: screen_rows.into(),
             screen_words,
             screen_rot,
@@ -2012,8 +2018,11 @@ impl VGraph {
             .unwrap_or_else(|_| self.searcher().search_two_hop(query, k, params, out))
     }
 
+    /// `search` on a per-thread cached scratch, so repeated queries on one thread do not
+    /// allocate the visited marks each time; indexes over 2^20 rows or with neighbour blocks
+    /// use a fresh searcher.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn search_cached(
+    pub fn search_cached(
         &self,
         query: &[f32],
         k: usize,
