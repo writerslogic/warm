@@ -51,6 +51,9 @@ const MAGIC_V1: &[u8; 8] = b"HMSCKP\x00\x01";
 pub(crate) fn known_magic(magic: &[u8]) -> bool {
     magic == MAGIC || magic == MAGIC_V2 || magic == MAGIC_V1
 }
+mod merge;
+pub(crate) use merge::merge;
+
 const HEADER_WORDS: usize = 40;
 pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;
 /// Dictionary entries per block: one binary search over blocks, then at most this many
@@ -406,6 +409,13 @@ pub(crate) enum Backing {
     Owned(Vec<u8>),
 }
 
+impl ServingImage {
+    /// Size of the checkpoint file in bytes.
+    pub(crate) fn byte_len(&self) -> usize {
+        self.bytes.len()
+    }
+}
+
 impl std::ops::Deref for Backing {
     type Target = [u8];
 
@@ -676,6 +686,25 @@ impl ServingImage {
                 Some(self.opened_text_stream().read(block, from, len, cache)?)
             }
         })
+    }
+
+    /// Whether [`merge::merge`] reads this checkpoint: block-encoded postings and inline chunk
+    /// text. Its document records are copied as bytes, and a record of compressed text points
+    /// into text sections the merge does not carry.
+    pub(crate) fn mergeable(&self) -> bool {
+        self.blocked
+    }
+
+    /// Drops the resident pages of a mapped checkpoint after a pass over it, so a merge that
+    /// reads the whole file does not hold the whole file in resident memory. A no-op for an
+    /// owned (decrypted) image; the pages fault back in if the image is read again.
+    pub(crate) fn release_pages(&self) {
+        #[cfg(unix)]
+        if let Backing::Mapped(map) = &self.bytes {
+            // SAFETY: the mapping is read-only and file-backed; discarding its resident pages
+            // changes no byte a reader observes, since they are read back from the file.
+            let _ = unsafe { map.unchecked_advise(memmap2::UncheckedAdvice::DontNeed) };
+        }
     }
 
     fn section(&self, section: Section) -> &[u8] {

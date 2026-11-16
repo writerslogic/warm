@@ -547,3 +547,80 @@ def test_reports_size(index):
     assert len(index) == N
     assert index.dim == DIM
     assert index.index_bytes > 0
+
+
+def _filter_fixture(n=3000, dim=32):
+    rng = np.random.default_rng(2026)
+    rows = rng.normal(size=(n, dim)).astype(np.float32)
+    index = hm.VectorIndex("angular", degree=16, build_ef=64, threads=1)
+    index.fit(rows)
+    index.set_query_arguments(ef=64, rerank=64)
+    return index, rows
+
+
+def _exact_allowed(rows, query, k, allowed):
+    unit = rows / np.linalg.norm(rows, axis=1, keepdims=True)
+    scores = unit @ (query / np.linalg.norm(query))
+    scores[~allowed] = -np.inf
+    return np.argsort(-scores, kind="stable")[: min(k, int(allowed.sum()))]
+
+
+@pytest.mark.parametrize("bounds", [(2900, 3000), (0, 2970), (1200, 1210), (5000, 6000)])
+def test_range_filter_returns_only_allowed_rows_and_the_exact_neighbours(bounds):
+    index, rows = _filter_fixture()
+    allowed = np.zeros(len(rows), dtype=bool)
+    allowed[bounds[0] : bounds[1]] = True
+    index.set_filter_range(*bounds)
+    hits = wanted = 0
+    for query in rows[::150]:
+        got = index.query(query, K)
+        assert allowed[got].all()
+        truth = _exact_allowed(rows, query, K, allowed)
+        assert len(got) == len(truth)
+        hits += len(set(got) & set(truth))
+        wanted += len(truth)
+    assert wanted == 0 or hits / wanted >= 0.9
+    batch = index.batch_query_array(rows[:20], K)
+    assert all(allowed[row[row >= 0]].all() for row in batch)
+
+
+def test_mask_filter_matches_range_filter_and_clear_restores_unfiltered_results():
+    index, rows = _filter_fixture()
+    unfiltered = index.batch_query_array(rows[:10], K)
+    mask = np.zeros(len(rows), dtype=bool)
+    mask[2000:] = True
+    index.set_filter_mask(mask)
+    by_mask = index.batch_query_array(rows[:10], K)
+    index.set_filter_range(2000, len(rows))
+    np.testing.assert_array_equal(by_mask, index.batch_query_array(rows[:10], K))
+    index.clear_filter()
+    np.testing.assert_array_equal(unfiltered, index.batch_query_array(rows[:10], K))
+    with pytest.raises(ValueError):
+        index.set_filter_mask(mask[:-1])
+    with pytest.raises(ValueError):
+        index.set_filter_range(5, 4)
+
+
+def test_build_profile_names_are_validated_and_all_profiles_build():
+    rows = np.random.default_rng(5).normal(size=(600, 16)).astype(np.float32)
+    for name in ("max-recall", "high", "balanced", "fast"):
+        index = hm.VectorIndex("angular", degree=8, build_ef=32, threads=1, build_profile=name)
+        index.fit(rows)
+        index.set_query_arguments(ef=32, rerank=32)
+        assert index.query(rows[0], 5)[0] == 0
+    with pytest.raises(ValueError):
+        hm.VectorIndex("angular", build_profile="bogus")
+
+
+@pytest.mark.parametrize("residency", ["heap", "mapped", "prefaulted"])
+def test_load_residency_gives_identical_results(tmp_path, residency):
+    index, rows = _filter_fixture(n=800)
+    path = tmp_path / "index.warm"
+    index.save(path)
+    expected = index.batch_query_array(rows[:20], K)
+    loaded = hm.VectorIndex("angular", degree=16, build_ef=64, threads=1)
+    loaded.load(path, residency=residency)
+    loaded.set_query_arguments(ef=64, rerank=64)
+    np.testing.assert_array_equal(loaded.batch_query_array(rows[:20], K), expected)
+    with pytest.raises(ValueError):
+        loaded.load(path, residency="bogus")

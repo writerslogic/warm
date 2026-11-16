@@ -75,6 +75,19 @@ pub struct DocumentCheckpointConfig {
     /// checkpoint holds chunk text compressed, so a hit decodes a block; blocks decoded once stay
     /// here, first come first kept, until the budget is used. `0` decodes on every hit.
     pub text_cache_bytes: usize,
+    /// Estimated resident bytes of the live lexical index at which ingest folds it into the
+    /// store's checkpoint and drops it from memory (see `docs/file-format/CHECKPOINT.md`,
+    /// "Streaming folds"). The estimate counts postings and per-chunk records, so the process
+    /// holds roughly this much more than its base footprint, not exactly this much. 0 never
+    /// folds: the index then grows with the corpus until the engine closes. Folding applies
+    /// to unencrypted lexical-only stores that take checkpoints.
+    pub index_memory_budget: usize,
+    /// A fold rewrites the whole checkpoint, so folding at a fixed budget does work quadratic
+    /// in the corpus. Ingest therefore folds once the estimate reaches the larger of
+    /// `index_memory_budget` and this fraction of the current checkpoint's size in bytes:
+    /// the checkpoint then at most grows by a constant factor per fold and the number of
+    /// rewrites is logarithmic in the corpus. 0 keeps the fixed budget.
+    pub index_fold_fraction: f64,
 }
 
 impl Default for DocumentCheckpointConfig {
@@ -84,6 +97,8 @@ impl Default for DocumentCheckpointConfig {
             min_journal_bytes: 256 << 10,
             compress_text: false,
             text_cache_bytes: 64 << 20,
+            index_memory_budget: 64 << 20,
+            index_fold_fraction: 20.0,
         }
     }
 }
