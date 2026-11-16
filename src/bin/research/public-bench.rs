@@ -41,7 +41,7 @@ use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{DocumentInput, EmbeddingSpace, EntangledHVec, SearchOptions, WarmCore};
 
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
 
 #[derive(Parser)]
 struct Cli {
