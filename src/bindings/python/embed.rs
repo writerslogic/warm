@@ -37,8 +37,8 @@ fn companion_dir(py: Python<'_>) -> Option<PathBuf> {
 
 /// A local sentence embedder: pure-Rust CPU inference, no network at inference.
 #[pyclass(name = "Embedder")]
-struct PyEmbedder {
-    inner: Arc<Embedder>,
+pub(super) struct PyEmbedder {
+    pub(super) inner: Arc<Embedder>,
 }
 
 #[pymethods]
