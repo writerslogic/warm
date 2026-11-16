@@ -3,6 +3,8 @@
 
 #![deny(clippy::all)]
 
+#[cfg(feature = "mimalloc")]
+pub mod allocator;
 mod bindings;
 pub mod compatibility;
 pub mod core;

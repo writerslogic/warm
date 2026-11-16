@@ -41,6 +41,8 @@ mod deferred_cache_tests;
 mod document_memory_census;
 #[cfg(test)]
 mod document_snapshot_tests;
+#[cfg(test)]
+mod fold_tests;
 
 #[cfg(all(test, feature = "local-models"))]
 mod document_stage_tests;
@@ -1975,6 +1977,8 @@ impl Drop for WarmCore {
     fn drop(&mut self) {
         if let Err(error) = self.checkpoint_if_due() {
             tracing::warn!(%error, "document checkpoint not written at close");
+        } else {
+            self.release_text_cache();
         }
     }
 }

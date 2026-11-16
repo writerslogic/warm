@@ -40,7 +40,10 @@ Repository = "https://github.com/writerslogic/warm"
 # The import name is `writerslogic_warm` (matches the #[pymodule] in src/bindings/python/mod.rs);
 # the PyPI distribution name is `warm-python` (the crate name is taken on PyPI).
 module-name = "writerslogic_warm"
-features = ["python", "local-embed-download"]
+features = ["python", "local-embed-download", "mimalloc"]
+# The wheel is its own shared object, so it owns its allocator: the cfg compiles the tuned mimalloc in
+# as the global allocator of this crate only, and only for the final cdylib (`cargo rustc`).
+rustc-args = ["--cfg", "warm_wheel_allocator"]
 exclude = [
     { path = "benchmarks/results/**/*", format = "sdist" },
     { path = "assets/**/*", format = "sdist" },
