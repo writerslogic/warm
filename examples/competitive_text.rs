@@ -353,6 +353,9 @@ fn main() -> Result<()> {
                 analyzer: args.analyzer,
                 ..Default::default()
             };
+            // `WARM_COMPRESS_TEXT=1` builds the checkpoint with compressed chunk text.
+            config.document_checkpoint.compress_text =
+                std::env::var_os("WARM_COMPRESS_TEXT").is_some();
             if let Some(budget) = args.index_budget {
                 config.document_checkpoint.index_memory_budget = budget;
             }
