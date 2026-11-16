@@ -58,6 +58,7 @@ pub(super) fn merge_structure(
         norms: norms_opt(norms),
         codes: codes.as_ref(),
         quantized: params.quantized_search,
+        bound: None,
     };
     // The entry and the upper layers depend on the rows alone; computed before the adjacency
     // exists, the gathered rows of the first layer do not add to its footprint.
@@ -247,6 +248,7 @@ mod tests {
             norms: norms_opt(&sub_norms),
             codes: None,
             quantized: false,
+            bound: None,
         };
         match live.get(medoid(&sub_rows, live.len(), metric) as usize) {
             Some(&s) => Ok(s),
@@ -275,6 +277,7 @@ mod tests {
                         norms: (metric == Metric::Euclidean).then_some(norms.as_slice()),
                         codes: None,
                         quantized: false,
+                        bound: None,
                     };
                     for count in [0, 1, 63, 64, 65, 127, 128, 129] {
                         let live: Vec<u32> = (0..count).rev().collect();
@@ -308,6 +311,7 @@ mod tests {
             norms: Some(&norms),
             codes: None,
             quantized: false,
+            bound: None,
         };
         let start = std::time::Instant::now();
         let entry = replacement_entry(&rows, &live, Metric::Euclidean).unwrap();
