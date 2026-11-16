@@ -1067,8 +1067,12 @@ impl Experience {
 
     /// Whether `step` of `episode` is already stored, so ingesting it again adds nothing.
     pub fn has_step(&self, episode: &str, step: u32) -> bool {
-        self.episode_slot(episode)
-            .is_some_and(|id| self.ep(id).steps.binary_search_by_key(&step, |s| s.step).is_ok())
+        self.episode_slot(episode).is_some_and(|id| {
+            self.ep(id)
+                .steps
+                .binary_search_by_key(&step, |s| s.step)
+                .is_ok()
+        })
     }
 
     /// An over-estimate of the snapshot payload, from counters kept as the store changes.

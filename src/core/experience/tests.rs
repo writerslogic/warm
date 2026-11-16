@@ -609,15 +609,18 @@ fn props_step(episode: &str, step: u32, props: &str) -> OwnedObservation {
 #[test]
 fn steps_differing_only_in_props_count_against_the_quota() {
     let dir = tempfile::tempdir().unwrap();
-    let mut s = store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None)
-        .unwrap();
+    let mut s =
+        store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None).unwrap();
     s.ingest_many(vec![props_step("e", 0, "p0")]).unwrap();
     let base = s.quota_units();
     let budget = base + 2;
     // limit - 1, limit, then limit + 1.
     for step in 1..=2u32 {
         let r = s
-            .ingest_many_within(vec![props_step("e", step, &format!("p{step}"))], Some(budget))
+            .ingest_many_within(
+                vec![props_step("e", step, &format!("p{step}"))],
+                Some(budget),
+            )
             .unwrap();
         assert_eq!(r, [Ingested::Applied]);
     }
@@ -663,7 +666,9 @@ fn a_write_that_would_pass_the_snapshot_limit_is_refused_before_it_is_journaled(
             assert_eq!(at, stored);
             assert!(matches!(err, ExperienceError::Limit { .. }), "{err}");
         } else {
-            assert!(s.ingest_many(vec![props_step("e", n, &format!("{big}{n}"))]).is_err());
+            assert!(s
+                .ingest_many(vec![props_step("e", n, &format!("{big}{n}"))])
+                .is_err());
         }
         // Checkpoint writes a snapshot the reader accepts, and the reopened store has every
         // acknowledged step.
@@ -677,8 +682,8 @@ fn a_write_that_would_pass_the_snapshot_limit_is_refused_before_it_is_journaled(
 #[test]
 fn an_append_after_a_zeroed_header_is_damage_not_a_scrubbed_journal() {
     let dir = tempfile::tempdir().unwrap();
-    let mut s = store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None)
-        .unwrap();
+    let mut s =
+        store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None).unwrap();
     s.ingest_many(vec![props_step("e", 0, "a")]).unwrap();
     s.checkpoint().unwrap();
     s.ingest_many(vec![props_step("e", 1, "b")]).unwrap();

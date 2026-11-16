@@ -191,7 +191,9 @@ impl Experience {
     pub fn open(dir: &Path, cfg: ExperienceConfig) -> Result<Self> {
         let path = dir.join(SNAPSHOT_FILE);
         match std::fs::metadata(&path) {
-            Ok(m) if m.len() > cfg.max_snapshot_bytes.min(MAX_SNAPSHOT_BYTES) => Err(bad("snapshot exceeds the size limit")),
+            Ok(m) if m.len() > cfg.max_snapshot_bytes.min(MAX_SNAPSHOT_BYTES) => {
+                Err(bad("snapshot exceeds the size limit"))
+            }
             Ok(_) => Self::from_bytes(
                 &std::fs::read(&path).map_err(|e| ExperienceError::Io(e.to_string()))?,
                 cfg,

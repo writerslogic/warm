@@ -584,7 +584,11 @@ impl ExperienceStore {
 /// by old records, all of them in the snapshot; a record beyond the snapshot after zeros is an
 /// acknowledged append that open must not drop.
 fn acknowledged_after_scrub(bytes: &[u8], snapshot_seq: u64, sealer: Option<&dyn Sealer>) -> bool {
-    let Some(first) = bytes[HEADER..].iter().position(|&b| b != 0).map(|i| i + HEADER) else {
+    let Some(first) = bytes[HEADER..]
+        .iter()
+        .position(|&b| b != 0)
+        .map(|i| i + HEADER)
+    else {
         return false;
     };
     // The little-endian length may itself start with zero bytes.
