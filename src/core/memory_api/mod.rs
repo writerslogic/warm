@@ -49,6 +49,7 @@ macro_rules! invalid {
 pub mod contract;
 #[cfg(feature = "conversation-memory")]
 mod conversation;
+mod experience;
 mod index;
 mod json;
 mod maintenance;
