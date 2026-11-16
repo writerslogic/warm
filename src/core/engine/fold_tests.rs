@@ -248,3 +248,116 @@ fn geometric_folds_answer_as_a_single_pass() -> Result<()> {
     }
     Ok(())
 }
+
+fn with_text(budget: usize, compress: bool) -> WarmConfig {
+    let mut config = config(budget);
+    config.document_checkpoint.compress_text = compress;
+    config
+}
+
+fn ingest_range(core: &WarmCore, from: usize, to: usize, batch: usize) -> Result<()> {
+    for start in (from..to).step_by(batch) {
+        core.memorize_documents_with(
+            (start..(start + batch).min(to))
+                .map(|i| document(i, true))
+                .collect(),
+            &options(),
+        )?;
+    }
+    Ok(())
+}
+
+/// The feature word of the live checkpoint (header word 3).
+fn features(directory: &std::path::Path) -> u64 {
+    u64::from_le_bytes(checkpoint(directory)[32..40].try_into().unwrap())
+}
+
+fn stored_texts(core: &WarmCore, documents: usize) -> Result<Vec<Option<String>>> {
+    let search: SearchOptions = serde_json::from_value(
+        json!({"k": 500, "candidateLimit": 500, "lexicalWeight": 1, "semanticWeight": 0}),
+    )?;
+    let mut texts = vec![None; documents];
+    for hit in core.search_documents("common", &search)? {
+        let i: usize = hit.document_id[1..].parse()?;
+        texts[i] = hit.text.clone();
+    }
+    Ok(texts)
+}
+
+/// A store with `compress_text` on, ingested with a fold budget that would fold it, ranks and
+/// returns text as the unfolded store and as an uncompressed one, and holds compressed text.
+#[test]
+fn compressed_text_stores_fold_to_the_answers_of_an_unfolded_store() -> Result<()> {
+    let open = |dir: &tempfile::TempDir, budget, compress| {
+        WarmCore::new(
+            256,
+            Some(dir.path().display().to_string()),
+            Some(with_text(budget, compress)),
+        )
+    };
+    let (plain, unfolded, folded) = (
+        tempfile::tempdir()?,
+        tempfile::tempdir()?,
+        tempfile::tempdir()?,
+    );
+    let expected = {
+        let core = open(&plain, 0, false)?;
+        ingest_range(&core, 0, 70, 7)?;
+        (answers(&core)?, stored_texts(&core, 70)?)
+    };
+    assert!(expected.1.iter().all(Option::is_some));
+    {
+        let core = open(&unfolded, 0, true)?;
+        ingest_range(&core, 0, 70, 7)?;
+        assert_eq!((answers(&core)?, stored_texts(&core, 70)?), expected);
+    }
+    {
+        let core = open(&folded, 1, true)?;
+        ingest_range(&core, 0, 70, 7)?;
+        assert_eq!((answers(&core)?, stored_texts(&core, 70)?), expected);
+    }
+    for dir in [&unfolded, &folded] {
+        assert_eq!(features(dir.path()), 1, "text blocks");
+        let core = open(dir, 1, true)?;
+        assert!(core.serves_from_checkpoint());
+        assert_eq!((answers(&core)?, stored_texts(&core, 70)?), expected);
+    }
+    assert_eq!(features(plain.path()), 0);
+    Ok(())
+}
+
+/// A store that toggles `compress_text` between checkpoints: each compaction writes what the
+/// setting says, and every state answers as a store that never toggled.
+#[test]
+fn toggling_compress_text_between_folds_keeps_answers_and_text() -> Result<()> {
+    let (toggled, reference) = (tempfile::tempdir()?, tempfile::tempdir()?);
+    let open = |dir: &tempfile::TempDir, budget, compress| {
+        WarmCore::new(
+            256,
+            Some(dir.path().display().to_string()),
+            Some(with_text(budget, compress)),
+        )
+    };
+    {
+        let core = open(&reference, 0, false)?;
+        ingest_range(&core, 0, 90, 5)?;
+    }
+    let expected = {
+        let core = open(&reference, 0, false)?;
+        (answers(&core)?, stored_texts(&core, 90)?)
+    };
+    // on, off, on: the second leg folds over a compressed-text base and the third over inline.
+    for (leg, compress, expect_features) in [(0, true, 1), (1, false, 0), (2, true, 1)] {
+        let core = open(&toggled, 1, compress)?;
+        ingest_range(&core, leg * 30, leg * 30 + 30, 5)?;
+        drop(core);
+        assert_eq!(features(toggled.path()), expect_features, "leg {leg}");
+        let core = open(&toggled, 1, compress)?;
+        let seen = (leg + 1) * 30;
+        assert_eq!(stored_texts(&core, 90)?[..seen].len(), seen);
+        assert!(stored_texts(&core, 90)?[..seen].iter().all(Option::is_some));
+    }
+    let core = open(&toggled, 1, true)?;
+    assert_eq!((answers(&core)?, stored_texts(&core, 90)?), expected);
+    Ok(())
+}
