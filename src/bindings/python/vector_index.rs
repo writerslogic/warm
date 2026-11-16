@@ -264,10 +264,10 @@ impl PyVectorIndex {
     /// 4-bit or no residual storage (0); smaller codes may reduce recall. Reranking still
     /// scores the primary codes with a float query when no residual is stored.
     /// `direct_ip` serves original coordinates with negative-IP scores on the lifted graph.
-    /// `build_profile` is the insertion schedule: "max-recall" (default), "high", "balanced" or
-    /// "fast"; later ones build faster and may lose recall.
+    /// `build_profile` is the insertion schedule: "standard" (default), "max-recall", "high",
+    /// "balanced" or "fast"; "max-recall" is the slowest build and the highest recall.
     #[new]
-    #[pyo3(signature = (metric="angular", degree=64, build_ef=500, threads=0, code_bits=4, compact_adjacency=false, direct_ip=false, residual_bits=8, build_profile="max-recall"))]
+    #[pyo3(signature = (metric="angular", degree=64, build_ef=500, threads=0, code_bits=4, compact_adjacency=false, direct_ip=false, residual_bits=8, build_profile="standard"))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         metric: &str,
@@ -281,7 +281,9 @@ impl PyVectorIndex {
         build_profile: &str,
     ) -> PyResult<Self> {
         let profile = BuildProfile::from_name(build_profile).ok_or_else(|| {
-            PyValueError::new_err("build_profile must be max-recall, high, balanced or fast")
+            PyValueError::new_err(
+                "build_profile must be standard, max-recall, high, balanced or fast",
+            )
         })?;
         let metric = match metric {
             "angular" => Distance::Angular,
