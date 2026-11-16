@@ -286,6 +286,7 @@ impl WarmCore {
     fn streams_plain(&self) -> bool {
         self.checkpoint_schema()
             && self.config.document_checkpoint.enabled
+            && !self.config.document_checkpoint.compress_text
             && !self.image.other_state.load(Ordering::Acquire)
     }
 

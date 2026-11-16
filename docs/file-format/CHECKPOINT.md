@@ -103,6 +103,13 @@ store's checkpoint is one AEAD message and stays on the in-memory path until the
 container carries it; a document written under an id the checkpoint already holds kills the
 checkpoint's document, and the next compaction then rebuilds the full store as before.
 
+Compressed text (`document_checkpoint.compress_text`, feature bit 0) is never folded: its
+dictionary is sampled from the whole text stream, and the fold copies document records as bytes
+and writes no feature word. A store with `compress_text` on does not fold during ingest and
+writes its checkpoint with the in-memory encoder; a compaction of a store whose checkpoint holds
+compressed text while `compress_text` is off rebuilds the store and writes inline text. Either
+way the compaction is correct, and the written checkpoint matches the setting.
+
 A crash at any point of a fold leaves the previous generation current: its checkpoint plus the
 frames of every committed batch, which is the state the next open replays. The scratch directory
 beside the staging generation (`gen-*.fold`) is removed by the next compaction.

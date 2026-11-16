@@ -256,7 +256,8 @@ fn merge_form(
 
 /// Streams the checkpoint of `base` (when there is one) plus `store` to `destination`, durably
 /// and atomically; the number of bytes written. `None` when the combined store does not fit the
-/// checkpoint layout or cannot be merged (a version 1 checkpoint, or one with dead documents).
+/// checkpoint layout or cannot be merged (a version 1 checkpoint, one with compressed text, or
+/// one with dead documents).
 pub(crate) fn merge(
     base: Option<&ServingImage>,
     store: &DocumentStore,
@@ -268,7 +269,7 @@ pub(crate) fn merge(
         return Ok(None);
     }
     if base.is_some_and(|image| {
-        !image.blocked || !image.has_impacts() || image.dimensions != dimensions
+        !image.mergeable() || !image.has_impacts() || image.dimensions != dimensions
     }) {
         return Ok(None);
     }
@@ -396,7 +397,11 @@ pub(crate) fn merge(
 
     let spools: Vec<Spool> = run
         .into_iter()
-        .map(|writer| writer.expect("every section was written").finish_spool())
+        .map(|writer| match writer {
+            Some(writer) => writer.finish_spool(),
+            // The sections of compressed text: a fold writes inline text.
+            None => BlockWriter::create_in(directory)?.finish_spool(),
+        })
         .collect::<Result<_>>()?;
     #[cfg(test)]
     crate::core::storage::compaction_crash_point("fold-spooled");

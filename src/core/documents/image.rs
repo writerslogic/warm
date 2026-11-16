@@ -692,7 +692,7 @@ impl ServingImage {
     /// text. Its document records are copied as bytes, and a record of compressed text points
     /// into text sections the merge does not carry.
     pub(crate) fn mergeable(&self) -> bool {
-        self.blocked
+        self.blocked && !self.text_blocks
     }
 
     /// Drops the resident pages of a mapped checkpoint after a pass over it, so a merge that
