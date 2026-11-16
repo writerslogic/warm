@@ -72,6 +72,11 @@ pub(super) fn get_varint(bytes: &[u8], at: &mut usize) -> u64 {
 const MERGE_BUCKETS: usize = 16;
 /// Batches below this many chunks are scanned as one range into one bucket.
 const PARALLEL_CHUNKS: usize = 64;
+/// Postings after which `index_chunks` closes a group of chunks and packs it.
+const GROUP_POSTINGS: usize = 1 << 18;
+/// The group grows with the slots already indexed, so a large index is packed in few groups: the
+/// transient is small beside it and each group repeats the per-term work.
+const GROUP_POSTINGS_PER_SLOT: usize = 256;
 /// Smallest chunk range one thread scans.
 const MIN_RANGE: usize = 32;
 /// Run counts below this look their terms up on the calling thread.
@@ -345,24 +350,81 @@ pub(super) struct Postings<'a> {
     pub(super) impacts: bool,
 }
 
-/// Appends `list`'s postings to `out` in the checkpoint's block encoding; with `impacts`, the
-/// version 3 form whose bounds come from `words`, the word count of a slot.
-pub(super) fn pack_checkpoint(
-    list: &PostingList,
-    words: &dyn Fn(usize) -> u32,
+/// Packs postings pushed in ascending slot order into the checkpoint's block encoding; with
+/// `impacts`, the version 3 form whose bounds come from `words`, the word count of a slot. One
+/// packer writes one list at a time, whether its postings come from one in-memory list or from a
+/// checkpoint's list merged with a live one, so both produce the same bytes.
+pub(super) struct CheckpointPacker<'w> {
+    block: Vec<Posting>,
+    last: usize,
     impacts: bool,
-    out: &mut Vec<u8>,
-    mut info: Option<&mut Vec<BlockInfo>>,
-) {
-    let list_start = out.len();
-    let info_start = info.as_deref().map_or(0, Vec::len);
-    let (mut list_frequency, mut list_words) = (0u32, u32::MAX);
-    let mut block: Vec<Posting> = Vec::with_capacity(CHECKPOINT_BLOCK);
-    let mut last = 0usize;
-    let mut flush = |block: &mut Vec<Posting>, out: &mut Vec<u8>| {
-        let first = block[0].0;
+    words: &'w dyn Fn(usize) -> u32,
+    list_start: Option<usize>,
+    list_frequency: u32,
+    list_words: u32,
+    /// The skip-table facts of each block of the current list, when asked for.
+    infos: Option<Vec<BlockInfo>>,
+}
+
+impl<'w> CheckpointPacker<'w> {
+    pub(super) fn new(impacts: bool, words: &'w dyn Fn(usize) -> u32) -> Self {
+        Self::with_info(impacts, words, false)
+    }
+
+    /// A packer that also records each block's [`BlockInfo`] (see [`Self::take_infos`]).
+    pub(super) fn with_info(impacts: bool, words: &'w dyn Fn(usize) -> u32, collect: bool) -> Self {
+        Self {
+            block: Vec::with_capacity(CHECKPOINT_BLOCK),
+            last: 0,
+            impacts,
+            words,
+            list_start: None,
+            list_frequency: 0,
+            list_words: u32::MAX,
+            infos: collect.then(Vec::new),
+        }
+    }
+
+    /// The block facts of the list just finished, in block order.
+    pub(super) fn take_infos(&mut self) -> Vec<BlockInfo> {
+        self.infos.as_mut().map(std::mem::take).unwrap_or_default()
+    }
+
+    pub(super) fn push(&mut self, slot: usize, frequency: u32, out: &mut Vec<u8>) {
+        self.block.push((slot, frequency));
+        if self.block.len() == CHECKPOINT_BLOCK {
+            self.flush(out);
+        }
+    }
+
+    /// Writes the last, shorter block and the list header; the packer then starts a new list.
+    pub(super) fn finish(&mut self, out: &mut Vec<u8>) {
+        if !self.block.is_empty() {
+            self.flush(out);
+        }
+        if let (true, Some(start)) = (self.impacts, self.list_start) {
+            let mut header = Vec::with_capacity(8);
+            put_varint(&mut header, u64::from(self.list_frequency));
+            put_varint(&mut header, u64::from(self.list_words));
+            if let Some(infos) = self.infos.as_mut() {
+                for entry in infos.iter_mut() {
+                    entry.offset += header.len() as u32;
+                }
+            }
+            out.splice(start..start, header);
+        }
+        self.last = 0;
+        self.list_start = None;
+        self.list_frequency = 0;
+        self.list_words = u32::MAX;
+    }
+
+    fn flush(&mut self, out: &mut Vec<u8>) {
+        let list_start = *self.list_start.get_or_insert(out.len());
         let block_offset = out.len() - list_start;
-        put_varint(out, (first - last) as u64);
+        let block = &self.block;
+        let first = block[0].0;
+        put_varint(out, (first - self.last) as u64);
         let gap = block
             .windows(2)
             .map(|pair| (pair[1].0 - pair[0].0) as u64)
@@ -372,24 +434,24 @@ pub(super) fn pack_checkpoint(
         let gap_bits = (64 - gap.leading_zeros()) as u8;
         let frequency_bits = (32 - frequency.leading_zeros()) as u8;
         out.extend_from_slice(&[gap_bits, frequency_bits]);
-        if impacts {
+        if self.impacts {
             let least = block
                 .iter()
-                .map(|p| words(p.0))
+                .map(|p| (self.words)(p.0))
                 .min()
                 .expect("nonempty block");
             put_varint(out, (block[block.len() - 1].0 - first) as u64);
             put_varint(out, u64::from(frequency));
             put_varint(out, u64::from(least));
-            list_frequency = list_frequency.max(frequency);
-            list_words = list_words.min(least);
-            if let Some(info) = info.as_deref_mut() {
-                info.push(BlockInfo {
+            self.list_frequency = self.list_frequency.max(frequency);
+            self.list_words = self.list_words.min(least);
+            if let Some(infos) = self.infos.as_mut() {
+                infos.push(BlockInfo {
                     last: block[block.len() - 1].0 as u32,
                     offset: block_offset as u32,
                     max_frequency: frequency,
                     min_words: least,
-                    frontier: frontier(block.iter().map(|p| (p.1, words(p.0)))),
+                    frontier: frontier(block.iter().map(|p| (p.1, (self.words)(p.0)))),
                 });
             }
         }
@@ -404,28 +466,25 @@ pub(super) fn pack_checkpoint(
             gap_bits,
         );
         pack(out, block.iter().map(|p| u64::from(p.1)), frequency_bits);
-        last = previous;
-        block.clear();
-    };
-    list.for_each(|slot, frequency| {
-        block.push((slot, frequency));
-        if block.len() == CHECKPOINT_BLOCK {
-            flush(&mut block, out);
-        }
-    });
-    if !block.is_empty() {
-        flush(&mut block, out);
+        self.last = previous;
+        self.block.clear();
     }
-    if impacts && out.len() > list_start {
-        let mut header = Vec::with_capacity(8);
-        put_varint(&mut header, u64::from(list_frequency));
-        put_varint(&mut header, u64::from(list_words));
-        if let Some(info) = info {
-            for entry in &mut info[info_start..] {
-                entry.offset += header.len() as u32;
-            }
-        }
-        out.splice(list_start..list_start, header);
+}
+
+/// Appends `list`'s postings to `out` in the checkpoint's block encoding; with `impacts`, the
+/// version 3 form whose bounds come from `words`, the word count of a slot.
+pub(super) fn pack_checkpoint(
+    list: &PostingList,
+    words: &dyn Fn(usize) -> u32,
+    impacts: bool,
+    out: &mut Vec<u8>,
+    info: Option<&mut Vec<BlockInfo>>,
+) {
+    let mut packer = CheckpointPacker::with_info(impacts, words, info.is_some());
+    list.for_each(|slot, frequency| packer.push(slot, frequency, out));
+    packer.finish(out);
+    if let Some(info) = info {
+        info.extend(packer.take_infos());
     }
 }
 
@@ -2201,10 +2260,71 @@ fn bucket_of(term: &str, buckets: usize) -> usize {
     (hash % buckets as u64) as usize
 }
 
+/// [`scan_range`] for a range whose chunks all take their terms from one dictionary: a term is
+/// found by its dictionary id in a table, not by hashing its text, and only each distinct term
+/// reaches the maps. `false`, with `maps` untouched, when the range does not qualify.
+fn scan_shared<'a>(
+    range: &[(usize, &'a StoredChunk)],
+    buckets: usize,
+    maps: &mut [Vec<RunMap<'a>>; 2],
+) -> bool {
+    let Some(&(_, first)) = range.first() else {
+        return false;
+    };
+    let Some((dictionary, _)) = first.terms.shared_ids() else {
+        return false;
+    };
+    let same = range.iter().all(|(_, chunk)| {
+        chunk
+            .terms
+            .shared_ids()
+            .is_some_and(|(other, _)| std::sync::Arc::ptr_eq(other, dictionary))
+    });
+    if !same {
+        return false;
+    }
+    const NONE: u32 = u32::MAX;
+    let words = dictionary.len();
+    let mut tables: [Vec<u32>; 2] = [Vec::new(), Vec::new()];
+    let mut runs: [Vec<TermRun<'a>>; 2] = [Vec::new(), Vec::new()];
+    for &(slot, chunk) in range {
+        let form = usize::from(chunk.stemmed);
+        if tables[form].is_empty() {
+            tables[form] = vec![NONE; words];
+        }
+        let (_, ids) = chunk.terms.shared_ids().expect("checked above");
+        for (id, frequency) in ids {
+            let at = &mut tables[form][id as usize];
+            if *at == NONE {
+                *at = runs[form].len() as u32;
+                runs[form].push(TermRun {
+                    term: dictionary.term(id as usize),
+                    postings: Vec::new(),
+                    ordinals: Vec::new(),
+                });
+            }
+            runs[form][*at as usize].postings.push((slot, frequency));
+        }
+    }
+    for (form, runs) in runs.into_iter().enumerate() {
+        for run in runs {
+            let bucket = if buckets == 1 {
+                0
+            } else {
+                bucket_of(run.term, buckets)
+            };
+            maps[form][bucket].insert(run.term, run);
+        }
+    }
+    true
+}
 /// Scans one chunk range into per-form, per-bucket maps.
 fn scan_range<'a>(range: &[(usize, &'a StoredChunk)], buckets: usize) -> [Vec<RunMap<'a>>; 2] {
     let mut maps: [Vec<RunMap<'a>>; 2] =
         std::array::from_fn(|_| (0..buckets).map(|_| RunMap::default()).collect());
+    if scan_shared(range, buckets, &mut maps) {
+        return maps;
+    }
     for &(slot, chunk) in range {
         let form = &mut maps[usize::from(chunk.stemmed)];
         for (index, (term, &frequency)) in (&chunk.terms).into_iter().enumerate() {
@@ -2277,18 +2397,36 @@ fn merge_bucket<'a>(maps: Vec<RunMap<'a>>) -> Vec<TermRun<'a>> {
 /// Indexes `chunks`, given as `(slot, chunk)` in strictly ascending slot order with every
 /// slot absent from the lists, into the unstemmed (`postings[0]`) and stemmed (`postings[1]`)
 /// lists. See the module head for the phases.
-pub(super) fn index_chunks<'a>(
+pub(super) fn index_chunks(
     postings: &mut [PostingLists; 2],
-    chunks: &[(usize, &'a StoredChunk)],
+    chunks: &[(usize, &StoredChunk)],
     word_counts: &[u32],
 ) {
     debug_assert!(
         chunks.windows(2).all(|pair| pair[0].0 < pair[1].0),
         "chunks out of slot order"
     );
-    if chunks.is_empty() {
-        return;
+    // Runs hold 16 bytes per posting until they are packed into the lists, so a large batch is
+    // indexed in slot-ordered groups: the peak is the lists plus one group, not the whole batch.
+    let mut rest = chunks;
+    while !rest.is_empty() {
+        let mut postings_in_group = 0usize;
+        let group_cap = GROUP_POSTINGS.max(rest[0].0.saturating_mul(GROUP_POSTINGS_PER_SLOT));
+        let mut end = 0;
+        while end < rest.len() && (end == 0 || postings_in_group < group_cap) {
+            postings_in_group += rest[end].1.terms.keys().len();
+            end += 1;
+        }
+        let (group, tail) = rest.split_at(end);
+        index_group(postings, group, word_counts);
+        rest = tail;
     }
+}
+fn index_group<'a>(
+    postings: &mut [PostingLists; 2],
+    chunks: &[(usize, &'a StoredChunk)],
+    word_counts: &[u32],
+) {
     let buckets = if chunks.len() < PARALLEL_CHUNKS {
         1
     } else {

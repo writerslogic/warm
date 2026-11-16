@@ -71,7 +71,7 @@ use kernels::{
 #[cfg(feature = "experimental")]
 pub use vertex::QueryProfile;
 pub use vertex::{
-    huge_page_status, HugePageStatus, Residency, SearchKnobs, VGraph, VGraphMemoryBreakdown,
+    huge_page_status, Allow, HugePageStatus, Residency, SearchKnobs, VGraph, VGraphMemoryBreakdown,
     VMetric, VSearchParams, VSearcher,
 };
 
