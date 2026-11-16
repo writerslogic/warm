@@ -65,23 +65,11 @@ fn typed<T: serde::de::DeserializeOwned>(py: Python<'_>, object: &Bound<'_, PyAn
 }
 
 #[cfg(feature = "local-embed")]
-type InstalledEmbedder = Arc<crate::core::embed::Embedder>;
-#[cfg(not(feature = "local-embed"))]
-type InstalledEmbedder = std::convert::Infallible;
-
-#[cfg(feature = "local-embed")]
-fn installed_embedder(object: &Bound<'_, PyAny>) -> PyResult<InstalledEmbedder> {
+fn installed_embedder(object: &Bound<'_, PyAny>) -> PyResult<Arc<crate::core::embed::Embedder>> {
     let embedder: PyRef<'_, super::embed::PyEmbedder> = object
         .extract()
         .map_err(|_| PyValueError::new_err("embedder must be a writerslogic_warm.Embedder"))?;
     Ok(embedder.inner.clone())
-}
-
-#[cfg(not(feature = "local-embed"))]
-fn installed_embedder(_: &Bound<'_, PyAny>) -> PyResult<InstalledEmbedder> {
-    Err(err(
-        "this build has no local embedder (feature local-embed)",
-    ))
 }
 
 /// An in-process WARM store: document search, the memory API and vector search.
@@ -122,11 +110,19 @@ impl PyWarm {
             ));
         }
         let mut config = WarmConfig::default();
-        let mut text_embedder: Option<InstalledEmbedder> = None;
+        #[cfg(feature = "local-embed")]
+        let mut text_embedder = None;
         if let Some(embedder) = embedder {
-            let embedder = installed_embedder(embedder)?;
-            config.embedding_space = Some(embedder.space());
-            text_embedder = Some(embedder);
+            #[cfg(feature = "local-embed")]
+            {
+                let embedder = installed_embedder(embedder)?;
+                config.embedding_space = Some(embedder.space());
+                text_embedder = Some(embedder);
+            }
+            #[cfg(not(feature = "local-embed"))]
+            return Err(err(format!(
+                "this build has no local embedder (feature local-embed); got {embedder}"
+            )));
         } else if let Some(dimensions) = embedding_dimensions {
             config.embedding_space = Some(EmbeddingSpace {
                 model: embedding_model.into(),
@@ -141,8 +137,6 @@ impl PyWarm {
                 let core = WarmCore::new(dimensions, path, Some(config))?;
                 #[cfg(feature = "local-embed")]
                 core.set_text_embedder(text_embedder)?;
-                #[cfg(not(feature = "local-embed"))]
-                let _ = text_embedder;
                 anyhow::Ok(core)
             })
             .map_err(err)?;
