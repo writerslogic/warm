@@ -75,12 +75,12 @@ jobs:
           test "$host" = "$TARGET"
           binary=target/release/warm-mcp
           if [[ "$TARGET" == *linux* ]]; then
-            cargo zigbuild --release --locked --target "${TARGET}.2.17" --features mcp,security --bin warm-mcp
+            cargo zigbuild --release --locked --target "${TARGET}.2.17" --features mcp,security,mimalloc --bin warm-mcp
             binary="target/${TARGET}/release/warm-mcp"
             newer=$(readelf -W --version-info "$binary" | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | cut -d_ -f2 | sort -Vu | awk -F. '$1 > 2 || ($1 == 2 && $2 > 17)' | head -1)
             test -z "$newer"
           else
-            cargo build --release --locked --features mcp,security --bin warm-mcp
+            cargo build --release --locked --features mcp,security,mimalloc --bin warm-mcp
           fi
           extension=""
           if [[ "$TARGET" == *windows* ]]; then extension=".exe"; fi
