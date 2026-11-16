@@ -6,28 +6,51 @@
 //! `explain`, `get`, `history`) and vector search (`memorize_vector`, `query_vector`). Requests
 //! and results are plain Python dicts and lists with the camelCase fields of the Node
 //! binding. Calls release the GIL.
+//!
+//! Recall is hybrid (BM25 blended with exact cosine) when the store has vectors: open it with
+//! an `embedder` (build `local-embed`) so the engine embeds facts and queries itself, or with
+//! `embedding_dimensions` and pass `embedding` on `remember` and `recall`. A store opened with
+//! neither ranks lexically, exactly as before.
 
 use std::sync::Arc;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyAny;
+use pyo3::types::{PyAny, PyDict};
 use serde_json::Value;
 
+use crate::core::config::WarmConfig;
 use crate::core::documents::{DocumentInput, IngestOptions, SearchOptions};
 use crate::core::engine::{RankingMode, SparseSearch};
 use crate::core::index::sparse_store::SparseVector;
 use crate::core::memory_api::Memory;
+use crate::core::schema::EmbeddingSpace;
 use crate::WarmCore;
 
 fn err(e: impl std::fmt::Display) -> PyErr {
     PyValueError::new_err(format!("{e:#}"))
 }
 
+/// JSON text of `object`. Numpy arrays and scalars serialize through `tolist`, and NaN or
+/// infinity is an error here rather than a malformed document later.
 fn to_value(py: Python<'_>, object: &Bound<'_, PyAny>) -> PyResult<Value> {
+    let kwargs = PyDict::new(py);
+    kwargs.set_item("allow_nan", false)?;
+    kwargs.set_item(
+        "default",
+        py.import("operator")?
+            .call_method1("methodcaller", ("tolist",))?,
+    )?;
     let text: String = py
         .import("json")?
-        .call_method1("dumps", (object,))?
+        .call_method("dumps", (object,), Some(&kwargs))
+        .map_err(|e| {
+            if e.is_instance_of::<pyo3::exceptions::PyAttributeError>(py) {
+                PyValueError::new_err("request holds a value that is not JSON serializable")
+            } else {
+                e
+            }
+        })?
         .extract()?;
     serde_json::from_str(&text).map_err(err)
 }
@@ -41,6 +64,26 @@ fn typed<T: serde::de::DeserializeOwned>(py: Python<'_>, object: &Bound<'_, PyAn
     serde_json::from_value(to_value(py, object)?).map_err(err)
 }
 
+#[cfg(feature = "local-embed")]
+type InstalledEmbedder = Arc<crate::core::embed::Embedder>;
+#[cfg(not(feature = "local-embed"))]
+type InstalledEmbedder = std::convert::Infallible;
+
+#[cfg(feature = "local-embed")]
+fn installed_embedder(object: &Bound<'_, PyAny>) -> PyResult<InstalledEmbedder> {
+    let embedder: PyRef<'_, super::embed::PyEmbedder> = object
+        .extract()
+        .map_err(|_| PyValueError::new_err("embedder must be a writerslogic_warm.Embedder"))?;
+    Ok(embedder.inner.clone())
+}
+
+#[cfg(not(feature = "local-embed"))]
+fn installed_embedder(_: &Bound<'_, PyAny>) -> PyResult<InstalledEmbedder> {
+    Err(err(
+        "this build has no local embedder (feature local-embed)",
+    ))
+}
+
 /// An in-process WARM store: document search, the memory API and vector search.
 #[pyclass(name = "Warm")]
 struct PyWarm {
@@ -52,11 +95,56 @@ struct PyWarm {
 impl PyWarm {
     /// Opens or creates the store at `path` (the current directory when `None`).
     /// `dimensions` is the sparse hypervector dimension of the store.
+    ///
+    /// Dense vectors, which make recall and document search hybrid, come from one of two
+    /// places. `embedder` (a `writerslogic_warm.Embedder`, build `local-embed`) is installed in
+    /// the engine, which then embeds every fact and query itself; the store's embedding space
+    /// is the embedder's. `embedding_dimensions` instead declares an external embedding space,
+    /// named by `embedding_model` and `embedding_revision`, and callers pass `embedding` on
+    /// `remember` and `recall`. The two are exclusive. Reopening a store needs the same choice.
     #[new]
-    #[pyo3(signature = (dimensions=16384, path=None))]
-    fn new(py: Python<'_>, dimensions: u32, path: Option<String>) -> PyResult<Self> {
+    #[pyo3(signature = (
+        dimensions=16384, path=None, *, embedder=None, embedding_dimensions=None,
+        embedding_model="external", embedding_revision="1"
+    ))]
+    fn new(
+        py: Python<'_>,
+        dimensions: u32,
+        path: Option<String>,
+        embedder: Option<&Bound<'_, PyAny>>,
+        embedding_dimensions: Option<usize>,
+        embedding_model: &str,
+        embedding_revision: &str,
+    ) -> PyResult<Self> {
+        if embedder.is_some() && embedding_dimensions.is_some() {
+            return Err(err(
+                "pass either embedder or embedding_dimensions, not both: an embedder fixes the embedding space",
+            ));
+        }
+        let mut config = WarmConfig::default();
+        let mut text_embedder: Option<InstalledEmbedder> = None;
+        if let Some(embedder) = embedder {
+            let embedder = installed_embedder(embedder)?;
+            config.embedding_space = Some(embedder.space());
+            text_embedder = Some(embedder);
+        } else if let Some(dimensions) = embedding_dimensions {
+            config.embedding_space = Some(EmbeddingSpace {
+                model: embedding_model.into(),
+                revision: embedding_revision.into(),
+                dimensions,
+                normalization: "l2".into(),
+                metric: "cosine".into(),
+            });
+        }
         let core = py
-            .detach(|| WarmCore::new(dimensions, path, None))
+            .detach(|| {
+                let core = WarmCore::new(dimensions, path, Some(config))?;
+                #[cfg(feature = "local-embed")]
+                core.set_text_embedder(text_embedder)?;
+                #[cfg(not(feature = "local-embed"))]
+                let _ = text_embedder;
+                anyhow::Ok(core)
+            })
             .map_err(err)?;
         let core = Arc::new(core);
         Ok(Self {

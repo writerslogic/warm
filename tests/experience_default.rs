@@ -671,3 +671,55 @@ fn a_fact_with_an_experience_shaped_id_explains_as_a_fact_and_unknown_episodes_f
     assert_eq!(report["purged"], json!(false));
     assert!(experience_files(dir.path()).is_empty());
 }
+
+#[test]
+fn hybrid_document_ranking_composes_with_the_region_merge() {
+    use writerslogic_warm::core::{EmbeddingSpace, WarmConfig};
+    let dir = tempfile::tempdir().unwrap();
+    let config = WarmConfig {
+        embedding_space: Some(EmbeddingSpace {
+            model: "test".into(),
+            revision: "1".into(),
+            dimensions: 3,
+            normalization: "l2".into(),
+            metric: "cosine".into(),
+        }),
+        ..WarmConfig::default()
+    };
+    let core =
+        Arc::new(WarmCore::new(DIM, Some(dir.path().display().to_string()), Some(config)).unwrap());
+    let m = Memory::new(core).with_clock(Arc::new(ManualClock::new(1)));
+    remember(
+        &m,
+        json!({"facts": [
+            {"id": "car", "text": "the car broke down on the highway", "embedding": [1.0, 0.0, 0.0]},
+            {"id": "auto", "text": "my automobile stopped working", "embedding": [0.9, 0.1, 0.0]},
+            {"id": "garden", "text": "tomatoes need watering", "embedding": [0.0, 0.0, 1.0]},
+            step("ep1", 0, "Checkout", &["Place order", "Cancel"], None),
+        ]}),
+    );
+    let ids = |request: Value| -> Vec<String> {
+        m.call("recall", request).unwrap()["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|r| r["id"].as_str().unwrap().to_owned())
+            .collect()
+    };
+    // The paraphrase has no query word in common: only the dense side finds it.
+    let hybrid = ids(json!({"query": "vehicle failed", "k": 2, "embedding": [1, 0, 0]}));
+    assert!(hybrid.contains(&"auto".to_string()), "{hybrid:?}");
+    // A query that also matches a region keeps the documents in hybrid order beside it.
+    let merged = ids(json!({"query": "Place order vehicle", "k": 5, "embedding": [1, 0, 0]}));
+    let position = |id: &str| merged.iter().position(|r| r == id);
+    assert!(
+        position("car").unwrap() < position("auto").unwrap(),
+        "{merged:?}"
+    );
+    assert!(
+        merged
+            .iter()
+            .any(|id| id != "car" && id != "auto" && id != "garden"),
+        "{merged:?}"
+    );
+}
