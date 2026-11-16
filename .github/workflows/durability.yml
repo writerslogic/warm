@@ -51,7 +51,7 @@ jobs:
         run: >
           cargo test --features failpoints
           --test erase --test crash_harness --test disk_faults --test purge_disk_full
-          --test second_writer --test purge
+          --test second_writer --test purge --test experience_crash
       - name: Same with encryption compiled in
         run: >
           cargo test --features failpoints,security

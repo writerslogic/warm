@@ -550,6 +550,16 @@
             },
             "type": "array"
           },
+          "provenance": {
+            "description": "For a result from the experience core: the episodes and steps where the region\noccurred (at most eight, in episode order).",
+            "items": {
+              "$ref": "#/components/schemas/ObservationProvenance"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "rank": {
             "description": "1-based position among the ranked candidates, after the recency policy.",
             "format": "uint",
@@ -907,6 +917,23 @@
               "filter"
             ],
             "type": "object"
+          },
+          {
+            "description": "Every observation step of one episode held by the experience core. The episode is\nremoved and its text scrubbed from the snapshot and journal before the call returns.",
+            "properties": {
+              "episode": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "episode",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "episode"
+            ],
+            "type": "object"
           }
         ]
       },
@@ -1163,6 +1190,121 @@
           "subjectEntityFilters",
           "documentPagination",
           "committedErrorCode"
+        ],
+        "type": "object"
+      },
+      "ObservationInput": {
+        "additionalProperties": false,
+        "description": "A step of an agent trajectory, stored by the experience core. Recognized by `episode`\n(string), `step` (non-negative integer) and `tree` (object). Bounds: 128 levels, 200000 nodes,\n16 KiB per string; over HTTP the JSON parser's limit of 128 levels allows 63 tree levels.",
+        "properties": {
+          "action": {
+            "additionalProperties": true,
+            "description": "`{\"label\": text}` or `{\"call\": text}`: the action taken before this observation.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "episode": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "goal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "step": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "tree": {
+            "$ref": "#/components/schemas/ObservationNode"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "episode",
+          "step",
+          "tree"
+        ],
+        "type": "object"
+      },
+      "ObservationNode": {
+        "additionalProperties": false,
+        "description": "A node of an accessibility tree. `children` hold nodes of the same shape.",
+        "properties": {
+          "children": {
+            "items": true,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "handle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "props": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "type": "object"
+      },
+      "ObservationProvenance": {
+        "description": "Where a region of an observation occurred.",
+        "properties": {
+          "count": {
+            "description": "How many times the region occurs in that step.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "episode": {
+            "type": "string"
+          },
+          "step": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "episode",
+          "step",
+          "count"
         ],
         "type": "object"
       },
@@ -1544,7 +1686,7 @@
         "properties": {
           "facts": {
             "items": {
-              "$ref": "#/components/schemas/RememberInput"
+              "$ref": "#/components/schemas/RememberItem"
             },
             "minItems": 1,
             "type": "array"
@@ -1658,6 +1800,17 @@
         ],
         "type": "object"
       },
+      "RememberItem": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/RememberInput"
+          },
+          {
+            "$ref": "#/components/schemas/ObservationInput"
+          }
+        ],
+        "description": "One item of a batch: a fact, or a step of an agent trajectory."
+      },
       "RememberReply": {
         "properties": {
           "remembered": {
@@ -1676,6 +1829,9 @@
         "anyOf": [
           {
             "$ref": "#/components/schemas/RememberInput"
+          },
+          {
+            "$ref": "#/components/schemas/ObservationInput"
           },
           {
             "$ref": "#/components/schemas/RememberBatch"
