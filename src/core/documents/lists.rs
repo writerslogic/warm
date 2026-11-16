@@ -291,6 +291,18 @@ impl<'a> Cursor<'a> {
         self.last
     }
 
+    /// Every slot of the current block, from its first posting whatever the cursor's position in
+    /// it. A cursor that ended has none.
+    pub(super) fn block_slots(&mut self) -> &[u32] {
+        if self.ended {
+            return &[];
+        }
+        if !self.decoded {
+            self.decode();
+        }
+        &self.slots[..self.count]
+    }
+
     /// The largest frequency and least word count of the current block.
     #[inline]
     pub(super) fn block_bounds(&self) -> (u32, u32) {

@@ -18,6 +18,7 @@ use super::wand::{sum_bound, Bound};
 use super::*;
 use crate::core::documents::image::ServingImage;
 use crate::core::documents::lists::{Cursor, ListRef, PositionIter, NO_DOC, RUN_BLOCKS};
+use crate::core::documents::postings::CHECKPOINT_BLOCK;
 use crate::core::documents::search::LexicalSource;
 
 /// One clause with its cursors: a single word, or a phrase's words rarest first.
@@ -726,25 +727,64 @@ impl<'a> Run<'a, '_> {
     }
 }
 
-/// Documents every term clause has, by leapfrogging from the rarest list; `terms` is sorted
-/// rarest first.
+/// Documents every term clause has: the rarest list's postings a block at a time, each block's
+/// slots filtered through the other lists' blocks that reach them (blocks no candidate falls in
+/// are skipped through the skip tables, never decoded). `terms` is sorted rarest first.
 fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
     let (lead, rest) = terms.split_first_mut().expect("two or more lists");
-    let mut count = 0;
-    let mut doc = lead.cursors[0].doc();
-    'lead: while doc != NO_DOC {
-        for rt in rest.iter_mut() {
-            let at = rt.cursors[0].advance_to(doc);
-            if at != doc {
-                doc = lead.cursors[0].advance_to(at);
-                continue 'lead;
+    let lead = &mut lead.cursors[0];
+    let mut count = 0usize;
+    let mut candidates = [0u32; CHECKPOINT_BLOCK];
+    let mut kept = [0u32; CHECKPOINT_BLOCK];
+    let mut exhausted = false;
+    loop {
+        let slots = lead.block_slots();
+        if slots.is_empty() {
+            return count;
+        }
+        let mut n = slots.len();
+        candidates[..n].copy_from_slice(slots);
+        for other in rest.iter_mut() {
+            let other = &mut other.cursors[0];
+            let (mut i, mut k) = (0usize, 0usize);
+            while i < n {
+                let wanted = candidates[i];
+                if other.block_last() < wanted && !other.advance_block(wanted) {
+                    // This list ended: no remaining candidate, here or later, can match.
+                    exhausted = true;
+                    break;
+                }
+                let first = other.block_first();
+                if first > wanted {
+                    while i < n && candidates[i] < first {
+                        i += 1;
+                    }
+                    continue;
+                }
+                let last = other.block_last();
+                let block = other.block_slots();
+                let mut j = 0usize;
+                while i < n && candidates[i] <= last {
+                    let value = candidates[i];
+                    while block[j] < value {
+                        j += 1;
+                    }
+                    kept[k] = value;
+                    k += usize::from(block[j] == value);
+                    i += 1;
+                }
+            }
+            n = k;
+            candidates[..n].copy_from_slice(&kept[..n]);
+            if n == 0 {
+                break;
             }
         }
-        count += 1;
-        lead.cursors[0].next();
-        doc = lead.cursors[0].doc();
+        count += n;
+        if exhausted || !lead.advance_block(lead.block_last().saturating_add(1)) {
+            return count;
+        }
     }
-    count
 }
 
 /// Documents with any of the term clauses' words: the largest list's postings, plus the
