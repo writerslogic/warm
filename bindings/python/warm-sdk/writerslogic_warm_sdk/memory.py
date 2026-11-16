@@ -124,6 +124,8 @@ class Explanation:
     valid_to: Optional[int]
     within_validity: bool
     chain: List[ChainLink]
+    #: For a result of the experience core: ``[{"episode", "step", "count"}]`` where the region occurred.
+    provenance: Optional[List[Dict[str, Any]]] = None
 
     @classmethod
     def _from(cls, d: Mapping[str, Any]) -> "Explanation":
@@ -147,6 +149,7 @@ class Explanation:
             valid_to=d.get("validTo"),
             within_validity=d["withinValidity"],
             chain=[ChainLink._from(link) for link in d["chain"]],
+            provenance=[dict(p) for p in d["provenance"]] if d.get("provenance") is not None else None,
         )
 
 
@@ -330,6 +333,7 @@ def _scope_payload(
     ingested_before: Optional[TimeLike],
     event_before: Optional[TimeLike],
     matching: Optional[Mapping[str, Any]],
+    episode: Optional[str] = None,
 ) -> Dict[str, Any]:
     chosen = [
         scope
@@ -342,12 +346,13 @@ def _scope_payload(
             else None,
             {"kind": "eventBefore", "time": to_millis(event_before)} if event_before is not None else None,
             {"kind": "matching", "filter": dict(matching)} if matching is not None else None,
+            {"kind": "episode", "episode": episode} if episode is not None else None,
         )
         if scope is not None
     ]
     if len(chosen) != 1:
         raise ValueError(
-            "forget takes exactly one scope: ids, subject, entity, ingested_before, event_before or matching"
+            "forget takes exactly one scope: ids, subject, entity, ingested_before, event_before, matching or episode"
         )
     return chosen[0]
 
@@ -425,6 +430,13 @@ class MemoryClient:
             source_uri=source_uri,
         )
         return Remembered._from(self._post("remember", payload)["remembered"][0])
+
+    def remember_observations(self, observations: Iterable[Mapping[str, Any]]) -> List[Remembered]:
+        """Store steps of an agent trajectory. Each mapping is ``{"episode", "step", "tree", "url"?,
+        "action"?, "goal"?, "outcome"?}`` with ``tree`` a nested ``{"role", "name", "props"?, "handle"?,
+        "children"?}``. Each step is durable when the call returns; a failing step leaves the earlier ones stored."""
+        payload = {"facts": [dict(o) for o in observations]}
+        return [Remembered._from(r) for r in self._post("remember", payload)["remembered"]]
 
     def remember_many(self, facts: Iterable[Mapping[str, Any]]) -> List[Remembered]:
         """Store facts atomically. Each mapping takes ``remember``'s keyword names plus ``text``."""
@@ -529,6 +541,7 @@ class MemoryClient:
         ingested_before: Optional[TimeLike] = None,
         event_before: Optional[TimeLike] = None,
         matching: Optional[Mapping[str, Any]] = None,
+        episode: Optional[str] = None,
         include_chain: bool = False,
         dry_run: bool = False,
         purge: bool = True,
@@ -542,7 +555,7 @@ class MemoryClient:
         ``dry_run`` only reports.
         """
         payload: Dict[str, Any] = {
-            "scope": _scope_payload(ids, subject, entity, ingested_before, event_before, matching),
+            "scope": _scope_payload(ids, subject, entity, ingested_before, event_before, matching, episode),
             "includeChain": include_chain,
             "dryRun": dry_run,
             "purge": purge,
@@ -629,6 +642,11 @@ class AsyncMemoryClient:
             source_uri=source_uri,
         )
         return Remembered._from((await self._post("remember", payload))["remembered"][0])
+
+    async def remember_observations(self, observations: Iterable[Mapping[str, Any]]) -> List[Remembered]:
+        """Async form of the sync client's ``remember_observations``."""
+        payload = {"facts": [dict(o) for o in observations]}
+        return [Remembered._from(r) for r in (await self._post("remember", payload))["remembered"]]
 
     async def remember_many(self, facts: Iterable[Mapping[str, Any]]) -> List[Remembered]:
         wire = [
@@ -730,13 +748,14 @@ class AsyncMemoryClient:
         ingested_before: Optional[TimeLike] = None,
         event_before: Optional[TimeLike] = None,
         matching: Optional[Mapping[str, Any]] = None,
+        episode: Optional[str] = None,
         include_chain: bool = False,
         dry_run: bool = False,
         purge: bool = True,
         synchronous: bool = False,
     ) -> ForgetReport:
         payload: Dict[str, Any] = {
-            "scope": _scope_payload(ids, subject, entity, ingested_before, event_before, matching),
+            "scope": _scope_payload(ids, subject, entity, ingested_before, event_before, matching, episode),
             "includeChain": include_chain,
             "dryRun": dry_run,
             "purge": purge,

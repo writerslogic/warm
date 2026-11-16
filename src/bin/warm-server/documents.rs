@@ -165,7 +165,7 @@ pub fn enforce_quota(
     if quota == 0 {
         return Ok(());
     }
-    if core.document_count() as u64 + fresh() > quota {
+    if core.document_count() as u64 + core.experience_units() + fresh() > quota {
         state
             .metrics
             .quota_rejections

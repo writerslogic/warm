@@ -270,3 +270,136 @@ fn invalid_memory_config_stops_the_server_at_startup() {
         .unwrap();
     assert!(!status.success());
 }
+
+#[test]
+fn observations_over_http_are_routed_bounded_recalled_and_forgotten() {
+    let dir = tempfile::tempdir().unwrap();
+    let server = start(dir.path(), &[]);
+    let tree = json!({"role": "RootWebArea", "name": "Checkout", "children": [
+        {"role": "button", "name": "Place order"}, {"role": "button", "name": "Cancel"}]});
+    let (status, body) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e1", "step": 0, "url": "http://shop/c", "tree": tree}),
+    );
+    assert_eq!(status, 200, "{body}");
+    let (status, body) = server.post("recall", "t1", &json!({"query": "Place order button"}));
+    assert_eq!(status, 200, "{body}");
+    assert!(
+        ids(&body).iter().any(|i| i.starts_with("experience:r")),
+        "{body}"
+    );
+
+    // Nesting is refused before any tree is built: the JSON parser stops at 128 levels, which is
+    // 63 tree levels, so the experience depth limit of 128 is not reachable over HTTP.
+    let mut deep = json!({"role": "button", "name": "leaf"});
+    for _ in 0..600 {
+        deep = json!({"role": "group", "name": "g", "children": [deep]});
+    }
+    let (status, body) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e2", "step": 0, "tree": deep}),
+    );
+    assert_eq!(status, 400, "{body}");
+    assert_eq!(body["error"]["code"], "nesting_too_deep", "{body}");
+    // 63 levels is accepted: the parser's limit is the only bound below the library's 128.
+    let mut ok = json!({"role": "button", "name": "leaf"});
+    for _ in 0..61 {
+        ok = json!({"role": "group", "name": "g", "children": [ok]});
+    }
+    let (status, body) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e2", "step": 0, "tree": ok}),
+    );
+    assert_eq!(status, 200, "{body}");
+    server.post(
+        "forget",
+        "t1",
+        &json!({"scope": {"kind": "episode", "episode": "e2"}}),
+    );
+    // Byte limits are checked on the raw value, before allocation.
+    let (status, _) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e3", "step": 0,
+                "tree": {"role": "button", "name": "x".repeat(16 * 1024 + 1)}}),
+    );
+    assert_eq!(status, 422);
+    let (status, _) = server.post(
+        "remember",
+        "t1",
+        &json!({"episode": "e4", "step": 0, "tree": {"role": "", "name": "x"}}),
+    );
+    assert_eq!(status, 422);
+    let (status, _) = server.post(
+        "remember",
+        "t1",
+        &json!({"facts": [
+            {"id": "f", "text": "a fact in the same batch"},
+            {"episode": "e5", "step": 0, "tree": {"role": "", "name": "x"}}]}),
+    );
+    assert_eq!(status, 422);
+    let (_, body) = server.post(
+        "recall",
+        "t1",
+        &json!({"query": "a fact in the same batch"}),
+    );
+    assert!(
+        ids(&body).is_empty(),
+        "a refused batch stores nothing: {body}"
+    );
+
+    let (status, body) = server.post(
+        "forget",
+        "t1",
+        &json!({"scope": {"kind": "episode", "episode": "e1"}}),
+    );
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["forgotten"][0], "experience:episode:e1");
+    let (_, body) = server.post("recall", "t1", &json!({"query": "Place order button"}));
+    assert!(
+        !ids(&body).iter().any(|i| i.starts_with("experience:")),
+        "{body}"
+    );
+}
+
+#[test]
+fn observations_count_against_the_tenant_quota() {
+    // The first observation stores one episode, one step and one region (3 units); each further
+    // episode of the same shape shares the region and adds an episode and a step (2 units).
+    let obs = |ep: &str| {
+        json!({"episode": ep, "step": 0, "url": "http://q/p",
+            "tree": {"role": "RootWebArea", "name": "Quota page", "children": [
+                {"role": "button", "name": "press the shared button"}]}})
+    };
+    let units_after = |quota: &str, n: usize| -> Vec<u16> {
+        let dir = tempfile::tempdir().unwrap();
+        let server = start(dir.path(), &["--max-documents-per-tenant", quota]);
+        (0..n)
+            .map(|i| server.post("remember", "q", &obs(&format!("e{i}"))).0)
+            .collect()
+    };
+    assert_eq!(
+        units_after("5", 3),
+        vec![200, 200, 429],
+        "quota is reached exactly"
+    );
+    assert_eq!(
+        units_after("7", 3),
+        vec![200, 200, 200],
+        "quota-1..quota admits"
+    );
+    assert_eq!(units_after("4", 2), vec![200, 429], "quota+1 refuses");
+    let dir = tempfile::tempdir().unwrap();
+    let server = start(dir.path(), &["--max-documents-per-tenant", "5"]);
+    assert_eq!(server.post("remember", "q", &obs("a")).0, 200);
+    assert_eq!(server.post("remember", "q", &obs("b")).0, 200);
+    let (status, body) = server.post("remember", "q", &obs("c"));
+    assert_eq!(status, 429, "{body}");
+    assert_eq!(body["error"]["code"], "quota_exceeded");
+    // The refused step left nothing: a fact still cannot fit, and the episode is not stored.
+    let (status, _) = server.post("remember", "q", &json!({"id": "f", "text": "a fact"}));
+    assert_eq!(status, 429);
+}
