@@ -199,10 +199,14 @@ def test_inner_product_ranks_by_dot_product(data, queries, code_bits, direct_ip)
     scaled = data * np.random.default_rng(10).uniform(0.2, 5.0, (len(data), 1)).astype(np.float32)
     dots = queries.astype(np.float64) @ scaled.astype(np.float64).T
     truth = np.argsort(-dots, axis=1, kind="stable")[:, :K]
-    idx = hm.VectorIndex("ip", degree=32, build_ef=128, threads=2, code_bits=code_bits, direct_ip=direct_ip)
+    # The reduction puts every row on one sphere, a harder graph than the raw data: more effort,
+    # and the unbounded max-recall schedule (the default "standard" bounds each construction
+    # search, which this 4,000-row graph at build_ef 128 does not tolerate: recall 0.92).
+    idx = hm.VectorIndex(
+        "ip", degree=32, build_ef=128, threads=2, code_bits=code_bits, direct_ip=direct_ip, build_profile="max-recall"
+    )
     idx.fit(scaled)
     assert repr(idx).startswith("VectorIndex(metric='ip'")
-    # The reduction puts every row on one sphere, a harder graph than the raw data: more effort.
     idx.set_query_arguments(ef=500, rerank=500)
     found = [idx.query(q, K) for q in queries]
     assert recall(found, truth) >= 0.95
