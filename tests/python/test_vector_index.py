@@ -29,14 +29,26 @@ def test_cosine_query_scaling_preserves_complete_ranking(bits, scale):
     np.testing.assert_array_equal(index.batch_query_array(query[None], 16)[0], expected)
 
 
-@pytest.mark.parametrize("k", [15, 16, 17, sys.maxsize])
-def test_requested_count_larger_than_index_does_not_overallocate(k):
-    rows = np.random.default_rng(898).normal(size=(16, 16)).astype(np.float32)
-    index = hm.VectorIndex("euclidean", degree=4, build_ef=16, threads=1)
-    index.fit(rows)
-    index.set_query_arguments(ef=16, rerank=16)
+@pytest.mark.parametrize(
+    "configured, k",
+    [(True, 15), (True, 16), (True, 17), (True, sys.maxsize), (False, 50)],
+    ids=["k=15", "k=16", "k=17", "k=maxsize", "defaults-k=50"],
+)
+def test_requested_count_larger_than_index_does_not_overallocate(configured, k):
+    if configured:
+        rows = np.random.default_rng(898).normal(size=(16, 16)).astype(np.float32)
+        index = hm.VectorIndex("euclidean", degree=4, build_ef=16, threads=1)
+        index.fit(rows)
+        index.set_query_arguments(ef=16, rerank=16)
+    else:
+        # Default metric and query arguments.
+        rows = clustered(12, 8, 3)
+        index = hm.VectorIndex(degree=4, build_ef=16)
+        index.fit(rows)
     expected = index.query(rows[0], min(k, len(rows)))
     np.testing.assert_array_equal(index.query(rows[0], k), expected)
+    if k >= len(rows):
+        assert sorted(expected.tolist()) == list(range(len(rows)))
     np.testing.assert_array_equal(index.batch_query(rows[:1], k)[0], expected)
 
 
@@ -137,6 +149,8 @@ def recall(found, truth):
 
 
 def test_recall_against_exact_search(index, data, queries):
+    assert (len(index), index.dim) == (N, DIM)
+    assert index.index_bytes > 0
     truth = exact_top_k(data, queries, K)
     index.set_query_arguments(ef=128, rerank=64)
     found = [index.query(q, K) for q in queries]
@@ -257,16 +271,25 @@ def test_omitted_reservoir_restores_legacy_retention():
     np.testing.assert_array_equal(index.query(query, K), expected)
 
 
-def test_default_traversal_codes_match_explicit_four_bits():
-    rows = clustered(128, 17, 31)
-    probes = clustered(8, 17, 32)
-    default = hm.VectorIndex("ip", degree=16, build_ef=64, threads=1)
-    explicit = hm.VectorIndex("ip", degree=16, build_ef=64, threads=1, code_bits=4)
-    for idx in (default, explicit):
-        idx.fit(rows)
-        idx.set_query_arguments(ef=64, rerank=32)
-    assert default.index_bytes == explicit.index_bytes
-    for actual, expected in zip(default.batch_query(probes, K), explicit.batch_query(probes, K)):
+@pytest.mark.parametrize(
+    "metric, dim, seed, explicit_init, explicit_fit, ef",
+    [
+        ("ip", 17, 31, {"code_bits": 4}, {}, 64),
+        *[(metric, 7, 41, {}, {"training_queries": None}, 32) for metric in ("angular", "euclidean", "ip")],
+    ],
+    ids=["code_bits=4", "training_queries=None-angular", "training_queries=None-euclidean", "training_queries=None-ip"],
+)
+def test_omitted_parameter_matches_explicit_default(metric, dim, seed, explicit_init, explicit_fit, ef):
+    rows = clustered(128, dim, seed)
+    probes = clustered(8, dim, seed + 1)
+    omitted = hm.VectorIndex(metric, degree=16, build_ef=64, threads=1)
+    explicit = hm.VectorIndex(metric, degree=16, build_ef=64, threads=1, **explicit_init)
+    omitted.fit(rows)
+    explicit.fit(rows, **explicit_fit)
+    assert omitted.index_bytes == explicit.index_bytes
+    for index in (omitted, explicit):
+        index.set_query_arguments(ef=ef, rerank=32)
+    for actual, expected in zip(omitted.batch_query(probes, K), explicit.batch_query(probes, K)):
         np.testing.assert_array_equal(actual, expected)
 
 
@@ -435,21 +458,6 @@ def test_failed_load_preserves_residual_configuration_and_results(tmp_path):
 
 
 @pytest.mark.parametrize("metric", ["angular", "euclidean", "ip"])
-def test_omitted_training_queries_match_explicit_none(metric):
-    rows = clustered(128, 7, 41)
-    probes = clustered(8, 7, 42)
-    omitted = hm.VectorIndex(metric, degree=16, build_ef=64, threads=1)
-    explicit = hm.VectorIndex(metric, degree=16, build_ef=64, threads=1)
-    omitted.fit(rows)
-    explicit.fit(rows, training_queries=None)
-    assert omitted.index_bytes == explicit.index_bytes
-    for index in (omitted, explicit):
-        index.set_query_arguments(ef=32, rerank=32)
-    for actual, expected in zip(omitted.batch_query(probes, K), explicit.batch_query(probes, K)):
-        np.testing.assert_array_equal(actual, expected)
-
-
-@pytest.mark.parametrize("metric", ["angular", "euclidean", "ip"])
 def test_training_queries_preserve_fortran_row_coordinates(metric):
     rows = clustered(128, 7, 43)
     learn = clustered(32, 7, 44)
@@ -514,14 +522,6 @@ def test_training_queries_inner_product_matches_asymmetric_l2_projection():
     assert recall(inner_product.batch_query(probes, K), truth) >= 0.99
 
 
-def test_k_above_size_returns_every_row_once():
-    small = clustered(12, 8, 3)
-    idx = hm.VectorIndex(degree=4, build_ef=16)
-    idx.fit(small)
-    ids = idx.query(small[0], 50)
-    assert sorted(ids.tolist()) == list(range(12))
-
-
 def test_rejects_invalid_arguments(index):
     with pytest.raises(ValueError, match="metric"):
         hm.VectorIndex("hamming")
@@ -545,12 +545,6 @@ def test_rejects_invalid_arguments(index):
         hm.VectorIndex().fit(np.ones(8, np.float32))
     with pytest.raises(ValueError, match="non-finite"):
         hm.VectorIndex().fit(np.full((4, 4), np.nan, np.float32))
-
-
-def test_reports_size(index):
-    assert len(index) == N
-    assert index.dim == DIM
-    assert index.index_bytes > 0
 
 
 def _filter_fixture(n=3000, dim=32):

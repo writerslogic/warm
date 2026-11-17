@@ -50,7 +50,7 @@ impl Generator {
         let mut l = load(source, device, super::dtype_for(device, true), false)?;
         // The rotary table only needs the positions a generation can reach (the 2507 models
         // declare 262144). Uncapped and in f32, Metal produced NaN logits; capped and in bf16 it
-        // decodes correctly. Which of the two changes was required was not isolated.
+        // decodes correctly. Keep both: which one is required is not known.
         l.config.max_position_embeddings = l.config.max_position_embeddings.min(MAX_CONTEXT);
         let mut tokenizer = l.tokenizer;
         tokenizer.with_padding(None);

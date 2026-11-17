@@ -33,13 +33,7 @@ impl EmbeddingSpace {
         let digest = Sha256::digest(serde_json::to_vec(descriptor)?);
         Ok(Self {
             model,
-            revision: format!(
-                "hms-embedding-v1:{}",
-                digest
-                    .iter()
-                    .map(|b| format!("{b:02x}"))
-                    .collect::<String>()
-            ),
+            revision: format!("hms-embedding-v1:{}", crate::core::hash::hex(&digest)),
             dimensions,
             normalization: normalization.into(),
             metric: "cosine".into(),
