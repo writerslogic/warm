@@ -13,6 +13,7 @@ Native Python bindings for WARM's vector search and vector-symbolic algebra.
 Python 3.9 or newer is required. Install the native binding; NumPy (`>=1.26`, which the vector-index API needs) is installed with it:
 
 ```sh
+uv init   # only outside an existing uv project
 uv add warm-python
 ```
 

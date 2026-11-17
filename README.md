@@ -162,7 +162,8 @@ const hits = await warm.memory.recall('restore backups', { filter: { project: 'a
 console.log(hits[0]?.text)
 ```
 
-Set `WARM_API_KEY` to the server's key before running the client. This memory example uses
+Save it as an ES module (`app.mjs`, or set `"type": "module"` in `package.json`); it uses
+`import` and top-level `await`. Set `WARM_API_KEY` to the server's key before running the client. This memory example uses
 lexical retrieval and needs no embedding model. A runnable source example also checks retrieval
 and deletion in an isolated namespace:
 
@@ -231,7 +232,7 @@ supply. `warm-python` (imported as `writerslogic_warm`) is the in-process native
 ```sh
 cargo install --locked --features server --bin warm-server warm-rust
 WARM_API_KEY=change-me warm-server --input-dim 384 &
-uv pip install warm-sdk
+uv venv && uv pip install warm-sdk   # run the example with .venv/bin/python
 ```
 
 ```python
