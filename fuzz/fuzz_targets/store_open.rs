@@ -49,7 +49,14 @@ fn copy_tree(from: &Path, to: &Path) {
         if entry.path().is_dir() {
             copy_tree(&entry.path(), &target);
         } else {
-            std::fs::copy(entry.path(), target).expect("copy");
+            // libFuzzer's timeout alarm can interrupt the copy syscall.
+            loop {
+                match std::fs::copy(entry.path(), &target) {
+                    Ok(_) => break,
+                    Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                    Err(e) => panic!("copy: {e}"),
+                }
+            }
         }
     }
 }
