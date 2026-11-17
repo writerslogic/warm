@@ -143,6 +143,8 @@ export interface Explanation {
   validTo?: number | null
   withinValidity: boolean
   chain: ChainLink[]
+  /** Experience-core results: where the region occurred. */
+  provenance?: { episode: string; step: number; count: number }[]
 }
 export interface FactRecord {
   id: string
@@ -169,6 +171,7 @@ export type ForgetScope =
   | { kind: 'subject'; subject: string }
   | { kind: 'entity'; entity: string }
   | { kind: 'ingestedBefore' | 'eventBefore'; time: number }
+  | { kind: 'episode'; episode: string }
   | { kind: 'matching'; filter: JsonObject }
 export interface ForgetOptions extends RequestOptions {
   includeChain?: boolean

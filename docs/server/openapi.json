@@ -550,6 +550,16 @@
             },
             "type": "array"
           },
+          "provenance": {
+            "description": "For a result from the experience core: the episodes and steps where the region\noccurred (at most eight, in episode order).",
+            "items": {
+              "$ref": "#/components/schemas/ObservationProvenance"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "rank": {
             "description": "1-based position among the ranked candidates, after the recency policy.",
             "format": "uint",
@@ -907,6 +917,23 @@
               "filter"
             ],
             "type": "object"
+          },
+          {
+            "description": "Every observation step of one episode held by the experience core. The episode is\nremoved and its text scrubbed from the snapshot and journal before the call returns.",
+            "properties": {
+              "episode": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "episode",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "episode"
+            ],
+            "type": "object"
           }
         ]
       },
@@ -963,6 +990,38 @@
         },
         "required": [
           "history"
+        ],
+        "type": "object"
+      },
+      "IdMatch": {
+        "description": "One vector match without stored text or metadata.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "score": {
+            "description": "Cosine similarity.",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "score"
+        ],
+        "type": "object"
+      },
+      "IdMatches": {
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/IdMatch"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "matches"
         ],
         "type": "object"
       },
@@ -1131,6 +1190,121 @@
           "subjectEntityFilters",
           "documentPagination",
           "committedErrorCode"
+        ],
+        "type": "object"
+      },
+      "ObservationInput": {
+        "additionalProperties": false,
+        "description": "A step of an agent trajectory, stored by the experience core. Recognized by `episode`\n(string), `step` (non-negative integer) and `tree` (object). Bounds: 128 levels, 200000 nodes,\n16 KiB per string; over HTTP the JSON parser's limit of 128 levels allows 63 tree levels.",
+        "properties": {
+          "action": {
+            "additionalProperties": true,
+            "description": "`{\"label\": text}` or `{\"call\": text}`: the action taken before this observation.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "episode": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "goal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "step": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "tree": {
+            "$ref": "#/components/schemas/ObservationNode"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "episode",
+          "step",
+          "tree"
+        ],
+        "type": "object"
+      },
+      "ObservationNode": {
+        "additionalProperties": false,
+        "description": "A node of an accessibility tree. `children` hold nodes of the same shape.",
+        "properties": {
+          "children": {
+            "items": true,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "handle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "props": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "type": "object"
+      },
+      "ObservationProvenance": {
+        "description": "Where a region of an observation occurred.",
+        "properties": {
+          "count": {
+            "description": "How many times the region occurs in that step.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "episode": {
+            "type": "string"
+          },
+          "step": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "episode",
+          "step",
+          "count"
         ],
         "type": "object"
       },
@@ -1512,7 +1686,7 @@
         "properties": {
           "facts": {
             "items": {
-              "$ref": "#/components/schemas/RememberInput"
+              "$ref": "#/components/schemas/RememberItem"
             },
             "minItems": 1,
             "type": "array"
@@ -1626,6 +1800,17 @@
         ],
         "type": "object"
       },
+      "RememberItem": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/RememberInput"
+          },
+          {
+            "$ref": "#/components/schemas/ObservationInput"
+          }
+        ],
+        "description": "One item of a batch: a fact, or a step of an agent trajectory."
+      },
       "RememberReply": {
         "properties": {
           "remembered": {
@@ -1644,6 +1829,9 @@
         "anyOf": [
           {
             "$ref": "#/components/schemas/RememberInput"
+          },
+          {
+            "$ref": "#/components/schemas/ObservationInput"
           },
           {
             "$ref": "#/components/schemas/RememberBatch"
@@ -3379,6 +3567,113 @@
           }
         ],
         "summary": "Nearest documents to a vector, best first, with exact cosine scores.",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/v1/query/vector": {
+      "post": {
+        "operationId": "queryVector",
+        "parameters": [
+          {
+            "description": "Tenant whose store is used: 1..=64 of [A-Za-z0-9_-]. Defaults to the key's only tenant, else \"default\".",
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "1..=--max-top-k (default 10).",
+            "in": "query",
+            "name": "top_k",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Beam width of the graph query, 1..=4096 (default --query-ef).",
+            "in": "query",
+            "name": "ef",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "auto (default), exact or graph.",
+            "in": "query",
+            "name": "index",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Keep documents whose id is an integer at least this large.",
+            "in": "query",
+            "name": "id_gte",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Keep documents whose id is an integer smaller than this.",
+            "in": "query",
+            "name": "id_lt",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "description": "Exactly --input-dim * 4 bytes: little-endian f32 values",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdMatches"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error (RFC 9457 problem details)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Nearest documents to a vector sent as the raw body (--input-dim little-endian f32 values): ids and cosine scores only, optionally restricted to an integer id range.",
         "tags": [
           "documents"
         ]

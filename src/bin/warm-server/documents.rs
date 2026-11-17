@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use axum::extract::rejection::{PathRejection, QueryRejection};
 use axum::extract::{Path as UrlPath, Query, Request, State};
@@ -165,7 +165,7 @@ pub fn enforce_quota(
     if quota == 0 {
         return Ok(());
     }
-    if core.document_count() as u64 + fresh() > quota {
+    if core.document_count() as u64 + core.experience_units() + fresh() > quota {
         state
             .metrics
             .quota_rejections
@@ -752,8 +752,11 @@ const MAX_SEARCH_CHUNKS: u32 = 1000;
 /// JSON tree, and stored text or metadata is copied into it only when requested.
 pub async fn search(State(state): State<Arc<AppState>>, req: Request) -> ApiResult {
     let (_, tenant) = admit(&state, &req, Scope::Read)?;
+    let t = Instant::now();
     let permit = acquire(&state).await?;
+    let t = state.metrics.stage(0, t);
     let bytes = read_body(&state, req.into_body()).await?;
+    let t = state.metrics.stage(1, t);
     let out = blocking(permit, move || {
         let q: SearchIn = parse(&bytes)?;
         if q.query.len() > 8192 || q.query.split_whitespace().next().is_none() {
@@ -775,10 +778,13 @@ pub async fn search(State(state): State<Arc<AppState>>, req: Request) -> ApiResu
             }
         }
         // The engine ranks chunks and a document longer than one chunk can rank several, of
-        // which its best one stands. Ask for more chunks than documents and widen the request
-        // until `top_k` distinct documents are found or the ranking is exhausted.
+        // which its best one stands. Ask for as many chunks as documents (more once a search
+        // has found documents of several chunks) and widen the request until `top_k` distinct
+        // documents are found or the ranking is exhausted.
         let core = state.core(&tenant)?;
-        let mut chunks = (top_k as u32).saturating_mul(4).min(MAX_SEARCH_CHUNKS);
+        let t = state.metrics.stage(2, t);
+        let factor = state.search_chunk_factor.load(Ordering::Relaxed);
+        let mut chunks = (top_k as u32).saturating_mul(factor).min(MAX_SEARCH_CHUNKS);
         let mut results = loop {
             let options = SearchOptions {
                 k: Some(chunks),
@@ -796,9 +802,12 @@ pub async fn search(State(state): State<Arc<AppState>>, req: Request) -> ApiResu
             if exhausted || results.len() >= top_k as usize {
                 break results;
             }
+            // Documents of several chunks rank several times: ask for more from now on.
+            state.search_chunk_factor.store(4, Ordering::Relaxed);
             chunks = chunks.saturating_mul(4).min(MAX_SEARCH_CHUNKS);
         };
         drop(core);
+        let t = state.metrics.stage(3, t);
         results.truncate(top_k as usize);
         let hits: Vec<SearchHit> = results
             .into_iter()
@@ -809,7 +818,10 @@ pub async fn search(State(state): State<Arc<AppState>>, req: Request) -> ApiResu
                 metadata: metadata.then_some(hit.metadata),
             })
             .collect();
-        serde_json::to_vec(&SearchHits { hits }).map_err(ApiError::internal)
+        let out = serde_json::to_vec(&SearchHits { hits }).map_err(ApiError::internal);
+        state.metrics.stage(4, t);
+        state.metrics.stage_requests.fetch_add(1, Ordering::Relaxed);
+        out
     })
     .await?;
     Ok(json_bytes_response(StatusCode::OK, out))
@@ -952,6 +964,144 @@ pub async fn query(State(state): State<Arc<AppState>>, req: Request) -> ApiResul
     Ok(json_response(StatusCode::OK, &body(&Matches { matches })))
 }
 
+/// Query-string parameters of `POST /api/v1/query/vector`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VectorParams {
+    /// 1..=`--max-top-k`, default 10.
+    pub top_k: Option<i64>,
+    /// Beam width of the graph query, 1..=4096. Default: `--query-ef`.
+    pub ef: Option<u32>,
+    /// `auto`, `exact` or `graph`; see `query`.
+    pub index: Option<String>,
+    /// Keep documents whose id is an integer at least this large.
+    pub id_gte: Option<i64>,
+    /// Keep documents whose id is an integer smaller than this.
+    pub id_lt: Option<i64>,
+}
+
+/// `POST /api/v1/query/vector`: the nearest documents to a query vector sent as the raw body,
+/// `--input-dim` little-endian `f32` values and nothing else. The reply carries ids and cosine
+/// scores only, serialized straight from the index's hits. The length is checked against the
+/// header before the body is read.
+pub async fn query_vector(
+    State(state): State<Arc<AppState>>,
+    params: Result<Query<VectorParams>, QueryRejection>,
+    req: Request,
+) -> ApiResult {
+    let (_, tenant) = admit(&state, &req, Scope::Read)?;
+    let Query(params) = params.map_err(|e| ApiError::bad(format!("invalid query string: {e}")))?;
+    let want = state.cfg.input_dim * 4;
+    let declared = req
+        .headers()
+        .get(header::CONTENT_LENGTH)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse::<u64>().ok());
+    if declared.is_some_and(|len| len != want as u64) {
+        return Err(ApiError::bad(format!(
+            "the body must be exactly {want} bytes: {} little-endian f32 values",
+            state.cfg.input_dim
+        )));
+    }
+    let t = Instant::now();
+    let permit = acquire(&state).await?;
+    let t = state.metrics.stage(0, t);
+    let bytes = read_body_max(&state, req.into_body(), want).await?;
+    let t = state.metrics.stage(1, t);
+    let out = blocking(permit, move || {
+        if bytes.len() != want {
+            return Err(ApiError::bad(format!(
+                "the body must be exactly {want} bytes: {} little-endian f32 values",
+                state.cfg.input_dim
+            )));
+        }
+        let values: Vec<f64> = bytes
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|b| f64::from(f32::from_le_bytes(*b)))
+            .collect();
+        drop(bytes);
+        dense(&values, state.cfg.input_dim, "query vector")?;
+        let top_k = params.top_k.unwrap_or(10);
+        if top_k < 1 || top_k > i64::from(state.cfg.max_top_k) {
+            return Err(ApiError::bad(format!(
+                "top_k must be 1..={}",
+                state.cfg.max_top_k
+            )));
+        }
+        let range = match (params.id_gte, params.id_lt) {
+            (None, None) => None,
+            (low, high) => Some((low.unwrap_or(i64::MIN), high.unwrap_or(i64::MAX))),
+        };
+        let options = query_options(&state.cfg, params.index.as_deref(), params.ef)?;
+        let core = state.core(&tenant)?;
+        let epoch = core.vector_epoch();
+        let mut retry_exact = epoch & 1 != 0;
+        let t = state.metrics.stage(2, t);
+        if options.mode != VectorIndexMode::Exact {
+            if let Some(vectors) = core
+                .vectors()
+                .filter(|vectors| !retry_exact && vectors.covers(&core))
+            {
+                let query = vindex::normalize(&values).map_err(|e| ApiError::bad(e.to_string()))?;
+                let hits = vectors
+                    .search_range(&query, top_k as usize, options.ef, range)
+                    .map_err(ApiError::internal)?;
+                let t = state.metrics.stage(3, t);
+                // A hit deleted since the capture must not reach the reply; the check is a
+                // table lookup, not a read of the stored document.
+                let matches: Vec<IdMatch> = hits
+                    .into_iter()
+                    .filter(|(id, _)| core.has_document(id))
+                    .map(|(id, score)| IdMatch {
+                        id: id.to_string(),
+                        score: f64::from(score),
+                    })
+                    .collect();
+                if core.vector_epoch() == epoch {
+                    let out =
+                        serde_json::to_vec(&IdMatches { matches }).map_err(ApiError::internal);
+                    state.metrics.stage(4, t);
+                    state.metrics.stage_requests.fetch_add(1, Ordering::Relaxed);
+                    return out;
+                }
+                retry_exact = true;
+            }
+        }
+        if range.is_some() {
+            return Err(ApiError::new(
+                StatusCode::CONFLICT,
+                "index_unavailable",
+                "id range filters need the vector graph; run /api/v1/index/maintain first",
+            ));
+        }
+        let mut fallback = options.clone();
+        if retry_exact {
+            fallback.mode = VectorIndexMode::Exact;
+        }
+        let hits = core
+            .search_vectors(&values, top_k as usize, &fallback)
+            .map_err(|e| {
+                if e.downcast_ref::<GraphUnavailable>().is_some() {
+                    ApiError::new(StatusCode::CONFLICT, "index_unavailable", e.to_string())
+                } else {
+                    ApiError::internal(e)
+                }
+            })?;
+        let matches = hits
+            .into_iter()
+            .map(|hit| IdMatch {
+                id: hit.document_id,
+                score: hit.score,
+            })
+            .collect();
+        serde_json::to_vec(&IdMatches { matches }).map_err(ApiError::internal)
+    })
+    .await?;
+    Ok(json_bytes_response(StatusCode::OK, out))
+}
+
 fn to_matches(hits: Vec<writerslogic_warm::DocumentResult>) -> Vec<Match> {
     hits.into_iter()
         .map(|hit| Match {
@@ -1071,6 +1221,9 @@ pub fn vector_index_body(core: &CoreGuard) -> VectorIndexBody {
     }
 }
 
+/// Embedded chunks the engine's bounding-box document index accepts (`documents::dense::MAX_ROWS`).
+const DENSE_INDEX_MAX_ROWS: usize = 250_000;
+
 pub async fn maintain_index(State(state): State<Arc<AppState>>, req: Request) -> ApiResult {
     let (_, tenant) = admit(&state, &req, Scope::Write)?;
     let permit = acquire(&state).await?;
@@ -1086,7 +1239,12 @@ pub async fn maintain_index(State(state): State<Arc<AppState>>, req: Request) ->
         // below sees the engine's snapshot current and does not build it a second time.
         core.maintain_vector_indexes(state.cfg.graph_min_rows, true)
             .map_err(ApiError::internal)?;
-        core.train_document_index().map_err(ApiError::internal)?;
+        // The bounding-box index serves filtered and hybrid queries and holds at most
+        // `DENSE_INDEX_MAX_ROWS` embedded chunks; a larger store keeps the exact scan and the
+        // persisted graph, which answer every vector query.
+        if core.vector_index_status().rows <= DENSE_INDEX_MAX_ROWS {
+            core.train_document_index().map_err(ApiError::internal)?;
+        }
         Ok((core.document_index_trained(), vector_index_body(&core)))
     })
     .await?;

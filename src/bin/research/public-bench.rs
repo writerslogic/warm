@@ -41,7 +41,7 @@ use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{DocumentInput, EmbeddingSpace, EntangledHVec, SearchOptions, WarmCore};
 
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
 
 #[derive(Parser)]
 struct Cli {
@@ -115,9 +115,10 @@ enum Mode {
         max_exact: Vec<usize>,
         #[arg(long, default_value_t = 128)]
         build_ef: usize,
-        /// Construction schedule: max-recall (the default two passes), high, balanced or fast. A
-        /// graph cache or saved index built with another profile is rejected or must use a new path.
-        #[arg(long, default_value = "max-recall")]
+        /// Construction schedule: standard (the default), max-recall (the unbounded two passes of
+        /// earlier releases), high, balanced or fast. A graph cache or saved index built with
+        /// another profile is rejected or must use a new path.
+        #[arg(long, default_value = "standard")]
         build_profile: String,
         /// Score the construction search with 8-bit codes (exact prune).
         #[arg(long)]
@@ -839,10 +840,9 @@ fn ann_qgraph_count<const K: usize>(a: &QgraphArgs) -> Result<()> {
                               "residual": a.residual, "residual_bits": a.residual_bits,
                               "vertex_bits": a.vertex_bits, "id_bytes": a.id_bytes, "screen": a.screen,
                               "block_bits": a.block_bits, "align_rows": a.align_rows, "reorder": a.reorder});
-    // Recorded only when it differs from the default, so records of earlier builds still match.
-    if params.profile != BuildProfile::MaxRecall {
-        build_params["build_profile"] = json!(params.profile.name());
-    }
+    // Always recorded: a record without it is an earlier release's max-recall build and does
+    // not match a standard request.
+    build_params["build_profile"] = json!(params.profile.name());
     let wait = if a.sync.is_some() { 0 } else { a.max_wait_secs };
     let deadline = Instant::now() + std::time::Duration::from_secs(wait);
     let (load_before_build, build_gate) = wait_for_idle(a.max_load, deadline);

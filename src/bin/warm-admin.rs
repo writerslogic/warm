@@ -1,6 +1,10 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;

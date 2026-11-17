@@ -1,6 +1,27 @@
 [
  {
   "status": "LOSS",
+  "dataset": "glove-100-angular (1,183,514 vectors, 10,000 queries)",
+  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
+  "suite": "heavy",
+  "metric": "p99_latency@recall0.95",
+  "label": "p99 latency @ 0.95",
+  "comparator": "FAISS IVF-PQ fast-scan (+refine)",
+  "warm": 830.799,
+  "comparator_value": 792.945,
+  "unit": "us",
+  "advantage_factor": 0.9544366326873288,
+  "advantage_ci": [
+   0.9338078106877875,
+   0.9859926585177977
+  ],
+  "level": 0.99,
+  "file": "benchmarks/results/competitive/heavy-ann-glove-100-angular-n1183514-linux-x86_64-gcp-n2-icelake-8c-16g.json",
+  "hypothesis": "same as QPS at 0.95; tail latency comes from the slowest queries' expansion counts",
+  "code_path": "src/core/qgraph/vertex.rs (VGraph search/refine), src/bin/research/public-bench.rs (ann-qgraph)"
+ },
+ {
+  "status": "LOSS",
   "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
   "hardware_class": "linux-aarch64-neoverse-n1-8c-31g",
   "suite": "standard",
@@ -2671,153 +2692,6 @@
   "file": "benchmarks/results/competitive/standard-text-beir-scifact-linux-x86_64-intel-xeon-2-60ghz-8c-16g.json",
   "hypothesis": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
   "code_path": "src/core/documents.rs (prepare, search), src/core/documents/search.rs, src/core/engine/document_api.rs"
- },
- {
-  "status": "TIE",
-  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "cold_start_s",
-  "label": "Cold start to first answer, per build",
-  "comparator": "hnswlib (native C++) m16",
-  "warm": 0.0954654375,
-  "comparator_value": 0.7390054905,
-  "unit": "s",
-  "advantage_factor": 7.741078969024784,
-  "advantage_ci": [
-   0.9837140570083225,
-   7.950107040848496
-  ],
-  "level": 0.999375,
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "ANN: persist and mmap the VGraph (no persisted ANN index exists today); text: lazy-load the arena instead of reading it at open",
-  "code_path": "no persisted VGraph exists; Graph::save/load only cache the structure (src/core/qgraph)"
- },
- {
-  "status": "TIE",
-  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "cold_start_s",
-  "label": "Cold start to first answer, per build",
-  "comparator": "hnswlib (native C++) m16e500",
-  "warm": 0.0954654375,
-  "comparator_value": 0.7371311265,
-  "unit": "s",
-  "advantage_factor": 7.721445015113454,
-  "advantage_ci": [
-   0.9846785785254545,
-   7.876057359925455
-  ],
-  "level": 0.999375,
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "ANN: persist and mmap the VGraph (no persisted ANN index exists today); text: lazy-load the arena instead of reading it at open",
-  "code_path": "no persisted VGraph exists; Graph::save/load only cache the structure (src/core/qgraph)"
- },
- {
-  "status": "TIE",
-  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "cold_start_s",
-  "label": "Cold start to first answer, per build",
-  "comparator": "FAISS HNSW m32",
-  "warm": 0.0954654375,
-  "comparator_value": 1.1750575950000002,
-  "unit": "s",
-  "advantage_factor": 12.308722672537904,
-  "advantage_ci": [
-   0.7786813571483272,
-   28.956491849797388
-  ],
-  "level": 0.999375,
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "ANN: persist and mmap the VGraph (no persisted ANN index exists today); text: lazy-load the arena instead of reading it at open",
-  "code_path": "no persisted VGraph exists; Graph::save/load only cache the structure (src/core/qgraph)"
- },
- {
-  "status": "TIE",
-  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "cold_start_s",
-  "label": "Cold start to first answer, per build",
-  "comparator": "FAISS HNSW m16e500",
-  "warm": 0.0954654375,
-  "comparator_value": 1.008226058,
-  "unit": "s",
-  "advantage_factor": 10.561163122517508,
-  "advantage_ci": [
-   0.6928849569102075,
-   23.714209244045236
-  ],
-  "level": 0.999375,
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "ANN: persist and mmap the VGraph (no persisted ANN index exists today); text: lazy-load the arena instead of reading it at open",
-  "code_path": "no persisted VGraph exists; Graph::save/load only cache the structure (src/core/qgraph)"
- },
- {
-  "status": "TIE",
-  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "cold_start_s",
-  "label": "Cold start to first answer, per build",
-  "comparator": "FAISS IVF-PQ fast-scan (+refine) ab_nl2048",
-  "warm": 0.0954654375,
-  "comparator_value": 0.8415795045000001,
-  "unit": "s",
-  "advantage_factor": 8.815541273772512,
-  "advantage_ci": [
-   0.6071623640623389,
-   19.92348974416874
-  ],
-  "level": 0.999375,
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "ANN: persist and mmap the VGraph (no persisted ANN index exists today); text: lazy-load the arena instead of reading it at open",
-  "code_path": "no persisted VGraph exists; Graph::save/load only cache the structure (src/core/qgraph)"
- },
- {
-  "status": "TIE",
-  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "cold_start_s",
-  "label": "Cold start to first answer, per build",
-  "comparator": "USearch m16",
-  "warm": 0.0954654375,
-  "comparator_value": 0.644969712,
-  "unit": "s",
-  "advantage_factor": 6.756054640193735,
-  "advantage_ci": [
-   0.8515616284981387,
-   21.65257970909118
-  ],
-  "level": 0.999375,
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "ANN: persist and mmap the VGraph (no persisted ANN index exists today); text: lazy-load the arena instead of reading it at open",
-  "code_path": "no persisted VGraph exists; Graph::save/load only cache the structure (src/core/qgraph)"
- },
- {
-  "status": "TIE",
-  "dataset": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "cold_start_s",
-  "label": "Cold start to first answer, per build",
-  "comparator": "USearch m32",
-  "warm": 0.0954654375,
-  "comparator_value": 0.7141688825,
-  "unit": "s",
-  "advantage_factor": 7.480915619330818,
-  "advantage_ci": [
-   0.9510584234691383,
-   24.77193881111923
-  ],
-  "level": 0.999375,
-  "file": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "ANN: persist and mmap the VGraph (no persisted ANN index exists today); text: lazy-load the arena instead of reading it at open",
-  "code_path": "no persisted VGraph exists; Graph::save/load only cache the structure (src/core/qgraph)"
  },
  {
   "status": "LOSS",

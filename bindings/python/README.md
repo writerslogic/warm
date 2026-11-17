@@ -107,6 +107,32 @@ store.remember({"text": "Ada prefers tea", "subject": "ada"})
 print(store.recall("what does Ada drink")["results"][0]["text"])
 ```
 
+### Hybrid recall
+
+Recall is lexical (BM25) until the store has vectors. Give it vectors one of two ways and
+`recall` blends BM25 with exact cosine by default:
+
+```python
+from writerslogic_warm import Embedder, Warm
+
+# The engine embeds facts and queries itself (local embedding model).
+store = Warm(16384, "./warm-data", embedder=Embedder())
+store.remember({"text": "Ada prefers tea", "subject": "ada"})
+store.recall("what does Ada drink")                       # hybrid
+
+# Or supply the vectors: declare the space, then pass `embedding` on remember and recall.
+store = Warm(16384, "./warm-ext", embedding_dimensions=384)
+store.remember({"text": "Ada prefers tea", "embedding": vector})
+store.recall("what does Ada drink", {"embedding": query_vector})
+```
+
+`embedding` takes a list or a numpy array of exactly the store's dimensions with finite values
+and not all zeros; anything else is a `ValueError` naming the problem. A recall with no
+`embedding` on a store with no embedder ranks lexically, bit-for-bit as before.
+`{"semanticWeight": 0}` forces lexical ranking on a store that has vectors, and
+`{"fusion": "rrf"}` selects reciprocal-rank fusion instead of the default blend. A store is
+reopened with the same `embedder` or `embedding_dimensions`.
+
 `memorize_vector(id, vector)` and `query_vector(vector, k)` use the vertex graph index;
 `query_vector` returns `(id, cosine)` pairs.
 

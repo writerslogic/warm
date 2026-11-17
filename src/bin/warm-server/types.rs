@@ -40,6 +40,19 @@ pub struct Matches {
     pub matches: Vec<Match>,
 }
 
+/// One vector match without stored text or metadata.
+#[derive(Serialize, JsonSchema)]
+pub struct IdMatch {
+    pub id: String,
+    /// Cosine similarity.
+    pub score: f64,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct IdMatches {
+    pub matches: Vec<IdMatch>,
+}
+
 /// One text search hit. `text` and `metadata` are present only when named in `include`.
 #[derive(Serialize, JsonSchema)]
 pub struct SearchHit {

@@ -215,6 +215,21 @@ pub struct Explanation {
     pub valid_to: Option<Millis>,
     pub within_validity: bool,
     pub chain: Vec<ChainLink>,
+    /// For a result from the experience core: the episodes and steps where the region
+    /// occurred (at most eight, in episode order).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<Vec<ObservationProvenance>>,
+}
+
+/// Where a region of an observation occurred.
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObservationProvenance {
+    pub episode: String,
+    pub step: u32,
+    /// How many times the region occurs in that step.
+    pub count: u32,
 }
 
 /// A stored fact with its history links, as `get` and `history` return it.
@@ -255,6 +270,9 @@ pub enum ForgetScope {
     EventBefore { time: Millis },
     /// Facts whose caller metadata contains all these top-level values.
     Matching { filter: Value },
+    /// Every observation step of one episode held by the experience core. The episode is
+    /// removed and its text scrubbed from the snapshot and journal before the call returns.
+    Episode { episode: String },
 }
 
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]

@@ -68,8 +68,13 @@ pub struct Saturation {
     pub ready: bool,
 }
 
+/// Stages of a search request, in order, for `warm_stage_seconds_total`.
+pub const STAGES: [&str; 5] = ["admit", "body", "parse", "search", "serialize"];
+
 pub struct Metrics {
     started: Instant,
+    stage_nanos: [AtomicU64; STAGES.len()],
+    pub stage_requests: AtomicU64,
     histograms: HashMap<&'static str, Histogram>,
     requests: Mutex<HashMap<(&'static str, &'static str, u16), u64>>,
     pub in_flight: AtomicI64,
@@ -92,6 +97,8 @@ impl Metrics {
         histograms.insert("unmatched", Histogram::new());
         Self {
             started: Instant::now(),
+            stage_nanos: std::array::from_fn(|_| AtomicU64::new(0)),
+            stage_requests: AtomicU64::new(0),
             histograms,
             requests: Mutex::new(HashMap::new()),
             in_flight: AtomicI64::new(0),
@@ -106,6 +113,15 @@ impl Metrics {
             tenant_evictions: AtomicU64::new(0),
             ingest_documents: AtomicU64::new(0),
         }
+    }
+
+    /// Adds the time since `since` to `stage` (an index of [`STAGES`]) and returns now, so
+    /// consecutive stages chain: `let t = metrics.stage(0, t);`.
+    pub fn stage(&self, stage: usize, since: Instant) -> Instant {
+        let now = Instant::now();
+        let nanos = u64::try_from(now.duration_since(since).as_nanos()).unwrap_or(u64::MAX);
+        self.stage_nanos[stage].fetch_add(nanos, Relaxed);
+        now
     }
 
     pub fn observe_request(
@@ -143,6 +159,23 @@ impl Metrics {
             out,
             "# HELP warm_build_info Build information.\n# TYPE warm_build_info gauge\nwarm_build_info{{version=\"{}\"}} 1",
             env!("CARGO_PKG_VERSION")
+        );
+        let _ = writeln!(
+            out,
+            "# HELP warm_stage_seconds_total Time spent in each stage of vector and text search requests, summed over requests.\n# TYPE warm_stage_seconds_total counter"
+        );
+        for (name, nanos) in STAGES.iter().zip(&self.stage_nanos) {
+            let _ = writeln!(
+                out,
+                "warm_stage_seconds_total{{stage=\"{name}\"}} {:.6}",
+                nanos.load(Relaxed) as f64 / 1e9
+            );
+        }
+        counter(
+            &mut out,
+            "warm_stage_requests_total",
+            "Search requests that contributed to warm_stage_seconds_total.",
+            self.stage_requests.load(Relaxed),
         );
         gauge(&mut out, "warm_up", "1 while serving.", &1);
         gauge(
