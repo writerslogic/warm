@@ -4,7 +4,17 @@ The `WritersLogic.WarmMemory` binding (net8.0) is available as source in this re
 
 From the repository root, run `cargo build --release --manifest-path bindings/c/Cargo.toml`. The library is written to `bindings/c/target/release/` unless `CARGO_TARGET_DIR` is set.
 
+## Use it from your project
+Reference the project from the checkout, then point the loader at the native library when you run:
+
+```sh
+dotnet add reference /path/to/warm/bindings/dotnet/src/WarmMemory/WarmMemory.csproj
+WARM_LIBRARY_PATH=/path/to/warm/bindings/c/target/release dotnet run
+```
+
 ```csharp
+using WritersLogic.WarmMemory;
+
 using var store = Store.Open("/data/store", 2048, new OpenOptions { EncryptionKey = key });
 store.Ingest(new Document("a", "text") { TitleWeight = 3 });
 var hits = await store.SearchAsync("query", new SearchOptions { K = 5, Bm25K1 = 1.2, Bm25B = 0.75 });

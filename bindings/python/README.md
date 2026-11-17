@@ -50,9 +50,9 @@ The loader requires `F_SEAL_WRITE`, `F_SEAL_SHRINK` and `F_SEAL_GROW`; ordinary 
 to share physical pages. A loaded mapping remains valid after its publishing descriptor closes.
 The normal private-memory load remains the default on every platform.
 
-[`sealed_index_run.py`](../../scripts/lowlevel/sealed_index_run.py) shows how a publisher copies
+[`sealed_index_run.py`](../../benchmarks/research/lowlevel/sealed_index_run.py) shows how a publisher copies
 an index once, seals it, keeps it available while worker processes run, and records the snapshot
-hash and setup time. This option is not in the published `warm-python==0.6.4` wheel used by the
+hash and setup time. This option is not in the earlier published `warm-python==0.6.4` wheel used by the
 VectorDBBench entry.
 
 With the `[embed]` extra, the pinned default text embedding model is available offline:
@@ -95,6 +95,9 @@ or allocating the resonator index.
 `Warm` is the in-process engine: a persistent store with hybrid BM25 and exact-cosine document
 search, the memory API and vector search. Requests and results are dicts and lists with the
 camelCase fields of the Node binding. One process may write a store at a time.
+
+`Warm` is on `main` and ships with the release after 0.6.8; the 0.6.8 wheel that `uv add warm-python`
+installs does not have it. Until that release, build it from a checkout with `maturin develop --release`.
 
 ```python
 from writerslogic_warm import Warm

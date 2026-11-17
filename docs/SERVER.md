@@ -21,7 +21,8 @@ search:
 ## Build and run
 
 ```sh
-# or install a prebuilt binary: curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+# or: cargo install --locked --features server --bin warm-server warm-rust
+# (prebuilt binaries via scripts/install-warm-server.sh start with the first server-v release)
 cargo build --release --features server --bin warm-server
 
 # One key valid for every tenant (the original setup):

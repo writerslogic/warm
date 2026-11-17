@@ -80,6 +80,8 @@ SYSTEMS = {
     "tantivy-rs-docs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, pruning collector, documents contract)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
     "tantivy-rs-count-docs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, exhaustive collector with Count, documents contract)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
     "whoosh": {"display": "Whoosh", "kind": "text", "env": "whoosh", "package": "whoosh-reloaded", "family": "lexical"},
+    "lancedb-fts": {"display": "LanceDB FTS", "kind": "text", "env": "lancedb", "package": "lancedb", "family": "lexical"},
+    "duckdb-fts": {"display": "DuckDB fts", "kind": "text", "env": "duckdb", "package": "duckdb", "family": "lexical"},
     "bm25s": {"display": "bm25s", "kind": "text", "env": "bm25s", "package": "bm25s", "family": "lexical"},
 }
 
@@ -106,13 +108,23 @@ TIMING_BOUNDARY = {
     "lucene-docs": "in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer",
     "lucene-dv-docs": "in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer",
     "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open",
+    "lancedb-fts": "CPython + Arrow call per query (raw text reduced to its word set inside the timer; native Rust BM25 inside, multi-threaded runtime)",
+    "duckdb-fts": "CPython duckdb call per query (raw text reduced to its word set inside the timer; SQL macro match_bm25 over a static index)",
 }
 
 # JVM flags per Lucene phase. serve: a small fixed heap and the serial collector (the index is memory-mapped, so the
 # heap holds only the id table, prepared queries and per-query garbage), compiler left at its default tiered C2, and no
 # perf-data mapping; build and ops: heap sized from the machine, parallel collector, the usual indexing setup.
+# Lucene's untimed JIT warm-up before the timed passes of every serve round (LuceneBm25.java reads these as system
+# properties): at least min_passes whole passes and min_seconds, then until stable_passes consecutive passes each agree
+# with the one before within band, capped at max_passes or max_seconds. A round that hits a cap without reaching the
+# stable condition records warmup_steady false, and its row carries no verdict (analyze.steady_state_note).
+LUCENE_WARMUP = {"min_passes": 20, "min_seconds": 5.0, "stable_passes": 3, "band": 0.03, "max_passes": 400, "max_seconds": 120.0}
+_WARMUP_PROPERTIES = {"min_passes": "minPasses", "min_seconds": "minSeconds", "stable_passes": "stablePasses", "band": "band",
+                      "max_passes": "maxPasses", "max_seconds": "maxSeconds"}
 LUCENE_JVM_FLAGS = {
-    "serve": ["-Xms64m", "-Xmx128m", "-XX:+UseSerialGC", "-XX:-UsePerfData"],
+    "serve": ["-Xms64m", "-Xmx128m", "-XX:+UseSerialGC", "-XX:-UsePerfData",
+              *(f"-Dwarm.{_WARMUP_PROPERTIES[k]}={v}" for k, v in LUCENE_WARMUP.items())],
     "build": ["-XX:MaxRAMPercentage=25", "-XX:+UseParallelGC", "-XX:-UsePerfData"],
     "ops": ["-XX:MaxRAMPercentage=25", "-XX:+UseParallelGC", "-XX:-UsePerfData"],
 }
@@ -123,7 +135,7 @@ COMPARATOR_SETTINGS = {
     "lucene": {"jvm_flags": LUCENE_JVM_FLAGS, "query_cache": "disabled (IndexSearcher.setQueryCache(null))",
                "query_analysis": "inside the timed region (the Query is built from the raw text on every call)",
                "id_resolution": "String[] indexed by docid, built at open; no stored-fields read in the timed region",
-               "warmup": "untimed whole passes until two consecutive passes agree within 5 percent (3 to 30), count in warmup_passes",
+               "warmup": LUCENE_WARMUP | {"rule": "untimed whole passes: at least min_passes and min_seconds, then until stable_passes consecutive passes each within band of the previous; per round warmup_passes, warmup_s and warmup_steady are recorded"},
                "similarity": "BM25Similarity default (k1 1.2, b 0.75); index force-merged to one segment"},
     "sqlite-fts5": {"query": "SELECT rowid, rank FROM docs WHERE docs MATCH ? ORDER BY rank LIMIT 100 (no join, no tie-break)",
                     "id_resolution": "rowid-to-id dict loaded at open, outside the timed region",
@@ -196,6 +208,8 @@ FACTS = {
     "tantivy-py": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "tantivy-rs": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "tantivy-rs-count": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
+    "lancedb-fts": {"service_needed": {"value": "no (embedded)", "basis": _DOC}, "encrypted_at_rest": {"value": "no built-in", "basis": _DOC}},
+    "duckdb-fts": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "database-file encryption (DuckDB 1.4+); not exercised", "basis": _DOC}},
     "whoosh": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "bm25s": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "lucene": {"service_needed": {"value": "no (library; needs a JVM)", "basis": _DOC}, "encrypted_at_rest": {"value": "no (filesystem-level only)", "basis": _DOC}},
@@ -203,11 +217,51 @@ FACTS = {
 
 # Systems named in the brief that were not run, with the reason recorded in every results file.
 NOT_RUN = {
+    "chroma-fts": "Chroma 1.5.9 PersistentClient: creating a collection with a BM25 sparse-vector index (ChromaBm25EmbeddingFunction) fails with 'Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local'; the only local text query is the unranked where_document $contains/$regex filter (measured 2026-11-14)",
+    "qdrant-fts": "Qdrant embedded local mode has no ranked full-text index (the full-text payload index only filters, and payload indexes are server features); documentation, not exercised here",
     "mem0": "agent-memory systems belong to the next harness stage (plug in through the same adapter interface)",
     "zep": "agent-memory systems belong to the next harness stage",
     "letta": "agent-memory systems belong to the next harness stage",
     "langmem": "agent-memory systems belong to the next harness stage",
 }
+
+# Text systems with an adapter that the published campaign does not run, with the reason. Recorded in every results file
+# and listed in the generated table; `warm-bench run --systems NAME` still runs one locally.
+CAMPAIGN_NOT_RUN = {
+    "whoosh": "adapter kept for local runs, not in the published text campaign: pure-Python engine, orders of magnitude below the native engines here, so no row it produced would be the fastest comparator of any cell",
+    "bm25s": "adapter kept for local runs, not in the published text campaign: an in-memory NumPy retriever whose saved index has no durable update or delete path (no ops rows) and no stored-document variant (no documents-contract row); its pin trails the current release",
+}
+NOT_RUN.update(CAMPAIGN_NOT_RUN)
+
+# Analysis and build threading of every text system, recorded with the comparator settings (`warm-bench` results
+# `protocol.comparator_settings`). Stop-word removal and stemmer differ by engine; each runs its documented English setup.
+TEXT_ANALYZERS = {
+    WARM: {"analyzer": "WARM default lexical analyzer: Unicode word split, lowercase, Snowball English stemmer (rust-stemmers)", "stop_words": "none"},
+    "lucene": {"analyzer": "EnglishAnalyzer: StandardTokenizer, possessive filter, lowercase, Porter stemmer", "stop_words": "English stop set (EnglishAnalyzer default)"},
+    "sqlite-fts5": {"analyzer": "porter unicode61 tokenizer", "stop_words": "none"},
+    "tantivy-py": {"analyzer": "en_stem: simple tokenizer, long-token filter, lowercase, Snowball English stemmer", "stop_words": "none"},
+    "lancedb-fts": {"analyzer": "LanceDB native FTS, language English, stem true", "stop_words": "English (remove_stop_words true)"},
+    "duckdb-fts": {"analyzer": "DuckDB fts: lower, porter stemmer", "stop_words": "english"},
+    "whoosh": {"analyzer": "StemmingAnalyzer (Porter)", "stop_words": "Whoosh English stop list (StemmingAnalyzer default)"},
+    "bm25s": {"analyzer": "bm25s.tokenize with PyStemmer english", "stop_words": "en"},
+}
+# Build threads: every engine indexes on one thread (RAYON_NUM_THREADS=1 holds WARM's ingest to one), except the two
+# that run their own pool with no single-thread default, which keep their defaults; each build records cpu_s and wall_s.
+TEXT_BUILD_THREADS = {
+    WARM: "1 (RAYON_NUM_THREADS=1)", "lucene": "1 indexing thread; merges on Lucene's default ConcurrentMergeScheduler threads",
+    "sqlite-fts5": "1", "tantivy-py": "1 writer thread", "tantivy-rs": "1 writer thread", "whoosh": "1 (procs=1)", "bm25s": "1",
+    "lancedb-fts": "LanceDB default pool (not limited)", "duckdb-fts": "DuckDB default threads setting (not limited)",
+}
+
+
+def text_settings(system):
+    """Analyzer and build-thread record of a text system (its -docs, -count and WARM variants share the base engine's)."""
+    base = system.removesuffix("-docs").removesuffix("-count").removesuffix("-dv").removesuffix("-prev")
+    base = WARM if base in (WARM_EAGER, WARM_LEXICAL_API) else "tantivy-py" if base == "tantivy" else base
+    analyzer = TEXT_ANALYZERS.get("tantivy-py" if base == "tantivy-rs" else base)
+    threads = TEXT_BUILD_THREADS.get(base)
+    return ({**analyzer} if analyzer else {}) | ({"build_threads": threads} if threads else {})
+
 
 FACTS[WARM_EAGER] = FACTS[WARM]
 FACTS[WARM_LEXICAL_API] = FACTS[WARM]

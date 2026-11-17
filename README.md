@@ -139,13 +139,14 @@ In your application, install that directory with
 Start the server in a separate terminal:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+cargo install --locked --path . --features server --bin warm-server
 WARM_API_KEY=change-me warm-server --input-dim 384
 ```
 
-The installer downloads a prebuilt, checksum-verified binary from the `server-v<version>` GitHub
-release (Linux glibc x86_64 and aarch64, macOS, no Alpine). To build it yourself instead:
-`cargo build --release --features server --bin warm-server`.
+`cargo install` builds `warm-server` from the checkout into `~/.cargo/bin`. From the first
+`server-v<version>` GitHub release, `scripts/install-warm-server.sh` will instead download a
+prebuilt, checksum-verified binary (Linux glibc x86_64 and aarch64, macOS, no Alpine); no such
+release is published yet.
 
 ```js
 import { WarmClient } from 'warm-sdk'
@@ -229,7 +230,7 @@ indexes and phase vectors in 0.6.8, which has no document search. The in-process
 release after 0.6.8; until then, `maturin develop --release` from a checkout provides it.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+cargo install --locked --features server --bin warm-server warm-rust
 WARM_API_KEY=change-me warm-server --input-dim 384 &
 uv pip install warm-sdk
 ```

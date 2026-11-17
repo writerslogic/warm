@@ -8,7 +8,7 @@ WARM, like most published ANN and memory systems, runs on defaults nobody re-tes
 
 ## Protocol
 
-- Proxy P: the first 160 runbook steps (80 searches, up to 5.0 M rows inserted, live up to 4.6 M) replayed through `PartitionIndex` by `scripts/lowlevel/replay.py`. It uses the adapter's data reads and id types, per-operation timers, an FNV digest of every returned id, and the harness tie-aware recall@10 against the GT100 files. Page cache dropped before each run, machine idle (load < 0.4), 8 threads.
+- Proxy P: the first 160 runbook steps (80 searches, up to 5.0 M rows inserted, live up to 4.6 M) replayed through `PartitionIndex` by `benchmarks/research/lowlevel/replay.py`. It uses the adapter's data reads and id types, per-operation timers, an FNV digest of every returned id, and the harness tie-aware recall@10 against the GT100 files. Page cache dropped before each run, machine idle (load < 0.4), 8 threads.
 - Arms were registered in `STATE.md` before they ran. Rounds are interleaved (the arm order rotates). Control spread over two rounds is 0.6 s of 302 s wall (0.2 %) [M], so a difference above 1 % is outside the noise.
 - Kill rule: an arm is dropped when its wall gain over the control is below 1 %, or its result digest or recall differs (a differing digest is reported exactly, never hidden).
 - Confirmation: the full 1,280-step runbook through the harness (`gcp-il-s2e/chain_e.sh` pattern, `chain_y.sh`), 8 GiB scope, no swap.
@@ -81,7 +81,7 @@ Reading:
 
 ## Elite and ablation
 
-The elite is one component, the adapter read-ahead (`scripts/lowlevel/fork-streaming-io-readahead.patch`, applied to the harness at 56fc6e6b); every other candidate was killed on the proxy. With one component the ablation is control against elite, and a factorial has a single factor.
+The elite is one component, the adapter read-ahead (`benchmarks/research/lowlevel/fork-streaming-io-readahead.patch`, applied to the harness at 56fc6e6b); every other candidate was killed on the proxy. With one component the ablation is control against elite, and a factorial has a single factor.
 
 Full 1,280-step runs, np600 / ro1000, Ice Lake VM, 8 GiB scope, nice 19, taskset 0-7, page cache dropped before each run [M]:
 
@@ -116,14 +116,14 @@ THP is a host setting (`/sys/kernel/mm/transparent_hugepage/enabled`), shared by
 
 ## Reproduce
 
-`scripts/lowlevel/replay.py` (proxy, audit, read-ahead arm), `scripts/lowlevel/summ.py` (tables), `scripts/lowlevel/audit.py` (miss classes), results under `benchmarks/results/lowlevel/`.
+`benchmarks/research/lowlevel/replay.py` (proxy, audit, read-ahead arm), `benchmarks/research/lowlevel/summ.py` (tables), `benchmarks/research/lowlevel/audit.py` (miss classes), results under `benchmarks/results/lowlevel/`.
 
 The killed arms' code is not on main. Build commit `46740d6a` to rerun them. It contains:
 - the `WARM_THP` and mimalloc allocator wrapper (`cfg(warm_wheel_alloc)`, `src/bindings/python/warm_alloc.rs`);
 - the `place` / `WARM_PLACE` list-order placement;
 - the replay driver's `--place` flag.
 
-The read-only `PartitionIndex.centres()` and `lists_of()` diagnostics stay, because `audit.py` needs them. The read-ahead arm is a patch to the big-ann fork's `streaming_io.py` (`scripts/lowlevel/fork-streaming-io-readahead.patch`). It is not applied, because its full-run gain (-0.5%, n=1) cannot move the submitted nprobe.
+The read-only `PartitionIndex.centres()` and `lists_of()` diagnostics stay, because `audit.py` needs them. The read-ahead arm is a patch to the big-ann fork's `streaming_io.py` (`benchmarks/research/lowlevel/fork-streaming-io-readahead.patch`). It is not applied, because its full-run gain (-0.5%, n=1) cannot move the submitted nprobe.
 
 ## Static graph follow-up: 2026-11-09
 
