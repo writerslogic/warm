@@ -60,6 +60,11 @@ jobs:
           python -m unittest scripts/test_docs_hooks.py scripts/test_docs_site.py
           npm test --prefix scripts/docs-api
 
+      # benchmarks/evidence/README.md documents these restore tools; their tests check size and
+      # SHA-256 verification and atomic publish.
+      - name: Unit-test the evidence restore tools
+        run: python -m unittest scripts/test_fetch_evidence.py scripts/test_restore_retired_inputs.py
+
       - name: Build every version (strict, any warning fails)
         run: bash scripts/build-docs-site.sh _site
 

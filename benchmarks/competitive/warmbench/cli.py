@@ -23,6 +23,8 @@ def main(argv=None):
     run.add_argument("--datasets", nargs="*", help="restrict to these dataset names")
     run.add_argument("--builds", nargs="*", metavar="SYSTEM:BUILD",
                      help="ANN only: restrict a comparator to these builds (systems not named keep all builds)")
+    run.add_argument("--screening", metavar="FILE", help="screening results file (select_builds.py input) that justifies a --builds subset; "
+                     "required whenever --builds drops builds of a swept system, which must appear in that file")
     run.add_argument("--rounds", type=int, help=f"independent process rounds (published suites default to {runner.PUBLISHED_MIN_ROUNDS})")
     run.add_argument("--pin-cpus", metavar="LIST", help="Linux: run the single-threaded serve and ops phases under `taskset -c LIST` (recorded in the results)")
     run.add_argument("--build-repeats", type=int)
@@ -76,9 +78,10 @@ def main(argv=None):
             for dataset, n_train, n_test in spec["ann"]:
                 if a.datasets and dataset not in a.datasets:
                     continue
-                print(runner.run_ann(dataset, n_train, n_test, spec, systems, only_builds=only_builds))
+                selection = runner.build_selection(systems, only_builds, a.screening)
+                print(runner.run_ann(dataset, n_train, n_test, spec, systems, only_builds=only_builds, selection=selection))
         if a.only in ("text", "both"):
-            systems = [registry.WARM] + [s for s in registry.TEXT_SYSTEMS if wanted is None or s in wanted]
+            systems = [registry.WARM] + [s for s in registry.TEXT_SYSTEMS if (s in wanted if wanted is not None else s not in registry.NOT_RUN)]
             systems += [s for s in registry.TEXT_CONTROL_SYSTEMS if wanted is not None and s in wanted]
             for dataset in spec["text"]:
                 if a.datasets and dataset not in a.datasets:

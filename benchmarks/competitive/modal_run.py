@@ -66,7 +66,7 @@ TIMEOUT_S = 23 * 3600
 
 
 @app.function(image=image, volumes={"/vol": VOL}, cpu=CPU, memory=MEM_GIB * 1024, timeout=TIMEOUT_S)
-def run(archive: bytes, suite: str, args: list[str], cap_usd: float, tag: str, revision: str) -> dict:
+def run(archive: bytes, suite: str, args: list[str], cap_usd: float, tag: str, revision: str, source: str) -> dict:
     started = time.time()
     work = Path("/work/src")
     work.mkdir(parents=True, exist_ok=True)
@@ -80,7 +80,7 @@ def run(archive: bytes, suite: str, args: list[str], cap_usd: float, tag: str, r
     results_dir.mkdir(parents=True, exist_ok=True)
     env = {**os.environ, "PATH": f"/root/.cargo/bin:{os.environ['PATH']}", "WARM_BENCH_DATA": "/vol/data", "WARM_BENCH_HW_CLASS": HW_CLASS,
            "WARM_BENCH_WORK": "/tmp/warm-work", "WARM_BENCH_ENVS": "/tmp/warm-envs", "WARM_BENCH_RESULTS": str(results_dir),
-           "WARM_BENCH_COMMIT": revision, "CARGO_TARGET_DIR": "/tmp/target", "CARGO_BUILD_JOBS": str(CPU), "PYTHONUNBUFFERED": "1"}
+           "WARM_BENCH_COMMIT": revision, "WARM_BENCH_SOURCE": source, "CARGO_TARGET_DIR": "/tmp/target", "CARGO_BUILD_JOBS": str(CPU), "PYTHONUNBUFFERED": "1"}
     # The profile the harness runs and measures (runner.WARM_PROFILE).
     subprocess.run(["cargo", "build", "--profile", "dist", "--features", "cli,mimalloc", "--bin", "public-bench", "--example", "competitive_text"], cwd=work, env=env, check=True)
     # The cap stops the run gracefully only if it falls before the platform's hard timeout.
@@ -118,9 +118,15 @@ def main(suite: str = "heavy", cap_usd: float = 12.0, only: str = "both", datase
     archive = tree_tar()
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
     dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
-    revision = head + ("+uncommitted" if dirty else "")
+    revision = head
+    # The shipped tree has no .git: the clean-tree and reachable-from-main checks run here, on the launching checkout,
+    # and travel with the run (common.source_record); a dirty or unreachable launch is a draft.
+    subprocess.run(["git", "fetch", "--quiet", "origin", "main"], cwd=ROOT)
+    reachable = subprocess.run(["git", "merge-base", "--is-ancestor", head, "origin/main"], cwd=ROOT).returncode == 0
+    tracked_dirty = bool(subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip())
+    source = json.dumps({"dirty_tree": tracked_dirty or bool(dirty), "reachable_from_origin_main": reachable, "checked_on": "launching checkout"})
     extra = ["--rounds", str(rounds)] if rounds else []
-    calls = [(archive, suite, shard_args(spec) + extra, cap_usd / len(specs), f"{run_id}-{i}", revision) for i, spec in enumerate(specs)]
+    calls = [(archive, suite, shard_args(spec) + extra, cap_usd / len(specs), f"{run_id}-{i}", revision, source) for i, spec in enumerate(specs)]
     dest = ROOT / "benchmarks/results/competitive"
     for out in run.starmap(calls, return_exceptions=True):
         if isinstance(out, BaseException):

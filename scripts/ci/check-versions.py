@@ -36,15 +36,20 @@ DOC_VERSION = re.compile(r"(?<![\w@/.-])(%s)(?:`)?(?:@|==|\s+)v?(\d+\.\d+\.\d+)(
 
 def doc_files() -> list[pathlib.Path]:
     files = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
-    return files + sorted(
+    files += sorted(
         path for path in (ROOT / "docs").rglob("*.md")
         if not str(path.relative_to(ROOT)).startswith(DOC_SKIP_DIRS)
         and path.name not in ("COMPARISON.md", "GAPS.md")
     )
+    # Package READMEs are registry long descriptions, so a stale install line there is published.
+    return files + sorted(
+        path for tree in ("bindings", "integrations") for path in (ROOT / tree).rglob("README.md")
+        if "node_modules" not in path.relative_to(ROOT).parts
+    )
 
 
 def doc_versions(cargo: str) -> list[str]:
-    """Current-version statements in README, CITATION.cff, CONTRIBUTING and docs/*.md must match the manifests."""
+    """Current-version statements in README, CITATION.cff, CONTRIBUTING, docs/*.md and package READMEs must match the manifests."""
     sdk_js = json.loads((ROOT / "bindings/js/warm-sdk/package.json").read_text())["version"]
     sdk_py = tomllib.loads((ROOT / "bindings/python/warm-sdk/pyproject.toml").read_text())["project"]["version"]
     mcp_npm = json.loads((ROOT / "integrations/mcp/npm/package.json").read_text())["version"]

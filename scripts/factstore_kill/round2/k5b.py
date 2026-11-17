@@ -450,8 +450,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["selftest", "tune", "report"])
     ap.add_argument("--source", choices=["locomo", "lme"], default="locomo")
-    ap.add_argument("--locomo", default="/home/davidcondrey/locomo10.json")
-    ap.add_argument("--lme", default="/home/davidcondrey/lme_input.json")
+    ap.add_argument("--locomo", help="LoCoMo locomo10.json; required with --source locomo")
+    ap.add_argument("--lme", help="LongMemEval input JSON; required with --source lme")
     ap.add_argument("--Ns", type=lambda s: [int(x) for x in s.split(",")], default=NS)
     ap.add_argument("--Bs", type=lambda s: [int(x) for x in s.split(",")], default=[2 ** 14, 2 ** 16])
     ap.add_argument("--seeds", type=lambda s: [int(x) for x in s.split(",")], default=[0, 1])
@@ -463,6 +463,8 @@ def main():
     a.dmax = max(a.Bs) if max(a.Bs) <= 2 ** 16 else max(a.Bs)
     if a.stage == "selftest":
         return selftest(a)
+    if getattr(a, a.source) is None:
+        ap.error(f"--{a.source} is required for stage {a.stage} with --source {a.source}")
     corpus = load_locomo(a.locomo) if a.source == "locomo" else load_lme(a.lme)
     print(f"corpus {a.source} n={len(corpus)}", flush=True)
     encs = {e: Encoder(e, corpus) for e in ENCS}
