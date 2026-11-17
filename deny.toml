@@ -15,6 +15,7 @@ ignore = [
     { id = "RUSTSEC-2026-0368", reason = "zip extract symlink targets; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2026-0369", reason = "zip extract path handling; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2024-0436", reason = "paste is a transitive dep via nalgebra/simba; no upstream fix available" },
+    { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained; pulled only by rmcp and schemars under the mcp feature; drop when they no longer depend on it" },
 ]
 
 [licenses]
