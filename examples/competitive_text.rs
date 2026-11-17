@@ -377,14 +377,18 @@ fn main() -> Result<()> {
                 Ok(())
             })?;
             // The build boundary is the same for every system: the data is durable and searchable by a
-            // fresh process. For WARM that is the durable close (the final checkpoint `drop` runs), as
-            // the comparators' ingest times hold their commit, merge or optimize.
+            // fresh process, after the engine's own merge step. The comparators' ingest times hold
+            // their commit plus merge or optimize (Lucene forceMerge(1), tantivy merge to one
+            // segment); WARM's counterpart is the explicit compaction, then the durable close.
+            let compacting = Instant::now();
+            core.compact()?;
+            let compact = compacting.elapsed();
             let closing = Instant::now();
             drop(core);
             let close = closing.elapsed();
-            json!({"documents": count, "ingest_s": (memorize + close).as_secs_f64(),
-                "memorize_s": memorize.as_secs_f64(), "close_s": close.as_secs_f64(),
-                "build_boundary": "memorize_documents_with calls plus the durable close (final checkpoint)",
+            json!({"documents": count, "ingest_s": (memorize + compact + close).as_secs_f64(),
+                "memorize_s": memorize.as_secs_f64(), "compact_s": compact.as_secs_f64(), "close_s": close.as_secs_f64(),
+                "build_boundary": "memorize_documents_with calls, the explicit compact() and the durable close (final checkpoint)",
                 "encode": mode.name(), "store_text": args.store_text, "allocator": ALLOCATOR})
         }
         "serve" => {

@@ -89,8 +89,8 @@ and the stemmers differ. Each results file records every system's analyzer and s
   SQLite); LanceDB and DuckDB keep their default pools. Each text build records `cpu_s` beside `wall_s`,
   and `comparator_settings` records every system's analyzer, stop words and build threads.
 * **Build boundary.** Every build time ends when the data is durable and searchable by a fresh process:
-  WARM's ingest time holds its durable close (the final checkpoint; `memorize_s` and `close_s` are kept
-  apart), as Lucene's holds forceMerge, commit and close, tantivy's commit and merge, SQLite's optimize and
+  WARM's ingest time holds its explicit `compact()`, its merge step, and its durable close (the final
+  checkpoint; `memorize_s`, `compact_s` and `close_s` are kept apart), as Lucene's holds forceMerge, commit and close, tantivy's commit and merge, SQLite's optimize and
   commit, DuckDB's CHECKPOINT. WARM build rows written before `close_s` was recorded print their ratio
   with no verdict.
 * Every system runs each phase (build, serve, ops) in a fresh process; the orchestrator reads the
