@@ -1,7 +1,8 @@
 # LoCoMo: WARM against the published Mem0 and Zep results
 
 WARM answers LoCoMo questions through the warm-server memory API. Scoring follows Mem0's published
-evaluation protocol, and WARM is compared with the numbers in the Mem0 paper:
+evaluation protocol. The paper-era sections compare WARM with the numbers in the Mem0 paper, which are self-reported by
+the paper's authors and were not re-run here:
 
 > P. Chhikara, D. Khant, S. Aryan, T. Singh, D. Yadav. *Mem0: Building Production-Ready AI Agents
 > with Scalable Long-Term Memory.* arXiv:2504.19413, 2025. Tables 1 and 2.
@@ -17,6 +18,12 @@ split and category, with per-pass J). Harness: [`benchmarks/public/locomo/`](../
 ## Mem0's own harness, top 200, gpt-5 (2026-11-14)
 
 Evidence and commands: [`benchmarks/results/locomo_mem0_harness_v1/`](../../benchmarks/results/locomo_mem0_harness_v1/README.md).
+
+**Verdict: tie.** Overall 92.0% against 91.6%, paired difference +0.5 pp with a 95% bootstrap interval of [-1.0, +1.9]
+that includes zero (`full1540-analysis.txt`). This is one WARM pass. Mem0's side is a hosted run that we did not execute
+(Azure `gpt-5`, snapshot unknown, 156 questions merged from reruns per its metadata); WARM's side used OpenAI
+`gpt-5-2025-08-07`. The judge is the same only by model name, and WARM's answerer saw about 10,000 prompt tokens per
+call (`full1540-analysis.txt`), a longer context than Mem0's formatter produces from extracted memories.
 
 ### What was compared
 
@@ -203,6 +210,14 @@ unchanged; only their column placement differs from the paper's labels.
 
 ## All 10 conversations (the paper's setting; includes the 3 tuning conversations)
 
+**Read the held-out result first.** WARM's configuration was tuned on 3 of the 10 conversations, so the overall figure
+below includes data it was tuned on. On the 7 held-out conversations (1,155 questions) WARM primary scores
+**71.97 ± 0.47** over 5 passes, below our full-context run on the same split (72.73, one pass); see the next section.
+The Mem0, Mem0^g, Zep, RAG and paper full-context rows are **self-reported (paper), not re-run**: 10 passes with the
+unpinned `gpt-4o-mini` alias, against WARM's pinned `gpt-4o-mini-2024-07-18`. Zep disputes its row: under its own
+harness it reports 75.14, a figure that is not protocol-matched (Mem0 reran Zep's setup with Mem0's prompt at 58.44).
+Sources: `published` in [`locomo_v1.json`](../../benchmarks/results/locomo_v1.json).
+
 Each cell is F1 / BLEU-1 / J in percent. Overall J is question-weighted; ± is the standard
 deviation across passes. Context is the mean number of memory tokens given to the reader.
 
@@ -211,15 +226,18 @@ deviation across passes. Context is the mean number of memory tokens given to th
 | **WARM primary** (1,764-token cap, 5 passes) | 35.86 / 23.90 / 63.90 | **59.90** / **48.77** / **71.59** | 27.40 / 20.48 / 48.96 | 57.34 / 46.63 / 80.52 | 73.65 ± 0.39 | 1,749 |
 | WARM uncapped (k=30/speaker, 3 passes) | 37.33 / 25.56 / 67.38 | 58.73 / 48.14 / 71.55 | 26.87 / 19.96 / 47.57 | **57.82** / **46.77** / 82.16 | **75.09** ± 0.19 | 2,884 |
 | WARM lexical (no embeddings, 3 passes) | 28.59 / 18.15 / 53.43 | 54.31 / 44.57 / 63.97 | 23.79 / 17.39 / 41.32 | 50.70 / 41.43 / 71.82 | 64.91 ± 0.46 | 1,749 |
-| Mem0 (paper) | **38.72** / **27.13** / 67.13 | 48.93 / 40.51 / 55.51 | **28.64** / **21.58** / 51.15 | 47.65 / 38.72 / 72.93 | 66.88 ± 0.15 | 1,764 |
-| Mem0^g (paper) | 38.09 / 26.03 / 65.71 | 51.55 / 40.28 / 58.13 | 24.32 / 18.82 / 47.19 | 49.27 / 40.30 / 75.71 | 68.44 ± 0.17 | 3,616 |
-| Zep, Mem0 harness (paper) | 35.74 / 23.30 / 61.70 | 42.00 / 34.53 / 49.31 | 19.37 / 14.82 / 41.35 | 49.56 / 38.92 / 76.60 | 65.99 ± 0.16 | 3,911 |
-| Best RAG, 256-token chunks, k=2 (paper) | | | | | 60.97 ± 0.20 | |
-| Full-context (paper) | | | | | 72.90 ± 0.19 | 26,031 |
+| Mem0 (paper, self-reported, not re-run) | **38.72** / **27.13** / 67.13 | 48.93 / 40.51 / 55.51 | **28.64** / **21.58** / 51.15 | 47.65 / 38.72 / 72.93 | 66.88 ± 0.15 | 1,764 |
+| Mem0^g (paper, self-reported, not re-run) | 38.09 / 26.03 / 65.71 | 51.55 / 40.28 / 58.13 | 24.32 / 18.82 / 47.19 | 49.27 / 40.30 / 75.71 | 68.44 ± 0.17 | 3,616 |
+| Zep, Mem0 harness (paper, self-reported, not re-run) | 35.74 / 23.30 / 61.70 | 42.00 / 34.53 / 49.31 | 19.37 / 14.82 / 41.35 | 49.56 / 38.92 / 76.60 | 65.99 ± 0.16 | 3,911 |
+| Best RAG, 256-token chunks, k=2 (paper, self-reported, not re-run) | | | | | 60.97 ± 0.20 | |
+| Full-context (paper, self-reported, not re-run) | | | | | 72.90 ± 0.19 | 26,031 |
 | Full-context (ours, 1 pass) | 32.45 / 24.50 / **70.92** | 33.02 / 24.73 / 49.22 | 23.46 / 17.35 / **59.38** | 48.23 / 33.78 / **85.14** | 73.44 | 25,322 |
 
-Our full-context run reaches 73.44 against the paper's 72.90, so the reader, judge and scoring
-reproduce Mem0's baseline to within about half a point.
+Our full-context run (one pass, no standard deviation) reaches 73.44 against the paper's 72.90, so the reader, judge
+and scoring reproduce Mem0's baseline to within about half a point. WARM does not beat full context on LoCoMo J: on all
+10 conversations its 73.65 is within the range of its own five passes of the one full-context pass, and on the held-out
+conversations full context leads (72.73 against 71.97). WARM's advantage is context size and cost (about 1,749 memory
+tokens against about 25,000), not accuracy.
 
 ## Held-out 7 conversations (tuning conversations excluded)
 

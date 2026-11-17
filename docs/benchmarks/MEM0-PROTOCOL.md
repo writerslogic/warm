@@ -1,8 +1,15 @@
 # WARM vs Mem0 under Mem0's own harness (memory-benchmarks @ 4b61c5d)
 
-Status: **prepared, not run.** The adapter, commands and anti-gaming rules are in
+Status (2026-11-17):
+
+- **LoCoMo: run** (2026-11-14), one WARM pass over all 1,540 questions. It ran the top-200 count-matched
+  configuration on raw turns, not the token-matched plan below. Result: a tie, 92.0% against Mem0's file at 91.6%,
+  paired difference +0.5 pp [-1.0, +1.9]. Write-up: [LOCOMO.md](LOCOMO.md#mem0s-own-harness-top-200-gpt-5-2026-11-14);
+  evidence: [`locomo_mem0_harness_v1/`](../../benchmarks/results/locomo_mem0_harness_v1/README.md).
+- **LongMemEval-S and BEAM: not run.** No WARM result under Mem0's harness exists in the repository for either.
+
+The adapter, commands and anti-gaming rules are in
 [`benchmarks/public/mem0_protocol/README.md`](../../benchmarks/public/mem0_protocol/README.md).
-Everything below "WARM" is filled from a run's `manifest.json` and the harness result JSON.
 
 ## Mem0's reference numbers
 
@@ -13,49 +20,35 @@ The repository README states **LoCoMo 92.5% (1425/1540)** and **LongMemEval 94.4
 committed top-200 result files say **91.56% (1410/1540)** and **93.4% (467/500)**. The files carry
 merged re-run subsets (`merged_from_questions`) and metadata keys that the committed `run.py` does
 not write, so Mem0's internal harness version differs from the public one. Both figures are shown.
-The 64.1 / 48.6 BEAM figures are the **average rubric score** x100. The pass rates are 70.1 / 50.5.
+Mem0 also publishes BEAM 1M and 10M result files; WARM was not run on BEAM under this harness, so they are not tabulated here.
 
 ### LoCoMo (categories 1-4, 1,540 q)
 
-| Category (id, n) | Mem0 top-200 (result file) | WARM |
+| Category (id, n) | Mem0 top-200 (result file) | WARM top-200, one pass (`full1540-analysis.txt`) |
 |---|---|---|
-| multi-hop (1, 282) | 93.3 (263/282) | |
-| temporal (2, 321) | 92.8 (298/321) | |
-| open-domain (3, 96) | 76.0 (73/96) | |
-| single-hop (4, 841) | 92.3 (776/841) | |
-| **overall** | **91.6 (1410/1540)**; README 92.5 | |
-| mean answer-prompt tokens | ~7k (Mem0 docs: 6,956 memory tokens) | |
+| multi-hop (1, 282) | 93.3 (263/282) | 88.3 |
+| temporal (2, 321) | 92.8 (298/321) | 94.4 |
+| open-domain (3, 96) | 76.0 (73/96) | 75.0 |
+| single-hop (4, 841) | 92.3 (776/841) | 94.3 |
+| **overall** | **91.6 (1410/1540)**; README 92.5 | **92.0**, tie (+0.5 pp [-1.0, +1.9]) |
+| mean answer-prompt tokens | ~7k (Mem0 docs: 6,956 memory tokens) | 9,970 per answer call |
 
 ### LongMemEval-S (500 q)
 
-| Type (n) | Mem0 top-200 (result file) | WARM |
-|---|---|---|
-| knowledge-update (78) | 96.2 (75/78) | |
-| multi-session (133) | 86.5 (115/133) | |
-| single-session-assistant (56) | 100.0 (56/56) | |
-| single-session-preference (30) | 96.7 (29/30) | |
-| single-session-user (70) | 97.1 (68/70) | |
-| temporal-reasoning (133) | 93.2 (124/133) | |
-| **overall** | **93.4 (467/500)**; README 94.4 | |
-| mean answer-prompt tokens | ~6.8k (docs: 6,787) | |
+Mem0's reference only; WARM was not run on LongMemEval-S under this harness.
 
-### BEAM 1M (700 q) and 10M (200 q): pass rate (score >= 0.5) and average score x100
+| Type (n) | Mem0 top-200 (result file) |
+|---|---|
+| knowledge-update (78) | 96.2 (75/78) |
+| multi-session (133) | 86.5 (115/133) |
+| single-session-assistant (56) | 100.0 (56/56) |
+| single-session-preference (30) | 96.7 (29/30) |
+| single-session-user (70) | 97.1 (68/70) |
+| temporal-reasoning (133) | 93.2 (124/133) |
+| **overall** | **93.4 (467/500)**; README 94.4 |
+| mean answer-prompt tokens | ~6.8k (docs: 6,787) |
 
-| Ability | Mem0 1M pass | Mem0 1M avg | WARM 1M pass | WARM 1M avg | Mem0 10M pass | Mem0 10M avg | WARM 10M pass | WARM 10M avg |
-|---|---|---|---|---|---|---|---|---|
-| abstention | 55.7 (39/70) | 52.5 | | | 40.0 (8/20) | 40.0 | | |
-| contradiction resolution | 48.6 (34/70) | 35.7 | | | 25.0 (5/20) | 32.5 | | |
-| event ordering | 60.0 (42/70) | 53.6 | | | 15.0 (3/20) | 20.2 | | |
-| information extraction | 75.7 (53/70) | 70.0 | | | 55.0 (11/20) | 56.2 | | |
-| instruction following | 88.6 (62/70) | 85.2 | | | 90.0 (18/20) | 82.5 | | |
-| knowledge update | 65.7 (46/70) | 65.0 | | | 80.0 (16/20) | 75.0 | | |
-| multi-session reasoning | 74.3 (52/70) | 65.2 | | | 30.0 (6/20) | 26.1 | | |
-| preference following | 97.1 (68/70) | 88.3 | | | 95.0 (19/20) | 90.4 | | |
-| summarization | 68.6 (48/70) | 63.5 | | | 55.0 (11/20) | 46.9 | | |
-| temporal reasoning | 67.1 (47/70) | 61.8 | | | 20.0 (4/20) | 16.2 | | |
-| **overall** | **70.1 (491/700)** | **64.1** | | | **50.5 (101/200)** | **48.6** | | |
-
-Each WARM row also records the following from its manifest:
+A WARM run records the following in its manifest:
 - WARM commit and binary sha256
 - `retrieval_config` (count-matched or token-matched) and its sha256
 - mean answer-prompt tokens and the fraction of the haystack returned
@@ -63,9 +56,11 @@ Each WARM row also records the following from its manifest:
 - the audit counts, which must all be zero
 - CPU and load average
 
-## Cost and run plan
+## Cost and run plan (as prepared; the LoCoMo run deviated)
 
-Every WARM row is **token-matched**. `retrieval_config.json` caps the returned memory text at 7,000
+The LoCoMo run that was made used the top-200 count-matched configuration and spent 41.55 USD
+(`all-usage.jsonl` in `locomo_mem0_harness_v1/`), plus 1.14 USD for the empty-answer retry. The plan below is the
+original, unexecuted token-matched design. In it, every WARM row is **token-matched**. `retrieval_config.json` caps the returned memory text at 7,000
 o200k tokens per question, matching Mem0's documented ~7k memory tokens. The cap is filled in rank
 order, it is one constant for the whole run, and it is recorded in the manifest. Recall is
 lexical (BM25) only. The literal top-200 (count-matched) variant is documented in the adapter
@@ -82,7 +77,7 @@ runs at $0.
 | 2. LongMemEval-S token-matched (cap $13) | ~7k memory plus template | ~$10 | estimate; the $0 retrieval-only step re-prices it before the paid step |
 | 3. BEAM-10M token-matched (cap $10) | ~7.2k | ~$7.2 | BEAM-1M per-question cost x 200 |
 | later: BEAM-1M token-matched | 7.2k tokens, 6.3 memories (max 7.3k) | $25.4 | conv 0 measured, 20 q scaled to 700 |
-| not run: count-matched | LoCoMo 12.3k, LongMemEval 87.6k, BEAM-1M 227k mean / 242k max | $46.6 / $59.5 / $218 | |
+| count-matched (LoCoMo run 2026-11-14 at about 10k measured; the others not run) | LoCoMo 12.3k estimated, LongMemEval 87.6k, BEAM-1M 227k mean / 242k max | $46.6 / $59.5 / $218 | |
 
 BEAM's `--evaluate-only` only recomputes metrics, so BEAM's paid run is the combined run. Its
 retrieval hash is checked against the $0 retrieval-only run. Hybrid keyword+embedding recall is left

@@ -7,6 +7,8 @@ per-dataset results and target coverage alongside the overview score.
 
 ## Published comparison, 2026-10-21
 
+Snapshot as of 2026-10-21; it has not been re-fetched since, so the live overview may have changed. No WARM placement is claimed.
+
 The [saved published inputs](../../benchmarks/results/vibe_v1/leaderboard_inputs/)
 and [recomputed ranking](../../benchmarks/results/vibe_v1/leaderboard.json)
 reproduce the [live overview](https://vector-index-bench.github.io/overview.html).
@@ -324,6 +326,8 @@ interpolated values (log-linear along each arm's frontier) in `benchmarks/vibe/`
 | **56 (T4b, submitted)** | elite | 10,812 | 6,844 | 5,594 | 5,048 | 0.99994 |
 | **56 (T4b), elite / control** | | 1.04x | 1.34x | 1.58x | 2.30x | |
 
+Cost of the elite set, which these ratios do not include. Both rows are WARM against WARM (the control is WARM's previous submission; no other method is in these runs), on an Apple M4, one thread, llama-128-ip full test queries. The elite takes the best QPS per recall level over six builds instead of four, and the gain at 0.95 is 1.04x. Build times, one build each, from `t1-llama-test.json` (the T2 to T4b runs reuse those cached builds and record 0 s): the four base builds 291.5 / 313.0 / 321.1 / 327.9 s (1,253.5 s together), `learn_mid` (d24, pd 64) 738.9 s and `learn_tail` (d32, pd 128) 748.8 s, so the six builds take 2,741.2 s against 1,253.5 s for the control's four. Index size is not recorded in the `vibe_apex_20261108` files and is not reported here.
+
 Interpolated elite / control at 0.95 / 0.99 / 0.995 / 0.998: T4b 1.01x / 1.33x / 1.58x / 2.22x; interpolated base-only at 0.99: control 5,165, T2 5,092, T3 5,180, T4b 5,247.
 
 What each ef point does (measured): ef 320 / rerank 200 is the control's first configuration at 0.99 for d32 (recall 0.99034, 5,102); without it the base builds
@@ -425,7 +429,7 @@ retains its three explicitly ignored experiments.
 The [WARM adapter](../../benchmarks/vibe/warm/)
 follows VIBE's [new-method guide](https://github.com/vector-index-bench/vibe/blob/main/docs/NEW_METHOD.md):
 one-thread builds, unique original row IDs, separate build/query parameters,
-four build combinations and 45 query combinations per metric, with a pinned
+six build combinations and 56 query combinations per metric (the submitted grid in `config.yml`, described under "Submitted grid and builds" above), with a pinned
 implementation revision in `image.def`. It is the quantized graph algorithm, not the memory
 database service. It advertises cosine, normalized, euclidean and ip datasets;
 ip is served directly by inner product on the original coordinates (`direct_ip`).
@@ -520,9 +524,9 @@ This verifies only the older binaries on these k=10 workloads. The current engin
 wheel profile training, and image build remain unvalidated, so `image.def` does not
 adopt PGO. This result does not establish VIBE k=100 performance or a leaderboard win.
 
-## Pre-registered OOD grid, 2026-10-23
+## Pre-registered OOD grid, 2026-10-23 (superseded)
 
-Fixed in `benchmarks/vibe/warm/config.yml` before any run of this grid. Build arguments
+This was the grid before the 2026-11-08 change; the submitted grid is six builds and 56 query combinations per metric ("Submitted grid and builds" above). It was fixed in `benchmarks/vibe/warm/config.yml` before any run of this grid. Build arguments
 `degree x build_ef x code_bits x query_aware`, query arguments `ef x rerank`:
 
 | Metric section | degree | build_ef | code_bits | query_aware | ef | rerank | build / query combos |

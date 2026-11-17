@@ -3,7 +3,6 @@ docs/benchmarks/BIG-ANN-FILTER.md|24,187 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|45,282 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|53,972.75 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|60k QPS
-docs/benchmarks/BIG-ANN-FILTER.md|88.2k QPS
 docs/benchmarks/BIG-ANN-FILTER.md|9,245 QPS
 docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9045
 docs/benchmarks/BIG-ANN-FILTER.md|recall 0.9067

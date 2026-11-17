@@ -3,11 +3,19 @@
 The streaming track replays a runbook of inserts, deletes and searches from an empty index and
 scores the mean recall@10 over its search checkpoints, under 8 GiB of DRAM and one hour.
 
-WARM's current entry runs the final runbook (msturing-30M-clustered, 1,280 steps) on
-`PartitionIndex`. Its result is in [the partition tier section](#final-runbook-msturing-30m-clustered-partition-tier):
-mean recall@10 0.9942 in 2,722 s at nprobe 650 and reorder 1000, with the submitted configuration
-pinned at `f21de886`, measured on a GCP Ice Lake VM. It is not a board result; wall time on the
-Azure evaluation VM is unmeasured.
+WARM's entry runs the final runbook (msturing-30M-clustered, 1,280 steps) on `PartitionIndex`.
+Two operating points are measured on GCP Ice Lake VMs, neither on the Azure evaluation VM, so
+neither is a board result:
+
+- nprobe 925, reorder 1000, Docker mode, two runs on two VMs: mean recall@10 0.998548 with step
+  sums of 3,324.5 s and 3,378.8 s (`run.py` 3,329 s and 3,383 s), 217 s under the one-hour limit on
+  the slower run ([`bigann_streaming_final_runbook_icelake_v2.json`](../../benchmarks/results/bigann_streaming_final_runbook_icelake_v2.json)).
+- nprobe 650, reorder 1000, `--nodocker`, one run: mean recall@10 0.9942 in 2,722 s, 878 s under
+  the limit ([the partition tier section](#final-runbook-msturing-30m-clustered-partition-tier)).
+
+The open PR 357 on harsha-simhadri/big-ann-benchmarks (head `a0ba411`, read 2026-11-17)
+configures nprobe 925 and pins WARM `1cdeab8d`. The v2 runs used WARM `5e2893f0`, a pre-merge
+commit of the same change that is not on main; the two source trees were not compared here.
 
 The sections before it describe the earlier graph entry. It ran the delete runbook
 (`neurips23/runbooks/delete_runbook.yaml` on msturing-10M-clustered: 100-d float32, L2, at most 6M
@@ -215,10 +223,11 @@ All runs below use `run.py --nodocker` with the final runbook, all 1,280 steps, 
 | Ice Lake VM | `c5cd1c61` (8-query scan, batched reorder) | 600 / 1000 | 0.9931 | 0.9836 | 2,601 s | 6.53 GiB | `il_s2e_np600_ro1000` |
 | Ice Lake VM | `c5cd1c61` | **650 / 1000** | **0.9942** | **0.9859** | **2,722 s** | 6.53 GiB | `il_s2e_np650_ro1000` |
 
-- The submitted configuration is the last row, pinned at `f21de886`: `c5cd1c61` merged, with an identical source tree. It is the highest recall with a step-time total at or below 2,800 s, which leaves 878 s under the hour.
+- The last row was the submitted configuration at `f21de886` (`c5cd1c61` merged, identical source tree): the highest recall with a step-time total at or below 2,800 s, 878 s under the hour. The PR now submits nprobe 925 instead (see the top of this page and [`bigann_streaming_final_runbook_icelake_v2.json`](../../benchmarks/results/bigann_streaming_final_runbook_icelake_v2.json)): recall 0.998548, step sums 3,324.5 s and 3,378.8 s in Docker mode, a 217 s margin on the slower run.
 - The scan change cut Ice Lake search from 5,293 s to 1,790 s at identical recall. Blocks and admitted counts are identical. The extra time went into higher nprobe and a larger reorder. The second scan round (`c5cd1c61`) bought another 250 lists of nprobe at about the same time.
-- The `neurips23/README.md` baselines table quotes DiskANN at 0.883 on this runbook.
-- This is not a board result: wall time on the Azure evaluation VM is unmeasured. The submission is draft PR 357 on harsha-simhadri/big-ann-benchmarks.
+- The `neurips23/README.md` baselines table quotes DiskANN at 0.883 on this runbook; that is the competition-era baseline, not the current board. The current comparison is the board CSVs quoted above: the `ongoing_leaderboard` CSV fetched 2026-11-06 lists scann 0.9924, and the older fork-copy CSV lists puck 0.9855. Which metric and ground truth the live board uses is unconfirmed, the snapshots were not re-fetched, and these runs are on GCP Ice Lake VMs, not the Azure evaluation VM.
+- The mean includes the 16 brute-force searches before the index trains (pre-train mean recall 1.0000 in `il_s2e_np650_ro1000/report.txt`); the lowest checkpoint after training is 0.9859 at nprobe 650 (`min after training` column).
+- This is not a board result: wall time on the Azure evaluation VM is unmeasured. The submission is PR 357 on harsha-simhadri/big-ann-benchmarks.
 
 ## Merged consolidation (development measurements)
 
