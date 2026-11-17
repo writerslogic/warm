@@ -158,7 +158,13 @@ mod tests {
         ] {
             store.add(make_goal(name, seed, relevance, 1.0, 0.0));
         }
+        assert_eq!(store.active_count(), 4);
+        let first = store.get("first").unwrap();
+        assert_eq!(first.name, "first");
+        assert!(first.active);
         store.deactivate("inactive");
+        assert_eq!(store.active_count(), 3);
+        assert!(!store.get("inactive").unwrap().active);
         assert_eq!(store.goal_relevance(&vector), 1.0);
         store.deactivate("first");
         assert_eq!(
@@ -178,25 +184,10 @@ mod tests {
     #[test]
     fn test_utility_clamps_cost() {
         let g = make_goal("test", 1, 1.0, 1.0, 1.5);
-        assert!(g.utility() > 0.0, "cost should be clamped to 0.99");
-    }
-
-    #[test]
-    fn test_add_get() {
-        let store = GoalStore::new();
-        store.add(make_goal("learn_rust", 1, 0.9, 0.8, 0.3));
-        let g = store.get("learn_rust").unwrap();
-        assert_eq!(g.name, "learn_rust");
-        assert!(g.active);
-    }
-
-    #[test]
-    fn test_deactivate() {
-        let store = GoalStore::new();
-        store.add(make_goal("g1", 1, 1.0, 1.0, 0.0));
-        assert_eq!(store.active_count(), 1);
-        store.deactivate("g1");
-        assert_eq!(store.active_count(), 0);
+        assert!(
+            (g.utility() - 0.01).abs() < 1e-12,
+            "cost should be clamped to 0.99"
+        );
     }
 
     #[test]
@@ -209,19 +200,6 @@ mod tests {
         assert_eq!(pri[0].name, "high");
         assert_eq!(pri[1].name, "mid");
         assert_eq!(pri[2].name, "low");
-    }
-
-    #[test]
-    fn test_goal_relevance() {
-        let store = GoalStore::new();
-        let g = make_goal("g1", 42, 1.0, 1.0, 0.0);
-        let vec = g.vector.clone();
-        store.add(g);
-        let rel = store.goal_relevance(&vec);
-        assert!(
-            (rel - 1.0).abs() < 0.001,
-            "Same vector should have relevance ~1.0"
-        );
     }
 
     #[test]

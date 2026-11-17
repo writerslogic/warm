@@ -293,6 +293,20 @@ pub(crate) fn opt_utf8<'a>(value: warm_str_t, what: &str) -> ApiResult<Option<&'
     }
 }
 
+/// The optional JSON text `value`, parsed. Any JSON value is accepted; `what` names the field.
+pub(crate) fn opt_json(value: warm_str_t, what: &str) -> ApiResult<Option<serde_json::Value>> {
+    opt_utf8(value, what)?
+        .map(|json| {
+            serde_json::from_str(json).map_err(|e| {
+                ApiError::new(
+                    WARM_ERR_INVALID_ARGUMENT,
+                    format!("{what} is not JSON: {e}"),
+                )
+            })
+        })
+        .transpose()
+}
+
 pub(crate) fn opt_u32(value: u32) -> Option<u32> {
     (value != 0).then_some(value)
 }

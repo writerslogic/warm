@@ -36,10 +36,9 @@ async function seeded() {
 }
 const ids = (r) => r.map((x) => x.id).sort()
 
-test('is a MastraVector', () => assert.ok(make() instanceof MastraVector))
-
 test('index lifecycle: create, list, describe, idempotent create, delete', async () => {
   const v = make()
+  assert.ok(v instanceof MastraVector)
   await v.createIndex({ indexName: 'one', dimension: DIM })
   await v.createIndex({ indexName: 'two', dimension: DIM, metric: 'cosine' })
   await v.createIndex({ indexName: 'one', dimension: DIM })

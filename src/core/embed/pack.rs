@@ -257,16 +257,7 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
     hex(&Sha256::digest(bytes))
 }
 
-pub(crate) fn hex(bytes: &[u8]) -> String {
-    use std::fmt::Write;
-    bytes
-        .iter()
-        .fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
-            // Writing to a String cannot fail.
-            let _ = write!(s, "{b:02x}");
-            s
-        })
-}
+pub(crate) use crate::core::hash::hex;
 
 /// Streams the sha256 of a file without holding it in memory.
 pub fn sha256_file(path: &Path) -> Result<String> {

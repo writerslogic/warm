@@ -554,12 +554,15 @@ impl WarmBackend {
         experience::check_observation_value(&observation, &limits)
             .map_err(|e| Fail::invalid(e.to_string()))?;
         let bytes = serde_json::to_vec(&observation).map_or(0, |v| v.len());
-        let parsed: experience::OwnedObservation = serde_json::from_value(observation)
+        let parsed = experience::ObservationInput::from_value(observation)
             .map_err(|e| Fail::invalid(format!("invalid observation: {e}")))?;
-        let id = format!("experience:{}:{}", parsed.episode, parsed.step);
+        let id = format!(
+            "experience:{}:{}",
+            parsed.observation.episode, parsed.observation.step
+        );
         let outcome = store
             .core
-            .with_experience_mut(|s| s.ingest_many(vec![parsed]))
+            .with_experience_mut(|s| s.ingest_inputs_within(vec![parsed], None))
             .map_err(|e| Fail::invalid(e.to_string()))?
             .map_err(|(_, e)| match e {
                 experience::ExperienceError::Limit { .. }

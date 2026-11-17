@@ -204,7 +204,7 @@ fn source_identity(source: &ModelSource, weights: &[PathBuf]) -> Result<Vec<(Str
                 }
                 hash.update(&buffer[..n]);
             }
-            let digest = hash.finalize().iter().map(|b| format!("{b:02x}")).collect();
+            let digest = crate::core::hash::hex(&hash.finalize());
             Ok((name, digest))
         })
         .collect()

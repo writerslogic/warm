@@ -22,6 +22,8 @@ use rayon::prelude::*;
 use sha2::{Digest, Sha256};
 use std::io::{BufRead, Read, Write};
 use std::path::{Path, PathBuf};
+
+use crate::core::hash::hex as hex_encode;
 use trust::StatusLookup;
 use trust::TrustStore;
 
@@ -1751,11 +1753,6 @@ fn append_synced(path: &Path, bytes: &[u8]) -> Result<()> {
         super::durable_file::sync_directory(path.parent().unwrap_or_else(|| Path::new(".")))?;
     }
     Ok(())
-}
-
-/// Lowercase hex, two digits per byte.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 fn hex_decode(hex: &str) -> Result<[u8; 32]> {

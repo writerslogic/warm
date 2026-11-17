@@ -19,8 +19,8 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    Experience, ExperienceConfig, ExperienceError, Ingested, OwnedObservation, PurgeReport, Result,
-    SNAPSHOT_FILE,
+    Control, Experience, ExperienceConfig, ExperienceError, Ingested, ObservationInput,
+    OwnedObservation, PurgeReport, Result, SNAPSHOT_FILE,
 };
 use crate::core::durable_file::{atomic_write, scrub_remove_file, sync_directory};
 use crate::core::failpoint;
@@ -48,10 +48,17 @@ pub(crate) trait Sealer: Send + Sync {
     fn unseal(&self, sealed: &[u8]) -> anyhow::Result<Vec<u8>>;
 }
 
-/// One journaled change.
+/// One journaled change. An observation is journaled without its accessibility-tree text; the
+/// controls parsed from it travel in `IngestForm`, so replay does not parse again and does not
+/// depend on the configuration it runs under. A reader that predates `IngestForm` refuses the
+/// record rather than dropping the controls.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 enum Op {
     Ingest(OwnedObservation),
+    IngestForm {
+        observation: OwnedObservation,
+        controls: Vec<Control>,
+    },
     Describe {
         episode: String,
         goal: String,
@@ -278,27 +285,31 @@ impl ExperienceStore {
         Self::create_journal(dir, Experience::new(cfg), 0, 0, sealer)
     }
 
+    /// The journaled form of an operation: the accessibility-tree text that came with an
+    /// observation is replaced by the controls parsed from it.
+    fn prepare(x: &Experience, op: Op, page: Option<String>) -> Result<Op> {
+        let (o, text) = match (op, page) {
+            (Op::Ingest(o), Some(text)) => (o, text),
+            (op, _) => return Ok(op),
+        };
+        let controls = x.extract_controls(&text)?;
+        Ok(if controls.is_empty() {
+            Op::Ingest(o)
+        } else {
+            Op::IngestForm {
+                observation: o,
+                controls,
+            }
+        })
+    }
+
     fn apply(x: &mut Experience, op: &Op) -> Result<Ingested> {
         match op {
-            Op::Ingest(o) => {
-                let ingested = x.ingest(&o.as_observation())?;
-                if o.goal.is_none() && o.outcome.is_none() {
-                    return Ok(ingested);
-                }
-                let (goal, outcome) = x
-                    .episode_description(&o.episode)
-                    .map(|(g, o)| (g.to_string(), o.to_string()))
-                    .unwrap_or_default();
-                let (new_goal, new_outcome) = (
-                    o.goal.clone().unwrap_or_else(|| goal.clone()),
-                    o.outcome.clone().unwrap_or_else(|| outcome.clone()),
-                );
-                if (&new_goal, &new_outcome) == (&goal, &outcome) {
-                    return Ok(ingested);
-                }
-                x.describe_episode(&o.episode, &new_goal, &new_outcome)?;
-                Ok(Ingested::Applied)
-            }
+            Op::Ingest(o) => Self::apply_ingest(x, o, Vec::new()),
+            Op::IngestForm {
+                observation,
+                controls,
+            } => Self::apply_ingest(x, observation, controls.clone()),
             Op::Describe {
                 episode,
                 goal,
@@ -311,6 +322,30 @@ impl ExperienceStore {
                 Ok(Ingested::Applied)
             }
         }
+    }
+
+    fn apply_ingest(
+        x: &mut Experience,
+        o: &OwnedObservation,
+        controls: Vec<Control>,
+    ) -> Result<Ingested> {
+        let ingested = x.ingest_with_controls(&o.as_observation(), controls)?;
+        if o.goal.is_none() && o.outcome.is_none() {
+            return Ok(ingested);
+        }
+        let (goal, outcome) = x
+            .episode_description(&o.episode)
+            .map(|(g, o)| (g.to_string(), o.to_string()))
+            .unwrap_or_default();
+        let (new_goal, new_outcome) = (
+            o.goal.clone().unwrap_or_else(|| goal.clone()),
+            o.outcome.clone().unwrap_or_else(|| outcome.clone()),
+        );
+        if (&new_goal, &new_outcome) == (&goal, &outcome) {
+            return Ok(ingested);
+        }
+        x.describe_episode(&o.episode, &new_goal, &new_outcome)?;
+        Ok(Ingested::Applied)
     }
 
     pub fn experience(&self) -> &Experience {
@@ -391,16 +426,24 @@ impl ExperienceStore {
     /// error carries the position of the failing one.
     fn run(
         &mut self,
-        ops: Vec<Op>,
+        ops: Vec<(Op, Option<String>)>,
         budget: Option<u64>,
     ) -> std::result::Result<Vec<Ingested>, (usize, ExperienceError)> {
         let mut outcomes = Vec::with_capacity(ops.len());
         let mut frames = Vec::new();
         let (start_seq, mut failed, mut ahead) = (self.seq, None, false);
-        for (i, op) in ops.into_iter().enumerate() {
+        for (i, (op, page)) in ops.into_iter().enumerate() {
+            let op = match Self::prepare(&self.x, op, page) {
+                Ok(op) => op,
+                Err(e) => {
+                    failed = Some((i, e));
+                    break;
+                }
+            };
             // A step that adds a unit and finds none left is refused before it touches the
             // state, so the common rejection needs no reload.
-            if let (Op::Ingest(o), Some(b)) = (&op, budget) {
+            if let (Op::Ingest(o) | Op::IngestForm { observation: o, .. }, Some(b)) = (&op, budget)
+            {
                 if self.x.quota_units() >= b && !self.x.has_step(&o.episode, o.step) {
                     failed = Some((i, ExperienceError::Quota(b)));
                     break;
@@ -494,16 +537,36 @@ impl ExperienceStore {
         observations: Vec<OwnedObservation>,
         budget: Option<u64>,
     ) -> std::result::Result<Vec<Ingested>, (usize, ExperienceError)> {
-        self.run(observations.into_iter().map(Op::Ingest).collect(), budget)
+        self.ingest_inputs_within(observations.into_iter().map(Into::into).collect(), budget)
+    }
+
+    /// [`Self::ingest_many_within`] for observations that may come with the accessibility-tree
+    /// text of their page; with [`ExperienceConfig::form_state`] the controls parsed from it are
+    /// stored with the step.
+    pub fn ingest_inputs_within(
+        &mut self,
+        inputs: Vec<ObservationInput>,
+        budget: Option<u64>,
+    ) -> std::result::Result<Vec<Ingested>, (usize, ExperienceError)> {
+        self.run(
+            inputs
+                .into_iter()
+                .map(|i| (Op::Ingest(i.observation), i.accessibility_tree))
+                .collect(),
+            budget,
+        )
     }
 
     pub fn describe_episode(&mut self, episode: &str, goal: &str, outcome: &str) -> Result<()> {
         self.run(
-            vec![Op::Describe {
-                episode: episode.into(),
-                goal: goal.into(),
-                outcome: outcome.into(),
-            }],
+            vec![(
+                Op::Describe {
+                    episode: episode.into(),
+                    goal: goal.into(),
+                    outcome: outcome.into(),
+                },
+                None,
+            )],
             None,
         )
         .map(|_| ())
@@ -627,4 +690,77 @@ fn open_rw(path: &Path) -> Result<File> {
         .write(true)
         .open(path)
         .map_err(io)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::experience::{form, ControlOption};
+
+    fn observation(step: u32) -> OwnedObservation {
+        serde_json::from_value(serde_json::json!({
+            "episode": "e", "step": step, "tree": {"role": "RootWebArea", "name": "Form"}
+        }))
+        .unwrap()
+    }
+
+    fn frame(record: &Record) -> Vec<u8> {
+        let mut body = Vec::new();
+        ciborium::into_writer(record, &mut body).unwrap();
+        let mut out = (body.len() as u32).to_le_bytes().to_vec();
+        out.extend_from_slice(&crc32fast::hash(&body).to_le_bytes());
+        out.extend_from_slice(&body);
+        out
+    }
+
+    #[test]
+    fn a_journaled_form_record_over_the_caps_is_refused_on_replay() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut s = ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+        let input = ObservationInput {
+            observation: observation(0),
+            accessibility_tree: Some("[1] textbox 'Name', value='Ada'".into()),
+        };
+        s.ingest_inputs_within(vec![input], None).unwrap();
+        let seq = s.sequence();
+        drop(s);
+        let journal = std::fs::read(dir.path().join(JOURNAL_FILE)).unwrap();
+        let one = Control {
+            role: "listbox".into(),
+            name: "l".into(),
+            ..Control::default()
+        };
+        let mut wide = one.clone();
+        wide.options = vec![
+            ControlOption {
+                label: "o".into(),
+                selected: true,
+            };
+            form::MAX_OPTIONS + 1
+        ];
+        for (controls, ok) in [
+            (vec![one.clone(); form::MAX_CONTROLS], true),
+            (vec![one; form::MAX_CONTROLS + 1], false),
+            (vec![wide], false),
+        ] {
+            let record = Record {
+                seq: seq + 1,
+                op: Op::IngestForm {
+                    observation: observation(1),
+                    controls,
+                },
+            };
+            let mut bytes = journal.clone();
+            bytes.extend_from_slice(&frame(&record));
+            std::fs::write(dir.path().join(JOURNAL_FILE), &bytes).unwrap();
+            let opened = ExperienceStore::open(dir.path(), ExperienceConfig::default(), None);
+            match opened {
+                Ok(s) => {
+                    assert!(ok, "an over-cap record replayed");
+                    assert_eq!(s.experience().step_controls("e", 1).unwrap().len(), 120);
+                }
+                Err(e) => assert!(!ok, "{e}"),
+            }
+        }
+    }
 }
