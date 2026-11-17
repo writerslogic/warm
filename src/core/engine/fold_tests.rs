@@ -130,6 +130,8 @@ fn folded_ingest_writes_the_checkpoint_of_a_single_pass() -> Result<()> {
             body(&checkpoint(folded.path())),
             "retain={retain}: the checkpoints differ"
         );
+        let bytes = checkpoint(folded.path());
+        assert_eq!(&bytes[..8], b"HMSCKP\x00\x04", "retain={retain}: version 4");
         let reopened = WarmCore::new(
             256,
             Some(folded.path().display().to_string()),
@@ -359,5 +361,76 @@ fn toggling_compress_text_between_folds_keeps_answers_and_text() -> Result<()> {
     }
     let core = open(&toggled, 1, true)?;
     assert_eq!((answers(&core)?, stored_texts(&core, 90)?), expected);
+    Ok(())
+}
+
+/// A store that keeps word positions folds to the version 4 checkpoint a single pass writes,
+/// positions and skip tables included, and answers phrases the same after reopening.
+#[test]
+fn positional_stores_fold_to_the_checkpoint_of_a_single_pass() -> Result<()> {
+    let positional = IngestOptions {
+        positions: true,
+        ..options()
+    };
+    let ingest_positional = |core: &WarmCore| -> Result<()> {
+        for start in (0..70).step_by(7) {
+            core.memorize_documents_with(
+                (start..start + 7).map(|i| document(i, false)).collect(),
+                &positional,
+            )?;
+        }
+        Ok(())
+    };
+    let phrases = |core: &WarmCore| -> Result<Vec<String>> {
+        [
+            "\"common amber0\"",
+            "\"binary2 common\"",
+            "\"amber1 binary2\"",
+        ]
+        .iter()
+        .map(|q| {
+            let hits = core.search_lexical(
+                &crate::core::documents::LexicalQuery::parse(q)?,
+                &crate::core::documents::LexicalOptions {
+                    k: 50,
+                    count: true,
+                    ..Default::default()
+                },
+            )?;
+            Ok(format!("{:?}", hits))
+        })
+        .collect()
+    };
+    let whole = tempfile::tempdir()?;
+    let folded = tempfile::tempdir()?;
+    let expected = {
+        let core = WarmCore::new(
+            256,
+            Some(whole.path().display().to_string()),
+            Some(config(0)),
+        )?;
+        ingest_positional(&core)?;
+        (answers(&core)?, phrases(&core)?)
+    };
+    {
+        let core = WarmCore::new(
+            256,
+            Some(folded.path().display().to_string()),
+            Some(config(1)),
+        )?;
+        ingest_positional(&core)?;
+        assert!(core.serves_from_checkpoint(), "folded");
+    }
+    let (whole_bytes, folded_bytes) = (checkpoint(whole.path()), checkpoint(folded.path()));
+    assert_eq!(&folded_bytes[..8], b"HMSCKP\x00\x04");
+    assert_eq!(folded_bytes[40] & 1, 1, "positional flag");
+    assert_eq!(body(&whole_bytes), body(&folded_bytes));
+    let reopened = WarmCore::new(
+        256,
+        Some(folded.path().display().to_string()),
+        Some(config(1)),
+    )?;
+    assert!(reopened.serves_from_checkpoint());
+    assert_eq!((answers(&reopened)?, phrases(&reopened)?), expected);
     Ok(())
 }

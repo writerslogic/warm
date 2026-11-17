@@ -13,7 +13,7 @@
 //! preserve the checkpoint. Operations requiring the complete lexical store rebuild it from
 //! the checkpoint and overlay ([`WarmCore::hydrate_documents`]).
 
-use std::io::{Read, Seek, SeekFrom};
+use std::io::Read;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -60,6 +60,38 @@ pub(super) struct ImageState {
 fn word(header: &[u8], index: usize) -> u64 {
     let at = 8 + 8 * index;
     u64::from_le_bytes(header[at..at + 8].try_into().expect("eight bytes"))
+}
+
+/// The CRC-32 of `bytes`, over chunks on several threads for a large checkpoint.
+fn checkpoint_hash(bytes: &[u8]) -> u32 {
+    const CHUNK_MIN: usize = 8 << 20;
+    let threads = std::thread::available_parallelism().map_or(1, |n| n.get().min(8));
+    if threads < 2 || bytes.len() < 2 * CHUNK_MIN {
+        return crc32fast::hash(bytes);
+    }
+    let chunk = bytes.len().div_ceil(threads);
+    std::thread::scope(|scope| {
+        let parts: Vec<_> = bytes
+            .chunks(chunk)
+            .map(|part| {
+                scope.spawn(move || {
+                    let mut hasher = crc32fast::Hasher::new();
+                    hasher.update(part);
+                    hasher
+                })
+            })
+            .collect();
+        let mut parts = parts.into_iter();
+        let mut whole = parts
+            .next()
+            .expect("a non-empty checkpoint")
+            .join()
+            .expect("checksum thread");
+        for part in parts {
+            whole.combine(&part.join().expect("checksum thread"));
+        }
+        whole.finalize()
+    })
 }
 
 impl WarmCore {
@@ -207,23 +239,6 @@ impl WarmCore {
                 sealed_key.is_none(),
                 "plaintext checkpoint in an encrypted store"
             );
-            let mut hasher = crc32fast::Hasher::new();
-            hasher.update(&outer[documents::CHECKPOINT_CRC_START..]);
-            let mut buffer = vec![0u8; 1 << 16];
-            loop {
-                let n = file.read(&mut buffer)?;
-                if n == 0 {
-                    break;
-                }
-                hasher.update(&buffer[..n]);
-            }
-            file.seek(SeekFrom::Start(0))?;
-            let mut header = vec![0u8; documents::CHECKPOINT_HEADER_LEN];
-            file.read_exact(&mut header)?;
-            ensure!(
-                hasher.finalize() == documents::checkpoint_crc(&header),
-                "checkpoint checksum mismatch"
-            );
             // SAFETY: the store lock keeps other engines out of the store directory, and no
             // engine writes a published checkpoint: compactions write new ones in new
             // generations and remove an old generation only after the switch.
@@ -232,7 +247,7 @@ impl WarmCore {
         ensure!(
             bytes.len() >= documents::CHECKPOINT_HEADER_LEN
                 && documents::checkpoint_crc(&bytes)
-                    == crc32fast::hash(&bytes[documents::CHECKPOINT_CRC_START..])
+                    == checkpoint_hash(&bytes[documents::CHECKPOINT_CRC_START..])
                 && documents::checkpoint_binding(&bytes) == (generation, self.dimensions as u64),
             "checkpoint checksum mismatch"
         );
@@ -454,7 +469,7 @@ mod tests {
     /// A store whose checkpoint is version 1 (flat postings) opens from it, answers exactly
     /// as it did from version 2, and its next compaction writes version 2.
     #[test]
-    fn version_1_checkpoint_serves_unchanged_and_compacts_to_version_3() -> Result<()> {
+    fn version_1_checkpoint_serves_unchanged_and_compacts_to_version_4() -> Result<()> {
         let directory = tempfile::tempdir()?;
         let path = directory.path().display().to_string();
         let mut config = WarmConfig::default();
@@ -494,7 +509,7 @@ mod tests {
         };
         let [file] = checkpoint_files(directory.path()).try_into().unwrap();
         let bytes = std::fs::read(&file)?;
-        assert_eq!(&bytes[..8], b"HMSCKP\x00\x03");
+        assert_eq!(&bytes[..8], b"HMSCKP\x00\x04");
         let generation = file
             .parent()
             .unwrap()
@@ -518,7 +533,7 @@ mod tests {
         core.compact()?;
         drop(core);
         let [file] = checkpoint_files(directory.path()).try_into().unwrap();
-        assert_eq!(&std::fs::read(&file)?[..8], b"HMSCKP\x00\x03");
+        assert_eq!(&std::fs::read(&file)?[..8], b"HMSCKP\x00\x04");
         let core = WarmCore::new(256, Some(path), Some(config))?;
         assert!(core.serves_from_checkpoint());
         assert_eq!(answers(&core)?, expected);

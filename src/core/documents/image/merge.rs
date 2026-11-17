@@ -7,7 +7,7 @@
 //! store, one posting list and one document record is held at once, however large the
 //! checkpoint is. The result is byte-for-byte the checkpoint [`super::encode`] writes for the
 //! store holding both sets of documents (`tests::merged_checkpoint_equals_the_whole_encoding`).
-//! The merge needs a version 2 checkpoint with no dead documents, so it applies to a store
+//! The merge writes a version 4 checkpoint and needs a version 4 base with no dead documents, so it applies to a store
 //! written once and extended by inserts; anything else keeps its in-memory path.
 
 use std::path::Path;
@@ -15,12 +15,14 @@ use std::path::Path;
 use anyhow::{ensure, Context, Result};
 
 use super::{
-    encode_document, put_bytes, put_varint, DocumentStore, Reader, ServingImage, BLOCK, FREE,
-    HEADER_LEN, HEADER_WORDS, H_CHUNKS, H_DIMENSIONS, H_DOCS, H_GENERATION, H_SECTIONS, H_SLOTS,
-    H_TERMS, H_WORDS, MAGIC, SECTIONS, SLOT_BYTES,
+    append_skips, encode_document, put_bytes, put_varint, DocumentStore, PositionPacker, Reader,
+    ServingImage, BLOCK, FLAG_POSITIONAL, FLAG_POSITIVE, FREE, HEADER_LEN, HEADER_WORDS, H_CHUNKS,
+    H_DIMENSIONS, H_DOCS, H_FLAGS, H_GENERATION, H_SECTIONS, H_SLOTS, H_TERMS, H_WORDS, MAGIC,
+    SLOT_BYTES, V4_SECTIONS,
 };
 use super::{u32_at, Section};
-use crate::core::documents::postings::{CheckpointPacker, Postings};
+use crate::core::documents::lists::{Cursor, ListRef, NO_DOC};
+use crate::core::documents::postings::{BlockInfo, CheckpointPacker};
 use crate::core::durable_file::{BlockWriter, Spool};
 
 /// Pages of the mapped checkpoint are released after this many bytes of it were read.
@@ -31,13 +33,19 @@ struct BaseTerm<'a> {
     term: Vec<u8>,
     count: u32,
     bytes: &'a [u8],
+    skips: &'a [u8],
+    positions: &'a [u8],
 }
 
 /// Sequential reader of one form's dictionary and posting bytes in the checkpoint.
 struct BaseTerms<'a> {
     reader: Reader<'a>,
     postings: &'a [u8],
+    skips: &'a [u8],
+    positions: &'a [u8],
     at: usize,
+    skip_at: usize,
+    position_at: usize,
     left: usize,
     index: usize,
     previous: Vec<u8>,
@@ -45,21 +53,19 @@ struct BaseTerms<'a> {
 
 impl<'a> BaseTerms<'a> {
     fn new(image: &'a ServingImage, form: usize) -> Self {
-        let (dict, blocks) = if form == 0 {
-            (Section::Dict0, Section::Blocks0)
+        let dict = if form == 0 {
+            Section::Dict0
         } else {
-            (Section::Dict1, Section::Blocks1)
-        };
-        let blocks = image.section(blocks);
-        let at = if blocks.is_empty() {
-            0
-        } else {
-            u32_at(blocks, 4) as usize
+            Section::Dict1
         };
         Self {
             reader: Reader::new(image.section(dict)),
             postings: image.section(Section::Postings),
-            at,
+            skips: image.section(Section::Skips),
+            positions: image.section(Section::Positions),
+            at: 0,
+            skip_at: 0,
+            position_at: 0,
             left: image.dictionaries[form].terms,
             index: 0,
             previous: Vec::new(),
@@ -83,15 +89,29 @@ impl<'a> BaseTerms<'a> {
         self.previous.extend_from_slice(suffix);
         let count = u32::try_from(self.reader.varint()?)?;
         let len = usize::try_from(self.reader.varint()?)?;
+        let position_len = usize::try_from(self.reader.varint()?)?;
+        let skip_len = usize::try_from(self.reader.varint()?)?;
         let bytes = self
             .postings
             .get(self.at..self.at + len)
             .context("checkpoint posting range")?;
+        let positions = self
+            .positions
+            .get(self.position_at..self.position_at + position_len)
+            .context("checkpoint position range")?;
+        let skips = self
+            .skips
+            .get(self.skip_at..self.skip_at + skip_len)
+            .context("checkpoint skip range")?;
         self.at += len;
+        self.position_at += position_len;
+        self.skip_at += skip_len;
         Ok(Some(BaseTerm {
             term: self.previous.clone(),
             count,
             bytes,
+            skips,
+            positions,
         }))
     }
 }
@@ -116,22 +136,13 @@ impl FormWriter {
         })
     }
 
-    /// Appends one term whose postings were just written to `postings` at `start`. `None` when
-    /// an offset no longer fits the format's `u32`.
-    fn push(
-        &mut self,
-        term: &[u8],
-        count: u64,
-        start: u64,
-        postings: &BlockWriter,
-    ) -> Result<Option<()>> {
+    /// Appends one term whose postings, skip table and positions were just written to the
+    /// shared runs after `at`. `None` when an offset no longer fits the format.
+    fn push(&mut self, term: &[u8], count: u64, at: Runs, runs: &Runs) -> Result<Option<()>> {
         let prefix = if self.terms.is_multiple_of(BLOCK as u64) {
-            let (Ok(at), Ok(posting)) = (u32::try_from(self.dict.len()), u32::try_from(start))
-            else {
-                return Ok(None);
-            };
-            self.blocks.write(&at.to_le_bytes())?;
-            self.blocks.write(&posting.to_le_bytes())?;
+            for value in [self.dict.len(), at.postings, at.skips, at.positions] {
+                self.blocks.write(&value.to_le_bytes())?;
+            }
             0
         } else {
             self.previous
@@ -144,12 +155,43 @@ impl FormWriter {
         put_varint(&mut self.entry, prefix as u64);
         put_bytes(&mut self.entry, &term[prefix..]);
         put_varint(&mut self.entry, count);
-        put_varint(&mut self.entry, postings.len() - start);
+        put_varint(&mut self.entry, runs.postings - at.postings);
+        put_varint(&mut self.entry, runs.positions - at.positions);
+        put_varint(&mut self.entry, runs.skips - at.skips);
         self.dict.write(&self.entry)?;
         self.previous.clear();
         self.previous.extend_from_slice(term);
         self.terms += 1;
         Ok(Some(()))
+    }
+}
+
+/// Lengths of the three shared runs (postings, skip tables, positions) at one moment.
+#[derive(Clone, Copy)]
+struct Runs {
+    postings: u64,
+    skips: u64,
+    positions: u64,
+}
+
+/// The shared runs one form's merge appends to.
+struct Streams<'w> {
+    postings: &'w mut BlockWriter,
+    skips: &'w mut BlockWriter,
+    positions: &'w mut BlockWriter,
+    /// Whether the merged checkpoint carries word positions.
+    positional: bool,
+    /// Cleared when a merged list holds a posting of frequency zero.
+    positive: bool,
+}
+
+impl Streams<'_> {
+    fn lens(&self) -> Runs {
+        Runs {
+            postings: self.postings.len(),
+            skips: self.skips.len(),
+            positions: self.positions.len(),
+        }
     }
 }
 
@@ -160,7 +202,7 @@ fn merge_form(
     form: usize,
     split: usize,
     out: &mut FormWriter,
-    postings: &mut BlockWriter,
+    streams: &mut Streams<'_>,
 ) -> Result<Option<()>> {
     let (terms, offsets, lists) = store.postings[form].sorted_terms();
     let mut live = (0..lists.len())
@@ -171,7 +213,9 @@ fn merge_form(
         Some(source) => source.next()?,
         None => None,
     };
+    let positional = streams.positional;
     let mut scratch = Vec::new();
+    let mut skip_scratch = Vec::new();
     let mut read = 0usize;
     // The impact bounds of a list come from the word count of each slot it holds: the checkpoint's
     // for its own slots, the store's for those written since.
@@ -183,7 +227,8 @@ fn merge_form(
             DocumentStore::slot_word_count(store, slot - split)
         }
     };
-    let mut packer = CheckpointPacker::new(true, &words);
+    let mut packer = CheckpointPacker::with_info(true, &words, true);
+    let mut placed = PositionPacker::new();
     loop {
         let live_term = live
             .peek()
@@ -194,48 +239,73 @@ fn merge_form(
             (None, Some(_)) => std::cmp::Ordering::Greater,
             (Some(b), Some(l)) => b.term.as_slice().cmp(l),
         };
-        let start = postings.len();
-        let (term, count) = match order {
-            std::cmp::Ordering::Less => {
-                let b = pending.take().expect("ordered by a checkpoint term");
-                postings.write(b.bytes)?;
-                read += b.bytes.len();
-                (b.term, u64::from(b.count))
-            }
-            std::cmp::Ordering::Greater => {
-                let i = live.next().expect("ordered by a live term");
-                scratch.clear();
-                lists[i].for_each(|slot, frequency| {
-                    packer.push(slot + split, frequency, &mut scratch);
-                });
-                packer.finish(&mut scratch);
-                postings.write(&scratch)?;
-                (
-                    terms[offsets[i] as usize..offsets[i + 1] as usize].to_vec(),
-                    lists[i].len() as u64,
-                )
-            }
-            std::cmp::Ordering::Equal => {
-                let b = pending.take().expect("equal terms");
-                let i = live.next().expect("equal terms");
-                scratch.clear();
-                Postings {
+        let at = streams.lens();
+        let (term, count) = if order == std::cmp::Ordering::Less {
+            let b = pending.take().expect("ordered by a checkpoint term");
+            streams.postings.write(b.bytes)?;
+            streams.skips.write(b.skips)?;
+            streams.positions.write(b.positions)?;
+            read += b.bytes.len() + b.skips.len() + b.positions.len();
+            (b.term, u64::from(b.count))
+        } else {
+            let from_base = order == std::cmp::Ordering::Equal;
+            let base_term = from_base.then(|| pending.take().expect("equal terms"));
+            let i = live.next().expect("a live term");
+            scratch.clear();
+            skip_scratch.clear();
+            placed.reset();
+            if let Some(b) = &base_term {
+                let mut cursor = Cursor::open(ListRef {
                     bytes: b.bytes,
                     count: b.count,
-                    blocked: true,
-                    impacts: true,
-                }
-                .for_each(|slot, frequency| packer.push(slot, frequency, &mut scratch));
-                lists[i].for_each(|slot, frequency| {
-                    packer.push(slot + split, frequency, &mut scratch);
+                    skips: b.skips,
+                    positions: b.positions,
                 });
-                packer.finish(&mut scratch);
-                postings.write(&scratch)?;
-                read += b.bytes.len();
-                (b.term, u64::from(b.count) + lists[i].len() as u64)
+                while cursor.doc() != NO_DOC {
+                    packer.push(cursor.doc() as usize, cursor.frequency(), &mut scratch);
+                    if positional {
+                        placed.push(cursor.position_bytes());
+                    }
+                    cursor.next();
+                }
+                read += b.bytes.len() + b.skips.len() + b.positions.len();
             }
+            streams.positive &= lists[i].positive_len() == lists[i].len();
+            let mut failure = None;
+            lists[i].for_each_with_ordinal(|slot, frequency, ordinal| {
+                packer.push(slot + split, frequency, &mut scratch);
+                if positional && failure.is_none() {
+                    match store
+                        .position_source(slot)
+                        .filter(|_| ordinal > 0)
+                        .map(|source| source.bytes(ordinal as usize - 1))
+                    {
+                        Some(bytes) => placed.push(bytes),
+                        None => failure = Some("positional posting lacks its positions"),
+                    }
+                }
+            });
+            ensure!(failure.is_none(), "{}", failure.unwrap_or_default());
+            packer.finish(&mut scratch);
+            let infos: Vec<BlockInfo> = packer.take_infos();
+            if !placed.finish() || u32::try_from(scratch.len()).is_err() {
+                return Ok(None);
+            }
+            if !append_skips(&infos, &placed.offsets, &mut skip_scratch) {
+                return Ok(None);
+            }
+            streams.postings.write(&scratch)?;
+            streams.skips.write(&skip_scratch)?;
+            streams.positions.write(&placed.out)?;
+            let count =
+                lists[i].len() as u64 + base_term.as_ref().map_or(0, |b| u64::from(b.count));
+            let term = match base_term {
+                Some(b) => b.term,
+                None => terms[offsets[i] as usize..offsets[i + 1] as usize].to_vec(),
+            };
+            (term, count)
         };
-        if out.push(&term, count, start, postings)?.is_none() {
+        if out.push(&term, count, at, &streams.lens())?.is_none() {
             return Ok(None);
         }
         if order != std::cmp::Ordering::Greater {
@@ -265,22 +335,31 @@ pub(crate) fn merge(
     dimensions: usize,
     destination: &Path,
 ) -> Result<Option<u64>> {
-    if !super::representable(store) {
+    let Some(positional) = positions_of(base, store) else {
         return Ok(None);
-    }
-    if base.is_some_and(|image| {
-        !image.mergeable() || !image.has_impacts() || image.dimensions != dimensions
-    }) {
+    };
+    if !super::representable(store)
+        || base.is_some_and(|image| !image.mergeable() || image.dimensions != dimensions)
+    {
         return Ok(None);
     }
     let directory = destination.parent().unwrap_or_else(|| Path::new("."));
     let split = base.map_or(0, |image| image.slots);
     let mut words = [0u64; HEADER_WORDS];
-    let mut run: Vec<Option<BlockWriter>> = (0..SECTIONS).map(|_| None).collect();
+    let mut run: Vec<Option<BlockWriter>> = (0..V4_SECTIONS).map(|_| None).collect();
     let mut postings = BlockWriter::create_in(directory)?;
+    let mut skips = BlockWriter::create_in(directory)?;
+    let mut positions = BlockWriter::create_in(directory)?;
+    let mut streams = Streams {
+        postings: &mut postings,
+        skips: &mut skips,
+        positions: &mut positions,
+        positional,
+        positive: base.is_none_or(|image| image.positive),
+    };
     for form in 0..2 {
         let mut out = FormWriter::new(directory)?;
-        if merge_form(base, store, form, split, &mut out, &mut postings)?.is_none() {
+        if merge_form(base, store, form, split, &mut out, &mut streams)?.is_none() {
             return Ok(None);
         }
         words[H_TERMS + form] = out.terms;
@@ -292,10 +371,15 @@ pub(crate) fn merge(
         run[d as usize] = Some(out.dict);
         run[b as usize] = Some(out.blocks);
     }
-    if u32::try_from(postings.len()).is_err() {
-        return Ok(None);
+    if positional {
+        words[H_FLAGS] |= FLAG_POSITIONAL;
+    }
+    if streams.positive {
+        words[H_FLAGS] |= FLAG_POSITIVE;
     }
     run[Section::Postings as usize] = Some(postings);
+    run[Section::Skips as usize] = Some(skips);
+    run[Section::Positions as usize] = Some(positions);
     #[cfg(test)]
     crate::core::storage::compaction_crash_point("fold-postings");
 
@@ -441,4 +525,25 @@ pub(crate) fn merge(
     #[cfg(test)]
     crate::core::storage::compaction_crash_point("fold-written");
     Ok(Some(written))
+}
+
+/// Whether the merged checkpoint holds word positions: `Some(true)` when every chunk of the
+/// checkpoint and of the store has them, `Some(false)` when neither does, and `None` when
+/// they differ (the merge would have to drop or invent positions).
+fn positions_of(base: Option<&ServingImage>, store: &DocumentStore) -> Option<bool> {
+    let from_base = base
+        .filter(|image| image.chunks > 0)
+        .map(ServingImage::has_positions);
+    let from_store = (store.chunk_count > 0).then_some(store.nonpositional_chunks == 0);
+    match (from_base, from_store) {
+        (Some(a), Some(b)) if a != b => None,
+        (a, b) => Some(a.or(b).unwrap_or(false)),
+    }
+}
+
+/// Whether [`merge`] can write the checkpoint of `store` over `base`.
+pub(crate) fn can_merge(base: Option<&ServingImage>, store: &DocumentStore) -> bool {
+    positions_of(base, store).is_some()
+        && super::representable(store)
+        && base.is_none_or(ServingImage::mergeable)
 }
