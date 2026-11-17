@@ -144,7 +144,7 @@ def test_explain_forget_get_history_and_maintenance():
 
     report = memory.forget(ids=["f0"], include_chain=True, dry_run=True)
     assert body(requests[-1]) == {
-        "scope": {"kind": "ids", "ids": ["f0"]}, "includeChain": True, "dryRun": True, "purge": False,
+        "scope": {"kind": "ids", "ids": ["f0"]}, "includeChain": True, "dryRun": True, "purge": True,
     }
     assert report.forgotten == ["f0"] and report.dry_run
     memory.forget(ingested_before=dt.datetime(1970, 1, 1, 0, 0, 1, tzinfo=dt.timezone.utc))
@@ -159,7 +159,7 @@ def test_explain_forget_get_history_and_maintenance():
     assert memory.get("f0").superseded_by == ["f1"]
     assert [fact.id for fact in memory.history("f0")] == ["f0"]
     assert memory.apply_forgetting().dry_run is True
-    assert body(requests[-1]) == {"includeChain": False, "dryRun": True, "purge": False}
+    assert body(requests[-1]) == {"includeChain": False, "dryRun": True, "purge": True}
     consolidated = memory.consolidate(allow_destructive=False)
     assert consolidated.created[0].id == "f1"
     assert body(requests[-1]) == {"dryRun": True, "allowDestructive": False}
@@ -252,3 +252,16 @@ def test_capability_negotiation_preserves_service_errors():
             with pytest.raises(memory_module.MemoryError):
                 await client.memory.capabilities(2)
     asyncio.run(run())
+
+
+def test_observations_and_episode_forget_use_the_memory_wire_format():
+    requests = []
+    memory = MemoryClient(WarmClient(transport=transport(requests)))
+    step = {"episode": "e1", "step": 0, "tree": {"role": "button", "name": "Go"}}
+    out = memory.remember_observations([step])
+    assert out[0].id == "f1"
+    sent = body(requests[0])
+    assert sent == {"facts": [step]}
+    memory.forget(episode="e1", dry_run=True)
+    sent = body(requests[1])
+    assert sent["scope"] == {"kind": "episode", "episode": "e1"} and sent["dryRun"] is True

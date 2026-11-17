@@ -24,7 +24,7 @@ T_IMPORT = time.time_ns()
 import numpy as np  # noqa: E402
 
 K = 10
-EF_SWEEP = [10, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024]
+EF_SWEEP = [e for e in (10, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048) if e <= int(os.environ.get("WARM_BENCH_EF_MAX", "1024"))]
 NPROBE_SWEEP = [1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 
@@ -155,7 +155,7 @@ class Warm(Adapter):
 class Hnswlib(Adapter):
     # m32e500 and m48e500 match the build effort of the WARM graph (degree 64 at level 0 for
     # M=32, construction ef 500); analysis reports the best build per target recall.
-    BUILDS = {"m16": {"M": 16, "ef_construction": 200}, "m32": {"M": 32, "ef_construction": 200},
+    BUILDS = {"m16": {"M": 16, "ef_construction": 200}, "m32": {"M": 32, "ef_construction": 200}, "m16e500": {"M": 16, "ef_construction": 500},
               "m32e500": {"M": 32, "ef_construction": 500}, "m48e500": {"M": 48, "ef_construction": 500}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
     PERSISTENT_FLUSH = True
@@ -192,6 +192,58 @@ class Hnswlib(Adapter):
         sync_index(self.workdir)
 
 
+class HnswlibCpp(Adapter):
+    """hnswlib's own C++ `searchKnn`, driven by a native process (benchmarks/competitive/hnswlib_cpp/driver.cpp)
+    over the index file the `hnswlib` row's Python build saved: same graph, same queries, no Python in the
+    timed region. The index is built and mutated by the `hnswlib` row, so this row has no build or ops."""
+    BUILDS = {k: dict(v) for k, v in Hnswlib.BUILDS.items()}
+    SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
+    NATIVE = True
+
+    def start(self, test, n, tmp):
+        import subprocess
+        queries = Path(tmp) / "queries.f32"
+        test.astype("<f4").tofile(queries)
+        self.tmp = Path(tmp)
+        t0 = time.time_ns()
+        self.proc = subprocess.Popen([os.environ["HNSWLIB_CPP_DRIVER"], "serve", str(self.workdir / "index.bin"), str(queries), str(len(test)),
+                                      str(self.dim), "ip" if self.angular else "l2", str(n + 1000)],
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        ready = self.proc.stdout.readline().split()
+        if not ready or ready[0] != "READY":
+            raise RuntimeError("hnswlib driver failed to open the index")
+        fields = dict(item.split("=") for item in ready[1:])
+        self.nq = len(test)
+        return float(fields["open_s"]), t0
+
+    def command(self, line):
+        self.proc.stdin.write(line + "\n")
+        self.proc.stdin.flush()
+        reply = self.proc.stdout.readline().split()
+        if not reply or reply[0] != "OK":
+            raise RuntimeError("hnswlib driver: " + " ".join(reply))
+        return reply[1:]
+
+    def found(self, ef):
+        out = self.tmp / "ids.i32"
+        self.command(f"ids {max(ef, K)} {out}")
+        return np.fromfile(out, dtype="<i4").reshape(self.nq, K)
+
+    def timed_pass(self, ef):
+        out = self.tmp / "lat.i64"
+        self.command(f"time {max(ef, K)} {out}")
+        return np.fromfile(out, dtype="<i8")
+
+    def rss(self):
+        return int(self.command("rss")[0])
+
+    def close(self):
+        self.proc.stdin.write("quit\n")
+        self.proc.stdin.close()
+        if self.proc.wait(timeout=30) != 0:
+            raise RuntimeError("hnswlib driver exited unsuccessfully")
+
+
 class FaissBase(Adapter):
     PERSISTENT_FLUSH = True
 
@@ -213,7 +265,7 @@ class FaissBase(Adapter):
 
 
 class FaissHnsw(FaissBase):
-    BUILDS = {"m16": {"M": 16, "efConstruction": 200}, "m32": {"M": 32, "efConstruction": 200},
+    BUILDS = {"m16": {"M": 16, "efConstruction": 200}, "m32": {"M": 32, "efConstruction": 200}, "m16e500": {"M": 16, "efConstruction": 500},
               "m32e500": {"M": 32, "efConstruction": 500}, "m48e500": {"M": 48, "efConstruction": 500}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
 
@@ -299,10 +351,38 @@ class FaissIvfpq(FaissBase):
         self.index.add_with_ids(vectors, np.asarray(ids, dtype=np.int64))
 
 
+class FaissIvfpqFs(FaissBase):
+    """FAISS IVFPQFastScan with exact refinement: the ann-benchmarks faiss-ivfpqfs construction
+    (`IVF{nlist},PQ{dim//2}x4fs` through index_factory, wrapped in a refine index over the raw vectors),
+    nlist from its config.yml (512, 1204, 2048, 4096; 2048 and 4096 here), nprobe and k_factor sweeps
+    from the same file. Every swept point refines (k_factor 10, 100 or 1000), so the refine store is
+    part of the index size and serving RSS."""
+    BUILDS = {"ab_nl2048": {"nlist": 2048}, "ab_nl4096": {"nlist": 4096}}
+    SWEEPS = {k: [{"nprobe": p, "k_factor": f} for f in (10, 100, 1000) for p in (1, 5, 10, 20, 50, 100, 200)] for k in BUILDS}
+    def build(self, train, params):
+        import faiss
+        faiss.omp_set_num_threads(self.threads)
+        metric = faiss.METRIC_INNER_PRODUCT if self.angular else faiss.METRIC_L2
+        ivf = faiss.index_factory(self.dim, f"IVF{params['nlist']},PQ{self.dim // 2}x4fs", metric)
+        ivf.train(train)
+        flat = faiss.IndexFlatIP(self.dim) if self.angular else faiss.IndexFlatL2(self.dim)
+        index = faiss.IndexRefine(ivf, flat)
+        index.add(train)
+        self._write(index)
+    def configure(self, sp):
+        import faiss
+        faiss.downcast_index(self.index.base_index).nprobe = sp["nprobe"]
+        self.index.k_factor = sp["k_factor"]
+    def replace(self, ids, vectors):
+        raise Unsupported("IndexRefine remove_ids is not defined for the refine store")
+    def delete(self, ids):
+        raise Unsupported("IndexRefine remove_ids is not defined for the refine store")
 class Usearch(Adapter):
     BUILDS = {"m16": {"connectivity": 16, "expansion_add": 200, "dtype": "f32"},
               "m32": {"connectivity": 32, "expansion_add": 200, "dtype": "f32"},
-              "m16_i8": {"connectivity": 16, "expansion_add": 200, "dtype": "i8"}}
+              "m16_i8": {"connectivity": 16, "expansion_add": 200, "dtype": "i8"},
+              "m16e500": {"connectivity": 16, "expansion_add": 500, "dtype": "f32"},
+              "m32e500": {"connectivity": 32, "expansion_add": 500, "dtype": "f32"}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
     PERSISTENT_FLUSH = True
 
@@ -605,7 +685,7 @@ class Duckdb(Adapter):
 
 SYSTEMS = {
     "warm": Warm,
-    "hnswlib": Hnswlib, "faiss-hnsw": FaissHnsw, "faiss-flat": FaissFlat, "faiss-ivfpq": FaissIvfpq,
+    "hnswlib": Hnswlib, "faiss-hnsw": FaissHnsw, "faiss-flat": FaissFlat, "faiss-ivfpq": FaissIvfpq, "faiss-ivfpqfs": FaissIvfpqFs,
     "usearch": Usearch, "annoy": Annoy, "sqlite-vec": SqliteVec, "lancedb": Lancedb, "chroma": Chroma,
     "qdrant-local": Qdrant, "milvus-lite": Milvus, "duckdb-vss": Duckdb,
 }
@@ -818,7 +898,7 @@ class Diskann(Adapter):
         raise Unsupported("StaticMemoryIndex is read-only; updates need the separate DynamicMemoryIndex build type")
 
 
-SYSTEMS.update({"ngt": Ngt, "scann": Scann, "pynndescent": Pynndescent, "voyager": Voyager, "diskann": Diskann})
+SYSTEMS.update({"ngt": Ngt, "scann": Scann, "pynndescent": Pynndescent, "voyager": Voyager, "diskann": Diskann, "hnswlib-cpp": HnswlibCpp})
 
 
 def wait_for_idle(max_load, max_wait):
@@ -870,8 +950,8 @@ def run_serve(a, adapter, meta):
     for sp in adapter.SWEEPS[a.build]:
         adapter.configure(sp)
         found = [list(adapter.query(q[None])) for q in test]
-        hits = sum(len(set(int(x) for x in f[:K]) & set(int(x) for x in t)) for f, t in zip(found, truth))
-        recall = hits / (K * len(test))
+        per_query = [len(set(int(x) for x in f[:K]) & set(int(x) for x in t)) for f, t in zip(found, truth)]
+        recall = sum(per_query) / (K * len(test))
         load, gate = wait_for_idle(a.max_load, a.max_wait)
         repeats = []
         for _ in range(a.repeats if recall >= 0.5 else 1):
@@ -882,12 +962,48 @@ def run_serve(a, adapter, meta):
                 adapter.query(qq)
                 lat[i] = time.perf_counter_ns() - t
             order = np.sort(lat) / 1e3
-            repeats.append({"qps": len(test) / (lat.sum() / 1e9), "p50_us": float(pctl(order, 0.5)), "p99_us": float(pctl(order, 0.99))})
-        configs.append({"params": {**variant, **sp}, "recall_at_10": recall, "repeats": repeats, "load_1m": load, "load_gate_met": gate})
+            repeats.append({"qps": len(test) / (lat.sum() / 1e9), "p50_us": float(pctl(order, 0.5)), "p99_us": float(pctl(order, 0.99)),
+                            "lat_ns": lat.tolist()})
+        configs.append({"params": {**variant, **sp}, "recall_at_10": recall, "repeats": repeats, "load_1m": load, "load_gate_met": gate,
+                        "hits_per_query": per_query})
         best_recall = max(best_recall, recall)
         if recall >= 0.999:
             break
     return {"open_s": open_s, "cold_start_s": cold_start_s, "rss_before_sweep": rss_before_sweep, "rss_steady": rss_now(),
+            "n_queries": len(test), "n": n, "configs": configs}
+
+
+def run_serve_native(a, adapter, meta):
+    """`run_serve` for a system whose search runs in a native driver process. Same sequence and the same
+    recall, QPS and percentile formulas; the per-query nanoseconds come from the driver's monotonic clock
+    around each native call, not from this process."""
+    import tempfile
+    n = meta["n_train"]
+    test = normalize(load_rows(Path(a.data) / "test.f32", meta["dim"], a.queries), adapter.angular)
+    truth = np.fromfile(Path(a.data) / "neighbors.i32", dtype="<i4").reshape(-1, meta["n_neighbors"])[: len(test), :K]
+    with tempfile.TemporaryDirectory() as tmp:
+        open_s, t0 = adapter.start(test, n, tmp)
+        adapter.command("warm 1")
+        cold_start_s = (time.time_ns() - t0) / 1e9
+        adapter.command("warm 50")
+        rss_before_sweep = adapter.rss()
+        configs = []
+        for sp in adapter.SWEEPS[a.build]:
+            found = adapter.found(sp["ef"])
+            hits = sum(len(set(int(x) for x in f[:K]) & set(int(x) for x in t)) for f, t in zip(found, truth))
+            recall = hits / (K * len(test))
+            load, gate = wait_for_idle(a.max_load, a.max_wait)
+            repeats = []
+            for _ in range(a.repeats if recall >= 0.5 else 1):
+                lat = adapter.timed_pass(sp["ef"])
+                order = np.sort(lat) / 1e3
+                repeats.append({"qps": len(test) / (lat.sum() / 1e9), "p50_us": float(pctl(order, 0.5)), "p99_us": float(pctl(order, 0.99))})
+            configs.append({"params": sp, "recall_at_10": recall, "repeats": repeats, "load_1m": load, "load_gate_met": gate})
+            if recall >= 0.999:
+                break
+        rss_steady = adapter.rss()
+        adapter.close()
+    return {"open_s": open_s, "cold_start_s": cold_start_s, "rss_before_sweep": rss_before_sweep, "rss_steady": rss_steady,
             "n_queries": len(test), "n": n, "configs": configs}
 
 
@@ -945,7 +1061,8 @@ def main():
         shutil.rmtree(workdir, ignore_errors=True)
         workdir.mkdir(parents=True)
     adapter = SYSTEMS[a.system](meta["dim"], workdir, a.threads, meta["metric"])
-    body = {"build": run_build, "serve": run_serve, "ops": run_ops}[a.mode](a, adapter, meta)
+    serve = run_serve_native if getattr(adapter, "NATIVE", False) else run_serve
+    body = {"build": run_build, "serve": serve, "ops": run_ops}[a.mode](a, adapter, meta)
     body["peak_rss_bytes_self"] = peak_rss()
     print("RESULT " + json.dumps(body, allow_nan=False))
 

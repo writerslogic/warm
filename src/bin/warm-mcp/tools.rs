@@ -169,8 +169,9 @@ pub fn definitions(exposure: &Exposure, limits: &Limits) -> Vec<Value> {
                 "metadata": {"type": "object", "description": format!("Arbitrary JSON object; keys starting with {:?} are reserved.", crate::memory::RESERVED), "additionalProperties": true},
                 "if_version": {"type": "string", "description": "Version from `remember` or `get`; write only if the stored version still matches. Cannot combine with `create_only`."},
                 "create_only": {"type": "boolean", "default": false, "description": "Reject the write if the chosen id already exists; cannot combine with `if_version`."},
-                "allow_empty": {"type": "boolean", "default": false, "description": "Permit blank text for file-like use; otherwise blank text is rejected."}
-            }), &["text"]),
+                "allow_empty": {"type": "boolean", "default": false, "description": "Permit blank text for file-like use; otherwise blank text is rejected."},
+                "observation": {"type": "object", "description": "Instead of `text`: one step of an agent trajectory, {episode, step, tree, url?, action?, goal?, outcome?}, where `tree` is a nested {role, name, props?, handle?, children?} accessibility tree. It is stored by the experience core and found by `recall` as a region of a page, with the episodes and steps where it occurred. Bounded in depth, nodes and bytes.", "additionalProperties": true}
+            }), &[]),
             "outputSchema": output_schema(json!({
                 "id": {"type": "string", "description": "Id of the stored memory."},
                 "version": {"type": "string", "description": "New version for a later conditional update."},
@@ -234,7 +235,8 @@ pub fn definitions(exposure: &Exposure, limits: &Limits) -> Vec<Value> {
                 "id": {"type": "string", "minLength": 1, "maxLength": 256, "description": "One exact memory id to delete; cannot combine with `prefix`."},
                 "ids": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 256}, "maxItems": limits.max_forget, "description": "Exact memory ids to delete in one call; cannot combine with `prefix`."},
                 "prefix": {"type": "string", "minLength": 1, "maxLength": 256, "description": "Delete every id starting with this prefix; use `list` with the same prefix first."},
-                "confirm": {"type": "boolean", "description": "Set true to authorize prefix deletion; exact ids do not need it."}
+                "confirm": {"type": "boolean", "description": "Set true to authorize prefix deletion; exact ids do not need it."},
+                "episode": {"type": "string", "minLength": 1, "maxLength": 256, "description": "Remove every observation step of this episode (see `remember.observation`); cannot combine with ids or `prefix`. The text is scrubbed from the snapshot and journal before the call returns."}
             }), &[]),
             "outputSchema": output_schema(json!({
                 "deleted": {"type": "integer", "description": "Number of memories deleted."},
@@ -311,7 +313,10 @@ pub fn definitions(exposure: &Exposure, limits: &Limits) -> Vec<Value> {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RememberArgs {
-    text: String,
+    text: Option<String>,
+    /// A tree-structured observation (`episode`, `step`, `tree`, optional `url`, `action`,
+    /// `goal`, `outcome`), stored by the experience core instead of as a text memory.
+    observation: Option<Value>,
     id: Option<String>,
     title: Option<String>,
     #[serde(default)]
@@ -363,6 +368,8 @@ struct GetArgs {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ForgetArgs {
+    /// An episode of observations to remove with everything only it held.
+    episode: Option<String>,
     id: Option<String>,
     #[serde(default)]
     ids: Vec<String>,
@@ -443,8 +450,20 @@ pub fn call(
         "remember" => {
             let a: RememberArgs = parse(arguments)?;
             let ns = exposure.resolve_namespace(a.namespace.as_deref())?;
+            if let Some(observation) = a.observation {
+                if a.text.is_some() || a.id.is_some() || a.title.is_some() || !a.tags.is_empty() {
+                    return Err(Fail::invalid(
+                        "an observation cannot combine with text, id, title or tags",
+                    ));
+                }
+                let out = backend.observe(&ns, observation)?;
+                return Ok(Output::data(out));
+            }
+            let text = a
+                .text
+                .ok_or_else(|| Fail::invalid("remember needs `text` or `observation`"))?;
             let req = RememberReq {
-                text: a.text,
+                text,
                 id: a.id,
                 title: a.title,
                 tags: a.tags,
@@ -520,6 +539,15 @@ pub fn call(
         "forget" => {
             let a: ForgetArgs = parse(arguments)?;
             let ns = exposure.resolve_namespace(a.namespace.as_deref())?;
+            if let Some(episode) = &a.episode {
+                if !a.ids.is_empty() || a.id.is_some() || a.prefix.is_some() {
+                    return Err(Fail::invalid(
+                        "episode cannot combine with id, ids or prefix",
+                    ));
+                }
+                let out = backend.forget_episode(&ns, episode)?;
+                return Ok(Output::data(out));
+            }
             let mut ids = a.ids;
             ids.extend(a.id);
             if a.prefix.is_some() && !a.confirm {
@@ -755,6 +783,57 @@ mod tests {
                 namespace: None,
             },
         )
+    }
+
+    #[test]
+    fn observations_are_stored_recalled_bounded_and_forgotten() {
+        let dir = tempfile::tempdir().unwrap();
+        let (backend, _) = export_fixture(dir.path(), 0);
+        let tree = serde_json::json!({"role": "RootWebArea", "name": "Checkout", "children": [
+            {"role": "button", "name": "Place order"}, {"role": "button", "name": "Cancel"}]});
+        let out = backend
+            .observe(
+                "default",
+                serde_json::json!({"episode": "e1", "step": 0, "url": "http://shop/c", "tree": tree}),
+            )
+            .unwrap();
+        assert_eq!(out["id"], "experience:e1:0");
+        let search = || {
+            backend
+                .search(
+                    "default",
+                    SearchReq {
+                        query: "Place order button".into(),
+                        k: 5,
+                        tags: Vec::new(),
+                        filter: serde_json::Map::new(),
+                        min_score: None,
+                        lexical_weight: None,
+                        semantic_weight: None,
+                        fusion: None,
+                    },
+                )
+                .unwrap()
+        };
+        assert!(search()
+            .iter()
+            .any(|h| h.memory.id.starts_with("experience:r")));
+        let mut deep = serde_json::json!({"role": "button", "name": "leaf"});
+        for _ in 0..600 {
+            deep = serde_json::json!({"role": "group", "name": "g", "children": [deep]});
+        }
+        let refused = backend
+            .observe(
+                "default",
+                serde_json::json!({"episode": "e2", "step": 0, "tree": deep}),
+            )
+            .unwrap_err();
+        assert_eq!(refused.code, "invalid_argument");
+        let gone = backend.forget_episode("default", "e1").unwrap();
+        assert_eq!(gone["deleted"], 1);
+        assert!(!search()
+            .iter()
+            .any(|h| h.memory.id.starts_with("experience:")));
     }
 
     #[test]

@@ -10,6 +10,7 @@ use serde::Serialize;
 
 use super::background_compaction::{CompactionStage, JobState, Stop};
 use super::{mutation::Mutation, WarmCore};
+
 use crate::core::documents::StoredDocument;
 use crate::core::storage::StagedArena;
 
@@ -53,7 +54,37 @@ struct Snapshot {
     text: Option<Arc<crate::core::documents::TextSegment>>,
     /// The document store as the new generation's checkpoint (sealed for an encrypted store),
     /// in place of `documents` frames, when the store takes one (`image::encode_checkpoint`).
-    document_checkpoint: Option<Vec<u8>>,
+    document_checkpoint: Option<DocumentCheckpoint>,
+}
+
+/// The document checkpoint of a compaction: encoded in memory for the caller to write, or
+/// already streamed to the staging generation (durable there).
+enum DocumentCheckpoint {
+    Bytes(Vec<u8>),
+    /// Written (durably) to `scratch`, a directory beside the staging generation, since the
+    /// staging directory must stay empty until its arena exists; moved in by the compaction.
+    Streamed {
+        len: u64,
+        scratch: ScratchDir,
+    },
+}
+
+/// A directory removed with it, whatever became of what it held.
+struct ScratchDir(std::path::PathBuf);
+
+impl Drop for ScratchDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+impl DocumentCheckpoint {
+    fn len(&self) -> usize {
+        match self {
+            Self::Bytes(bytes) => bytes.len(),
+            Self::Streamed { len, .. } => *len as usize,
+        }
+    }
 }
 
 /// Estimated heap and inline bytes of a cloned record other than a live vector: its inline
@@ -80,7 +111,12 @@ enum DocumentMutation<'a> {
 }
 
 impl WarmCore {
+    /// Compacts. Purges that are waiting for a scrub (`defer_purge`) make this a scrubbing
+    /// compaction, so the next compaction of a store with deferred deletes erases them.
     pub fn compact(&self) -> Result<()> {
+        if self.purge.status().committed > 0 {
+            return self.compact_scrubbing();
+        }
         self.compact_impl(|| {}, || {}, false, &JobState::foreground())
     }
 
@@ -92,9 +128,75 @@ impl WarmCore {
     /// arrived in (see `canonicalize_derived_state`), so every query, status field
     /// other than the opaque counters, and file other than the generation's name match a store
     /// that never held them and was purged at the same point.
+    ///
+    /// Clears the `purge.pending` ticket of every purge whose deletes had committed when the
+    /// compaction began, and no other.
     pub fn compact_scrubbing(&self) -> Result<()> {
-        self.sync_text_segment()?;
-        self.compact_impl(|| {}, || {}, true, &JobState::foreground())
+        let _gate = self.scrub_gate.lock();
+        self.scrub_covering_committed()
+    }
+
+    /// Caller holds `scrub_gate`.
+    fn scrub_covering_committed(&self) -> Result<()> {
+        // Collected before the snapshot: every delete of these tickets precedes it.
+        let covered = self.purge.committed();
+        let result = self
+            .sync_text_segment()
+            .and_then(|()| self.compact_impl(|| {}, || {}, true, &JobState::foreground()))
+            .and_then(|()| self.purge.clear(&covered));
+        if let Err(error) = &result {
+            self.purge.record_failure(error);
+        }
+        result
+    }
+
+    /// Whether a purge began and no scrubbing compaction has covered it yet.
+    pub(crate) fn purge_pending(&self) -> bool {
+        self.purge.status().pending > 0
+    }
+
+    /// The purges waiting for a scrubbing compaction, and why the last attempt to finish them
+    /// failed (a store opened with a full disk reports the interrupted purge here).
+    pub fn purge_status(&self) -> super::PurgeStatus {
+        self.purge.status()
+    }
+
+    /// Records, durably and before the delete is committed, that deleted text must be purged:
+    /// if the process dies before a scrubbing compaction ends, the next open finishes the
+    /// purge. Delete, then end the purge with [`Self::finish_purge`] (erased before it
+    /// returns) or [`Self::defer_purge`] (erased by the next scrubbing compaction or open).
+    pub fn mark_purge_pending(&self) -> Result<super::PurgeTicket> {
+        let id = self.purge.mark()?;
+        Ok(super::PurgeTicket::new(id, Arc::clone(&self.purge)))
+    }
+
+    /// Ends a purge whose deletes have committed, scrubbing before it returns. A scrubbing
+    /// compaction that another thread completed since the mark already covered this purge, and
+    /// then nothing more is done.
+    pub fn finish_purge(&self, ticket: super::PurgeTicket) -> Result<()> {
+        ticket.ledger().commit(ticket.id());
+        let _gate = self.scrub_gate.lock();
+        if !ticket.ledger().contains(ticket.id()) {
+            return Ok(());
+        }
+        self.scrub_covering_committed()
+    }
+
+    /// Ends a purge whose deletes have committed without scrubbing: the ticket stays durable
+    /// and a later scrubbing compaction, `compact`, or the next open erases the text. Once
+    /// `DEFERRED_BATCH` purges are waiting this call scrubs them all in one compaction.
+    /// Returns whether the text of this purge was erased before the call returned.
+    pub fn defer_purge(&self, ticket: super::PurgeTicket) -> Result<bool> {
+        let id = ticket.id();
+        ticket.ledger().commit(id);
+        if self.purge.status().committed < super::purge::DEFERRED_BATCH {
+            return Ok(false);
+        }
+        let _gate = self.scrub_gate.lock();
+        if self.purge.contains(id) {
+            self.scrub_covering_committed()?;
+        }
+        Ok(!self.purge.contains(id))
     }
 
     /// Rebuilds the state a delete leaves shaped by history rather than by the live set: the
@@ -130,7 +232,19 @@ impl WarmCore {
             .rebuild_canonical(&self.storage_path.join("documents.text"))
     }
 
+    /// Compacts the documents, then writes the experience checkpoint in the same step.
     pub(super) fn compact_impl(
+        &self,
+        after_snapshot: impl FnOnce(),
+        before_publication: impl FnOnce(),
+        scrub: bool,
+        job: &JobState,
+    ) -> Result<()> {
+        self.compact_documents(after_snapshot, before_publication, scrub, job)?;
+        self.experience_checkpoint()
+    }
+
+    fn compact_documents(
         &self,
         after_snapshot: impl FnOnce(),
         before_publication: impl FnOnce(),
@@ -167,7 +281,11 @@ impl WarmCore {
             .file_name()
             .map(|name| name.to_string_lossy().into_owned())
             .context("staging generation has no name")?;
-        let snapshot = self.compaction_snapshot(&staged_name, job)?;
+        let snapshot = self.compaction_snapshot(&staged_name, staging.path(), scrub, job)?;
+        let streamed = matches!(
+            snapshot.document_checkpoint,
+            Some(DocumentCheckpoint::Streamed { .. })
+        );
         let (generation, mut cursor) = snapshot.checkpoint;
         after_snapshot();
         job.set_stage(CompactionStage::Staging);
@@ -176,15 +294,32 @@ impl WarmCore {
             Relaxed,
         );
         let mut arena = StagedArena::new(staging.path(), Some(&self.arena))?;
-        let checkpoint_len = snapshot.document_checkpoint.as_ref().map_or(0, Vec::len);
-        if let Some(bytes) = &snapshot.document_checkpoint {
-            job.check_disk(arena.capacity_after_frame(0), checkpoint_len)?;
-            // Durable (file and directory synced) before the generation can be published.
-            crate::core::durable_file::atomic_write(
-                &staging.path().join(super::image::FILE),
-                bytes,
-            )?;
-            job.bytes_written.store(checkpoint_len as u64, Relaxed);
+        let checkpoint_len = snapshot
+            .document_checkpoint
+            .as_ref()
+            .map_or(0, DocumentCheckpoint::len);
+        match &snapshot.document_checkpoint {
+            Some(DocumentCheckpoint::Bytes(bytes)) => {
+                job.check_disk(arena.capacity_after_frame(0), checkpoint_len)?;
+                // Durable (file and directory synced) before the generation can be published.
+                crate::core::durable_file::atomic_write(
+                    &staging.path().join(super::image::FILE),
+                    bytes,
+                )?;
+                job.bytes_written.store(checkpoint_len as u64, Relaxed);
+            }
+            Some(DocumentCheckpoint::Streamed { scratch, .. }) => {
+                job.check_disk(arena.capacity_after_frame(0), checkpoint_len)?;
+                // Already synced under its own name; renaming it in is atomic, and the
+                // directory sync makes the move durable before the generation can publish.
+                std::fs::rename(
+                    scratch.0.join(super::image::FILE),
+                    staging.path().join(super::image::FILE),
+                )?;
+                crate::core::durable_file::sync_directory(staging.path())?;
+                job.bytes_written.store(checkpoint_len as u64, Relaxed);
+            }
+            None => {}
         }
         let mut payload = Vec::new();
         for mutation in snapshot.mutations {
@@ -305,6 +440,14 @@ impl WarmCore {
                 .store(true, std::sync::atomic::Ordering::Release);
         }
         replaced?;
+        if streamed && job.tail_frames.load(Relaxed) == 0 {
+            // Nothing was written since the snapshot, so the published checkpoint is the
+            // whole store: serve from it and let the index in memory go. With a tail the store
+            // keeps what it holds (still complete), and the next fold takes it.
+            if let Err(error) = self.serve_published_checkpoint() {
+                tracing::warn!(%error, "serving the folded checkpoint failed; keeping the index in memory");
+            }
+        }
         *self.history_floor.write() = self.initial_history_floor();
         if let Some(intent) = audit_intent {
             self.audit_pending.write().push_back(intent);
@@ -373,12 +516,38 @@ impl WarmCore {
         Ok(())
     }
 
-    fn compaction_snapshot(&self, staged_name: &str, job: &JobState) -> Result<Snapshot> {
-        // Built before any lock is held: the snapshot below reads the store under the shards
-        // guard, and a store still served from its checkpoint must not be rebuilt there.
-        self.hydrate_documents()?;
-        let _transaction = self.mutation_gate.maintenance();
-        let shards = self.shards.read();
+    fn compaction_snapshot(
+        &self,
+        staged_name: &str,
+        staging: &std::path::Path,
+        scrub: bool,
+        job: &JobState,
+    ) -> Result<Snapshot> {
+        // A store served from its checkpoint is rebuilt before any lock is held (the snapshot
+        // below reads the store under the shards guard) unless its checkpoint can be streamed:
+        // then the merge reads the checkpoint where it lies. The decision is checked again
+        // under the lease, since a writer may have made the checkpoint unmergeable meanwhile.
+        let streams = !scrub && self.streams_checkpoints();
+        let mut attempts = 0;
+        let (_transaction, shards) = loop {
+            let streamable = |this: &Self| streams && this.documents.read().can_merge_checkpoint();
+            if !streamable(self) {
+                self.hydrate_documents()?;
+            }
+            let transaction = self.mutation_gate.maintenance();
+            let shards = self.shards.read();
+            let served = self.documents.read().has_base();
+            if !served || (shards.count() == 0 && streamable(self)) {
+                break (transaction, shards);
+            }
+            drop(shards);
+            drop(transaction);
+            attempts += 1;
+            ensure!(
+                attempts < 4,
+                "document store kept changing during compaction"
+            );
+        };
         let shard_vectors = shards.count();
         let mut retained = 0u64;
         let mut vectors = Vec::new();
@@ -436,8 +605,24 @@ impl WarmCore {
         drop(atom_ids);
         let (documents, text, document_checkpoint) = {
             let store = self.documents.read();
-            let checkpoint = if shard_vectors == 0 {
+            let checkpoint = if shard_vectors == 0 && streams && store.can_merge_checkpoint() {
+                let mut scratch_path = staging.as_os_str().to_owned();
+                scratch_path.push(".fold");
+                let scratch = ScratchDir(scratch_path.into());
+                std::fs::create_dir_all(&scratch.0)?;
+                match self.stream_checkpoint(&store, &scratch.0, staged_name)? {
+                    Some(len) => Some(DocumentCheckpoint::Streamed { len, scratch }),
+                    None => {
+                        ensure!(
+                            !store.has_base(),
+                            "the document checkpoint exceeds the format's 4 GiB section limit"
+                        );
+                        None
+                    }
+                }
+            } else if shard_vectors == 0 {
                 self.encode_checkpoint(&store, staged_name)?
+                    .map(DocumentCheckpoint::Bytes)
             } else {
                 None
             };
@@ -449,7 +634,10 @@ impl WarmCore {
             job.account_memory(
                 &mut retained,
                 documents.len() * size_of::<Arc<StoredDocument>>()
-                    + checkpoint.as_ref().map_or(0, Vec::len),
+                    + match &checkpoint {
+                        Some(DocumentCheckpoint::Bytes(bytes)) => bytes.len(),
+                        _ => 0,
+                    },
             )?;
             (documents, store.text_segment(), checkpoint)
         };
@@ -848,7 +1036,12 @@ pub(super) mod tests {
             Some(config()),
         )?;
         core.memorize_document(document("replace", "old"))?;
-        let snapshot = core.compaction_snapshot("gen-test", &JobState::foreground())?;
+        let snapshot = core.compaction_snapshot(
+            "gen-test",
+            std::path::Path::new("."),
+            true,
+            &JobState::foreground(),
+        )?;
         let owner = core.documents.read().shared_values().next().unwrap();
         assert!(Arc::ptr_eq(&owner, &snapshot.documents[0]));
         let dense_pointer = owner.chunks[0].embedding.as_ref().unwrap().as_ptr();

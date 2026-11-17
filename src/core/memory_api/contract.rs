@@ -15,14 +15,52 @@ use super::{
 #[serde(untagged)]
 pub enum RememberRequest {
     Fact(Box<RememberInput>),
+    Observation(Box<ObservationInput>),
     Batch(RememberBatch),
+}
+
+/// One item of a batch: a fact, or a step of an agent trajectory.
+#[derive(JsonSchema)]
+#[serde(untagged)]
+pub enum RememberItem {
+    Fact(Box<RememberInput>),
+    Observation(Box<ObservationInput>),
+}
+
+/// A step of an agent trajectory, stored by the experience core. Recognized by `episode`
+/// (string), `step` (non-negative integer) and `tree` (object). Bounds: 128 levels, 200000 nodes,
+/// 16 KiB per string; over HTTP the JSON parser's limit of 128 levels allows 63 tree levels.
+#[derive(JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ObservationInput {
+    #[schemars(length(min = 1, max = 256))]
+    pub episode: String,
+    pub step: u32,
+    pub tree: ObservationNode,
+    pub url: Option<String>,
+    /// `{"label": text}` or `{"call": text}`: the action taken before this observation.
+    pub action: Option<serde_json::Map<String, serde_json::Value>>,
+    pub goal: Option<String>,
+    pub outcome: Option<String>,
+}
+
+/// A node of an accessibility tree. `children` hold nodes of the same shape.
+#[derive(JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ObservationNode {
+    #[schemars(length(min = 1))]
+    pub role: String,
+    pub name: Option<String>,
+    pub props: Option<String>,
+    pub handle: Option<String>,
+    pub children: Option<Vec<serde_json::Value>>,
 }
 
 #[derive(JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RememberBatch {
     #[schemars(length(min = 1))]
-    pub facts: Vec<RememberInput>,
+    pub facts: Vec<RememberItem>,
 }
 
 #[derive(JsonSchema)]

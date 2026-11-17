@@ -100,6 +100,7 @@ impl Delta {
                 norms: norms_opt(&self.norms),
                 codes: None,
                 quantized: false,
+                bound: None,
             };
             let candidates = SEEN.with(|seen| {
                 rows.greedy(
@@ -161,6 +162,7 @@ impl Delta {
             norms: norms_opt(&self.norms),
             codes: None,
             quantized: false,
+            bound: None,
         };
         rows.insert_pass(
             &mut self.edges,
@@ -169,6 +171,7 @@ impl Delta {
             params.build_ef,
             params.alpha,
             params.degree,
+            &[],
         );
         for &slot in order.iter().filter(|&&s| s > 0) {
             // A parent inserted earlier keeps the routing tree acyclic and rooted at slot 0.

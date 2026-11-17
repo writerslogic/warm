@@ -33,6 +33,12 @@ impl WarmCore {
         })
     }
 
+    /// The store's dense embedding space, when one is configured: the dimension caller-supplied
+    /// embeddings must have and the model an installed embedder must match.
+    pub fn embedding_space(&self) -> Option<&crate::core::EmbeddingSpace> {
+        self.config.embedding_space.as_ref()
+    }
+
     pub fn memorize_document(&self, input: DocumentInput) -> Result<u32> {
         self.memorize_document_with(input, &IngestOptions::default())
     }
@@ -137,6 +143,9 @@ impl WarmCore {
             })
             .collect();
         self.commit_serialized(&mutations, &payload)?;
+        // The fold's working set should not add to the batch's.
+        drop((mutations, payload));
+        self.fold_if_over_budget();
         Ok(counts)
     }
 
@@ -363,6 +372,21 @@ impl WarmCore {
         options: &documents::LexicalOptions,
     ) -> Result<documents::LexicalResults> {
         let query = query.for_analyzer(self.analyzer)?;
+        if let Some(prepared) = documents::plain_lexical_search(&query, options)? {
+            // Ranked as `search_documents` ranks the same words, from the checkpoint when the
+            // store is served from one; a store that is not hydrates as any other query does.
+            let queries = std::slice::from_ref(&prepared);
+            let served = self.capture_from_checkpoint(|store| {
+                documents::overlay_serves(store, queries)
+                    .then(|| documents::rank_lexical_overlaid(store, &prepared))
+            });
+            if let Some(results) = served {
+                return Ok(results);
+            }
+            self.hydrate_documents()?;
+            let _transaction = self.mutation_gate.read();
+            return Ok(documents::rank_lexical(&self.documents.read(), &prepared));
+        }
         self.hydrate_documents()?;
         let _transaction = self.mutation_gate.read();
         documents::execute_lexical(&self.documents.read(), &query, options)
@@ -934,12 +958,6 @@ impl WarmCore {
             })
             .collect();
         self.commit(&mutations)
-    }
-
-    pub fn query_vector(&self, dense: &[f32], k: u32) -> Result<Vec<crate::RetrievalResult>> {
-        self.validate_dense(dense)?;
-        let vector = crate::EntangledHVec::from_dense(dense, self.dimensions);
-        self.query(&vector, k)
     }
 
     pub(super) fn validate_dense(&self, dense: &[f32]) -> Result<()> {

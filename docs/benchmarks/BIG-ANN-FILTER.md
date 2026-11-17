@@ -272,3 +272,28 @@ python data_export.py --out res.csv
 
 with `neurips23/filter/warm` from the fork branch `filter/warm`, whose Dockerfile pins the WARM
 commit.
+
+## Per-class tuning (2026-11-12): fast-scan probe path and class table
+
+Same hardware and protocol as above (GCP Ice Lake clone, unchanged `run.py`, 100,000 public queries, 5 runs per
+configuration, cold cache). Changes over the fast-scan entry (`881ef32f`, 84.3-88.2k QPS):
+the other-label bitsets are resolved once per query and prefetched before the probes, calibration
+reads one list instead of two, the PQ table is built with coordinate-major centroids, labels of
+1,500 members and more get an inverted file (`ivf_min 1500`), and `(target, rerank)` is set per
+class (single or multi-label query, rarest-label band with edges 5k/30k/150k) from the per-class
+time-recall fronts on the selection split.
+
+Profile before the change (selection split, 8 threads): other-label probes 24.4% of the time, 4-bit scan 14.4%,
+exact re-rank and exact routes 24.7%, PQ table 5.8%. Multi-label queries were 50% of the time at
+recall 0.97 while rarest labels above 150k members sat at 0.76-0.83.
+
+Official runs, qps at recall (run 1 / run 2); build 462 s, index 5.42e6 KB:
+
+| targets (single bands, multi bands) | reranks | recall | QPS |
+|---|---|---|---|
+| 2800 2800 5000 3600, 1200 450 800 800 | 64 64 64 96, 48 x4 | 0.9039 | 117,572 / 115,792 |
+| 2800 2800 5000 3600, 1200 450 600 600 | 64 64 64 96, 48 x4 | 0.9026 | 117,302 / 117,523 |
+| 2800 2800 3600 3600, 1200 600 600 600 | 64 64 64 96, 48 x4 | 0.9022 | 117,823 / 117,757 |
+| 2800 2800 5000 3600, 1200 450 600 600 | 64 64 96 96, 48 x4 | 0.9077 | 115,334 / 115,548 |
+
+Peak container memory (cgroup `memory.peak`, includes page cache): 11.6 GiB of 16 GiB in run 2. Run-to-run spread inside one process is about 3%.

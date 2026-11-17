@@ -43,7 +43,7 @@ def serve():
                 os._exit(127)
         reply(f"pid {pid}")
         _, status, usage = os.wait4(pid, 0)
-        reply(f"done {os.waitstatus_to_exitcode(status)} {usage.ru_maxrss * (1 if sys.platform == 'darwin' else 1024)}")
+        reply(f"done {os.waitstatus_to_exitcode(status)} {usage.ru_maxrss * (1 if sys.platform == 'darwin' else 1024)} {usage.ru_utime + usage.ru_stime:.6f}")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from urllib.parse import unquote_to_bytes
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -35,12 +34,8 @@ class BrandingTests(unittest.TestCase):
         for url in ("https://docs.example/", "https://docs.example/dev/", "http://127.0.0.1:8123/latest/"):
             config = {"docs_dir": str(ROOT / "docs"), "site_url": url, "extra": {}, "theme": {}}
             docs_site.on_config(config)
-            hero = config["extra"]["warm"]["hero_image"]
-            self.assertTrue(hero.startswith("data:image/svg+xml,"))
-            self.assertEqual(unquote_to_bytes(hero.split(",", 1)[1]),
-                             (ROOT / "docs/assets/crystal-detailed-static.svg").read_bytes())
-            for key in ("logo", "favicon"):
-                asset = config["theme"][key]
+            assets = [config["extra"]["warm"]["hero_image"]] + [config["theme"][key] for key in ("logo", "favicon")]
+            for asset in assets:
                 self.assertTrue(asset.startswith(url))
                 self.assertTrue((ROOT / "docs" / asset.removeprefix(url)).is_file())
 

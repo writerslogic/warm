@@ -143,6 +143,8 @@ export interface Explanation {
   validTo?: number | null
   withinValidity: boolean
   chain: ChainLink[]
+  /** Experience-core results: where the region occurred. */
+  provenance?: { episode: string; step: number; count: number }[]
 }
 export interface FactRecord {
   id: string
@@ -169,11 +171,14 @@ export type ForgetScope =
   | { kind: 'subject'; subject: string }
   | { kind: 'entity'; entity: string }
   | { kind: 'ingestedBefore' | 'eventBefore'; time: number }
+  | { kind: 'episode'; episode: string }
   | { kind: 'matching'; filter: JsonObject }
 export interface ForgetOptions extends RequestOptions {
   includeChain?: boolean
   dryRun?: boolean
   purge?: boolean
+  /** With `purge`, scrub before returning, so `purged` is true; by default the scrub is deferred. */
+  synchronous?: boolean
 }
 export interface ConsolidateOptions extends RequestOptions { dryRun?: boolean; allowDestructive?: boolean }
 export interface ForgetReport { forgotten: string[]; dryRun: boolean; purged: boolean }

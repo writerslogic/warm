@@ -1,0 +1,247 @@
+{
+ "what": "One run of the four reported evaluation sets with the ranker chosen in lexical_ranking_selection.json (BM25 k1 1.4, b 0.6, idf max(ln((n-df+0.5)/(df+0.5)), 1e-6)), compared on identical queries with the committed results (commit 14ca7ff3) by the paired per-query bootstrap, Bonferroni-adjusted over 16 comparisons.",
+ "decision": "NOT ADOPTED. The selection protocol keeps a change only if no nDCG@10 or recall@100 of the four sets falls. Three fell: FiQA recall@100 (0.5422 to 0.5402), SciFact nDCG@10 (0.7027 to 0.7001), memory nDCG@10 (0.4561 to 0.4514). No paired difference is significant in either direction; the ranker was not retuned on these queries.",
+ "machine": "GCP n2-standard-8 (quality metrics only; not a timing host)",
+ "rows": [
+  {
+   "dataset": "beir-fiqa",
+   "metric": "ndcg@10",
+   "against": "best other (sqlite-fts5)",
+   "new": 0.26695670373566427,
+   "reference": 0.26781574230549227,
+   "difference": -0.0008590385698279968,
+   "ci": [
+    -0.012586853689766428,
+    0.0112555064804817
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 500
+  },
+  {
+   "dataset": "beir-fiqa",
+   "metric": "ndcg@10",
+   "against": "committed WARM",
+   "new": 0.26695670373566427,
+   "reference": 0.26537791112001474,
+   "difference": 0.0015787926156495269,
+   "ci": [
+    -0.008701140412485018,
+    0.013509212892150771
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 500
+  },
+  {
+   "dataset": "beir-fiqa",
+   "metric": "recall@100",
+   "against": "best other (sqlite-fts5)",
+   "new": 0.5401613664113665,
+   "reference": 0.5545597791097792,
+   "difference": -0.014398412698412688,
+   "ci": [
+    -0.03514603174603178,
+    0.0004603174603174693
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 500
+  },
+  {
+   "dataset": "beir-fiqa",
+   "metric": "recall@100",
+   "against": "committed WARM",
+   "new": 0.5401613664113665,
+   "reference": 0.5422345043845044,
+   "difference": -0.0020731379731379063,
+   "ci": [
+    -0.018660683760683697,
+    0.013726862026862022
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 500
+  },
+  {
+   "dataset": "beir-nfcorpus",
+   "metric": "ndcg@10",
+   "against": "best other (sqlite-fts5)",
+   "new": 0.2917754261347528,
+   "reference": 0.29140981016338025,
+   "difference": 0.0003656159713725793,
+   "ci": [
+    -0.0037585299073633217,
+    0.004530430929174945
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 324
+  },
+  {
+   "dataset": "beir-nfcorpus",
+   "metric": "ndcg@10",
+   "against": "committed WARM",
+   "new": 0.2917754261347528,
+   "reference": 0.29158226275481797,
+   "difference": 0.00019316337993485755,
+   "ci": [
+    -0.003111740133005488,
+    0.0037035084011547534
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 324
+  },
+  {
+   "dataset": "beir-nfcorpus",
+   "metric": "recall@100",
+   "against": "best other (lucene)",
+   "new": 0.22931076185765395,
+   "reference": 0.22757113786424402,
+   "difference": 0.0017396239934099333,
+   "ci": [
+    -0.0011655976793444776,
+    0.006648329706275221
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 324
+  },
+  {
+   "dataset": "beir-nfcorpus",
+   "metric": "recall@100",
+   "against": "committed WARM",
+   "new": 0.22931076185765395,
+   "reference": 0.22742500506264265,
+   "difference": 0.0018857567950112952,
+   "ci": [
+    -0.00026028154723399137,
+    0.004754906071555775
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 324
+  },
+  {
+   "dataset": "beir-scifact",
+   "metric": "ndcg@10",
+   "against": "best other (lucene)",
+   "new": 0.7001463590006619,
+   "reference": 0.7021782838562147,
+   "difference": -0.0020319248555528135,
+   "ci": [
+    -0.008547292983585753,
+    0.005015470247789851
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 809
+  },
+  {
+   "dataset": "beir-scifact",
+   "metric": "ndcg@10",
+   "against": "committed WARM",
+   "new": 0.7001463590006619,
+   "reference": 0.7026997341473034,
+   "difference": -0.0025533751466414456,
+   "ci": [
+    -0.009015295105909456,
+    0.00329347801158962
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 809
+  },
+  {
+   "dataset": "beir-scifact",
+   "metric": "recall@100",
+   "against": "best other (sqlite-fts5)",
+   "new": 0.926926246394726,
+   "reference": 0.9321796456530697,
+   "difference": -0.005253399258343672,
+   "ci": [
+    -0.014833127317676144,
+    0.003399258343634116
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 809
+  },
+  {
+   "dataset": "beir-scifact",
+   "metric": "recall@100",
+   "against": "committed WARM",
+   "new": 0.926926246394726,
+   "reference": 0.9264112072517512,
+   "difference": 0.0005150391429747936,
+   "ci": [
+    -0.010300782859497369,
+    0.009888751545117428
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 809
+  },
+  {
+   "dataset": "memory",
+   "metric": "ndcg@10",
+   "against": "best other (lucene)",
+   "new": 0.4514196466862058,
+   "reference": 0.46265299364569407,
+   "difference": -0.011233346959488244,
+   "ci": [
+    -0.04299854441586533,
+    0.020313610292364927
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 100
+  },
+  {
+   "dataset": "memory",
+   "metric": "ndcg@10",
+   "against": "committed WARM",
+   "new": 0.4514196466862058,
+   "reference": 0.4561419499447157,
+   "difference": -0.004722303258509863,
+   "ci": [
+    -0.032892546775229334,
+    0.024461337785216416
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 100
+  },
+  {
+   "dataset": "memory",
+   "metric": "recall@100",
+   "against": "best other (sqlite-fts5)",
+   "new": 0.8408333333333333,
+   "reference": 0.8391666666666667,
+   "difference": 0.0016666666666665941,
+   "ci": [
+    -0.015,
+    0.025
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 100
+  },
+  {
+   "dataset": "memory",
+   "metric": "recall@100",
+   "against": "committed WARM",
+   "new": 0.8408333333333333,
+   "reference": 0.8203333333333334,
+   "difference": 0.020499999999999963,
+   "ci": [
+    -0.016000000000000084,
+    0.0775
+   ],
+   "level": 0.996875,
+   "verdict": "TIE",
+   "queries": 100
+  }
+ ]
+}

@@ -3,6 +3,8 @@
 
 #![deny(clippy::all)]
 
+#[cfg(feature = "mimalloc")]
+pub mod allocator;
 mod bindings;
 pub mod compatibility;
 pub mod core;
@@ -21,8 +23,10 @@ pub use crate::core::engine::{
     CompactionHandle, CompactionOptions, CompactionProgress, CompactionReport, CompactionResource,
     CompactionStage, CompactionStatus,
 };
+pub use crate::core::engine::{RankingMode, SparseSearch};
 pub use crate::core::entangled::EntangledHVec;
 pub use crate::core::error::{CommittedMutationError, IndeterminateMutationError, WarmError};
+pub use crate::core::index::sparse_store::SparseVector;
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::core::memory_api::{Memory, MemoryConfig};
 pub use crate::core::types::{
@@ -54,3 +58,8 @@ pub use crate::core::provenance::TripleProvenanceParams;
 
 #[cfg(test)]
 mod tests;
+
+/// Compiles and runs the Rust blocks of the README so the documented quickstart cannot rot.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;

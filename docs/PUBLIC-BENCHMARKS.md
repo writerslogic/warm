@@ -48,13 +48,15 @@ Datasets and ground truth from [ann-benchmarks](https://ann-benchmarks.com): `ny
 system searches single-threaded, one query at a time; builds use all cores. FAISS 1.15.1,
 hnswlib 0.8.0.
 
-This table measures WARM's sparse vector path, not the graph index (see [COMPARISON](benchmarks/COMPARISON.md)): each dense vector is encoded with `from_dense`
-(D=16384, 64 active indices) and searched exactly in the inverted index. Its query time includes
-encoding, because the other systems take dense input directly.
+This table measures WARM through the engine API: `memorize_vectors` builds the vertex graph
+(`dense-vectors/`, out-degree 32, build_ef 200, 8-bit codes with residual re-rank) and
+`query_vector` searches it with ef 128 and rerank 64, returning exact cosine scores. One
+operating point, no sweep; query time is one `query_vector` call on dense input. The nytimes
+row is the earlier sparse-path measurement and has not been re-run.
 
 | System | nytimes recall@10 | nytimes QPS | glove recall@10 | glove QPS | glove memory |
 |---|---|---|---|---|---|
-| WARM sparse (D=16384) | 0.34 | 204 | 0.25 | 34 | 2.5 GB RSS |
+| WARM `query_vector` (vertex graph; nytimes: earlier sparse path) | 0.34 | 204 | 0.86 | 2,092 | 2.9 GB RSS |
 | FAISS flat (exact) | 0.99 | 206 | 1.00 | 124 | 0.47 GB vectors |
 | FAISS HNSW M=16, efSearch=16 | 0.69 | 13,782 | 0.56 | 19,861 | 0.64 GB |
 | FAISS HNSW M=16, efSearch=128 | 0.88 | 2,875 | 0.83 | 4,111 | 0.64 GB |
@@ -63,15 +65,14 @@ encoding, because the other systems take dense input directly.
 
 Full sweeps are in the result files.
 
-- WARM is behind at every operating point. On glove, HNSW reaches higher recall than WARM at roughly
-  600 times the throughput, and exact FAISS search is faster than WARM while returning the right
-  answer.
-- The cause is the encoder, not the index: the inverted index is exact over the sparse codes, but
-  the codes keep only part of the neighbour structure. The true top-10 is inside WARM's top-100 for
-  54% of results on both sets (`experimental_prefilter` in the result files), so even an exact
-  re-rank of 100 candidates would not close the gap.
-- Encoding dominates build time (155 s for nytimes, 265 s for glove, all cores) and is about half
-  of query time on nytimes.
+- On glove, WARM's single operating point has higher recall than hnswlib at ef 128 (0.859 against
+  0.831) at 62% of its QPS (2,092 against 3,368). It is behind FAISS HNSW M=16 efSearch=128 on QPS
+  (4,111) at about the same recall, and exact FAISS search is still more accurate.
+- The earlier sparse path (recall 0.25 at 34 QPS on glove, 155 s encode for nytimes and 265 s for
+  glove) is still what `query` uses on `EntangledHVec` codes and for vectors memorized before the
+  graph existed. `memorize_vector` keeps writing the sparse code, so the glove build (478 s, all
+  cores) includes encoding.
+- The nytimes row has not been re-run through the new path.
 
 ## Quantized graph index (`core::qgraph`) vs the field
 
@@ -234,8 +235,8 @@ here. No ranking against the paper is implied.
 
 - For semantic search over text, use the document API: exact cosine reproduces the embedding
   model's quality, and hybrid search with the built-in BM25 improves on it.
-- Do not use the sparse vector path (`memorize_vector` / `query_vector`) where nearest-neighbour
-  recall matters. Improving it needs a different encoder; making the current one faster does not.
+- `memorize_vector` / `query_vector` use the vertex graph (glove-100 recall@10 0.859 at 2,092
+  QPS). The sparse `query` path on `EntangledHVec` codes remains far behind HNSW.
 - As a vector index, `VGraph` is ahead of FAISS HNSW, hnswlib and Lucene HNSW on single-thread QPS
   at recall 0.90 and below them on bytes on nytimes (Apple M4, load above the gate: indicative), and
   behind SymphonyQG on QPS and behind RaBitQ on bytes. No x86 number exists yet, and the

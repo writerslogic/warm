@@ -73,22 +73,14 @@ class WarmAnnBuildContractTests(unittest.TestCase):
             with patch.object(runner, "warm_binary", return_value=binary), patch.object(runner, "WORK", root / "work"), \
                     patch.object(runner, "run_measured", capture):
                 build = runner._warm_ann_build(directory, meta, 2, workdir)
-                index = workdir / "index.vgraph"
-                self.assertTrue(index.is_file())
                 self.assertTrue((workdir / "index.updates").is_dir())
-                sidecar = json.loads(Path(str(index) + ".json").read_text())
-                self.assertEqual(set(sidecar), {"graph_hash", "build_params", "dataset", "build_secs"})
-                self.assertEqual(sidecar["dataset"], meta)
-                self.assertEqual(build["build_s"], sidecar["build_secs"])
-                self.assertEqual(build["graph_hash"], sidecar["graph_hash"])
+                self.assertFalse((workdir / "index.vgraph").exists())
                 self.assertEqual(build["warm_threads"], 2)
                 self.assertGreater(build["peak_rss_bytes"], 0)
                 self.assertGreater(build["in_memory_index_bytes"], build["residual_bytes"])
                 self.assertTrue(build["memory_phases"])
                 raw = captured[0]["report"]
                 self.assertEqual(raw["sweep"], [])
-                self.assertEqual(raw["index_file"]["saved"], str(index))
-                self.assertEqual(raw["index_file"]["bytes"], index.stat().st_size)
                 self.assertEqual(raw["build"]["build_secs"], build["build_s"])
                 self.assertEqual(raw["memory_phases"], build["memory_phases"])
                 for key in ("degree", "build_ef", "vertex_bits", "residual_bits", "quantized_search"):

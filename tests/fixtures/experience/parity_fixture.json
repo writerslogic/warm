@@ -1,0 +1,945 @@
+{
+ "effects": [
+  {
+   "action": "click link 'Section 2 of the portal'",
+   "add": {
+    "\"Order #1000\"": 4,
+    "\"Order #1001\"": 4,
+    "\"Order #1002\"": 4,
+    "\"Order #1003\"": 4,
+    "\"Order #1004\"": 4,
+    "\"Order #1005\"": 4,
+    "\"Order #1006\"": 4,
+    "\"Order #1007\"": 4,
+    "\"Order #1008\"": 4,
+    "\"Order #1009\"": 4,
+    "\"Order #1010\"": 4,
+    "\"Order #1011\"": 4,
+    "\"Order #1012\"": 4,
+    "\"Order #1013\"": 4,
+    "RootWebArea 'Orders - Admin'": 4,
+    "link 'Order #1000'": 4,
+    "link 'Order #1001'": 4,
+    "link 'Order #1002'": 4,
+    "link 'Order #1003'": 4,
+    "link 'Order #1004'": 4,
+    "link 'Order #1005'": 4,
+    "link 'Order #1006'": 4,
+    "link 'Order #1007'": 4,
+    "link 'Order #1008'": 4,
+    "link 'Order #1009'": 4,
+    "link 'Order #1010'": 4,
+    "link 'Order #1011'": 4,
+    "link 'Order #1012'": 4,
+    "link 'Order #1013'": 4,
+    "table 'Orders'": 4
+   },
+   "err": {},
+   "loops": 0,
+   "n": 4,
+   "next": {
+    "/admin/orders?page=||Orders - Admin": 4
+   },
+   "rem": {
+    "\"Welcome back\"": 4,
+    "RootWebArea 'Dashboard - Admin'": 4,
+    "heading 'Welcome back'": 4
+   },
+   "template": "/admin/dashboard?session=||Dashboard - Admin"
+  },
+  {
+   "action": "click button 'Save'",
+   "add": {
+    "\"Error: required field missing\"": 2,
+    "\"Order 1003\"": 1,
+    "\"Order 1010\"": 1,
+    "\"Widget\"": 2,
+    "RootWebArea 'Order 1003 - Admin'": 1,
+    "RootWebArea 'Order 1010 - Admin'": 1,
+    "button 'Cancel order'": 2,
+    "button 'Edit'": 2,
+    "heading 'Order 1003'": 1,
+    "heading 'Order 1010'": 1,
+    "table 'Items'": 2
+   },
+   "err": {
+    "\"Error: required field missing\"": 2
+   },
+   "loops": 0,
+   "n": 4,
+   "next": {
+    "/admin/orders/#/edit||Edit order # - Admin": 2,
+    "/admin/orders/#||Order # - Admin": 2
+   },
+   "rem": {
+    "RootWebArea 'Edit order 1003 - Admin'": 1,
+    "RootWebArea 'Edit order 1010 - Admin'": 1,
+    "button 'Save'": 2,
+    "checkbox 'Gift wrap'": 2,
+    "form 'Edit order'": 2,
+    "link 'Back to list'": 2,
+    "textbox 'Customer's note'": 2
+   },
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "action": "click checkbox 'Gift wrap'",
+   "add": {},
+   "err": {},
+   "loops": 2,
+   "n": 2,
+   "next": {
+    "/admin/orders/#/edit||Edit order # - Admin": 2
+   },
+   "rem": {},
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "action": "click link 'Back to list'",
+   "add": {
+    "\"Order #1000\"": 1,
+    "\"Order #1001\"": 1,
+    "\"Order #1002\"": 1,
+    "\"Order #1003\"": 1,
+    "\"Order #1004\"": 1,
+    "\"Order #1005\"": 1,
+    "\"Order #1006\"": 1,
+    "\"Order #1007\"": 1,
+    "\"Order #1008\"": 1,
+    "\"Order #1009\"": 1,
+    "\"Order #1010\"": 1,
+    "\"Order #1011\"": 1,
+    "\"Order #1012\"": 1,
+    "\"Order #1013\"": 1,
+    "RootWebArea 'Orders - Admin'": 1,
+    "link 'Order #1000'": 1,
+    "link 'Order #1001'": 1,
+    "link 'Order #1002'": 1,
+    "link 'Order #1003'": 1,
+    "link 'Order #1004'": 1,
+    "link 'Order #1005'": 1,
+    "link 'Order #1006'": 1,
+    "link 'Order #1007'": 1,
+    "link 'Order #1008'": 1,
+    "link 'Order #1009'": 1,
+    "link 'Order #1010'": 1,
+    "link 'Order #1011'": 1,
+    "link 'Order #1012'": 1,
+    "link 'Order #1013'": 1,
+    "table 'Orders'": 1
+   },
+   "err": {},
+   "loops": 0,
+   "n": 1,
+   "next": {
+    "/admin/orders?page=||Orders - Admin": 1
+   },
+   "rem": {
+    "\"Error: required field missing\"": 1,
+    "RootWebArea 'Edit order 1004 - Admin'": 1,
+    "button 'Save'": 1,
+    "checkbox 'Gift wrap'": 1,
+    "form 'Edit order'": 1,
+    "link 'Back to list'": 1,
+    "textbox 'Customer's note'": 1
+   },
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "action": "fill textbox 'Customer's note' <- 'gift for mum'",
+   "add": {},
+   "err": {},
+   "loops": 2,
+   "n": 2,
+   "next": {
+    "/admin/orders/#/edit||Edit order # - Admin": 2
+   },
+   "rem": {},
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "action": "fill textbox 'Customer's note' <- 'x'",
+   "add": {},
+   "err": {},
+   "loops": 0,
+   "n": 1,
+   "next": {
+    "/admin/orders/#/edit||Edit order # - Admin": 1
+   },
+   "rem": {
+    "\"Error: required field missing\"": 1
+   },
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "action": "press textbox 'Customer's note'",
+   "add": {},
+   "err": {},
+   "loops": 1,
+   "n": 1,
+   "next": {
+    "/admin/orders/#/edit||Edit order # - Admin": 1
+   },
+   "rem": {},
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "action": "scroll",
+   "add": {},
+   "err": {},
+   "loops": 1,
+   "n": 1,
+   "next": {
+    "/admin/orders/#/edit||Edit order # - Admin": 1
+   },
+   "rem": {},
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "action": "click button 'Edit'",
+   "add": {
+    "RootWebArea 'Edit order 1003 - Admin'": 2,
+    "RootWebArea 'Edit order 1004 - Admin'": 1,
+    "RootWebArea 'Edit order 1010 - Admin'": 1,
+    "button 'Save'": 4,
+    "checkbox 'Gift wrap'": 4,
+    "form 'Edit order'": 4,
+    "link 'Back to list'": 4,
+    "textbox 'Customer's note'": 4
+   },
+   "err": {},
+   "loops": 0,
+   "n": 4,
+   "next": {
+    "/admin/orders/#/edit||Edit order # - Admin": 4
+   },
+   "rem": {
+    "\"Order 1003\"": 2,
+    "\"Order 1004\"": 1,
+    "\"Order 1010\"": 1,
+    "\"Widget\"": 4,
+    "RootWebArea 'Order 1003 - Admin'": 2,
+    "RootWebArea 'Order 1004 - Admin'": 1,
+    "RootWebArea 'Order 1010 - Admin'": 1,
+    "button 'Cancel order'": 4,
+    "button 'Edit'": 4,
+    "heading 'Order 1003'": 2,
+    "heading 'Order 1004'": 1,
+    "heading 'Order 1010'": 1,
+    "table 'Items'": 4
+   },
+   "template": "/admin/orders/#||Order # - Admin"
+  },
+  {
+   "action": "click link 'Order #1002'",
+   "add": {
+    "\"Order 1003\"": 2,
+    "\"Order 1010\"": 1,
+    "\"Widget\"": 3,
+    "RootWebArea 'Order 1003 - Admin'": 2,
+    "RootWebArea 'Order 1010 - Admin'": 1,
+    "button 'Cancel order'": 3,
+    "button 'Edit'": 3,
+    "heading 'Order 1003'": 2,
+    "heading 'Order 1010'": 1,
+    "table 'Items'": 3
+   },
+   "err": {},
+   "loops": 0,
+   "n": 3,
+   "next": {
+    "/admin/orders/#||Order # - Admin": 3
+   },
+   "rem": {
+    "\"Order #1000\"": 3,
+    "\"Order #1001\"": 3,
+    "\"Order #1002\"": 3,
+    "\"Order #1003\"": 3,
+    "\"Order #1004\"": 3,
+    "\"Order #1005\"": 3,
+    "\"Order #1006\"": 3,
+    "\"Order #1007\"": 3,
+    "\"Order #1008\"": 3,
+    "\"Order #1009\"": 3,
+    "\"Order #1010\"": 3,
+    "\"Order #1011\"": 3,
+    "\"Order #1012\"": 3,
+    "\"Order #1013\"": 3,
+    "RootWebArea 'Orders - Admin'": 3,
+    "link 'Order #1000'": 3,
+    "link 'Order #1001'": 3,
+    "link 'Order #1002'": 3,
+    "link 'Order #1003'": 3,
+    "link 'Order #1004'": 3,
+    "link 'Order #1005'": 3,
+    "link 'Order #1006'": 3,
+    "link 'Order #1007'": 3,
+    "link 'Order #1008'": 3,
+    "link 'Order #1009'": 3,
+    "link 'Order #1010'": 3,
+    "link 'Order #1011'": 3,
+    "link 'Order #1012'": 3,
+    "link 'Order #1013'": 3,
+    "table 'Orders'": 3
+   },
+   "template": "/admin/orders?page=||Orders - Admin"
+  },
+  {
+   "action": "click link 'Order #1003'",
+   "add": {
+    "\"Order 1004\"": 1,
+    "\"Widget\"": 1,
+    "RootWebArea 'Order 1004 - Admin'": 1,
+    "button 'Cancel order'": 1,
+    "button 'Edit'": 1,
+    "heading 'Order 1004'": 1,
+    "table 'Items'": 1
+   },
+   "err": {},
+   "loops": 0,
+   "n": 1,
+   "next": {
+    "/admin/orders/#||Order # - Admin": 1
+   },
+   "rem": {
+    "\"Order #1000\"": 1,
+    "\"Order #1001\"": 1,
+    "\"Order #1002\"": 1,
+    "\"Order #1003\"": 1,
+    "\"Order #1004\"": 1,
+    "\"Order #1005\"": 1,
+    "\"Order #1006\"": 1,
+    "\"Order #1007\"": 1,
+    "\"Order #1008\"": 1,
+    "\"Order #1009\"": 1,
+    "\"Order #1010\"": 1,
+    "\"Order #1011\"": 1,
+    "\"Order #1012\"": 1,
+    "\"Order #1013\"": 1,
+    "RootWebArea 'Orders - Admin'": 1,
+    "link 'Order #1000'": 1,
+    "link 'Order #1001'": 1,
+    "link 'Order #1002'": 1,
+    "link 'Order #1003'": 1,
+    "link 'Order #1004'": 1,
+    "link 'Order #1005'": 1,
+    "link 'Order #1006'": 1,
+    "link 'Order #1007'": 1,
+    "link 'Order #1008'": 1,
+    "link 'Order #1009'": 1,
+    "link 'Order #1010'": 1,
+    "link 'Order #1011'": 1,
+    "link 'Order #1012'": 1,
+    "link 'Order #1013'": 1,
+    "table 'Orders'": 1
+   },
+   "template": "/admin/orders?page=||Orders - Admin"
+  },
+  {
+   "action": "goto /admin/dashboard?session=",
+   "add": {
+    "\"Welcome back\"": 1,
+    "RootWebArea 'Dashboard - Admin'": 1,
+    "heading 'Welcome back'": 1
+   },
+   "err": {},
+   "loops": 0,
+   "n": 1,
+   "next": {
+    "/admin/dashboard?session=||Dashboard - Admin": 1
+   },
+   "rem": {
+    "\"Order #1000\"": 1,
+    "\"Order #1001\"": 1,
+    "\"Order #1002\"": 1,
+    "\"Order #1003\"": 1,
+    "\"Order #1004\"": 1,
+    "\"Order #1005\"": 1,
+    "\"Order #1006\"": 1,
+    "\"Order #1007\"": 1,
+    "\"Order #1008\"": 1,
+    "\"Order #1009\"": 1,
+    "\"Order #1010\"": 1,
+    "\"Order #1011\"": 1,
+    "\"Order #1012\"": 1,
+    "\"Order #1013\"": 1,
+    "RootWebArea 'Orders - Admin'": 1,
+    "link 'Order #1000'": 1,
+    "link 'Order #1001'": 1,
+    "link 'Order #1002'": 1,
+    "link 'Order #1003'": 1,
+    "link 'Order #1004'": 1,
+    "link 'Order #1005'": 1,
+    "link 'Order #1006'": 1,
+    "link 'Order #1007'": 1,
+    "link 'Order #1008'": 1,
+    "link 'Order #1009'": 1,
+    "link 'Order #1010'": 1,
+    "link 'Order #1011'": 1,
+    "link 'Order #1012'": 1,
+    "link 'Order #1013'": 1,
+    "table 'Orders'": 1
+   },
+   "template": "/admin/orders?page=||Orders - Admin"
+  }
+ ],
+ "episodes": {
+  "t0": "1. click link 'Section 2 of the portal'\n2. click link 'Order #1002'\n3. click button 'Edit'\n4. fill textbox 'Customer's note' <- 'gift for mum' (no visible change)\n5. click checkbox 'Gift wrap' (no visible change)\n6. click button 'Save'\nended on: Order # - Admin",
+  "t1": "1. click link 'Section 2 of the portal'\n2. click link 'Order #1003'\n3. click button 'Edit'\n4. click button 'Save' (ERROR text: \"Error: required field missing\")\n5. scroll (no visible change)\n6. click link 'Back to list'\n7. goto /admin/dashboard?session=\nended on: Dashboard - Admin",
+  "t2": "1. click link 'Section 2 of the portal'\n2. click link 'Order #1002'\n3. click button 'Edit'\n4. click button 'Save' (ERROR text: \"Error: required field missing\")\n5. press textbox 'Customer's note' (no visible change)\n6. fill textbox 'Customer's note' <- 'x'\nended on: Edit order # - Admin",
+  "t3": "1. click link 'Section 2 of the portal'\n2. click link 'Order #1002'\n3. click button 'Edit'\n4. fill textbox 'Customer's note' <- 'gift for mum' (no visible change)\n5. click checkbox 'Gift wrap' (no visible change)\n6. click button 'Save'\nended on: Order # - Admin"
+ },
+ "templates": [
+  {
+   "inventory": {
+    "\"Section 0 of the portal\"": 5,
+    "\"Section 1 of the portal\"": 5,
+    "\"Section 10 of the portal\"": 5,
+    "\"Section 11 of the portal\"": 5,
+    "\"Section 12 of the portal\"": 5,
+    "\"Section 13 of the portal\"": 5,
+    "\"Section 14 of the portal\"": 5,
+    "\"Section 15 of the portal\"": 5,
+    "\"Section 16 of the portal\"": 5,
+    "\"Section 17 of the portal\"": 5,
+    "\"Section 18 of the portal\"": 5,
+    "\"Section 19 of the portal\"": 5,
+    "\"Section 2 of the portal\"": 5,
+    "\"Section 20 of the portal\"": 5,
+    "\"Section 21 of the portal\"": 5,
+    "\"Section 22 of the portal\"": 5,
+    "\"Section 23 of the portal\"": 5,
+    "\"Section 3 of the portal\"": 5,
+    "\"Section 4 of the portal\"": 5,
+    "\"Section 5 of the portal\"": 5,
+    "\"Section 6 of the portal\"": 5,
+    "\"Section 7 of the portal\"": 5,
+    "\"Section 8 of the portal\"": 5,
+    "\"Section 9 of the portal\"": 5,
+    "\"Welcome back\"": 5,
+    "RootWebArea 'Dashboard - Admin'": 5,
+    "heading 'Welcome back'": 5,
+    "link 'Section 0 of the portal'": 5,
+    "link 'Section 1 of the portal'": 5,
+    "link 'Section 10 of the portal'": 5,
+    "link 'Section 11 of the portal'": 5,
+    "link 'Section 12 of the portal'": 5,
+    "link 'Section 13 of the portal'": 5,
+    "link 'Section 14 of the portal'": 5,
+    "link 'Section 15 of the portal'": 5,
+    "link 'Section 16 of the portal'": 5,
+    "link 'Section 17 of the portal'": 5,
+    "link 'Section 18 of the portal'": 5,
+    "link 'Section 19 of the portal'": 5,
+    "link 'Section 2 of the portal'": 5,
+    "link 'Section 20 of the portal'": 5,
+    "link 'Section 21 of the portal'": 5,
+    "link 'Section 22 of the portal'": 5,
+    "link 'Section 23 of the portal'": 5,
+    "link 'Section 3 of the portal'": 5,
+    "link 'Section 4 of the portal'": 5,
+    "link 'Section 5 of the portal'": 5,
+    "link 'Section 6 of the portal'": 5,
+    "link 'Section 7 of the portal'": 5,
+    "link 'Section 8 of the portal'": 5,
+    "link 'Section 9 of the portal'": 5,
+    "navigation 'Main menu'": 5
+   },
+   "obs": 5,
+   "template": "/admin/dashboard?session=||Dashboard - Admin"
+  },
+  {
+   "inventory": {
+    "\"Error: required field missing\"": 4,
+    "\"Section 0 of the portal\"": 13,
+    "\"Section 1 of the portal\"": 13,
+    "\"Section 10 of the portal\"": 13,
+    "\"Section 11 of the portal\"": 13,
+    "\"Section 12 of the portal\"": 13,
+    "\"Section 13 of the portal\"": 13,
+    "\"Section 14 of the portal\"": 13,
+    "\"Section 15 of the portal\"": 13,
+    "\"Section 16 of the portal\"": 13,
+    "\"Section 17 of the portal\"": 13,
+    "\"Section 18 of the portal\"": 13,
+    "\"Section 19 of the portal\"": 13,
+    "\"Section 2 of the portal\"": 13,
+    "\"Section 20 of the portal\"": 13,
+    "\"Section 21 of the portal\"": 13,
+    "\"Section 22 of the portal\"": 13,
+    "\"Section 23 of the portal\"": 13,
+    "\"Section 3 of the portal\"": 13,
+    "\"Section 4 of the portal\"": 13,
+    "\"Section 5 of the portal\"": 13,
+    "\"Section 6 of the portal\"": 13,
+    "\"Section 7 of the portal\"": 13,
+    "\"Section 8 of the portal\"": 13,
+    "\"Section 9 of the portal\"": 13,
+    "RootWebArea 'Edit order 1003 - Admin'": 7,
+    "RootWebArea 'Edit order 1004 - Admin'": 3,
+    "RootWebArea 'Edit order 1010 - Admin'": 3,
+    "button 'Save'": 13,
+    "checkbox 'Gift wrap'": 13,
+    "form 'Edit order'": 13,
+    "link 'Back to list'": 13,
+    "link 'Section 0 of the portal'": 13,
+    "link 'Section 1 of the portal'": 13,
+    "link 'Section 10 of the portal'": 13,
+    "link 'Section 11 of the portal'": 13,
+    "link 'Section 12 of the portal'": 13,
+    "link 'Section 13 of the portal'": 13,
+    "link 'Section 14 of the portal'": 13,
+    "link 'Section 15 of the portal'": 13,
+    "link 'Section 16 of the portal'": 13,
+    "link 'Section 17 of the portal'": 13,
+    "link 'Section 18 of the portal'": 13,
+    "link 'Section 19 of the portal'": 13,
+    "link 'Section 2 of the portal'": 13,
+    "link 'Section 20 of the portal'": 13,
+    "link 'Section 21 of the portal'": 13,
+    "link 'Section 22 of the portal'": 13,
+    "link 'Section 23 of the portal'": 13,
+    "link 'Section 3 of the portal'": 13,
+    "link 'Section 4 of the portal'": 13,
+    "link 'Section 5 of the portal'": 13,
+    "link 'Section 6 of the portal'": 13,
+    "link 'Section 7 of the portal'": 13,
+    "link 'Section 8 of the portal'": 13,
+    "link 'Section 9 of the portal'": 13,
+    "navigation 'Main menu'": 13,
+    "textbox 'Customer's note'": 13
+   },
+   "obs": 13,
+   "template": "/admin/orders/#/edit||Edit order # - Admin"
+  },
+  {
+   "inventory": {
+    "\"Order 1003\"": 3,
+    "\"Order 1004\"": 1,
+    "\"Order 1010\"": 2,
+    "\"Section 0 of the portal\"": 6,
+    "\"Section 1 of the portal\"": 6,
+    "\"Section 10 of the portal\"": 6,
+    "\"Section 11 of the portal\"": 6,
+    "\"Section 12 of the portal\"": 6,
+    "\"Section 13 of the portal\"": 6,
+    "\"Section 14 of the portal\"": 6,
+    "\"Section 15 of the portal\"": 6,
+    "\"Section 16 of the portal\"": 6,
+    "\"Section 17 of the portal\"": 6,
+    "\"Section 18 of the portal\"": 6,
+    "\"Section 19 of the portal\"": 6,
+    "\"Section 2 of the portal\"": 6,
+    "\"Section 20 of the portal\"": 6,
+    "\"Section 21 of the portal\"": 6,
+    "\"Section 22 of the portal\"": 6,
+    "\"Section 23 of the portal\"": 6,
+    "\"Section 3 of the portal\"": 6,
+    "\"Section 4 of the portal\"": 6,
+    "\"Section 5 of the portal\"": 6,
+    "\"Section 6 of the portal\"": 6,
+    "\"Section 7 of the portal\"": 6,
+    "\"Section 8 of the portal\"": 6,
+    "\"Section 9 of the portal\"": 6,
+    "\"Widget\"": 6,
+    "RootWebArea 'Order 1003 - Admin'": 3,
+    "RootWebArea 'Order 1004 - Admin'": 1,
+    "RootWebArea 'Order 1010 - Admin'": 2,
+    "button 'Cancel order'": 6,
+    "button 'Edit'": 6,
+    "heading 'Order 1003'": 3,
+    "heading 'Order 1004'": 1,
+    "heading 'Order 1010'": 2,
+    "link 'Section 0 of the portal'": 6,
+    "link 'Section 1 of the portal'": 6,
+    "link 'Section 10 of the portal'": 6,
+    "link 'Section 11 of the portal'": 6,
+    "link 'Section 12 of the portal'": 6,
+    "link 'Section 13 of the portal'": 6,
+    "link 'Section 14 of the portal'": 6,
+    "link 'Section 15 of the portal'": 6,
+    "link 'Section 16 of the portal'": 6,
+    "link 'Section 17 of the portal'": 6,
+    "link 'Section 18 of the portal'": 6,
+    "link 'Section 19 of the portal'": 6,
+    "link 'Section 2 of the portal'": 6,
+    "link 'Section 20 of the portal'": 6,
+    "link 'Section 21 of the portal'": 6,
+    "link 'Section 22 of the portal'": 6,
+    "link 'Section 23 of the portal'": 6,
+    "link 'Section 3 of the portal'": 6,
+    "link 'Section 4 of the portal'": 6,
+    "link 'Section 5 of the portal'": 6,
+    "link 'Section 6 of the portal'": 6,
+    "link 'Section 7 of the portal'": 6,
+    "link 'Section 8 of the portal'": 6,
+    "link 'Section 9 of the portal'": 6,
+    "navigation 'Main menu'": 6,
+    "table 'Items'": 6
+   },
+   "obs": 6,
+   "template": "/admin/orders/#||Order # - Admin"
+  },
+  {
+   "inventory": {
+    "\"Order #1000\"": 5,
+    "\"Order #1001\"": 5,
+    "\"Order #1002\"": 5,
+    "\"Order #1003\"": 5,
+    "\"Order #1004\"": 5,
+    "\"Order #1005\"": 5,
+    "\"Order #1006\"": 5,
+    "\"Order #1007\"": 5,
+    "\"Order #1008\"": 5,
+    "\"Order #1009\"": 5,
+    "\"Order #1010\"": 5,
+    "\"Order #1011\"": 5,
+    "\"Order #1012\"": 5,
+    "\"Order #1013\"": 5,
+    "\"Section 0 of the portal\"": 5,
+    "\"Section 1 of the portal\"": 5,
+    "\"Section 10 of the portal\"": 5,
+    "\"Section 11 of the portal\"": 5,
+    "\"Section 12 of the portal\"": 5,
+    "\"Section 13 of the portal\"": 5,
+    "\"Section 14 of the portal\"": 5,
+    "\"Section 15 of the portal\"": 5,
+    "\"Section 16 of the portal\"": 5,
+    "\"Section 17 of the portal\"": 5,
+    "\"Section 18 of the portal\"": 5,
+    "\"Section 19 of the portal\"": 5,
+    "\"Section 2 of the portal\"": 5,
+    "\"Section 20 of the portal\"": 5,
+    "\"Section 21 of the portal\"": 5,
+    "\"Section 22 of the portal\"": 5,
+    "\"Section 23 of the portal\"": 5,
+    "\"Section 3 of the portal\"": 5,
+    "\"Section 4 of the portal\"": 5,
+    "\"Section 5 of the portal\"": 5,
+    "\"Section 6 of the portal\"": 5,
+    "\"Section 7 of the portal\"": 5,
+    "\"Section 8 of the portal\"": 5,
+    "\"Section 9 of the portal\"": 5,
+    "RootWebArea 'Orders - Admin'": 5,
+    "link 'Order #1000'": 5,
+    "link 'Order #1001'": 5,
+    "link 'Order #1002'": 5,
+    "link 'Order #1003'": 5,
+    "link 'Order #1004'": 5,
+    "link 'Order #1005'": 5,
+    "link 'Order #1006'": 5,
+    "link 'Order #1007'": 5,
+    "link 'Order #1008'": 5,
+    "link 'Order #1009'": 5,
+    "link 'Order #1010'": 5,
+    "link 'Order #1011'": 5,
+    "link 'Order #1012'": 5,
+    "link 'Order #1013'": 5,
+    "link 'Section 0 of the portal'": 5,
+    "link 'Section 1 of the portal'": 5,
+    "link 'Section 10 of the portal'": 5,
+    "link 'Section 11 of the portal'": 5,
+    "link 'Section 12 of the portal'": 5,
+    "link 'Section 13 of the portal'": 5,
+    "link 'Section 14 of the portal'": 5,
+    "link 'Section 15 of the portal'": 5,
+    "link 'Section 16 of the portal'": 5,
+    "link 'Section 17 of the portal'": 5,
+    "link 'Section 18 of the portal'": 5,
+    "link 'Section 19 of the portal'": 5,
+    "link 'Section 2 of the portal'": 5,
+    "link 'Section 20 of the portal'": 5,
+    "link 'Section 21 of the portal'": 5,
+    "link 'Section 22 of the portal'": 5,
+    "link 'Section 23 of the portal'": 5,
+    "link 'Section 3 of the portal'": 5,
+    "link 'Section 4 of the portal'": 5,
+    "link 'Section 5 of the portal'": 5,
+    "link 'Section 6 of the portal'": 5,
+    "link 'Section 7 of the portal'": 5,
+    "link 'Section 8 of the portal'": 5,
+    "link 'Section 9 of the portal'": 5,
+    "navigation 'Main menu'": 5,
+    "table 'Orders'": 5
+   },
+   "obs": 5,
+   "template": "/admin/orders?page=||Orders - Admin"
+  }
+ ],
+ "trajectories": [
+  {
+   "goal": "Add a gift note to order 1003",
+   "id": "t0",
+   "outcome": "success",
+   "states": [
+    {
+     "accessibility_tree": "RootWebArea 'Dashboard - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[50] heading 'Welcome back'\n\t\t\tStaticText 'Welcome back'",
+     "action": null,
+     "state_index": 0,
+     "url": "http://shop.example.com/admin/dashboard?session=ab12cd34ef"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Orders - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[100] table 'Orders'\n\t\t\t[101] rowgroup ''\n\t\t\t\t[110] row ''\n\t\t\t\t\t[111] cell ''\n\t\t\t\t\t\t[112] link 'Order #1000'\n\t\t\t\t\t\t\tStaticText 'Order #1000'\n\t\t\t\t[113] row ''\n\t\t\t\t\t[114] cell ''\n\t\t\t\t\t\t[115] link 'Order #1001'\n\t\t\t\t\t\t\tStaticText 'Order #1001'\n\t\t\t\t[116] row ''\n\t\t\t\t\t[117] cell ''\n\t\t\t\t\t\t[118] link 'Order #1002'\n\t\t\t\t\t\t\tStaticText 'Order #1002'\n\t\t\t\t[119] row ''\n\t\t\t\t\t[120] cell ''\n\t\t\t\t\t\t[121] link 'Order #1003'\n\t\t\t\t\t\t\tStaticText 'Order #1003'\n\t\t\t\t[122] row ''\n\t\t\t\t\t[123] cell ''\n\t\t\t\t\t\t[124] link 'Order #1004'\n\t\t\t\t\t\t\tStaticText 'Order #1004'\n\t\t\t\t[125] row ''\n\t\t\t\t\t[126] cell ''\n\t\t\t\t\t\t[127] link 'Order #1005'\n\t\t\t\t\t\t\tStaticText 'Order #1005'\n\t\t\t\t[128] row ''\n\t\t\t\t\t[129] cell ''\n\t\t\t\t\t\t[130] link 'Order #1006'\n\t\t\t\t\t\t\tStaticText 'Order #1006'\n\t\t\t\t[131] row ''\n\t\t\t\t\t[132] cell ''\n\t\t\t\t\t\t[133] link 'Order #1007'\n\t\t\t\t\t\t\tStaticText 'Order #1007'\n\t\t\t\t[134] row ''\n\t\t\t\t\t[135] cell ''\n\t\t\t\t\t\t[136] link 'Order #1008'\n\t\t\t\t\t\t\tStaticText 'Order #1008'\n\t\t\t\t[137] row ''\n\t\t\t\t\t[138] cell ''\n\t\t\t\t\t\t[139] link 'Order #1009'\n\t\t\t\t\t\t\tStaticText 'Order #1009'\n\t\t\t\t[140] row ''\n\t\t\t\t\t[141] cell ''\n\t\t\t\t\t\t[142] link 'Order #1010'\n\t\t\t\t\t\t\tStaticText 'Order #1010'\n\t\t\t\t[143] row ''\n\t\t\t\t\t[144] cell ''\n\t\t\t\t\t\t[145] link 'Order #1011'\n\t\t\t\t\t\t\tStaticText 'Order #1011'\n\t\t\t\t[146] row ''\n\t\t\t\t\t[147] cell ''\n\t\t\t\t\t\t[148] link 'Order #1012'\n\t\t\t\t\t\t\tStaticText 'Order #1012'\n\t\t\t\t[149] row ''\n\t\t\t\t\t[150] cell ''\n\t\t\t\t\t\t[151] link 'Order #1013'\n\t\t\t\t\t\t\tStaticText 'Order #1013'",
+     "action": "click('12')",
+     "state_index": 1,
+     "url": "http://shop.example.com/admin/orders?page=1"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[300] heading 'Order 1003'\n\t\t\tStaticText 'Order 1003'\n\t\t[301] button 'Edit'\n\t\t[302] button 'Cancel order'\n\t\t[303] table 'Items'\n\t\t\t[304] row ''\n\t\t\t\t[305] cell ''\n\t\t\t\t\tStaticText 'Widget'",
+     "action": "click('118')",
+     "state_index": 2,
+     "url": "http://shop.example.com/admin/orders/1003"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "click('301')",
+     "state_index": 3,
+     "url": "http://shop.example.com/admin/orders/1003/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='gift for mum' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "fill('401', 'gift for mum')",
+     "state_index": 4,
+     "url": "http://shop.example.com/admin/orders/1003/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='gift for mum' required\n\t\t\t[402] checkbox 'Gift wrap' checked=true\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "click('402')",
+     "state_index": 5,
+     "url": "http://shop.example.com/admin/orders/1003/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[300] heading 'Order 1003'\n\t\t\tStaticText 'Order 1003'\n\t\t[301] button 'Edit'\n\t\t[302] button 'Cancel order'\n\t\t[303] table 'Items'\n\t\t\t[304] row ''\n\t\t\t\t[305] cell ''\n\t\t\t\t\tStaticText 'Widget'",
+     "action": "click('403')",
+     "state_index": 6,
+     "url": "http://shop.example.com/admin/orders/1003"
+    }
+   ]
+  },
+  {
+   "goal": "Add a gift note to order 1004",
+   "id": "t1",
+   "outcome": "failure",
+   "states": [
+    {
+     "accessibility_tree": "RootWebArea 'Dashboard - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[50] heading 'Welcome back'\n\t\t\tStaticText 'Welcome back'",
+     "action": null,
+     "state_index": 0,
+     "url": "http://shop.example.com/admin/dashboard?session=ab12cd34ef"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Orders - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[100] table 'Orders'\n\t\t\t[101] rowgroup ''\n\t\t\t\t[110] row ''\n\t\t\t\t\t[111] cell ''\n\t\t\t\t\t\t[112] link 'Order #1000'\n\t\t\t\t\t\t\tStaticText 'Order #1000'\n\t\t\t\t[113] row ''\n\t\t\t\t\t[114] cell ''\n\t\t\t\t\t\t[115] link 'Order #1001'\n\t\t\t\t\t\t\tStaticText 'Order #1001'\n\t\t\t\t[116] row ''\n\t\t\t\t\t[117] cell ''\n\t\t\t\t\t\t[118] link 'Order #1002'\n\t\t\t\t\t\t\tStaticText 'Order #1002'\n\t\t\t\t[119] row ''\n\t\t\t\t\t[120] cell ''\n\t\t\t\t\t\t[121] link 'Order #1003'\n\t\t\t\t\t\t\tStaticText 'Order #1003'\n\t\t\t\t[122] row ''\n\t\t\t\t\t[123] cell ''\n\t\t\t\t\t\t[124] link 'Order #1004'\n\t\t\t\t\t\t\tStaticText 'Order #1004'\n\t\t\t\t[125] row ''\n\t\t\t\t\t[126] cell ''\n\t\t\t\t\t\t[127] link 'Order #1005'\n\t\t\t\t\t\t\tStaticText 'Order #1005'\n\t\t\t\t[128] row ''\n\t\t\t\t\t[129] cell ''\n\t\t\t\t\t\t[130] link 'Order #1006'\n\t\t\t\t\t\t\tStaticText 'Order #1006'\n\t\t\t\t[131] row ''\n\t\t\t\t\t[132] cell ''\n\t\t\t\t\t\t[133] link 'Order #1007'\n\t\t\t\t\t\t\tStaticText 'Order #1007'\n\t\t\t\t[134] row ''\n\t\t\t\t\t[135] cell ''\n\t\t\t\t\t\t[136] link 'Order #1008'\n\t\t\t\t\t\t\tStaticText 'Order #1008'\n\t\t\t\t[137] row ''\n\t\t\t\t\t[138] cell ''\n\t\t\t\t\t\t[139] link 'Order #1009'\n\t\t\t\t\t\t\tStaticText 'Order #1009'\n\t\t\t\t[140] row ''\n\t\t\t\t\t[141] cell ''\n\t\t\t\t\t\t[142] link 'Order #1010'\n\t\t\t\t\t\t\tStaticText 'Order #1010'\n\t\t\t\t[143] row ''\n\t\t\t\t\t[144] cell ''\n\t\t\t\t\t\t[145] link 'Order #1011'\n\t\t\t\t\t\t\tStaticText 'Order #1011'\n\t\t\t\t[146] row ''\n\t\t\t\t\t[147] cell ''\n\t\t\t\t\t\t[148] link 'Order #1012'\n\t\t\t\t\t\t\tStaticText 'Order #1012'\n\t\t\t\t[149] row ''\n\t\t\t\t\t[150] cell ''\n\t\t\t\t\t\t[151] link 'Order #1013'\n\t\t\t\t\t\t\tStaticText 'Order #1013'",
+     "action": "click('12')",
+     "state_index": 1,
+     "url": "http://shop.example.com/admin/orders?page=1"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Order 1004 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[300] heading 'Order 1004'\n\t\t\tStaticText 'Order 1004'\n\t\t[301] button 'Edit'\n\t\t[302] button 'Cancel order'\n\t\t[303] table 'Items'\n\t\t\t[304] row ''\n\t\t\t\t[305] cell ''\n\t\t\t\t\tStaticText 'Widget'",
+     "action": "click('121')",
+     "state_index": 2,
+     "url": "http://shop.example.com/admin/orders/1004"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1004 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "click('301')",
+     "state_index": 3,
+     "url": "http://shop.example.com/admin/orders/1004/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1004 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'\n\t\t\t[405] alert ''\n\t\t\t\tStaticText 'Error: required field missing'",
+     "action": "click('403')",
+     "state_index": 4,
+     "url": "http://shop.example.com/admin/orders/1004/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1004 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'\n\t\t\t[405] alert ''\n\t\t\t\tStaticText 'Error: required field missing'",
+     "action": "scroll(0, 400)",
+     "state_index": 5,
+     "url": "http://shop.example.com/admin/orders/1004/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Orders - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[100] table 'Orders'\n\t\t\t[101] rowgroup ''\n\t\t\t\t[110] row ''\n\t\t\t\t\t[111] cell ''\n\t\t\t\t\t\t[112] link 'Order #1000'\n\t\t\t\t\t\t\tStaticText 'Order #1000'\n\t\t\t\t[113] row ''\n\t\t\t\t\t[114] cell ''\n\t\t\t\t\t\t[115] link 'Order #1001'\n\t\t\t\t\t\t\tStaticText 'Order #1001'\n\t\t\t\t[116] row ''\n\t\t\t\t\t[117] cell ''\n\t\t\t\t\t\t[118] link 'Order #1002'\n\t\t\t\t\t\t\tStaticText 'Order #1002'\n\t\t\t\t[119] row ''\n\t\t\t\t\t[120] cell ''\n\t\t\t\t\t\t[121] link 'Order #1003'\n\t\t\t\t\t\t\tStaticText 'Order #1003'\n\t\t\t\t[122] row ''\n\t\t\t\t\t[123] cell ''\n\t\t\t\t\t\t[124] link 'Order #1004'\n\t\t\t\t\t\t\tStaticText 'Order #1004'\n\t\t\t\t[125] row ''\n\t\t\t\t\t[126] cell ''\n\t\t\t\t\t\t[127] link 'Order #1005'\n\t\t\t\t\t\t\tStaticText 'Order #1005'\n\t\t\t\t[128] row ''\n\t\t\t\t\t[129] cell ''\n\t\t\t\t\t\t[130] link 'Order #1006'\n\t\t\t\t\t\t\tStaticText 'Order #1006'\n\t\t\t\t[131] row ''\n\t\t\t\t\t[132] cell ''\n\t\t\t\t\t\t[133] link 'Order #1007'\n\t\t\t\t\t\t\tStaticText 'Order #1007'\n\t\t\t\t[134] row ''\n\t\t\t\t\t[135] cell ''\n\t\t\t\t\t\t[136] link 'Order #1008'\n\t\t\t\t\t\t\tStaticText 'Order #1008'\n\t\t\t\t[137] row ''\n\t\t\t\t\t[138] cell ''\n\t\t\t\t\t\t[139] link 'Order #1009'\n\t\t\t\t\t\t\tStaticText 'Order #1009'\n\t\t\t\t[140] row ''\n\t\t\t\t\t[141] cell ''\n\t\t\t\t\t\t[142] link 'Order #1010'\n\t\t\t\t\t\t\tStaticText 'Order #1010'\n\t\t\t\t[143] row ''\n\t\t\t\t\t[144] cell ''\n\t\t\t\t\t\t[145] link 'Order #1011'\n\t\t\t\t\t\t\tStaticText 'Order #1011'\n\t\t\t\t[146] row ''\n\t\t\t\t\t[147] cell ''\n\t\t\t\t\t\t[148] link 'Order #1012'\n\t\t\t\t\t\t\tStaticText 'Order #1012'\n\t\t\t\t[149] row ''\n\t\t\t\t\t[150] cell ''\n\t\t\t\t\t\t[151] link 'Order #1013'\n\t\t\t\t\t\t\tStaticText 'Order #1013'",
+     "action": "click('404')",
+     "state_index": 6,
+     "url": "http://shop.example.com/admin/orders?page=1"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Dashboard - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[50] heading 'Welcome back'\n\t\t\tStaticText 'Welcome back'",
+     "action": "goto('http://shop.example.com/admin/dashboard?session=ff00ee11dd')",
+     "state_index": 7,
+     "url": "http://shop.example.com/admin/dashboard?session=ff00ee11dd"
+    }
+   ]
+  },
+  {
+   "goal": "Add a gift note to order 1003",
+   "id": "t2",
+   "outcome": "success",
+   "states": [
+    {
+     "accessibility_tree": "RootWebArea 'Dashboard - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[50] heading 'Welcome back'\n\t\t\tStaticText 'Welcome back'",
+     "action": null,
+     "state_index": 0,
+     "url": "http://shop.example.com/admin/dashboard?session=ab12cd34ef"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Orders - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[100] table 'Orders'\n\t\t\t[101] rowgroup ''\n\t\t\t\t[110] row ''\n\t\t\t\t\t[111] cell ''\n\t\t\t\t\t\t[112] link 'Order #1000'\n\t\t\t\t\t\t\tStaticText 'Order #1000'\n\t\t\t\t[113] row ''\n\t\t\t\t\t[114] cell ''\n\t\t\t\t\t\t[115] link 'Order #1001'\n\t\t\t\t\t\t\tStaticText 'Order #1001'\n\t\t\t\t[116] row ''\n\t\t\t\t\t[117] cell ''\n\t\t\t\t\t\t[118] link 'Order #1002'\n\t\t\t\t\t\t\tStaticText 'Order #1002'\n\t\t\t\t[119] row ''\n\t\t\t\t\t[120] cell ''\n\t\t\t\t\t\t[121] link 'Order #1003'\n\t\t\t\t\t\t\tStaticText 'Order #1003'\n\t\t\t\t[122] row ''\n\t\t\t\t\t[123] cell ''\n\t\t\t\t\t\t[124] link 'Order #1004'\n\t\t\t\t\t\t\tStaticText 'Order #1004'\n\t\t\t\t[125] row ''\n\t\t\t\t\t[126] cell ''\n\t\t\t\t\t\t[127] link 'Order #1005'\n\t\t\t\t\t\t\tStaticText 'Order #1005'\n\t\t\t\t[128] row ''\n\t\t\t\t\t[129] cell ''\n\t\t\t\t\t\t[130] link 'Order #1006'\n\t\t\t\t\t\t\tStaticText 'Order #1006'\n\t\t\t\t[131] row ''\n\t\t\t\t\t[132] cell ''\n\t\t\t\t\t\t[133] link 'Order #1007'\n\t\t\t\t\t\t\tStaticText 'Order #1007'\n\t\t\t\t[134] row ''\n\t\t\t\t\t[135] cell ''\n\t\t\t\t\t\t[136] link 'Order #1008'\n\t\t\t\t\t\t\tStaticText 'Order #1008'\n\t\t\t\t[137] row ''\n\t\t\t\t\t[138] cell ''\n\t\t\t\t\t\t[139] link 'Order #1009'\n\t\t\t\t\t\t\tStaticText 'Order #1009'\n\t\t\t\t[140] row ''\n\t\t\t\t\t[141] cell ''\n\t\t\t\t\t\t[142] link 'Order #1010'\n\t\t\t\t\t\t\tStaticText 'Order #1010'\n\t\t\t\t[143] row ''\n\t\t\t\t\t[144] cell ''\n\t\t\t\t\t\t[145] link 'Order #1011'\n\t\t\t\t\t\t\tStaticText 'Order #1011'\n\t\t\t\t[146] row ''\n\t\t\t\t\t[147] cell ''\n\t\t\t\t\t\t[148] link 'Order #1012'\n\t\t\t\t\t\t\tStaticText 'Order #1012'\n\t\t\t\t[149] row ''\n\t\t\t\t\t[150] cell ''\n\t\t\t\t\t\t[151] link 'Order #1013'\n\t\t\t\t\t\t\tStaticText 'Order #1013'",
+     "action": "click('12')",
+     "state_index": 1,
+     "url": "http://shop.example.com/admin/orders?page=1"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[300] heading 'Order 1003'\n\t\t\tStaticText 'Order 1003'\n\t\t[301] button 'Edit'\n\t\t[302] button 'Cancel order'\n\t\t[303] table 'Items'\n\t\t\t[304] row ''\n\t\t\t\t[305] cell ''\n\t\t\t\t\tStaticText 'Widget'",
+     "action": "click('118')",
+     "state_index": 2,
+     "url": "http://shop.example.com/admin/orders/1003"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "click('301')",
+     "state_index": 3,
+     "url": "http://shop.example.com/admin/orders/1003/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'\n\t\t\t[405] alert ''\n\t\t\t\tStaticText 'Error: required field missing'",
+     "action": "click('403')",
+     "state_index": 4,
+     "url": "http://shop.example.com/admin/orders/1003/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'\n\t\t\t[405] alert ''\n\t\t\t\tStaticText 'Error: required field missing'",
+     "action": "press('401', 'Enter')",
+     "state_index": 5,
+     "url": "http://shop.example.com/admin/orders/1003/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1003 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='x' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "fill('401', 'x')",
+     "state_index": 6,
+     "url": "http://shop.example.com/admin/orders/1003/edit"
+    }
+   ]
+  },
+  {
+   "goal": "Add a gift note to order 1010",
+   "id": "t3",
+   "outcome": "success",
+   "states": [
+    {
+     "accessibility_tree": "RootWebArea 'Dashboard - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[50] heading 'Welcome back'\n\t\t\tStaticText 'Welcome back'",
+     "action": null,
+     "state_index": 0,
+     "url": "http://shop.example.com/admin/dashboard?session=ab12cd34ef"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Orders - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[100] table 'Orders'\n\t\t\t[101] rowgroup ''\n\t\t\t\t[110] row ''\n\t\t\t\t\t[111] cell ''\n\t\t\t\t\t\t[112] link 'Order #1000'\n\t\t\t\t\t\t\tStaticText 'Order #1000'\n\t\t\t\t[113] row ''\n\t\t\t\t\t[114] cell ''\n\t\t\t\t\t\t[115] link 'Order #1001'\n\t\t\t\t\t\t\tStaticText 'Order #1001'\n\t\t\t\t[116] row ''\n\t\t\t\t\t[117] cell ''\n\t\t\t\t\t\t[118] link 'Order #1002'\n\t\t\t\t\t\t\tStaticText 'Order #1002'\n\t\t\t\t[119] row ''\n\t\t\t\t\t[120] cell ''\n\t\t\t\t\t\t[121] link 'Order #1003'\n\t\t\t\t\t\t\tStaticText 'Order #1003'\n\t\t\t\t[122] row ''\n\t\t\t\t\t[123] cell ''\n\t\t\t\t\t\t[124] link 'Order #1004'\n\t\t\t\t\t\t\tStaticText 'Order #1004'\n\t\t\t\t[125] row ''\n\t\t\t\t\t[126] cell ''\n\t\t\t\t\t\t[127] link 'Order #1005'\n\t\t\t\t\t\t\tStaticText 'Order #1005'\n\t\t\t\t[128] row ''\n\t\t\t\t\t[129] cell ''\n\t\t\t\t\t\t[130] link 'Order #1006'\n\t\t\t\t\t\t\tStaticText 'Order #1006'\n\t\t\t\t[131] row ''\n\t\t\t\t\t[132] cell ''\n\t\t\t\t\t\t[133] link 'Order #1007'\n\t\t\t\t\t\t\tStaticText 'Order #1007'\n\t\t\t\t[134] row ''\n\t\t\t\t\t[135] cell ''\n\t\t\t\t\t\t[136] link 'Order #1008'\n\t\t\t\t\t\t\tStaticText 'Order #1008'\n\t\t\t\t[137] row ''\n\t\t\t\t\t[138] cell ''\n\t\t\t\t\t\t[139] link 'Order #1009'\n\t\t\t\t\t\t\tStaticText 'Order #1009'\n\t\t\t\t[140] row ''\n\t\t\t\t\t[141] cell ''\n\t\t\t\t\t\t[142] link 'Order #1010'\n\t\t\t\t\t\t\tStaticText 'Order #1010'\n\t\t\t\t[143] row ''\n\t\t\t\t\t[144] cell ''\n\t\t\t\t\t\t[145] link 'Order #1011'\n\t\t\t\t\t\t\tStaticText 'Order #1011'\n\t\t\t\t[146] row ''\n\t\t\t\t\t[147] cell ''\n\t\t\t\t\t\t[148] link 'Order #1012'\n\t\t\t\t\t\t\tStaticText 'Order #1012'\n\t\t\t\t[149] row ''\n\t\t\t\t\t[150] cell ''\n\t\t\t\t\t\t[151] link 'Order #1013'\n\t\t\t\t\t\t\tStaticText 'Order #1013'",
+     "action": "click('12')",
+     "state_index": 1,
+     "url": "http://shop.example.com/admin/orders?page=1"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Order 1010 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[300] heading 'Order 1010'\n\t\t\tStaticText 'Order 1010'\n\t\t[301] button 'Edit'\n\t\t[302] button 'Cancel order'\n\t\t[303] table 'Items'\n\t\t\t[304] row ''\n\t\t\t\t[305] cell ''\n\t\t\t\t\tStaticText 'Widget'",
+     "action": "click('118')",
+     "state_index": 2,
+     "url": "http://shop.example.com/admin/orders/1010"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1010 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "click('301')",
+     "state_index": 3,
+     "url": "http://shop.example.com/admin/orders/1010/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1010 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='gift for mum' required\n\t\t\t[402] checkbox 'Gift wrap'\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "fill('401', 'gift for mum')",
+     "state_index": 4,
+     "url": "http://shop.example.com/admin/orders/1010/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Edit order 1010 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[400] form 'Edit order'\n\t\t\t[401] textbox 'Customer\\'s note' value='gift for mum' required\n\t\t\t[402] checkbox 'Gift wrap' checked=true\n\t\t\t[403] button 'Save'\n\t\t\t[404] link 'Back to list'",
+     "action": "click('402')",
+     "state_index": 5,
+     "url": "http://shop.example.com/admin/orders/1010/edit"
+    },
+    {
+     "accessibility_tree": "RootWebArea 'Order 1010 - Admin'\n\t[1] navigation 'Main menu'\n\t\t[10] link 'Section 0 of the portal'\n\t\t\tStaticText 'Section 0 of the portal'\n\t\t[11] link 'Section 1 of the portal'\n\t\t\tStaticText 'Section 1 of the portal'\n\t\t[12] link 'Section 2 of the portal'\n\t\t\tStaticText 'Section 2 of the portal'\n\t\t[13] link 'Section 3 of the portal'\n\t\t\tStaticText 'Section 3 of the portal'\n\t\t[14] link 'Section 4 of the portal'\n\t\t\tStaticText 'Section 4 of the portal'\n\t\t[15] link 'Section 5 of the portal'\n\t\t\tStaticText 'Section 5 of the portal'\n\t\t[16] link 'Section 6 of the portal'\n\t\t\tStaticText 'Section 6 of the portal'\n\t\t[17] link 'Section 7 of the portal'\n\t\t\tStaticText 'Section 7 of the portal'\n\t\t[18] link 'Section 8 of the portal'\n\t\t\tStaticText 'Section 8 of the portal'\n\t\t[19] link 'Section 9 of the portal'\n\t\t\tStaticText 'Section 9 of the portal'\n\t\t[20] link 'Section 10 of the portal'\n\t\t\tStaticText 'Section 10 of the portal'\n\t\t[21] link 'Section 11 of the portal'\n\t\t\tStaticText 'Section 11 of the portal'\n\t\t[22] link 'Section 12 of the portal'\n\t\t\tStaticText 'Section 12 of the portal'\n\t\t[23] link 'Section 13 of the portal'\n\t\t\tStaticText 'Section 13 of the portal'\n\t\t[24] link 'Section 14 of the portal'\n\t\t\tStaticText 'Section 14 of the portal'\n\t\t[25] link 'Section 15 of the portal'\n\t\t\tStaticText 'Section 15 of the portal'\n\t\t[26] link 'Section 16 of the portal'\n\t\t\tStaticText 'Section 16 of the portal'\n\t\t[27] link 'Section 17 of the portal'\n\t\t\tStaticText 'Section 17 of the portal'\n\t\t[28] link 'Section 18 of the portal'\n\t\t\tStaticText 'Section 18 of the portal'\n\t\t[29] link 'Section 19 of the portal'\n\t\t\tStaticText 'Section 19 of the portal'\n\t\t[30] link 'Section 20 of the portal'\n\t\t\tStaticText 'Section 20 of the portal'\n\t\t[31] link 'Section 21 of the portal'\n\t\t\tStaticText 'Section 21 of the portal'\n\t\t[32] link 'Section 22 of the portal'\n\t\t\tStaticText 'Section 22 of the portal'\n\t\t[33] link 'Section 23 of the portal'\n\t\t\tStaticText 'Section 23 of the portal'\n\t[5] main ''\n\t\t[300] heading 'Order 1010'\n\t\t\tStaticText 'Order 1010'\n\t\t[301] button 'Edit'\n\t\t[302] button 'Cancel order'\n\t\t[303] table 'Items'\n\t\t\t[304] row ''\n\t\t\t\t[305] cell ''\n\t\t\t\t\tStaticText 'Widget'",
+     "action": "click('403')",
+     "state_index": 6,
+     "url": "http://shop.example.com/admin/orders/1010"
+    }
+   ]
+  }
+ ],
+ "units": [
+  {
+   "breadcrumb": "RootWebArea 'Dashboard - Admin' > navigation 'Main menu'",
+   "episodes": 4,
+   "occurrences": 29,
+   "text": "link 'Section 0 of the portal'\nlink 'Section 1 of the portal'\nlink 'Section 2 of the portal'\nlink 'Section 3 of the portal'\nlink 'Section 4 of the portal'\nlink 'Section 5 of the portal'\nlink 'Section 6 of the portal'\nlink 'Section 7 of the portal'\nlink 'Section 8 of the portal'\nlink 'Section 9 of the portal'\nlink 'Section 10 of the portal'\nlink 'Section 11 of the portal'\nlink 'Section 12 of the portal'\nlink 'Section 13 of the portal'\nlink 'Section 14 of the portal'\nlink 'Section 15 of the portal'\nlink 'Section 16 of the portal'\nlink 'Section 17 of the portal'\nlink 'Section 18 of the portal'\nlink 'Section 19 of the portal'\nlink 'Section 20 of the portal'",
+   "values": {}
+  },
+  {
+   "breadcrumb": "RootWebArea 'Dashboard - Admin' > navigation 'Main menu'",
+   "episodes": 4,
+   "occurrences": 29,
+   "text": "link 'Section 21 of the portal'\nlink 'Section 22 of the portal'\nlink 'Section 23 of the portal'",
+   "values": {}
+  },
+  {
+   "breadcrumb": "RootWebArea 'Edit order 1003 - Admin'",
+   "episodes": 4,
+   "occurrences": 9,
+   "text": "main\n form 'Edit order'\n  textbox 'Customer's note'\n  checkbox 'Gift wrap'\n  button 'Save'\n  link 'Back to list'",
+   "values": {
+    "checkbox 'Gift wrap' checked=true": 1,
+    "textbox 'Customer's note' value='' required": 1,
+    "textbox 'Customer's note' value='gift for mum' required": 2,
+    "textbox 'Customer's note' value='x' required": 1
+   }
+  },
+  {
+   "breadcrumb": "RootWebArea 'Edit order 1004 - Admin'",
+   "episodes": 2,
+   "occurrences": 4,
+   "text": "main\n form 'Edit order'\n  textbox 'Customer's note'\n  checkbox 'Gift wrap'\n  button 'Save'\n  link 'Back to list'\n  alert\n   \"Error: required field missing\"",
+   "values": {
+    "textbox 'Customer's note' value='' required": 1
+   }
+  },
+  {
+   "breadcrumb": "RootWebArea 'Order 1003 - Admin'",
+   "episodes": 2,
+   "occurrences": 3,
+   "text": "main\n heading 'Order 1003'\n button 'Edit'\n button 'Cancel order'\n table 'Items'\n  row\n   cell\n    \"Widget\"",
+   "values": {}
+  },
+  {
+   "breadcrumb": "RootWebArea 'Order 1004 - Admin'",
+   "episodes": 1,
+   "occurrences": 1,
+   "text": "main\n heading 'Order 1004'\n button 'Edit'\n button 'Cancel order'\n table 'Items'\n  row\n   cell\n    \"Widget\"",
+   "values": {}
+  },
+  {
+   "breadcrumb": "RootWebArea 'Order 1010 - Admin'",
+   "episodes": 1,
+   "occurrences": 2,
+   "text": "main\n heading 'Order 1010'\n button 'Edit'\n button 'Cancel order'\n table 'Items'\n  row\n   cell\n    \"Widget\"",
+   "values": {}
+  },
+  {
+   "breadcrumb": "RootWebArea 'Dashboard - Admin'",
+   "episodes": 4,
+   "occurrences": 5,
+   "text": "main\n heading 'Welcome back'",
+   "values": {}
+  },
+  {
+   "breadcrumb": "RootWebArea 'Orders - Admin'",
+   "episodes": 4,
+   "occurrences": 5,
+   "text": "main\n table 'Orders'\n  row\n   cell\n    link 'Order #1000'\n  row\n   cell\n    link 'Order #1001'\n  row\n   cell\n    link 'Order #1002'\n  row\n   cell\n    link 'Order #1003'\n  row\n   cell\n    link 'Order #1004'\n  row\n   cell\n    link 'Order #1005'\n  row\n   cell\n    link 'Order #1006'\n  row\n   cell\n    link 'Order #1007'\n  row\n   cell\n    link 'Order #1008'\n  row\n   cell\n    link 'Order #1009'\n  row\n   cell\n    link 'Order #1010'\n  row\n   cell\n    link 'Order #1011'\n  row\n   cell\n    link 'Order #1012'\n  row\n   cell\n    link 'Order #1013'",
+   "values": {}
+  }
+ ]
+}

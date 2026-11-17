@@ -27,8 +27,10 @@ pub(crate) mod durable_file;
 #[cfg(feature = "local-embed")]
 pub mod embed;
 pub mod encoding;
+pub mod experience;
 #[cfg(feature = "experimental")]
 pub mod experimental;
+pub mod failpoint;
 pub(crate) mod schema;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod vector_records;
@@ -82,6 +84,7 @@ pub(crate) mod rules;
 pub(crate) mod security;
 #[cfg(not(target_arch = "wasm32"))]
 pub use index::sparse_impact;
+pub use index::sparse_store;
 #[cfg(feature = "security")]
 pub use security::scrub_stack;
 pub(crate) mod os_memory;
@@ -110,6 +113,8 @@ pub use engine::{
     HistoryBounds, HistoryError, HistoryOptions, HistoryRevision, HistoryView, JournalPosition,
     RevisionKind, TimeResolution,
 };
+#[cfg(not(target_arch = "wasm32"))]
+pub use engine::{PurgeStatus, PurgeTicket};
 pub use phase_hvec::PhaseHVec;
 pub use phase_resonator::{
     phase_resonator_factorize, FactorResult, PhaseResonator, ResonatorConfig,

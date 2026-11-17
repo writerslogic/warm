@@ -1,0 +1,13 @@
+{
+  "written": "2026-11-15, before any hybrid run on any dataset",
+  "development_sets": ["fiqa-train (1000-query seeded sample of the 5500 train queries)", "nfcorpus-train (1000-query seeded sample)", "memory-selection (100 of the 400 held-out LongMemEval questions, seed 20261114)"],
+  "metric": "nDCG@10 macro-averaged over the three development sets; recall@100 recorded",
+  "candidates": {
+    "blend_minmax": "weights (1 - a, a) on min-max normalised lexical and cosine scores of each list's top L, a in 0.1..0.9, L in 100, 300, 1000 (the engine's current default is a = 0.5, L = 100)",
+    "convex_tm2": "weights (1 - a, a) on scores divided by the list maximum (Bruch et al. TM2 with theoretical minimum 0 for BM25 and for the cosine floor the engine applies), same a and L",
+    "rrf": "weights 1:1, constant k in 1, 5, 10, 20, 40, 60, 100, 200, L in 100, 1000"
+  },
+  "adopt_rule": "A candidate replaces the engine default only if its macro nDCG@10 exceeds the current default's by at least 0.003 and no development set falls by more than 0.005 below the current default. Among eligible candidates the highest macro nDCG@10 wins; otherwise the default stays.",
+  "comparators": "each comparator's RRF constant is the one maximising macro nDCG@10 of its own lexical and vector top-100 lists on the same sets, over 1, 2, 5, 10, 20, 30, 40, 60, 100, 200; ties go to 60",
+  "freeze": "hybrid_fusion.py writes fusion_frozen.json once; it is committed before hybrid_run.py eval runs. Evaluation sets are read once."
+}

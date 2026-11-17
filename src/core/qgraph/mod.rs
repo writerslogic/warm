@@ -39,7 +39,7 @@ mod vnni;
 #[cfg(not(target_arch = "wasm32"))]
 pub use repair::{RepairParams, RepairStats};
 pub use update::{
-    Consolidation, ConsolidationMode, ConsolidationPolicy, UpdatableVGraph, UpdateError,
+    Consolidation, ConsolidationMode, ConsolidationPolicy, RowStore, UpdatableVGraph, UpdateError,
 };
 
 #[cfg(feature = "experimental")]
@@ -71,13 +71,17 @@ use kernels::{
 #[cfg(feature = "experimental")]
 pub use vertex::QueryProfile;
 pub use vertex::{
-    huge_page_status, HugePageStatus, Residency, SearchKnobs, VGraph, VGraphMemoryBreakdown,
+    huge_page_status, Allow, HugePageStatus, Residency, SearchKnobs, VGraph, VGraphMemoryBreakdown,
     VMetric, VSearchParams, VSearcher,
 };
 
 /// Default out-degree of every vertex; one batch of edge codes per expansion.
 pub const DEFAULT_DEGREE: usize = 32;
 const NONE: u32 = u32::MAX;
+/// Smallest batch whose points are run in locality order, and the number of cells that order
+/// groups the rows into (a quarter of the square root of the row count, within the bounds).
+const LOCALITY_MIN_BATCH: usize = 1024;
+const LOCALITY_CELLS: std::ops::RangeInclusive<usize> = 64..=256;
 
 /// Every failure of a build or search names its cause as an invalid parameter.
 fn invalid(details: String) -> WarmError {
@@ -96,6 +100,76 @@ const BUILD_CODES_MIN_DIM: usize = 128;
 /// 2.7x on glove-100, and searches needed within 1.1% of the estimates per query for recall
 /// 0.90 and 0.95 and 1.4-1.7% more for 0.99 (benchmarks/results/qgraph_build_schedule_wl02_v1.json).
 const FIRST_PASS_EF: usize = 200;
+
+/// Candidate expansions of the standard profile's construction search. The search stops
+/// expanding once the best unexpanded candidate is farther than `BOUND_SLACK` times the
+/// `BOUND_RANK`-th best candidate in the pool (squared distances): the pool beyond that rank is
+/// kept to fill the lists, not to find the neighbours. Measured on glove-100 (distances there
+/// concentrate, so the unbounded search expands most of a 500-entry pool) and SIFT-1M.
+const BOUND_RANK: usize = 64;
+const BOUND_SLACK: f32 = 1.02;
+
+/// Insertion passes a build runs. Every profile searches the same way and prunes the same way;
+/// they differ in how many passes run and how wide the construction search is. Measured on
+/// SIFT-1M at 8 threads (benchmarks/results/qgraph_build_profiles_gcp_v1.json).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum BuildProfile {
+    /// Two passes at `build_ef` capped at 100 and then at `build_ef`, with a bounded
+    /// construction search (see `BOUND_RANK`).
+    #[default]
+    Standard,
+    /// Two passes: the first at `build_ef` capped at 200, the second at `build_ef`, each
+    /// expanding its whole pool. The slowest build and the highest recall; the graphs of
+    /// earlier releases, byte for byte.
+    MaxRecall,
+    /// Two passes at `build_ef` capped at 100 and 300.
+    High,
+    /// Two passes at `build_ef` capped at 100 and 200.
+    Balanced,
+    /// One pass at `build_ef` capped at 100.
+    Fast,
+}
+
+impl BuildProfile {
+    /// The (candidate list size, alpha) of each insertion pass for a build with these parameters.
+    fn passes(self, params: &BuildParams) -> Vec<(usize, f32)> {
+        let cap = |ef: usize| params.build_ef.min(ef);
+        match self {
+            Self::Standard => vec![(cap(100), 1.0), (params.build_ef, params.alpha)],
+            Self::MaxRecall => vec![(cap(FIRST_PASS_EF), 1.0), (params.build_ef, params.alpha)],
+            Self::High => vec![(cap(100), 1.0), (cap(300), params.alpha)],
+            Self::Balanced => vec![(cap(100), 1.0), (cap(200), params.alpha)],
+            Self::Fast => vec![(cap(100), params.alpha)],
+        }
+    }
+
+    /// `(rank, slack)` of the construction search's expansion bound, if the profile has one.
+    fn bound(self) -> Option<(usize, f32)> {
+        matches!(self, Self::Standard).then_some((BOUND_RANK, BOUND_SLACK))
+    }
+
+    /// The profile named `name` (`standard`, `max-recall`, `high`, `balanced`, `fast`), if any.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Some(match name {
+            "standard" => Self::Standard,
+            "max-recall" => Self::MaxRecall,
+            "high" => Self::High,
+            "balanced" => Self::Balanced,
+            "fast" => Self::Fast,
+            _ => return None,
+        })
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Standard => "standard",
+            Self::MaxRecall => "max-recall",
+            Self::High => "high",
+            Self::Balanced => "balanced",
+            Self::Fast => "fast",
+        }
+    }
+}
 
 /// Distance a graph is built and searched for.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -139,6 +213,9 @@ pub struct BuildParams {
     /// set is re-scored exactly before the prune, which stays exact. The cache header does
     /// not record this yet: build with a fresh cache path when it changes.
     pub quantized_search: bool,
+    /// Insertion passes of the build; the default is the schedule of earlier releases. A graph
+    /// cache header does not record it: build with a fresh cache path when it changes.
+    pub profile: BuildProfile,
 }
 
 impl Default for BuildParams {
@@ -151,6 +228,7 @@ impl Default for BuildParams {
             code_bits: 0,
             seed: 0x5EED,
             quantized_search: false,
+            profile: BuildProfile::default(),
         }
     }
 }
@@ -392,6 +470,9 @@ struct Rows<'a> {
     /// or, with `quantized`, the estimates that order the construction search's pool.
     codes: Option<&'a BuildCodes>,
     quantized: bool,
+    /// `(rank, slack)`: [`Rows::greedy_into`] stops expanding at a candidate farther than
+    /// `slack` times the `rank`-th best of the pool.
+    bound: Option<(usize, f32)>,
 }
 
 /// One 8-bit code per row (`x = scale q + e` with `|e| <= err`), giving bounds on the
@@ -695,6 +776,11 @@ impl Rows<'_> {
         expanded.clear();
         let mut cur = 0;
         while cur < pool.len() {
+            if let Some((rank, slack)) = self.bound {
+                if pool.len() >= rank && pool[cur].dist > slack * pool[rank - 1].dist {
+                    break;
+                }
+            }
             pool[cur].done = true;
             let v = pool[cur].id;
             expanded.push((pool[cur].dist, v));
@@ -891,6 +977,55 @@ impl Rows<'_> {
         }
     }
 
+    /// The position of every row in an order that keeps near rows together: the rows are
+    /// grouped by their nearest of `cells` sampled rows, and the groups follow a nearest-
+    /// neighbour tour of the samples. Empty when the build is too small to gain from it.
+    fn locality_rank(&self, order: &[u32]) -> Vec<u32> {
+        let n = order.len();
+        if n < 4 * LOCALITY_MIN_BATCH {
+            return Vec::new();
+        }
+        let cells =
+            ((n as f64).sqrt() as usize / 4).clamp(*LOCALITY_CELLS.start(), *LOCALITY_CELLS.end());
+        let centers = &order[..cells];
+        let cell_of: Vec<u32> = (0..n as u32)
+            .into_par_iter()
+            .map_init(Vec::new, |d, p| {
+                self.d2_many(p, centers, d);
+                let mut best = 0;
+                for (i, &x) in d.iter().enumerate() {
+                    if x < d[best] {
+                        best = i;
+                    }
+                }
+                best as u32
+            })
+            .collect();
+        // Nearest-neighbour tour of the cell centres.
+        let mut tour = Vec::with_capacity(cells);
+        let mut left: Vec<u32> = (1..cells as u32).collect();
+        let mut at = 0u32;
+        tour.push(0u32);
+        let mut d = Vec::new();
+        while !left.is_empty() {
+            let ids: Vec<u32> = left.iter().map(|&c| centers[c as usize]).collect();
+            self.d2_many(centers[at as usize], &ids, &mut d);
+            let mut best = 0;
+            for (i, &x) in d.iter().enumerate() {
+                if x < d[best] {
+                    best = i;
+                }
+            }
+            at = left.swap_remove(best);
+            tour.push(at);
+        }
+        let mut place = vec![0u32; cells];
+        for (i, &c) in tour.iter().enumerate() {
+            place[c as usize] = i as u32;
+        }
+        cell_of.iter().map(|&c| place[c as usize]).collect()
+    }
+
     /// One insertion pass in batches of doubling size; each batch searches a frozen graph, so
     /// the result does not depend on thread scheduling.
     #[allow(clippy::too_many_arguments)]
@@ -902,6 +1037,7 @@ impl Rows<'_> {
         l: usize,
         alpha: f32,
         r: usize,
+        rank: &[u32],
     ) {
         let n = graph.len();
         // Length of the prefix of each list that is an unchanged output of `prune` in this pass.
@@ -911,7 +1047,17 @@ impl Rows<'_> {
         let (mut start, mut size) = (0, 1);
         while start < order.len() {
             let end = (start + size).min(order.len());
-            let batch = &order[start..end];
+            // Each batch searches a frozen graph and its lists are merged in sorted order, so
+            // the order the points run in cannot change the result. Running neighbours of the
+            // space together keeps their rows and lists in the cache.
+            let mut local;
+            let batch = if !rank.is_empty() && end - start >= LOCALITY_MIN_BATCH {
+                local = order[start..end].to_vec();
+                local.sort_unstable_by_key(|&p| rank[p as usize]);
+                &local[..]
+            } else {
+                &order[start..end]
+            };
             let g: &Adjacency = graph;
             outs.par_set(batch.len(), |i, out| {
                 let p = batch[i];
@@ -1424,6 +1570,7 @@ impl Graph {
             norms: norms_opt(&self.norms),
             codes: None,
             quantized: false,
+            bound: None,
         }
     }
 
@@ -1454,6 +1601,15 @@ impl Graph {
             }
         }
         h.finish()
+    }
+
+    /// Frees the topology (lists, upper layers) once the graph is encoded, keeping the rows
+    /// and build parameters that a persisted base still needs. The graph can no longer be
+    /// searched, saved or repaired.
+    pub fn release_structure(&mut self) {
+        self.adj = Adjacency::default();
+        self.upper_ids = Vec::new();
+        self.layers = Vec::new();
     }
 
     /// Build over `data` (row-major, `dim` floats per vector). Angular rows are normalized;
@@ -1560,6 +1716,7 @@ fn build_structure(
         norms: norms_opt(norms),
         codes: codes.as_ref(),
         quantized: params.quantized_search,
+        bound: params.profile.bound(),
     };
 
     let entry = medoid(&rows, n, metric);
@@ -1575,11 +1732,13 @@ fn build_structure(
     let tup = prof::start();
     let layers = upper_layers(&rows, &order, params);
     prof::report("upper", tup);
+    let tloc = prof::start();
+    let rank = rows.locality_rank(&order);
+    prof::report("locality", tloc);
     let mut graph = Adjacency::new(n, r);
-    let first_ef = params.build_ef.min(FIRST_PASS_EF);
-    for (l, alpha) in [(first_ef, 1.0), (params.build_ef, params.alpha)] {
+    for (l, alpha) in params.profile.passes(params) {
         let t = prof::start();
-        rows.insert_pass(&mut graph, &order, entry, l, alpha, r);
+        rows.insert_pass(&mut graph, &order, entry, l, alpha, r, &rank);
         prof::report("pass", t);
     }
     let t = prof::start();
@@ -1677,6 +1836,7 @@ fn upper_layers(rows: &Rows<'_>, order: &[u32], params: &BuildParams) -> Vec<Vec
             norms: norms_opt(&sub_norms),
             codes: sub_codes.as_ref(),
             quantized: params.quantized_search,
+            bound: None,
         };
         let local: Vec<u32> = (0..size as u32).collect();
         let mut g = Adjacency::new(size, UPPER_DEGREE);
@@ -1687,6 +1847,7 @@ fn upper_layers(rows: &Rows<'_>, order: &[u32], params: &BuildParams) -> Vec<Vec
             params.build_ef,
             params.alpha,
             UPPER_DEGREE,
+            &[],
         );
         layers.push(g.to_lists());
         size /= LAYER_RATIO;
@@ -2268,6 +2429,70 @@ mod tests {
         assert!(recall >= 0.9, "recall {recall}");
     }
 
+    /// Each profile builds a deterministic graph that still finds the neighbours, the default
+    /// is the `Standard` schedule, and every other profile changes the graph.
+    #[test]
+    fn build_profiles_are_deterministic_and_searchable() {
+        let d = 24;
+        let data = clustered(1500, d, 1);
+        let queries = clustered(100, d, 2);
+        let base = BuildParams {
+            build_ef: 400,
+            ..BuildParams::default()
+        };
+        assert_eq!(base.profile, BuildProfile::Standard);
+        let default_hash = Graph::build(&data, d, &base)
+            .expect("build")
+            .structure_hash();
+        let mut seen = Vec::new();
+        for profile in [
+            BuildProfile::Standard,
+            BuildProfile::MaxRecall,
+            BuildProfile::High,
+            BuildProfile::Balanced,
+            BuildProfile::Fast,
+        ] {
+            assert_eq!(BuildProfile::from_name(profile.name()), Some(profile));
+            let params = BuildParams {
+                profile,
+                ..base.clone()
+            };
+            let hash = Graph::build(&data, d, &params)
+                .expect("build")
+                .structure_hash();
+            assert_eq!(
+                hash,
+                Graph::build(&data, d, &params)
+                    .expect("build")
+                    .structure_hash()
+            );
+            if profile == BuildProfile::Standard {
+                assert_eq!(hash, default_hash);
+            }
+            assert!(
+                !seen.contains(&hash),
+                "{profile:?} must build its own graph"
+            );
+            seen.push(hash);
+            let index = QGraph::build(&data, d, &params).expect("build");
+            let mut s = index.searcher();
+            let mut out = Vec::new();
+            let mut hits = 0;
+            for q in queries.chunks_exact(d) {
+                let truth = brute_force(&data, d, q, 10);
+                let p = SearchParams {
+                    ef: 64,
+                    max_exact: 0,
+                };
+                s.search(q, 10, p, &mut out);
+                hits += out.iter().filter(|x| truth.contains(x)).count();
+            }
+            let recall = hits as f64 / 1000.0;
+            assert!(recall >= 0.85, "{profile:?} recall {recall}");
+        }
+        assert_eq!(BuildProfile::from_name("nope"), None);
+    }
+
     /// The reverse-edge prune that skips re-checks inside a closed prefix must equal a full
     /// prune of the merged list.
     #[test]
@@ -2283,6 +2508,7 @@ mod tests {
             dim: d,
             norms: None,
             quantized: false,
+            bound: None,
             codes: None,
         };
         let mut rng = SplitMix(11);
@@ -2345,11 +2571,12 @@ mod tests {
                         norms: norms_opt(&norms),
                         codes,
                         quantized: false,
+                        bound: None,
                     };
                     let order: Vec<u32> = (0..n as u32).rev().collect();
                     let mut graph = Adjacency::new(n, 12);
                     for alpha in [1.0, 1.2] {
-                        rows.insert_pass(&mut graph, &order, 0, 40, alpha, 12);
+                        rows.insert_pass(&mut graph, &order, 0, 40, alpha, 12, &[]);
                     }
                     rows.fill(&mut graph, 12);
                     graph
@@ -2357,6 +2584,36 @@ mod tests {
                 assert_eq!(build(Some(&codes)), build(None), "{metric:?}, d = {d}");
             }
         }
+    }
+
+    #[test]
+    fn locality_order_leaves_the_graph_unchanged() {
+        let (n, d) = (6000, 16);
+        let mut data = clustered(n, d, 3);
+        let norms = prepare_rows(&mut data, d, Metric::Euclidean);
+        let rows = Rows {
+            data: &data,
+            dim: d,
+            norms: norms_opt(&norms),
+            codes: None,
+            quantized: false,
+            bound: None,
+        };
+        let order: Vec<u32> = (0..n as u32).rev().collect();
+        let rank = rows.locality_rank(&order);
+        assert_eq!(
+            rank.len(),
+            n,
+            "a build this size must take the locality order"
+        );
+        let build = |rank: &[u32]| {
+            let mut graph = Adjacency::new(n, 12);
+            for alpha in [1.0, 1.2] {
+                rows.insert_pass(&mut graph, &order, 0, 40, alpha, 12, rank);
+            }
+            graph
+        };
+        assert_eq!(build(&rank), build(&[]));
     }
 
     #[test]
@@ -2400,6 +2657,7 @@ mod tests {
                 degree: 16,
                 build_ef: 48,
                 seed: 7,
+                profile: BuildProfile::MaxRecall,
                 ..BuildParams::default()
             };
             let g = Graph::build(&data, d, &params).expect("build");

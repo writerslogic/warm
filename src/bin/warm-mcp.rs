@@ -5,6 +5,10 @@
 //! Tools: remember, recall, search, get, forget, list, stats, export. Resources expose stored
 //! memories; prompts wrap recall and review. Transports: stdio (default) and streamable HTTP.
 
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
+
 #[path = "warm-mcp/config.rs"]
 mod config;
 #[path = "warm-mcp/http.rs"]

@@ -21,6 +21,7 @@ search:
 ## Build and run
 
 ```sh
+# or install a prebuilt binary: curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
 cargo build --release --features server --bin warm-server
 
 # One key valid for every tenant (the original setup):
@@ -41,6 +42,8 @@ from writerslogic_warm_sdk import WarmClient
 client = WarmClient(url="http://127.0.0.1:8080", api_key="<token>", tenant_id="acme")
 ```
 
+The release binaries are built with `--features server,mimalloc`: the server installs `writerslogic_warm::allocator::Tuned`, mimalloc with arenas committed on demand and an immediate purge. A build without the feature (`cargo build --features server`) uses the system allocator; results are identical, ingest is slower by about the allocator's share (roughly 15% at 250k documents) and the peak resident size is the same. `MIMALLOC_ARENA_EAGER_COMMIT` and `MIMALLOC_PURGE_DELAY` override the options.
+
 ## API keys
 
 Every request carries an API key. `WARM_API_KEY` sets one key valid for every tenant; `--keys-file` loads per-tenant API keys with read, write or admin scopes, created with `warm-server keygen`. Key format, scopes and rotation are in [server/auth.md](server/auth.md).
@@ -54,11 +57,12 @@ The contract is [`server/openapi.json`](server/openapi.json). Every operation li
 | `POST /api/v1/documents` one document | write | 200 `{"added": 1}` |
 | `POST /api/v1/documents/batch` 1..=`max-batch` documents, one atomic commit | write | 200 `{"added": n}` |
 | `POST /api/v1/documents/stream` NDJSON, committed every `--stream-batch` lines | write | 200 `{"added","rejected","errors":[{"line","message"}],"errors_truncated"}` |
-| `DELETE /api/v1/documents/{id}[?purge=true]` (percent-encoded; `purge` also rewrites the journal and scrubs the deleted data) | write | 200 `{"deleted": true}` |
+| `DELETE /api/v1/documents/{id}[?purge=false]` (percent-encoded; by default the delete is recorded as a durable pending purge and a later scrubbing compaction erases the data; `synchronous=true` scrubs before the response, `purge=false` opts out) | write | 200 `{"deleted": true}` |
 | `GET /api/v1/documents?limit&after` ids and metadata, id cursor | read | 200 `{"documents":[{"id","metadata"}],"next_cursor","count"}` |
 | `GET /api/v1/documents/{id}/chunks/{index}` retained chunk, zero-based index | read | 200 `{"revision","document","index","id","startByte","endByte","text"}`; 404 if absent |
 | `GET /api/v1/stats` | read | 200 `{"tenant","documents","vectors","documentIndexTrained","usedBytes","capacityBytes"}` |
 | `POST /api/v1/query` | read | 200 `{"matches":[{"id","text","metadata","score"}]}` best first |
+| `POST /api/v1/query/vector` | read | 200 `{"matches":[{"id","score"}]}` best first; body is the query as raw little-endian `f32` |
 | `POST /api/v1/search` | read | 200 `{"hits":[{"id","score"}]}` best first (BM25; model stages when configured) |
 | `POST /api/v1/index/maintain` | write | 200 `{"documentIndexTrained": bool}` |
 | `POST /api/v1/memory/{remember,recall,explain,forget,get,history,applyForgetting,consolidate}` | write / read | the memory API, `docs/memory-api` |
@@ -97,6 +101,8 @@ If-None-Match for the complete returned representation.
 
 `POST /api/v1/query` takes `{"query_vector": [...], "top_k"?: 1..=max-top-k (default 3), "filter"?: object}`. `filter` keeps documents whose metadata contains every filter key with an equal JSON value; it is applied before ranking, so it never reduces the number of matches below `top_k` when enough documents match. `score` is the exact cosine similarity between the query and the stored embedding.
 
+`POST /api/v1/query/vector` takes the query vector as the raw request body (`--input-dim` little-endian `f32` values, `Content-Type: application/octet-stream`) and the options in the query string: `top_k` (default 10), `ef`, `index` (`auto`, `exact`, `graph`, as for `query`), and `id_gte` / `id_lt`, which keep documents whose id is an integer in that range. A body whose length differs from `--input-dim * 4` is refused with 422 before it is read, and one holding a non-finite or all-zero vector after it. The reply carries ids and cosine scores only (no stored text or metadata) and skips the per-hit document read of `query`. A range filter is applied inside the graph search: a selective range is scored directly from the index's codes, a permissive one by a wider search that keeps the allowed hits; it needs the vector graph (run `index/maintain` first), otherwise 409 `index_unavailable`.
+
 `POST /api/v1/search` takes `{"query": "...", "top_k"?: 1..=max-top-k (default 10), "include"?: ["text", "metadata"]}` and ranks the tenant's documents, memory facts included, by BM25 (through the on-device model stages instead when the server has them), one hit per document. Hits carry only `id` and `score` unless `include` names stored text or metadata; it applies no memory semantics (validity time, supersession), for which use `memory/recall`.
 
 Batch totals are limited to 8 MiB of ids and text, 8 MiB of metadata and 1,048,576 embedding values; the native prepared transaction is limited to 32 MiB. All documents are validated before one atomic commit; repeated ids keep their last occurrence while `added` stays the incoming count.
@@ -122,7 +128,7 @@ Stores open on first use. Simultaneous first requests share one initialization; 
 
 ## Limits and backpressure
 
-- `--max-concurrent-work` bounds admitted requests reading bodies or running engine work. When full, a request is answered 503 `server_busy` with `Retry-After` immediately, or, with `--max-queue` above zero, waits in a bounded queue for up to `--queue-timeout-ms` first. `warm_queue_depth` and `warm_work_slots_in_use` expose the saturation.
+- `--max-concurrent-work` bounds admitted requests reading bodies or running engine work. When full, a request is answered 503 `server_busy` with `Retry-After` immediately, or, with `--max-queue` above zero, waits in a bounded queue for up to `--queue-timeout-ms` first. The defaults are one slot per available core (at least 4), a queue of 4096 and a 10 s wait, so a closed-loop client count up to the queue size is queued, not shed; `--max-queue 0` restores immediate shedding. `warm_queue_depth` and `warm_work_slots_in_use` expose the saturation.
 - `--rate-limit-rps`/`--rate-limit-burst` is a per-tenant token bucket (429 `rate_limited`, `Retry-After`). `--max-documents-per-tenant` is a per-tenant document quota (429 `quota_exceeded`). Both are off by default.
 - `--max-connections` caps simultaneous connections; `--header-read-timeout-seconds` drops clients that dribble headers; `--body-timeout-seconds` bounds body reads. A disconnected client releases body admission immediately, but a running blocking operation keeps its work slot until it finishes.
 - Parsing, validation, store initialization, ingest, search and maintenance run on blocking workers; the async runtime only moves bytes.

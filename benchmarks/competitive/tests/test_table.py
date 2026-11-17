@@ -59,14 +59,34 @@ def test_every_cell_recomputes_from_its_results_file():
     cells = json.loads(table.CELLS.read_text())
     markdown = table.COMPARISON.read_text()
     assert cells, "empty cell index"
-    by_file = {}
+    by_file, fresh_views = {}, {}
     for cell in cells:
         by_file.setdefault(cell["file"], []).append(cell)
     for file, group in by_file.items():
         path = ROOT / file
-        data = json.loads(path.read_text())
-        metrics, _, _ = table.metrics_for(path, data)
+        whole = json.loads(path.read_text())
+        # A file written under two text timing contracts is read as one view per contract; a cell belongs to the view
+        # named in its section title. Both views share the file's Bonferroni family.
+        views = [d for _, d in table.contract_views(path, whole)]
+        siblings = [d for d in views if d.get("contract")]
         for cell in group:
+            data = next((d for d in views if not d.get("contract") or f"{d['contract']} contract" in cell["section"]), None)
+            assert data is not None, cell["section"]
+            if (file, data.get("contract")) not in fresh_views:
+                metrics, _, _ = table.metrics_for(path, data, siblings)
+                entries, _ = table.per_build_for(path, data)
+                fresh_views[(file, data.get("contract"))] = (metrics, {(e["system"], e["build"], e["metric"]): e for e in entries})
+            metrics, by_build = fresh_views[(file, data.get("contract"))]
+            if cell.get("per_build"):
+                system, build = cell["per_build"]
+                entry = by_build[(system, build, cell["metric"])]
+                if cell.get("derived"):
+                    assert cell["verdict"] == entry["verdict"] and cell["text"] == ("n/m" if entry["adv"] is None else table.fx(entry["adv"]["factor"]))
+                else:
+                    fresh = entry["mine"] if cell["system"] == table.reference(data) else entry["theirs"]
+                    assert fresh["value"] == cell["value"] and fresh["source"] == cell["source"]
+                    assert resolve(data, cell["source"].split("#", 1)[1]), f"{cell['source']} resolves to nothing"
+                continue
             if cell.get("derived"):
                 mine, other = metrics[cell["metric"]][cell["warm"]], metrics[cell["metric"]][cell["other"]]
                 adv = table.advantage(cell["metric"], mine, other)
@@ -263,3 +283,27 @@ def test_audit_text_uncertainty_counts_process_rounds_not_passes():
     cells = analyze.text_metrics("x", data)
     assert cells["qps"]["warm"]["n"] == 3
     assert cells["p99_latency"]["warm"]["n"] == 3
+
+
+def test_quality_verdict_is_a_paired_comparison_of_the_same_queries():
+    """A system 0.005 ahead of another on every query is a WIN under the paired interval; the unpaired intervals of
+    the two means overlap and would call it a TIE."""
+    import numpy as np
+    base = list(np.random.default_rng(5).uniform(0, 1, 300))
+    ahead = [v + 0.005 for v in base]
+    cells = {name: analyze.cell(float(np.mean(per)), common_ci(per), 300, "x", "nDCG") | {"per_query": per, "level": 0.95}
+             for name, per in (("ahead", ahead), ("base", base))}
+    adv = table.advantage("ndcg@10", cells["ahead"], cells["base"])
+    assert table.verdict(adv) == "WIN"
+    assert adv["paired"]["difference"] == pytest.approx(0.005)
+    assert adv["paired"]["ci"][0] > 0
+    unpaired = {k: {key: v for key, v in c.items() if key != "per_query"} for k, c in cells.items()}
+    assert table.verdict(table.advantage("ndcg@10", unpaired["ahead"], unpaired["base"])) == "TIE"
+    with pytest.raises(ValueError):
+        table.advantage("ndcg@10", cells["ahead"], cells["base"] | {"per_query": base[:10]})
+
+
+def common_ci(values):
+    from warmbench.common import bootstrap_ci
+    import statistics
+    return bootstrap_ci(values, statistics.fmean, rounds=1000)

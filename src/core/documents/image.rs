@@ -36,18 +36,24 @@ use super::packed_terms::StoredTerms;
 use super::postings::{PostingList, PostingLists, Postings, RestoredList};
 use super::search::LexicalSource;
 use super::text::TextSegment;
+use super::text_blocks::{BlockCache, DecodedBlocks, TextBlocks, TextBuilder};
 use super::{StoredChunk, StoredDocument, VectorState};
 use crate::core::entangled::EntangledHVec;
 
-/// The magic of the version written: block-encoded postings.
-pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x02";
+/// The magic of the version written: block-encoded postings with per-list and per-block impacts.
+pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x03";
+/// Version 2, still read: block-encoded postings without impacts.
+const MAGIC_V2: &[u8; 8] = b"HMSCKP\x00\x02";
 /// Version 1, still read: flat varint postings.
 const MAGIC_V1: &[u8; 8] = b"HMSCKP\x00\x01";
 
 /// Whether `magic` opens a plaintext checkpoint of a version this build reads.
 pub(crate) fn known_magic(magic: &[u8]) -> bool {
-    magic == MAGIC || magic == MAGIC_V1
+    magic == MAGIC || magic == MAGIC_V2 || magic == MAGIC_V1
 }
+mod merge;
+pub(crate) use merge::merge;
+
 const HEADER_WORDS: usize = 40;
 pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;
 /// Dictionary entries per block: one binary search over blocks, then at most this many
@@ -62,6 +68,10 @@ const H_CHUNKS: usize = 9;
 const H_WORDS: usize = 10;
 const H_DOCS: usize = 11;
 const H_TERMS: usize = 12; // and 13
+/// Feature bits of a checkpoint (header word 3, in the zeroed words of versions 1 to 3).
+const H_FEATURES: usize = 3;
+/// Chunk text is in compressed blocks ([`super::text_blocks`]); three more sections.
+const FEATURE_TEXT_BLOCKS: u64 = 1;
 const H_SECTIONS: usize = 14;
 
 #[derive(Clone, Copy)]
@@ -76,15 +86,22 @@ enum Section {
     Ids,
     DocOffsets,
     Docs,
+    TextDict,
+    TextTable,
+    TextBlocks,
 }
-const SECTIONS: usize = 10;
+const SECTIONS: usize = 13;
+/// Sections of a checkpoint without the text blocks feature.
+const BASE_SECTIONS: usize = 10;
 const _: () = assert!(H_SECTIONS + 2 * SECTIONS <= HEADER_WORDS);
 
-const SLOT_BYTES: usize = 12;
+pub(super) const SLOT_BYTES: usize = 12;
 const FREE: u32 = u32::MAX;
 
 const TEXT_NONE: u8 = 0;
 const TEXT_INLINE: u8 = 2;
+/// The text is in the compressed blocks: its offset in the stream follows, its length is the span.
+const TEXT_BLOCK: u8 = 3;
 /// Chunk flags: the chunk id is stored (it is not the default id for its index); the chunk's
 /// terms are stemmed (its postings are in form 1).
 const OWN_ID: u8 = 1;
@@ -140,7 +157,16 @@ pub(crate) fn encode(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, true)
+    encode_as(store, generation, dimensions, 3, false)
+}
+
+/// [`encode`] with the chunk text in compressed blocks (feature bit 0).
+pub(crate) fn encode_compressed(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, 3, true)
 }
 
 /// [`encode`] in version 1, for tests of reading it.
@@ -150,16 +176,29 @@ pub(crate) fn encode_v1(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, false)
+    encode_as(store, generation, dimensions, 1, false)
 }
 
-/// [`encode`] with block-encoded postings (version 2) or flat ones (version 1).
+/// [`encode`] in version 2, for tests of reading it.
+#[cfg(test)]
+pub(crate) fn encode_v2(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, 2, false)
+}
+
+/// [`encode`] with impact-carrying block postings (version 3), plain block postings (version
+/// 2) or flat ones (version 1), and the chunk text in compressed blocks or inline.
 fn encode_as(
     store: &DocumentStore,
     generation: u32,
     dimensions: usize,
-    blocked: bool,
+    version: u8,
+    text_blocks: bool,
 ) -> Result<Option<Vec<u8>>> {
+    let (blocked, impacts) = (version >= 2, version >= 3);
     if !representable(store) {
         return Ok(None);
     }
@@ -196,7 +235,8 @@ fn encode_as(
             put_bytes(&mut dict, &term[prefix..]);
             let start = postings.len();
             if blocked {
-                super::postings::pack_checkpoint(list, &mut postings);
+                let words = |slot: usize| DocumentStore::slot_word_count(store, slot);
+                super::postings::pack_checkpoint(list, &words, impacts, &mut postings);
             } else {
                 #[cfg(test)]
                 super::postings::pack_checkpoint_flat(list, &mut postings);
@@ -224,6 +264,7 @@ fn encode_as(
     let mut owners = vec![(FREE, 0u32); store.slot_count];
     let (mut ids, mut id_offsets) = (Vec::new(), Vec::new());
     let (mut docs, mut doc_offsets) = (Vec::new(), Vec::new());
+    let mut texts = text_blocks.then(TextBuilder::default);
     for (ordinal, (id, document)) in store.documents.iter().enumerate() {
         let ordinal = u32::try_from(ordinal).context("checkpoint document count")?;
         let document_slots = store.slots.get(id).context("document without slots")?;
@@ -240,7 +281,9 @@ fn encode_as(
         id_offsets.extend_from_slice(&id_at.to_le_bytes());
         ids.extend_from_slice(id.as_bytes());
         doc_offsets.extend_from_slice(&doc_at.to_le_bytes());
-        encode_document(&mut docs, document, segment.as_deref())?;
+        if !encode_document(&mut docs, document, segment.as_deref(), texts.as_mut())? {
+            return Ok(None);
+        }
     }
     let (Ok(id_end), Ok(doc_end)) = (u32::try_from(ids.len()), u32::try_from(docs.len())) else {
         return Ok(None);
@@ -257,6 +300,15 @@ fn encode_as(
     sections[Section::Ids as usize] = ids;
     sections[Section::DocOffsets as usize] = doc_offsets;
     sections[Section::Docs as usize] = docs;
+    if let Some(texts) = texts.filter(|texts| !texts.is_empty()) {
+        let Some(encoded) = texts.finish() else {
+            return Ok(None);
+        };
+        words[H_FEATURES] = FEATURE_TEXT_BLOCKS;
+        sections[Section::TextDict as usize] = encoded.dict;
+        sections[Section::TextTable as usize] = encoded.table;
+        sections[Section::TextBlocks as usize] = encoded.blocks;
+    }
 
     words[H_GENERATION] = u64::from(generation);
     words[H_DIMENSIONS] = dimensions as u64;
@@ -271,7 +323,11 @@ fn encode_as(
         at += section.len() as u64;
     }
     let mut out = Vec::with_capacity(at as usize);
-    out.extend_from_slice(if blocked { MAGIC } else { MAGIC_V1 });
+    out.extend_from_slice(match version {
+        3 => MAGIC,
+        2 => MAGIC_V2,
+        _ => MAGIC_V1,
+    });
     for value in words {
         out.extend_from_slice(&value.to_le_bytes());
     }
@@ -301,7 +357,8 @@ fn encode_document(
     out: &mut Vec<u8>,
     document: &StoredDocument,
     segment: Option<&TextSegment>,
-) -> Result<()> {
+    mut texts: Option<&mut TextBuilder>,
+) -> Result<bool> {
     put_bytes(out, document.version.as_bytes());
     match &document.source_uri {
         Some(uri) => {
@@ -325,14 +382,24 @@ fn encode_document(
         put_varint(out, u64::from(chunk.start_byte));
         put_varint(out, u64::from(chunk.end_byte));
         match super::index::try_text_of(chunk, segment)? {
-            Some(text) => {
-                out.push(TEXT_INLINE);
-                put_bytes(out, text.as_bytes());
-            }
+            Some(text) => match texts.as_deref_mut() {
+                Some(texts) => {
+                    let Some((block, from)) = texts.add(&text) else {
+                        return Ok(false);
+                    };
+                    out.push(TEXT_BLOCK);
+                    put_varint(out, block);
+                    put_varint(out, from);
+                }
+                None => {
+                    out.push(TEXT_INLINE);
+                    put_bytes(out, text.as_bytes());
+                }
+            },
             None => out.push(TEXT_NONE),
         }
     }
-    Ok(())
+    Ok(true)
 }
 
 /// Bytes a checkpoint is read from: its file mapped, or (encrypted stores) decrypted in memory.
@@ -340,6 +407,13 @@ pub(crate) enum Backing {
     Mapped(memmap2::Mmap),
     #[cfg_attr(not(feature = "security"), allow(dead_code))]
     Owned(Vec<u8>),
+}
+
+impl ServingImage {
+    /// Size of the checkpoint file in bytes.
+    pub(crate) fn byte_len(&self) -> usize {
+        self.bytes.len()
+    }
 }
 
 impl std::ops::Deref for Backing {
@@ -373,8 +447,41 @@ pub(crate) struct ServingImage {
     dimensions: usize,
     dictionaries: [Dictionary; 2],
     sections: [(usize, usize); SECTIONS],
-    /// Version 2: postings in the block encoding (see `postings::Postings`).
+    /// Versions 2 and 3: postings in the block encoding (see `postings::Postings`).
     blocked: bool,
+    /// Version 3: the block encoding with impacts.
+    impacts: bool,
+    /// Direct frequency tables of the longest lists, built by queries (see `impact`).
+    dense: super::impact::DenseTables,
+    /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
+    word_classes: std::sync::OnceLock<Vec<u8>>,
+    /// Per slot, its word count capped at `u16::MAX`, built by the first pruned query.
+    word_counts: std::sync::OnceLock<Vec<u16>>,
+    /// Chunk text may be in the compressed blocks (the feature word says so).
+    text_blocks: bool,
+    /// Blocks decoded for hits, kept up to the configured byte budget.
+    decoded: DecodedBlocks,
+}
+
+/// Where a chunk's text is.
+#[derive(Clone, Copy)]
+enum RecordText<'a> {
+    Inline(&'a str),
+    /// `len` bytes at `from` in the text of one compressed block.
+    Block {
+        block: u64,
+        from: u64,
+        len: usize,
+    },
+}
+
+impl RecordText<'_> {
+    fn len(&self) -> usize {
+        match self {
+            Self::Inline(text) => text.len(),
+            Self::Block { len, .. } => *len,
+        }
+    }
 }
 
 /// One decoded chunk of a checkpoint record.
@@ -384,7 +491,7 @@ struct RecordChunk<'a> {
     analyzed: bool,
     start_byte: u32,
     end_byte: u32,
-    text: Option<&'a str>,
+    text: Option<RecordText<'a>>,
 }
 
 fn parse_metadata(bytes: &[u8]) -> Result<serde_json::Value> {
@@ -407,6 +514,8 @@ pub(crate) struct MetadataCache {
     entries: Vec<(Box<[u8]>, serde_json::Value)>,
     repeated: bool,
     next: usize,
+    /// The entry the last lookup found: consecutive hits mostly share their metadata.
+    last: usize,
 }
 
 impl MetadataCache {
@@ -419,9 +528,17 @@ impl MetadataCache {
         if bytes.len() > Self::LONGEST || (!self.repeated && self.entries.len() >= Self::GIVE_UP) {
             return parse_metadata(bytes);
         }
-        if let Some((_, value)) = self.entries.iter().find(|(stored, _)| &**stored == bytes) {
+        let found = match self.entries.get(self.last) {
+            Some((stored, _)) if &**stored == bytes => Some(self.last),
+            _ => self
+                .entries
+                .iter()
+                .position(|(stored, _)| &**stored == bytes),
+        };
+        if let Some(at) = found {
             self.repeated = true;
-            return Ok(value.clone());
+            self.last = at;
+            return Ok(self.entries[at].1.clone());
         }
         let value = parse_metadata(bytes)?;
         let entry = (bytes.into(), value.clone());
@@ -449,11 +566,23 @@ impl ServingImage {
             bytes.len() >= HEADER_LEN && known_magic(&bytes[..8]),
             "not a document checkpoint of this version"
         );
-        let blocked = &bytes[..8] == MAGIC;
+        let impacts = &bytes[..8] == MAGIC;
+        let blocked = impacts || &bytes[..8] == MAGIC_V2;
         let count = |index: usize| usize::try_from(word(&bytes, index)).ok();
+        let features = word(&bytes, H_FEATURES);
+        ensure!(
+            features & !FEATURE_TEXT_BLOCKS == 0,
+            "checkpoint feature bits {features:#x} are newer than supported"
+        );
+        let text_blocks = features & FEATURE_TEXT_BLOCKS != 0;
         let mut sections = [(0usize, 0usize); SECTIONS];
         let mut end = HEADER_LEN;
+        let present = if text_blocks { SECTIONS } else { BASE_SECTIONS };
         for (i, section) in sections.iter_mut().enumerate() {
+            if i >= present {
+                *section = (end, 0);
+                continue;
+            }
             let (at, len) = (count(H_SECTIONS + 2 * i), count(H_SECTIONS + 2 * i + 1));
             let (Some(at), Some(len)) = (at, len) else {
                 bail!("checkpoint section out of range");
@@ -486,13 +615,96 @@ impl ServingImage {
             dictionaries: [Dictionary::default(); 2],
             sections,
             blocked,
+            impacts,
+            dense: Default::default(),
+            word_classes: std::sync::OnceLock::new(),
+            word_counts: std::sync::OnceLock::new(),
+            text_blocks,
+            decoded: DecodedBlocks::default(),
         };
+        if text_blocks {
+            image.text_stream()?;
+        }
         image.check_documents()?;
         image.check_slots()?;
         for form in 0..2 {
             image.dictionaries[form] = image.check_dictionary(form)?;
         }
         Ok(image)
+    }
+
+    /// Keeps decoded text blocks for later hits, up to `limit` bytes and no more than the
+    /// compression saves, so decoded plus compressed text stays within the raw text's size.
+    pub(crate) fn with_text_cache(mut self, limit: usize) -> Self {
+        if self.text_blocks {
+            let blocks = self.section(Section::TextTable).len() / 8 - 1;
+            let budget = limit.min(self.opened_text_stream().saved());
+            self.decoded = DecodedBlocks::new(blocks, budget);
+        }
+        self
+    }
+
+    /// The compressed text, checked; the sections are empty when the feature is off.
+    fn text_stream(&self) -> Result<TextBlocks<'_>> {
+        TextBlocks::new(
+            self.section(Section::TextDict),
+            self.section(Section::TextTable),
+            self.section(Section::TextBlocks),
+        )
+    }
+
+    /// The dictionary and the decoded stream of the compressed text (empty without it).
+    #[cfg(test)]
+    pub(crate) fn text_contents(&self) -> Result<(Vec<u8>, Vec<u8>)> {
+        if self.text_blocks {
+            self.text_stream()?.contents()
+        } else {
+            Ok((Vec::new(), Vec::new()))
+        }
+    }
+
+    /// [`Self::text_stream`] for an image that opened, which checked it.
+    fn opened_text_stream(&self) -> TextBlocks<'_> {
+        TextBlocks::unchecked(
+            self.section(Section::TextDict),
+            self.section(Section::TextTable),
+            self.section(Section::TextBlocks),
+        )
+    }
+
+    /// The text of a chunk as an owned string. `cache` keeps the last decoded block, so
+    /// the chunks of one document cost one decompression.
+    fn text_string(
+        &self,
+        text: Option<RecordText<'_>>,
+        cache: &mut BlockCache,
+    ) -> Result<Option<String>> {
+        Ok(match text {
+            None => None,
+            Some(RecordText::Inline(text)) => Some(text.to_owned()),
+            Some(RecordText::Block { block, from, len }) => {
+                Some(self.opened_text_stream().read(block, from, len, cache)?)
+            }
+        })
+    }
+
+    /// Whether [`merge::merge`] reads this checkpoint: block-encoded postings and inline chunk
+    /// text. Its document records are copied as bytes, and a record of compressed text points
+    /// into text sections the merge does not carry.
+    pub(crate) fn mergeable(&self) -> bool {
+        self.blocked && !self.text_blocks
+    }
+
+    /// Drops the resident pages of a mapped checkpoint after a pass over it, so a merge that
+    /// reads the whole file does not hold the whole file in resident memory. A no-op for an
+    /// owned (decrypted) image; the pages fault back in if the image is read again.
+    pub(crate) fn release_pages(&self) {
+        #[cfg(unix)]
+        if let Backing::Mapped(map) = &self.bytes {
+            // SAFETY: the mapping is read-only and file-backed; discarding its resident pages
+            // changes no byte a reader observes, since they are read back from the file.
+            let _ = unsafe { map.unchecked_advise(memmap2::UncheckedAdvice::DontNeed) };
+        }
     }
 
     fn section(&self, section: Section) -> &[u8] {
@@ -621,7 +833,8 @@ impl ServingImage {
             let len = usize::try_from(reader.varint()?)?;
             ensure!(
                 count > 0
-                    && super::postings::checkpoint_min_len(count, self.blocked) <= len as u64
+                    && super::postings::checkpoint_min_len(count, self.blocked, self.impacts)
+                        <= len as u64
                     && count <= u64::from(u32::MAX),
                 "checkpoint posting count"
             );
@@ -715,15 +928,12 @@ impl ServingImage {
                 .is_none_or(|text| text.len() <= super::MAX_DOCUMENT_BYTES),
             "stored chunk exceeds read limit"
         );
+        let text = self.text_string(chunk.text, &mut BlockCache::default())?;
         let id = chunk
             .id
             .map(str::to_owned)
             .unwrap_or_else(|| super::chunk_id(self.id(ordinal), index));
-        let (start_byte, end_byte, text) = (
-            chunk.start_byte,
-            chunk.end_byte,
-            chunk.text.map(str::to_owned),
-        );
+        let (start_byte, end_byte) = (chunk.start_byte, chunk.end_byte);
         Ok(Some(super::DocumentChunkRecord {
             revision: revision.to_string(),
             document: self.info(ordinal, record),
@@ -829,7 +1039,12 @@ impl ServingImage {
             );
             let text = match reader.byte()? {
                 TEXT_NONE => None,
-                TEXT_INLINE => Some(reader.str()?),
+                TEXT_INLINE => Some(RecordText::Inline(reader.str()?)),
+                TEXT_BLOCK if self.text_blocks => Some(RecordText::Block {
+                    block: reader.varint()?,
+                    from: reader.varint()?,
+                    len: (end_byte - start_byte) as usize,
+                }),
                 other => bail!("checkpoint text kind {other}"),
             };
             ensure!(
@@ -903,6 +1118,13 @@ impl ServingImage {
             },
         )?;
         let chunk = found.context("checkpoint chunk index")?;
+        let text = match chunk.text {
+            Some(RecordText::Block { block, from, len }) => Some(
+                self.opened_text_stream()
+                    .read_shared(block, from, len, &self.decoded)?,
+            ),
+            other => self.text_string(other, &mut BlockCache::default())?,
+        };
         Ok(super::DocumentResult {
             id: chunk
                 .id
@@ -911,7 +1133,7 @@ impl ServingImage {
             source_uri: source_uri.map(str::to_owned),
             version: version.to_owned(),
             metadata,
-            text: chunk.text.map(str::to_owned),
+            text,
             start_byte: chunk.start_byte,
             end_byte: chunk.end_byte,
             score: 0.0,
@@ -1019,23 +1241,33 @@ impl ServingImage {
                     bytes,
                     count,
                     blocked: self.blocked,
+                    impacts: self.impacts,
                 }
-                .try_for_each(|slot, frequency| {
-                    let fits = slot < self.slots
-                        && form_of[slot] == form as u8
-                        && (seen == 0 || slot > last);
-                    if !fits {
-                        failure = Some(slot);
-                        return false;
-                    }
-                    if dead_slot.get(slot) != Some(&true) {
-                        forward[slot].push((position, frequency));
-                        live.push((slot, frequency));
-                    }
-                    last = slot;
-                    seen += 1;
-                    true
-                })?;
+                .try_for_each(
+                    &|slot| {
+                        if slot < self.slots {
+                            self.slot(slot).0
+                        } else {
+                            0
+                        }
+                    },
+                    |slot, frequency| {
+                        let fits = slot < self.slots
+                            && form_of[slot] == form as u8
+                            && (seen == 0 || slot > last);
+                        if !fits {
+                            failure = Some(slot);
+                            return false;
+                        }
+                        if dead_slot.get(slot) != Some(&true) {
+                            forward[slot].push((position, frequency));
+                            live.push((slot, frequency));
+                        }
+                        last = slot;
+                        seen += 1;
+                        true
+                    },
+                )?;
                 ensure!(
                     failure.is_none() && seen == count,
                     "checkpoint posting list for a slot it cannot hold"
@@ -1051,6 +1283,7 @@ impl ServingImage {
             lists[1].iter().map(|(t, ..)| t.as_str()).collect(),
         ];
         let mut documents = Vec::with_capacity(self.docs);
+        let mut text_cache = BlockCache::default();
         for (ordinal, (record, slots)) in records.iter().zip(&document_slots).enumerate() {
             let id = self.id(ordinal);
             let mut chunks = Vec::with_capacity(slots.len());
@@ -1067,7 +1300,7 @@ impl ServingImage {
                     id,
                     index,
                     chunk,
-                    chunk.text.map(str::to_owned),
+                    self.text_string(chunk.text, &mut text_cache)?,
                     stored,
                     self.slot(slot).0 as usize,
                 );
@@ -1106,8 +1339,48 @@ impl ServingImage {
     }
 }
 
+impl ServingImage {
+    /// Whether this checkpoint's postings carry the impacts block-max pruning reads.
+    pub(super) fn has_impacts(&self) -> bool {
+        self.impacts
+    }
+
+    /// The slot table: per slot its word count, document ordinal and chunk index, `u32`s.
+    pub(super) fn slot_table(&self) -> &[u8] {
+        self.section(Section::Slots)
+    }
+
+    /// Per slot the entry of `class_of` for its word count.
+    pub(super) fn word_classes(&self, class_of: &[u8]) -> &[u8] {
+        self.word_classes.get_or_init(|| {
+            let last = class_of.len() - 1;
+            (0..self.slots)
+                .map(|slot| class_of[(self.slot(slot).0 as usize).min(last)])
+                .collect()
+        })
+    }
+
+    /// Per slot its word count, `u16::MAX` for counts that do not fit (read the slot table then):
+    /// a table a sixth the size of the slot table, so it stays in cache where the slot table
+    /// does not.
+    pub(super) fn word_counts(&self) -> &[u16] {
+        self.word_counts.get_or_init(|| {
+            (0..self.slots)
+                .map(|slot| self.slot(slot).0.min(u32::from(u16::MAX)) as u16)
+                .collect()
+        })
+    }
+    pub(super) fn dense(&self) -> &super::impact::DenseTables {
+        &self.dense
+    }
+}
+
 impl LexicalSource for ServingImage {
     type List<'a> = Postings<'a>;
+
+    fn impact_image(&self) -> Option<&ServingImage> {
+        self.impacts.then_some(self)
+    }
 
     fn slot_count(&self) -> usize {
         self.slots
@@ -1167,6 +1440,7 @@ impl LexicalSource for ServingImage {
                         bytes: &postings[at..at + len],
                         count,
                         blocked: self.blocked,
+                        impacts: self.impacts,
                     })
                 }
                 std::cmp::Ordering::Greater => return None,
@@ -1414,7 +1688,11 @@ mod tests {
             assert_eq!(hit.version, record.version);
             assert_eq!(hit.source_uri.as_deref(), record.source_uri);
             assert_eq!(hit.metadata, record.metadata);
-            assert_eq!(hit.text.as_deref(), chunk.text, "slot {slot}");
+            let want_text = chunk.text.map(|text| match text {
+                RecordText::Inline(text) => text,
+                RecordText::Block { .. } => unreachable!("inline record"),
+            });
+            assert_eq!(hit.text.as_deref(), want_text, "slot {slot}");
             assert_eq!(
                 (hit.start_byte, hit.end_byte),
                 (chunk.start_byte, chunk.end_byte)
@@ -1423,7 +1701,10 @@ mod tests {
         }
         assert_eq!(record.chunks[1].id, Some("own-id"));
         assert!(record.chunks[1].stemmed && record.chunks[1].analyzed);
-        assert_eq!(record.chunks[1].text, Some("xy"));
+        assert!(matches!(
+            record.chunks[1].text,
+            Some(RecordText::Inline("xy"))
+        ));
         let error = image.hit(3, &mut cache).unwrap_err().to_string();
         assert!(error.contains("chunk index"), "{error}");
     }

@@ -14,11 +14,13 @@ use serde_json::Value;
 
 use super::dense::DenseIndex;
 use super::image::{MetadataCache, ServingImage};
+use super::lexical::{LexicalHit, LexicalResults};
 use super::overlay::Overlaid;
+use super::screen::ScreenTable;
 use super::{
-    matches_document_metadata, normalize_embedding, query_words_with, terms_with, top_ranked,
-    Analyzer, Bm25, DocumentResult, DocumentStore, SearchOptions, StoredChunk, StoredDocument,
-    MAX_DOCUMENT_BYTES,
+    matches_document_metadata, normalize_embedding, query_words_both, terms_with, top_ranked,
+    Analyzer, Bm25, DocumentResult, DocumentStore, Embedding, ScreenBound, SearchOptions,
+    StoredChunk, StoredDocument, MAX_DOCUMENT_BYTES,
 };
 
 pub(crate) struct PreparedSearch {
@@ -106,6 +108,37 @@ impl CapturedChunk {
     }
 }
 
+/// What scores a screened capture's pending lexical scores: BM25 inverse document frequencies per form and the
+/// average chunk length of the captured store state.
+struct ScreenedLexical {
+    /// Present when no lexical list was ranked (zero lexical weight), so the scores of returned chunks are computed.
+    pending: Option<PendingLexical>,
+}
+
+struct PendingLexical {
+    idf: [BTreeMap<String, f64>; 2],
+    average: f64,
+}
+
+impl ScreenedLexical {
+    fn score(&self, prepared: &PreparedSearch, chunk: &CapturedChunk) -> f64 {
+        let Some(pending) = &self.pending else {
+            return 0.0;
+        };
+        let stored = chunk.stored().expect(LIVE_ONLY);
+        let norm = prepared
+            .bm25
+            .norm(f64::from(chunk.word_count), pending.average);
+        pending.idf[usize::from(stored.stemmed)]
+            .iter()
+            .map(|(word, idf)| {
+                let tf = f64::from(stored.terms.get(word).copied().unwrap_or(0));
+                prepared.bm25.weight(*idf, tf, norm)
+            })
+            .sum()
+    }
+}
+
 struct CapturedPosting {
     chunk: u32,
     frequency: u32,
@@ -133,7 +166,22 @@ enum SlotPositions {
 }
 
 const DENSE_SLOT_LIMIT: usize = 1 << 19;
-
+/// Below this many slots the exhaustive hot-list ranking beats the windowed pruned ranker
+/// (measured on scifact, nfcorpus and the memory set, where exhaustive is 1.7 to 2.4 times
+/// faster; the pruned ranker wins from FiQA's 57k documents up). Above `DENSE_SLOT_LIMIT` the
+/// pruned ranker is the only one that avoids hydrating the store.
+const PRUNE_SLOT_FLOOR_SERVING: usize = 1 << 15;
+const PRUNE_SLOT_FLOOR: usize = if cfg!(test) {
+    0
+} else {
+    PRUNE_SLOT_FLOOR_SERVING
+};
+fn prune_above(slots: usize, floor: usize) -> bool {
+    slots > floor
+}
+fn prune_wanted(slots: usize) -> bool {
+    prune_above(slots, PRUNE_SLOT_FLOOR)
+}
 impl SlotPositions {
     fn new(slot_count: usize) -> Self {
         if slot_count <= DENSE_SLOT_LIMIT {
@@ -178,6 +226,9 @@ struct CapturedQuery {
     /// Set when the capture already scored the query (an unfiltered lexical query): `chunks`
     /// are then its top `limit` lexical chunks, best first, and these their BM25 scores.
     lexical_scores: Option<Vec<f64>>,
+    /// Set by [`capture_screened`]: the chunks are already the screen's survivors, and a lexical score that is NaN
+    /// (the chunk is outside the lexical list) is computed only if the chunk is returned.
+    screened: Option<Box<ScreenedLexical>>,
 }
 
 #[cfg(test)]
@@ -197,10 +248,17 @@ pub(crate) fn prepare_search_with(
     analyzer: Analyzer,
 ) -> Result<PreparedSearch> {
     let mut prepared = validate_search(text, options, embedding_dimensions)?;
-    prepared.query_terms = [
-        query_words_with(analyzer, text, false),
-        query_words_with(analyzer, text, true),
-    ];
+    prepared.query_terms = query_words_both(analyzer, text);
+    Ok(prepared)
+}
+
+/// A lexical-only search of unfiltered `terms` (one set per form), validated as `options` are.
+pub(super) fn prepare_terms(
+    terms: [BTreeSet<String>; 2],
+    options: &SearchOptions,
+) -> Result<PreparedSearch> {
+    let mut prepared = validate_search("", options, None)?;
+    prepared.query_terms = terms;
     Ok(prepared)
 }
 
@@ -336,7 +394,100 @@ fn capture_query(store: &DocumentStore, prepared: PreparedSearch) -> CapturedQue
     if prepared.embedding.is_none() || prepared.semantic_weight == 0.0 {
         return capture_planned_query(store, prepared, None);
     }
+    if prepared.unfiltered {
+        let table = prepared
+            .embedding
+            .as_ref()
+            .and_then(|query| store.screen_table(query.len()));
+        if let Some(table) = table {
+            return match capture_screened(store, prepared, &table) {
+                Ok(captured) => captured,
+                Err(prepared) => capture_postings(store, *prepared),
+            };
+        }
+    }
     capture_postings(store, prepared)
+}
+
+/// Captures an unfiltered hybrid query without a slot per chunk: the lexical list's chunks and every chunk the
+/// quantized screen leaves able to rank in the semantic list, with the exact BM25 score of each. Every chunk outside
+/// that set is below both lists' cut, so [`execute_chunks`] ranks the same hits as over the whole store. Gives the
+/// query back when the screen cannot bound it.
+fn capture_screened(
+    store: &DocumentStore,
+    prepared: PreparedSearch,
+    table: &ScreenTable,
+) -> Result<CapturedQuery, Box<PreparedSearch>> {
+    let query = prepared
+        .embedding
+        .as_deref()
+        .expect("a screened query has an embedding");
+    let Some(candidates) = table.candidates(query, prepared.limit, prepared.minimum) else {
+        return Err(Box::new(prepared));
+    };
+    let (ranked, extras) = if prepared.lexical_weight > 0.0 {
+        let mut extras = Vec::with_capacity(candidates.len());
+        let ranked = LEXICAL_SCRATCH.with(|scratch| {
+            scratch
+                .borrow_mut()
+                .rank_with(store, &prepared, true, &candidates, &mut extras)
+        });
+        (ranked, extras)
+    } else {
+        (Vec::new(), Vec::new())
+    };
+    let mut scored: FastMap<usize, f64> = candidates.iter().copied().zip(extras).collect();
+    scored.extend(ranked.iter().map(|&(score, slot)| (slot as usize, score)));
+    let mut slots: Vec<usize> = ranked
+        .iter()
+        .map(|&(_, slot)| slot as usize)
+        .chain(candidates)
+        .collect();
+    slots.sort_unstable();
+    slots.dedup();
+    let pending = (prepared.lexical_weight <= 0.0).then(|| {
+        let n = store.chunk_count as f64;
+        let idf: [BTreeMap<String, f64>; 2] = std::array::from_fn(|form| {
+            prepared.query_terms[form]
+                .iter()
+                .map(|word| {
+                    let df = store.postings[form].get(word).map_or(0, PostingList::len) as f64;
+                    (word.clone(), Bm25::idf(n, df))
+                })
+                .collect()
+        });
+        PendingLexical {
+            idf,
+            average: (store.word_count as f64 / n).max(1.0),
+        }
+    });
+    let mut chunks = Vec::with_capacity(slots.len());
+    let mut scores = Vec::with_capacity(slots.len());
+    for slot in slots {
+        let (document, index) = store.owned_chunk(slot);
+        scores.push(scored.get(&slot).copied().unwrap_or(f64::NAN));
+        chunks.push(CapturedChunk::live(
+            document,
+            index,
+            store.slot_word_count(slot),
+        ));
+    }
+    Ok(CapturedQuery {
+        prepared,
+        chunks,
+        postings: Default::default(),
+        count: store.chunk_count,
+        words: store.word_count,
+        use_postings: true,
+        dense: None,
+        scan: None,
+        eligible: None,
+        excluded_owners: FastSet::default(),
+        dfs: None,
+        text: store.text_segment(),
+        lexical_scores: Some(scores),
+        screened: Some(Box::new(ScreenedLexical { pending })),
+    })
 }
 
 /// Captures the chunks a query may rank and, where postings are cheaper than a scan of the
@@ -438,6 +589,7 @@ fn capture_postings(store: &DocumentStore, prepared: PreparedSearch) -> Captured
         dfs: None,
         text: store.text_segment(),
         lexical_scores: None,
+        screened: None,
     }
 }
 
@@ -478,6 +630,7 @@ fn capture_ranked_lexical(store: &DocumentStore, prepared: PreparedSearch) -> Ca
         dfs: None,
         text: store.text_segment(),
         lexical_scores: Some(scores),
+        screened: None,
     }
 }
 
@@ -495,6 +648,26 @@ pub(super) trait LexicalSource {
     fn slot_word_count(&self, slot: usize) -> u32;
     /// `(document id, chunk index)` of the chunk in `slot`, the tie order of equal scores.
     fn slot_order(&self, slot: usize) -> (&str, usize);
+    /// The checkpoint whose postings carry impacts, when this source is one: its queries may
+    /// be pruned by block-max bounds (see [`super::impact`]).
+    fn impact_image(&self) -> Option<&super::image::ServingImage> {
+        None
+    }
+    /// The shortest posting list and the most postings a thread keeps decoded and weighted
+    /// for this source (see [`HotList`]).
+    fn hot_policy(&self) -> HotPolicy {
+        HotPolicy {
+            min_len: HOT_MIN_LEN.max(self.slot_count() / HOT_MIN_SLOTS),
+            postings: HOT_POSTINGS,
+        }
+    }
+}
+
+/// How much of a source's posting lists a thread keeps decoded and weighted.
+#[derive(Clone, Copy)]
+pub(super) struct HotPolicy {
+    pub(super) min_len: usize,
+    pub(super) postings: usize,
 }
 
 /// A term's postings as [`LexicalScratch::rank`] reads them.
@@ -553,6 +726,14 @@ impl LexicalSource for DocumentStore {
     fn slot_order(&self, slot: usize) -> (&str, usize) {
         DocumentStore::slot_order(self, slot)
     }
+
+    /// A live store's lists are short and its queries long: keep every list of 16 postings or more.
+    fn hot_policy(&self) -> HotPolicy {
+        HotPolicy {
+            min_len: LIVE_HOT_MIN_LEN,
+            postings: LIVE_HOT_POSTINGS,
+        }
+    }
 }
 
 /// [`capture_ranked_lexical`] over a serving image, for queries [`overlay_serves`] accepts.
@@ -590,6 +771,7 @@ fn capture_image(image: &ServingImage, prepared: PreparedSearch) -> anyhow::Resu
         dfs: None,
         text: None,
         lexical_scores: Some(scores),
+        screened: None,
     })
 }
 
@@ -601,7 +783,8 @@ pub(super) fn overlay_serves(prepared: &PreparedSearch, store: &DocumentStore) -
     store.base.as_ref().is_some_and(|base| {
         prepared.lexical_only
             && prepared.embedding.is_none()
-            && base.image.slot_total() + store.slot_count <= DENSE_SLOT_LIMIT
+            && (base.image.slot_total() + store.slot_count <= DENSE_SLOT_LIMIT
+                || (base.intact() && store.documents.is_empty() && base.image.has_impacts()))
     })
 }
 
@@ -656,7 +839,44 @@ fn capture_overlaid(
         dfs: None,
         text: store.text_segment(),
         lexical_scores: Some(scores),
+        screened: None,
     })
+}
+
+/// The top `prepared.limit` chunks [`LexicalScratch::rank`] scores from the checkpoint under
+/// `store` and the store's own documents, as [`capture_overlaid`] ranks them but without
+/// decoding a result per hit. For a query [`overlay_serves`] accepts.
+pub(super) fn rank_overlaid(store: &DocumentStore, prepared: &PreparedSearch) -> LexicalResults {
+    let base = store.base.as_ref().expect("checked by overlay_serves");
+    if base.intact() && store.documents.is_empty() {
+        return ranked_hits(&*base.image, prepared, true);
+    }
+    ranked_hits(&Overlaid { base, store }, prepared, false)
+}
+
+/// [`rank_overlaid`] over a store holding its own documents.
+pub(super) fn rank_store(store: &DocumentStore, prepared: &PreparedSearch) -> LexicalResults {
+    ranked_hits(store, prepared, false)
+}
+
+fn ranked_hits<S: LexicalSource>(
+    source: &S,
+    prepared: &PreparedSearch,
+    hot: bool,
+) -> LexicalResults {
+    let ranked = LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(source, prepared, hot));
+    let hits = ranked
+        .into_iter()
+        .map(|(score, slot)| {
+            let (document, chunk_index) = source.slot_order(slot as usize);
+            LexicalHit {
+                document_id: document.to_owned(),
+                chunk_index,
+                score,
+            }
+        })
+        .collect();
+    LexicalResults { hits, count: None }
 }
 
 pub(super) fn capture_overlaid_search(
@@ -684,7 +904,8 @@ struct NormKey {
 /// Per-thread working memory of [`capture_ranked_lexical`], reused across queries so a query
 /// neither allocates nor clears a table per store slot. It grows to the largest store a thread
 /// queries (20 bytes per slot plus 4 per posting of the longest query: no more than the
-/// store's own owner and word-count tables per slot) and is not shrunk.
+/// store's own owner and word-count tables per slot) and is not shrunk. The decoded lists in
+/// `hot` are bounded by the source's [`HotPolicy`].
 #[derive(Default)]
 struct LexicalScratch {
     /// BM25 sum per slot; every entry is 0 between queries.
@@ -705,6 +926,7 @@ struct LexicalScratch {
     /// zeroes every score first.
     dirty: bool,
     hot: HotLists,
+    pruned: super::impact::PruneScratch,
 }
 
 /// The most postings a thread keeps decoded and weighted (12 bytes each).
@@ -714,9 +936,12 @@ const HOT_POSTINGS: usize = 1 << 18;
 /// absolute floor.
 const HOT_MIN_LEN: usize = 32;
 const HOT_MIN_SLOTS: usize = 32;
+const LIVE_HOT_MIN_LEN: usize = 16;
+const LIVE_HOT_POSTINGS: usize = if cfg!(test) { 2200 } else { 1 << 20 };
 
-/// What a thread's decoded posting lists belong to: one immutable checkpoint under fixed BM25
-/// constants, so each list's idf and every posting's weight are fixed too.
+/// What a thread's decoded posting lists belong to: one immutable checkpoint, or one generation
+/// of a live store, under fixed BM25 constants, so each list's idf and every posting's weight
+/// are fixed too.
 #[derive(Clone, Copy, PartialEq)]
 struct HotKey {
     norm: NormKey,
@@ -732,8 +957,9 @@ struct HotList {
     weights: Box<[f64]>,
 }
 
-/// Per-thread decoded lists of an immutable checkpoint, by form and term, bounded by
-/// [`HOT_POSTINGS`] and dropped when the checkpoint or the BM25 constants change.
+/// Per-thread decoded lists of an immutable checkpoint or a live store generation, by form and
+/// term, bounded by the source's [`HotPolicy`] and dropped when the checkpoint, the generation
+/// or the BM25 constants change.
 #[derive(Default)]
 struct HotLists {
     key: Option<HotKey>,
@@ -762,14 +988,55 @@ impl LexicalScratch {
     /// `execute_chunks` computes from captured postings: the same terms in the same order
     /// (form 0 terms, then form 1 terms, each sorted), the same expressions, from 0.
     ///
-    /// With `hot` set, `store` is an immutable checkpoint whose long posting lists this thread
-    /// may keep decoded and weighted between queries (see [`HotList`]).
+    /// With `hot` set, `store` is an immutable checkpoint, or a live store whose generation
+    /// every mutation advances, and its long posting lists may be kept decoded and weighted by
+    /// this thread between queries (see [`HotList`]).
     fn rank<S: LexicalSource>(
         &mut self,
         store: &S,
         prepared: &PreparedSearch,
         hot: bool,
     ) -> Vec<(f64, u32)> {
+        self.rank_with(store, prepared, hot, &[], &mut Vec::new())
+    }
+
+    /// [`Self::rank`], also pushing to `extras` the lexical score of each slot of `extra` (zero for a slot no query
+    /// term reaches), in order, as accumulated before the selection clears them.
+    fn rank_with<S: LexicalSource>(
+        &mut self,
+        store: &S,
+        prepared: &PreparedSearch,
+        hot: bool,
+        extra: &[usize],
+        extras: &mut Vec<f64>,
+    ) -> Vec<(f64, u32)> {
+        if hot
+            && extra.is_empty()
+            && store
+                .impact_image()
+                .is_some_and(|image| prune_wanted(image.slot_total()))
+        {
+            let limit = prepared.limit;
+            if super::impact::rank(
+                store,
+                &prepared.query_terms,
+                prepared.bm25,
+                limit,
+                &mut self.pruned,
+            )
+            .is_some()
+            {
+                let candidates = &mut self.pruned.candidates;
+                top_ranked(candidates, limit, |a, b| {
+                    b.0.total_cmp(&a.0).then_with(|| {
+                        store
+                            .slot_order(a.1 as usize)
+                            .cmp(&store.slot_order(b.1 as usize))
+                    })
+                });
+                return candidates.clone();
+            }
+        }
         let slots = store.slot_count();
         if self.dirty {
             self.scores.fill(0.0);
@@ -855,7 +1122,7 @@ impl LexicalScratch {
         self.touched.clear();
         if dense {
             let norms = &self.norms[..slots];
-            let admit_from = HOT_MIN_LEN.max(slots / HOT_MIN_SLOTS);
+            let policy = store.hot_policy();
             for listed in &lists {
                 match listed {
                     Listed::Hot(list) => {
@@ -870,16 +1137,20 @@ impl LexicalScratch {
                         word,
                     } => {
                         let length = list.len();
-                        if hot && length >= admit_from && length <= HOT_POSTINGS - self.hot.postings
+                        if hot
+                            && length >= policy.min_len
+                            && length <= policy.postings.saturating_sub(self.hot.postings)
                         {
                             let mut kept_slots = Vec::with_capacity(length);
                             let mut kept_weights = Vec::with_capacity(length);
-                            list.for_each(|slot, frequency| {
-                                let weight = bm25.weight(idf, f64::from(frequency), norms[slot]);
-                                scores[slot] += weight;
-                                kept_slots.push(slot as u32);
-                                kept_weights.push(weight);
-                            });
+                            accumulate(
+                                list,
+                                bm25,
+                                idf,
+                                norms,
+                                scores,
+                                Some((&mut kept_slots, &mut kept_weights)),
+                            );
                             self.hot.postings += kept_slots.len();
                             self.hot.lists[form].insert(
                                 word.to_owned(),
@@ -889,9 +1160,7 @@ impl LexicalScratch {
                                 }),
                             );
                         } else {
-                            list.for_each(|slot, frequency| {
-                                scores[slot] += bm25.weight(idf, f64::from(frequency), norms[slot]);
-                            });
+                            accumulate(list, bm25, idf, norms, scores, None);
                         }
                     }
                 }
@@ -901,6 +1170,7 @@ impl LexicalScratch {
             let (norms, norm_epochs, touched) =
                 (&mut self.norms, &mut self.norm_epochs, &mut self.touched);
             let (epoch, complete) = (self.epoch, self.complete);
+            let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
             let mut reached = 0;
             for listed in &lists {
                 match listed {
@@ -924,12 +1194,15 @@ impl LexicalScratch {
                         let score = scores[slot];
                         touched[reached] = slot as u32;
                         reached += usize::from(score == 0.0);
-                        scores[slot] = score + bm25.weight(idf, f64::from(frequency), norms[slot]);
+                        let weight =
+                            weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
+                        scores[slot] = score + weight;
                     }),
                 }
             }
             self.touched.truncate(reached);
         }
+        extras.extend(extra.iter().map(|&slot| scores[slot]));
         // Selection: a bounded heap holds the best `limit` scores read so far (as `f64` bits,
         // which order positive values); once it is full its smallest is the floor a later
         // score must reach. Every score at or above the floor when read is kept, so all chunks
@@ -943,8 +1216,9 @@ impl LexicalScratch {
         // floor. One unsigned range test admits positive scores (infinity included) at or
         // above it and turns away zero, NaN and the scores below it without branching on each.
         const INFINITY: u64 = 0x7FF0_0000_0000_0000;
-        let mut floor = 1u64;
+        let floor_cell = std::cell::Cell::new(1u64);
         let mut consider = |slot: u32, score: f64| {
+            let floor = floor_cell.get();
             let bits = score.to_bits();
             if bits.wrapping_sub(floor) > INFINITY - floor {
                 return;
@@ -958,13 +1232,22 @@ impl LexicalScratch {
                 return;
             }
             if best.len() == limit {
-                floor = best.peek().expect("full heap").0;
+                floor_cell.set(best.peek().expect("full heap").0);
             }
         };
         if dense {
-            for (slot, score) in scores.iter_mut().enumerate() {
-                let value = std::mem::replace(score, 0.0);
-                consider(slot as u32, value);
+            const SCAN: usize = 8;
+            for (index, chunk) in scores.chunks_mut(SCAN).enumerate() {
+                let floor = floor_cell.get();
+                let admitted = chunk.iter().fold(false, |any, score| {
+                    any | (score.to_bits().wrapping_sub(floor) <= INFINITY - floor)
+                });
+                if admitted {
+                    for (offset, score) in chunk.iter().enumerate() {
+                        consider((index * SCAN + offset) as u32, *score);
+                    }
+                }
+                chunk.fill(0.0);
             }
         } else {
             for &slot in &self.touched {
@@ -987,6 +1270,173 @@ impl LexicalScratch {
         self.dirty = false;
         candidates.clone()
     }
+}
+
+const WEIGH_BLOCK: usize = 128;
+
+/// One posting's weight: `Bm25::weight`, with its parameter test hoisted into `simple`.
+#[inline(always)]
+fn weigh_one(simple: bool, bm25: Bm25, idf: f64, tf: f64, norm: f64) -> f64 {
+    if !simple {
+        bm25.weight(idf, tf, norm)
+    } else if tf == 0.0 {
+        0.0
+    } else {
+        idf * tf * bm25.k1_plus_one / (tf + bm25.k1 * norm)
+    }
+}
+
+/// Adds each posting's BM25 weight to its slot's score, in posting order, and appends the slots
+/// and weights to `keep` when given. Postings are weighed a block at a time; every weight is
+/// the `Bm25::weight` expression evaluated on the same operands, and each slot appears once per
+/// list, so the scores are those of a posting-by-posting loop.
+fn accumulate(
+    list: &impl PostingSet,
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    scores: &mut [f64],
+    mut keep: Option<(&mut Vec<u32>, &mut Vec<f64>)>,
+) {
+    assert!(norms.len() == scores.len() && norms.len() <= i32::MAX as usize);
+    let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
+    if list.len() < WEIGH_BLOCK / 4 {
+        list.for_each(|slot, frequency| {
+            let weight = weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
+            scores[slot] += weight;
+            if let Some((kept_slots, kept_weights)) = keep.as_mut() {
+                kept_slots.push(slot as u32);
+                kept_weights.push(weight);
+            }
+        });
+        return;
+    }
+    let mut slots = [0u32; WEIGH_BLOCK];
+    let mut tfs = [0f64; WEIGH_BLOCK];
+    let mut weights = [0f64; WEIGH_BLOCK];
+    let mut filled = 0usize;
+    let mut flush = |slots: &[u32], tfs: &[f64], weights: &mut [f64]| {
+        let count = slots.len();
+        let highest = slots.iter().copied().max().unwrap_or(0) as usize;
+        assert!(
+            count == 0 || highest < norms.len(),
+            "posting slot past the store"
+        );
+        if simple {
+            // SAFETY: every slot is below `norms.len()`, checked above.
+            unsafe { weigh_simple(bm25, idf, norms, slots, tfs, weights) };
+        } else {
+            for index in 0..count {
+                weights[index] = bm25.weight(idf, tfs[index], norms[slots[index] as usize]);
+            }
+        }
+        for (&slot, &weight) in slots.iter().zip(&weights[..count]) {
+            scores[slot as usize] += weight;
+        }
+        if let Some((kept_slots, kept_weights)) = keep.as_mut() {
+            kept_slots.extend_from_slice(slots);
+            kept_weights.extend_from_slice(&weights[..count]);
+        }
+    };
+    list.for_each(|slot, frequency| {
+        slots[filled] = slot as u32;
+        tfs[filled] = f64::from(frequency);
+        filled += 1;
+        if filled == WEIGH_BLOCK {
+            flush(&slots, &tfs, &mut weights);
+            filled = 0;
+        }
+    });
+    if filled > 0 {
+        flush(&slots[..filled], &tfs[..filled], &mut weights);
+    }
+}
+
+/// `weights[i] = bm25.weight(idf, tfs[i], norms[slots[i]])` for the default saturation form
+/// `idf * tf * (k1 + 1) / (tf + k1 * norm)`, with 0 where `tf` is 0.
+///
+/// # Safety
+/// Every slot must index `norms`.
+#[inline]
+unsafe fn weigh_simple(
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    slots: &[u32],
+    tfs: &[f64],
+    weights: &mut [f64],
+) {
+    #[cfg(target_arch = "x86_64")]
+    if is_x86_feature_detected!("avx2") {
+        // SAFETY: the feature is present; the slot invariant is the caller's.
+        return unsafe { weigh_simple_avx2(bm25, idf, norms, slots, tfs, weights) };
+    }
+    // SAFETY: the slot invariant is the caller's.
+    unsafe { weigh_simple_generic(bm25, idf, norms, slots, tfs, weights) }
+}
+
+#[inline(always)]
+unsafe fn weigh_simple_generic(
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    slots: &[u32],
+    tfs: &[f64],
+    weights: &mut [f64],
+) {
+    for index in 0..slots.len() {
+        let tf = tfs[index];
+        // SAFETY: the caller guarantees the slot indexes `norms`.
+        let norm = unsafe { *norms.get_unchecked(slots[index] as usize) };
+        let weight = idf * tf * bm25.k1_plus_one / (tf + bm25.k1 * norm);
+        weights[index] = f64::from_bits(weight.to_bits() & u64::from(tf != 0.0).wrapping_neg());
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn weigh_simple_avx2(
+    bm25: Bm25,
+    idf: f64,
+    norms: &[f64],
+    slots: &[u32],
+    tfs: &[f64],
+    weights: &mut [f64],
+) {
+    use std::arch::x86_64::*;
+    let count = slots.len();
+    let (idf_v, k1p1_v, k1_v) = (
+        _mm256_set1_pd(idf),
+        _mm256_set1_pd(bm25.k1_plus_one),
+        _mm256_set1_pd(bm25.k1),
+    );
+    let zero = _mm256_setzero_pd();
+    let mut index = 0;
+    while index + 4 <= count {
+        // SAFETY: four slots, tfs and weights are in range; the slots index `norms`.
+        unsafe {
+            let at = _mm_loadu_si128(slots.as_ptr().add(index).cast());
+            let norm = _mm256_i32gather_pd::<8>(norms.as_ptr(), at);
+            let tf = _mm256_loadu_pd(tfs.as_ptr().add(index));
+            let numerator = _mm256_mul_pd(_mm256_mul_pd(idf_v, tf), k1p1_v);
+            let denominator = _mm256_add_pd(tf, _mm256_mul_pd(k1_v, norm));
+            let weight = _mm256_div_pd(numerator, denominator);
+            let weight = _mm256_and_pd(weight, _mm256_cmp_pd::<_CMP_NEQ_OQ>(tf, zero));
+            _mm256_storeu_pd(weights.as_mut_ptr().add(index), weight);
+        }
+        index += 4;
+    }
+    // SAFETY: the slot invariant is the caller's.
+    unsafe {
+        weigh_simple_generic(
+            bm25,
+            idf,
+            norms,
+            &slots[index..],
+            &tfs[index..],
+            &mut weights[index..],
+        )
+    };
 }
 
 struct FilteredPostings<'a> {
@@ -1275,6 +1725,7 @@ fn capture_planned_query(
         dfs: Some(dfs),
         text: store.text_segment(),
         lexical_scores: None,
+        screened: None,
     }
 }
 
@@ -1496,42 +1947,144 @@ fn execute_query(captured: &CapturedQuery) -> Vec<RankedHit> {
     execute_chunks(captured, &captured.chunks)
 }
 
+/// Chunk count from which the semantic scan screens every embedding in `f32` and scores exactly only the chunks that
+/// can reach the ranked list; below it every chunk is scored exactly. The result is identical either way.
+const SCREEN_MIN_ROWS: usize = 256;
+
+/// Which chunks `semantic_scores` must score exactly besides the ones that can enter the semantic list.
+struct SemanticNeed<'a> {
+    /// Chunk positions whose reported semantic score is read (the lexical list's).
+    reported: &'a [usize],
+    /// The semantic list's length and floor, or `None` when the semantic list is empty.
+    list: Option<(usize, f64)>,
+    /// The chunks are already a screen's survivors, so none is screened again.
+    survivors: bool,
+}
+
+/// The semantic score of the chunks that can be read: its cached score, else the cosine of its stored embedding with
+/// the query. A chunk not read is `None`. The chunks read are those of the `reported` positions and, when `list` is
+/// set, every chunk that can be among the `list.0` best scores at or above `list.1`.
+///
+/// Every embedding is first screened with an `f32` kernel whose error against the exact score is bounded
+/// ([`ScreenBound`]). A chunk whose screened upper bound is below both the floor and the screened lower bound of the
+/// list's `limit`-th chunk cannot rank, so only the remaining chunks are scored exactly. Four are scored at once so
+/// the four sequential `f64` reductions overlap in the pipeline; each chunk's own summation order is unchanged, so
+/// every score is bit-identical to `Embedding::cosine`.
+fn semantic_scores(
+    chunks: &[CapturedChunk],
+    query: Option<&[f64]>,
+    need: &SemanticNeed,
+) -> Vec<Option<f64>> {
+    let mut scores: Vec<Option<f64>> = chunks.iter().map(|chunk| chunk.semantic_cache).collect();
+    let Some(query) = query else {
+        return scores;
+    };
+    let rows: Vec<(usize, &Embedding)> = chunks
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| scores[*i].is_none())
+        .filter_map(|(i, chunk)| Some((i, chunk.stored()?.embedding.as_ref()?)))
+        .collect();
+    let mut exact = vec![false; chunks.len()];
+    match need.list {
+        Some((limit, floor))
+            if !need.survivors && rows.len() >= SCREEN_MIN_ROWS && limit < rows.len() =>
+        {
+            let query32: Vec<f32> = query.iter().map(|&q| q as f32).collect();
+            let embeddings: Vec<&Embedding> = rows.iter().map(|row| row.1).collect();
+            let mut screened = Vec::new();
+            Embedding::screen(&embeddings, &query32, &mut screened);
+            let bound = ScreenBound::new(query);
+            let spans: Vec<(f64, f64)> = screened
+                .iter()
+                .map(|&(dot, norm)| {
+                    let (dot, slack) = (f64::from(dot), bound.of(norm));
+                    if dot.is_finite() && slack.is_finite() {
+                        ((dot - slack).max(-1.0), (dot + slack).min(1.0))
+                    } else {
+                        (f64::NEG_INFINITY, f64::INFINITY)
+                    }
+                })
+                .collect();
+            // The list holds at least `limit` chunks scoring at least their lower bound, so a chunk whose upper
+            // bound is below that bound's `limit`-th largest value, or below the floor, cannot be in it. Chunks
+            // with a cached score count with their exact value.
+            let mut lower: Vec<f64> = spans.iter().map(|span| span.0).collect();
+            lower.extend(scores.iter().flatten().copied());
+            let cut = if lower.len() > limit {
+                let (_, nth, _) = lower.select_nth_unstable_by(limit - 1, |a, b| b.total_cmp(a));
+                *nth
+            } else {
+                f64::NEG_INFINITY
+            };
+            let threshold = cut.max(floor);
+            for (&(i, _), span) in rows.iter().zip(&spans) {
+                exact[i] = span.1 >= threshold;
+            }
+        }
+        Some(_) => {
+            for &(i, _) in &rows {
+                exact[i] = true;
+            }
+        }
+        None => {}
+    }
+    for &i in need.reported {
+        exact[i] = true;
+    }
+    let rows: Vec<(usize, &Embedding)> = rows.into_iter().filter(|&(i, _)| exact[i]).collect();
+    let (groups, remainder) = rows.as_chunks::<4>();
+    for group in groups {
+        let batch = [group[0].1, group[1].1, group[2].1, group[3].1];
+        for (&(i, _), score) in group.iter().zip(Embedding::cosine4(batch, query)) {
+            scores[i] = Some(score);
+        }
+    }
+    for &(i, embedding) in remainder {
+        scores[i] = Some(embedding.cosine(query));
+    }
+    scores
+}
+
 fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<RankedHit> {
     if chunks.is_empty() {
         return Vec::new();
     }
     let prepared = &captured.prepared;
-    let semantic = |captured_chunk: &CapturedChunk| {
-        captured_chunk.semantic_cache.or_else(|| {
-            prepared.embedding.as_ref().and_then(|q| {
-                captured_chunk
-                    .stored()?
-                    .embedding
-                    .as_ref()
-                    .map(|values| values.cosine(q))
-            })
-        })
-    };
-    let scores: Vec<(f64, Option<f64>)> = match &captured.lexical_scores {
-        Some(lexical) => chunks
-            .iter()
-            .zip(lexical)
-            .map(|(chunk, &score)| (score, semantic(chunk)))
-            .collect(),
-        None => score_chunks(captured, chunks, semantic),
+    let lexical_scores: Vec<f64> = match &captured.lexical_scores {
+        Some(lexical) => lexical.clone(),
+        None => score_chunks(captured, chunks),
     };
     let order = |a: usize, b: usize| chunks[a].order().cmp(&chunks[b].order());
     // Scores travel with their indices so the selection compares without indirection.
     let mut lexical: Vec<(f64, usize)> = if prepared.lexical_weight > 0.0 {
-        scores
+        lexical_scores
             .iter()
             .enumerate()
-            .filter(|(_, score)| score.0 > 0.0)
-            .map(|(i, score)| (score.0, i))
+            .filter(|(_, &score)| score > 0.0)
+            .map(|(i, &score)| (score, i))
             .collect()
     } else {
         Vec::new()
     };
+    let by_score =
+        |a: &(f64, usize), b: &(f64, usize)| b.0.total_cmp(&a.0).then_with(|| order(a.1, b.1));
+    top_ranked(&mut lexical, prepared.limit, by_score);
+    let reported: Vec<usize> = lexical.iter().map(|&(_, i)| i).collect();
+    let semantic_scores = semantic_scores(
+        chunks,
+        prepared.embedding.as_deref(),
+        &SemanticNeed {
+            reported: &reported,
+            list: (prepared.semantic_weight > 0.0).then_some((prepared.limit, prepared.minimum)),
+            survivors: captured.screened.is_some(),
+        },
+    );
+    let scores: Vec<(f64, Option<f64>)> = lexical_scores
+        .iter()
+        .zip(&semantic_scores)
+        .map(|(&lexical, &semantic)| (lexical, semantic))
+        .collect();
     let mut semantic: Vec<(f64, usize)> = if prepared.semantic_weight > 0.0 {
         scores
             .iter()
@@ -1546,9 +2099,6 @@ fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<Ran
     } else {
         Vec::new()
     };
-    let by_score =
-        |a: &(f64, usize), b: &(f64, usize)| b.0.total_cmp(&a.0).then_with(|| order(a.1, b.1));
-    top_ranked(&mut lexical, prepared.limit, by_score);
     top_ranked(&mut semantic, prepared.limit, by_score);
     // Each list's contribution per chunk, lexical first; a stable sort by chunk then sums them
     // in that order, starting from 0.
@@ -1594,7 +2144,12 @@ fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<Ran
     ranked
         .into_iter()
         .map(|(i, score)| {
-            let (lexical_score, semantic_score) = scores[i];
+            let (mut lexical_score, semantic_score) = scores[i];
+            if lexical_score.is_nan() {
+                if let Some(screened) = &captured.screened {
+                    lexical_score = screened.score(prepared, &chunks[i]);
+                }
+            }
             match &chunks[i].owner {
                 ChunkOwner::Live(document) => {
                     let chunk = &document.chunks[chunks[i].index];
@@ -1634,13 +2189,8 @@ fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<Ran
 /// Captures without lexical scores hold only live chunks (see [`ChunkOwner::Image`]).
 const LIVE_ONLY: &str = "a capture scored here holds only live chunks";
 
-/// Lexical (BM25) and semantic scores of captured `chunks` whose lexical scores the capture
-/// did not compute.
-fn score_chunks(
-    captured: &CapturedQuery,
-    chunks: &[CapturedChunk],
-    semantic: impl Fn(&CapturedChunk) -> Option<f64>,
-) -> Vec<(f64, Option<f64>)> {
+/// Lexical (BM25) scores of captured `chunks` whose lexical scores the capture did not compute.
+fn score_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<f64> {
     let prepared = &captured.prepared;
     let n = captured.count as f64;
     let average = (captured.words as f64 / n).max(1.0);
@@ -1670,7 +2220,7 @@ fn score_chunks(
     } else {
         0
     });
-    let mut scores: Vec<(f64, Option<f64>)> = chunks
+    let mut scores: Vec<f64> = chunks
         .iter()
         .map(|captured_chunk| {
             let norm = prepared
@@ -1689,7 +2239,7 @@ fn score_chunks(
                     })
                     .sum()
             };
-            (lexical, semantic(captured_chunk))
+            lexical
         })
         .collect();
     if captured.use_postings {
@@ -1699,7 +2249,7 @@ fn score_chunks(
                     for posting in posting {
                         let chunk = posting.chunk as usize;
                         let tf = f64::from(posting.frequency);
-                        scores[chunk].0 += prepared.bm25.weight(*idf, tf, norms[chunk]);
+                        scores[chunk] += prepared.bm25.weight(*idf, tf, norms[chunk]);
                     }
                 }
             }
@@ -2314,6 +2864,289 @@ mod tests {
         assert!(old.upgrade().is_none());
     }
 
+    /// A store of `count` two-chunk documents whose embeddings are pseudo-random unit-ish vectors in 8 dimensions,
+    /// with exact duplicates and a shared near-tie so the list's boundary falls among equal scores.
+    fn noisy_store(count: usize, without_embedding: usize) -> DocumentStore {
+        let mut state = 0x9E37_79B9_7F4A_7C15u64;
+        let mut next = move || {
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((state >> 33) as f64 / (1u64 << 31) as f64) - 0.5
+        };
+        let mut store = DocumentStore::default();
+        for id in 0..count {
+            let vectors: Vec<Vec<f64>> = (0..2)
+                .map(|chunk| {
+                    if (id + chunk) % 7 == 0 {
+                        vec![0.25; 8]
+                    } else {
+                        (0..8).map(|_| next()).collect()
+                    }
+                })
+                .collect();
+            let input = serde_json::from_value(json!({
+                "id": format!("n{id:04}"), "version": "1",
+                "text": format!("running common rare{id} old semantic noisy"),
+                "chunkWords": 3, "overlapWords": 0,
+                "embeddings": vectors,
+            }))
+            .unwrap();
+            let mut document =
+                super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap();
+            if id < without_embedding {
+                document.chunks[0].embedding = None;
+            }
+            store.insert(document.id.clone(), document);
+        }
+        store
+    }
+
+    /// Screening only decides which chunks are scored exactly: the ranked output is identical to the reference scan
+    /// on both sides of the row count where screening starts (`SCREEN_MIN_ROWS` - 1, `SCREEN_MIN_ROWS`, +1), at
+    /// the list-length boundaries, with and without a floor, and with chunks lacking an embedding.
+    #[test]
+    fn screened_semantic_scan_matches_the_exact_scan() {
+        let query = vec![0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25];
+        for (count, missing) in [
+            (SCREEN_MIN_ROWS / 2 - 1, 0),
+            (SCREEN_MIN_ROWS / 2, 1),
+            (SCREEN_MIN_ROWS / 2, 0),
+            (SCREEN_MIN_ROWS / 2 + 1, 0),
+            (400, 3),
+            (1100, 3),
+        ] {
+            let store = noisy_store(count, missing);
+            for fusion in ["blend", "rrf"] {
+                for (limit, text) in [
+                    (9u32, "running rare3"),
+                    (10, "common old"),
+                    (11, "running rare3"),
+                    (100, "common old"),
+                ] {
+                    for (floor, lexical_weight) in
+                        [(-1.0, 1.0), (0.3, 1.0), (-1.0, 0.0), (0.3, 0.0)]
+                    {
+                        let options = SearchOptions {
+                            k: Some(9),
+                            candidate_limit: Some(limit),
+                            fusion: Some(fusion.into()),
+                            embedding: Some(query.clone()),
+                            min_semantic_score: Some(floor),
+                            lexical_weight: Some(lexical_weight),
+                            ..Default::default()
+                        };
+                        let expected = serde_json::to_value(
+                            super::super::search_impl(&store, text, &options, Some(8), false)
+                                .unwrap(),
+                        )
+                        .unwrap();
+                        let actual = serde_json::to_value(
+                            super::super::search_impl(&store, text, &options, Some(8), true)
+                                .unwrap(),
+                        )
+                        .unwrap();
+                        assert_eq!(
+                            actual, expected,
+                            "{count} {missing} {fusion} {limit} {floor}"
+                        );
+                    }
+                }
+            }
+            if count * 2 >= 2048 {
+                assert!(
+                    store.screen_table(8).is_some(),
+                    "the screen table serves {count}"
+                );
+            }
+        }
+    }
+
+    /// A one-chunk document of `words` with a pseudo-random embedding.
+    fn chunk_document(id: usize, words: &str, state: &mut u64) -> StoredDocument {
+        let mut next = || {
+            *state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((*state >> 33) as f64 / (1u64 << 31) as f64) - 0.5
+        };
+        let vector: Vec<f64> = (0..8).map(|_| next()).collect();
+        let input = serde_json::from_value(json!({
+            "id": format!("h{id:05}"), "version": "1", "text": words,
+            "chunkWords": 32, "overlapWords": 0, "embeddings": [vector],
+        }))
+        .unwrap();
+        super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap()
+    }
+
+    /// A thread keeps a live store's decoded lists only from `LIVE_HOT_MIN_LEN` postings and within
+    /// `LIVE_HOT_POSTINGS`, and every ranking, cold or from kept lists, is the reference scan's, also after a
+    /// mutation of the store.
+    #[test]
+    fn live_hot_lists_rank_as_the_reference_scan_at_their_limits() {
+        const DOCUMENTS: usize = 2100;
+        let query = vec![0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25];
+        let options = SearchOptions {
+            k: Some(9),
+            candidate_limit: Some(10),
+            embedding: Some(query),
+            min_semantic_score: Some(-1.0),
+            ..Default::default()
+        };
+        let text = "alpha beta common delta";
+        // The budget left after beta and common is 2200 - (16 + 2100) = 84 postings.
+        for (alpha, beta, delta) in [
+            (LIVE_HOT_MIN_LEN - 1, LIVE_HOT_MIN_LEN, 83),
+            (LIVE_HOT_MIN_LEN, LIVE_HOT_MIN_LEN + 1, 84),
+            (LIVE_HOT_MIN_LEN + 1, LIVE_HOT_MIN_LEN - 1, 85),
+        ] {
+            let mut state = 0x2545_F491_4F6C_DD1Du64;
+            let mut store = DocumentStore::default();
+            let document = |id: usize, state: &mut u64| {
+                let mut words = format!("common rare{id}");
+                for (name, count) in [("alpha", alpha), ("beta", beta), ("delta", delta)] {
+                    if id < count {
+                        words.push_str(&format!(" {name}"));
+                    }
+                }
+                chunk_document(id, &words, state)
+            };
+            for id in 0..DOCUMENTS {
+                let document = document(id, &mut state);
+                store.insert(document.id.clone(), document);
+            }
+            let kept = || LEXICAL_SCRATCH.with(|scratch| scratch.borrow().hot.postings);
+            let check = |store: &DocumentStore, label: &str| {
+                let expected = serde_json::to_value(
+                    super::super::search_impl(store, text, &options, Some(8), false).unwrap(),
+                )
+                .unwrap();
+                for pass in 0..3 {
+                    let actual = serde_json::to_value(
+                        super::super::search_impl(store, text, &options, Some(8), true).unwrap(),
+                    )
+                    .unwrap();
+                    assert_eq!(
+                        actual, expected,
+                        "{label} {alpha} {beta} {delta} pass {pass}"
+                    );
+                }
+            };
+            LEXICAL_SCRATCH.with(|scratch| scratch.take());
+            check(&store, "built");
+            let admitted = |count: usize| if count >= LIVE_HOT_MIN_LEN { count } else { 0 };
+            let first = admitted(alpha)
+                + admitted(beta)
+                + DOCUMENTS
+                + if delta <= LIVE_HOT_POSTINGS - (admitted(alpha) + admitted(beta) + DOCUMENTS) {
+                    delta
+                } else {
+                    0
+                };
+            assert_eq!(kept(), first, "{alpha} {beta} {delta}");
+            let document = document(DOCUMENTS, &mut state);
+            store.insert(document.id.clone(), document);
+            check(&store, "grown");
+        }
+    }
+
+    /// The screen table serves from `SCREEN_TABLE_MIN_CHUNKS` chunks (the second query of a generation builds it) and
+    /// ranks identically to the exact scan on both sides of that size.
+    #[test]
+    fn screen_table_switches_on_at_the_chunk_threshold() {
+        let single = |id: usize| {
+            let input = serde_json::from_value(json!({
+                "id": format!("s{id:04}"), "version": "1", "text": "running common",
+                "chunkWords": 3, "overlapWords": 0,
+                "embeddings": [[0.1 * id as f64 + 1.0, 0.5, -0.2, 0.3, 0.1, 0.9, -0.4, 0.2]],
+            }))
+            .unwrap();
+            super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap()
+        };
+        let options = SearchOptions {
+            k: Some(9),
+            candidate_limit: Some(10),
+            embedding: Some(vec![0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25]),
+            min_semantic_score: Some(-1.0),
+            ..Default::default()
+        };
+        for (extra, served) in [(1, false), (2, true), (3, true)] {
+            let mut store = noisy_store(1023, 0);
+            for id in 0..extra {
+                let document = single(id);
+                store.insert(document.id.clone(), document);
+            }
+            assert_eq!(store.chunk_count, 2046 + extra, "{extra}");
+            let built: Vec<bool> = (0..3).map(|_| store.screen_table(8).is_some()).collect();
+            assert_eq!(built, [false, served, served], "{extra}");
+            let expected =
+                super::super::search_impl(&store, "common", &options, Some(8), false).unwrap();
+            let actual =
+                super::super::search_impl(&store, "common", &options, Some(8), true).unwrap();
+            assert_eq!(
+                serde_json::to_value(actual).unwrap(),
+                serde_json::to_value(expected).unwrap(),
+                "{extra}"
+            );
+        }
+    }
+
+    /// The screen prunes: on random vectors far fewer chunks than the store holds are scored exactly, every score
+    /// returned is the exact cosine, and the exact top `limit` is among them.
+    #[test]
+    fn screening_scores_only_chunks_that_can_rank() {
+        let store = noisy_store(600, 0);
+        let query = normalize_embedding(&[0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25], 8).unwrap();
+        let options = SearchOptions {
+            embedding: Some(query.clone()),
+            ..Default::default()
+        };
+        let captured = capture_search(
+            &store,
+            vec![prepare_search("running", &options, Some(8)).unwrap()],
+        );
+        let chunks = &captured.queries[0].chunks;
+        assert!(chunks.len() >= 1200);
+        let limit = 50;
+        let scores = semantic_scores(
+            chunks,
+            Some(&query),
+            &SemanticNeed {
+                reported: &[],
+                list: Some((limit, -1.0)),
+                survivors: false,
+            },
+        );
+        let scored = scores.iter().flatten().count();
+        assert!(scored >= limit && scored < chunks.len() / 4, "{scored}");
+        let mut exact: Vec<(f64, usize)> = chunks
+            .iter()
+            .enumerate()
+            .map(|(i, chunk)| {
+                (
+                    chunk
+                        .stored()
+                        .unwrap()
+                        .embedding
+                        .as_ref()
+                        .unwrap()
+                        .cosine(&query),
+                    i,
+                )
+            })
+            .collect();
+        for &(score, i) in &exact {
+            if let Some(got) = scores[i] {
+                assert_eq!(got.to_bits(), score.to_bits());
+            }
+        }
+        exact.sort_by(|a, b| {
+            b.0.total_cmp(&a.0)
+                .then(chunks[a.1].order().cmp(&chunks[b.1].order()))
+        });
+        assert!(exact[..limit].iter().all(|&(_, i)| scores[i].is_some()));
+    }
+
     #[test]
     fn lexical_capture_holds_only_ranked_candidates_and_shares_embeddings() {
         let store = store(120);
@@ -2705,7 +3538,11 @@ mod tests {
         ];
         // Version 1 (flat postings) is still read: it serves, and rebuilds the store, as the
         // version written does.
-        let versions = [super::super::image::encode, super::super::image::encode_v1];
+        let versions = [
+            super::super::image::encode,
+            super::super::image::encode_v2,
+            super::super::image::encode_v1,
+        ];
         for ((first, every), encode) in [(0, 1), (1, 2)]
             .into_iter()
             .flat_map(|layout| versions.map(|encode| (layout, encode)))
@@ -2741,6 +3578,10 @@ mod tests {
                         );
                     }
                 }
+                // A version 3 checkpoint is pruned, not decoded into hot lists.
+                if image.has_impacts() {
+                    continue;
+                }
                 let kept = LEXICAL_SCRATCH.with(|scratch| {
                     let scratch = scratch.borrow();
                     (
@@ -2754,6 +3595,279 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// A store of `documents` one-chunk documents whose words follow a heavy-tailed
+    /// distribution over `vocabulary` terms, with lengths from 3 to 60 words, so some posting
+    /// lists run to many blocks and chunk lengths differ.
+    fn heavy_tailed_store(documents: usize, vocabulary: u64, state: &mut u64) -> DocumentStore {
+        let mut store = DocumentStore::default();
+        for id in 0..documents {
+            let length = 3 + xorshift(state) % 58;
+            let text: Vec<String> = (0..length)
+                .map(|_| {
+                    let u = (xorshift(state) % 1_000_000) as f64 / 1_000_000.0;
+                    format!("w{}", ((vocabulary as f64).powf(u) as u64).min(vocabulary))
+                })
+                .collect();
+            let input = serde_json::from_value(json!({
+                "id": format!("h{id:06}"), "text": text.join(" "), "chunkWords": 4096, "overlapWords": 0,
+            }))
+            .unwrap();
+            let mut document =
+                super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+            for chunk in &mut document.chunks {
+                chunk.vector_state = super::super::VectorState::Lexical;
+                chunk.vector =
+                    crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+            }
+            store.insert(document.id.clone(), document);
+        }
+        store
+    }
+
+    /// Block-max pruned ranking from a version 3 checkpoint returns the chunks, the scores to
+    /// the bit and the order the exhaustive ranking of a version 2 one does, for queries of one
+    /// to thirty terms at several depths and BM25 settings, and decodes fewer blocks than the
+    /// lists hold.
+    #[test]
+    fn pruned_ranking_matches_exhaustive_ranking_to_the_bit() {
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        let stores = [
+            prose_store(0, 1),
+            heavy_tailed_store(6000, 400, &mut state),
+            heavy_tailed_store(40, 6, &mut state),
+        ];
+        let options = [
+            SearchOptions {
+                k: Some(10),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(100),
+                candidate_limit: Some(100),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(3),
+                candidate_limit: Some(5),
+                bm25_k1: Some(1.6),
+                bm25_b: Some(0.4),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(50),
+                candidate_limit: Some(50),
+                bm25_k1: Some(0.0),
+                bm25_b: Some(1.0),
+                ..Default::default()
+            },
+        ];
+        let (mut listed, mut decoded, mut scored_total, mut queries_run) = (0, 0, 0, 0);
+        for (index, store) in stores.iter().enumerate() {
+            type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+            let build = |encode: Encoder| {
+                ServingImage::new(super::super::Backing::Owned(
+                    encode(store, 1, 1024).unwrap().unwrap(),
+                ))
+                .unwrap()
+            };
+            let (pruned, plain) = (
+                build(super::super::image::encode),
+                build(super::super::image::encode_v2),
+            );
+            assert!(pruned.has_impacts() && !plain.has_impacts());
+            let texts: Vec<String> = match index {
+                0 => include_str!("../../../CHANGELOG.md")
+                    .lines()
+                    .filter(|line| line.len() >= 20)
+                    .step_by(4)
+                    .map(str::to_owned)
+                    .collect(),
+                1 => (0..300)
+                    .map(|_| {
+                        let terms = 1 + xorshift(&mut state) % 30;
+                        (0..terms)
+                            .map(|_| {
+                                let u = (xorshift(&mut state) % 1_000_000) as f64 / 1_000_000.0;
+                                format!("w{}", (400f64.powf(u) as u64).min(400))
+                            })
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    })
+                    .collect(),
+                _ => (0..40)
+                    .map(|i| format!("w1 w2 w{} w{} nonsense", i % 7, (i * 3) % 7))
+                    .collect(),
+            };
+            for text in &texts {
+                for options in &options {
+                    let prepared = prepare_search(text, options, None).unwrap();
+                    let (fast, exact, stats) = LEXICAL_SCRATCH.with(|scratch| {
+                        let mut scratch = scratch.borrow_mut();
+                        let fast = scratch.rank(&pruned, &prepared, true);
+                        let stats = scratch.pruned.stats;
+                        let exact = scratch.rank(&plain, &prepared, true);
+                        (fast, exact, stats)
+                    });
+                    let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+                        ranked
+                            .iter()
+                            .map(|&(s, slot)| (s.to_bits(), slot))
+                            .collect()
+                    };
+                    assert_eq!(bits(&fast), bits(&exact), "{text:?}");
+                    listed += stats.blocks_listed;
+                    decoded += stats.blocks_decoded;
+                    scored_total += stats.scored;
+                    queries_run += 1;
+                }
+            }
+        }
+        assert!(queries_run > 1000 && scored_total > 0);
+        assert!(
+            decoded < listed,
+            "pruning decoded {decoded} of {listed} blocks"
+        );
+    }
+
+    /// The windowed ranker's block decoder and frequency tables at the block boundary: a list
+    /// of 127, 128 or 129 postings (and the same plus one block) with frequencies running past
+    /// the table's escape value ranks to the bit as the exhaustive ranking does.
+    #[test]
+    fn pruned_ranking_matches_exhaustive_at_block_boundaries() {
+        let options = [
+            SearchOptions {
+                k: Some(10),
+                ..Default::default()
+            },
+            SearchOptions {
+                k: Some(100),
+                candidate_limit: Some(100),
+                ..Default::default()
+            },
+        ];
+        for documents in [127usize, 128, 129, 255, 256, 257] {
+            let mut store = DocumentStore::default();
+            for id in 0..documents {
+                let repeats = 1 + id % 20;
+                let filler = 1 + (id * 7) % 11;
+                let mut words = vec!["edge"; repeats];
+                words.extend(std::iter::repeat_n("pad", filler));
+                if id % 3 == 0 {
+                    words.push("common");
+                }
+                let input = serde_json::from_value(json!({
+                    "id": format!("b{id:04}"), "text": words.join(" "), "chunkWords": 4096, "overlapWords": 0,
+                }))
+                .unwrap();
+                let mut document =
+                    super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+                for chunk in &mut document.chunks {
+                    chunk.vector_state = super::super::VectorState::Lexical;
+                    chunk.vector =
+                        crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+                }
+                store.insert(document.id.clone(), document);
+            }
+            type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+            let build = |encode: Encoder| {
+                ServingImage::new(super::super::Backing::Owned(
+                    encode(&store, 1, 1024).unwrap().unwrap(),
+                ))
+                .unwrap()
+            };
+            let (pruned, plain) = (
+                build(super::super::image::encode),
+                build(super::super::image::encode_v2),
+            );
+            for text in [
+                "edge",
+                "edge pad",
+                "edge common",
+                "common pad edge edge",
+                "pad",
+            ] {
+                for options in &options {
+                    let prepared = prepare_search(text, options, None).unwrap();
+                    let (fast, exact) = LEXICAL_SCRATCH.with(|scratch| {
+                        let mut scratch = scratch.borrow_mut();
+                        let fast = scratch.rank(&pruned, &prepared, true);
+                        (fast, scratch.rank(&plain, &prepared, true))
+                    });
+                    let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+                        ranked
+                            .iter()
+                            .map(|&(s, slot)| (s.to_bits(), slot))
+                            .collect()
+                    };
+                    assert_eq!(bits(&fast), bits(&exact), "{documents} documents, {text:?}");
+                }
+            }
+        }
+    }
+    /// The cost model switches to the pruned ranker exactly above the serving floor, and every
+    /// store too large for a dense slot table is above it.
+    #[test]
+    fn pruning_switches_on_above_the_serving_floor() {
+        let floor = PRUNE_SLOT_FLOOR_SERVING;
+        assert!(!prune_above(floor - 1, floor));
+        assert!(!prune_above(floor, floor));
+        assert!(prune_above(floor + 1, floor));
+        assert!(DENSE_SLOT_LIMIT > floor);
+    }
+    /// Reports how much of a checkpoint's posting lists block-max pruning reads per query:
+    /// `WARM_PRUNE_CKPT` the `documents.ckpt`, `WARM_PRUNE_QUERIES` the harness query file.
+    #[test]
+    #[ignore = "measurement: needs WARM_PRUNE_CKPT and WARM_PRUNE_QUERIES"]
+    fn pruning_work_report() {
+        let (Ok(ckpt), Ok(queries)) = (
+            std::env::var("WARM_PRUNE_CKPT"),
+            std::env::var("WARM_PRUNE_QUERIES"),
+        ) else {
+            return;
+        };
+        let image =
+            ServingImage::new(super::super::Backing::Owned(std::fs::read(ckpt).unwrap())).unwrap();
+        let queries: Vec<Value> = serde_json::from_slice(&std::fs::read(queries).unwrap()).unwrap();
+        let options = SearchOptions {
+            k: Some(100),
+            candidate_limit: Some(100),
+            ..Default::default()
+        };
+        let mut total = [0usize; 10];
+        for query in &queries {
+            let text = query["text"].as_str().unwrap();
+            let prepared = prepare_search(text, &options, None).unwrap();
+            let stats = LEXICAL_SCRATCH.with(|scratch| {
+                let mut scratch = scratch.borrow_mut();
+                scratch.rank(&image, &prepared, true);
+                scratch.pruned.stats
+            });
+            total[0] += stats.listed;
+            total[1] += stats.blocks_listed;
+            total[2] += stats.blocks_decoded;
+            total[3] += stats.scored;
+            total[4] += stats.windows;
+            total[6] += stats.accumulated;
+            total[7] += stats.survivors;
+            total[8] += stats.table_lookups;
+            total[9] += stats.cursor_lookups;
+        }
+        let n = queries.len() as f64;
+        eprintln!(
+            "queries {} per query: postings listed {:.0} blocks listed {:.0} blocks decoded {:.0} chunks scored {:.0} windows {:.1} accumulated {:.0} survivors {:.0} table lookups {:.0} cursor lookups {:.0}",
+            queries.len(),
+            total[0] as f64 / n,
+            total[1] as f64 / n,
+            total[2] as f64 / n,
+            total[3] as f64 / n,
+            total[4] as f64 / n,
+            total[6] as f64 / n,
+            total[7] as f64 / n,
+            total[8] as f64 / n,
+            total[9] as f64 / n
+        );
     }
 
     /// Rebuilding a checkpoint without the postings of its dead documents and then removing

@@ -56,9 +56,12 @@ With neither `WARM_API_KEY` nor `--keys-file`, the server only starts if `--no-a
 | `--graph-min-rows` | `WARM_GRAPH_MIN_ROWS` | `4096` | Fewest embedded chunks for which index maintenance builds the graph index; smaller stores answer from the exact scan. |
 | `--ingest-encode` | `WARM_INGEST_ENCODE` | `eager` | When ingest computes chunk hypervectors (the text-vector channel): `eager` (at ingest), `deferred` (on the first vector query or maintenance; needs stored text and a text encoder) or `lexical` (never: embedding-only workloads skip the channel's time and memory). Text and `query_vector` search see every document in every mode. |
 | `--max-tenants` | `WARM_MAX_TENANTS` | `64` | Stores open at once (503 `tenant_limit` above it). |
-| `--max-concurrent-work` | `WARM_MAX_CONCURRENT_WORK` | `4` | Requests reading bodies or running engine work at once, 1..=256. |
-| `--max-queue` | `WARM_MAX_QUEUE` | `0` | Requests allowed to wait for a work slot. 0 answers 503 `server_busy` immediately. |
-| `--queue-timeout-ms` | `WARM_QUEUE_TIMEOUT_MS` | `1000` | Longest a queued request waits before 503. |
+| `--max-concurrent-work` | `WARM_MAX_CONCURRENT_WORK` | available cores, at least 4 | Requests reading bodies or running engine work at once, 1..=256. |
+| `--max-queue` | `WARM_MAX_QUEUE` | `4096` | Requests allowed to wait for a work slot. 0 answers 503 `server_busy` immediately. |
+| `--queue-timeout-ms` | `WARM_QUEUE_TIMEOUT_MS` | `10000` | Longest a queued request waits before 503. |
+| `--graph-degree` | `WARM_GRAPH_DEGREE` | `32` | Out-degree of the persisted vector graph, 4..=128. Applies to graphs built after start. |
+| `--graph-build-ef` | `WARM_GRAPH_BUILD_EF` | `300` | Candidate list size while building the vector graph, 16..=4096. |
+| `--graph-profile` | `WARM_GRAPH_PROFILE` | `max-recall` | Build profile of the vector graph: `max-recall`, `high`, `balanced` or `fast`. |
 | `--rate-limit-rps` | `WARM_RATE_LIMIT_RPS` | `0` | Per-tenant sustained requests per second (token bucket); 429 `rate_limited` with `Retry-After`. 0 disables. |
 | `--rate-limit-burst` | `WARM_RATE_LIMIT_BURST` | `0` | Per-tenant burst. 0 means one second of the sustained rate. |
 | `--max-documents-per-tenant` | `WARM_MAX_DOCUMENTS_PER_TENANT` | `0` | Per-tenant document ingest and memory `remember` quota ([scope and retry limits](../SERVER.md#limits-and-backpressure)); exceeding it gets 429 `quota_exceeded`. Replacing an existing id never counts. 0 disables. |

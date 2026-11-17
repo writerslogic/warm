@@ -5,9 +5,9 @@
 //! writes machine-readable results; benchmarks/public/evaluate.py scores them and runs
 //! the comparison libraries on the same data.
 //!
-//! `ann`:  ann-benchmarks sets (dense vectors + shipped ground truth). Measures the raw
-//!         sparse-vector path (`from_dense` + inverted index): recall@10, encode and
-//!         search latency per query, build time, resident memory.
+//! `ann`:  ann-benchmarks sets (dense vectors + shipped ground truth). Measures the engine's
+//!         `memorize_vectors` / `query_vector` path (vertex graph): recall@10, search latency
+//!         per query, build time, resident memory.
 //! `ann-qgraph`: the same sets through the quantized graph index (`core::qgraph`). Builds on
 //!         all cores, then times single-threaded queries one at a time over an `ef` x
 //!         `max-exact` sweep, each configuration repeated and gated on the 1-minute load.
@@ -34,14 +34,14 @@ use clap::{Parser, Subcommand};
 use rayon::prelude::*;
 use serde_json::{json, Value};
 use writerslogic_warm::core::qgraph::{
-    BuildParams, Graph, Metric, QGraph, Residency, SearchParams, UpdatableVGraph, VGraph,
-    VSearchParams,
+    BuildParams, BuildProfile, Graph, Metric, QGraph, Residency, RowStore, SearchParams,
+    UpdatableVGraph, VGraph, VSearchParams,
 };
 use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{DocumentInput, EmbeddingSpace, EntangledHVec, SearchOptions, WarmCore};
 
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
 
 #[derive(Parser)]
 struct Cli {
@@ -87,6 +87,9 @@ enum Mode {
         repeats: usize,
         #[arg(long)]
         cold: bool,
+        /// Keep the base rows on disk behind a cache of this many 64 KiB blocks (0 maps them).
+        #[arg(long, default_value_t = 0)]
+        row_blocks: usize,
     },
     AnnQgraph {
         #[arg(long)]
@@ -112,6 +115,11 @@ enum Mode {
         max_exact: Vec<usize>,
         #[arg(long, default_value_t = 128)]
         build_ef: usize,
+        /// Construction schedule: standard (the default), max-recall (the unbounded two passes of
+        /// earlier releases), high, balanced or fast. A graph cache or saved index built with
+        /// another profile is rejected or must use a new path.
+        #[arg(long, default_value = "standard")]
+        build_profile: String,
         /// Score the construction search with 8-bit codes (exact prune).
         #[arg(long)]
         quantized_search: bool,
@@ -206,7 +214,7 @@ enum Mode {
         /// whose serving process passes `--load-index`.
         #[arg(long, conflicts_with = "load_index")]
         save_index: Option<PathBuf>,
-        #[arg(long, requires = "save_index")]
+        #[arg(long, conflicts_with = "load_index")]
         save_updates: Option<PathBuf>,
         /// Serve a vertex index written by `--save-index` instead of building one. The train
         /// vectors are not read; the build parameters and dataset must match the saved ones.
@@ -543,72 +551,51 @@ fn ann(data: &Path, dim: u32, queries: Option<usize>, out: &Path) -> Result<()> 
         test.truncate(q);
     }
     const K: usize = 10;
-    const PREFILTER: usize = 100;
-
-    let t = Instant::now();
-    let codes: Vec<EntangledHVec> = train
-        .par_iter()
-        .map(|v| EntangledHVec::from_dense(v, dim as usize))
-        .collect();
-    let encode_secs = t.elapsed().as_secs_f64();
-    drop(train);
 
     let store = TempStore::new("ann")?;
     let core = WarmCore::new(dim, Some(store.0.display().to_string()), None)?;
     let t = Instant::now();
-    for (i, code) in codes.into_iter().enumerate() {
-        core.memorize(i.to_string(), code)?;
-    }
-    let insert_secs = t.elapsed().as_secs_f64();
+    let items: Vec<(String, Vec<f32>)> = train
+        .into_iter()
+        .enumerate()
+        .map(|(i, v)| (i.to_string(), v))
+        .collect();
+    core.memorize_vectors(items)?;
+    let build_secs = t.elapsed().as_secs_f64();
     let rss = rss_bytes();
 
     // Single-threaded queries, as in ann-benchmarks.
-    let (mut enc_us, mut search_us) = (Vec::new(), Vec::new());
-    let (mut hits, mut prefilter_hits) = (0usize, 0usize);
+    let mut total_us = Vec::new();
+    let mut hits = 0usize;
     for (q, t_ids) in test.iter().zip(&truth) {
         let gold: Vec<String> = t_ids[..K].iter().map(|i| i.to_string()).collect();
         let t0 = Instant::now();
-        let code = EntangledHVec::from_dense(q, dim as usize);
-        let t1 = Instant::now();
-        let res = core.query(&code, K as u32)?;
-        let t2 = Instant::now();
-        enc_us.push((t1 - t0).as_secs_f64() * 1e6);
-        search_us.push((t2 - t1).as_secs_f64() * 1e6);
+        let res = core.query_vector(q, K as u32)?;
+        total_us.push(t0.elapsed().as_secs_f64() * 1e6);
         hits += res.iter().filter(|r| gold.contains(&r.id)).count();
-        let wide = core.query(&code, PREFILTER as u32)?;
-        prefilter_hits += wide.iter().filter(|r| gold.contains(&r.id)).count();
     }
     let n = test.len();
-    let total_us: Vec<f64> = enc_us.iter().zip(&search_us).map(|(a, b)| a + b).collect();
     let mean_total = total_us.iter().sum::<f64>() / n as f64;
     let report = json!({
         "dataset": m,
         "environment": environment(),
-        "path": "raw sparse vector: EntangledHVec::from_dense + WarmCore::query (inverted index)",
+        "path": "WarmCore::memorize_vectors / query_vector (vertex graph index, exact-cosine scores)",
         "sparse_dim": dim,
         "k": K,
         "n_queries": n,
         "recall_at_10": hits as f64 / (n * K) as f64,
-        "experimental_prefilter": {
-            "note": "fraction of the true top-10 inside the sparse top-100; an exact re-rank of those candidates would return this recall. Not a shipped path.",
-            "candidates": PREFILTER,
-            "recall_at_10": prefilter_hits as f64 / (n * K) as f64,
-        },
-        "build": {"encode_secs_parallel": encode_secs, "insert_secs": insert_secs, "rss_bytes_after_build": rss},
-        "query_encode": latency_summary(enc_us),
-        "query_search": latency_summary(search_us),
+        "build": {"build_secs": build_secs, "rss_bytes_after_build": rss},
         "query_total": latency_summary(total_us),
         "qps_single_thread": 1e6 / mean_total,
     });
     fs::write(out, serde_json::to_string_pretty(&report)?)?;
     println!(
         "{}",
-        json!({"recall_at_10": report["recall_at_10"], "qps": report["qps_single_thread"], "prefilter": report["experimental_prefilter"]["recall_at_10"]})
+        json!({"recall_at_10": report["recall_at_10"], "qps": report["qps_single_thread"]})
     );
     Ok(())
 }
 
-/// Truncate to the engine's single-chunk limits (4096 words, 64 KiB) on a char boundary.
 fn load_1m() -> Option<f64> {
     if cfg!(target_os = "linux") {
         return fs::read_to_string("/proc/loadavg")
@@ -652,6 +639,7 @@ struct QgraphArgs {
     ef: Vec<usize>,
     max_exact: Vec<usize>,
     build_ef: usize,
+    build_profile: String,
     quantized_search: bool,
     alpha: f32,
     code_bits: usize,
@@ -839,17 +827,22 @@ fn ann_qgraph_count<const K: usize>(a: &QgraphArgs) -> Result<()> {
     let params = BuildParams {
         metric,
         build_ef: a.build_ef,
+        profile: BuildProfile::from_name(&a.build_profile)
+            .with_context(|| format!("unknown --build-profile {:?}", a.build_profile))?,
         quantized_search: a.quantized_search,
         alpha: a.alpha,
         code_bits: a.code_bits,
         degree: a.degree,
         ..BuildParams::default()
     };
-    let build_params = json!({"index": a.index, "metric": metric_name, "degree": a.degree, "build_ef": a.build_ef, "quantized_search": a.quantized_search,
+    let mut build_params = json!({"index": a.index, "metric": metric_name, "degree": a.degree, "build_ef": a.build_ef, "quantized_search": a.quantized_search,
                               "alpha": a.alpha, "code_bits": a.code_bits, "seed": params.seed,
                               "residual": a.residual, "residual_bits": a.residual_bits,
                               "vertex_bits": a.vertex_bits, "id_bytes": a.id_bytes, "screen": a.screen,
                               "block_bits": a.block_bits, "align_rows": a.align_rows, "reorder": a.reorder});
+    // Always recorded: a record without it is an earlier release's max-recall build and does
+    // not match a standard request.
+    build_params["build_profile"] = json!(params.profile.name());
     let wait = if a.sync.is_some() { 0 } else { a.max_wait_secs };
     let deadline = Instant::now() + std::time::Duration::from_secs(wait);
     let (load_before_build, build_gate) = wait_for_idle(a.max_load, deadline);
@@ -934,8 +927,10 @@ fn ann_qgraph_count<const K: usize>(a: &QgraphArgs) -> Result<()> {
                 v = v.with_blocks(&graph, a.block_bits)?;
             }
             phase(&mut phases, "encode");
+            let mut graph = graph;
+            graph.release_structure();
             if let Some(path) = &a.save_updates {
-                UpdatableVGraph::create_from_graph(path, &graph, &v)?;
+                UpdatableVGraph::save_from_graph(path, &graph, &v)?;
             }
             Built::Vertex(Box::new(v))
         }
@@ -1616,6 +1611,7 @@ fn ann_updates(
     reranks: &[usize],
     repeats: usize,
     cold: bool,
+    row_blocks: usize,
 ) -> Result<()> {
     if action == "session" {
         return ann_update_session(index_path);
@@ -1639,7 +1635,14 @@ fn ann_updates(
         }
     }
     let start = Instant::now();
-    let index = UpdatableVGraph::open(index_path)?;
+    let store = if row_blocks == 0 {
+        RowStore::Mapped
+    } else {
+        RowStore::Blocks {
+            cache_blocks: row_blocks,
+        }
+    };
+    let index = UpdatableVGraph::open_with(index_path, store)?;
     let open_s = start.elapsed().as_secs_f64();
     let params = VSearchParams {
         ef: *efs.first().context("empty ef sweep")?,
@@ -1704,30 +1707,38 @@ fn ann_updates(
                         ..Default::default()
                     };
                     let mut hits = 0;
+                    // Per-query hit counts: the harness scores recall on a half of the queries
+                    // apart from the half that selected this configuration.
+                    let mut hits_per_query = Vec::with_capacity(test.len());
                     for (q, truth) in test.iter().zip(&truth) {
                         index.search_into(q, 10, p, &mut found)?;
-                        hits += found
+                        let query_hits = found
                             .iter()
                             .filter(|&&id| truth[..10.min(truth.len())].contains(&(id as i32)))
                             .count();
+                        hits += query_hits;
+                        hits_per_query.push(query_hits);
                     }
                     let mut timings = Vec::new();
                     for _ in 0..repeats {
                         let mut lat = Vec::with_capacity(test.len());
+                        let mut lat_ns = Vec::with_capacity(test.len());
                         for q in &test {
                             let t = Instant::now();
                             index.search_into(q, 10, p, &mut found)?;
                             std::hint::black_box(&found);
-                            lat.push(t.elapsed().as_secs_f64() * 1e6);
+                            let elapsed = t.elapsed();
+                            lat.push(elapsed.as_secs_f64() * 1e6);
+                            lat_ns.push(elapsed.as_nanos() as u64);
                         }
                         let qps = test.len() as f64 / (lat.iter().sum::<f64>() * 1e-6);
                         lat.sort_by(f64::total_cmp);
-                        timings.push(json!({"qps":qps, "p50_us":percentile(&lat,0.5), "p99_us":percentile(&lat,0.99)}));
+                        timings.push(json!({"qps":qps, "p50_us":percentile(&lat,0.5), "p99_us":percentile(&lat,0.99), "lat_ns":lat_ns}));
                     }
-                    configs.push(json!({"params":{"ef":ef,"rerank":rerank}, "recall_at_10":hits as f64/(test.len()*10) as f64, "repeats":timings, "load_1m":load_1m(), "load_gate_met":null}));
+                    configs.push(json!({"params":{"ef":ef,"rerank":rerank}, "recall_at_10":hits as f64/(test.len()*10) as f64, "repeats":timings, "load_1m":load_1m(), "load_gate_met":null, "hits_per_query":hits_per_query}));
                 }
             }
-            json!({"n":index.len(), "n_queries":test.len(), "configs":configs, "open_s":open_s, "cold_start_s":cold_start_s, "first_query_unix_ns":first_query_unix_ns, "rss_steady":rss_bytes(), "rss_after_open":rss_after_open, "memory_phases":[{"phase":"serve_end","memory":memory()}]})
+            json!({"n":index.len(), "row_blocks":row_blocks, "n_queries":test.len(), "configs":configs, "open_s":open_s, "cold_start_s":cold_start_s, "first_query_unix_ns":first_query_unix_ns, "rss_steady":rss_bytes(), "rss_after_open":rss_after_open, "memory_phases":[{"phase":"serve_end","memory":memory()}]})
         }
         _ => anyhow::bail!("unsupported update action {action}"),
     };
@@ -1799,6 +1810,7 @@ fn main() -> Result<()> {
             rerank,
             repeats,
             cold,
+            row_blocks,
         } => ann_updates(
             &index,
             data.as_deref(),
@@ -1808,6 +1820,7 @@ fn main() -> Result<()> {
             &rerank,
             repeats,
             cold,
+            row_blocks,
         ),
         Mode::AnnQgraph {
             data,
@@ -1817,6 +1830,7 @@ fn main() -> Result<()> {
             ef,
             max_exact,
             build_ef,
+            build_profile,
             quantized_search,
             alpha,
             code_bits,
@@ -1856,6 +1870,7 @@ fn main() -> Result<()> {
             ef,
             max_exact,
             build_ef,
+            build_profile,
             quantized_search,
             alpha,
             code_bits,

@@ -55,7 +55,7 @@ Competitors that were not run include NGT/ONNG/QSG-NGT and DiskANN/Vamana. The h
 - glove-100-angular (degree 32): same-configuration after/before on the 4-bit index 1.16 to 1.52; max recall@10 in the sweep 0.9485 with 4-bit codes, 0.9503 with 8-bit.
 - glove-100-angular (degree 64): same-configuration after/before on the 4-bit index 1.18 to 1.43; max recall@10 in the sweep 0.9917 with 4-bit codes, 0.9931 with 8-bit.
 
-Losses and limits: on GloVe degree 32 neither code width reaches 0.99 in the swept pool sizes and 4-bit codes do not reach 0.95; degree 64 reaches all three. GloVe was not rerun in the harness, so its standing against scann is the v1 table's. On GloVe the 8-bit codes buy almost no recall at a given ef (0.9174 against 0.9137 at ef 120, degree 64), so the wider codes cost more than they buy there: at degree 64 the after 8-bit arm runs at 1.04x, 0.94x, 0.99x of after 4-bit at 0.90, 0.95 and 0.99. Below 1.00 is a loss of the new default against 4-bit codes; the gain on GloVe is the prefetch and re-rank work.
+Losses and limits: on GloVe degree 32 neither code width reaches 0.99 in the swept pool sizes and 4-bit codes do not reach 0.95; degree 64 reaches all three. GloVe was not rerun in the harness, so its standing against scann is the v1 table's. On GloVe the 8-bit codes buy almost no recall at a given ef (0.9174 against 0.9137 at ef 120, degree 64), so the wider codes cost more than they buy there: at degree 64 the after 8-bit arm is faster than after 4-bit at 0.90, slower at 0.95 and slightly slower at 0.99 (the table above lists each QPS). Below 1.00 is a loss of the new default against 4-bit codes; the gain on GloVe is the prefetch and re-rank work.
 
 The Fashion-MNIST set started while jobs outside the lock held the host at 1-minute load 8.5, which fell to 1.2 during it: its first round ran up to 2.6x slower than the other two, so its medians are the slower of the two clean rounds and its same-configuration ratios are less certain than SIFT's and GloVe's.
 
@@ -69,7 +69,7 @@ Status: this is a partial development record. The committed artifacts contain tw
 
 ### What the entry is
 
-The ann-benchmarks entry is the quantised vertex graph (`VectorIndex`, `qgraph`), not an IVF index. The wrapper builds one graph (degree, `build_ef`, traversal `code_bits`) and sweeps `ef` and `rerank`. The README row "sift 2,819 QPS, glove 1,019 QPS" is the v1 standing: commit `19f4371`, 4-bit traversal codes, up to ten parallel runs on WSL2 logical CPUs, one job swapping. The wrapper default at the time was 8-bit codes (`d1aa6097`), and `ann_benchmarks_single_thread_wl02_v2.json` measured 2.1x to 3.0x on SIFT from that change with a local driver, never through the harness. These older README measurements describe their recorded revision, not the throughput of a later release.
+The ann-benchmarks entry is the quantised vertex graph (`VectorIndex`, `qgraph`), not an IVF index. The wrapper builds one graph (degree, `build_ef`, traversal `code_bits`) and sweeps `ef` and `rerank`. The README row "sift 2,819 QPS, glove 1,019 QPS" ([`ann_benchmarks_harness_wl02_v1.json`](../../benchmarks/results/ann_benchmarks_harness_wl02_v1.json)) is the v1 standing: commit `19f4371`, 4-bit traversal codes, up to ten parallel runs on WSL2 logical CPUs, one job swapping. The wrapper default at the time was 8-bit codes (`d1aa6097`), and `ann_benchmarks_single_thread_wl02_v2.json` measured 2.1x to 3.0x on SIFT from that change with a local driver, never through the harness. These older README measurements describe their recorded revision, not the throughput of a later release.
 
 ### Control through the harness (measured)
 
@@ -80,15 +80,15 @@ Historical control wheel: `f21de886` (rustc 1.99.1), wrapper `code_bits` 8, degr
 | sift-128-euclidean | 0.95 | 17,908 | 17,423 | 17,666 | 2,819 |
 | sift-128-euclidean | 0.99 | 9,196 | 9,086 | 9,141 | 1,267 |
 
-QPS is the best of the points with recall at least the target (the harness convention); linear-in-log-QPS interpolation gives 18,595 and 9,505. Files: `benchmarks/results/ann_benchmarks_v3_wl02/g0-sift-ctrl.json` and `g0-sift/`. No same-session faiss-ivfpqfs (SIFT) or ScaNN (GloVe) rerun is committed. The v1 faiss-ivfpqfs figures of 3,787 and 1,895 QPS were measured on another day under different contention and do not support a matched speedup ratio.
+QPS is the best of the points with recall at least the target (the harness convention); linear-in-log-QPS interpolation gives 18,595 and 9,505. Files: `benchmarks/results/ann_benchmarks_v3_wl02/g0-sift-ctrl.json` and `g0-sift/`. No same-session faiss-ivfpqfs (SIFT) or ScaNN (GloVe) rerun is committed. The v1 faiss-ivfpqfs figures of 3,787 and 1,895 QPS ([`ann_benchmarks_harness_wl02_v1.json`](../../benchmarks/results/ann_benchmarks_harness_wl02_v1.json)) were measured on another day under different contention and do not support a matched speedup ratio.
 
-No full GloVe harness control is committed for this campaign. The v2 driver numbers (not comparable) were 2,968 QPS at 0.95 for degree 64 against ScaNN's 1,535 in v1.
+No full GloVe harness control is committed for this campaign. The v2 driver numbers (not comparable, [`ann_benchmarks_single_thread_wl02_v2.json`](../../benchmarks/results/ann_benchmarks_single_thread_wl02_v2.json)) were 2,968 QPS at 0.95 for degree 64 against ScaNN's 1,535 in v1 ([`ann_benchmarks_harness_wl02_v1.json`](../../benchmarks/results/ann_benchmarks_harness_wl02_v1.json)).
 
 ### Profile of the control at its 0.95 point (measured)
 
 `perf record -e cpu-clock -F 4000` of the harness query loop (`index.query` per test query), pinned to one CPU outside the lock (attribution only, not timing; host load about 17). Raw reports are in `benchmarks/results/ann_benchmarks_v3_wl02/profiles/`.
 
-| Share of samples | sift (held-out, degree 32, ef 30, recall 0.953) | glove (degree 64, ef 240, recall 0.956) |
+| Share of samples | sift ([profiles](../../benchmarks/results/ann_benchmarks_v3_wl02/profiles/); held-out, degree 32, ef 30, recall 0.953) | glove (degree 64, ef 240, recall 0.956) |
 |---|---|---|
 | `search_inner` (traversal, admission, memory stalls) | 51% | 56% |
 | `dot_i8` (AVX-VNNI tier selected on this host) | 8.9% | 12.6% |
@@ -106,7 +106,7 @@ The entry is traversal-bound. The re-rank occupies under 3% of these samples, li
 
 | Candidate | Status |
 |---|---|
-| IVF tier (`PartitionIndex`: SOAR, 4-bit LUT16 scan with the fused admission, exact reorder) as a second entry | Historically reported as rejected on SIFT by a smoke run (held-out sift, 2048 lists, `pq_m` 64, reorder 200): recall 0.968 at 2,976 QPS and 0.992 at 1,292, against 18,182 QPS at recall 0.954 for the graph. No raw smoke result is committed in this PR; this report is not independently verified here. Not run on GloVe. |
+| IVF tier (`PartitionIndex`: SOAR, 4-bit LUT16 scan with the fused admission, exact reorder) as a second entry | Historically reported as rejected on SIFT by a smoke run (held-out sift, 2048 lists, `pq_m` 64, reorder 200). Its raw result is not committed, so no figure from it is quoted. Not run on GloVe. |
 | Compile-time variants already in tree: `experimental-batch-pool`, `-neighbor-admission`, `-query-x4` (wheels `xbp`, `xna`, `xq4`) | Reported built; no completed timing result is committed (`b1-sift`, `b2-glove` plans). |
 | Searcher env knobs (`WARM_QGRAPH_PREFETCH`, `BATCH_EST`, `FRONTIER`, `RERANK_Z`, `KERNEL=avx2` against the auto-selected AVX-VNNI tier) | No completed timing result committed. |
 | `rerank` depth, `patience` (query arguments) | No completed timing result committed. |

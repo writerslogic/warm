@@ -8,11 +8,17 @@ pub use background_compaction::{
     CompactionStage, CompactionStatus,
 };
 mod compaction;
+mod purge;
+pub use purge::{PurgeStatus, PurgeTicket};
 pub(crate) mod concepts;
+mod dense_vectors;
+mod sparse_docs;
+pub use sparse_docs::{RankingMode, SparseSearch};
 mod document_api;
 mod document_batch;
 #[cfg(feature = "local-embed")]
 mod embed_api;
+mod experience_api;
 mod governance;
 mod history;
 mod image;
@@ -35,6 +41,8 @@ mod deferred_cache_tests;
 mod document_memory_census;
 #[cfg(test)]
 mod document_snapshot_tests;
+#[cfg(test)]
+mod fold_tests;
 
 #[cfg(all(test, feature = "local-models"))]
 mod document_stage_tests;
@@ -127,6 +135,8 @@ pub struct WarmCore {
     image: image::ImageState,
     /// Snapshot answering unfiltered vector queries (`search_vectors`); built by maintenance.
     vector_index: super::documents::VectorIndexSlot,
+    dense: dense_vectors::DenseVectors,
+    sparse: crate::core::index::sparse_store::SparseStore,
     #[cfg(feature = "local-models")]
     model_stages: RwLock<Option<Arc<crate::core::models::ModelStages>>>,
     #[cfg(feature = "local-embed")]
@@ -162,6 +172,14 @@ pub struct WarmCore {
     phase_graph: crate::core::sync::Mutex<Option<super::phase_graph::PhaseGraph>>,
     // Declared last so it is dropped after every mmap, index, and store
     // component. No subsequent instance can enter while teardown is flushing.
+    /// Purges waiting for a scrubbing compaction (`purge.pending`).
+    purge: Arc<purge::PurgeLedger>,
+    /// Serializes scrubbing compactions, so a purge whose ticket another one already cleared
+    /// does not compact again.
+    scrub_gate: crate::core::sync::Mutex<()>,
+    /// The experience store of tree-structured observations; absent until the store holds
+    /// one, so a store that never receives an observation has no experience files.
+    experience: RwLock<Option<super::experience::store::ExperienceStore>>,
     _store_lock: StoreLock,
 }
 
@@ -201,6 +219,8 @@ impl WarmCore {
 
         let store_lock = StoreLock::acquire(&base_path)?;
         let (schema, analyzer) = super::schema::validate_store(&base_path, dim, &config)?;
+        let dense = dense_vectors::DenseVectors::open(&base_path)?;
+        let base_path_sparse = base_path.clone();
 
         let arena = PersistentArena::new(base_path.join("vectors_data.bin"))?;
 
@@ -308,6 +328,7 @@ impl WarmCore {
                 (None, None, None, None, None, None, None)
             };
 
+        let purge = Arc::new(purge::PurgeLedger::open(&base_path)?);
         let core = Self {
             config: config.clone(),
             mutation_gate: mutation_gate::MutationGate::default(),
@@ -329,6 +350,8 @@ impl WarmCore {
             documents: RwLock::new(super::documents::DocumentStore::opened()),
             image: image::ImageState::default(),
             vector_index: super::documents::VectorIndexSlot::default(),
+            dense,
+            sparse: crate::core::index::sparse_store::SparseStore::open(&base_path_sparse)?,
             #[cfg(feature = "local-models")]
             model_stages: RwLock::new(None),
             #[cfg(feature = "local-embed")]
@@ -368,6 +391,9 @@ impl WarmCore {
             connection_graph: crate::core::sync::Mutex::new(None),
             #[cfg(feature = "experimental")]
             phase_graph: crate::core::sync::Mutex::new(None),
+            purge,
+            scrub_gate: crate::core::sync::Mutex::new(()),
+            experience: RwLock::new(None),
             _store_lock: store_lock,
         };
 
@@ -398,7 +424,22 @@ impl WarmCore {
         }
         // Only a completely opened engine may write an image when it closes.
         core.flush_audit()?;
+        core.open_experience()?;
         core.mark_opened();
+        // A purge that died between its delete commit and the end of its compaction left the
+        // deleted text in the journal; finish it before the store is handed out.
+        if core.purge_pending() {
+            if let Err(error) = core.compact_scrubbing() {
+                // A full disk (or any failure) must not make the store unopenable: nothing
+                // acknowledged is lost, the deletes are committed, and the ticket stays on disk
+                // so a later open (or `compact_scrubbing`) finishes the purge. The store reports
+                // it as pending (`purge_status`), never as purged.
+                tracing::warn!(
+                    error = %format!("{error:#}"),
+                    "an interrupted purge could not be completed; it stays pending"
+                );
+            }
+        }
 
         Ok(core)
     }
@@ -945,13 +986,6 @@ impl WarmCore {
         self.revision
             .fetch_add(1, std::sync::atomic::Ordering::Release);
         self.persist_indices(&self.shards.read())
-    }
-
-    /// Convert a dense f32 vector to sparse and memorize it.
-    pub fn memorize_vector(&self, id: String, dense: &[f32]) -> Result<()> {
-        self.validate_dense(dense)?;
-        let vector = EntangledHVec::from_dense(dense, self.dimensions);
-        self.memorize(id, vector)
     }
 
     /// Encode a bounded scalar value as a hypervector and memorize it.
@@ -1943,6 +1977,8 @@ impl Drop for WarmCore {
     fn drop(&mut self) {
         if let Err(error) = self.checkpoint_if_due() {
             tracing::warn!(%error, "document checkpoint not written at close");
+        } else {
+            self.release_text_cache();
         }
     }
 }

@@ -1,0 +1,8 @@
+wl2 2026-11-14, one performance core (taskset -c 2), idle host, same index per corpus built by the native example (one segment).
+QPS, best of 5 passes (native, ids from array) / best of 3 passes (tantivy-py 0.27.0, query parsed outside, no id fetch).
+corpus     native TopDocs  native TopDocs+Count  py count=True  py count=False
+fiqa            807              2491                1800            2024
+scifact        5312             14954               11100           11930
+nfcorpus      30779             54883               37398           39596
+memory         2922             10507                8003            8433
+tantivy-py src (0.27.0 sdist, src/searcher.rs): TopDocs::with_limit(limit).and_offset(offset), always wrapped in a MultiCollector; Count added when count=true (default).

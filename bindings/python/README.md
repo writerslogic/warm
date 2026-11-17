@@ -1,4 +1,4 @@
-<a href="https://writerslogic.com/warm/"><img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/crystal-halo/crystal-detailed-static.png" alt="WARM logo" width="96" align="left"></a>
+<a href="https://writerslogic.com/warm/"><img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/logo/warm-logo.png" alt="WARM logo" width="96" align="left"></a>
 
 # WARM for Python
 
@@ -10,10 +10,10 @@ Native Python bindings for WARM's vector search and vector-symbolic algebra.
 
 ## Install
 
-Python 3.9 or newer is required. Install the native binding and NumPy for the vector-index API:
+Python 3.9 or newer is required. Install the native binding; NumPy (`>=1.26`, which the vector-index API needs) is installed with it:
 
 ```sh
-uv add warm-python numpy
+uv add warm-python
 ```
 
 The distribution is named `warm-python`; the import is `writerslogic_warm`.
@@ -90,9 +90,54 @@ total phase elements per operation. Resonators additionally allow at most 64 fac
 `(3 * entries + factors**2) * max(dimensions, 1) * (iterations + 1)` before cloning codebooks
 or allocating the resonator index.
 
+## Document search and memory
+
+`Warm` is the in-process engine: a persistent store with hybrid BM25 and exact-cosine document
+search, the memory API and vector search. Requests and results are dicts and lists with the
+camelCase fields of the Node binding. One process may write a store at a time.
+
+```python
+from writerslogic_warm import Warm
+
+store = Warm(16384, "./warm-data")
+store.memorize_document({"id": "a", "text": "The harbor opens at six in the morning."})
+print(store.search_documents("when does the harbor open", {"k": 3})[0]["documentId"])
+
+store.remember({"text": "Ada prefers tea", "subject": "ada"})
+print(store.recall("what does Ada drink")["results"][0]["text"])
+```
+
+### Hybrid recall
+
+Recall is lexical (BM25) until the store has vectors. Give it vectors one of two ways and
+`recall` blends BM25 with exact cosine by default:
+
+```python
+from writerslogic_warm import Embedder, Warm
+
+# The engine embeds facts and queries itself (local embedding model).
+store = Warm(16384, "./warm-data", embedder=Embedder())
+store.remember({"text": "Ada prefers tea", "subject": "ada"})
+store.recall("what does Ada drink")                       # hybrid
+
+# Or supply the vectors: declare the space, then pass `embedding` on remember and recall.
+store = Warm(16384, "./warm-ext", embedding_dimensions=384)
+store.remember({"text": "Ada prefers tea", "embedding": vector})
+store.recall("what does Ada drink", {"embedding": query_vector})
+```
+
+`embedding` takes a list or a numpy array of exactly the store's dimensions with finite values
+and not all zeros; anything else is a `ValueError` naming the problem. A recall with no
+`embedding` on a store with no embedder ranks lexically, bit-for-bit as before.
+`{"semanticWeight": 0}` forces lexical ranking on a store that has vectors, and
+`{"fusion": "rrf"}` selects reciprocal-rank fusion instead of the default blend. A store is
+reopened with the same `embedder` or `embedding_dimensions`.
+
+`memorize_vector(id, vector)` and `query_vector(vector, k)` use the vertex graph index;
+`query_vector` returns `(id, cosine)` pairs.
+
 ## Choosing the right Python package
 
-This native binding runs vector search and phase-vector operations in your Python process. It does
-not expose the persistent document-search and agent-memory APIs. For an HTTP client to `warm-server`,
-use [`warm-sdk`](https://pypi.org/project/warm-sdk/). The Rust and Node.js
-packages expose the full embedded engine.
+This native binding runs the engine in your Python process: document search, the memory API,
+vector search and phase-vector operations. For an HTTP client to `warm-server`, use
+[`warm-sdk`](https://pypi.org/project/warm-sdk/).

@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from warmbench import text_worker  # noqa: E402
 
 
-@pytest.mark.parametrize("system, package", [("sqlite-fts5", "sqlite3"), ("tantivy", "tantivy"), ("whoosh", "whoosh")])
+@pytest.mark.parametrize("system, package", [("sqlite-fts5", "sqlite3"), ("tantivy-py", "tantivy"), ("whoosh", "whoosh")])
 def test_text_mutations_are_visible_and_committed(tmp_path, system, package):
     pytest.importorskip(package)
     docs = [{"id": "one/α", "text": "apricot orchard"}, {"id": "two", "text": "banana orchard"}]
@@ -36,6 +36,6 @@ def test_version_controls_are_selectable_but_never_default():
     assert controls - {"lucene-prev"} <= set(text_worker.SYSTEMS)
     for control in controls - {"lucene-prev"}:
         assert registry.SYSTEMS[control]["env"] in envs.PINS
-        assert registry.SYSTEMS[control]["env"] != registry.SYSTEMS[control.removesuffix("-prev")]["env"]
+        assert registry.SYSTEMS[control]["env"] != registry.system(control.removesuffix("-prev"))["env"]
     assert set(jars.PINNED) == set(jars.JAVA_RELEASE) == {jars.VERSION, jars.PREVIOUS}
     assert jars.PINNED[jars.VERSION] != jars.PINNED[jars.PREVIOUS]

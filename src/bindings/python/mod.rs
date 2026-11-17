@@ -62,6 +62,7 @@ mod filter_index;
 mod partition_index;
 mod sparse_index;
 mod vector_index;
+mod warm;
 
 /// A quantized-phase hypervector: `dim` phases in `Z_N`. Binding is phase-add mod N
 /// (not self-inverse), bundling is a deterministic integer fold, similarity is the
@@ -197,6 +198,11 @@ fn resonator_factorize(
         .collect())
 }
 
+/// The wheel is its own shared object, so its allocations stay inside it; see `crate::allocator`.
+#[cfg(all(feature = "mimalloc", warm_wheel_allocator))]
+#[global_allocator]
+static GLOBAL: crate::allocator::Tuned = crate::allocator::Tuned;
+
 #[pymodule]
 fn writerslogic_warm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add(
@@ -208,6 +214,7 @@ fn writerslogic_warm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     vector_index::register(m)?;
     filter_index::register(m)?;
     sparse_index::register(m)?;
+    warm::register(m)?;
     #[cfg(feature = "experimental")]
     partition_index::register(m)?;
     #[cfg(feature = "local-embed")]

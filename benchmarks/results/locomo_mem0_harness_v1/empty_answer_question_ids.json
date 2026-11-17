@@ -1,0 +1,27 @@
+{
+ "note": "questions whose WARM answer is empty (completion limit reached); 22 x 0.027 USD = 0.59 USD to re-answer and re-judge; the prompt-hash call cache must be bypassed or a rerun returns the same empty reply",
+ "question_ids": [
+  "conv0_q15",
+  "conv0_q32",
+  "conv0_q38",
+  "conv0_q39",
+  "conv0_q40",
+  "conv2_q11",
+  "conv3_q54",
+  "conv3_q58",
+  "conv3_q70",
+  "conv3_q73",
+  "conv3_q74",
+  "conv3_q78",
+  "conv3_q81",
+  "conv4_q4",
+  "conv4_q17",
+  "conv4_q61",
+  "conv5_q17",
+  "conv5_q51",
+  "conv7_q82",
+  "conv7_q88",
+  "conv8_q50",
+  "conv9_q19"
+ ]
+}

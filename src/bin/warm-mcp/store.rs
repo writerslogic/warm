@@ -9,8 +9,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use parking_lot::{Condvar, Mutex};
 use serde_json::{json, Map, Value};
+use writerslogic_warm::core::experience;
 use writerslogic_warm::core::WarmConfig;
-use writerslogic_warm::{chunk_document, DocumentInput, DocumentRecord, SearchOptions, WarmCore};
+use writerslogic_warm::{
+    chunk_document, DocumentInput, DocumentRecord, DocumentResult, SearchOptions, WarmCore,
+};
 
 use crate::memory::{
     Fail, ForgetOut, ForgetReq, Hit, Limits, ListReq, Memory, Page, RememberOut, RememberReq, Res,
@@ -538,6 +541,67 @@ impl WarmBackend {
             .map(|r| record_memory(&r)))
     }
 
+    /// Stores one observation step in the namespace's experience core.
+    pub fn observe(&self, namespace: &str, observation: Value) -> Res<Value> {
+        let store = self.store(namespace)?;
+        let _write = store.gate.lock();
+        let limits = store.core.experience_limits();
+        if !experience::is_observation_shape(&observation) {
+            return Err(Fail::invalid(
+                "an observation needs an `episode` string, a `step` number and a `tree` object",
+            ));
+        }
+        experience::check_observation_value(&observation, &limits)
+            .map_err(|e| Fail::invalid(e.to_string()))?;
+        let bytes = serde_json::to_vec(&observation).map_or(0, |v| v.len());
+        let parsed: experience::OwnedObservation = serde_json::from_value(observation)
+            .map_err(|e| Fail::invalid(format!("invalid observation: {e}")))?;
+        let id = format!("experience:{}:{}", parsed.episode, parsed.step);
+        let outcome = store
+            .core
+            .with_experience_mut(|s| s.ingest_many(vec![parsed]))
+            .map_err(|e| Fail::invalid(e.to_string()))?
+            .map_err(|(_, e)| match e {
+                experience::ExperienceError::Limit { .. }
+                | experience::ExperienceError::Invalid(_)
+                | experience::ExperienceError::OutOfOrder { .. }
+                | experience::ExperienceError::Conflict { .. } => Fail::invalid(e.to_string()),
+                other => Fail::internal(other),
+            })?;
+        Ok(json!({
+            "id": id,
+            "version": "",
+            "created": outcome[0] == experience::Ingested::Applied,
+            "bytes": bytes,
+            "namespace": namespace,
+        }))
+    }
+
+    /// Removes an episode of observations and scrubs it from the snapshot and journal.
+    pub fn forget_episode(&self, namespace: &str, episode: &str) -> Res<Value> {
+        let store = self.store(namespace)?;
+        let _write = store.gate.lock();
+        // Read first: purging through the writer would create an experience store in a
+        // namespace that holds only documents.
+        if !store
+            .core
+            .with_experience(|s| s.has_episode(episode))
+            .unwrap_or(false)
+        {
+            return Ok(json!({"deleted": 0, "missing": [episode]}));
+        }
+        let report = store
+            .core
+            .with_experience_mut(|s| s.purge_episode(episode))
+            .map_err(Fail::internal)?
+            .map_err(Fail::internal)?;
+        let (deleted, missing) = match report {
+            Some(_) => (1, Vec::new()),
+            None => (0, vec![episode.to_string()]),
+        };
+        Ok(json!({"deleted": deleted, "missing": missing}))
+    }
+
     pub fn search(&self, namespace: &str, req: SearchReq) -> Res<Vec<Hit>> {
         let store = self.store(namespace)?;
         let filter = tag_filter(&req.tags, &req.filter);
@@ -557,9 +621,69 @@ impl WarmBackend {
             .core
             .search_documents(&req.query, &options)
             .map_err(|e| Fail::invalid(format!("search failed: {e:#}")))?;
-        Ok(results
+        // `min_score` applies to the document scores the caller can compare; once regions merge in
+        // every score is a rank-fused value relative to the best one.
+        let mut results: Vec<DocumentResult> = results
             .into_iter()
             .filter(|r| req.min_score.is_none_or(|min| r.score >= min))
+            .collect();
+        // Regions of observations have no tags or metadata, so a filtered search skips them.
+        let regions = if filter.as_object().is_none_or(|m| m.is_empty()) {
+            store
+                .core
+                .with_experience(|s| {
+                    let mut hits: Vec<DocumentResult> = s
+                        .search_regions(&req.query, req.k)?
+                        .into_iter()
+                        .map(|h| h.into_document_result())
+                        .collect();
+                    // Regions and effect rows are two ranked lists; both merge by rank below.
+                    hits.extend(
+                        s.search_effects(&req.query, req.k)?
+                            .into_iter()
+                            .map(|h| h.into_document_result()),
+                    );
+                    Ok::<_, experience::ExperienceError>(hits)
+                })
+                .transpose()
+                .map_err(Fail::internal)?
+                .unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        if !regions.is_empty() {
+            // The two lists come from separate lexical indexes, so they merge by rank
+            // (`experience::rank_fusion_score`); the score is relative to the best fused one.
+            let mut merged: Vec<(f64, DocumentResult)> = results
+                .into_iter()
+                .enumerate()
+                .map(|(i, r)| (experience::rank_fusion_score(i + 1), r))
+                .collect();
+            // `regions` holds the region list followed by the effect list; each restarts at rank 1.
+            let mut rank = 0;
+            let mut in_effects = false;
+            for h in regions {
+                let effect = h.metadata["kind"] == "experience-effect";
+                if effect != in_effects {
+                    in_effects = effect;
+                    rank = 0;
+                }
+                rank += 1;
+                merged.push((experience::rank_fusion_score(rank), h));
+            }
+            merged.sort_by(|a, b| b.0.total_cmp(&a.0));
+            merged.truncate(req.k);
+            let top = merged.first().map_or(1.0, |m| m.0);
+            results = merged
+                .into_iter()
+                .map(|(fused, mut r)| {
+                    r.score = fused / top;
+                    r
+                })
+                .collect();
+        }
+        Ok(results
+            .into_iter()
             .map(|r| Hit {
                 memory: memory_from(&r.document_id, r.text.as_deref(), &r.metadata, &r.version),
                 score: r.score,
@@ -677,6 +801,11 @@ impl WarmBackend {
         }
         let mut deleted = 0;
         let mut missing = Vec::new();
+        let ticket = if ids.is_empty() {
+            None
+        } else {
+            Some(store.core.mark_purge_pending().map_err(Fail::internal)?)
+        };
         for id in ids {
             if store.core.delete_document(&id).map_err(|error| {
                 Self::committed_write(
@@ -693,6 +822,16 @@ impl WarmBackend {
             } else {
                 missing.push(id);
             }
+        }
+        if let Some(ticket) = ticket.filter(|_| deleted > 0) {
+            // The delete is physical when the tool returns: the journal is rewritten without
+            // the text and what it replaced is overwritten. One compaction covers the whole call.
+            store.core.finish_purge(ticket).map_err(|error| {
+                Self::committed_write(
+                    error,
+                    json!({"deleted": deleted, "missing": missing, "namespace": namespace}),
+                )
+            })?;
         }
         Ok(ForgetOut { deleted, missing })
     }
@@ -758,6 +897,64 @@ mod tests {
             },
         )
         .unwrap()
+    }
+
+    fn search_req(query: &str, min_score: Option<f64>) -> SearchReq {
+        SearchReq {
+            query: query.into(),
+            k: 10,
+            tags: Vec::new(),
+            filter: Map::new(),
+            min_score,
+            lexical_weight: None,
+            semantic_weight: None,
+            fusion: None,
+        }
+    }
+
+    #[test]
+    fn min_score_filters_documents_when_regions_merge_in() {
+        let dir = tempfile::tempdir().unwrap();
+        let b = backend(dir.path());
+        put(
+            &b,
+            "d1",
+            "checkout order policy for the place order button",
+            &[],
+        );
+        let q = "place order button";
+        let weak = b.search("t", search_req(q, None)).unwrap();
+        assert_eq!(weak.len(), 1);
+        let cutoff = weak[0].score * 1.01 + 1e-6;
+        b.observe(
+            "t",
+            json!({"episode": "e1", "step": 0, "url": "http://shop/c", "tree":
+                {"role": "RootWebArea", "name": "Checkout", "children": [
+                    {"role": "button", "name": "Place order"}]}}),
+        )
+        .unwrap();
+        let hits = b.search("t", search_req(q, Some(cutoff))).unwrap();
+        let found: Vec<&str> = hits.iter().map(|h| h.memory.id.as_str()).collect();
+        assert!(!found.contains(&"d1"), "{found:?}");
+        assert!(
+            found.iter().any(|i| i.starts_with("experience:")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn forgetting_an_unknown_episode_creates_no_experience_store() {
+        let dir = tempfile::tempdir().unwrap();
+        let b = backend(dir.path());
+        put(&b, "d1", "text", &[]);
+        let out = b.forget_episode("t", "nope").unwrap();
+        assert_eq!(out["deleted"], 0);
+        let found = std::fs::read_dir(dir.path())
+            .unwrap()
+            .flatten()
+            .flat_map(|e| std::fs::read_dir(e.path()).into_iter().flatten().flatten())
+            .any(|e| e.file_name().to_string_lossy().starts_with("experience."));
+        assert!(!found);
     }
 
     fn ids(page: &Page) -> Vec<&str> {

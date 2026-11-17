@@ -1,0 +1,25 @@
+{
+ "selected_on": [
+  "fiqa-train",
+  "nfcorpus-train",
+  "memory-selection"
+ ],
+ "rule": "fusion_rule.json",
+ "engine_default_before": {
+  "kind": "blend_minmax",
+  "alpha": 0.5,
+  "depth": 100
+ },
+ "adopted": null,
+ "adopted_macro_ndcg10": null,
+ "default_macro_ndcg10": 0.4325067827420456,
+ "comparator_rrf": {
+  "lucene-hnsw": 1,
+  "lucene-exact": 1,
+  "sqlite-vec": 1,
+  "lancedb": 5,
+  "tantivy-usearch": 2
+ },
+ "warm_flags": [],
+ "warm_previous_flags": []
+}

@@ -94,6 +94,38 @@ const LIST_PARAMS: &[Param] = &[
         kind: "string",
     },
 ];
+const VECTOR_PARAMS: &[Param] = &[
+    Param {
+        name: "top_k",
+        location: "query",
+        description: "1..=--max-top-k (default 10).",
+        kind: "integer",
+    },
+    Param {
+        name: "ef",
+        location: "query",
+        description: "Beam width of the graph query, 1..=4096 (default --query-ef).",
+        kind: "integer",
+    },
+    Param {
+        name: "index",
+        location: "query",
+        description: "auto (default), exact or graph.",
+        kind: "string",
+    },
+    Param {
+        name: "id_gte",
+        location: "query",
+        description: "Keep documents whose id is an integer at least this large.",
+        kind: "integer",
+    },
+    Param {
+        name: "id_lt",
+        location: "query",
+        description: "Keep documents whose id is an integer smaller than this.",
+        kind: "integer",
+    },
+];
 const IDEMPOTENCY: &[Param] = &[Param {
     name: "Idempotency-Key",
     location: "header",
@@ -106,7 +138,7 @@ const PURGE: &[Param] = &[
         name: "purge",
         location: "query",
         description:
-            "true also rewrites the journal and scrubs what the deleted document left behind.",
+            "Default true: the journal is rewritten and what the deleted document left behind is scrubbed before the call returns. false leaves the deleted frame in the journal until a later compaction.",
         kind: "boolean",
     },
     Param {
@@ -137,6 +169,7 @@ pub static OPS: &[Op] = &[
     Op { method: "get", path: "/api/v1/documents/{id}/chunks/{index}", id: "readDocumentChunk", tag: "documents", summary: "Read one retained chunk and its document metadata (up to 8 MiB of text). Missing retained text is null; missing documents/chunks return 404. Byte spans do not reconstruct omitted whitespace or unretained text.", scope: Some(Scope::Read), tenant: true, request: Request::None, status: 200, reply: Reply::Json(schema::<writerslogic_warm::DocumentChunkRecord>), params: &[Param { name: "index", location: "path", description: "Zero-based chunk index, less than document.chunkCount.", kind: "integer" }], handler: || get(documents::read_document_chunk) },
     Op { method: "delete", path: "/api/v1/documents/{id}", id: "deleteDocument", tag: "documents", summary: "Delete a document by id (percent-encoded).", scope: Some(Scope::Write), tenant: true, request: Request::None, status: 200, reply: Reply::Json(schema::<types::Deleted>), params: PURGE, handler: || delete(documents::delete_doc) },
     Op { method: "post", path: "/api/v1/query", id: "query", tag: "documents", summary: "Nearest documents to a vector, best first, with exact cosine scores.", scope: Some(Scope::Read), tenant: true, request: Request::Json(schema::<documents::QueryIn>), status: 200, reply: Reply::Json(schema::<types::Matches>), params: &[], handler: || post(documents::query) },
+    Op { method: "post", path: "/api/v1/query/vector", id: "queryVector", tag: "documents", summary: "Nearest documents to a vector sent as the raw body (--input-dim little-endian f32 values): ids and cosine scores only, optionally restricted to an integer id range.", scope: Some(Scope::Read), tenant: true, request: Request::Raw("application/octet-stream", "Exactly --input-dim * 4 bytes: little-endian f32 values"), status: 200, reply: Reply::Json(schema::<types::IdMatches>), params: VECTOR_PARAMS, handler: || post(documents::query_vector) },
     Op { method: "post", path: "/api/v1/search", id: "search", tag: "documents", summary: "Text search: document ids and scores, best first (BM25, or the on-device model stages when configured); stored text and metadata on request.", scope: Some(Scope::Read), tenant: true, request: Request::Json(schema::<documents::SearchIn>), status: 200, reply: Reply::Json(schema::<types::SearchHits>), params: &[], handler: || post(documents::search) },
     Op { method: "get", path: "/api/v1/stats", id: "stats", tag: "documents", summary: "Document and vector counts and storage use for the tenant.", scope: Some(Scope::Read), tenant: true, request: Request::None, status: 200, reply: Reply::Json(schema::<types::Stats>), params: CONDITIONAL, handler: || get(documents::stats) },
     Op { method: "post", path: "/api/v1/memory/remember", id: "memoryRemember", tag: "memory", summary: "Store one fact or an array of facts with validity time, source and supersession. See docs/memory-api.", scope: Some(Scope::Write), tenant: true, request: Request::Json(schema::<memory_contract::RememberRequest>), status: 200, reply: Reply::Json(schema::<memory_contract::RememberReply>), params: IDEMPOTENCY, handler: || post(memory::remember) },

@@ -62,8 +62,6 @@ pub(crate) fn allocation(required: usize, limit: usize) -> usize {
 /// The segment size formats 1, 2 and 4 declare in their manifest (format 4 allocates it in
 /// steps, [`allocation`]); only format 3 declared [`SEGMENT_SIZE`].
 pub(crate) const LEGACY_SEGMENT_SIZE: usize = 1024 * 1024 * 1024;
-// Windows requires unmapping all views before extending a mapped file.
-const INCREMENTAL_ALLOCATION: bool = cfg!(unix);
 /// Frame header: [CRC32: u32][RawLen: u32][CompLen: u32][Version: u32]
 pub(crate) const HEADER_SIZE: usize = 16;
 /// Maximum decompressed frame payload (50 MB). Used consistently in
@@ -132,6 +130,7 @@ impl ActiveSegment {
     /// Writes back the mapping's dirty pages (`msync`) without the platform's full sync:
     /// for intermediate flushes whose durability a later [`Self::sync`] completes.
     fn write_back(&self) -> Result<()> {
+        crate::core::failpoint::hit("segment-flush")?;
         self.map
             .flush()
             .map_err(|e| anyhow!("mmap flush failed: {}", e))
@@ -145,6 +144,7 @@ impl ActiveSegment {
 
     /// Makes `[offset, offset + len)` durable.
     fn sync_range(&self, offset: usize, len: usize, test_point: &'static str) -> Result<()> {
+        crate::core::failpoint::hit("segment-flush")?;
         self.map
             .flush_range(offset, len)
             .map_err(|e| anyhow!("mmap flush_range failed: {}", e))?;
@@ -236,7 +236,7 @@ impl PersistentArena {
             length <= manifest.segment_size as u64,
             "active segment exceeds its declared size"
         );
-        let active_capacity = if manifest.version >= 4 && INCREMENTAL_ALLOCATION {
+        let active_capacity = if manifest.version >= 4 {
             allocation(
                 usize::try_from(length).context("arena capacity exceeds address space")?,
                 manifest.segment_size,
@@ -247,6 +247,7 @@ impl PersistentArena {
         // A reopened segment already has its durable length (growth syncs it); only a new or
         // resized file needs the length change and the full sync.
         if length != active_capacity as u64 {
+            crate::core::failpoint::hit("segment-resize")?;
             file.set_len(active_capacity as u64)?;
             file.sync_all()?;
         }
@@ -792,7 +793,6 @@ impl PersistentArena {
     ) -> Result<()> {
         ensure!(
             self.format_version >= 4
-                && INCREMENTAL_ALLOCATION
                 && required <= self.segment_size
                 && required > active.map.len(),
             "invalid arena growth request"
@@ -804,10 +804,15 @@ impl PersistentArena {
         ));
         let file = OpenOptions::new().read(true).write(true).open(path)?;
         active.write_back()?;
-        file.set_len(capacity as u64)?;
-        file.sync_all()?;
-        // SAFETY: the writer guard excludes all readers and the file has its new durable length.
+        crate::core::failpoint::hit("segment-resize")?;
+        // Windows refuses to resize a file that has a mapped view, so the view goes first.
+        // The writer guard excludes every reader, and the file is mapped again below whether
+        // or not the resize succeeded, so a failed grow leaves the arena on its old length.
+        drop(std::mem::replace(&mut active.map, MmapMut::map_anon(1)?));
+        let resized = file.set_len(capacity as u64).and_then(|()| file.sync_all());
+        // SAFETY: the writer guard excludes all readers; the file is the segment's own.
         **active = ActiveSegment::new(file)?;
+        resized?;
         self.active_capacity.store(capacity, Ordering::Release);
         Ok(())
     }
@@ -839,11 +844,12 @@ impl PersistentArena {
             .open(&next_path)?;
         #[cfg(test)]
         tests::fail_point("rotation after create")?;
-        let capacity = if self.format_version >= 4 && INCREMENTAL_ALLOCATION {
+        let capacity = if self.format_version >= 4 {
             GROWTH_STEP
         } else {
             self.segment_size
         };
+        crate::core::failpoint::hit("segment-resize")?;
         next_file.set_len(capacity as u64)?;
         next_file.sync_all()?;
         super::durable_file::sync_directory(&self.data_path.read())?;
@@ -944,7 +950,7 @@ impl PersistentArena {
         let frame = HEADER_SIZE.saturating_add(raw_len);
         let stats = self.stats();
         let offset = self.write_offset.load(Ordering::Acquire);
-        let incremental = self.format_version >= 4 && INCREMENTAL_ALLOCATION;
+        let incremental = self.format_version >= 4;
         let required = offset.saturating_add(frame);
         if required > self.segment_size || self.rotation_pending.load(Ordering::Acquire) {
             let next = if incremental {
@@ -1227,7 +1233,15 @@ impl Drop for PersistentArena {
 #[cfg(test)]
 pub(crate) fn compaction_crash_point(phase: &str) {
     if crate::compatibility::var("WARM_TEST_COMPACTION_PHASE").as_deref() == Ok(phase) {
-        std::process::exit(73);
+        // The nth hit of the phase (zero-based, `WARM_TEST_COMPACTION_SKIP`) is the one that dies.
+        static SEEN: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let skip = crate::compatibility::var("WARM_TEST_COMPACTION_SKIP")
+            .ok()
+            .and_then(|n| n.parse().ok())
+            .unwrap_or(0);
+        if SEEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) >= skip {
+            std::process::exit(73);
+        }
     }
 }
 

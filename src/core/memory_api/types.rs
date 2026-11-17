@@ -215,6 +215,21 @@ pub struct Explanation {
     pub valid_to: Option<Millis>,
     pub within_validity: bool,
     pub chain: Vec<ChainLink>,
+    /// For a result from the experience core: the episodes and steps where the region
+    /// occurred (at most eight, in episode order).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<Vec<ObservationProvenance>>,
+}
+
+/// Where a region of an observation occurred.
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObservationProvenance {
+    pub episode: String,
+    pub step: u32,
+    /// How many times the region occurs in that step.
+    pub count: u32,
 }
 
 /// A stored fact with its history links, as `get` and `history` return it.
@@ -255,10 +270,13 @@ pub enum ForgetScope {
     EventBefore { time: Millis },
     /// Facts whose caller metadata contains all these top-level values.
     Matching { filter: Value },
+    /// Every observation step of one episode held by the experience core. The episode is
+    /// removed and its text scrubbed from the snapshot and journal before the call returns.
+    Episode { episode: String },
 }
 
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct ForgetOptions {
     /// Also remove every fact linked to a matched one by supersession, in both directions,
@@ -267,9 +285,30 @@ pub struct ForgetOptions {
     pub include_chain: bool,
     /// Report what would be removed without removing it.
     pub dry_run: bool,
-    /// Compact the store afterwards. Deleted text stays in the append-only journal until a
-    /// compaction rewrites it; this makes the removal physical.
+    /// Purge what the delete leaves in the journal: the delete is recorded durably as a purge
+    /// before it commits, so a crash cannot leave deleted text without an obligation to erase
+    /// it, and a scrubbing compaction overwrites what the compaction replaced. Default: `true`.
+    /// With `false` the delete is logical: the append-only journal keeps the deleted frames
+    /// (and time-travel reads them) until some later compaction.
     pub purge: bool,
+    /// With `purge`, run the scrubbing compaction before returning, so the text is in no file
+    /// of the store when the call returns. Default: `false`, which defers the scrub: the call
+    /// returns once the delete and the pending purge are durable, and the next
+    /// `compact`, `compact_scrubbing`, open, or the 64th waiting purge erases the text of every
+    /// deferred delete in one compaction. A compaction costs time that grows with the store, so
+    /// one per delete does not scale.
+    pub synchronous: bool,
+}
+
+impl Default for ForgetOptions {
+    fn default() -> Self {
+        Self {
+            include_chain: false,
+            dry_run: false,
+            purge: true,
+            synchronous: false,
+        }
+    }
 }
 
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
@@ -279,6 +318,8 @@ pub struct ForgetReport {
     /// Ids removed (or, for a dry run, that would be removed), sorted.
     pub forgotten: Vec<String>,
     pub dry_run: bool,
+    /// The deleted text is in no file of the store. `false` after a deferred purge (see
+    /// [`ForgetOptions::synchronous`]) until the scrubbing compaction that covers it ends.
     pub purged: bool,
 }
 

@@ -9,6 +9,7 @@ use anyhow::Context;
 use super::dense::{DenseChange, DenseIndex, MAX_ROWS, MIN_ROWS};
 use super::positions::Positions;
 use super::postings::PostingLists;
+use super::screen::ScreenTable;
 use super::text::TextSegment;
 use super::{SearchOptions, StoredChunk, StoredDocument, VectorState};
 
@@ -152,6 +153,30 @@ pub(crate) struct DocumentStore {
     /// The checkpoint this store is served from, whose live documents count as the store's
     /// (`overlay`): the store holds only documents written since.
     pub(super) base: Option<super::overlay::Base>,
+    /// Estimated resident bytes of the documents installed since the store was created
+    /// (see [`Self::resident_estimate`]); never lowered by deletes, which keeps it an upper bound.
+    resident_estimate: usize,
+    /// Quantized embeddings for unfiltered hybrid queries, built on demand for one generation.
+    screen: ScreenCache,
+}
+
+/// Rows of embedded chunks below which a store is scored by a plain scan and keeps no screen table.
+const SCREEN_TABLE_MIN_CHUNKS: usize = 2048;
+
+#[derive(Default)]
+struct ScreenState {
+    generation: u64,
+    dimensions: usize,
+    queries: u32,
+    table: Option<Arc<ScreenTable>>,
+}
+
+struct ScreenCache(crate::core::sync::Mutex<ScreenState>);
+
+impl Default for ScreenCache {
+    fn default() -> Self {
+        Self(crate::core::sync::Mutex::new(ScreenState::default()))
+    }
 }
 
 #[cfg(test)]
@@ -263,6 +288,10 @@ impl DocumentStore {
         census
     }
 }
+
+/// Bytes the estimate adds per chunk and per distinct term of a chunk.
+const RESIDENT_PER_CHUNK: usize = 512;
+const RESIDENT_PER_TERM: usize = 40;
 
 /// A random starting value for a process-local mutation counter, below 2^53 so increments
 /// cannot overflow. A counter that starts here still advances by one per mutation for the
@@ -604,6 +633,36 @@ impl DocumentStore {
         }
     }
 
+    /// Estimated resident bytes of what this store holds: per chunk a record and its slot
+    /// entries, per distinct term of a chunk its share of the postings and the chunk's term
+    /// table. Measured against the process's resident memory in `docs/file-format/CHECKPOINT.md`.
+    pub(crate) fn resident_estimate(&self) -> usize {
+        self.resident_estimate
+    }
+
+    /// What a streaming checkpoint merge reads under this store: `Some(None)` for a store with
+    /// no checkpoint under it, `Some(Some(image))` for one over an intact checkpoint, `None`
+    /// when a checkpoint document is dead (the merge copies documents wholesale).
+    pub(crate) fn merge_base(&self) -> Option<Option<&super::image::ServingImage>> {
+        match &self.base {
+            None => Some(None),
+            Some(base) if base.intact() => Some(Some(&*base.image)),
+            Some(_) => None,
+        }
+    }
+
+    /// Whether [`super::merge_checkpoint`] can write this store's checkpoint.
+    pub(crate) fn can_merge_checkpoint(&self) -> bool {
+        self.merge_base()
+            .is_some_and(|base| base.is_none_or(super::image::ServingImage::mergeable))
+            && super::image::representable(self)
+    }
+
+    /// Bytes of the checkpoint under this store; 0 when there is none.
+    pub(crate) fn base_bytes(&self) -> usize {
+        self.base.as_ref().map_or(0, |base| base.image.byte_len())
+    }
+
     /// Whether the store is served from a checkpoint (see [`Self::over`]).
     pub(crate) fn has_base(&self) -> bool {
         self.base.is_some()
@@ -644,6 +703,44 @@ impl DocumentStore {
             .write()
             .record(previous, self.generation, [id]);
         true
+    }
+
+    /// The screen table of this generation for queries of `dimensions`, once a second query has asked for it (a store
+    /// written between queries never pays for a table it would not reuse). `None` below `SCREEN_TABLE_MIN_CHUNKS`
+    /// chunks, for a store served over a checkpoint, and until built.
+    pub(super) fn screen_table(&self, dimensions: usize) -> Option<Arc<ScreenTable>> {
+        if self.base.is_some()
+            || self.chunk_count < SCREEN_TABLE_MIN_CHUNKS
+            || dimensions == 0
+            || dimensions > super::screen::MAX_DIMENSIONS
+        {
+            return None;
+        }
+        let mut state = self.screen.0.lock();
+        if state.generation != self.generation || state.dimensions != dimensions {
+            *state = ScreenState {
+                generation: self.generation,
+                dimensions,
+                ..ScreenState::default()
+            };
+        }
+        if let Some(table) = &state.table {
+            return Some(Arc::clone(table));
+        }
+        state.queries = state.queries.saturating_add(1);
+        if state.queries < 2 {
+            return None;
+        }
+        let table = ScreenTable::build(
+            self.owners.len(),
+            dimensions,
+            self.owners.iter().enumerate().filter_map(|(slot, owner)| {
+                let (document, chunk) = owner.as_ref()?;
+                Some((slot, document.chunks[*chunk].embedding.as_ref()?))
+            }),
+        );
+        state.table = Some(Arc::clone(&table));
+        Some(table)
     }
 
     pub(crate) fn get(&self, id: &str) -> Option<&Arc<StoredDocument>> {
@@ -948,6 +1045,9 @@ impl DocumentStore {
             let mut slots = Vec::with_capacity(document.chunks.len());
             let mut embedded = false;
             for (chunk_index, chunk) in document.chunks.iter().enumerate() {
+                self.resident_estimate += RESIDENT_PER_CHUNK
+                    + RESIDENT_PER_TERM * chunk.terms.keys().len()
+                    + document.id.len();
                 self.nonpositional_chunks += usize::from(chunk.terms.positions.is_none());
                 self.count_vector_state(chunk.vector_state, true);
                 if chunk.embedding.is_some() {
@@ -1260,6 +1360,7 @@ impl DocumentStore {
             ..Self::default()
         };
         rebuilt.insert_batch(documents)?;
+        crate::core::failpoint::hit("text-rename")?;
         std::fs::rename(&staging, path)?;
         *self = rebuilt;
         if let Some(parent) = path.parent() {

@@ -127,6 +127,10 @@ impl Memory {
             }
             "remember" => {
                 let mut map = object(request)?;
+                if super::experience::carries_observation(&map) {
+                    let remembered = self.remember_routed(map, limit, parse::<RememberInput>)?;
+                    return Ok(json!({ "remembered": remembered }));
+                }
                 let inputs: Vec<RememberInput> = match map.remove("facts") {
                     Some(facts) if map.is_empty() => parse(facts)?,
                     Some(_) => {
