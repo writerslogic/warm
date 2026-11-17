@@ -22,7 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from warmbench import jars, textdata  # noqa: E402
-from warmbench.common import dir_bytes, hardware, ndcg_at, recall_at, run_measured  # noqa: E402
+from warmbench.common import dir_bytes, hardware, ndcg_at, recall_at, run_measured, source_record  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
@@ -251,13 +251,15 @@ def evaluate(a):
     out.mkdir(parents=True, exist_ok=True)
     frozen = json.loads(Path(a.frozen).read_text())
     rows = row_names(frozen)
+    source = source_record("hybrid")
     for name in a.corpora.split(","):
         dataset = EVAL[name]
         corpus_name = corpus_key(dataset)
         dataset_dir = work / dataset.replace(":", "-")
         qrels = json.loads((dataset_dir / "qrels.json").read_text())
         builds = build_all(corpus_name, work, [r[1] for r in rows], a.builds)
-        result = {"contract": "hybrid", "dataset": dataset, "hardware": hardware(), "frozen": frozen, "rounds": a.rounds, "pin_cpu": PIN_CPU,
+        result = {"contract": "hybrid", "dataset": dataset, "hardware": hardware(), "commit": source["commit"], "source": source,
+                  "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "frozen": frozen, "rounds": a.rounds, "pin_cpu": PIN_CPU,
                   "builds": builds, "systems": {r[0]: {"rounds": []} for r in rows}, "queries": len(qrels)}
         systems = list(dict.fromkeys(r[1] for r in rows))
         for r in range(a.rounds):

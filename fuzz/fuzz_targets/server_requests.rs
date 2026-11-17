@@ -13,6 +13,8 @@
 mod admin;
 #[path = "../../src/bin/warm-server/auth.rs"]
 mod auth;
+#[path = "../../src/bin/shared/bearer.rs"]
+mod bearer;
 #[path = "../../src/bin/warm-server/config.rs"]
 mod config;
 #[path = "../../src/bin/warm-server/documents.rs"]

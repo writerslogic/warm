@@ -4,15 +4,15 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cloneStore, exec, manifest, readJson, runMonitored, sha256, watchPhase, writeOnce } from '../../public/vectra_comparison/vector-receipts.mjs'
+import { cloneStore, exec, manifest, readJson, runMonitored, sha256, watchPhase, writeOnce, retiredInput } from '../../public/vectra_comparison/vector-receipts.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url)), repo = path.resolve(here, '../../..'), root = process.argv[2]
 assert.ok(path.isAbsolute(root ?? ''), 'new absolute output directory required')
 assert.equal(process.env.NODE_OPTIONS, undefined, 'unset NODE_OPTIONS')
 assert.ok(!Object.keys(process.env).some(name => name.startsWith('WARM_QGRAPH_')), 'unset experimental graph environment knobs')
 const fixture = '/Volumes/A/.hms-bench-cache/vectra-comparison-followup-20261102-v1/fixtures/glove-100000/warm'
-const input = await readJson(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json'))
-const stop = await readJson(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json'))
+const input = await readJson(await retiredInput(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json')))
+const stop = await readJson(await retiredInput(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json')))
 const dataset = { name: 'glove-100000', rows: 100000, dimensions: 100, queryCount: 1000, corpus: path.join(input.glove.directory, 'train.f32'), queries: path.join(input.glove.directory, 'test.f32') }
 assert.equal(await sha256(dataset.corpus), input.glove.files['train.f32'].sha256); assert.equal(await sha256(dataset.queries), input.glove.files['test.f32'].sha256)
 const oracleRecord = stop.trees.results.files.find(file => file.path.endsWith('glove-100000-oracle-oracle.ndjson'))

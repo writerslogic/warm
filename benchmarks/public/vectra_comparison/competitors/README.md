@@ -49,9 +49,10 @@ The revised protocol is a proposal; obtain explicit user authorization before a
 new attempt.
 
 From the repository root, after installing the isolated locked dependencies and
-building hnswlib-node for this host, run:
+building hnswlib-node for this host, restore the retired input manifest and stop receipt, then run:
 
 ```sh
+uv run scripts/restore-retired-inputs.py --path docs/research/technical-audit-20261029/vectra-comparison-20261102
 node benchmarks/public/vectra_comparison/competitors/run.mjs freeze /absolute/new/output
 node benchmarks/public/vectra_comparison/competitors/run.mjs preparation /absolute/new/output
 node benchmarks/public/vectra_comparison/competitors/run.mjs measurement /absolute/new/output

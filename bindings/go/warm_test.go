@@ -93,8 +93,8 @@ func TestSearchRoundTrip(t *testing.T) {
 		t.Fatalf("source filter: %+v %v", hits, err)
 	}
 	hits, err = s.Search(ctx, "river language", &warm.SearchOptions{DocumentIDs: []string{"rust"}, Fusion: warm.FusionRRF})
-	if err != nil {
-		t.Fatal(err)
+	if err != nil || len(hits) == 0 {
+		t.Fatalf("document filter: %+v %v", hits, err)
 	}
 	for _, h := range hits {
 		if h.DocumentID != "rust" {

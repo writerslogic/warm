@@ -6,13 +6,13 @@ import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { LIMITS, sha256, readJson, writeOnce, preflight, runMonitored, watchPhase } from '../vector-receipts.mjs'
+import { LIMITS, sha256, readJson, writeOnce, preflight, runMonitored, watchPhase, retiredInput } from '../vector-receipts.mjs'
 import { atLeast, latency, mean } from '../oracle-vector.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const worker = path.join(here, 'worker.mjs')
-const inputFile = path.resolve(here, '../../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json')
-const stopFile = path.resolve(here, '../../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json')
+const inputFile = await retiredInput(path.resolve(here, '../../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json'))
+const stopFile = await retiredInput(path.resolve(here, '../../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json'))
 const stopped = '/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen'
 const require = createRequire(import.meta.url)
 export const arms = Object.freeze(['hnswlib', 'usearch'].flatMap(engine => [128, 256, 512, 2048].map(ef => Object.freeze({ engine, ef }))))

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { pipeline } from 'node:stream/promises'
 import { createGzip } from 'node:zlib'
 import { inspect, topology } from './navigation-analysis.mjs'
-import { exec, readJson, runMonitored, sha256, watchPhase, writeOnce } from '../../public/vectra_comparison/vector-receipts.mjs'
+import { exec, readJson, runMonitored, sha256, watchPhase, writeOnce, retiredInput } from '../../public/vectra_comparison/vector-receipts.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url)), repo = path.resolve(here, '../../..')
 const [output, binary, size = '100000'] = process.argv.slice(2)
@@ -18,8 +18,8 @@ const corpusRows = Number(size)
 assert.ok(path.isAbsolute(output ?? '') && path.isAbsolute(binary ?? ''))
 assert.equal(process.env.NODE_OPTIONS, undefined)
 assert.ok(!Object.keys(process.env).some(name => name.startsWith('WARM_QGRAPH_')))
-const input = await readJson(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json'))
-const stop = await readJson(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json'))
+const input = await readJson(await retiredInput(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json')))
+const stop = await readJson(await retiredInput(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json')))
 const oldRoot = '/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results'
 const corpus = path.join(input.glove.directory, 'train.f32'), queries = path.join(input.glove.directory, 'test.f32')
 assert.equal(await sha256(corpus), input.glove.files['train.f32'].sha256)

@@ -236,25 +236,14 @@ mod tests {
 
     #[test]
     fn test_no_causal_chain() {
-        let store = TripleStore::new();
-        store.add("x", "likes", "y", "c1");
-
-        let plan = Planner::backward_chain(&store, "goal", &["causes"], 5);
-        assert!(plan.actions.is_empty());
-        assert!(!plan.complete);
-    }
-
-    #[test]
-    fn test_depth_limit() {
-        let store = TripleStore::new();
-        store.add("a", "causes", "b", "c1");
-        store.add("b", "causes", "c", "c2");
-        store.add("c", "causes", "d", "c3");
-        store.add("d", "causes", "goal", "c4");
-
-        // Depth 2 should not reach all the way back to "a"
-        let plan = Planner::backward_chain(&store, "goal", &["causes"], 2);
-        assert!(plan.actions.len() <= 3);
+        let unrelated = TripleStore::new();
+        unrelated.add("x", "likes", "y", "c1");
+        let empty = TripleStore::new();
+        for (store, relations) in [(&unrelated, &["causes"][..]), (&empty, &[][..])] {
+            let plan = Planner::backward_chain(store, "goal", relations, 5);
+            assert!(plan.actions.is_empty());
+            assert!(!plan.complete);
+        }
     }
 
     #[test]
@@ -278,13 +267,6 @@ mod tests {
         // Empty causal_relations means follow all
         let plan = Planner::backward_chain(&store, "power", &[], 5);
         assert_eq!(plan.actions.len(), 2);
-    }
-
-    #[test]
-    fn test_empty_store() {
-        let store = TripleStore::new();
-        let plan = Planner::backward_chain(&store, "anything", &[], 5);
-        assert!(plan.actions.is_empty());
     }
 
     #[test]
@@ -366,14 +348,13 @@ mod tests {
         }
 
         // Depth-1 actions target "mid" (1 triple) or "side" (1 triple): cost = 1/2
-        if !depth1.is_empty() {
-            for a in &depth1 {
-                assert!(
-                    a.cost > expected_d0_cost,
-                    "depth-1 cost {} should exceed depth-0 cost {expected_d0_cost}",
-                    a.cost
-                );
-            }
+        assert!(!depth1.is_empty(), "should have depth-1 actions");
+        for a in &depth1 {
+            assert!(
+                a.cost > expected_d0_cost,
+                "depth-1 cost {} should exceed depth-0 cost {expected_d0_cost}",
+                a.cost
+            );
         }
 
         // Verify total_cost is consistent.

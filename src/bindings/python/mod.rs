@@ -24,6 +24,17 @@ const MAX_PHASE_FACTORS: usize = 64;
 const MAX_PHASE_ITER: usize = 1_000;
 const MAX_PHASE_WORK: usize = 100_000_000;
 
+/// `ValueError` carrying the error's `Display` text.
+fn value_err(e: impl std::fmt::Display) -> PyErr {
+    PyValueError::new_err(e.to_string())
+}
+
+/// `ValueError` carrying the error's alternate `Display` text, which for an `anyhow::Error`
+/// includes its context chain.
+fn context_err(e: impl std::fmt::Display) -> PyErr {
+    PyValueError::new_err(format!("{e:#}"))
+}
+
 fn phase_limit(value: usize, limit: usize, name: &str) -> PyResult<()> {
     if value > limit {
         return Err(PyValueError::new_err(format!(

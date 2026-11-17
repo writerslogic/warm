@@ -16,7 +16,7 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
-use axum::http::{header, HeaderMap, StatusCode};
+use axum::http::{HeaderMap, StatusCode};
 use clap::Args;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
@@ -356,15 +356,7 @@ impl Authenticator {
                 scopes: ScopeSet::ALL,
             });
         }
-        let mut values = headers.get_all(header::AUTHORIZATION).iter();
-        let token = values
-            .next()
-            .filter(|_| values.next().is_none())
-            .and_then(|v| v.to_str().ok())
-            .and_then(|v| v.split_once(' '))
-            .filter(|(scheme, _)| scheme.eq_ignore_ascii_case("bearer"))
-            .map(|(_, token)| token.trim_start_matches(' '))
-            .unwrap_or("");
+        let token = crate::bearer::bearer_value(headers).unwrap_or("");
         let digest = digest_token(token);
         // Evaluate every comparison before branching so timing does not reveal which matched.
         let legacy_ok = self
@@ -506,6 +498,7 @@ fn append_entry(path: &Path, entry: KeyEntry) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::http::header;
 
     #[test]
     fn bearer_header_syntax_preserves_key_file_scope_and_secret_case() {

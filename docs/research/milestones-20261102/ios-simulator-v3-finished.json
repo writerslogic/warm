@@ -1,7 +1,0 @@
-{
-  "complete": false,
-  "error": {
-    "message": "swift-consumer-tests failed; log retained",
-    "type": "RuntimeError"
-  }
-}

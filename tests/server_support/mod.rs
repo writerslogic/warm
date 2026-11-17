@@ -11,11 +11,20 @@ use std::net::{SocketAddr, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde_json::{json, Value};
 
 pub const DIM: usize = 16;
+
+/// Polls `ok` every 50 ms and fails the test after 15 s.
+pub fn wait_until(what: &str, mut ok: impl FnMut() -> bool) {
+    let deadline = Instant::now() + Duration::from_secs(15);
+    while !ok() {
+        assert!(Instant::now() < deadline, "timed out waiting for {what}");
+        std::thread::sleep(Duration::from_millis(50));
+    }
+}
 pub const BIN: &str = env!("CARGO_BIN_EXE_warm-server");
 
 pub enum Endpoint {

@@ -1,7 +1,0 @@
-{
-  "complete": false,
-  "error": {
-    "message": "swift-xcframework failed; retained log: swift-xcframework.log",
-    "type": "RuntimeError"
-  }
-}

@@ -15,6 +15,8 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tokio::sync::Semaphore;
 
+use crate::bearer::bearer_value;
+
 const MAX_TOKEN: usize = 8192;
 const MAX_RESPONSE: u64 = 16 * 1024;
 const READ: &str = "hms:read";
@@ -246,18 +248,6 @@ fn valid_token(token: &str) -> bool {
             .trim_end_matches('=')
             .bytes()
             .all(|b| b.is_ascii_alphanumeric() || b"-._~+/".contains(&b))
-}
-
-pub(super) fn bearer_value(headers: &HeaderMap) -> Option<&str> {
-    let mut values = headers.get_all(header::AUTHORIZATION).iter();
-    let value = values.next()?.to_str().ok()?;
-    if values.next().is_some() {
-        return None;
-    }
-    let (scheme, token) = value.split_once(' ')?;
-    scheme
-        .eq_ignore_ascii_case("bearer")
-        .then(|| token.trim_start_matches(' '))
 }
 
 fn bearer(headers: &HeaderMap) -> Option<&str> {

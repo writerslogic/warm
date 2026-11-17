@@ -6,7 +6,7 @@
 mod server_support;
 
 use std::process::Command;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use serde_json::{json, Value};
 use server_support::*;
@@ -161,14 +161,6 @@ fn durable_read_receipts_are_scrubbed_by_forget_and_document_deletion() {
             .send();
         assert_eq!(retry.status, 409);
         assert_eq!(retry.json()["code"], "idempotency_reconciliation_required");
-    }
-}
-
-fn wait_until(what: &str, mut ok: impl FnMut() -> bool) {
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while !ok() {
-        assert!(Instant::now() < deadline, "timed out waiting for {what}");
-        std::thread::sleep(Duration::from_millis(50));
     }
 }
 

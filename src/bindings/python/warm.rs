@@ -19,6 +19,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 use serde_json::Value;
 
+use super::context_err as err;
 use crate::core::config::WarmConfig;
 use crate::core::documents::{DocumentInput, IngestOptions, SearchOptions};
 use crate::core::engine::{RankingMode, SparseSearch};
@@ -26,10 +27,6 @@ use crate::core::index::sparse_store::SparseVector;
 use crate::core::memory_api::Memory;
 use crate::core::schema::EmbeddingSpace;
 use crate::WarmCore;
-
-fn err(e: impl std::fmt::Display) -> PyErr {
-    PyValueError::new_err(format!("{e:#}"))
-}
 
 /// JSON text of `object`. Numpy arrays and scalars serialize through `tolist`, and NaN or
 /// infinity is an error here rather than a malformed document later.

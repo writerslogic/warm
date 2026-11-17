@@ -19,6 +19,6 @@ The [draft v2 profile](provenance-profile-v1.md) specifies producer admission, c
 
 ## Reproduction
 
-Run `cargo test --locked --lib --no-default-features --features provenance core::provenance:: -- --test-threads=1`, scoped provenance Clippy, and `bash scripts/check-w3c-interop.sh`. The latter generates fresh credentials and uses pinned independent JavaScript implementations; it does not call a hosted model. The [integration receipt](evidence/integration-core-20261028.json) records inputs and actual results.
+Run `cargo test --locked --lib --no-default-features --features provenance core::provenance:: -- --test-threads=1`, scoped provenance Clippy, and `bash scripts/check-w3c-interop.sh`. The latter generates fresh credentials and uses pinned independent JavaScript implementations; it does not call a hosted model. The [integration receipt](https://github.com/writerslogic/warm/blob/cd2f4c11865c638166ed6bfc370fd9eb6ff221c9/docs/reference/evidence/integration-core-20261028.json) records inputs and actual results.
 
 No production status endpoint, general VC/DID resolver, C2PA signing acceptance, CAWG conformance result, or certification is claimed. Local provenance checks do not measure AML retrieval or answer quality.
