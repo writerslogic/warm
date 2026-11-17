@@ -163,6 +163,13 @@ impl ReorderRequest {
     }
 }
 
+/// The slot order a streamed checkpoint is merged in, if any, and the reorder outcome and
+/// estimate to report once the compaction publishes.
+type PlannedReorder = (
+    Option<crate::core::documents::SlotOrder>,
+    Option<(ReorderOutcome, usize)>,
+);
+
 fn planned_over(estimate: usize, budget: Option<usize>) -> bool {
     budget.is_some_and(|budget| estimate > budget)
 }
@@ -265,10 +272,7 @@ impl WarmCore {
         &self,
         job: &JobState,
         streamed: bool,
-    ) -> Result<(
-        Option<crate::core::documents::SlotOrder>,
-        Option<(ReorderOutcome, usize)>,
-    )> {
+    ) -> Result<PlannedReorder> {
         let request = job.reorder_request();
         if matches!(request, ReorderRequest::None | ReorderRequest::Disabled) {
             return Ok((None, request.skipped(ReorderOutcome::Disabled)));
