@@ -328,7 +328,7 @@ public final class LuceneBm25 {
         for (int i = 0; i < Math.min(16, prepared.length); i++) run.apply(prepared[i]);
         // JIT warm-up to steady state: whole untimed passes, at least `warm.minPasses` passes and `warm.minSeconds`
         // seconds, then until `warm.stablePasses` consecutive passes each agree with the previous one within
-        // `warm.band`, capped at `warm.maxPasses` passes or `warm.maxSeconds` seconds. The rule is passed by the
+        // `warm.band`, capped (once the minimum passes are done) at `warm.maxPasses` passes or `warm.maxSeconds` seconds. The rule is passed by the
         // harness (registry.LUCENE_WARMUP) and recorded in the results; each round records what it ran.
         int minPasses = Integer.getInteger("warm.minPasses", 20), stablePasses = Integer.getInteger("warm.stablePasses", 3);
         int maxPasses = Integer.getInteger("warm.maxPasses", 400);
@@ -351,7 +351,7 @@ public final class LuceneBm25 {
             steady = true;
             break;
           }
-          if (warmPasses >= maxPasses || elapsed >= maxSeconds) break;
+          if (warmPasses >= minPasses && (warmPasses >= maxPasses || elapsed >= maxSeconds)) break;
         }
         double warmSeconds = (System.nanoTime() - warmStart) / 1e9;
         ScoreDoc[][] first = new ScoreDoc[prepared.length][];

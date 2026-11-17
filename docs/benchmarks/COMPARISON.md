@@ -2651,4 +2651,6 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 - `letta`: agent-memory systems belong to the next harness stage
 - `langmem`: agent-memory systems belong to the next harness stage
 - `milvus-standalone`: no non-Docker artifact: releases 3.0.3 and 2.6.25 ship only Docker Compose files; the last native package (milvus_2.6.4 .deb/.rpm, Linux only) is superseded
+- `whoosh`: adapter kept for local runs, not in the published text campaign: pure-Python engine, orders of magnitude below the native engines here, so no row it produced would be the fastest comparator of any cell
+- `bm25s`: adapter kept for local runs, not in the published text campaign: an in-memory NumPy retriever whose saved index has no durable update or delete path (no ops rows) and no stored-document variant (no documents-contract row); its pin trails the current release
 

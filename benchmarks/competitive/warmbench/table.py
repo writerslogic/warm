@@ -463,7 +463,7 @@ def render_section(sec, cells_out):
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": hw["class"], "metric": key, "system": system,
                               "value": c["value"], "ci": c["ci"] if c["value"] is not None else None, "n": c["n"], "source": c["source"],
                               "validity": c["validity"], "validity_reason": c["validity_reason"], "uncertainty": c["uncertainty"],
-                              "text": fmt(c["value"], dec)})
+                              "interval_kind": c.get("interval_kind"), "text": fmt(c["value"], dec)})
         if mine is None:
             continue
         adv = advantage(key, mine, other) if other else None
@@ -588,7 +588,8 @@ def per_build_lines(sec, cells_out):
             for who, cell_ in ((ref, e["mine"]), (system, e["theirs"])):
                 cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": sec["hw"]["class"], "metric": m, "system": who, "build": build if who == system else None,
                                   "per_build": [system, build], "value": cell_["value"], "ci": cell_["ci"], "n": cell_["n"], "source": cell_["source"],
-                                  "validity": cell_["validity"], "validity_reason": cell_["validity_reason"], "uncertainty": cell_["uncertainty"], "text": fmt(cell_["value"], dec)})
+                                  "validity": cell_["validity"], "validity_reason": cell_["validity_reason"], "uncertainty": cell_["uncertainty"],
+                                  "interval_kind": cell_.get("interval_kind"), "text": fmt(cell_["value"], dec)})
             if m in analyze.NO_VERDICT:
                 continue
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": sec["hw"]["class"], "metric": m, "derived": True, "per_build": [system, build],
@@ -684,9 +685,9 @@ def build():
            "Every cell is indexed with its source file and key path in [comparison.cells.json](comparison.cells.json). Method, caveats and how to reproduce: [README.md](README.md).", "",
            "Rows are never compared across hardware classes: each section is one dataset on one hardware class. " +
            f"A verdict is WIN or LOSS only when a 95% (Bonferroni-adjusted) percentile bootstrap interval of the advantage factor itself excludes 1, with at least {analyze.MIN_BOOTSTRAP_ROUNDS} "
-           "process rounds or build runs on each side (quality metrics: a paired per-query bootstrap); deterministic byte counts use a 5% band; a bootstrap interval that "
-           "contains 1 is a TIE. Rows with fewer observations, or with an unverified side, print the measured factor and its min-max range with no verdict (n/v), and the ones where "
-           "WARM is behind are listed under \"Measured behind, no verdict\". " +
+           + "process rounds or build runs on each side (quality metrics: a paired per-query bootstrap); deterministic byte counts use a 5% band; a bootstrap interval that "
+           + "contains 1 is a TIE. Rows with fewer observations, or with an unverified side, print the measured factor and its min-max range with no verdict (n/v), and the ones where "
+           + "WARM is behind are listed under \"Measured behind, no verdict\". " +
            "The advantage factor is always oriented so that more than 1 means WARM is better. Hosted-runner rows carry noise; trust the ratios, not the absolute values.", "",
            "## Scoreboard", "", "| Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |", "|---|---|---|---|---|---|---|---|"]
     for sec, counts, _ in summary:
@@ -706,7 +707,7 @@ def build():
     if behind_rows:
         out += ["", "### Measured behind, no verdict", "",
                 "Rows whose measured factor puts WARM behind but which carry no verdict under the rule above (too few observations for a bootstrap, "
-                "or a side whose measurement is not verified). They are losses as measured, not established ones.", "",
+                + "or a side whose measurement is not verified). They are losses as measured, not established ones.", "",
                 "| Dataset | Metric | Best other | WARM disadvantage (measured) | Interval | Why no verdict |", "|---|---|---|---|---|---|"]
         for sec, key, label, name, adv, reason in behind_rows:
             who = display(name.split('|')[0], sec['data']) + (' ' + name.split('|')[1] if '|' in name else '')
@@ -722,6 +723,7 @@ def build():
     nr = {}
     for _, data in results:
         nr.update(data.get("not_run", {}))
+    nr.update(registry.CAMPAIGN_NOT_RUN)  # platform-independent: adapters the published campaign does not run
     out += ["## Not run", "", *[f"- `{k}`: {v}" for k, v in nr.items()], ""]
     block = readme_block(summary)
     return "\n".join(out), cells, block, gaps_from(summary)
@@ -824,8 +826,8 @@ def gaps_markdown(gaps):
 def readme_block(summary):
     lines = [START, "", "_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). " +
              f"W = WARM ahead (95% bootstrap interval of the factor excludes parity, at least {analyze.MIN_BOOTSTRAP_ROUNDS} rounds a side), T = tie, L = a comparator is ahead, "
-             "- = no verdict (fewer rounds than the rule needs, unverified measurement or source revision, no interval, or not comparable): the factor is as measured. "
-             "Rows are compared only within one machine._", "",
+             + "- = no verdict (fewer rounds than the rule needs, unverified measurement or source revision, no interval, or not comparable): the factor is as measured. "
+             + "Rows are compared only within one machine._", "",
              "| Dataset | Machine | Metric | WARM | Best other | Advantage | |", "|---|---|---|---|---|---|---|"]
     for sec, counts, tally in summary:
         if sec["data"]["suite"] == "smoke":

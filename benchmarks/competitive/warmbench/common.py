@@ -105,8 +105,11 @@ def source_record(suite, revision=None):
     if suite == "smoke":
         return {"commit": revision, "draft": True, "checked": "smoke run, never published"}
     if not (ROOT / ".git").exists():
-        reasons = ["no git metadata in the measured tree (shipped source); reachability not checked"]
-        dirty, reachable = None, None
+        # A shipped tree (modal_run.py) carries the launcher's checks in WARM_BENCH_SOURCE.
+        shipped = json.loads(os.environ.get("WARM_BENCH_SOURCE") or "{}")
+        dirty, reachable = shipped.get("dirty_tree"), shipped.get("reachable_from_origin_main")
+        reasons = ([] if shipped else ["no git metadata in the measured tree and no launcher record"]) + (["tracked files differed from the commit at launch"] if dirty else []) + \
+            ([f"{revision} is not reachable from origin/main"] if shipped and not reachable else [])
     else:
         _git("fetch", "--quiet", "origin", "main")
         dirty = bool(_git("status", "--porcelain", "--untracked-files=no").stdout.strip())
