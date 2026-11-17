@@ -234,19 +234,28 @@ fn compaction_reorders_again_only_after_a_quarter_of_the_slots_are_new() -> Resu
     };
     add(0..1200)?;
     core.compact()?;
-    let (ordered, slots) = (header_word(directory.path(), 5)?, header_word(directory.path(), 8)?);
+    let (ordered, slots) = (
+        header_word(directory.path(), 5)?,
+        header_word(directory.path(), 8)?,
+    );
     assert_eq!((ordered, slots), (1200, 1200));
     add(1200..1500)?;
     core.compact()?;
     assert_eq!(
-        (header_word(directory.path(), 5)?, header_word(directory.path(), 8)?),
+        (
+            header_word(directory.path(), 5)?,
+            header_word(directory.path(), 8)?
+        ),
         (1200, 1500),
         "300 of 1500 slots are new: not due"
     );
     add(1500..1600)?;
     core.compact()?;
     assert_eq!(
-        (header_word(directory.path(), 5)?, header_word(directory.path(), 8)?),
+        (
+            header_word(directory.path(), 5)?,
+            header_word(directory.path(), 8)?
+        ),
         (1600, 1600),
         "400 of 1600 slots are new: due"
     );

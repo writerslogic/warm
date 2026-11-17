@@ -1396,7 +1396,8 @@ impl DocumentStore {
 
     /// Whether [`crate::core::WarmCore::compact`] reorders: the store was never reordered, or at
     /// least one in [`REORDER_DUE_SHARE`] of its slots (the checkpoint's under it included) was
-    /// written after the last reorder's. Rewrites into freed slots are not counted.
+    /// written after the last reorder's. Rewrites into freed slots are not counted, and a store
+    /// of fewer slots than [`REORDER_MIN_DOCUMENTS`] is never due.
     pub(crate) fn reorder_due(&self) -> bool {
         let (ordered, slots) = match &self.base {
             Some(base) => {
@@ -1405,7 +1406,8 @@ impl DocumentStore {
             }
             None => (self.ordered_slots.min(self.slot_count), self.slot_count),
         };
-        ordered == 0 || (slots - ordered) * REORDER_DUE_SHARE >= slots
+        slots >= REORDER_MIN_DOCUMENTS
+            && (ordered == 0 || (slots - ordered) * REORDER_DUE_SHARE >= slots)
     }
 
     /// The document order (positions of the documents in id order) in which documents sharing

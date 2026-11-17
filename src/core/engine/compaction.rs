@@ -136,7 +136,7 @@ impl WarmCore {
         self.compact_impl(|| {}, || {}, false, &JobState::foreground())
     }
 
-    /// Puts the document slots in bisection order (`DocumentStore::reorder_slots`) when the
+    /// Puts the document slots in bisection order (`DocumentStore::apply_slot_order`) when the
     /// next compaction writes a checkpoint, so the checkpoint records that order. A store served
     /// from its checkpoint is rebuilt in memory first. Only memory changes here: the journal and
     /// the published checkpoint stay as they were until the compaction publishes, so a failure

@@ -17,8 +17,8 @@ use anyhow::{ensure, Context, Result};
 use super::{
     append_skips, encode_document, put_bytes, put_varint, DocumentStore, PositionPacker, Reader,
     ServingImage, BLOCK, FLAG_POSITIONAL, FLAG_POSITIVE, FREE, HEADER_LEN, HEADER_WORDS, H_CHUNKS,
-    H_DIMENSIONS, H_DOCS, H_FLAGS, H_GENERATION, H_ORDERED, H_SECTIONS, H_SLOTS, H_TERMS, H_WORDS, MAGIC,
-    SLOT_BYTES, V4_SECTIONS,
+    H_DIMENSIONS, H_DOCS, H_FLAGS, H_GENERATION, H_ORDERED, H_SECTIONS, H_SLOTS, H_TERMS, H_WORDS,
+    MAGIC, SLOT_BYTES, V4_SECTIONS,
 };
 use super::{u32_at, Section};
 use crate::core::documents::lists::{Cursor, ListRef, NO_DOC};
