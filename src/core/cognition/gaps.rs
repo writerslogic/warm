@@ -124,20 +124,15 @@ mod tests {
     }
 
     #[test]
-    fn test_no_gaps_when_complete() {
+    fn test_no_gaps_when_complete_or_empty() {
+        let empty = TripleStore::new();
+        assert!(GapDetector::detect(&empty, 1, 0.5).is_empty());
+
         let store = TripleStore::new();
         store.add("a", "r1", "x", "c1");
         store.add("b", "r1", "y", "c2");
         // Both have the same relation, no gaps
-        let gaps = GapDetector::detect(&store, 1, 0.5);
-        assert!(gaps.is_empty());
-    }
-
-    #[test]
-    fn test_no_gaps_empty_store() {
-        let store = TripleStore::new();
-        let gaps = GapDetector::detect(&store, 1, 0.5);
-        assert!(gaps.is_empty());
+        assert!(GapDetector::detect(&store, 1, 0.5).is_empty());
     }
 
     #[test]

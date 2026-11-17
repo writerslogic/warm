@@ -256,38 +256,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_detect_analogy() {
-        let store = TripleStore::new();
-        // Domain A: solar system
-        store.add("earth", "orbits", "sun", "c1");
-        store.add("earth", "has_satellite", "moon", "c2");
-        // Domain B: Jupiter system (separate component)
-        store.add("europa", "orbits", "jupiter", "c3");
-        store.add("europa", "has_satellite", "none", "c4");
+    fn test_no_analogy_empty_or_single_component() {
+        let empty = TripleStore::new();
+        assert!(AnalogyDetector::detect(&empty, 1).is_empty());
 
-        let analogies = AnalogyDetector::detect(&store, 2);
-        // Should find an analogy between the two domains
-        if !analogies.is_empty() {
-            assert!(analogies[0].shared_relations.len() >= 2);
-            assert!(analogies[0].score > 0.0);
-        }
-    }
-
-    #[test]
-    fn test_no_analogy_single_component() {
-        let store = TripleStore::new();
-        store.add("a", "r", "b", "c1");
-        store.add("b", "r", "c", "c2");
+        let single = TripleStore::new();
+        single.add("a", "r", "b", "c1");
+        single.add("b", "r", "c", "c2");
         // All in one component, no pair to compare
-        let analogies = AnalogyDetector::detect(&store, 1);
-        assert!(analogies.is_empty());
-    }
-
-    #[test]
-    fn test_no_analogy_empty() {
-        let store = TripleStore::new();
-        let analogies = AnalogyDetector::detect(&store, 1);
-        assert!(analogies.is_empty());
+        assert!(AnalogyDetector::detect(&single, 1).is_empty());
     }
 
     #[test]
@@ -317,6 +294,7 @@ mod tests {
         assert!(!analogies.is_empty(), "should detect an analogy");
 
         let best = &analogies[0];
+        assert!(best.shared_relations.len() >= 2);
         assert!(best.score > 0.0, "score should be positive");
         assert!(
             best.mapping_quality > 0.0,

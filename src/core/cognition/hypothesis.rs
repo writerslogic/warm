@@ -148,18 +148,16 @@ mod tests {
             .cloned()
             .collect();
 
-        if !tokyo_gaps.is_empty() {
-            let hypotheses =
-                HypothesisEngine::propose(&tokyo_gaps, &triple_store, &atom_mem, 24.0, 0.0);
-            // Peers (paris, berlin) both have located_in -> europe
-            // Bundle of [europe, europe] = europe, cleanup should find europe
-            if !hypotheses.is_empty() {
-                assert_eq!(hypotheses[0].entity, "tokyo");
-                assert_eq!(hypotheses[0].relation, "located_in");
-                assert_eq!(hypotheses[0].proposed_filler, "europe");
-                assert!(hypotheses[0].evidence_count >= 1);
-            }
-        }
+        assert!(!tokyo_gaps.is_empty(), "Tokyo should be missing located_in");
+        let hypotheses =
+            HypothesisEngine::propose(&tokyo_gaps, &triple_store, &atom_mem, 24.0, 0.0);
+        // Peers (paris, berlin) both have located_in -> europe
+        // Bundle of [europe, europe] = europe, cleanup should find europe
+        assert!(!hypotheses.is_empty(), "the gap should yield a hypothesis");
+        assert_eq!(hypotheses[0].entity, "tokyo");
+        assert_eq!(hypotheses[0].relation, "located_in");
+        assert_eq!(hypotheses[0].proposed_filler, "europe");
+        assert!(hypotheses[0].evidence_count >= 1);
     }
 
     #[test]
