@@ -608,8 +608,7 @@ fn main() -> Result<()> {
     let probe = PathBuf::from(arg(&args, "--probe").context("--probe")?);
     let pack = PathBuf::from(arg(&args, "--pack").context("--pack")?);
     let out = PathBuf::from(arg(&args, "--out").context("--out")?);
-    let scratch =
-        PathBuf::from(arg(&args, "--scratch").unwrap_or_else(|| "/Volumes/C/.hms-tmp".into()));
+    let scratch = arg(&args, "--scratch").map_or_else(std::env::temp_dir, PathBuf::from);
     let limit: Option<usize> = arg(&args, "--limit").map(|v| v.parse()).transpose()?;
     let limit_dev: Option<usize> = arg(&args, "--limit-dev")
         .map(|v| v.parse())

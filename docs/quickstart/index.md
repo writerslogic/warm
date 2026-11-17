@@ -9,12 +9,12 @@ uses Rust, Python or the optional embedded `writerslogic-warm` Node engine.
 ## Portable JavaScript client
 
 From a checkout, build the client (needs Node 20.19 or newer; the built client runs on Node 18)
-and install a prebuilt server:
+and build the server from the same checkout:
 
 ```sh
 npm ci --prefix bindings/js/warm-sdk
 npm run build --prefix bindings/js/warm-sdk
-curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+cargo install --locked --path . --features server --bin warm-server
 WARM_API_KEY=quickstart warm-server --input-dim 384
 ```
 
@@ -75,7 +75,7 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     ```sh
     git clone https://github.com/writerslogic/warm
     cd warm
-    curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+    cargo install --locked --path . --features server --bin warm-server
     WARM_API_KEY=quickstart warm-server --input-dim 384 &
     WARM_API_KEY=quickstart uv run --no-project --with warm-sdk \
         python examples/quickstart/python/quickstart.py
@@ -259,6 +259,9 @@ A learned sparse encoder (SPLADE style) maps a text to weights over a vocabulary
 terms. WARM runs no encoder here: you encode documents and queries yourself and pass the vectors in.
 Nothing changes for a store that never receives one; no sparse file is written and lexical search is
 byte for byte what it was.
+
+The Python `Warm` class used here is not in the 0.6.8 wheel; it ships with the release after 0.6.8.
+Until then, build it from a checkout with `maturin develop --release`.
 
 ```python
 from writerslogic_warm import Warm

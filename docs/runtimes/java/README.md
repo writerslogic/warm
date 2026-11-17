@@ -4,6 +4,28 @@ The `com.writerslogic:writerslogic-warm` binding is available as source in this 
 
 From the repository root, run `cargo build --release --manifest-path bindings/c/Cargo.toml`. The library is written to `bindings/c/target/release/` unless `CARGO_TARGET_DIR` is set.
 
+## Use it from your project
+Install the jar into the local Maven repository (this also runs the tests against the library you built):
+
+```sh
+cd bindings/java
+mvn -Dwarm.native.dir="$PWD/../c/target/release" install
+```
+
+Then depend on it and run with the native library on the path:
+
+```xml
+<dependency>
+  <groupId>com.writerslogic</groupId>
+  <artifactId>writerslogic-warm</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
+
+```sh
+java --enable-native-access=ALL-UNNAMED -Dwarm.library.path=/path/to/warm/bindings/c/target/release -jar app.jar
+```
+
 ```java
 try (Store store = Store.open(Path.of("/data/store"), 2048,
         OpenOptions.builder().encryptionKey(key).build())) {
@@ -18,11 +40,11 @@ Metadata and filters are JSON strings (no JSON dependency). `Store` is thread sa
 FFM is final in JDK 22; JDK 21 has it only as a preview (needs `--enable-preview` and classes compiled with the same release), and JDK 17 has an incubator API with a different shape. A JNI shim would add a second native artifact per platform plus a C toolchain to the build. This binding targets Java 22+; applications on older Java runtimes can call the HTTP server or supply their own bridge to the C ABI.
 
 ## Native library resolution
-`-Dhms.library.path` or `WARM_LIBRARY_PATH` (file or directory), then `META-INF/native/<rid>/<lib>` inside the jar (`osx-arm64`, `linux-x64`, `win-x64`, ...), then the OS library path. To bundle: put libraries at `bindings/java/natives/<rid>/<lib>` before `mvn package`.
+`-Dwarm.library.path` (or the older `-Dhms.library.path`) or `WARM_LIBRARY_PATH` (file or directory), then `META-INF/native/<rid>/<lib>` inside the jar (`osx-arm64`, `linux-x64`, `win-x64`, ...), then the OS library path. To bundle: put libraries at `bindings/java/natives/<rid>/<lib>` before `mvn package`.
 
 ## Test
 ```sh
 cd bindings/java
-mvn -Dhms.native.dir="$PWD/../c/target/release" test
+mvn -Dwarm.native.dir="$PWD/../c/target/release" test
 ```
 Verified here: JDK 25 on macOS arm64, 11 JUnit tests, `--release 22` compile. JDK 22-24 runtime and Linux/Windows are not verified locally.

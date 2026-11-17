@@ -9,7 +9,7 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, "/Volumes/A/.hms-lb/factstore-20261114/kill")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import boot_ci  # noqa: E402
 
 ARMS = ["vsa", "col", "inv", "rowbf", "fpf", "pat"]

@@ -15,4 +15,4 @@ The document search path needs supplied embeddings for semantic matching. Its in
 
 The vector-symbolic layer supports composition and associative recall for facts. It is not a substitute for a strong language embedding model when the task is nuanced semantic search over prose. The older sparse-vector path is experimental and trails established ANN libraries; use the graph index for vector search.
 
-For measured wins and losses, see [public benchmarks](PUBLIC-BENCHMARKS.md). For the boundary between document retrieval and holographic memory, see [what “holographic” means](concepts/holographic.md) and the [architecture map](ARCHITECTURE.md).
+For measured wins and losses, see [public benchmarks](../PUBLIC-BENCHMARKS.md). For the boundary between document retrieval and holographic memory, see [what “holographic” means](holographic.md) and the [architecture map](../ARCHITECTURE.md).
