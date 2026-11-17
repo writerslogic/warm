@@ -219,7 +219,13 @@ Version 4 adds, after the version 3 sections, two more:
     postings that no other point dominates with a larger frequency at no greater word count. A
     reader bounds the BM25 weight of every posting in the block (run) by the largest weight of any
     point, which is tighter than the block's two maxima; a block whose count is zero has the single
-    point of its two maxima. A list of one block has no table;
+    point of its two maxima. A dense list, one of two or more blocks holding at least one of
+    every 8 slots through its last, ends its table with its slot bitmap after the frontier
+    bytes: `ceil((last + 1) / 64)` little-endian `u64` words, bit `s % 64` of word `s / 64` set
+    for each slot `s` it holds. Counting queries OR and AND these words instead of decoding the
+    list. A reader takes the bitmap only when the bytes after the frontiers are exactly that
+    long, so a table written without one (before bitmaps were added) reads as before. A list of
+    one block has no table;
 7. positions: for each list, in dictionary order, one region per block when the flags say
     positional: a width byte `w` (the bits needed for the longest posting's byte length), the
     byte length of each posting's positions packed at `w` bits (the packing of the frequencies),
