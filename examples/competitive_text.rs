@@ -376,12 +376,15 @@ fn main() -> Result<()> {
                 memorize += start.elapsed();
                 Ok(())
             })?;
-            let ingest_s = memorize.as_secs_f64();
-            // `close_s` is the durable close (the final checkpoint) that `drop` runs.
+            // The build boundary is the same for every system: the data is durable and searchable by a
+            // fresh process. For WARM that is the durable close (the final checkpoint `drop` runs), as
+            // the comparators' ingest times hold their commit, merge or optimize.
             let closing = Instant::now();
             drop(core);
-            json!({"documents": count, "ingest_s": ingest_s,
-                "close_s": closing.elapsed().as_secs_f64(),
+            let close = closing.elapsed();
+            json!({"documents": count, "ingest_s": (memorize + close).as_secs_f64(),
+                "memorize_s": memorize.as_secs_f64(), "close_s": close.as_secs_f64(),
+                "build_boundary": "memorize_documents_with calls plus the durable close (final checkpoint)",
                 "encode": mode.name(), "store_text": args.store_text, "allocator": ALLOCATOR})
         }
         "serve" => {

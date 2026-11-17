@@ -17,13 +17,19 @@ use std::collections::BinaryHeap;
 use super::wand::{sum_bound, Bound};
 use super::*;
 use crate::core::documents::image::ServingImage;
-use crate::core::documents::lists::{Cursor, ListRef, PositionIter, NO_DOC, RUN_BLOCKS};
+use crate::core::documents::lists::{
+    dense_word, holds, Cursor, ListRef, PositionIter, NO_DOC, RUN_BLOCKS,
+};
+use crate::core::documents::postings::CHECKPOINT_BLOCK;
 use crate::core::documents::search::LexicalSource;
 
 /// One clause with its cursors: a single word, or a phrase's words rarest first.
 struct Rt<'a> {
     /// The clause's index in the query, the order scores are summed in.
     clause: usize,
+    /// Later clauses of the same single word, which [`merge_twins`] folded into this one: they
+    /// share its postings and weight.
+    twins: Vec<usize>,
     phrase: bool,
     cursors: Vec<Cursor<'a>>,
     /// The phrase word each cursor reads.
@@ -49,6 +55,7 @@ impl<'a> Rt<'a> {
         });
         Self {
             clause,
+            twins: Vec::new(),
             phrase,
             cursors,
             word: order,
@@ -243,6 +250,31 @@ impl<'a> Rt<'a> {
             .min()
             .unwrap_or(NO_DOC)
     }
+}
+
+/// Sorts term clauses rarest first and folds each clause whose word repeats an earlier one's
+/// into that one's [`Rt::twins`]: a conjunction reads each list once.
+fn merge_twins(terms: &mut Vec<Rt<'_>>) {
+    let key = |rt: &Rt<'_>| {
+        (
+            rt.rarest(),
+            rt.cursors[0].list_bytes().as_ptr() as usize,
+            rt.clause,
+        )
+    };
+    terms.sort_by_key(key);
+    let mut kept: Vec<Rt<'_>> = Vec::with_capacity(terms.len());
+    for rt in terms.drain(..) {
+        match kept.last_mut() {
+            Some(last)
+                if last.cursors[0].list_bytes().as_ptr() == rt.cursors[0].list_bytes().as_ptr() =>
+            {
+                last.twins.push(rt.clause);
+            }
+            _ => kept.push(rt),
+        }
+    }
+    *terms = kept;
 }
 
 /// What every clause's scoring shares.
@@ -471,16 +503,50 @@ pub(in crate::core::documents) fn execute(
         // Every posting counts, so the ranking may skip blocks.
         run.count = false;
     }
+    let lone_phrase = excluded.is_empty()
+        && required.len() + optional.len() == 1
+        && required
+            .iter()
+            .chain(&optional)
+            .all(|rt| rt.phrase && rt.cursors.len() >= 2);
+    if lone_phrase {
+        let mut rt = required
+            .pop()
+            .or_else(|| optional.pop())
+            .expect("one clause");
+        let (hits, count) = run.phrase_top(&mut rt)?;
+        return Ok(Some(LexicalResults {
+            hits,
+            count: options.count.then_some(count),
+        }));
+    }
     if k == 0
         && required.len() >= 2
         && excluded.is_empty()
         && optional.is_empty()
         && required.iter().all(|rt| !rt.phrase)
     {
-        required.sort_by_key(Rt::rarest);
-        let count = intersect_count(&mut required);
+        merge_twins(&mut required);
+        let count = if required.len() == 1 {
+            required[0].rarest()
+        } else {
+            intersect_count(&mut required)
+        };
         return Ok(Some(LexicalResults {
             hits: Vec::new(),
+            count: options.count.then_some(count),
+        }));
+    }
+    let terms_only = required.len() >= 2
+        && k > 0
+        && excluded.is_empty()
+        && optional.is_empty()
+        && required.iter().all(|rt| !rt.phrase && rt.bound.is_some());
+    if terms_only {
+        merge_twins(&mut required);
+        let (hits, count) = run.terms_top(&mut required)?;
+        return Ok(Some(LexicalResults {
+            hits,
             count: options.count.then_some(count),
         }));
     }
@@ -651,6 +717,204 @@ impl<'a> Run<'a, '_> {
         Ok((top.finish(), count))
     }
 
+    /// The top `k` of the documents every term clause has, and with `self.count` their number:
+    /// the rarest list a block at a time, filtered through the others (see [`keep_common`]).
+    /// A block whose bound, with the bounds of the other lists at it, is below the k-th best
+    /// score is skipped before the other lists are read, or when counting, filtered but not
+    /// scored. `terms` is sorted rarest first and every clause has a bound.
+    fn terms_top(&mut self, terms: &mut [Rt<'a>]) -> Result<(Vec<LexicalHit>, usize)> {
+        let lists = terms.len();
+        let clauses = terms.iter().map(|rt| 1 + rt.twins.len()).sum();
+        // Each list's clauses, and how many times its weight enters a score.
+        let ids: Vec<Vec<usize>> = terms
+            .iter()
+            .map(|rt| {
+                std::iter::once(rt.clause)
+                    .chain(rt.twins.iter().copied())
+                    .collect()
+            })
+            .collect();
+        let times: Vec<f64> = ids.iter().map(|ids| ids.len() as f64).collect();
+        let ceiling = sum_bound(
+            terms.iter().zip(&times).map(|(rt, t)| rt.ceiling * t).sum(),
+            clauses,
+        );
+        let mut top = Top::new(self.image, self.k);
+        let mut count = 0usize;
+        let mut slots = [0u32; CHECKPOINT_BLOCK];
+        // Row 0: each candidate's index in the lead block; row `l`: its frequency in list `l`.
+        let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; lists];
+        let (lead, rest) = terms.split_first_mut().expect("two or more lists");
+        let lead_bound = lead.bound.expect("a bounded term");
+        'blocks: loop {
+            let floor = top.floor();
+            if !self.count && floor.is_some_and(|floor| ceiling < floor) {
+                break;
+            }
+            let cursor = &mut lead.cursors[0];
+            if cursor.is_end() {
+                break;
+            }
+            let (first, last) = (cursor.block_first(), cursor.block_last());
+            let mut scored = true;
+            if let Some(floor) = floor {
+                let mut sum = cursor.block_weight(lead_bound) * times[0];
+                for (other, t) in rest.iter_mut().zip(&times[1..]) {
+                    let c = &mut other.cursors[0];
+                    if !c.advance_block(first) {
+                        break 'blocks;
+                    }
+                    let bound = other.bound.expect("a bounded term");
+                    let weight = if c.block_last() >= last {
+                        c.block_weight(bound)
+                    } else {
+                        c.span_weight(last, bound, 8).unwrap_or(other.ceiling)
+                    };
+                    sum += weight * t;
+                }
+                scored = sum_bound(sum, clauses) >= floor;
+            }
+            let mut live = true;
+            if scored || self.count {
+                let cursor = &mut lead.cursors[0];
+                let block = cursor.block_slots();
+                let mut n = block.len();
+                slots[..n].copy_from_slice(block);
+                if !scored {
+                    // Counted only: the dense lists' bitmaps answer without decoding them.
+                    let (kept, more) = keep_counted(rest, &mut slots, n);
+                    count += kept;
+                    if !more || !lead.cursors[0].advance_block(last.saturating_add(1)) {
+                        break;
+                    }
+                    continue;
+                }
+                for (index, value) in rows[0][..n].iter_mut().enumerate() {
+                    *value = index as u32;
+                }
+                for (l, other) in rest.iter_mut().enumerate() {
+                    let (kept, more) = keep_common(
+                        &mut other.cursors[0],
+                        &mut slots,
+                        n,
+                        &mut rows,
+                        Record::Frequency(l + 1),
+                    );
+                    n = kept;
+                    live &= more;
+                    if n == 0 {
+                        break;
+                    }
+                }
+                count += n;
+                if n > 0 {
+                    let frequencies = lead.cursors[0].block_frequencies();
+                    for (m, &slot) in slots[..n].iter().enumerate() {
+                        let lead_frequency = frequencies[rows[0][m] as usize];
+                        for &id in &ids[0] {
+                            self.frequencies[id] = lead_frequency;
+                        }
+                        for (ids, row) in ids.iter().zip(&rows).skip(1) {
+                            for &id in ids {
+                                self.frequencies[id] = row[m];
+                            }
+                        }
+                        let score = self.score(slot)?;
+                        top.offer(score, slot);
+                    }
+                }
+            }
+            if !live || !lead.cursors[0].advance_block(last.saturating_add(1)) {
+                break;
+            }
+        }
+        Ok((top.finish(), count))
+    }
+
+    /// The documents holding the query's one phrase clause, and with `self.count` their number:
+    /// its rarest word's list a block at a time, filtered through its other words' lists (see
+    /// [`keep_common`]), then each survivor's positions checked. A block whose bound is below
+    /// the k-th best score is skipped unread, or when counting, checked but not scored.
+    fn phrase_top(&mut self, rt: &mut Rt<'a>) -> Result<(Vec<LexicalHit>, usize)> {
+        let words = rt.cursors.len();
+        let scoring = self.k > 0;
+        let mut top = Top::new(self.image, self.k);
+        let mut count = 0usize;
+        let mut slots = [0u32; CHECKPOINT_BLOCK];
+        // Row 0: each candidate's index in the lead block; rows `2c - 1` and `2c`: where the
+        // positions of cursor `c` start and end.
+        let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; 2 * words - 1];
+        let mut bytes: Vec<&'a [u8]> = vec![&[]; words];
+        let mut iters = Vec::with_capacity(words);
+        let (lead, rest) = rt
+            .cursors
+            .split_first_mut()
+            .expect("a phrase of two words or more");
+        let positions: Vec<&'a [u8]> = std::iter::once(lead.list_positions())
+            .chain(rest.iter().map(|c| c.list_positions()))
+            .collect();
+        while !lead.is_end() {
+            let last = lead.block_last();
+            let mut scored = scoring;
+            if let (true, Some(floor), Some(bound)) = (scoring, top.floor(), rt.bound) {
+                // The phrase occurs in a document no more often than its lead word does.
+                let (frequency, least) = lead.block_bounds();
+                if sum_bound(bound.at(frequency, least), 1) < floor {
+                    if !self.count {
+                        if !lead.advance_block(last.saturating_add(1)) {
+                            break;
+                        }
+                        continue;
+                    }
+                    scored = false;
+                }
+            }
+            let block = lead.block_slots();
+            let mut n = block.len();
+            slots[..n].copy_from_slice(block);
+            for (index, value) in rows[0][..n].iter_mut().enumerate() {
+                *value = index as u32;
+            }
+            let mut live = true;
+            for (c, other) in rest.iter_mut().enumerate() {
+                let (kept, more) = keep_common(
+                    other,
+                    &mut slots,
+                    n,
+                    &mut rows,
+                    Record::Positions(2 * c + 1),
+                );
+                n = kept;
+                live &= more;
+                if n == 0 {
+                    break;
+                }
+            }
+            for (m, &slot) in slots[..n].iter().enumerate() {
+                let (start, end) = lead.position_range(rows[0][m] as usize);
+                bytes[rt.word[0]] = &positions[0][start as usize..end as usize];
+                for (c, (&word, list)) in rt.word.iter().zip(&positions).enumerate().skip(1) {
+                    let (start, end) = (rows[2 * c - 1][m] as usize, rows[2 * c][m] as usize);
+                    bytes[word] = &list[start..end];
+                }
+                let occurrences = phrase_occurrences(&bytes, &mut iters, scored);
+                if occurrences == 0 {
+                    continue;
+                }
+                count += 1;
+                if scored {
+                    self.frequencies[rt.clause] = occurrences;
+                    let score = self.score(slot)?;
+                    top.offer(score, slot);
+                }
+            }
+            if !live || !lead.advance_block(last.saturating_add(1)) {
+                break;
+            }
+        }
+        Ok((top.finish(), count))
+    }
+
     /// The top `k` of one long term's postings: its runs strongest first by their frontiers, and
     /// within a run the blocks whose own bound reaches the k-th best score, so the floor rises
     /// before the weak runs are reached and most of them are never read.
@@ -726,25 +990,225 @@ impl<'a> Run<'a, '_> {
     }
 }
 
-/// Documents every term clause has, by leapfrogging from the rarest list; `terms` is sorted
-/// rarest first.
-fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
-    let (lead, rest) = terms.split_first_mut().expect("two or more lists");
+/// Occurrences of a phrase in one document whose words' positions (as gap bytes, in phrase
+/// order) are `words`; one when there is any and not `exact`.
+fn phrase_occurrences<'b>(
+    words: &[&'b [u8]],
+    iters: &mut Vec<std::iter::Peekable<PositionIter<'b>>>,
+    exact: bool,
+) -> u32 {
+    // Any word may lead; the one with the fewest position bytes reads the least.
+    let lead = (0..words.len())
+        .min_by_key(|&w| words[w].len())
+        .expect("a phrase of words");
+    iters.clear();
+    iters.extend(
+        words
+            .iter()
+            .map(|bytes| PositionIter::new(bytes).peekable()),
+    );
     let mut count = 0;
-    let mut doc = lead.cursors[0].doc();
-    'lead: while doc != NO_DOC {
-        for rt in rest.iter_mut() {
-            let at = rt.cursors[0].advance_to(doc);
-            if at != doc {
-                doc = lead.cursors[0].advance_to(at);
-                continue 'lead;
+    for position in PositionIter::new(words[lead]) {
+        let Some(start) = position.checked_sub(lead as u32) else {
+            continue;
+        };
+        let matched = iters.iter_mut().enumerate().all(|(offset, iter)| {
+            if offset == lead {
+                return true;
             }
+            let Some(target) = start.checked_add(offset as u32) else {
+                return false;
+            };
+            while iter.peek().is_some_and(|&p| p < target) {
+                iter.next();
+            }
+            iter.peek() == Some(&target)
+        });
+        count += u32::from(matched);
+        if matched && !exact {
+            break;
         }
-        count += 1;
-        lead.cursors[0].next();
-        doc = lead.cursors[0].doc();
     }
     count
+}
+
+/// What [`keep_common`] records of each kept candidate in `other`, in the rows from the one
+/// given (the rows before it are carried along).
+#[derive(Clone, Copy)]
+enum Record {
+    Nothing,
+    /// Its frequency.
+    Frequency(usize),
+    /// The start and end of its positions in the list's positions bytes, in two rows.
+    Positions(usize),
+}
+
+/// Keeps, in place, the candidates among `slots[..n]` that `other` also holds and moves each
+/// kept candidate's entries in `rows` along with it, recording what `record` asks. The candidates ascend; blocks of `other` no candidate
+/// falls in are skipped through its skip table, never decoded. The second value is false when
+/// `other` ended before the last candidate, so no later candidate can match either.
+fn keep_common(
+    other: &mut Cursor<'_>,
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+    rows: &mut [[u32; CHECKPOINT_BLOCK]],
+    record: Record,
+) -> (usize, bool) {
+    let carried = match record {
+        Record::Nothing => rows.len(),
+        Record::Frequency(row) | Record::Positions(row) => row,
+    };
+    let mut matched = [0u8; CHECKPOINT_BLOCK];
+    let (mut i, mut k) = (0usize, 0usize);
+    while i < n {
+        let wanted = slots[i];
+        if other.block_last() < wanted && !other.advance_block(wanted) {
+            return (k, false);
+        }
+        let first = other.block_first();
+        if first > wanted {
+            while i < n && slots[i] < first {
+                i += 1;
+            }
+            continue;
+        }
+        let last = other.block_last();
+        let from = k;
+        let block = other.block_slots();
+        // The candidates this block can hold: `slots[i..end]`.
+        let mut end = i + 1;
+        while end < n && slots[end] <= last {
+            end += 1;
+        }
+        if (end - i) * 16 < block.len() {
+            // Few candidates: a branch-free binary search each.
+            let mut j = 0usize;
+            let mut at = i;
+            while at < end {
+                let value = slots[at];
+                let mut size = block.len() - j;
+                while size > 1 {
+                    let half = size / 2;
+                    j += half * usize::from(block[j + half] <= value);
+                    size -= half;
+                }
+                slots[k] = value;
+                matched[k] = j as u8;
+                for row in rows[..carried].iter_mut() {
+                    row[k] = row[at];
+                }
+                k += usize::from(block[j] == value);
+                at += 1;
+            }
+        } else {
+            // Many: a branch-free merge, each step advancing whichever side is behind.
+            let mut j = 0usize;
+            let mut at = i;
+            while at < end && j < block.len() {
+                let (value, posting) = (slots[at], block[j]);
+                slots[k] = value;
+                matched[k] = j as u8;
+                for row in rows[..carried].iter_mut() {
+                    row[k] = row[at];
+                }
+                k += usize::from(value == posting);
+                at += usize::from(value <= posting);
+                j += usize::from(posting <= value);
+            }
+        }
+        i = end;
+        if k > from {
+            match record {
+                Record::Nothing => {}
+                Record::Frequency(row) => {
+                    let frequencies = other.block_frequencies();
+                    for (out, &j) in rows[row][from..k].iter_mut().zip(&matched[from..k]) {
+                        *out = frequencies[usize::from(j)];
+                    }
+                }
+                Record::Positions(row) => {
+                    for (m, &j) in matched.iter().enumerate().take(k).skip(from) {
+                        let (start, end) = other.position_range(usize::from(j));
+                        rows[row][m] = start;
+                        rows[row + 1][m] = end;
+                    }
+                }
+            }
+        }
+    }
+    (k, true)
+}
+
+/// Documents every term clause has: the rarest list's postings a block at a time, each block's
+/// slots tested against the dense lists' bitmaps, then filtered through the other lists (see
+/// [`keep_common`]); when every list is dense, the bitmaps ANDed a word at a time. `terms` is
+/// sorted rarest first.
+fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
+    let bitmaps: Vec<&[u8]> = terms
+        .iter()
+        .filter_map(|rt| rt.cursors[0].dense())
+        .collect();
+    if bitmaps.len() == terms.len() {
+        let words = bitmaps.iter().map(|bits| bits.len() / 8).min().unwrap_or(0);
+        return (0..words)
+            .map(|index| {
+                bitmaps
+                    .iter()
+                    .fold(u64::MAX, |word, bits| word & dense_word(bits, index))
+                    .count_ones() as usize
+            })
+            .sum();
+    }
+    let (lead, rest) = terms.split_first_mut().expect("two or more lists");
+    let lead = &mut lead.cursors[0];
+    let mut count = 0usize;
+    let mut slots = [0u32; CHECKPOINT_BLOCK];
+    loop {
+        let block = lead.block_slots();
+        if block.is_empty() {
+            return count;
+        }
+        let n = block.len();
+        slots[..n].copy_from_slice(block);
+        let (n, live) = keep_counted(rest, &mut slots, n);
+        count += n;
+        if !live || !lead.advance_block(lead.block_last().saturating_add(1)) {
+            return count;
+        }
+    }
+}
+
+/// Keeps the candidates among `slots[..n]` that every list of `rest` holds: tested against the
+/// dense lists' bitmaps first, then filtered through the others (see [`keep_common`]). The
+/// second value is false when a list ended, so no later candidate can match.
+fn keep_counted(
+    rest: &mut [Rt<'_>],
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+) -> (usize, bool) {
+    let mut kept = n;
+    for rt in rest.iter() {
+        if let Some(bits) = rt.cursors[0].dense() {
+            let (mut i, mut k) = (0, 0);
+            while i < kept {
+                let slot = slots[i];
+                slots[k] = slot;
+                k += usize::from(holds(bits, slot));
+                i += 1;
+            }
+            kept = k;
+        }
+    }
+    let mut live = true;
+    for other in rest.iter_mut().filter(|rt| rt.cursors[0].dense().is_none()) {
+        if kept == 0 {
+            break;
+        }
+        let (k, more) = keep_common(&mut other.cursors[0], slots, kept, &mut [], Record::Nothing);
+        kept = k;
+        live &= more;
+    }
+    (kept, live)
 }
 
 /// Documents with any of the term clauses' words: the largest list's postings, plus the
@@ -758,7 +1222,8 @@ fn union_count(optional: &mut [Rt<'_>], slots: usize) -> usize {
     let (big, rest) = optional.split_first_mut().expect("two or more lists");
     let rest_total: usize = rest.iter().map(|rt| rt.cursors[0].len()).sum();
     let big_len = big.cursors[0].len();
-    if big_len >= 16 * rest_total {
+    // A dense largest list is not probed: its bitmap below costs no decoding.
+    if big_len >= 16 * rest_total && big.cursors[0].dense().is_none() {
         let mut count = big_len;
         loop {
             let doc = rest
@@ -781,6 +1246,14 @@ fn union_count(optional: &mut [Rt<'_>], slots: usize) -> usize {
     }
     let mut bits = vec![0u64; slots.div_ceil(64)];
     for rt in optional.iter_mut() {
+        if let Some(dense) = rt.cursors[0].dense() {
+            // A dense list's bitmap is ORed a word at a time; its postings are not decoded.
+            let (words, _) = dense.as_chunks::<8>();
+            for (at, word) in bits.iter_mut().zip(words) {
+                *at |= u64::from_le_bytes(*word);
+            }
+            continue;
+        }
         rt.cursors[0].for_each_block(|block| {
             for &doc in block {
                 let doc = doc as usize;
@@ -949,7 +1422,7 @@ mod tests {
             "w4 \"w1 w0\"",
         ] {
             let query = LexicalQuery::parse(text).unwrap();
-            for k in [1usize, 10, 100] {
+            for k in [0usize, 1, 10, 100] {
                 for count in [false, true] {
                     let options = LexicalOptions {
                         k,

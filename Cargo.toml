@@ -207,7 +207,7 @@ provenance-scitt = ["provenance", "ureq"]
 experimental = ["dep:gemm"]
 experimental-batch-pool = ["experimental"]
 experimental-neighbor-admission = ["experimental"]
-# Always on: four-row batched 8-bit neighbour estimates are the default query path. Kept so existing feature lists still resolve.
+# Always on: four-row batched 8-bit and 4-bit neighbour estimates are the default query path. Kept so existing feature lists still resolve.
 experimental-query-x4 = ["experimental"]
 experimental-build-search = ["experimental"]
 # On-device embedding, re-ranking, fact extraction and query rewriting (candle, Qwen3).

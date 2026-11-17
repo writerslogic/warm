@@ -53,15 +53,16 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     uv pip install warm-sdk
     ```
 
-    Install a prebuilt server (checksum-verified, from the `server-v<version>` GitHub release;
-    Linux glibc and macOS, no Alpine) and start it:
+    Build and install the server (needs Rust 1.89 or newer), then start it:
 
     ```sh
-    curl -fsSL https://raw.githubusercontent.com/writerslogic/warm/main/scripts/install-warm-server.sh | sh
+    cargo install --locked --features server --bin warm-server warm-rust
     WARM_API_KEY=change-me warm-server --input-dim 384
     ```
 
-    To build it from a checkout instead: `cargo build --release --features server --bin warm-server`.
+    From a checkout, `cargo build --release --features server --bin warm-server` builds the same
+    binary. Prebuilt, checksum-verified binaries (`scripts/install-warm-server.sh`, Linux glibc and
+    macOS, no Alpine) start with the first `server-v<version>` GitHub release; none is published yet.
 
     The `warm-python` wheel runs native code in-process, imported as `writerslogic_warm`. The
     0.6.8 wheel provides the vector indexes and phase vectors only. The in-process `Warm` class

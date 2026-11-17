@@ -9,6 +9,7 @@
 # Node.js
 /node_modules
 package-lock.json
+!/package-lock.json
 !interop/w3c/package-lock.json
 !integrations/mcp/tests/package-lock.json
 !integrations/js/package-lock.json
@@ -72,6 +73,7 @@ benchmarks/public/*.py.lock
 !/scripts/docs-api/package-lock.json
 # Local embedder model packs are build products (see bindings/embed-models)
 *.hmsemb
+!tests/fixtures/**/*.hmsemb
 bindings/embed-models/**/packs/
 .warm-local/
 benchmarks/results/research/ann/*.graph
