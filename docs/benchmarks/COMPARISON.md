@@ -244,42 +244,42 @@ Timing boundary (where each query is timed): WARM: native Rust API call in the e
 
 | Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
 |---|---|---|---|---|
-| QPS @ recall@10 >= 0.90 (QPS) | 21,032 | hnswlib (native C++) 11,152 | 1.89x [1.85, 2.02] | **WIN** |
-| QPS @ recall@10 >= 0.95 (QPS) | 12,732 | hnswlib (native C++) 7,427 | 1.71x [1.64, 1.81] | **WIN** |
-| QPS @ recall@10 >= 0.99 (QPS) | 5,653 | hnswlib (native C++) 3,487 | 1.62x [1.57, 1.72] | **WIN** |
-| p50 latency @ 0.95 (us) | 80 | PyNNDescent 133 | 1.67x [1.61, 1.75] | **WIN** |
-| p99 latency @ 0.95 (us) | 114 | hnswlib (native C++) 194 | 1.70x [1.60, 1.83] | **WIN** |
-| Build time (s) | 59.16 | per build, see below | per build | **n/v** |
-| Peak RSS, build (MiB) | 1,290 | per build, see below | per build | **n/v** |
-| RSS, serving (MiB) | 530 | per build, see below | per build | **n/v** |
+| QPS @ recall@10 >= 0.90 (QPS) | 24,335 | hnswlib (native C++) 11,152 | 2.18x [2.14, 2.30] | **WIN** |
+| QPS @ recall@10 >= 0.95 (QPS) | 14,645 | hnswlib (native C++) 7,427 | 1.97x [1.93, 2.05] | **WIN** |
+| QPS @ recall@10 >= 0.99 (QPS) | 6,576 | hnswlib (native C++) 3,487 | 1.89x [1.85, 1.92] | **WIN** |
+| p50 latency @ 0.95 (us) | 69 | PyNNDescent 133 | 1.92x [1.89, 1.99] | **WIN** |
+| p99 latency @ 0.95 (us) | 96 | hnswlib (native C++) 194 | 2.02x [1.96, 2.12] | **WIN** |
+| Build time (s) | 67.42 | per build, see below | per build | **n/v** |
+| Peak RSS, build (MiB) | 1,218 | per build, see below | per build | **n/v** |
+| RSS, serving (MiB) | 513 | per build, see below | per build | **n/v** |
 | Index size (MiB) | 576.3 | FAISS IVF-PQ fast-scan (+refine) 528.4 | 0.92x (no CI) | **n/v** |
 | Cold start to first answer (s) | 0.10 | per build, see below | per build | **n/v** |
-| Replace one vector (durable) (ms) | 1.500 | n/m | n/m | **n/m** |
-| Delete one vector (durable) (ms) | 1.253 | n/m | n/m | **n/m** |
-| Install size (MiB) | 5.2 | hnswlib 62.2 | 12.00x (no CI) | **n/v** |
+| Replace one vector (durable) (ms) | 1.112 | n/m | n/m | **n/m** |
+| Delete one vector (durable) (ms) | 0.914 | n/m | n/m | **n/m** |
+| Install size (MiB) | 5.8 | hnswlib 62.2 | 10.70x (no CI) | **n/v** |
 | Install distributions (count) | 0 | hnswlib 2 | inf (no CI) | **n/v** |
 
 <details><summary>All systems</summary>
 
 | Metric | WARM | hnswlib | hnswlib (native C++) | FAISS HNSW | FAISS IVF-PQ fast-scan (+refine) | USearch | ScaNN | PyNNDescent | DiskANN (in-memory Vamana) |
 |---|---|---|---|---|---|---|---|---|---|
-| QPS @ recall@10 >= 0.90 (QPS) | **21,032** | 10,780 | 11,152 | 6,690 | 7,467 | 4,549 | 5,766 | 9,177 | 6,804 |
-| QPS @ recall@10 >= 0.95 (QPS) | **12,732** | 7,223 | 7,427 | 5,056 | 4,701 | 2,750 | 2,162 | 6,673 | 5,152 |
-| QPS @ recall@10 >= 0.99 (QPS) | **5,653** | 3,389 | 3,487 | 2,701 | 1,865 | 1,511 | 1,233 | 3,424 | 3,150 |
-| p50 latency @ 0.95 (us) | **80** | 142 | 138 | 201 | 206 | 372 | 463 | 133 | 197 |
-| p99 latency @ 0.95 (us) | **114** | 199 | 194 | 254 | 376 | 488 | 547 | 412 | 254 |
-| Build time (s) | 59.16 | 257.05 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 230.46 | 152.35 | 130.51 | **34.86** | 194.87 | 390.25 |
-| Peak RSS, build (MiB) | 1,290 | 1,400 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 1,176 | **1,103** | 1,272 | 1,472 | 4,665 | 1,454 |
-| RSS, serving (MiB) | **530** | 904 | 853 | 699 | 616 | 797 | 594 | 2,261 | 860 |
+| QPS @ recall@10 >= 0.90 (QPS) | **24,335** | 10,780 | 11,152 | 6,690 | 7,467 | 4,549 | 5,766 | 9,177 | 6,804 |
+| QPS @ recall@10 >= 0.95 (QPS) | **14,645** | 7,223 | 7,427 | 5,056 | 4,701 | 2,750 | 2,162 | 6,673 | 5,152 |
+| QPS @ recall@10 >= 0.99 (QPS) | **6,576** | 3,389 | 3,487 | 2,701 | 1,865 | 1,511 | 1,233 | 3,424 | 3,150 |
+| p50 latency @ 0.95 (us) | **69** | 142 | 138 | 201 | 206 | 372 | 463 | 133 | 197 |
+| p99 latency @ 0.95 (us) | **96** | 199 | 194 | 254 | 376 | 488 | 547 | 412 | 254 |
+| Build time (s) | 67.42 | 257.05 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 230.46 | 152.35 | 130.51 | **34.86** | 194.87 | 390.25 |
+| Peak RSS, build (MiB) | 1,218 | 1,400 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 1,176 | **1,103** | 1,272 | 1,472 | 4,665 | 1,454 |
+| RSS, serving (MiB) | **513** | 904 | 853 | 699 | 616 | 797 | 594 | 2,261 | 860 |
 | Index size (MiB) | 576.3 | 751.8 | n/m (serves the hnswlib row's index file (built there, same bytes); not a separate build) | 625.9 | **528.4** | 630.0 | 534.4 | 1,987.2 | 1,198.2 |
 | Cold start to first answer (s) | **0.10** | 0.86 | 0.77 | 1.01 | 0.84 | 0.64 | 1.01 | 11.46 | 1.24 |
-| Replace one vector (durable) (ms) | **1.500** |  |  |  |  |  |  |  |  |
-| Delete one vector (durable) (ms) | **1.253** |  |  |  |  |  |  |  |  |
-| Install size (MiB) | **5.2** | 62.2 |  | 180.9 | 180.9 | 90.8 | 98.9 | 379.3 | 338.4 |
+| Replace one vector (durable) (ms) | **1.112** |  |  |  |  |  |  |  |  |
+| Delete one vector (durable) (ms) | **0.914** |  |  |  |  |  |  |  |  |
+| Install size (MiB) | **5.8** | 62.2 |  | 180.9 | 180.9 | 90.8 | 98.9 | 379.3 | 338.4 |
 | Install distributions (count) | **0** | 2 |  | 3 | 3 | 4 | 3 | 10 | 2 |
 
 n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
-Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 32, 'rerank': 64} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.959; hnswlib: m32e500 {'ef': 32} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.951; hnswlib (native C++): m32e500 {'ef': 32} recall 0.952; FAISS HNSW: m16e500 {'ef': 48} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.956; FAISS IVF-PQ fast-scan (+refine): ab_nl2048 {'nprobe': 50, 'k_factor': 10} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.969; USearch: m16 {'ef': 64} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.964; ScaNN: ab_scann4 {'leaves': 110, 'reorder': 120} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.956; PyNNDescent: ab_nn80_fast {'epsilon': 0.16} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.970; DiskANN (in-memory Vamana): r64_l500 {'L': 24} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.964.
+Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 32, 'rerank': 32} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.959; hnswlib: m32e500 {'ef': 32} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.951; hnswlib (native C++): m32e500 {'ef': 32} recall 0.952; FAISS HNSW: m16e500 {'ef': 48} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.956; FAISS IVF-PQ fast-scan (+refine): ab_nl2048 {'nprobe': 50, 'k_factor': 10} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.969; USearch: m16 {'ef': 64} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.964; ScaNN: ab_scann4 {'leaves': 110, 'reorder': 120} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.956; PyNNDescent: ab_nn80_fast {'epsilon': 0.16} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.970; DiskANN (in-memory Vamana): r64_l500 {'L': 24} selected on the even-indexed queries, reported on the odd-indexed; report recall 0.964.
 
 </details>
 
@@ -301,22 +301,22 @@ Per-build comparison. Each row is one comparator build; every figure in it, and 
 
 | Comparator build | QPS @ recall@10 >= 0.90 (QPS) | QPS @ recall@10 >= 0.95 (QPS) | QPS @ recall@10 >= 0.99 (QPS) | Build time (s) | Peak RSS, build (MiB) | RSS, serving (MiB) | Index size (MiB) | Cold start to first answer (s) |
 |---|---|---|---|---|---|---|---|---|
-| DiskANN (in-memory Vamana) r64_l500 | 6,804; WARM 21,032, 3.09x [3.04, 3.56] **WIN** | 5,152; WARM 12,732, 2.47x [2.36, 2.80] **WIN** | 3,150; WARM 5,653, 1.79x [1.72, 2.08] **WIN** | 390.25; WARM 59.16, 6.60x **n/v** | 1,454; WARM 1,290, 1.13x **n/v** | 860; WARM 530, 1.62x [1.62, 1.62] **WIN** | 1,198.2; WARM 576.3 | 1.24; WARM 0.10, 12.66x [11.32, 13.58] **WIN** |
-| FAISS HNSW m16e500 | 6,578; WARM 21,032, 3.20x [3.10, 3.45] **WIN** | 5,056; WARM 12,732, 2.52x [2.41, 2.70] **WIN** | 2,533; WARM 5,653, 2.23x [2.15, 2.47] **WIN** | 230.46; WARM 59.16, 3.90x **n/v** | 1,176; WARM 1,290, 0.91x **n/v** | 699; WARM 530, 1.32x [1.32, 1.32] **WIN** | 625.9; WARM 576.3 | 1.01; WARM 0.10, 10.31x [5.02, 23.10] **WIN** |
-| FAISS HNSW m32 | 6,690; WARM 21,032, 3.14x [3.08, 3.37] **WIN** | 4,400; WARM 12,732, 2.89x [2.78, 3.17] **WIN** | 2,701; WARM 5,653, 2.09x [2.00, 2.32] **WIN** | 116.06; WARM 59.16, 1.96x **n/v** | 1,297; WARM 1,290, 1.01x **n/v** | 822; WARM 530, 1.55x [1.55, 1.55] **WIN** | 747.8; WARM 576.3 | 1.18; WARM 0.10, 12.01x [5.65, 28.20] **WIN** |
-| FAISS IVF-PQ fast-scan (+refine) ab_nl2048 | 7,467; WARM 21,032, 2.82x [2.66, 3.00] **WIN** | 4,701; WARM 12,732, 2.71x [2.52, 2.97] **WIN** | 1,865; WARM 5,653, 3.03x [2.86, 3.27] **WIN** | 152.35; WARM 59.16, 2.58x **n/v** | 1,103; WARM 1,290, 0.86x **n/v** | 616; WARM 530, 1.16x [1.16, 1.16] **WIN** | 528.4; WARM 576.3 | 0.84; WARM 0.10, 8.60x [4.40, 19.41] **WIN** |
-| hnswlib m16 | 10,780; WARM 21,032, 1.95x [1.89, 2.09] **WIN** | 6,232; WARM 12,732, 2.04x [1.96, 2.22] **WIN** | 2,458; WARM 5,653, 2.30x [2.20, 2.51] **WIN** | 82.73; WARM 59.16, 1.40x **n/v** | 1,279; WARM 1,290, 0.99x **n/v** | 786; WARM 530, 1.48x [1.48, 1.48] **WIN** | 630.0; WARM 576.3 | 0.84; WARM 0.10, 8.58x [8.01, 23.51] **WIN** |
-| hnswlib m16e500 | 10,513; WARM 21,032, 2.00x [1.94, 2.25] **WIN** | 6,033; WARM 12,732, 2.11x [2.01, 2.35] **WIN** | 3,389; WARM 5,653, 1.67x [1.60, 1.83] **WIN** | 185.79; WARM 59.16, 3.14x **n/v** | 1,279; WARM 1,290, 0.99x **n/v** | 786; WARM 530, 1.48x [1.48, 1.48] **WIN** | 630.0; WARM 576.3 | 0.87; WARM 0.10, 8.85x [8.12, 24.25] **WIN** |
-| hnswlib m32 | 9,730; WARM 21,032, 2.16x [2.09, 2.45] **WIN** | 5,724; WARM 12,732, 2.22x [2.11, 2.53] **WIN** | 3,225; WARM 5,653, 1.75x [1.66, 1.97] **WIN** | 105.10; WARM 59.16, 1.78x **n/v** | 1,400; WARM 1,290, 1.09x **n/v** | 905; WARM 530, 1.71x [1.71, 1.71] **WIN** | 751.8; WARM 576.3 | 0.96; WARM 0.10, 9.85x [8.43, 27.97] **WIN** |
-| hnswlib m32e500 | 8,947; WARM 21,032, 2.35x [2.29, 2.60] **WIN** | 7,223; WARM 12,732, 1.76x [1.69, 1.96] **WIN** | 2,948; WARM 5,653, 1.92x [1.84, 2.14] **WIN** | 257.05; WARM 59.16, 4.34x **n/v** | 1,400; WARM 1,290, 1.09x **n/v** | 904; WARM 530, 1.71x [1.71, 1.71] **WIN** | 751.8; WARM 576.3 | 0.86; WARM 0.10, 8.74x [8.29, 26.67] **WIN** |
-| hnswlib (native C++) m16 | 11,152; WARM 21,032, 1.89x [1.84, 2.04] **WIN** | 6,453; WARM 12,732, 1.97x [1.89, 2.15] **WIN** | 2,507; WARM 5,653, 2.25x [2.17, 2.49] **WIN** | n/m | n/m | 731; WARM 530, 1.38x [1.38, 1.38] **WIN** | n/m | 0.74; WARM 0.10, 7.55x [7.13, 7.74] **WIN** |
-| hnswlib (native C++) m16e500 | 10,855; WARM 21,032, 1.94x [1.89, 2.10] **WIN** | 6,286; WARM 12,732, 2.03x [1.95, 2.15] **WIN** | 3,487; WARM 5,653, 1.62x [1.56, 1.75] **WIN** | n/m | n/m | 731; WARM 530, 1.38x [1.38, 1.38] **WIN** | n/m | 0.74; WARM 0.10, 7.54x [7.14, 7.67] **WIN** |
-| hnswlib (native C++) m32 | 10,172; WARM 21,032, 2.07x [2.00, 2.25] **WIN** | 5,999; WARM 12,732, 2.12x [2.03, 2.33] **WIN** | 3,392; WARM 5,653, 1.67x [1.62, 1.84] **WIN** | n/m | n/m | 853; WARM 530, 1.61x [1.61, 1.61] **WIN** | n/m | 0.76; WARM 0.10, 7.80x [7.39, 7.95] **WIN** |
-| hnswlib (native C++) m32e500 | 9,071; WARM 21,032, 2.32x [2.23, 2.51] **WIN** | 7,427; WARM 12,732, 1.71x [1.64, 1.87] **WIN** | 2,997; WARM 5,653, 1.89x [1.81, 2.18] **WIN** | n/m | n/m | 853; WARM 530, 1.61x [1.61, 1.61] **WIN** | n/m | 0.77; WARM 0.10, 7.83x [7.39, 8.00] **WIN** |
-| PyNNDescent ab_nn80_fast | 9,177; WARM 21,032, 2.29x [2.21, 2.57] **WIN** | 6,673; WARM 12,732, 1.91x [1.81, 2.10] **WIN** | 3,424; WARM 5,653, 1.65x [1.59, 1.84] **WIN** | 194.87; WARM 59.16, 3.29x **n/v** | 4,665; WARM 1,290, 3.62x **n/v** | 2,261; WARM 530, 4.27x [4.27, 4.27] **WIN** | 1,987.2; WARM 576.3 | 11.46; WARM 0.10, 117.11x [108.57, 124.21] **WIN** |
-| ScaNN ab_scann4 | 5,766; WARM 21,032, 3.65x [3.55, 3.91] **WIN** | 2,162; WARM 12,732, 5.89x [5.67, 6.33] **WIN** | 1,233; WARM 5,653, 4.59x [4.42, 4.90] **WIN** | 34.86; WARM 59.16, 0.59x **n/v** | 1,472; WARM 1,290, 1.14x **n/v** | 594; WARM 530, 1.12x [1.12, 1.12] **WIN** | 534.4; WARM 576.3 | 1.01; WARM 0.10, 10.36x [9.48, 24.07] **WIN** |
-| USearch m16 | 4,549; WARM 21,032, 4.62x [4.46, 4.99] **WIN** | 2,750; WARM 12,732, 4.63x [4.41, 5.00] **WIN** | 1,132; WARM 5,653, 4.99x [4.84, 5.73] **WIN** | 130.51; WARM 59.16, 2.21x **n/v** | 1,272; WARM 1,290, 0.99x **n/v** | 797; WARM 530, 1.51x [1.51, 1.51] **WIN** | 630.0; WARM 576.3 | 0.64; WARM 0.10, 6.59x [6.18, 21.09] **WIN** |
-| USearch m32 | 4,252; WARM 21,032, 4.95x [4.81, 5.47] **WIN** | 2,591; WARM 12,732, 4.91x [4.71, 5.35] **WIN** | 1,511; WARM 5,653, 3.74x [3.60, 4.11] **WIN** | 165.02; WARM 59.16, 2.79x **n/v** | 1,394; WARM 1,290, 1.08x **n/v** | 917; WARM 530, 1.73x [1.73, 1.73] **WIN** | 751.8; WARM 576.3 | 0.71; WARM 0.10, 7.30x [6.90, 24.13] **WIN** |
+| DiskANN (in-memory Vamana) r64_l500 | 6,804; WARM 24,335, 3.58x [3.48, 4.00] **WIN** | 5,152; WARM 14,645, 2.84x [2.77, 3.17] **WIN** | 3,150; WARM 6,576, 2.09x [2.03, 2.33] **WIN** | 390.25; WARM 67.42, 5.79x **n/v** | 1,454; WARM 1,218, 1.19x **n/v** | 860; WARM 513, 1.68x [1.68, 1.68] **WIN** | 1,198.2; WARM 576.3 | 1.24; WARM 0.10, 12.82x [11.65, 13.72] **WIN** |
+| FAISS HNSW m16e500 | 6,578; WARM 24,335, 3.70x [3.55, 3.89] **WIN** | 5,056; WARM 14,645, 2.90x [2.84, 3.06] **WIN** | 2,533; WARM 6,576, 2.60x [2.54, 2.77] **WIN** | 230.46; WARM 67.42, 3.42x **n/v** | 1,176; WARM 1,218, 0.97x **n/v** | 699; WARM 513, 1.36x [1.36, 1.36] **WIN** | 625.9; WARM 576.3 | 1.01; WARM 0.10, 10.44x [5.17, 23.33] **WIN** |
+| FAISS HNSW m32 | 6,690; WARM 24,335, 3.64x [3.52, 3.79] **WIN** | 4,400; WARM 14,645, 3.33x [3.26, 3.59] **WIN** | 2,701; WARM 6,576, 2.43x [2.36, 2.60] **WIN** | 116.06; WARM 67.42, 1.72x **n/v** | 1,297; WARM 1,218, 1.07x **n/v** | 822; WARM 513, 1.60x [1.60, 1.60] **WIN** | 747.8; WARM 576.3 | 1.18; WARM 0.10, 12.17x [5.81, 28.49] **WIN** |
+| FAISS IVF-PQ fast-scan (+refine) ab_nl2048 | 7,467; WARM 24,335, 3.26x [3.04, 3.38] **WIN** | 4,701; WARM 14,645, 3.12x [2.96, 3.36] **WIN** | 1,865; WARM 6,576, 3.53x [3.38, 3.66] **WIN** | 152.35; WARM 67.42, 2.26x **n/v** | 1,103; WARM 1,218, 0.91x **n/v** | 616; WARM 513, 1.20x [1.20, 1.20] **WIN** | 528.4; WARM 576.3 | 0.84; WARM 0.10, 8.71x [4.53, 19.60] **WIN** |
+| hnswlib m16 | 10,780; WARM 24,335, 2.26x [2.16, 2.36] **WIN** | 6,232; WARM 14,645, 2.35x [2.30, 2.51] **WIN** | 2,458; WARM 6,576, 2.68x [2.60, 2.81] **WIN** | 82.73; WARM 67.42, 1.23x **n/v** | 1,279; WARM 1,218, 1.05x **n/v** | 786; WARM 513, 1.53x [1.53, 1.53] **WIN** | 630.0; WARM 576.3 | 0.84; WARM 0.10, 8.69x [8.25, 23.75] **WIN** |
+| hnswlib m16e500 | 10,513; WARM 24,335, 2.31x [2.22, 2.53] **WIN** | 6,033; WARM 14,645, 2.43x [2.36, 2.66] **WIN** | 3,389; WARM 6,576, 1.94x [1.88, 2.05] **WIN** | 185.79; WARM 67.42, 2.76x **n/v** | 1,279; WARM 1,218, 1.05x **n/v** | 786; WARM 513, 1.53x [1.53, 1.53] **WIN** | 630.0; WARM 576.3 | 0.87; WARM 0.10, 8.97x [8.36, 24.50] **WIN** |
+| hnswlib m32 | 9,730; WARM 24,335, 2.50x [2.39, 2.76] **WIN** | 5,724; WARM 14,645, 2.56x [2.48, 2.86] **WIN** | 3,225; WARM 6,576, 2.04x [1.95, 2.20] **WIN** | 105.10; WARM 67.42, 1.56x **n/v** | 1,400; WARM 1,218, 1.15x **n/v** | 905; WARM 513, 1.76x [1.76, 1.76] **WIN** | 751.8; WARM 576.3 | 0.96; WARM 0.10, 9.98x [8.68, 28.26] **WIN** |
+| hnswlib m32e500 | 8,947; WARM 24,335, 2.72x [2.63, 2.92] **WIN** | 7,223; WARM 14,645, 2.03x [1.98, 2.22] **WIN** | 2,948; WARM 6,576, 2.23x [2.17, 2.40] **WIN** | 257.05; WARM 67.42, 3.81x **n/v** | 1,400; WARM 1,218, 1.15x **n/v** | 904; WARM 513, 1.76x [1.76, 1.76] **WIN** | 751.8; WARM 576.3 | 0.86; WARM 0.10, 8.85x [8.54, 26.94] **WIN** |
+| hnswlib (native C++) m16 | 11,152; WARM 24,335, 2.18x [2.10, 2.30] **WIN** | 6,453; WARM 14,645, 2.27x [2.22, 2.44] **WIN** | 2,507; WARM 6,576, 2.62x [2.57, 2.79] **WIN** | n/m | n/m | 731; WARM 513, 1.43x [1.43, 1.43] **WIN** | n/m | 0.74; WARM 0.10, 7.65x [7.34, 7.82] **WIN** |
+| hnswlib (native C++) m16e500 | 10,855; WARM 24,335, 2.24x [2.16, 2.37] **WIN** | 6,286; WARM 14,645, 2.33x [2.29, 2.43] **WIN** | 3,487; WARM 6,576, 1.89x [1.85, 1.96] **WIN** | n/m | n/m | 731; WARM 513, 1.43x [1.43, 1.43] **WIN** | n/m | 0.74; WARM 0.10, 7.63x [7.35, 7.75] **WIN** |
+| hnswlib (native C++) m32 | 10,172; WARM 24,335, 2.39x [2.29, 2.54] **WIN** | 5,999; WARM 14,645, 2.44x [2.38, 2.63] **WIN** | 3,392; WARM 6,576, 1.94x [1.91, 2.06] **WIN** | n/m | n/m | 853; WARM 513, 1.66x [1.66, 1.66] **WIN** | n/m | 0.76; WARM 0.10, 7.90x [7.61, 8.03] **WIN** |
+| hnswlib (native C++) m32e500 | 9,071; WARM 24,335, 2.68x [2.56, 2.82] **WIN** | 7,427; WARM 14,645, 1.97x [1.93, 2.11] **WIN** | 2,997; WARM 6,576, 2.19x [2.14, 2.44] **WIN** | n/m | n/m | 853; WARM 513, 1.66x [1.66, 1.66] **WIN** | n/m | 0.77; WARM 0.10, 7.94x [7.61, 8.08] **WIN** |
+| PyNNDescent ab_nn80_fast | 9,177; WARM 24,335, 2.65x [2.53, 2.90] **WIN** | 6,673; WARM 14,645, 2.19x [2.13, 2.37] **WIN** | 3,424; WARM 6,576, 1.92x [1.87, 2.07] **WIN** | 194.87; WARM 67.42, 2.89x **n/v** | 4,665; WARM 1,218, 3.83x **n/v** | 2,261; WARM 513, 4.41x [4.40, 4.41] **WIN** | 1,987.2; WARM 576.3 | 11.46; WARM 0.10, 118.62x [111.78, 125.48] **WIN** |
+| ScaNN ab_scann4 | 5,766; WARM 24,335, 4.22x [4.06, 4.40] **WIN** | 2,162; WARM 14,645, 6.77x [6.66, 7.15] **WIN** | 1,233; WARM 6,576, 5.33x [5.22, 5.48] **WIN** | 34.86; WARM 67.42, 0.52x **n/v** | 1,472; WARM 1,218, 1.21x **n/v** | 594; WARM 513, 1.16x [1.16, 1.16] **WIN** | 534.4; WARM 576.3 | 1.01; WARM 0.10, 10.49x [9.76, 24.32] **WIN** |
+| USearch m16 | 4,549; WARM 24,335, 5.35x [5.10, 5.61] **WIN** | 2,750; WARM 14,645, 5.32x [5.18, 5.65] **WIN** | 1,132; WARM 6,576, 5.81x [5.71, 6.42] **WIN** | 130.51; WARM 67.42, 1.94x **n/v** | 1,272; WARM 1,218, 1.04x **n/v** | 797; WARM 513, 1.55x [1.55, 1.55] **WIN** | 630.0; WARM 576.3 | 0.64; WARM 0.10, 6.68x [6.36, 21.31] **WIN** |
+| USearch m32 | 4,252; WARM 24,335, 5.72x [5.51, 6.15] **WIN** | 2,591; WARM 14,645, 5.65x [5.54, 6.05] **WIN** | 1,511; WARM 6,576, 4.35x [4.25, 4.61] **WIN** | 165.02; WARM 67.42, 2.45x **n/v** | 1,394; WARM 1,218, 1.15x **n/v** | 917; WARM 513, 1.79x [1.79, 1.79] **WIN** | 751.8; WARM 576.3 | 0.71; WARM 0.10, 7.39x [7.10, 24.37] **WIN** |
 
 Per-build verdicts: WARM wins 80, ties 0, losses 0. Index size carries no verdict.
 
@@ -2388,7 +2388,7 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 
 | System | Pinned version(s) |
 |---|---|
-| WARM | writerslogic-warm 0.6.8, commit 7597223838a99af5ab15950ef43bd9b6fa9eee17; writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit c3e0bfdb; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
+| WARM | writerslogic-warm 0.6.8, commit 7597223838a99af5ab15950ef43bd9b6fa9eee17; writerslogic-warm 0.6.8, commit cfc35343b481b59a37fe5f8e200e49a0246c2568; writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit c3e0bfdb; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
 | hnswlib | hnswlib 0.8.0, python 3.13.18; hnswlib 0.8.0, python 3.13.15 |
 | hnswlib (native C++) | hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux); hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux) |
 | FAISS HNSW | faiss-cpu 1.12.0, python 3.13.18 |

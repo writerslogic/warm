@@ -2458,12 +2458,7 @@ impl SearchScratch {
         out: &mut Vec<u32>,
     ) -> Result<usize, WarmError> {
         Self::validate_query(index, query)?;
-        self.search_inner::<
-            false,
-            { cfg!(feature = "experimental-batch-pool") },
-            { cfg!(feature = "experimental-query-x4") },
-            true,
-        >(
+        self.search_inner::<false, { cfg!(feature = "experimental-batch-pool") }, true, true>(
             index,
             query,
             k,
@@ -2620,12 +2615,7 @@ impl SearchScratch {
         params: VSearchParams,
         out: &mut Vec<u32>,
     ) -> Result<usize, WarmError> {
-        self.search_inner::<
-            false,
-            { cfg!(feature = "experimental-batch-pool") },
-            { cfg!(feature = "experimental-query-x4") },
-            false,
-        >(
+        self.search_inner::<false, { cfg!(feature = "experimental-batch-pool") }, true, false>(
             g,
             query,
             k,
@@ -3210,12 +3200,7 @@ impl VSearcher<'_> {
         SearchScratch::validate_query(g, query)?;
         let mut profile = QueryProfile::default();
         self.scratch
-            .search_inner::<
-                true,
-                { cfg!(feature = "experimental-batch-pool") },
-                { cfg!(feature = "experimental-query-x4") },
-                false,
-            >(
+            .search_inner::<true, { cfg!(feature = "experimental-batch-pool") }, true, false>(
                 g,
                 query,
                 k,
@@ -4553,7 +4538,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(feature = "experimental-query-x4")]
     fn query_x4_estimates_match_serial_at_padding_boundaries() {
         for dim in [
             15, 16, 17, 31, 32, 33, 63, 64, 65, 111, 112, 113, 127, 128, 129,
@@ -4607,7 +4591,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "experimental-query-x4")]
     fn query_x4_preserves_admission_state_at_batch_boundaries() {
         let dim = 17;
         let data = clustered(48, dim, 175);
@@ -4703,7 +4686,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "experimental-query-x4")]
     fn query_x4_preserves_search_results_work_and_reopening() {
         let directory = tempfile::tempdir().unwrap();
         for dim in [17, 33] {
@@ -5318,7 +5300,7 @@ mod tests {
                                             (QueryProfile::default(), QueryProfile::default());
                                         let ea = plain
                                             .scratch
-                                            .search_inner::<true, false, { cfg!(feature = "experimental-query-x4") }, false>(
+                                            .search_inner::<true, false, true, false>(
                                                 &index,
                                                 query,
                                                 k,
@@ -5329,7 +5311,7 @@ mod tests {
                                             .unwrap();
                                         let eb = batched
                                             .scratch
-                                            .search_inner::<true, true, { cfg!(feature = "experimental-query-x4") }, false>(
+                                            .search_inner::<true, true, true, false>(
                                                 &reopened,
                                                 query,
                                                 k,
