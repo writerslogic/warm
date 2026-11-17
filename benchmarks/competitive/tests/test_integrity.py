@@ -180,3 +180,18 @@ def test_interval_labels_say_what_they_are():
     sec_text = table.interval_text({"data": {"protocol": {"rounds": 3, "build_repeats": 2}}, "level": 0.99, "family": 4})
     assert "fewer than 8 serve rounds and build runs" in sec_text and "percentile bootstrap" in sec_text
     assert re.search(r"min-max range", sec_text)
+
+
+def test_hybrid_report_states_machine_commit_and_date():
+    sys.path.insert(0, str(HERE / "hybrid"))
+    import hybrid_report
+    hw = {"class": "linux-x86_64-x-8c-16g", "cpu": "X", "logical_cores": 8, "memory_bytes": 16 << 30, "os": "Linux", "machine": "x86_64"}
+    files = {"scifact": {"hardware": hw | {"load_1m": 0.1}, "commit": "a" * 40, "source": {"draft": False}, "date": "2026-11-17T10:00:00+0000", "rounds": 10},
+             "nfcorpus": {"hardware": hw | {"load_1m": 0.7}, "commit": "a" * 40, "source": {"draft": False}, "date": "2026-11-17T12:00:00+0000", "rounds": 10}}
+    meta = hybrid_report.provenance(files)
+    assert meta["hardware_class"] == [hw["class"]] and len(meta["hardware"]) == 1 and meta["commit"] == ["a" * 40] and not meta["draft"]
+    text = "\n".join(hybrid_report.header(meta))
+    assert hw["class"] in text and "a" * 40 in text and "2026-11-17T10:00:00+0000 to 2026-11-17T12:00:00+0000" in text
+    # Results written before the provenance fields carry none: the report says so and marks them a draft.
+    legacy = hybrid_report.provenance({"fiqa": {"hardware": hw}})
+    assert legacy["draft"] and "Commit: not recorded" in "\n".join(hybrid_report.header(legacy))
