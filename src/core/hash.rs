@@ -20,11 +20,11 @@ pub(crate) fn hex(bytes: &[u8]) -> String {
 /// The multiply-rotate Fx hash with 64-bit words and no seed.
 ///
 /// foldhash replaces it where it measured faster (the bulk-index run map keyed by `&str`).
-/// Alternating runs on the 22-core benchmark host, median of 21, foldhash over this hash:
-/// random `usize` slot table 1.11x, `u32` score table 1.21x, sequential `usize` set 1.27x,
-/// `String` ids 1.08x, random `usize` set 0.96x, `&str` terms 0.79x. Maps keyed by integers or
-/// owned strings therefore keep this hash. It is not DoS-resistant and its iteration order is
-/// reproducible, so keys must not be attacker-chosen without a bound.
+/// Time of foldhash over this hash, median of 21 alternating runs: random `usize` slot table
+/// 1.11x, `u32` score table 1.21x, sequential `usize` set 1.27x, `String` ids 1.08x, random
+/// `usize` set 0.96x, `&str` terms 0.79x. Maps keyed by integers or owned strings therefore
+/// keep this hash. It is not DoS-resistant and its iteration order is reproducible, so keys
+/// must not be attacker-chosen without a bound.
 #[derive(Clone, Copy, Default)]
 pub(crate) struct FxHasher {
     hash: u64,

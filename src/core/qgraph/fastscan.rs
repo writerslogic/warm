@@ -1159,8 +1159,8 @@ mod tests {
         }
     }
 
-    /// L22 kill test (research/STREAMING-L22-DESIGN.md section 6, STATE.md 21:15Z): one search
-    /// step of the partition tier, list-major, on 8 threads. Per (query, list): the LUT is the
+    /// Microbenchmark of one partition-tier search step (research/STREAMING-L22-DESIGN.md
+    /// section 6), list-major, on 8 threads. Per (query, list): the LUT is the
     /// sum of a shared per-query table and a per-list table (the IVFPQ precomputed split),
     /// quantized to u8 per block with one scale; the scan admits a code only when its u16 sum
     /// beats the query's running reorder threshold converted into that list's units; admitted

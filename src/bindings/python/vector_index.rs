@@ -958,8 +958,8 @@ impl PyUpdatableIndex {
         }
     }
 
-    /// The caller's rows, borrowed when they are already a C-contiguous float32 matrix (the
-    /// streaming harness passes up to 757,735 x 100 rows per insert: a 303 MB copy otherwise).
+    /// The caller's rows, borrowed when they are already a C-contiguous float32 matrix, so a
+    /// bulk insert does not copy its input.
     fn rows<'a>(
         &self,
         x: &'a PyArrayLike2<'_, f32, AllowTypeChange>,
