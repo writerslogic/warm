@@ -872,8 +872,8 @@ impl<'a> Run<'a, '_> {
             let block = lead.block_slots();
             let mut n = block.len();
             slots[..n].copy_from_slice(block);
-            for (index, value) in rows[0][..n].iter_mut().enumerate() {
-                *value = index as u32;
+            for (value, index) in rows[0][..n].iter_mut().zip(0u32..) {
+                *value = index;
             }
             let mut live = true;
             for (c, other) in rest.iter_mut().enumerate() {
@@ -1059,6 +1059,7 @@ fn keep_common(
         Record::Frequency(row) | Record::Positions(row) => row,
     };
     let mut matched = [0u8; CHECKPOINT_BLOCK];
+    let mut source = [0u8; CHECKPOINT_BLOCK];
     let (mut i, mut k) = (0usize, 0usize);
     while i < n {
         let wanted = slots[i];
@@ -1074,7 +1075,16 @@ fn keep_common(
         }
         let last = other.block_last();
         let from = k;
-        let block = other.block_slots();
+        // A frequency is written beside each candidate as it is matched: a separate pass over
+        // the matched indices vectorizes into 512-bit gathers under `target-cpu=native`, whose
+        // frequency license slows the queries that follow on AVX-512 parts.
+        let (block, frequencies, row) = match record {
+            Record::Frequency(row) => {
+                let (block, frequencies) = other.block_postings();
+                (block, frequencies, row)
+            }
+            _ => (other.block_slots(), &[][..], usize::MAX),
+        };
         // The candidates this block can hold: `slots[i..end]`.
         let mut end = i + 1;
         while end < n && slots[end] <= last {
@@ -1094,8 +1104,9 @@ fn keep_common(
                 }
                 slots[k] = value;
                 matched[k] = j as u8;
-                for row in rows[..carried].iter_mut() {
-                    row[k] = row[at];
+                source[k] = at as u8;
+                if let Some(&frequency) = frequencies.get(j) {
+                    rows[row][k] = frequency;
                 }
                 k += usize::from(block[j] == value);
                 at += 1;
@@ -1108,8 +1119,9 @@ fn keep_common(
                 let (value, posting) = (slots[at], block[j]);
                 slots[k] = value;
                 matched[k] = j as u8;
-                for row in rows[..carried].iter_mut() {
-                    row[k] = row[at];
+                source[k] = at as u8;
+                if let Some(&frequency) = frequencies.get(j) {
+                    rows[row][k] = frequency;
                 }
                 k += usize::from(value == posting);
                 at += usize::from(value <= posting);
@@ -1117,15 +1129,16 @@ fn keep_common(
             }
         }
         i = end;
+        // The carried rows move after the block, a row at a time: moved per candidate across
+        // the rows, the copy vectorizes into 512-bit gathers and scatters (see above).
+        for row in rows[..carried].iter_mut() {
+            for (m, &at) in source.iter().enumerate().take(k).skip(from) {
+                row[m] = row[usize::from(at)];
+            }
+        }
         if k > from {
             match record {
-                Record::Nothing => {}
-                Record::Frequency(row) => {
-                    let frequencies = other.block_frequencies();
-                    for (out, &j) in rows[row][from..k].iter_mut().zip(&matched[from..k]) {
-                        *out = frequencies[usize::from(j)];
-                    }
-                }
+                Record::Nothing | Record::Frequency(_) => {}
                 Record::Positions(row) => {
                     for (m, &j) in matched.iter().enumerate().take(k).skip(from) {
                         let (start, end) = other.position_range(usize::from(j));

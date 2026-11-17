@@ -1,7 +1,7 @@
 {
   "name": "writerslogic-warm",
   "version": "0.1.0",
-  "description": "Persistent, private, on-device memory over MCP: remember, recall, search, list, forget, export.",
+  "description": "Persistent on-device memory over MCP with no service calls: remember, recall, search, list, forget, export.",
   "mcpServers": {
     "writerslogic-warm": {
       "command": "npx",

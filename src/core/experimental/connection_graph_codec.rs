@@ -115,8 +115,9 @@ mod tests {
     #[test]
     fn retained_legacy_fixtures_cover_integer_and_frame_boundaries() {
         let fixtures: serde_json::Value = serde_json::from_str(include_str!(
-            "../../../docs/research/technical-audit-20261029/bincode-removal-20261102/legacy-fixtures.json"
-        )).unwrap();
+            "../../../tests/fixtures/connection-graph-legacy-fixtures.json"
+        ))
+        .unwrap();
         for case in fixtures["cases"].as_array().unwrap() {
             let field = "x".repeat(case["length"].as_u64().unwrap() as usize);
             let event = if case["tag"] == 0 {

@@ -31,7 +31,7 @@ pub(crate) fn after_commit<T>(
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "type", content = "message")]

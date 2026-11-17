@@ -27,9 +27,10 @@ and the count below 90%. Do not select a product default from mean recall alone 
 claim a speedup: building, memory, mutation, tail latency and held-out workloads
 are not measured here. No query timing, model download or paid service is used.
 
-Compile with the pinned local lockfile and run into a fresh absolute directory:
+Restore the retired input manifest and stop receipt, compile with the pinned local lockfile, and run into a fresh absolute directory:
 
 ```sh
+uv run scripts/restore-retired-inputs.py --path docs/research/technical-audit-20261029/vectra-comparison-20261102
 cargo build --release --offline --locked --manifest-path benchmarks/research/vector_topology/Cargo.toml
 node benchmarks/research/vector_topology/run.mjs /absolute/new/output /absolute/path/to/warm-vector-topology-development
 ```
