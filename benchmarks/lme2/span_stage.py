@@ -9,7 +9,7 @@ import fileio  # noqa: E402
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import common, ctl_g, tools3
-from prompts import CONTROLLER_MODEL, CONTROLLER_MAX_STEPS, CONTROLLER_EXTRA, workflow
+from prompts import CONTROLLER_MODEL, CONTROLLER_MAX_STEPS, CONTROLLER_EXTRA, _schema, workflow
 ap = argparse.ArgumentParser()
 ap.add_argument("--model", default=CONTROLLER_MODEL); ap.add_argument("--ids", required=True); ap.add_argument("--n", type=int, default=999); ap.add_argument("--out", required=True)
 ap.add_argument("--workers", type=int, default=8); ap.add_argument("--max-steps", type=int, default=CONTROLLER_MAX_STEPS); ap.add_argument("--extra", default=json.dumps(CONTROLLER_EXTRA)); ap.add_argument("--cap", type=float, default=None)
@@ -18,7 +18,7 @@ Q = common.questions(); hay = common.haystack()
 ids = fileio.read_json(a.ids)[:a.n]
 T = common.trajectories(); notes = common.notes()
 TL = {d: tools3.Tools3(next(hay[q] for q in Q if Q[q]["domain"] == d), T, notes) for d in {Q[i]["domain"] for i in ids}}
-DECLS = [{"name": t["function"]["name"], "description": t["function"]["description"], "parameters": ctl_g._schema(t["function"]["parameters"])} for t in tools3.SPAN_SPECS]
+DECLS = [{"name": t["function"]["name"], "description": t["function"]["description"], "parameters": _schema(t["function"]["parameters"])} for t in tools3.SPAN_SPECS]
 lock = threading.Lock(); extra = json.loads(a.extra); out = Path(a.out); spent = [0.0]
 done = common.done_ids(out)
 def one(i):

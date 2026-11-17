@@ -77,5 +77,6 @@ fixture = {
         for c in chosen
     ],
 }
-json.dump(fixture, open(OUT, "w"), ensure_ascii=False, indent=1)
+with open(OUT, "w") as f:
+    json.dump(fixture, f, ensure_ascii=False, indent=1)
 print("states", sum(len(g["states"]) for g in fixture["groups"]), file=sys.stderr)

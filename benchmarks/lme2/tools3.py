@@ -5,7 +5,7 @@ find_states: BM25 over per-state text (url+action+thought-free AXTree); show_sta
 import tools2 as T2
 import envmodel as EM
 from envmodel import toks
-from prompts import MAX_SPAN_STATES, EXTRA_SPECS, SUBMIT_SPANS
+from prompts import MAX_SPAN_STATES, EXTRA_SPECS, SUBMIT_SPANS, TOOL_SPECS
 
 class Tools3(T2.Tools):
     def __init__(s, traj_ids, T, notes=None):
@@ -49,5 +49,5 @@ class Tools3(T2.Tools):
         if tot > MAX_SPAN_STATES: return None, tot, f"spans cover {tot} states, limit is {MAX_SPAN_STATES}; shrink or drop spans (least important last)"
         return v, tot, None
 
-BASE = [t for t in T2.TOOL_SPECS if t["function"]["name"] != "submit_brief"]
+BASE = [t for t in TOOL_SPECS if t["function"]["name"] != "submit_brief"]
 SPAN_SPECS = BASE + EXTRA_SPECS + [SUBMIT_SPANS]

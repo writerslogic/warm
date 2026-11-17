@@ -14,7 +14,7 @@ Needs LME2_DATA and LME2_UPSTREAM; --reference-dir holds the frozen run's files 
   6. engine (--engine, run where the writerslogic_warm wheel from this branch is installed): form_backend=engine renders
      exactly what form_backend=reference renders, both passes, every selected question
 usage: smoke_test.py --reference-dir DIR [--questions all|N] [--loader REF_PKL] [--engine]"""
-import argparse, json, os, pickle, sys
+import argparse, json, os, sys
 import fileio  # noqa: E402
 from pathlib import Path
 

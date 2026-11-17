@@ -7,7 +7,7 @@ Environment:
   LME2_VERTEX_TOKEN    OAuth access token; when unset, `gcloud auth print-access-token` is called every 25 minutes
 """
 import json, os, time, subprocess, threading, random, urllib.request, urllib.error
-from prompts import PRICES, _schema  # noqa: F401
+from prompts import PRICES  # noqa: F401
 _tok = [None, 0]; _l = threading.Lock()
 def token():
     with _l:

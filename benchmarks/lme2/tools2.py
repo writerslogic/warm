@@ -4,7 +4,7 @@
 Compiled products: region units (R), transition effects (T), episodes (E), page inventories (P), per-step value log (V), trajectory notes (N)."""
 import re, collections
 import envmodel as EM
-from envmodel import Model, Index, parse_tree, finish, value_lines, label, toks
+from envmodel import Model, Index, parse_tree, finish, value_lines, toks
 
 class Model2(Model):
     """Model plus a per-step value log: vlog[tid] = [(state_index, {element label: value string})]."""
@@ -96,4 +96,3 @@ class Tools:
         except Exception as e: r = f"tool error: {e!r}"[:200]
         return r[:6500]
 
-from prompts import TOOL_SPECS  # noqa: E402
