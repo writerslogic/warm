@@ -92,7 +92,12 @@ impl Memory {
         let now = self.clock.now_millis();
         let ids: Vec<String> = observations
             .iter()
-            .map(|o| format!("experience:{}:{}", o.observation.episode, o.observation.step))
+            .map(|o| {
+                format!(
+                    "experience:{}:{}",
+                    o.observation.episode, o.observation.step
+                )
+            })
             .collect();
         let outcomes = self
             .core

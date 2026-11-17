@@ -896,11 +896,8 @@ fn a_version_3_snapshot_over_the_control_caps_is_refused() {
         ],
         ..Control::default()
     };
-    x.ingest_with_controls(
-        &obs("a", 0, &t, None),
-        vec![listbox; form::MAX_CONTROLS],
-    )
-    .unwrap();
+    x.ingest_with_controls(&obs("a", 0, &t, None), vec![listbox; form::MAX_CONTROLS])
+        .unwrap();
     let bytes = x.to_bytes().unwrap();
     assert_eq!(bytes[4], 3);
     let same = mutate_controls(&bytes, &|_| {});

@@ -791,7 +791,6 @@ impl Experience {
         )
     }
 
-
     /// [`Self::ingest`] storing `controls` with the step. The controls are part of the step's
     /// content: the same step again with other controls is a conflict.
     pub fn ingest_with_controls(

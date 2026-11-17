@@ -14,8 +14,8 @@ use super::effects::delta;
 use super::form::Control;
 use super::regions::{self, Region};
 use super::{
-    doc, index_err, ControlCounts, Episode, Experience, ExperienceConfig, ExperienceError, Result, StepRec,
-    FLAG_ERROR, FLAG_NO_CHANGE,
+    doc, index_err, ControlCounts, Episode, Experience, ExperienceConfig, ExperienceError, Result,
+    StepRec, FLAG_ERROR, FLAG_NO_CHANGE,
 };
 use crate::core::documents::MemoryDocumentStore;
 
