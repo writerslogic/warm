@@ -475,6 +475,11 @@ impl<'a> Cursor<'a> {
         (self.block + most >= self.blocks).then_some(weight)
     }
 
+    /// The list the cursor reads.
+    pub(super) fn list(&self) -> ListRef<'a> {
+        self.list
+    }
+
     /// The list's block bytes, whose address identifies the list.
     pub(super) fn list_bytes(&self) -> &'a [u8] {
         self.list.bytes

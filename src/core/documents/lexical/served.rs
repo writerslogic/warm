@@ -17,6 +17,7 @@ use std::collections::BinaryHeap;
 use super::wand::{sum_bound, Bound};
 use super::*;
 use crate::core::documents::image::ServingImage;
+use crate::core::documents::impact::{prefetch, Dense};
 use crate::core::documents::lists::{
     dense_word, holds, Cursor, ListRef, PositionIter, NO_DOC, RUN_BLOCKS,
 };
@@ -530,7 +531,7 @@ pub(in crate::core::documents) fn execute(
         let count = if required.len() == 1 {
             required[0].rarest()
         } else {
-            intersect_count(&mut required)
+            intersect_count(image, &mut required)
         };
         return Ok(Some(LexicalResults {
             hits: Vec::new(),
@@ -591,13 +592,23 @@ struct Run<'a, 'q> {
 }
 
 impl<'a> Run<'a, '_> {
-    /// Scores the chunk in `slot` from the frequencies set in `self.frequencies`.
-    fn score(&self, slot: u32) -> Result<f64> {
-        let words = match self.word_counts[slot as usize] {
+    /// The word count of the chunk in `slot`.
+    fn words(&self, slot: u32) -> u32 {
+        match self.word_counts[slot as usize] {
             u16::MAX => self.image.slot_word_count(slot as usize),
             short => u32::from(short),
-        };
-        exact_score(self.query, &self.frequencies, self.idfs, words, self.shape)
+        }
+    }
+
+    /// Scores the chunk in `slot` from the frequencies set in `self.frequencies`.
+    fn score(&self, slot: u32) -> Result<f64> {
+        exact_score(
+            self.query,
+            &self.frequencies,
+            self.idfs,
+            self.words(slot),
+            self.shape,
+        )
     }
 
     /// Documents every required clause matches, none excluded, scored with the optional ones.
@@ -742,7 +753,13 @@ impl<'a> Run<'a, '_> {
         let mut top = Top::new(self.image, self.k);
         let mut count = 0usize;
         let mut slots = [0u32; CHECKPOINT_BLOCK];
-        // Row 0: each candidate's index in the lead block; row `l`: its frequency in list `l`.
+        let tables = frequency_tables(self.image, &terms[1..]);
+        // The other lists in the order candidates are filtered through them: those with a
+        // frequency table first, a lookup per candidate, then those whose blocks are decoded.
+        let mut sequence: Vec<usize> = (0..lists - 1).collect();
+        sequence.sort_by_key(|&l| tables[l].is_none());
+        // Row 0: each candidate's index in the lead block; row `p`: its frequency in list
+        // `sequence[p - 1]`.
         let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; lists];
         let (lead, rest) = terms.split_first_mut().expect("two or more lists");
         let lead_bound = lead.bound.expect("a bounded term");
@@ -782,7 +799,7 @@ impl<'a> Run<'a, '_> {
                 slots[..n].copy_from_slice(block);
                 if !scored {
                     // Counted only: the dense lists' bitmaps answer without decoding them.
-                    let (kept, more) = keep_counted(rest, &mut slots, n);
+                    let (kept, more) = keep_counted(rest, &tables, &mut slots, n);
                     count += kept;
                     if !more || !lead.cursors[0].advance_block(last.saturating_add(1)) {
                         break;
@@ -792,14 +809,17 @@ impl<'a> Run<'a, '_> {
                 for (index, value) in rows[0][..n].iter_mut().enumerate() {
                     *value = index as u32;
                 }
-                for (l, other) in rest.iter_mut().enumerate() {
-                    let (kept, more) = keep_common(
-                        &mut other.cursors[0],
-                        &mut slots,
-                        n,
-                        &mut rows,
-                        Record::Frequency(l + 1),
-                    );
+                for (p, &l) in sequence.iter().enumerate() {
+                    let (kept, more) = match &tables[l] {
+                        Some(table) => (keep_tabled(table, &mut slots, n, &mut rows, p + 1), true),
+                        None => keep_common(
+                            &mut rest[l].cursors[0],
+                            &mut slots,
+                            n,
+                            &mut rows,
+                            Record::Frequency(p + 1),
+                        ),
+                    };
                     n = kept;
                     live &= more;
                     if n == 0 {
@@ -808,15 +828,48 @@ impl<'a> Run<'a, '_> {
                 }
                 count += n;
                 if n > 0 {
+                    // The candidates are known: start loading their word counts together.
+                    for &slot in &slots[..n] {
+                        prefetch(self.word_counts, slot as usize);
+                    }
                     let frequencies = lead.cursors[0].block_frequencies();
                     for (m, &slot) in slots[..n].iter().enumerate() {
                         let lead_frequency = frequencies[rows[0][m] as usize];
+                        if rows[1..].iter().any(|row| row[m] == SATURATED) {
+                            // A tabled list holds this candidate fifteen times or more: bound
+                            // its weight by the list's largest frequency, and read the list only
+                            // when the bound reaches the k-th best score.
+                            if let Some(floor) = top.floor() {
+                                let words = self.words(slot);
+                                let mut sum = lead_bound.at(lead_frequency, words) * times[0];
+                                for (p, &l) in sequence.iter().enumerate() {
+                                    let other = &rest[l];
+                                    let bound = other.bound.expect("a bounded term");
+                                    let frequency = match rows[p + 1][m] {
+                                        SATURATED => other.cursors[0].list_bounds().0,
+                                        found => found,
+                                    };
+                                    sum += bound.at(frequency, words) * times[l + 1];
+                                }
+                                if sum_bound(sum, clauses) < floor {
+                                    continue;
+                                }
+                            }
+                            for (p, &l) in sequence.iter().enumerate() {
+                                if rows[p + 1][m] == SATURATED {
+                                    let cursor = &mut rest[l].cursors[0];
+                                    let at = cursor.advance_to(slot);
+                                    debug_assert_eq!(at, slot, "a tabled slot is in its list");
+                                    rows[p + 1][m] = cursor.frequency();
+                                }
+                            }
+                        }
                         for &id in &ids[0] {
                             self.frequencies[id] = lead_frequency;
                         }
-                        for (ids, row) in ids.iter().zip(&rows).skip(1) {
-                            for &id in ids {
-                                self.frequencies[id] = row[m];
+                        for (p, &l) in sequence.iter().enumerate() {
+                            for &id in &ids[l + 1] {
+                                self.frequencies[id] = rows[p + 1][m];
                             }
                         }
                         let score = self.score(slot)?;
@@ -846,6 +899,15 @@ impl<'a> Run<'a, '_> {
         let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; 2 * words - 1];
         let mut bytes: Vec<&'a [u8]> = vec![&[]; words];
         let mut iters = Vec::with_capacity(words);
+        let mut order = Vec::with_capacity(words);
+        // A cursor whose word repeats an earlier cursor's list reads nothing itself: its
+        // candidates and positions are that cursor's.
+        let twin: Vec<Option<usize>> = (0..words)
+            .map(|c| {
+                let bytes = rt.cursors[c].list_bytes().as_ptr();
+                (0..c).find(|&t| rt.cursors[t].list_bytes().as_ptr() == bytes)
+            })
+            .collect();
         let (lead, rest) = rt
             .cursors
             .split_first_mut()
@@ -877,6 +939,9 @@ impl<'a> Run<'a, '_> {
             }
             let mut live = true;
             for (c, other) in rest.iter_mut().enumerate() {
+                if twin[c + 1].is_some() {
+                    continue;
+                }
                 let (kept, more) = keep_common(
                     other,
                     &mut slots,
@@ -893,11 +958,20 @@ impl<'a> Run<'a, '_> {
             for (m, &slot) in slots[..n].iter().enumerate() {
                 let (start, end) = lead.position_range(rows[0][m] as usize);
                 bytes[rt.word[0]] = &positions[0][start as usize..end as usize];
-                for (c, (&word, list)) in rt.word.iter().zip(&positions).enumerate().skip(1) {
-                    let (start, end) = (rows[2 * c - 1][m] as usize, rows[2 * c][m] as usize);
-                    bytes[word] = &list[start..end];
+                for (c, &word) in rt.word.iter().enumerate().skip(1) {
+                    bytes[word] = match twin[c] {
+                        Some(0) => bytes[rt.word[0]],
+                        source => {
+                            let source = source.unwrap_or(c);
+                            let (start, end) = (
+                                rows[2 * source - 1][m] as usize,
+                                rows[2 * source][m] as usize,
+                            );
+                            &positions[source][start..end]
+                        }
+                    };
                 }
-                let occurrences = phrase_occurrences(&bytes, &mut iters, scored);
+                let occurrences = phrase_occurrences(&bytes, &mut iters, &mut order, scored);
                 if occurrences == 0 {
                     continue;
                 }
@@ -995,12 +1069,17 @@ impl<'a> Run<'a, '_> {
 fn phrase_occurrences<'b>(
     words: &[&'b [u8]],
     iters: &mut Vec<std::iter::Peekable<PositionIter<'b>>>,
+    order: &mut Vec<usize>,
     exact: bool,
 ) -> u32 {
-    // Any word may lead; the one with the fewest position bytes reads the least.
-    let lead = (0..words.len())
-        .min_by_key(|&w| words[w].len())
-        .expect("a phrase of words");
+    // Any word may lead; the one with the fewest position bytes reads the least. The others
+    // are checked fewest bytes first, so a frequent word's positions are read only where the
+    // rarer words already line up (each iterator only moves forward, so skipping one for a
+    // start that fails earlier loses nothing).
+    order.clear();
+    order.extend(0..words.len());
+    order.sort_by_key(|&w| (words[w].len(), w));
+    let lead = order.remove(0);
     iters.clear();
     iters.extend(
         words
@@ -1012,10 +1091,8 @@ fn phrase_occurrences<'b>(
         let Some(start) = position.checked_sub(lead as u32) else {
             continue;
         };
-        let matched = iters.iter_mut().enumerate().all(|(offset, iter)| {
-            if offset == lead {
-                return true;
-            }
+        let matched = order.iter().all(|&offset| {
+            let iter = &mut iters[offset];
             let Some(target) = start.checked_add(offset as u32) else {
                 return false;
             };
@@ -1156,7 +1233,7 @@ fn keep_common(
 /// slots tested against the dense lists' bitmaps, then filtered through the other lists (see
 /// [`keep_common`]); when every list is dense, the bitmaps ANDed a word at a time. `terms` is
 /// sorted rarest first.
-fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
+fn intersect_count(image: &ServingImage, terms: &mut [Rt<'_>]) -> usize {
     let bitmaps: Vec<&[u8]> = terms
         .iter()
         .filter_map(|rt| rt.cursors[0].dense())
@@ -1172,6 +1249,7 @@ fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
             })
             .sum();
     }
+    let tables = frequency_tables(image, &terms[1..]);
     let (lead, rest) = terms.split_first_mut().expect("two or more lists");
     let lead = &mut lead.cursors[0];
     let mut count = 0usize;
@@ -1183,7 +1261,7 @@ fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
         }
         let n = block.len();
         slots[..n].copy_from_slice(block);
-        let (n, live) = keep_counted(rest, &mut slots, n);
+        let (n, live) = keep_counted(rest, &tables, &mut slots, n);
         count += n;
         if !live || !lead.advance_block(lead.block_last().saturating_add(1)) {
             return count;
@@ -1191,11 +1269,59 @@ fn intersect_count(terms: &mut [Rt<'_>]) -> usize {
     }
 }
 
+/// Each clause's direct frequency table (see [`ServingImage::frequency_table`]), when it has one.
+fn frequency_tables(image: &ServingImage, terms: &[Rt<'_>]) -> Vec<Option<std::sync::Arc<Dense>>> {
+    terms
+        .iter()
+        .map(|rt| image.frequency_table(rt.cursors[0].list()))
+        .collect()
+}
+
+/// Keeps, in place, the candidates among `slots[..n]` that `table`'s list holds, carrying
+/// `rows[..row]` along and writing each kept candidate's frequency in `rows[row]`: the table's
+/// nibble, or [`SATURATED`] for fifteen and more, which the caller reads from the list only for
+/// a candidate that can still reach the top k. Returns how many candidates are kept.
+fn keep_tabled(
+    table: &Dense,
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+    rows: &mut [[u32; CHECKPOINT_BLOCK]],
+    row: usize,
+) -> usize {
+    let mut source = [0u8; CHECKPOINT_BLOCK];
+    let (mut i, mut k) = (0usize, 0usize);
+    while i < n {
+        let slot = slots[i];
+        let found = table.get(slot as usize);
+        slots[k] = slot;
+        source[k] = i as u8;
+        rows[row][k] = u32::from(found);
+        k += usize::from(found != 0);
+        i += 1;
+    }
+    for carried in rows[..row].iter_mut() {
+        for (m, &at) in source.iter().enumerate().take(k) {
+            carried[m] = carried[usize::from(at)];
+        }
+    }
+    for frequency in rows[row][..k].iter_mut() {
+        if *frequency == 15 {
+            *frequency = SATURATED;
+        }
+    }
+    k
+}
+
+/// A frequency [`keep_tabled`] leaves unread: fifteen or more.
+const SATURATED: u32 = u32::MAX;
+
 /// Keeps the candidates among `slots[..n]` that every list of `rest` holds: tested against the
-/// dense lists' bitmaps first, then filtered through the others (see [`keep_common`]). The
+/// dense lists' bitmaps first, then the other lists' frequency tables (`tables`, one per list
+/// of `rest`), then filtered through the remaining lists (see [`keep_common`]). The
 /// second value is false when a list ended, so no later candidate can match.
 fn keep_counted(
     rest: &mut [Rt<'_>],
+    tables: &[Option<std::sync::Arc<Dense>>],
     slots: &mut [u32; CHECKPOINT_BLOCK],
     n: usize,
 ) -> (usize, bool) {
@@ -1212,8 +1338,26 @@ fn keep_counted(
             kept = k;
         }
     }
+    let decoded =
+        |rt: &Rt<'_>, table: &Option<_>| rt.cursors[0].dense().is_none() && table.is_none();
+    for (rt, table) in rest.iter().zip(tables) {
+        if let (Some(table), true) = (table, rt.cursors[0].dense().is_none()) {
+            let (mut i, mut k) = (0, 0);
+            while i < kept {
+                let slot = slots[i];
+                slots[k] = slot;
+                k += usize::from(table.get(slot as usize) != 0);
+                i += 1;
+            }
+            kept = k;
+        }
+    }
     let mut live = true;
-    for other in rest.iter_mut().filter(|rt| rt.cursors[0].dense().is_none()) {
+    for (other, _) in rest
+        .iter_mut()
+        .zip(tables)
+        .filter(|(rt, table)| decoded(rt, table))
+    {
         if kept == 0 {
             break;
         }
@@ -1433,6 +1577,66 @@ mod tests {
             "\"w1 w2\"",
             "+\"w0 w1\" w2",
             "w4 \"w1 w0\"",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [0usize, 1, 10, 100] {
+                for count in [false, true] {
+                    let options = LexicalOptions {
+                        k,
+                        count,
+                        ..Default::default()
+                    };
+                    assert!(assert_same(&image, &live, &query, &options), "{text}");
+                }
+            }
+        }
+    }
+
+    /// Phrases repeating a word (the rarest one, another one, or only one word), and
+    /// conjunctions over lists read through their frequency tables, frequencies of fifteen and
+    /// more included: the exhaustive scorer's result to the bit.
+    #[test]
+    fn repeated_phrase_words_and_tabled_lists_keep_the_result() {
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(11)
+                .wrapping_mul(40503)
+        };
+        let docs: Vec<Vec<u8>> = (0..6000u32)
+            .map(|i| {
+                let len = 4 + hash(i) % 50;
+                let mut words: Vec<u8> = (0..len)
+                    .map(|j| ((hash(i * 97 + j) >> 9) % 8) as u8)
+                    .collect();
+                if i % 5 == 0 {
+                    words.extend([1, 1, 1, 2, 1, 2, 1]);
+                }
+                if i % 23 == 0 {
+                    words.extend([8, 1, 8, 2, 8, 1, 8]);
+                }
+                if i % 17 == 0 {
+                    words.extend(std::iter::repeat_n(0, 15 + (i % 7) as usize));
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, true);
+        let image = image_of(&live);
+        let list = image.list(0, "w0").unwrap();
+        assert!(list.blocks() > 2 * RUN_BLOCKS);
+        assert!(image.frequency_table(list).is_some(), "w0 has a table");
+        for text in [
+            "\"w1 w1\"",
+            "\"w1 w1 w1\"",
+            "\"w1 w2 w1\"",
+            "\"w2 w1 w2 w1\"",
+            "\"w8 w1 w8\"",
+            "\"w1 w8 w1 w8\"",
+            "\"w8 w8\"",
+            "+w0 +w3",
+            "+w0 +w3 +w5",
+            "+w8 +w0",
+            "+w8 +w1 +w0",
         ] {
             let query = LexicalQuery::parse(text).unwrap();
             for k in [0usize, 1, 10, 100] {

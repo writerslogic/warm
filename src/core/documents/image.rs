@@ -2040,6 +2040,24 @@ impl ServingImage {
     pub(super) fn dense(&self) -> &super::impact::DenseTables {
         &self.dense
     }
+
+    /// The direct frequency table of `list`, one of this image's lists, when it is long enough
+    /// for one and the tables' budget allows it.
+    pub(super) fn frequency_table(
+        &self,
+        list: super::lists::ListRef<'_>,
+    ) -> Option<std::sync::Arc<super::impact::Dense>> {
+        if !super::impact::tabled(list.count as usize, self.slots) {
+            return None;
+        }
+        let postings = Postings {
+            bytes: list.bytes,
+            count: list.count,
+            blocked: self.blocked,
+            impacts: self.impacts,
+        };
+        self.dense.get(self.slots, &postings)
+    }
 }
 
 impl LexicalSource for ServingImage {

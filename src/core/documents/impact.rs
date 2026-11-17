@@ -217,7 +217,7 @@ impl<'a> ImpactCursor<'a> {
 
 /// Asks the CPU to load the cache line holding `table[at]`; a hint, with no effect on results.
 #[inline(always)]
-fn prefetch<T>(table: &[T], at: usize) {
+pub(super) fn prefetch<T>(table: &[T], at: usize) {
     #[cfg(target_arch = "x86_64")]
     if at < table.len() {
         // SAFETY: `at` is inside `table`, and a prefetch never faults or writes.
@@ -272,6 +272,11 @@ fn classes() -> &'static ([u32; CLASSES], Vec<u8>) {
     })
 }
 
+/// Whether a list of `postings` over `slots` slots is long enough for a direct table.
+pub(super) fn tabled(postings: usize, slots: usize) -> bool {
+    postings >= DENSE_MIN_POSTINGS && postings * 32 >= slots
+}
+
 /// Per-slot frequencies of one long posting list, a nibble each: 0 absent, 15 fifteen or more
 /// (read the list), else the frequency. A query that must know whether a few chunks hold a
 /// frequent term reads one nibble per chunk instead of seeking the list.
@@ -283,8 +288,9 @@ pub(super) struct Dense {
 }
 
 impl Dense {
+    /// The nibble of `slot`: 0 when the list lacks it, 15 when its frequency is fifteen or more.
     #[inline]
-    fn get(&self, slot: usize) -> u8 {
+    pub(super) fn get(&self, slot: usize) -> u8 {
         (self.nibbles[slot >> 1] >> ((slot & 1) * 4)) & 15
     }
 }
@@ -299,7 +305,7 @@ pub(super) struct DenseTables {
 
 impl DenseTables {
     /// The table of `list`, building it when the budget allows; `None` when it does not.
-    fn get(&self, slots: usize, list: &Postings<'_>) -> Option<std::sync::Arc<Dense>> {
+    pub(super) fn get(&self, slots: usize, list: &Postings<'_>) -> Option<std::sync::Arc<Dense>> {
         use std::sync::atomic::Ordering::Relaxed;
         let key = list.bytes.as_ptr() as usize;
         let lookup = |tables: &[(usize, std::sync::Arc<Dense>)]| {
@@ -521,7 +527,7 @@ pub(super) fn rank<S: LexicalSource>(
             idf: *idf,
             bound: *bound,
             ceiling: bound.at(cursor.list_max_frequency, cursor.list_min_words),
-            tabled: postings >= DENSE_MIN_POSTINGS && postings * 32 >= slots,
+            tabled: tabled(postings, slots),
             dense: None,
             dense_tried: false,
             ub: Vec::new(),
