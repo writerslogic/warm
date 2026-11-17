@@ -293,15 +293,7 @@ fn document_input(doc: &warm_document_t) -> ApiResult<DocumentInput> {
     let text = utf8(doc.text, "document.text")?.to_owned();
     let source_uri = opt_utf8(doc.source_uri, "document.source_uri")?.map(str::to_owned);
     let version = opt_utf8(doc.version, "document.version")?.map(str::to_owned);
-    let metadata = match opt_utf8(doc.metadata_json, "document.metadata_json")? {
-        None => None,
-        Some(json) => Some(serde_json::from_str(json).map_err(|e| {
-            ApiError::new(
-                WARM_ERR_INVALID_ARGUMENT,
-                format!("document.metadata_json is not JSON: {e}"),
-            )
-        })?),
-    };
+    let metadata = opt_json(doc.metadata_json, "document.metadata_json")?;
     let store_text = match doc.store_text {
         0 => None,
         1 => Some(true),
@@ -413,15 +405,7 @@ fn search_options(options: *const warm_search_options_t) -> ApiResult<SearchOpti
     } else {
         Some(slice(o.embedding, o.embedding_len, "options.embedding")?.to_vec())
     };
-    let filter = match opt_utf8(o.filter_json, "options.filter_json")? {
-        None => None,
-        Some(json) => Some(serde_json::from_str(json).map_err(|e| {
-            ApiError::new(
-                WARM_ERR_INVALID_ARGUMENT,
-                format!("options.filter_json is not JSON: {e}"),
-            )
-        })?),
-    };
+    let filter = opt_json(o.filter_json, "options.filter_json")?;
     Ok(SearchOptions {
         k: opt_u32(o.k),
         candidate_limit: opt_u32(o.candidate_limit),

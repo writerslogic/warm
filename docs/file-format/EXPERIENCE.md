@@ -12,7 +12,7 @@ accepted no-op.
 | Offset | Size | Field |
 |---:|---:|---|
 | 0 | 4 | magic `WEXP` |
-| 4 | 1 | version, currently 2; version 1 files also open |
+| 4 | 1 | version, currently 3; versions 1 and 2 also open |
 | 5 | 3 | zero |
 | 8 | 8 | payload length, little-endian |
 | 16 | 4 | CRC32 (IEEE) of the payload, little-endian |
@@ -33,11 +33,22 @@ identifiers (symbols, nodes, templates, frames, regions, episodes) are the same 
 | `templates` | `[url template symbol, title template symbol]` |
 | `frames` | sorted, distinct line symbols of one observation |
 | `regions` | breadcrumb, page title, URL template, rendered text, and 1 to 12 variants (each the node slots of the run of sibling subtrees) |
-| `episodes` | id, goal, outcome, and steps: step index, root node, template, frame, optional action-label symbol, and `[region, count]` pairs; version 2 adds `handles`, the sorted `[handle, label]` pairs of the episode's latest observation |
+| `episodes` | id, goal, outcome, and steps: step index, root node, template, frame, optional action-label symbol, and `[region, count]` pairs; version 2 adds `handles`, the sorted `[handle, label]` pairs of the episode's latest observation; version 3 adds `controls` to a step that has form controls (absent when it has none) |
 | `seq` | version 2: the last journal sequence number folded into this snapshot (0 from `Experience::save`) |
 
 Version 2 adds `seq` and `handles`; a version 1 file has neither, opens with sequence 0 and empty
 handle maps, and is rewritten as version 2 by the next checkpoint. A writer never produces version 1.
+
+Version 3 adds the form controls of a step (see [Form state](../concepts/experience-core.md#form-state)):
+each a map with `role`, `name`, the optional state strings `value`, `checked`, `selected`,
+`expanded` and `pressed`, the optional flags `required`, `disabled` and `readonly`, up to 25
+`options` (`label`, `selected`) and `moreOptions`, the count of options beyond them. A writer
+produces version 3 only when some step has controls and version 2 otherwise, so a store that
+never stores controls writes the same bytes as before and stays readable by older releases; once
+it does, an older release refuses the file instead of dropping the controls. A loader refuses
+`controls` in a file older than version 3, more than 120 controls on a step, more than 25 options
+on a control, a control string over the configured string bound and more than 1 MiB of control
+text on a step (the sum of the string bytes, plus one per option).
 
 ## Derived state
 
@@ -74,7 +85,12 @@ sealed with the store's key and each journal record body is sealed; there is no 
 
 Record: `u32` body length, `u32` CRC32 (IEEE) of the body, body. The body is CBOR of
 `{seq, op}` (sealed when the store is encrypted); `op` is `Ingest` (an observation, with optional
-goal and outcome), `Describe` (episode, goal, outcome) or `Purge` (episode). Sequence numbers
+goal and outcome), `IngestForm` (an observation with the form controls parsed from its
+accessibility-tree text, as in the snapshot), `Describe` (episode, goal, outcome) or `Purge`
+(episode). An observation is journaled without its accessibility-tree text. Replay checks the
+controls of an `IngestForm` record against the same bounds as the snapshot loader. A reader that
+predates `IngestForm` refuses such a record rather than dropping it; the journal version stays 1,
+since a store without controls writes the same records as before. Sequence numbers
 start after the snapshot's and increase by one.
 
 Write: apply the change in memory (validation first), append the record, `fdatasync`, return. A

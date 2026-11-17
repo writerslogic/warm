@@ -3,8 +3,9 @@
 This harness exercises the real Vectra 0.15 `LocalIndex` hybrid API and WARM
 `searchDocuments` with identical supplied vectors and original document text.
 The [protocol](../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/PLAN.md)
-and [input manifest](../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json)
-remain preparation artifacts. No SciFact query evaluation or benchmark timing has
+and input manifest (`docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json`,
+retired from the tree; restore it with `uv run scripts/restore-retired-inputs.py --path
+docs/research/technical-audit-20261029/vectra-comparison-20261102`) remain preparation artifacts. No SciFact query evaluation or benchmark timing has
 run. The shared controller schedules this harness with the vector migration, ANN, mutation and interruption harness.
 
 ## Local development check

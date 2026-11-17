@@ -62,8 +62,8 @@ pub const SNAPSHOT_MIN_ROWS: usize = 1;
 /// Default `graph_min_rows`: a snapshot with fewer rows carries only the exact scan, which
 /// beats a graph traversal at that size.
 pub const DEFAULT_GRAPH_MIN_ROWS: usize = 4096;
-/// Default beam width of a graph query. Recall depends on the corpus and graph; the frozen
-/// 100,000-row study on an earlier revision measured 92.35% mean recall at this setting.
+/// Default beam width of a graph query. Recall depends on the corpus and the graph, so a
+/// caller that needs a recall target measures it on its own data.
 pub const DEFAULT_EF: usize = 128;
 pub const MAX_EF: usize = 4096;
 pub const MAX_K: usize = 1000;

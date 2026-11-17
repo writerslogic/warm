@@ -49,6 +49,30 @@ def verdict_ratio(lo, hi):
     return "WIN" if lo > 1 else "LOSS" if hi < 1 else "TIE"
 
 
+def provenance(files):
+    """Machine, commit and dates of the per-corpus results. Corpora measured on different hardware classes or commits are
+    listed, never merged into one claim."""
+    def distinct(values):
+        return sorted({v for v in values if v is not None})
+    keys = ("class", "cpu", "logical_cores", "memory_bytes", "os", "machine")
+    hardware = {json.dumps({k: d["hardware"].get(k) for k in keys}, sort_keys=True) for d in files.values() if d.get("hardware")}
+    return {"hardware_class": distinct(d.get("hardware", {}).get("class") for d in files.values()),
+            "hardware": [json.loads(h) for h in sorted(hardware)],
+            "commit": distinct(d.get("commit") for d in files.values()),
+            "draft": any(d.get("source", {}).get("draft", True) for d in files.values()),
+            "dates": {n: d.get("date") for n, d in files.items()},
+            "rounds": distinct(d.get("rounds") for d in files.values()), "pin_cpu": distinct(d.get("pin_cpu") for d in files.values())}
+
+
+def header(meta):
+    missing = "not recorded"
+    cpu = "; ".join(f"{h.get('cpu') or missing}, {h.get('logical_cores') or '?'} logical cores, {h.get('os') or missing}, {h.get('memory_bytes', 0) / 2**30:.0f} GiB" for h in meta["hardware"]) or missing
+    dates = [d for d in meta["dates"].values() if d]
+    return [f"Machine: {', '.join(meta['hardware_class']) or missing} ({cpu})",
+            f"Commit: {', '.join(meta['commit']) or missing}{' (draft: no verdict is publishable)' if meta['draft'] else ''}",
+            f"Date: {min(dates) + ' to ' + max(dates) if dates else missing}", ""]
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--results", required=True)
@@ -58,8 +82,9 @@ def main():
     files = {n: json.loads((Path(a.results) / f"hybrid-{n}.json").read_text()) for n in ORDER if (Path(a.results) / f"hybrid-{n}.json").exists()}
     family = max(1, len(files) * 2)
     level = 1 - 0.05 / family
-    lines = [f"Intervals: 95 percent family-wise (each of {family} comparisons per family at {level:.4f}). One machine; not official results.", ""]
-    report = {}
+    meta = provenance(files)
+    lines = [*header(meta), f"Intervals: 95 percent family-wise (each of {family} comparisons per family at {level:.4f}). One machine; not official results.", ""]
+    report = {"meta": meta}
     for name, data in files.items():
         systems = data["systems"]
         warm = systems["warm"]

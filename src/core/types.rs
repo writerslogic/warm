@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -28,7 +28,7 @@ pub struct TextMetrics {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct RetrievalResult {
@@ -42,7 +42,7 @@ pub struct RetrievalResult {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -64,7 +64,7 @@ pub struct QueryExplanation {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -83,7 +83,7 @@ pub struct IndexStatus {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -100,7 +100,7 @@ pub struct StorageHealth {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -157,7 +157,7 @@ impl Ord for RetrievalResult {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -176,7 +176,7 @@ pub struct ConceptCandidate {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct MemorizeBatchItem {
@@ -190,7 +190,7 @@ pub struct MemorizeBatchItem {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -211,7 +211,7 @@ pub struct Relation {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -229,7 +229,7 @@ pub struct RelationType {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -245,7 +245,7 @@ pub struct PathHop {
 #[cfg_attr(
     feature = "node-api",
     derive(ts_rs::TS),
-    ts(export, export_to = "bindings/")
+    ts(export, export_to = "types/")
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]

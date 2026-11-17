@@ -33,6 +33,9 @@ pub struct WarmConfig {
     /// absent). Ignored by the other encoders.
     #[cfg(feature = "local-embed")]
     pub local_embed: Option<super::embed::EmbedOptions>,
+    /// Bounds of one observation in the experience core, and whether form state is parsed
+    /// from the accessibility-tree text observations carry.
+    pub experience: super::experience::ExperienceConfig,
 }
 
 /// Opt-in graph candidate projection and the number of candidates fully reranked.

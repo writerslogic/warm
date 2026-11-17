@@ -228,6 +228,11 @@ mod tests {
 
         assert!(sm.mark_applied(id));
         assert_eq!(sm.get(id).unwrap().status, ProposalStatus::Applied);
+
+        let entries = sm.audit_entries();
+        let actions: Vec<_> = entries.iter().map(|e| e.action.as_str()).collect();
+        assert_eq!(actions, ["proposed", "approved", "applied"]);
+        assert!(entries.iter().all(|e| e.proposal_id == id));
     }
 
     #[test]
@@ -260,25 +265,6 @@ mod tests {
         );
 
         assert!(!sm.mark_applied(id)); // still pending, not approved
-    }
-
-    #[test]
-    fn test_audit_trail() {
-        let sm = SelfModifier::new();
-        let id = sm.propose(
-            ProposalKind::AddPattern {
-                description: "passive voice pattern".to_string(),
-            },
-            "Improve decomposer".to_string(),
-        );
-        sm.approve(id);
-        sm.mark_applied(id);
-
-        let entries = sm.audit_entries();
-        assert_eq!(entries.len(), 3);
-        assert_eq!(entries[0].action, "proposed");
-        assert_eq!(entries[1].action, "approved");
-        assert_eq!(entries[2].action, "applied");
     }
 
     #[test]

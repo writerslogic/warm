@@ -84,8 +84,9 @@ x.save(dir)?;                                        // Experience::open(dir, cf
 Ingesting a step again with identical content changes nothing (`Ingested::Duplicate`); a different
 tree at the same step is `ExperienceError::Conflict`; a step before the last one is
 `ExperienceError::OutOfOrder`. `ExperienceConfig` bounds depth (default 128, at most 512), nodes
-per tree (200000), bytes per string (16384), episode id bytes (256), goal bytes (65536) and steps
-per episode (1048576); a tree over a limit is rejected before anything is stored.
+per tree (200000), bytes per string (16384), episode id bytes (256), goal bytes (65536), steps
+per episode (1048576) and accessibility-tree text bytes (4 MiB); a tree over a limit is rejected
+before anything is stored. Its `form_state` switch is described under [Form state](#form-state).
 
 `Action::Call` takes a call such as `click('12')` and resolves the handle against the previous
 observation of the same episode. The handle map of each episode's latest observation is stored in
@@ -102,7 +103,7 @@ No flag and no separate API are needed.
 
 - `remember`: a request (or an entry of `facts`) that is an object with an `episode` string, a
   `step` number and a `tree` object is an observation: `{"episode", "step", "tree", "url"?,
-  "action"?, "goal"?, "outcome"?}`. `tree` nodes are `{"role", "name", "props"?, "handle"?,
+  "action"?, "goal"?, "outcome"?, "accessibilityTree"?}`. `tree` nodes are `{"role", "name", "props"?, "handle"?,
   "children"?}`. Everything else is a fact and is handled exactly as before. Facts in one call are
   stored in one transaction first; observations follow in order, each durable when the call
   returns, and a failing observation leaves the ones before it stored. `Memory::remember_observations`
@@ -112,9 +113,10 @@ No flag and no separate API are needed.
   two (an object and a `children` array), so a request can carry 63 tree levels; the depth limit
   of 128 applies to the library and the bindings. A request nested deeper than the parser allows is
   refused with 400 `nesting_too_deep`. `warm-server`'s `--max-documents-per-tenant` counts one unit
-  per stored document plus one per episode, region and effect row; a step that would pass it
-  gets 429 `quota_exceeded` and leaves nothing stored (steps before it in the same call stay).
-  The quota counts entries, not bytes. The shape and limits of every entry in a batch are
+  per stored document plus one per episode, step, region and effect row, and one per started
+  4 KiB of a step's form-control text; a step that would pass it gets 429 `quota_exceeded` and
+  leaves nothing stored (steps before it in the same call stay). Apart from the control text the
+  quota counts entries, not bytes. The shape and limits of every entry in a batch are
   checked before anything in it is stored; an out-of-order or conflicting step is still found only
   when it is applied.
 - `recall`: the best regions and the best action-effect rows merge with the fact results into one
@@ -141,6 +143,60 @@ No flag and no separate API are needed.
   other episodes also show is kept, but what the episode contributed to it (its value variants and
   the page title, breadcrumb and text taken from its first occurrence) is re-derived from the
   episodes that remain, so no text of the forgotten episode stays in the snapshot.
+
+## Form state
+
+An observation can carry the accessibility-tree text of its page in the JSON key
+`accessibilityTree` (memory API, MCP `observe`, `warm-server`). In Rust the text travels beside
+the observation in an `ObservationInput` (`ExperienceStore::ingest_inputs_within`);
+`OwnedObservation` itself is unchanged. At ingest the engine parses the form controls from it
+and stores them with the step; the text itself is not stored. A control is a node whose role is
+`textbox`, `searchbox`, `combobox`, `listbox`, `checkbox`, `radio`, `switch`, `spinbutton`,
+`button`, `tab`, `menuitemcheckbox` or `menuitemradio`, read from lines of the form
+`[id] role 'name' props`, with the properties `value`, `checked`, `selected`, `expanded`,
+`pressed`, `required`, `disabled` and `readonly`; a combobox or listbox also keeps the `option`
+nodes indented below it, the selected ones marked, the first 25 by name and the rest counted.
+An unnamed button with no state is not kept. Nothing in the parser names a site.
+
+At query time `Experience::form_tables` (and `WarmCore::experience_form_tables`, Python
+`Warm.experience_form_tables`) renders the controls of a list of steps, one block per step:
+
+```text
+- Form controls (structured from the page text; * = selected option):
+  combobox 'Sort by' value='Newest', expanded=False options: *Newest | Oldest | Price
+  textbox 'Email' value='a@b.c', required
+  [3 controls unchanged from an earlier state omitted]
+```
+
+A row already shown for an earlier step of the same list is left out and counted, and a step
+without controls gives an empty string.
+
+The grammar is defined in `src/core/experience/form.rs`: whitespace is the set Python's
+`str.isspace` accepts, a word character is a Unicode alphabetic or numeric character or `_`
+(`char::is_alphanumeric`), and names and values are quoted as Python's `repr` quotes a string,
+with a fixed table of non-printable characters. The reference renderer of the LongMemEval-V2
+adapter (`benchmarks/lme2/formstate.py`) uses Python's `\w` and its own Unicode database, which
+differ on some characters, so agreement is a tested result, not a guarantee: the same output on
+the 28 recorded states of `tests/experience_form_state.rs` and on the 5,095 states of the
+benchmark's small tier.
+
+Bounds: the text is at most `ExperienceConfig::max_page_bytes` (4 MiB) and is refused over it
+before anything is parsed; a line longer than `max_text_bytes` (16 KiB) is skipped; a step keeps
+at most 120 controls and a control at most 25 options; a line that does not parse is skipped.
+The controls of a step hold at most as much text as its page, and never more than 1 MiB
+(`form::MAX_CONTROL_BYTES`); the parser stops before the control that would pass either, which
+bounds the options repeated under nested listboxes. `Experience::ingest_with_controls` takes
+controls a caller built itself under the same caps and the 1 MiB budget, and the journal replay
+and the snapshot loader check them again. The controls are part of a step's content: the same
+step sent again with other controls is a conflict, also after a reopen.
+
+`ExperienceConfig::form_state` is on by default. It changes nothing for a store whose
+observations carry no `accessibilityTree`: such a store writes the same journal records and the
+same version 2 snapshot as before. Off, the text is not parsed and is dropped, but it is still
+refused over `max_page_bytes`. The parsed controls are journaled with the step (an `IngestForm`
+record) and saved in a version 3 snapshot, so a reopen does not parse again and does not depend
+on the switch. A step stored with the switch on and sent again with it off (or the reverse) has
+different controls, so the retry is a `Conflict`, not a duplicate.
 
 ## Persistence
 

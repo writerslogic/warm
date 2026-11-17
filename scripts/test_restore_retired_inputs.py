@@ -73,6 +73,29 @@ class HistoricalInputs(unittest.TestCase):
                 self.assertFalse((self.root / original["path"]).exists())
         self.assertEqual(list(self.root.rglob(".warm-restore-*")), [])
 
+    def test_record_revision_overrides_the_manifest_revision_and_research_tree_is_allowed(self):
+        name = "docs/research/session/evidence.log.gz"
+        path = self.root / name
+        path.parent.mkdir(parents=True)
+        data = b"retired research evidence"
+        path.write_bytes(data)
+        self.git("add", "docs")
+        self.git("commit", "-qm", "research")
+        later = self.git("rev-parse", "HEAD").decode().strip()
+        path.unlink()
+        record = {"path": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "mode": 0o644}
+        with self.assertRaisesRegex(ValueError, "Git object is missing"):
+            RESTORE.restore(self.root, self.revision, record)
+        self.assertTrue(RESTORE.restore(self.root, self.revision, dict(record, revision=later)))
+        self.assertEqual(path.read_bytes(), data)
+        for change in ({"revision": "HEAD"}, {"revision": None}, {"path": "docs/other/evidence.log.gz"},
+                       {"extra": 1}):
+            with self.subTest(change=change):
+                path.unlink(missing_ok=True)
+                with self.assertRaises(ValueError):
+                    RESTORE.restore(self.root, self.revision, {**record, "revision": later, **change})
+                self.assertFalse(path.exists())
+
     @unittest.skipIf(os.name == "nt", "symlink privileges are not assumed on Windows")
     def test_symlinks_cannot_redirect_publication(self):
         with tempfile.TemporaryDirectory() as outside:

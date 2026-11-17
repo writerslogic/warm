@@ -9,15 +9,11 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
+use super::context_err as err;
 use crate::core::embed::{EmbedKind, EmbedOptions, Embedder, Pooling, SemanticIndex};
-
-fn err(e: anyhow::Error) -> PyErr {
-    PyValueError::new_err(format!("{e:#}"))
-}
 
 #[derive(FromPyObject)]
 enum OneOrMany {
@@ -69,10 +65,10 @@ impl PyEmbedder {
         limits: Option<HashMap<String, usize>>,
     ) -> PyResult<Self> {
         let limits = match limits {
-            Some(value) => {
-                serde_json::from_value(serde_json::to_value(value).map_err(|e| err(e.into()))?)
-                    .map_err(|e| err(e.into()))?
-            }
+            Some(value) => serde_json::from_value(
+                serde_json::to_value(value).map_err(|e| err(anyhow::Error::from(e)))?,
+            )
+            .map_err(|e| err(anyhow::Error::from(e)))?,
             None => Default::default(),
         };
         let options = EmbedOptions {

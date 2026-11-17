@@ -9,6 +9,8 @@
 #[global_allocator]
 static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
 
+#[path = "shared/bearer.rs"]
+mod bearer;
 #[path = "warm-mcp/config.rs"]
 mod config;
 #[path = "warm-mcp/http.rs"]
@@ -156,7 +158,7 @@ fn limits(cli: &Cli) -> Limits {
 }
 
 async fn bearer(State(token): State<Arc<String>>, req: Request, next: Next) -> Response {
-    let presented = oauth::bearer_value(req.headers()).unwrap_or("");
+    let presented = bearer::bearer_value(req.headers()).unwrap_or("");
     // Constant-time over the bytes; the token length is not treated as secret.
     let ok =
         presented.len() == token.len() && bool::from(presented.as_bytes().ct_eq(token.as_bytes()));

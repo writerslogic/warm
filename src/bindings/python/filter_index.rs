@@ -11,7 +11,8 @@ use numpy::{PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
-use super::vector_index::result_array;
+use super::value_err;
+use super::vector_index::{result_array, thread_pool};
 use crate::core::qgraph::filter::{
     FilterBuildParams, FilterSearchParams, FilterTuning, FilteredIndex,
 };
@@ -21,10 +22,6 @@ struct PyFilteredIndex {
     index: FilteredIndex,
     pool: Option<rayon::ThreadPool>,
     params: FilterSearchParams,
-}
-
-fn value_err(e: impl std::fmt::Display) -> PyErr {
-    PyValueError::new_err(e.to_string())
 }
 
 fn u8_rows<'py>(x: &PyArrayLike2<'py, u8, AllowTypeChange>) -> (Vec<u8>, usize, usize) {
@@ -95,15 +92,7 @@ impl PyFilteredIndex {
     ) -> PyResult<Self> {
         let (rows, n, dim) = u8_rows(&data);
         let (ptr, ids) = csr(&indptr, &indices, n)?;
-        let pool = match threads {
-            0 => None,
-            t => Some(
-                rayon::ThreadPoolBuilder::new()
-                    .num_threads(t)
-                    .build()
-                    .map_err(|e| PyRuntimeError::new_err(format!("thread pool: {e}")))?,
-            ),
-        };
+        let pool = thread_pool(threads)?;
         let params = FilterBuildParams {
             ivf_min,
             cluster_size,

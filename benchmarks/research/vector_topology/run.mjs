@@ -4,13 +4,13 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { append, exec, readJson, runMonitored, sha256, watchPhase, writeOnce } from '../../public/vectra_comparison/vector-receipts.mjs'
+import { append, exec, readJson, runMonitored, sha256, watchPhase, writeOnce, retiredInput } from '../../public/vectra_comparison/vector-receipts.mjs'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const repo = path.resolve(here, '../../..')
 const old = '/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen/results'
 const priorDev = '/Volumes/A/.hms-bench-cache/warm-graph-development-20261102-v2'
-const input = await readJson(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json'))
-const stop = await readJson(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json'))
+const input = await readJson(await retiredInput(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json')))
+const stop = await readJson(await retiredInput(path.join(repo, 'docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json')))
 const previous = await readJson(path.join(priorDev, 'finished.json'))
 const [output, binary] = process.argv.slice(2)
 assert.ok(path.isAbsolute(output ?? '') && path.isAbsolute(binary ?? ''), 'provide fresh absolute output and binary paths')

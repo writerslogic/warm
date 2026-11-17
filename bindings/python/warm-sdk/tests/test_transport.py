@@ -89,10 +89,16 @@ def test_plain_http_url_uses_keep_alive_transport(server, monkeypatch):
     assert (path, auth, json.loads(body)) == ("/api/v1/query", "Bearer k", {"query_vector": [0.5, 0.25], "top_k": 2})
 
 
-def test_proxy_environment_keeps_httpx_transport(monkeypatch):
-    monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:9")
-    with WarmClient("http://127.0.0.1:1") as c:
-        assert not isinstance(c.client._transport, KeepAliveTransport)
+def test_proxy_environment_routes_requests_through_the_proxy(server, monkeypatch):
+    for var in ("http_proxy", "https_proxy", "all_proxy", "no_proxy", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY"):
+        monkeypatch.delenv(var, raising=False)
+    proxy, proxy_url = server()
+    monkeypatch.setenv("HTTP_PROXY", proxy_url)
+    # The target host does not resolve, so a reply proves the proxy carried the request.
+    with WarmClient("http://warm.invalid", api_key="k") as c:
+        c.query([0.5, 0.25], top_k=2)
+    path, auth, _ = proxy.seen[0]
+    assert (path, auth) == ("http://warm.invalid/api/v1/query", "Bearer k")
 
 
 def test_reconnects_after_server_drops_idle_connection(server):

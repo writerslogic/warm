@@ -280,7 +280,7 @@ test('custom vectors rank by cosine; fusion and weights are passed through', asy
   assert.ok(hits[0].semanticScore > 0.99)
 })
 
-test('titleWeight and BM25 knobs reach the engine', async () => {
+test('titleWeight reaches the engine', async () => {
   const mk = (titleWeight) => store({ titleWeight })
   const docs = [
     { id: 'titled', text: 'rocket\nfiller words about cooking and gardening and more filler text here' },
@@ -290,12 +290,10 @@ test('titleWeight and BM25 knobs reach the engine', async () => {
   const heavy = mk(8)
   await plain.remember(docs)
   await heavy.remember(docs)
-  const opts = { k: 2, vector: new HashingEmbedder(384).encodeQuery('x') }
   const a = await plain.recall('rocket', { k: 2 })
   const b = await heavy.recall('rocket', { k: 2 })
   const sc = (h, id) => h.find((x) => x.id === id).lexicalScore
   assert.ok(sc(b, 'titled') > sc(a, 'titled'))
-  assert.ok(opts)
 })
 
 test('encryption config is accepted and the store still works', async () => {

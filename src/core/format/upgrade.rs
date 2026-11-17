@@ -476,7 +476,7 @@ fn upgrade_data_dir(
 /// Directory name of tenant `name` (hex of its UTF-8 bytes), or the name itself if it was
 /// reported undecoded.
 fn tenant_dir(source: &Path, name: &str) -> Result<String> {
-    let hex: String = name.bytes().map(|b| format!("{b:02x}")).collect();
+    let hex = crate::core::hash::hex(name.as_bytes());
     if source.join("tenants").join(&hex).is_dir() {
         Ok(hex)
     } else if source.join("tenants").join(name).is_dir() {

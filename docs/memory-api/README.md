@@ -376,6 +376,17 @@ object with `episode`, `step` and `tree` to the experience core, `recall` merges
 hits with fact results by rank, `explain` returns their provenance and `forget` takes the scope
 `{"kind": "episode", "episode": "<id>"}`. See [Experience core](../concepts/experience-core.md).
 
+An observation may also carry `accessibilityTree`, the page's accessibility-tree text (one
+`[id] role 'name' props` node per line, up to 4 MiB). The engine parses the form controls of the
+step from it (text fields, selects with their options, checkboxes, buttons, with values and
+states), stores them with the step and drops the text. Rendered, they are a compact table to put
+before a step's page text; the in-process Python `Warm` returns it with
+`experience_form_tables([(episode, step), ...])`, one string per step, leaving out rows already
+shown for an earlier step of the list. `WarmConfig::experience.form_state` (Python
+`Warm(..., experience_form_state=False)`) turns the parsing off; the 4 MiB bound still applies.
+A step retried after the switch changed is a conflict, since its controls differ. See
+[Form state](../concepts/experience-core.md#form-state).
+
 `warm-server` serves them as `POST /api/v1/memory/{op}` with the same tenant header, API key and
 body limits as the document routes. Errors: 422 `invalid_request`, 404 `not_found`, 409
 `conflict`. Embeddings must have the server's `--input-dim` values; without one a fact is

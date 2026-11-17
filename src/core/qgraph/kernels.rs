@@ -1331,7 +1331,7 @@ mod x86 {
     /// [`dot_i8_avx2`] with `vpdpbusd` on 256-bit registers (AVX512-VNNI with VL): `a` is biased
     /// by 128 into the unsigned operand, so `sum (a + 128) b = a.b + 128 sum b`, and a second
     /// `vpdpbusd` against ones yields `sum b` to subtract. Exact over the whole i8 range. The
-    /// 512-bit forms measured no faster on 128 and 256-wide rows (kill test).
+    /// 512-bit forms are not used: they measured no faster on 128 and 256-wide rows.
     ///
     /// # Safety
     /// The CPU supports AVX512F, AVX512VL, AVX512-VNNI and AVX2; `a` and `b` have the same
