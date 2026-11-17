@@ -103,10 +103,3 @@ pass 10 SDK memory tests and three renamer tests. Finding 151 is intentional:
 `docs/research/technical-audit-20261030/python_reproduction.py` must catch PyO3
 `PanicException` to record the original native assertion failures (shown in the
 adjacent `python-reproduction.log`). Its historical evidence remains unchanged.
-
-Already-integrated audit branch tips are retained locally under
-`refs/archive/20261031/` before obsolete branch removal. Their original worktrees
-remain intact and detached. Clean temporary crate-release worktrees were removed.
-The user confirmed the C2PA conformance application was submitted as
-`holographic-memory`; `/Volumes/A/.hms-c2pa-24` and its historical submission files
-are preserved unchanged, separately from this cleanup.
