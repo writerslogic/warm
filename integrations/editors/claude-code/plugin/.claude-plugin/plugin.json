@@ -2,7 +2,7 @@
   "name": "writerslogic-warm",
   "displayName": "WARM",
   "version": "0.1.0",
-  "description": "Persistent, private, on-device memory for Claude Code: an MCP server (remember, recall, search, list, forget, export), a session-start hook and a usage skill.",
+  "description": "Persistent on-device memory for Claude Code with no service calls: an MCP server (remember, recall, search, list, forget, export), a session-start hook and a usage skill.",
   "author": {
     "name": "WritersLogic, Inc.",
     "email": "david@writerslogic.com"

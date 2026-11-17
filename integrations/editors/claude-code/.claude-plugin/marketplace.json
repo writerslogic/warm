@@ -1,6 +1,6 @@
 {
   "name": "writerslogic-warm",
-  "description": "Private, on-device persistent memory for Claude Code, backed by WARM",
+  "description": "On-device persistent memory for Claude Code with no service calls, backed by WARM",
   "owner": {
     "name": "WritersLogic, Inc.",
     "email": "david@writerslogic.com"
