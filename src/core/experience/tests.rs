@@ -392,7 +392,7 @@ fn snapshot_round_trips_and_rejects_damage() {
         Experience::from_bytes(&bytes[..bytes.len() - 1], ExperienceConfig::default()).is_err()
     );
     let mut future = bytes.clone();
-    future[4] = 3;
+    future[4] = 4;
     assert!(Experience::from_bytes(&future, ExperienceConfig::default()).is_err());
     assert!(Experience::from_bytes(b"WEXP", ExperienceConfig::default()).is_err());
 
@@ -700,4 +700,219 @@ fn an_append_after_a_zeroed_header_is_damage_not_a_scrubbed_journal() {
     bytes.fill(0);
     std::fs::write(&journal, &bytes).unwrap();
     store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+}
+
+#[test]
+fn step_controls_round_trip_the_snapshot_and_purge_with_the_episode() {
+    let mut x = Experience::default();
+    let page_a = page("Form", vec![btn("Save")]);
+    let controls = x
+        .extract_controls(
+            "[1] textbox 'Name', value='Ada'\n[2] combobox 'Size'\n\t[3] option 'S', selected=True",
+        )
+        .unwrap();
+    assert_eq!(controls.len(), 2);
+    x.ingest_with_controls(&obs("a", 0, &page_a, None), controls.clone())
+        .unwrap();
+    x.ingest(&obs("b", 0, &page_a, None)).unwrap();
+    let bytes = x.to_bytes().unwrap();
+    assert_eq!(bytes[4], 3);
+    let y = Experience::from_bytes(&bytes, ExperienceConfig::default()).unwrap();
+    assert_eq!(y.step_controls("a", 0), Some(&controls[..]));
+    assert_eq!(y.step_controls("b", 0), Some(&[][..]));
+    assert_eq!(y.step_controls("a", 1), None);
+    assert_eq!(y.to_bytes().unwrap(), bytes);
+    assert_eq!(
+        y.form_tables(&[("a", 0), ("b", 0)]),
+        x.form_tables(&[("a", 0), ("b", 0)])
+    );
+
+    // A version 2 header over a payload with controls is refused, not read without them.
+    let mut old = bytes.clone();
+    old[4] = 2;
+    assert!(Experience::from_bytes(&old, ExperienceConfig::default()).is_err());
+
+    x.purge_episode("a").unwrap();
+    assert_eq!(x.to_bytes().unwrap()[4], 2);
+}
+
+#[test]
+fn caller_controls_are_bounded_and_the_switch_drops_the_page_text() {
+    let mut x = Experience::default();
+    let t = page("Form", vec![btn("Save")]);
+    let one = Control {
+        role: "checkbox".into(),
+        name: "c".into(),
+        ..Control::default()
+    };
+    let too_many = vec![one.clone(); form::MAX_CONTROLS + 1];
+    assert!(matches!(
+        x.ingest_with_controls(&obs("a", 0, &t, None), too_many),
+        Err(ExperienceError::Limit { .. })
+    ));
+    let mut wide = one.clone();
+    wide.options = vec![
+        ControlOption {
+            label: "o".into(),
+            selected: false,
+        };
+        form::MAX_OPTIONS + 1
+    ];
+    assert!(x
+        .ingest_with_controls(&obs("a", 0, &t, None), vec![wide])
+        .is_err());
+    let mut long = one;
+    long.name = "n".repeat(x.config().max_text_bytes + 1);
+    assert!(x
+        .ingest_with_controls(&obs("a", 0, &t, None), vec![long])
+        .is_err());
+    assert!(!x.has_episode("a"));
+
+    let off = Experience::new(ExperienceConfig {
+        form_state: false,
+        ..Default::default()
+    });
+    assert!(off.extract_controls("[1] textbox 'x'").unwrap().is_empty());
+}
+
+/// `n` textbox controls whose text totals `total` bytes.
+fn boxes_totalling(n: usize, total: usize) -> Vec<Control> {
+    let names = total - n * "textbox".len();
+    (0..n)
+        .map(|i| Control {
+            role: "textbox".into(),
+            name: "n".repeat(names / n + usize::from(i < names % n)),
+            ..Control::default()
+        })
+        .collect()
+}
+
+#[test]
+fn caller_controls_are_bounded_by_the_step_budget_and_charged_to_the_quota() {
+    let t = page("Form", vec![btn("Save")]);
+    for (step, total, ok) in [
+        (0, form::MAX_CONTROL_BYTES - 1, true),
+        (1, form::MAX_CONTROL_BYTES, true),
+        (2, form::MAX_CONTROL_BYTES + 1, false),
+    ] {
+        let mut x = Experience::default();
+        let mut plain = Experience::default();
+        plain.ingest(&obs("a", step, &t, None)).unwrap();
+        let controls = boxes_totalling(65, total);
+        assert_eq!(form::text_bytes(&controls), total);
+        let r = x.ingest_with_controls(&obs("a", step, &t, None), controls);
+        if ok {
+            r.unwrap();
+            assert_eq!(
+                x.quota_units() - plain.quota_units(),
+                total.div_ceil(form::QUOTA_UNIT_BYTES) as u64
+            );
+        } else {
+            assert!(matches!(r, Err(ExperienceError::Limit { .. })), "{r:?}");
+            assert!(!x.has_episode("a"));
+        }
+    }
+}
+
+#[test]
+fn the_snapshot_estimate_bounds_the_encoded_controls() {
+    let full = |s: &str| Control {
+        role: s.into(),
+        name: s.into(),
+        value: Some(s.into()),
+        checked: Some(s.into()),
+        selected: Some(s.into()),
+        expanded: Some(s.into()),
+        pressed: Some(s.into()),
+        required: Some(true),
+        disabled: Some(true),
+        readonly: Some(true),
+        options: vec![
+            ControlOption {
+                label: s.into(),
+                selected: true,
+            };
+            form::MAX_OPTIONS
+        ],
+        more_options: u32::MAX,
+    };
+    let t = page("Form", vec![btn("Save")]);
+    let mut x = Experience::default();
+    let mut plain = Experience::default();
+    for step in 0..8 {
+        x.ingest_with_controls(
+            &obs("a", step, &t, None),
+            vec![full(""); form::MAX_CONTROLS],
+        )
+        .unwrap();
+        plain.ingest(&obs("a", step, &t, None)).unwrap();
+    }
+    let added = x.to_bytes().unwrap().len() - plain.to_bytes().unwrap().len();
+    let estimated = x.snapshot_estimate() - plain.snapshot_estimate();
+    assert!(estimated >= added as u64, "{estimated} < {added}");
+    assert!(x.snapshot_estimate() >= x.to_bytes().unwrap().len() as u64);
+}
+
+/// Rewrites every `controls` list of a snapshot payload and reseals the header.
+fn mutate_controls(bytes: &[u8], f: &dyn Fn(&mut Vec<ciborium::Value>)) -> Vec<u8> {
+    fn walk(v: &mut ciborium::Value, f: &dyn Fn(&mut Vec<ciborium::Value>)) {
+        match v {
+            ciborium::Value::Map(m) => {
+                for (k, v) in m.iter_mut() {
+                    match (k.as_text(), v) {
+                        (Some("controls"), ciborium::Value::Array(a)) => f(a),
+                        (_, v) => walk(v, f),
+                    }
+                }
+            }
+            ciborium::Value::Array(a) => a.iter_mut().for_each(|v| walk(v, f)),
+            _ => {}
+        }
+    }
+    let mut v: ciborium::Value = ciborium::from_reader(&bytes[20..]).unwrap();
+    walk(&mut v, f);
+    let mut payload = Vec::new();
+    ciborium::into_writer(&v, &mut payload).unwrap();
+    let mut out = bytes[..20].to_vec();
+    out[8..16].copy_from_slice(&(payload.len() as u64).to_le_bytes());
+    out[16..20].copy_from_slice(&crc32fast::hash(&payload).to_le_bytes());
+    out.extend_from_slice(&payload);
+    out
+}
+
+#[test]
+fn a_version_3_snapshot_over_the_control_caps_is_refused() {
+    let mut x = Experience::default();
+    let t = page("Form", vec![btn("Save")]);
+    let listbox = Control {
+        role: "listbox".into(),
+        name: "l".into(),
+        options: vec![
+            ControlOption {
+                label: "o".into(),
+                selected: false,
+            };
+            form::MAX_OPTIONS
+        ],
+        ..Control::default()
+    };
+    x.ingest_with_controls(&obs("a", 0, &t, None), vec![listbox; form::MAX_CONTROLS])
+        .unwrap();
+    let bytes = x.to_bytes().unwrap();
+    assert_eq!(bytes[4], 3);
+    let same = mutate_controls(&bytes, &|_| {});
+    Experience::from_bytes(&same, ExperienceConfig::default()).unwrap();
+
+    let more_controls = mutate_controls(&bytes, &|a| a.push(a[0].clone()));
+    assert!(Experience::from_bytes(&more_controls, ExperienceConfig::default()).is_err());
+    let more_options = mutate_controls(&bytes, &|a| {
+        if let ciborium::Value::Map(m) = &mut a[0] {
+            for (k, v) in m.iter_mut() {
+                if let (Some("options"), ciborium::Value::Array(o)) = (k.as_text(), v) {
+                    o.push(o[0].clone());
+                }
+            }
+        }
+    });
+    assert!(Experience::from_bytes(&more_options, ExperienceConfig::default()).is_err());
 }

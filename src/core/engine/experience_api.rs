@@ -43,7 +43,7 @@ impl WarmCore {
         }
         let opened = ExperienceStore::open(
             &self.storage_path,
-            ExperienceConfig::default(),
+            self.config.experience.clone(),
             self.experience_sealer(),
         )?;
         *self.experience.write() = Some(opened);
@@ -59,7 +59,7 @@ impl WarmCore {
         if slot.is_none() {
             *slot = Some(ExperienceStore::create(
                 &self.storage_path,
-                ExperienceConfig::default(),
+                self.config.experience.clone(),
                 self.experience_sealer(),
             )?);
         }
@@ -78,7 +78,15 @@ impl WarmCore {
 
     /// The configured bounds on one observation.
     pub fn experience_limits(&self) -> ExperienceConfig {
-        ExperienceConfig::default()
+        self.config.experience.clone()
+    }
+
+    /// The form tables of the given `(episode, step)` states, in order
+    /// ([`Experience::form_tables`](crate::core::experience::Experience::form_tables)); all
+    /// empty when the store holds no experience state.
+    pub fn experience_form_tables<S: AsRef<str>>(&self, states: &[(S, u32)]) -> Vec<String> {
+        self.with_experience(|s| s.form_tables(states))
+            .unwrap_or_else(|| vec![String::new(); states.len()])
     }
 
     /// Writes the experience snapshot and empties its journal when anything changed since the

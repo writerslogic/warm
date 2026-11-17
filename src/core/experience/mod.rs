@@ -10,6 +10,7 @@
 //! of a node is counted, so purging an episode frees exactly what no other episode shares.
 
 mod effects;
+pub mod form;
 mod regions;
 mod snapshot;
 pub mod store;
@@ -24,6 +25,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use self::effects::{delta, EffectTable, Frames, Templates};
+pub use self::form::{Control, ControlOption};
 use self::regions::{Region, RegionStore};
 use self::terms::{Sym, TermStore};
 use self::tree::{action_label, label, title_template, trunc, url_template};
@@ -56,6 +58,13 @@ pub struct ExperienceConfig {
     /// Bytes of the snapshot payload. A snapshot over this is refused when it is read, so a
     /// write that would take the store past it is refused before it is journaled.
     pub max_snapshot_bytes: u64,
+    /// Parse the controls of a step from the accessibility-tree text it arrives with
+    /// ([`ObservationInput`]) and store them with the step. Off, the text is not parsed and is
+    /// dropped; its size is still bounded by `max_page_bytes`.
+    pub form_state: bool,
+    /// Bytes of the accessibility-tree text of one observation, checked before it is parsed.
+    /// Its lines longer than `max_text_bytes` are skipped by the form-state parser.
+    pub max_page_bytes: usize,
 }
 
 impl Default for ExperienceConfig {
@@ -68,6 +77,8 @@ impl Default for ExperienceConfig {
             max_goal_bytes: 64 * 1024,
             max_steps: 1 << 20,
             max_snapshot_bytes: snapshot::MAX_SNAPSHOT_BYTES,
+            form_state: true,
+            max_page_bytes: 4 << 20,
         }
     }
 }
@@ -133,6 +144,52 @@ pub struct OwnedObservation {
     pub outcome: Option<String>,
 }
 
+/// The JSON key of an observation that carries the accessibility-tree text of its page.
+pub const ACCESSIBILITY_TREE_KEY: &str = "accessibilityTree";
+
+/// An observation with the accessibility-tree text of its page, one `[id] role 'name' props`
+/// node per line. With [`ExperienceConfig::form_state`] the controls are parsed from the text
+/// at ingest and stored with the step; the text itself is not stored.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObservationInput {
+    pub observation: OwnedObservation,
+    pub accessibility_tree: Option<String>,
+}
+
+impl From<OwnedObservation> for ObservationInput {
+    fn from(observation: OwnedObservation) -> Self {
+        Self {
+            observation,
+            accessibility_tree: None,
+        }
+    }
+}
+
+impl ObservationInput {
+    /// Parses the JSON form: an [`OwnedObservation`] object that may also hold
+    /// `accessibilityTree`, a string (or null).
+    pub fn from_value(value: Value) -> std::result::Result<Self, serde_json::Error> {
+        use serde::de::Error as _;
+        let mut value = value;
+        let accessibility_tree = match value
+            .as_object_mut()
+            .and_then(|o| o.remove(ACCESSIBILITY_TREE_KEY))
+        {
+            None | Some(Value::Null) => None,
+            Some(Value::String(t)) => Some(t),
+            Some(_) => {
+                return Err(serde_json::Error::custom(
+                    "accessibilityTree must be a string",
+                ))
+            }
+        };
+        Ok(Self {
+            observation: serde_json::from_value(value)?,
+            accessibility_tree,
+        })
+    }
+}
+
 impl OwnedObservation {
     pub fn as_observation(&self) -> Observation<'_> {
         Observation {
@@ -193,6 +250,11 @@ pub fn check_observation_value(value: &Value, cfg: &ExperienceConfig) -> Result<
     text(o.get("url"), "url bytes", cfg.max_text_bytes)?;
     text(o.get("goal"), "goal bytes", cfg.max_goal_bytes)?;
     text(o.get("outcome"), "outcome bytes", cfg.max_goal_bytes)?;
+    text(
+        o.get(ACCESSIBILITY_TREE_KEY),
+        "accessibility tree bytes",
+        cfg.max_page_bytes,
+    )?;
     if let Some(Value::Object(a)) = o.get("action") {
         for v in a.values() {
             text(Some(v), "action bytes", cfg.max_text_bytes)?;
@@ -469,6 +531,8 @@ pub(crate) struct StepRec {
     pub label: Option<Sym>,
     pub flags: u8,
     pub regions: Vec<(u32, u32)>,
+    /// The form controls of the step, from its accessibility-tree text.
+    pub controls: Box<[Control]>,
 }
 
 pub(crate) struct Episode {
@@ -497,6 +561,30 @@ pub struct Experience {
     /// Steps stored over all episodes, and the region entries they carry.
     step_count: usize,
     step_region_count: usize,
+    /// Controls stored over all steps, and the bytes of text they hold.
+    control_counts: ControlCounts,
+}
+
+/// Totals over the stored controls behind the snapshot version, its size estimate and the quota.
+#[derive(Clone, Copy, Debug, Default)]
+struct ControlCounts {
+    controls: usize,
+    encoded: usize,
+    units: usize,
+}
+
+impl ControlCounts {
+    fn add(&mut self, controls: &[Control]) {
+        self.controls += controls.len();
+        self.encoded += form::encoded_bound(controls);
+        self.units += form::quota_units(controls);
+    }
+
+    fn remove(&mut self, controls: &[Control]) {
+        self.controls -= controls.len();
+        self.encoded -= form::encoded_bound(controls);
+        self.units -= form::quota_units(controls);
+    }
 }
 
 fn doc(id: String, text: String) -> DocumentInput {
@@ -557,6 +645,7 @@ impl Experience {
             dirty: BTreeSet::new(),
             step_count: 0,
             step_region_count: 0,
+            control_counts: ControlCounts::default(),
         }
     }
 
@@ -665,7 +754,52 @@ impl Experience {
 
     /// Ingests one observation step. Retrying a step with identical content changes nothing.
     pub fn ingest(&mut self, o: &Observation<'_>) -> Result<Ingested> {
+        self.ingest_with_controls(o, Vec::new())
+    }
+
+    /// The form controls of an accessibility-tree text ([`form::extract_controls`]), bounded by
+    /// this store's limits; none when [`ExperienceConfig::form_state`] is off. The text is
+    /// refused over `max_page_bytes` either way.
+    pub fn extract_controls(&self, accessibility_tree: &str) -> Result<Vec<Control>> {
+        Self::limit(
+            "accessibility tree bytes",
+            self.cfg.max_page_bytes,
+            accessibility_tree.len(),
+        )?;
+        if !self.cfg.form_state {
+            return Ok(Vec::new());
+        }
+        Ok(form::extract_controls(
+            accessibility_tree,
+            self.cfg.max_text_bytes,
+        ))
+    }
+
+    /// The bounds every stored list of controls meets, on every path (ingest, journal replay,
+    /// snapshot load): the control and option caps, the string bound and
+    /// [`form::MAX_CONTROL_BYTES`] of text for the step.
+    pub(crate) fn validate_controls(&self, controls: &[Control]) -> Result<()> {
+        Self::limit("step controls", form::MAX_CONTROLS, controls.len())?;
+        for c in controls {
+            Self::limit("control options", form::MAX_OPTIONS, c.options.len())?;
+            Self::limit("string bytes", self.cfg.max_text_bytes, c.longest_string())?;
+        }
+        Self::limit(
+            "step control bytes",
+            form::MAX_CONTROL_BYTES,
+            form::text_bytes(controls),
+        )
+    }
+
+    /// [`Self::ingest`] storing `controls` with the step. The controls are part of the step's
+    /// content: the same step again with other controls is a conflict.
+    pub fn ingest_with_controls(
+        &mut self,
+        o: &Observation<'_>,
+        controls: Vec<Control>,
+    ) -> Result<Ingested> {
         self.validate(o)?;
+        self.validate_controls(&controls)?;
         let eid = self.episode_slot(o.episode);
         if let Some(id) = eid {
             let e = self.ep(id);
@@ -705,7 +839,10 @@ impl Experience {
             let e = self.ep(id);
             if let Ok(i) = e.steps.binary_search_by_key(&o.step, |s| s.step) {
                 let s = &e.steps[i];
-                let same = s.root == root && s.template == template && s.label == label_sym;
+                let same = s.root == root
+                    && s.template == template
+                    && s.label == label_sym
+                    && *s.controls == *controls;
                 self.terms.release(root);
                 self.templates.release(&mut self.terms.syms, template);
                 if let Some(l) = label_sym {
@@ -801,6 +938,7 @@ impl Experience {
         let regions: Vec<(u32, u32)> = counts.into_iter().collect();
         self.step_count += 1;
         self.step_region_count += regions.len();
+        self.control_counts.add(&controls);
         e.steps.push(StepRec {
             step: o.step,
             root,
@@ -809,6 +947,7 @@ impl Experience {
             label: label_sym,
             flags,
             regions,
+            controls: controls.into_boxed_slice(),
         });
         self.dirty.insert(eid);
         Ok(Ingested::Applied)
@@ -1057,12 +1196,16 @@ impl Experience {
         Ok(())
     }
 
-    /// What counts against a tenant quota: one unit per episode, step, region and effect row.
-    /// A step counts because regions are keyed by structure, so steps that differ only in
-    /// their props add no region yet each stores them.
+    /// What counts against a tenant quota: one unit per episode, step, region and effect row,
+    /// and one per started 4 KiB of form-control text of a step. A step counts because regions
+    /// are keyed by structure, so steps that differ only in their props add no region yet each
+    /// stores them.
     pub fn quota_units(&self) -> u64 {
-        (self.episode_map.len() + self.step_count + self.regions.live() + self.effects.rows.len())
-            as u64
+        (self.episode_map.len()
+            + self.step_count
+            + self.regions.live()
+            + self.effects.rows.len()
+            + self.control_counts.units) as u64
     }
 
     /// Whether `step` of `episode` is already stored, so ingesting it again adds nothing.
@@ -1082,7 +1225,8 @@ impl Experience {
         const STEP: usize = 32;
         const STEP_REGION: usize = 12;
         const REGION: usize = 2048;
-        (self.terms.syms.live_bytes()
+        (self.control_counts.encoded
+            + self.terms.syms.live_bytes()
             + SYMBOL * self.terms.syms.live()
             + NODE * self.terms.live_nodes()
             + STEP * self.step_count
@@ -1216,6 +1360,24 @@ impl Experience {
                 })
             })
             .collect())
+    }
+
+    /// The form controls stored with a step; `None` when the step is not stored.
+    pub fn step_controls(&self, episode: &str, step: u32) -> Option<&[Control]> {
+        let e = self.ep(self.episode_slot(episode)?);
+        let i = e.steps.binary_search_by_key(&step, |s| s.step).ok()?;
+        Some(&e.steps[i].controls)
+    }
+
+    /// The form tables of `states` in order ([`form::render_form_tables`]): each state's
+    /// controls, without those already shown for an earlier state of the list. A state that is
+    /// not stored or has no controls gives an empty string.
+    pub fn form_tables<S: AsRef<str>>(&self, states: &[(S, u32)]) -> Vec<String> {
+        form::render_form_tables(
+            states
+                .iter()
+                .map(|(e, s)| self.step_controls(e.as_ref(), *s).unwrap_or(&[])),
+        )
     }
 
     pub fn episode(&self, id: &str) -> Option<EpisodeView> {
@@ -1407,6 +1569,9 @@ impl Experience {
         let e = self.episodes[eid as usize].take()?;
         self.step_count -= e.steps.len();
         self.step_region_count -= e.steps.iter().map(|s| s.regions.len()).sum::<usize>();
+        for s in &e.steps {
+            self.control_counts.remove(&s.controls);
+        }
         self.episode_map.remove(id);
         self.free_episodes.push(eid);
         self.dirty.remove(&eid);

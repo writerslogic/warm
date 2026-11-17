@@ -87,11 +87,17 @@ impl PyWarm {
     /// is the embedder's. `embedding_dimensions` instead declares an external embedding space,
     /// named by `embedding_model` and `embedding_revision`, and callers pass `embedding` on
     /// `remember` and `recall`. The two are exclusive. Reopening a store needs the same choice.
+    ///
+    /// `experience_form_state` parses the form controls of an observation from the
+    /// `accessibilityTree` text it carries and stores them with the step (see
+    /// `experience_form_tables`); off, that text is not parsed but is still refused over
+    /// 4 MiB.
     #[new]
     #[pyo3(signature = (
         dimensions=16384, path=None, *, embedder=None, embedding_dimensions=None,
-        embedding_model="external", embedding_revision="1"
+        embedding_model="external", embedding_revision="1", experience_form_state=true
     ))]
+    #[allow(clippy::too_many_arguments)]
     fn new(
         py: Python<'_>,
         dimensions: u32,
@@ -100,6 +106,7 @@ impl PyWarm {
         embedding_dimensions: Option<usize>,
         embedding_model: &str,
         embedding_revision: &str,
+        experience_form_state: bool,
     ) -> PyResult<Self> {
         if embedder.is_some() && embedding_dimensions.is_some() {
             return Err(err(
@@ -107,6 +114,7 @@ impl PyWarm {
             ));
         }
         let mut config = WarmConfig::default();
+        config.experience.form_state = experience_form_state;
         #[cfg(feature = "local-embed")]
         let mut text_embedder = None;
         if let Some(embedder) = embedder {
@@ -314,6 +322,14 @@ impl PyWarm {
         request: &Bound<'py, PyAny>,
     ) -> PyResult<Bound<'py, PyAny>> {
         self.call(py, op, request)
+    }
+
+    /// The form tables of observation steps, one string per `(episode, step)` in order: the
+    /// step's controls as rows, without rows already shown for an earlier step of the list, or
+    /// `""` for a step with no controls.
+    fn experience_form_tables(&self, py: Python<'_>, states: Vec<(String, u32)>) -> Vec<String> {
+        let core = &self.core;
+        py.detach(|| core.experience_form_tables(&states))
     }
 
     /// Stores `vector` under `id` in the vector index (the vertex graph).
