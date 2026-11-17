@@ -12,6 +12,8 @@ static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocato
 
 mod admin;
 mod auth;
+#[path = "../shared/bearer.rs"]
+mod bearer;
 mod config;
 mod documents;
 mod error;
