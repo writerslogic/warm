@@ -431,11 +431,12 @@ impl<'w> CheckpointPacker<'w> {
         let frequency_bits = (32 - frequency.leading_zeros()) as u8;
         out.extend_from_slice(&[gap_bits, frequency_bits]);
         if self.impacts {
-            let least = block
-                .iter()
-                .map(|p| (self.words)(p.0))
-                .min()
-                .expect("nonempty block");
+            let mut lengths = [0u32; CHECKPOINT_BLOCK];
+            for (length, p) in lengths.iter_mut().zip(block) {
+                *length = (self.words)(p.0);
+            }
+            let lengths = &lengths[..block.len()];
+            let least = lengths.iter().copied().min().expect("nonempty block");
             put_varint(out, (block[block.len() - 1].0 - first) as u64);
             put_varint(out, u64::from(frequency));
             put_varint(out, u64::from(least));
@@ -447,7 +448,7 @@ impl<'w> CheckpointPacker<'w> {
                     offset: block_offset as u32,
                     max_frequency: frequency,
                     min_words: least,
-                    frontier: frontier(block.iter().map(|p| (p.1, (self.words)(p.0)))),
+                    frontier: frontier(block.iter().map(|p| p.1).zip(lengths.iter().copied())),
                 });
             }
         }
@@ -1163,10 +1164,12 @@ fn frontier(points: impl Iterator<Item = (u32, u32)>) -> Option<Box<[(u32, u32)]
     let mut least = [u32::MAX; BLOCK_LEN + 1];
     let mut spill = [(0u32, 0u32); BLOCK_LEN];
     let mut spilled = 0;
+    let mut highest = 0usize;
     for (used, (frequency, words)) in points.filter(|p| p.0 > 0).enumerate() {
         assert!(used < BLOCK_LEN, "frontier exceeds posting block length");
         if let Some(entry) = least.get_mut(frequency as usize) {
             *entry = (*entry).min(words);
+            highest = highest.max(frequency as usize);
         } else {
             spill[spilled] = (frequency, words);
             spilled += 1;
@@ -1174,7 +1177,7 @@ fn frontier(points: impl Iterator<Item = (u32, u32)>) -> Option<Box<[(u32, u32)]
     }
     let spill = &mut spill[..spilled];
     spill.sort_unstable_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
-    let table = (1..=BLOCK_LEN)
+    let table = (1..=highest)
         .rev()
         .filter(|&frequency| least[frequency] != u32::MAX)
         .map(|frequency| (frequency as u32, least[frequency]));
