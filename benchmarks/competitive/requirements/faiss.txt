@@ -1,8 +1,8 @@
-faiss-cpu==1.12.0
-    # via -r requirements/faiss.in
+faiss-cpu==1.16.0
+    # via -r benchmarks/competitive/requirements/faiss.in
 numpy==2.5.4
     # via
-    #   -r requirements/faiss.in
+    #   -r benchmarks/competitive/requirements/faiss.in
     #   faiss-cpu
 packaging==26.3
     # via faiss-cpu
