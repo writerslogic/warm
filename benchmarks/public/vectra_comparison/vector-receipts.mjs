@@ -18,6 +18,18 @@ export async function sha256(file) {
 export function hashValue(value) { return createHash('sha256').update(JSON.stringify(value)).digest('hex') }
 export async function writeOnce(file, value) { await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }) }
 export async function append(file, value) { await fs.appendFile(file, JSON.stringify(value) + '\n') }
+const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../..')
+// Returns `file`, or fails with the restore command when it is an input retired from the tree
+// (benchmarks/evidence/retired-inputs.json).
+export async function retiredInput(file) {
+  try {
+    await fs.access(file)
+  } catch {
+    const directory = path.relative(REPO, path.dirname(file))
+    throw new Error(`${path.relative(REPO, file)} is not in the checkout: it is a retired input. Restore it with: uv run scripts/restore-retired-inputs.py --path ${directory}`)
+  }
+  return file
+}
 export async function readJson(file) { return JSON.parse(await fs.readFile(file, 'utf8')) }
 export async function manifest(directory) {
   const files = []
