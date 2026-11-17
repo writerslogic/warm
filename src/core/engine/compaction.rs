@@ -105,6 +105,47 @@ fn retained_bytes(mutation: &Mutation) -> Result<usize> {
     Ok(count.0)
 }
 
+/// Whether a compaction reorders the document slots (see [`WarmCore::compact`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum ReorderRequest {
+    None,
+    /// When the estimate is within `document_checkpoint.reorder_memory_budget`.
+    WithinBudget,
+    /// Whatever the estimate.
+    Forced,
+}
+
+/// What a compaction did about the document slot order ([`WarmCore::last_reorder`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ReorderOutcome {
+    /// No explicit compaction has run.
+    #[default]
+    NotRequested,
+    /// `document_checkpoint.reorder` is off.
+    Disabled,
+    /// The last reorder still covers more than three quarters of the slots.
+    NotDue,
+    /// The checkpoint was written in bisection order.
+    Reordered,
+    /// Skipped: the estimate was over `document_checkpoint.reorder_memory_budget`.
+    OverBudget,
+    /// Skipped: no checkpoint was written, or the store has fewer than 1024 documents.
+    NotApplicable,
+}
+
+/// The outcome of the last explicit compaction's reorder, with the working-memory estimate it
+/// was decided on (zero when none was computed) and the budget.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ReorderReport {
+    pub outcome: ReorderOutcome,
+    pub estimate_bytes: usize,
+    pub budget_bytes: usize,
+}
+
+fn planned_over(estimate: usize, budget: Option<usize>) -> bool {
+    budget.is_some_and(|budget| estimate > budget)
+}
+
 #[derive(Serialize)]
 enum DocumentMutation<'a> {
     Document(crate::core::documents::DocumentWithText<'a>),
@@ -122,10 +163,21 @@ impl WarmCore {
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();
         }
-        if self.config.document_checkpoint.reorder && self.documents.read().reorder_due() {
-            self.reorder_documents()?;
-        }
-        self.compact_routine()
+        let request = if !self.config.document_checkpoint.reorder {
+            self.record_reorder(ReorderOutcome::Disabled, 0);
+            ReorderRequest::None
+        } else if !self.documents.read().reorder_due() {
+            self.record_reorder(ReorderOutcome::NotDue, 0);
+            ReorderRequest::None
+        } else {
+            ReorderRequest::WithinBudget
+        };
+        self.compact_impl(
+            || {},
+            || {},
+            false,
+            &JobState::foreground().reordering(request),
+        )
     }
 
     /// [`Self::compact`] without the reorder: the compaction a fold, `flush` or close runs.
@@ -136,30 +188,87 @@ impl WarmCore {
         self.compact_impl(|| {}, || {}, false, &JobState::foreground())
     }
 
-    /// Puts the document slots in bisection order (`DocumentStore::apply_slot_order`) when the
-    /// next compaction writes a checkpoint, so the checkpoint records that order. A store served
-    /// from its checkpoint is rebuilt in memory first. Only memory changes here: the journal and
-    /// the published checkpoint stay as they were until the compaction publishes, so a failure
-    /// or a crash before then reopens to the old order, and the results are the same in both.
-    /// Runs whenever called, due or not ([`Self::compact`] calls it only when due); a
-    /// `compact` right after it finds the store ordered. Returns whether the slots were
-    /// reordered.
+    /// Compacts with the document slots in bisection order whether or not a reorder is due or
+    /// within `document_checkpoint.reorder_memory_budget` (see `docs/file-format/CHECKPOINT.md`,
+    /// "Document order"). Returns whether the written checkpoint is reordered: a store that
+    /// takes no checkpoint, has purges waiting (the scrubbing compaction runs instead) or holds
+    /// fewer than 1024 documents is compacted as it is.
     pub fn reorder_documents(&self) -> Result<bool> {
-        if !self.takes_checkpoint() {
+        if self.purge.status().committed > 0 {
+            self.compact_scrubbing()?;
             return Ok(false);
         }
-        // Held so no compaction swaps the store (`serve_published_checkpoint`) between the
-        // order and its installation; writers wait on the lease.
-        let _compaction = self.compaction.lock();
-        self.hydrate_documents()?;
-        let _transaction = self.mutation_gate.maintenance();
+        self.record_reorder(ReorderOutcome::NotApplicable, 0);
+        self.compact_impl(
+            || {},
+            || {},
+            false,
+            &JobState::foreground().reordering(ReorderRequest::Forced),
+        )?;
+        Ok(self.last_reorder().outcome == ReorderOutcome::Reordered)
+    }
+
+    /// What the last [`Self::compact`] or [`Self::reorder_documents`] did about the slot order.
+    pub fn last_reorder(&self) -> ReorderReport {
+        self.image.reorder.lock().clone()
+    }
+
+    fn record_reorder(&self, outcome: ReorderOutcome, estimate_bytes: usize) {
+        *self.image.reorder.lock() = ReorderReport {
+            outcome,
+            estimate_bytes,
+            budget_bytes: self.config.document_checkpoint.reorder_memory_budget,
+        };
+    }
+
+    /// Under the compaction lease, before the checkpoint is written: the slot order a streamed
+    /// checkpoint is merged in, or for a store the compaction rebuilt in memory, the slots
+    /// renumbered in place (only memory changes: the journal and the published checkpoint stay
+    /// as they were until the compaction publishes, so a crash before then reopens to the old
+    /// order). `streamed` says which of the two the compaction writes.
+    fn reorder_for_checkpoint(
+        &self,
+        job: &JobState,
+        streamed: bool,
+    ) -> Result<Option<crate::core::documents::SlotOrder>> {
+        let request = job.reorder_request();
+        if request == ReorderRequest::None {
+            return Ok(None);
+        }
+        let budget = (request == ReorderRequest::WithinBudget)
+            .then_some(self.config.document_checkpoint.reorder_memory_budget);
+        if streamed {
+            let planned =
+                crate::core::documents::checkpoint_slot_order(&self.documents.read(), budget)?;
+            let (estimate, order) = planned.unwrap_or((0, None));
+            self.record_reorder(
+                match (&order, planned_over(estimate, budget)) {
+                    (Some(_), _) => ReorderOutcome::Reordered,
+                    (None, true) => ReorderOutcome::OverBudget,
+                    (None, false) => ReorderOutcome::NotApplicable,
+                },
+                estimate,
+            );
+            #[cfg(test)]
+            if order.is_some() {
+                crate::core::storage::compaction_crash_point("reordered");
+            }
+            return Ok(order);
+        }
+        let estimate = self.documents.read().reorder_estimate();
+        if planned_over(estimate, budget) {
+            self.record_reorder(ReorderOutcome::OverBudget, estimate);
+            return Ok(None);
+        }
         let Some(order) = self.documents.read().bisection_order()? else {
-            return Ok(false);
+            self.record_reorder(ReorderOutcome::NotApplicable, estimate);
+            return Ok(None);
         };
         self.documents.write().apply_slot_order(&order);
+        self.record_reorder(ReorderOutcome::Reordered, estimate);
         #[cfg(test)]
         crate::core::storage::compaction_crash_point("reordered");
-        Ok(true)
+        Ok(None)
     }
 
     /// Compacts and then physically erases what the compaction replaced: the old generation
@@ -645,6 +754,12 @@ impl WarmCore {
             }
         }
         drop(atom_ids);
+        let order = if shard_vectors == 0 {
+            let streamed = streams && self.documents.read().can_merge_checkpoint();
+            self.reorder_for_checkpoint(job, streamed)?
+        } else {
+            None
+        };
         let (documents, text, document_checkpoint) = {
             let store = self.documents.read();
             let checkpoint = if shard_vectors == 0 && streams && store.can_merge_checkpoint() {
@@ -652,7 +767,7 @@ impl WarmCore {
                 scratch_path.push(".fold");
                 let scratch = ScratchDir(scratch_path.into());
                 std::fs::create_dir_all(&scratch.0)?;
-                match self.stream_checkpoint(&store, &scratch.0, staged_name)? {
+                match self.stream_checkpoint(&store, &scratch.0, staged_name, order.as_ref())? {
                     Some(len) => Some(DocumentCheckpoint::Streamed { len, scratch }),
                     None => {
                         ensure!(

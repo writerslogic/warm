@@ -56,7 +56,7 @@ pub(crate) fn known_magic(magic: &[u8]) -> bool {
     magic == MAGIC || magic == MAGIC_V3 || magic == MAGIC_V2 || magic == MAGIC_V1
 }
 mod merge;
-pub(crate) use merge::{can_merge, merge};
+pub(crate) use merge::{bisection_order, can_merge, merge, SlotOrder, REORDER_MAX_EDGES};
 
 const HEADER_WORDS: usize = 40;
 pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;

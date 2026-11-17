@@ -281,14 +281,23 @@ What the reorder holds and when it runs:
    below 1024 documents keeps its order. Under the quarter rule a store compacted as it grows
    reorders at most each time it grows by a third, so the reorders of a growing store cost at
    most about four reorders of its final size;
-2. a store served from its checkpoint is rebuilt in memory first, as a scrubbing compaction
-   rebuilds it. The posting lists are then permuted in place one list at a time per thread, so
-   beyond the rebuilt index the reorder holds its forward index (at most 1 GiB) and the lists
-   being permuted, never a second copy of the index;
-3. it changes only memory. The journal and the published checkpoint stay as they were until the
-   compaction publishes its generation, so a failure or a crash before then reopens to the old
-   order and one after it to the new, and both serve the same results. A panic while the lists
-   are being permuted ends the process instead of serving a half-permuted store.
+2. it does not rebuild the store. When the compaction streams its checkpoint (a plaintext store
+   without compressed text whose checkpoint has no dead document), the order is built from the
+   checkpoint's lists where they lie and the live store's lists, and the merge writes every list
+   unpacked, sorted by new slot with its positions, and packed again, one list at a time. A store
+   the compaction rebuilds in memory anyway (sealed, compressed text, or dead documents) has its
+   slots renumbered in place, one list per thread. Before it builds anything the reorder
+   estimates what it will hold beyond the plain compaction (forward index, per-document and
+   per-slot tables, the longest list being moved); over `document_checkpoint.reorder_memory_budget`
+   (2 GiB by default) `compact` writes the checkpoint in its old order and
+   `WarmCore::last_reorder` reports `OverBudget` with the estimate, while
+   `WarmCore::reorder_documents` reorders regardless. The forward index is capped at 2^28 pairs
+   (1 GiB) either way;
+3. nothing on disk changes before the compaction publishes its generation: the streamed order is
+   only written into the staged checkpoint, and an in-place renumbering changes only memory. A
+   failure or a crash before publication reopens to the old order and one after it to the new,
+   and both serve the same results. A panic while lists are being renumbered in place ends the
+   process instead of serving a half-permuted store.
 
 ## Durability and crash safety
 

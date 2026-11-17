@@ -55,6 +55,8 @@ pub(super) struct ImageState {
     opened: AtomicBool,
     /// Set when a fold failed: the engine stops folding and keeps the index in memory.
     fold_failed: AtomicBool,
+    /// What the last explicit compaction did about the slot order.
+    pub(super) reorder: crate::core::sync::Mutex<super::compaction::ReorderReport>,
 }
 
 fn word(header: &[u8], index: usize) -> u64 {
@@ -311,12 +313,14 @@ impl WarmCore {
         store: &DocumentStore,
         staging: &Path,
         generation: &str,
+        order: Option<&documents::SlotOrder>,
     ) -> Result<Option<u64>> {
         documents::merge_checkpoint(
             store,
             Self::generation_crc(generation),
             self.dimensions,
             &staging.join(FILE),
+            order,
         )
     }
 

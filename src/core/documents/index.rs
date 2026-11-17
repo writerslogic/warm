@@ -167,8 +167,7 @@ pub(crate) struct DocumentStore {
 pub(crate) const REORDER_MIN_DOCUMENTS: usize = 1024;
 /// A compaction reorders once one slot in this many was written after the last reorder's.
 pub(crate) const REORDER_DUE_SHARE: usize = 4;
-/// Most (document, term) pairs the reorder's forward index holds (4 bytes each).
-const REORDER_MAX_EDGES: usize = 1 << 28;
+use super::image::REORDER_MAX_EDGES;
 
 /// Ends the process when dropped; forgotten once the state it guards is consistent again.
 struct AbortOnUnwind;
@@ -1408,6 +1407,27 @@ impl DocumentStore {
         };
         slots >= REORDER_MIN_DOCUMENTS
             && (ordered == 0 || (slots - ordered) * REORDER_DUE_SHARE >= slots)
+    }
+
+    /// Bytes [`Self::bisection_order`] and [`Self::apply_slot_order`] hold beyond the store: the
+    /// forward index (at most [`REORDER_MAX_EDGES`] pairs), the per-document and per-slot tables,
+    /// and one list being permuted per thread.
+    pub(crate) fn reorder_estimate(&self) -> usize {
+        let documents = self.slots.len();
+        let min_len = (documents / 1024).clamp(2, 4096);
+        let (mut pairs, mut longest) = (0usize, 0usize);
+        for list in self
+            .postings
+            .iter()
+            .flat_map(|postings| postings.long_lists(min_len))
+        {
+            pairs += list.len();
+            longest = longest.max(list.len());
+        }
+        pairs.min(REORDER_MAX_EDGES) * 4
+            + documents * 40
+            + self.slot_count * 48
+            + rayon::current_num_threads() * longest * 40
     }
 
     /// The document order (positions of the documents in id order) in which documents sharing

@@ -9,6 +9,7 @@ pub use background_compaction::{
 };
 mod compaction;
 mod purge;
+pub use compaction::{ReorderOutcome, ReorderReport};
 pub use purge::{PurgeStatus, PurgeTicket};
 pub(crate) mod concepts;
 mod dense_vectors;

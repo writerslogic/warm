@@ -5,7 +5,7 @@
 //! counts) is the one the store gives in arrival order, after the reorder, after the
 //! compaction, after a reopen, and after a crash at each step of the compaction.
 
-use super::WarmCore;
+use super::{ReorderOutcome, WarmCore};
 use crate::core::documents::{
     DocumentInput, EncodeMode, IngestOptions, LexicalOptions, LexicalQuery, SearchOptions,
 };
@@ -140,10 +140,14 @@ fn checkpoint(directory: &std::path::Path) -> Result<Vec<u8>> {
 
 #[test]
 fn reorder_keeps_every_result_through_compaction_and_reopen() -> Result<()> {
-    for positions in [false, true] {
+    // Compressed text keeps the checkpoint off the streamed merge: the slots are renumbered in
+    // memory instead.
+    for (positions, compress) in [(false, false), (true, false), (true, true)] {
+        let mut config = config(true);
+        config.document_checkpoint.compress_text = compress;
         let directory = tempfile::tempdir()?;
         let path = directory.path().display().to_string();
-        let core = WarmCore::new(1024, Some(path.clone()), Some(config(true)))?;
+        let core = WarmCore::new(1024, Some(path.clone()), Some(config.clone()))?;
         build(&core, positions)?;
         let expected = answers(&core, positions)?;
         assert!(core.reorder_documents()?, "positions {positions}");
@@ -159,7 +163,7 @@ fn reorder_keeps_every_result_through_compaction_and_reopen() -> Result<()> {
             "compacted, positions {positions}"
         );
         drop(core);
-        let core = WarmCore::new(1024, Some(path), Some(config(true)))?;
+        let core = WarmCore::new(1024, Some(path), Some(config.clone()))?;
         assert_eq!(
             answers(&core, positions)?,
             expected,
@@ -250,7 +254,10 @@ fn compaction_reorders_again_only_after_a_quarter_of_the_slots_are_new() -> Resu
         "300 of 1500 slots are new: not due"
     );
     add(1500..1600)?;
+    // The checkpoint's lists and the live store's merge in the new order.
+    let expected = answers(&core, true)?;
     core.compact()?;
+    assert_eq!(core.last_reorder().outcome, ReorderOutcome::Reordered);
     assert_eq!(
         (
             header_word(directory.path(), 5)?,
@@ -259,6 +266,46 @@ fn compaction_reorders_again_only_after_a_quarter_of_the_slots_are_new() -> Resu
         (1600, 1600),
         "400 of 1600 slots are new: due"
     );
+    assert_eq!(answers(&core, true)?, expected);
+    drop(core);
+    let core = WarmCore::new(
+        1024,
+        Some(directory.path().display().to_string()),
+        Some(config(true)),
+    )?;
+    assert_eq!(answers(&core, true)?, expected, "reopened");
+    Ok(())
+}
+
+/// Over `reorder_memory_budget`, `compact` writes the checkpoint in arrival order and reports
+/// the estimate; `reorder_documents` reorders anyway.
+#[test]
+fn reorder_over_budget_is_skipped_and_reported_unless_forced() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    let mut config = config(true);
+    config.document_checkpoint.reorder_memory_budget = 1;
+    let core = WarmCore::new(
+        1024,
+        Some(directory.path().display().to_string()),
+        Some(config),
+    )?;
+    build(&core, true)?;
+    let expected = answers(&core, true)?;
+    core.compact()?;
+    let report = core.last_reorder();
+    assert_eq!(report.outcome, ReorderOutcome::OverBudget);
+    assert!(
+        report.estimate_bytes > 1 && report.budget_bytes == 1,
+        "{report:?}"
+    );
+    assert_eq!(header_word(directory.path(), 5)?, 0);
+    assert!(core.reorder_documents()?);
+    assert_eq!(core.last_reorder().outcome, ReorderOutcome::Reordered);
+    assert_eq!(
+        header_word(directory.path(), 5)?,
+        header_word(directory.path(), 8)?
+    );
+    assert_eq!(answers(&core, true)?, expected);
     Ok(())
 }
 

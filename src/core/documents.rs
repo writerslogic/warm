@@ -1680,11 +1680,28 @@ pub(crate) fn merge_checkpoint(
     generation: u32,
     dimensions: usize,
     destination: &std::path::Path,
+    order: Option<&image::SlotOrder>,
 ) -> Result<Option<u64>> {
     let Some(base) = store.merge_base() else {
         return Ok(None);
     };
-    image::merge(base, store, generation, dimensions, destination)
+    image::merge(base, store, generation, dimensions, destination, order)
+}
+
+pub(crate) use image::SlotOrder;
+
+/// The bisection slot order [`merge_checkpoint`] can write `store` in (see
+/// `image::bisection_order`) and the estimate of the bytes it holds; `None` when the store's
+/// checkpoint cannot be merged, no order when the estimate is over `budget` or the store has
+/// fewer than [`REORDER_MIN_DOCUMENTS`] documents.
+pub(crate) fn checkpoint_slot_order(
+    store: &DocumentStore,
+    budget: Option<usize>,
+) -> Result<Option<(usize, Option<SlotOrder>)>> {
+    let Some(base) = store.merge_base() else {
+        return Ok(None);
+    };
+    image::bisection_order(base, store, index::REORDER_MIN_DOCUMENTS, budget).map(Some)
 }
 #[cfg(test)]
 pub(crate) fn search(

@@ -94,6 +94,12 @@ pub struct DocumentCheckpointConfig {
     /// unchanged. Only that explicit call reorders: folds, `flush` and closing never do. On by
     /// default; see `docs/file-format/CHECKPOINT.md`, "Document order".
     pub reorder: bool,
+    /// Most bytes the reorder of [`crate::core::WarmCore::compact`] may hold beyond a plain
+    /// compaction, by the estimate it computes before it builds anything (its forward index is
+    /// also capped at 2^28 pairs, 1 GiB). Over it, `compact` compacts without reordering and
+    /// `WarmCore::last_reorder` reports `OverBudget`; `WarmCore::reorder_documents` reorders
+    /// regardless. 2 GiB by default.
+    pub reorder_memory_budget: usize,
 }
 
 impl Default for DocumentCheckpointConfig {
@@ -106,6 +112,7 @@ impl Default for DocumentCheckpointConfig {
             index_memory_budget: 64 << 20,
             index_fold_fraction: 20.0,
             reorder: true,
+            reorder_memory_budget: 2 << 30,
         }
     }
 }

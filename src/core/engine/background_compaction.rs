@@ -154,6 +154,8 @@ pub(super) struct JobState {
     pub(super) disk_before: AtomicU64,
     pub(super) disk_after: AtomicU64,
     pub(super) published: AtomicBool,
+    /// The slot reorder this compaction runs (see `WarmCore::compact`).
+    reorder: super::compaction::ReorderRequest,
     started: Instant,
     slice: Mutex<Instant>,
     result: Mutex<Option<CompactionReport>>,
@@ -178,6 +180,7 @@ impl JobState {
             disk_before: AtomicU64::new(0),
             disk_after: AtomicU64::new(0),
             published: AtomicBool::new(false),
+            reorder: super::compaction::ReorderRequest::None,
             started: now,
             slice: Mutex::new(now),
             result: Mutex::new(None),
@@ -198,6 +201,16 @@ impl JobState {
 
     pub(super) fn background(&self) -> bool {
         self.background
+    }
+
+    /// This job with `request` as its slot reorder.
+    pub(super) fn reordering(mut self, request: super::compaction::ReorderRequest) -> Self {
+        self.reorder = request;
+        self
+    }
+
+    pub(super) fn reorder_request(&self) -> super::compaction::ReorderRequest {
+        self.reorder
     }
 
     pub(super) fn require_reclaim(&self) -> bool {

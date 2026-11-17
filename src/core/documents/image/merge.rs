@@ -334,6 +334,7 @@ pub(crate) fn merge(
     generation: u32,
     dimensions: usize,
     destination: &Path,
+    order: Option<&SlotOrder>,
 ) -> Result<Option<u64>> {
     let Some(positional) = positions_of(base, store) else {
         return Ok(None);
@@ -357,9 +358,39 @@ pub(crate) fn merge(
         positional,
         positive: base.is_none_or(|image| image.positive),
     };
+    // With an order, each new slot's word count: the checkpoint's for its slots, the store's
+    // for those written since.
+    let new_words: Vec<u32> = order.map_or_else(Vec::new, |order| {
+        let table = base.map_or(&[][..], |image| image.section(Section::Slots));
+        let mut words = vec![0u32; order.slots];
+        for (slot, &new) in order.map.iter().enumerate() {
+            if new != u32::MAX {
+                words[new as usize] = if slot < split {
+                    u32_at(table, slot * SLOT_BYTES)
+                } else {
+                    DocumentStore::slot_word_count(store, slot - split)
+                };
+            }
+        }
+        words
+    });
+    let new_word = |slot: usize| new_words[slot];
     for form in 0..2 {
         let mut out = FormWriter::new(directory)?;
-        if merge_form(base, store, form, split, &mut out, &mut streams)?.is_none() {
+        let merged = match order {
+            Some(order) => merge_form_ordered(
+                base,
+                store,
+                form,
+                split,
+                order,
+                &new_word,
+                &mut out,
+                &mut streams,
+            )?,
+            None => merge_form(base, store, form, split, &mut out, &mut streams)?,
+        };
+        if merged.is_none() {
             return Ok(None);
         }
         words[H_TERMS + form] = out.terms;
@@ -451,9 +482,39 @@ pub(crate) fn merge(
     id_offsets.write(&id_end.to_le_bytes())?;
     doc_offsets.write(&doc_end.to_le_bytes())?;
 
-    // Slots: the checkpoint's, owners renumbered, then the live store's after them.
+    // Slots: the checkpoint's, owners renumbered, then the live store's after them; with an
+    // order, each at its new slot.
     let mut slots = BlockWriter::create_in(directory)?;
-    if let Some(image) = base {
+    if let Some(order) = order {
+        let table = base.map_or(&[][..], |image| image.section(Section::Slots));
+        let mut entries = vec![[0u32; 3]; order.slots];
+        for (slot, &new) in order.map.iter().enumerate() {
+            if new == u32::MAX {
+                continue;
+            }
+            entries[new as usize] = if slot < split {
+                let at = slot * SLOT_BYTES;
+                [
+                    u32_at(table, at),
+                    base_ordinal[u32_at(table, at + 4) as usize],
+                    u32_at(table, at + 8),
+                ]
+            } else {
+                let (owner, chunk) = owners[slot - split];
+                ensure!(owner != FREE, "ordered slot without a document");
+                [
+                    DocumentStore::slot_word_count(store, slot - split),
+                    owner,
+                    chunk,
+                ]
+            };
+        }
+        for entry in entries {
+            for value in entry {
+                slots.write(&value.to_le_bytes())?;
+            }
+        }
+    } else if let Some(image) = base {
         let table = image.section(Section::Slots);
         for slot in 0..image.slots {
             let at = slot * SLOT_BYTES;
@@ -468,7 +529,7 @@ pub(crate) fn merge(
             slots.write(&table[at + 8..at + 12])?;
         }
     }
-    for (slot, &(owner, chunk)) in owners.iter().enumerate() {
+    for (slot, &(owner, chunk)) in owners.iter().enumerate().filter(|_| order.is_none()) {
         slots.write(&DocumentStore::slot_word_count(store, slot).to_le_bytes())?;
         slots.write(&owner.to_le_bytes())?;
         slots.write(&chunk.to_le_bytes())?;
@@ -492,11 +553,16 @@ pub(crate) fn merge(
 
     words[H_GENERATION] = u64::from(generation);
     words[H_DIMENSIONS] = dimensions as u64;
-    words[H_SLOTS] = (split + store.slot_count) as u64;
     // Slots written since the checkpoint follow its slots, so its reordered prefix stays one.
-    words[H_ORDERED] = base.map_or(store.ordered_slots.min(store.slot_count), |image| {
-        image.ordered
-    }) as u64;
+    (words[H_SLOTS], words[H_ORDERED]) = match order {
+        Some(order) => (order.slots as u64, order.slots as u64),
+        None => (
+            (split + store.slot_count) as u64,
+            base.map_or(store.ordered_slots.min(store.slot_count), |image| {
+                image.ordered
+            }) as u64,
+        ),
+    };
     words[H_CHUNKS] = (base.map_or(0, |image| image.chunks) + store.chunk_count) as u64;
     words[H_WORDS] = (base.map_or(0, |image| image.words) + store.word_count) as u64;
     words[H_DOCS] = (base_documents + store.documents.len()) as u64;
@@ -550,4 +616,400 @@ pub(crate) fn can_merge(base: Option<&ServingImage>, store: &DocumentStore) -> b
     positions_of(base, store).is_some()
         && super::representable(store)
         && base.is_none_or(ServingImage::mergeable)
+}
+
+/// Most (document, term) pairs the reorder's forward index holds (4 bytes each).
+pub(crate) const REORDER_MAX_EDGES: usize = 1 << 28;
+
+/// A slot order for [`merge`]: `map[s]` is the new slot of combined slot `s` (the checkpoint's
+/// slots, then the live store's after them, as the merge numbers them), `u32::MAX` for a free
+/// slot; `slots` is the count of occupied slots, numbered `0..slots`.
+pub(crate) struct SlotOrder {
+    map: Vec<u32>,
+    slots: usize,
+}
+
+/// One term of the merged dictionaries: the checkpoint's list, the live store's, or both.
+struct MergedTerm<'a> {
+    term: Vec<u8>,
+    base: Option<BaseTerm<'a>>,
+    live: Option<&'a crate::core::documents::postings::PostingList>,
+}
+
+impl MergedTerm<'_> {
+    fn count(&self) -> usize {
+        self.base.as_ref().map_or(0, |b| b.count as usize) + self.live.map_or(0, |l| l.len())
+    }
+}
+
+/// Calls `f` for every term of form `form` of `base` plus `store`, in term order.
+fn for_each_merged_term<'a>(
+    base: Option<&'a ServingImage>,
+    form: usize,
+    terms: &'a (
+        Vec<u8>,
+        Vec<u32>,
+        Vec<&'a crate::core::documents::postings::PostingList>,
+    ),
+    mut f: impl FnMut(MergedTerm<'a>) -> Result<()>,
+) -> Result<()> {
+    let (bytes, offsets, lists) = terms;
+    let mut live = (0..lists.len())
+        .filter(|&i| !lists[i].is_empty())
+        .peekable();
+    let mut checkpoint = base.map(|image| BaseTerms::new(image, form));
+    let mut pending = match checkpoint.as_mut() {
+        Some(source) => source.next()?,
+        None => None,
+    };
+    loop {
+        let live_term = live
+            .peek()
+            .map(|&i| &bytes[offsets[i] as usize..offsets[i + 1] as usize]);
+        let order = match (&pending, live_term) {
+            (None, None) => break,
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (Some(b), Some(l)) => b.term.as_slice().cmp(l),
+        };
+        let from_base = (order != std::cmp::Ordering::Greater)
+            .then(|| pending.take())
+            .flatten();
+        let from_live = (order != std::cmp::Ordering::Less)
+            .then(|| live.next())
+            .flatten();
+        let term = match (&from_base, from_live) {
+            (Some(b), _) => b.term.clone(),
+            (None, Some(i)) => bytes[offsets[i] as usize..offsets[i + 1] as usize].to_vec(),
+            (None, None) => unreachable!("a term from either side"),
+        };
+        f(MergedTerm {
+            term,
+            base: from_base,
+            live: from_live.map(|i| lists[i]),
+        })?;
+        if order != std::cmp::Ordering::Greater {
+            pending = match checkpoint.as_mut() {
+                Some(source) => source.next()?,
+                None => None,
+            };
+        }
+    }
+    Ok(())
+}
+
+/// Bytes [`bisection_order`] and the permuted [`merge`] hold beyond what a plain merge holds,
+/// from the counts alone: the forward index (`pairs` 4-byte entries and two offset arrays), the
+/// slot tables (owner, map, document slots, new word counts, the new slot table), the bisection's
+/// per-document arrays, and the longest list's postings sorted by new slot.
+fn order_estimate(documents: usize, slots: usize, pairs: usize, longest: usize) -> usize {
+    pairs * 4 + documents * (2 * 8 + 4 + 4 + 16) + slots * (4 + 4 + 4 + 4 + 12) + longest * 24
+}
+
+/// The slot order recursive graph bisection gives the merge of `base` and `store` (see
+/// `reorder`), built from the checkpoint's lists where they lie and the live store's lists,
+/// without rebuilding the store: the forward index holds the terms of at least
+/// `documents / 1024` postings (at most 4096), and of those, when they exceed
+/// [`REORDER_MAX_EDGES`] pairs, the shortest that fit. Returns the estimate of the bytes it and
+/// the permuted merge hold ([`order_estimate`]) and the order, or no order when the estimate is
+/// over `budget` (nothing larger than the dictionaries is built before that is known) or the
+/// merge has fewer than `min_documents` documents. A merged document's chunks keep ascending
+/// slots.
+pub(crate) fn bisection_order(
+    base: Option<&ServingImage>,
+    store: &DocumentStore,
+    min_documents: usize,
+    budget: Option<usize>,
+) -> Result<(usize, Option<SlotOrder>)> {
+    let split = base.map_or(0, |image| image.slots);
+    let total = split + store.slot_count;
+    let base_documents = base.map_or(0, |image| image.docs);
+    let documents = base_documents + store.documents.len();
+    if documents < min_documents {
+        return Ok((0, None));
+    }
+    let min_len = (documents / 1024).clamp(2, 4096);
+    let forms = [
+        store.postings[0].sorted_terms(),
+        store.postings[1].sorted_terms(),
+    ];
+    let mut chosen: Vec<MergedTerm<'_>> = Vec::new();
+    let mut longest = 0usize;
+    for (form, terms) in forms.iter().enumerate() {
+        for_each_merged_term(base, form, terms, |term| {
+            let count = term.count();
+            longest = longest.max(count);
+            if count >= min_len {
+                chosen.push(term);
+            }
+            Ok(())
+        })?;
+    }
+    let mut lengths: Vec<usize> = chosen.iter().map(MergedTerm::count).collect();
+    lengths.sort_unstable();
+    let mut max_len = usize::MAX;
+    let mut pairs = 0usize;
+    for &length in &lengths {
+        if pairs + length > REORDER_MAX_EDGES {
+            // Lists exactly as long as the one that overflows are left out with it.
+            max_len = length - 1;
+            break;
+        }
+        pairs += length;
+    }
+    chosen.retain(|term| term.count() <= max_len);
+    let estimate = order_estimate(documents, total, pairs, longest);
+    if budget.is_some_and(|budget| estimate > budget) {
+        return Ok((estimate, None));
+    }
+
+    // Merged document ordinals, as the merge numbers the documents (id order), and each
+    // combined slot's document.
+    let mut owner = vec![u32::MAX; total];
+    let mut base_ordinal = vec![0u32; base_documents];
+    let mut live = store.documents.keys().peekable();
+    let (mut next_base, mut ordinal) = (0usize, 0u32);
+    loop {
+        let from_base = match (next_base < base_documents, live.peek()) {
+            (false, None) => break,
+            (true, None) => true,
+            (false, Some(_)) => false,
+            (true, Some(id)) => base.expect("base documents exist").id(next_base) < id.as_str(),
+        };
+        if from_base {
+            base_ordinal[next_base] = ordinal;
+            next_base += 1;
+        } else {
+            let id = live.next().expect("peeked");
+            for &slot in store.slots.get(id).context("document without slots")? {
+                owner[split + slot] = ordinal;
+            }
+        }
+        ordinal += 1;
+    }
+    if let Some(image) = base {
+        let table = image.section(Section::Slots);
+        for (slot, owner) in owner.iter_mut().enumerate().take(split) {
+            let document = u32_at(table, slot * SLOT_BYTES + 4);
+            if document != FREE {
+                *owner = base_ordinal[document as usize];
+            }
+        }
+    }
+    drop(base_ordinal);
+
+    // The forward index: per document, the chosen terms it holds, sorted, each once.
+    let mut offsets = vec![0usize; documents + 1];
+    let visit = |term: &MergedTerm<'_>, f: &mut dyn FnMut(u32)| {
+        if let Some(b) = &term.base {
+            let mut cursor = Cursor::open(ListRef {
+                bytes: b.bytes,
+                count: b.count,
+                skips: b.skips,
+                positions: b.positions,
+            });
+            while cursor.doc() != NO_DOC {
+                f(owner[cursor.doc() as usize]);
+                cursor.next();
+            }
+        }
+        if let Some(list) = term.live {
+            list.for_each(|slot, _| f(owner[split + slot]));
+        }
+    };
+    let mut read = 0usize;
+    let mut release = |term: &MergedTerm<'_>| {
+        read += term.base.as_ref().map_or(0, |b| b.bytes.len());
+        if read >= RELEASE_EVERY {
+            read = 0;
+            if let Some(image) = base {
+                image.release_pages();
+            }
+        }
+    };
+    for term in &chosen {
+        visit(term, &mut |document| offsets[document as usize + 1] += 1);
+        release(term);
+    }
+    for at in 1..offsets.len() {
+        offsets[at] += offsets[at - 1];
+    }
+    let mut fill = offsets.clone();
+    let mut terms = vec![0u32; offsets[documents]];
+    for (id, term) in chosen.iter().enumerate() {
+        visit(term, &mut |document| {
+            terms[fill[document as usize]] = id as u32;
+            fill[document as usize] += 1;
+        });
+        release(term);
+    }
+    drop(fill);
+    let term_count = chosen.len();
+    drop(chosen);
+    let mut write = 0;
+    for document in 0..documents {
+        let (start, end) = (offsets[document], offsets[document + 1]);
+        offsets[document] = write;
+        terms[start..end].sort_unstable();
+        let mut previous = None;
+        for at in start..end {
+            let term = terms[at];
+            if previous != Some(term) {
+                terms[write] = term;
+                write += 1;
+                previous = Some(term);
+            }
+        }
+    }
+    offsets[documents] = write;
+    terms.truncate(write);
+    let order =
+        crate::core::documents::reorder::order(&crate::core::documents::reorder::ForwardIndex {
+            offsets,
+            terms,
+            term_count,
+        });
+
+    // Each document's slots, ascending (its chunks in order), then the map in bisection order.
+    let mut starts = vec![0u32; documents + 1];
+    for &document in &owner {
+        if document != u32::MAX {
+            starts[document as usize + 1] += 1;
+        }
+    }
+    for at in 1..starts.len() {
+        starts[at] += starts[at - 1];
+    }
+    let mut cursor = starts.clone();
+    let mut slots_of = vec![0u32; starts[documents] as usize];
+    for (slot, &document) in owner.iter().enumerate() {
+        if document != u32::MAX {
+            slots_of[cursor[document as usize] as usize] = slot as u32;
+            cursor[document as usize] += 1;
+        }
+    }
+    drop(cursor);
+    drop(owner);
+    let mut map = vec![u32::MAX; total];
+    let mut next = 0u32;
+    for &document in &order {
+        let document = document as usize;
+        for &slot in &slots_of[starts[document] as usize..starts[document + 1] as usize] {
+            map[slot as usize] = next;
+            next += 1;
+        }
+    }
+    Ok((
+        estimate,
+        Some(SlotOrder {
+            map,
+            slots: next as usize,
+        }),
+    ))
+}
+
+/// [`merge_form`] with every posting moved to its slot in `order` (`words` by new slot): each
+/// list is unpacked, its postings sorted by new slot with their positions, and packed again.
+fn merge_form_ordered(
+    base: Option<&ServingImage>,
+    store: &DocumentStore,
+    form: usize,
+    split: usize,
+    order: &SlotOrder,
+    words: &dyn Fn(usize) -> u32,
+    out: &mut FormWriter,
+    streams: &mut Streams<'_>,
+) -> Result<Option<()>> {
+    let terms = store.postings[form].sorted_terms();
+    let positional = streams.positional;
+    let mut packer = CheckpointPacker::with_info(true, words, true);
+    let mut placed = PositionPacker::new();
+    let (mut scratch, mut skip_scratch) = (Vec::new(), Vec::new());
+    let mut moved: Vec<(u32, u32, &[u8])> = Vec::new();
+    let mut read = 0usize;
+    let mut fits = true;
+    for_each_merged_term(base, form, &terms, |term| {
+        if !fits {
+            return Ok(());
+        }
+        moved.clear();
+        if let Some(b) = &term.base {
+            let mut cursor = Cursor::open(ListRef {
+                bytes: b.bytes,
+                count: b.count,
+                skips: b.skips,
+                positions: b.positions,
+            });
+            while cursor.doc() != NO_DOC {
+                let slot = order.map[cursor.doc() as usize];
+                let frequency = cursor.frequency();
+                let bytes = if positional {
+                    cursor.position_bytes()
+                } else {
+                    &[][..]
+                };
+                moved.push((slot, frequency, bytes));
+                cursor.next();
+            }
+            read += b.bytes.len() + b.skips.len() + b.positions.len();
+        }
+        if let Some(list) = term.live {
+            streams.positive &= list.positive_len() == list.len();
+            let mut failure = false;
+            list.for_each_with_ordinal(|slot, frequency, ordinal| {
+                let bytes = if positional {
+                    match store
+                        .position_source(slot)
+                        .filter(|_| ordinal > 0)
+                        .map(|source| source.bytes(ordinal as usize - 1))
+                    {
+                        Some(bytes) => bytes,
+                        None => {
+                            failure = true;
+                            &[][..]
+                        }
+                    }
+                } else {
+                    &[][..]
+                };
+                moved.push((order.map[split + slot], frequency, bytes));
+            });
+            ensure!(!failure, "positional posting lacks its positions");
+        }
+        moved.sort_unstable_by_key(|posting| posting.0);
+        scratch.clear();
+        skip_scratch.clear();
+        placed.reset();
+        for &(slot, frequency, bytes) in &moved {
+            packer.push(slot as usize, frequency, &mut scratch);
+            if positional {
+                placed.push(bytes);
+            }
+        }
+        packer.finish(&mut scratch);
+        let infos: Vec<BlockInfo> = packer.take_infos();
+        let count = moved.len() as u64;
+        if !placed.finish()
+            || u32::try_from(scratch.len()).is_err()
+            || !append_skips(&infos, &placed.offsets, &scratch, count, &mut skip_scratch)
+        {
+            fits = false;
+            return Ok(());
+        }
+        let at = streams.lens();
+        streams.postings.write(&scratch)?;
+        streams.skips.write(&skip_scratch)?;
+        streams.positions.write(&placed.out)?;
+        if out.push(&term.term, count, at, &streams.lens())?.is_none() {
+            fits = false;
+        }
+        if read >= RELEASE_EVERY {
+            read = 0;
+            if let Some(image) = base {
+                image.release_pages();
+            }
+        }
+        Ok(())
+    })?;
+    Ok(fits.then_some(()))
 }
