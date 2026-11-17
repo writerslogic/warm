@@ -52,7 +52,7 @@ The normal private-memory load remains the default on every platform.
 
 [`sealed_index_run.py`](../../scripts/lowlevel/sealed_index_run.py) shows how a publisher copies
 an index once, seals it, keeps it available while worker processes run, and records the snapshot
-hash and setup time. This option is not in the published `warm-python==0.6.4` wheel used by the
+hash and setup time. This option is not in the earlier published `warm-python==0.6.4` wheel used by the
 VectorDBBench entry.
 
 With the `[embed]` extra, the pinned default text embedding model is available offline:
