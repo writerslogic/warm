@@ -96,6 +96,9 @@ or allocating the resonator index.
 search, the memory API and vector search. Requests and results are dicts and lists with the
 camelCase fields of the Node binding. One process may write a store at a time.
 
+`Warm` is on `main` and ships with the release after 0.6.8; the 0.6.8 wheel that `uv add warm-python`
+installs does not have it. Until that release, build it from a checkout with `maturin develop --release`.
+
 ```python
 from writerslogic_warm import Warm
 

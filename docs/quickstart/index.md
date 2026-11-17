@@ -260,6 +260,9 @@ terms. WARM runs no encoder here: you encode documents and queries yourself and 
 Nothing changes for a store that never receives one; no sparse file is written and lexical search is
 byte for byte what it was.
 
+The Python `Warm` class used here is not in the 0.6.8 wheel; it ships with the release after 0.6.8.
+Until then, build it from a checkout with `maturin develop --release`.
+
 ```python
 from writerslogic_warm import Warm
 
