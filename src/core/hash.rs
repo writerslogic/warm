@@ -6,6 +6,17 @@ use std::hash::{BuildHasherDefault, Hasher};
 
 const SEED: u64 = 0x517c_c1b7_2722_0a95;
 
+/// Lowercase hex, two digits per byte.
+pub(crate) fn hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 15)]));
+    }
+    encoded
+}
+
 /// The multiply-rotate Fx hash with 64-bit words and no seed.
 ///
 /// foldhash replaces it where it measured faster (the bulk-index run map keyed by `&str`).

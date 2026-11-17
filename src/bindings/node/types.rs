@@ -3,15 +3,7 @@
 
 use napi_derive::napi;
 
-pub(super) fn hex_encode(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut encoded = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        encoded.push(HEX[usize::from(byte >> 4)] as char);
-        encoded.push(HEX[usize::from(byte & 15)] as char);
-    }
-    encoded
-}
+pub(super) use crate::core::hash::hex as hex_encode;
 
 /// Vector route options; filters use full exact ranking before top-k selection.
 #[napi(object)]

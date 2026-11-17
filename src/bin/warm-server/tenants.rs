@@ -54,7 +54,7 @@ pub fn valid_tenant(name: &str) -> bool {
 
 /// Hex keeps the directory name safe and distinct on case-insensitive filesystems.
 pub fn tenant_hex(name: &str) -> String {
-    name.bytes().map(|b| format!("{b:02x}")).collect()
+    crate::auth::hex(name.as_bytes())
 }
 
 /// The tenant a store directory name encodes, if `name` is exactly `tenant_hex` of a valid one.

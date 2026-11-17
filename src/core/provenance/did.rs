@@ -264,8 +264,7 @@ mod tests {
         let issuer = "did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6IkE2RUh2X1BPRUw0ZGNOMFk1MHZBbVdmazFqQ2JwUTFmSGR5R1pCSlZNYmcifQ==";
         let expected = "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8";
         let key = ed25519_from_did_jwk(issuer).unwrap();
-        let hex: String = key.iter().map(|b| format!("{b:02x}")).collect();
-        assert_eq!(hex, expected);
+        assert_eq!(crate::core::hash::hex(&key), expected);
     }
 
     #[test]
