@@ -23,7 +23,7 @@ pub use crate::core::engine::{
     CompactionHandle, CompactionOptions, CompactionProgress, CompactionReport, CompactionResource,
     CompactionStage, CompactionStatus,
 };
-pub use crate::core::engine::{RankingMode, SparseSearch};
+pub use crate::core::engine::{RankingMode, ReorderOutcome, ReorderReport, SparseSearch};
 pub use crate::core::entangled::EntangledHVec;
 pub use crate::core::error::{CommittedMutationError, IndeterminateMutationError, WarmError};
 pub use crate::core::index::sparse_store::SparseVector;

@@ -112,6 +112,14 @@ export declare class WarmMemorySystem {
   get documentIndexTrained(): boolean
   querySequence(partial: Array<string>, k: number): Promise<Array<RetrievalResult>>
   delete(id: string): Promise<boolean>
+  /**
+   * Compacts the store. Searches keep running; writes wait for most of the call (its snapshot
+   * and its publication). The first compaction after a bulk ingest, and then whenever at least a
+   * quarter of the slots are new, also renumbers the document slots of a store without chunk
+   * vectors, which makes it 3 to 5 times as long (measured: 325 s against 64.5 s at 5M documents,
+   * 71.5 s against 17.7 s at 1M); with compressed text or encryption, searches also wait while
+   * the slots are renumbered in memory. `startCompaction` never renumbers.
+   */
   compact(): Promise<void>
   /**
    * Starts a compaction on a worker thread and returns its job; reads and writes continue

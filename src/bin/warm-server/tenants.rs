@@ -733,7 +733,13 @@ impl AppState {
             status.last_started_at = Some(crate::log::rfc3339(SystemTime::now()));
         }
         let started = Instant::now();
-        let result = guard.compact();
+        // Only a compaction an operator asks for reorders the document slots, which holds the
+        // tenant's writers several times longer (`WarmCore::compact`); the schedule does not.
+        let result = if trigger == "manual" {
+            guard.compact()
+        } else {
+            guard.compact_without_reorder()
+        };
         // Scheduled maintenance of the vector indexes rides on compaction: a rebuild happens
         // only past the mutation threshold (or with no snapshot yet), and its duration counts
         // into this compaction's.
