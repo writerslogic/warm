@@ -80,6 +80,8 @@ SYSTEMS = {
     "tantivy-rs-docs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, pruning collector, documents contract)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
     "tantivy-rs-count-docs": {"display": f"tantivy {TANTIVY_CRATE} (native Rust, exhaustive collector with Count, documents contract)", "kind": "text", "env": None, "package": "tantivy", "family": "lexical"},
     "whoosh": {"display": "Whoosh", "kind": "text", "env": "whoosh", "package": "whoosh-reloaded", "family": "lexical"},
+    "lancedb-fts": {"display": "LanceDB FTS", "kind": "text", "env": "lancedb", "package": "lancedb", "family": "lexical"},
+    "duckdb-fts": {"display": "DuckDB fts", "kind": "text", "env": "duckdb", "package": "duckdb", "family": "lexical"},
     "bm25s": {"display": "bm25s", "kind": "text", "env": "bm25s", "package": "bm25s", "family": "lexical"},
 }
 
@@ -106,6 +108,8 @@ TIMING_BOUNDARY = {
     "lucene-docs": "in-process JVM API call after untimed JIT warm-up; `StoredFields.document` for each hit (default codec, BEST_SPEED stored fields) with id, body and bucket read, inside the timer",
     "lucene-dv-docs": "in-process JVM API call after untimed JIT warm-up; id, body and bucket held in doc values (BinaryDocValues, NumericDocValues; no stored fields) and read per hit in docid order with fresh iterators, results kept in rank order, inside the timer",
     "whoosh": "pure Python", "bm25s": "CPython + NumPy (single-threaded retrieve)", "lucene": "in-process JVM API call, after untimed JIT warm-up passes to steady state; raw text analyzed inside the timer, ids from an array built at open",
+    "lancedb-fts": "CPython + Arrow call per query (raw text reduced to its word set inside the timer; native Rust BM25 inside, multi-threaded runtime)",
+    "duckdb-fts": "CPython duckdb call per query (raw text reduced to its word set inside the timer; SQL macro match_bm25 over a static index)",
 }
 
 # JVM flags per Lucene phase. serve: a small fixed heap and the serial collector (the index is memory-mapped, so the
@@ -196,6 +200,8 @@ FACTS = {
     "tantivy-py": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "tantivy-rs": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "tantivy-rs-count": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
+    "lancedb-fts": {"service_needed": {"value": "no (embedded)", "basis": _DOC}, "encrypted_at_rest": {"value": "no built-in", "basis": _DOC}},
+    "duckdb-fts": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "database-file encryption (DuckDB 1.4+); not exercised", "basis": _DOC}},
     "whoosh": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "bm25s": {"service_needed": {"value": "no", "basis": _DOC}, "encrypted_at_rest": {"value": "no", "basis": _DOC}},
     "lucene": {"service_needed": {"value": "no (library; needs a JVM)", "basis": _DOC}, "encrypted_at_rest": {"value": "no (filesystem-level only)", "basis": _DOC}},
@@ -203,6 +209,8 @@ FACTS = {
 
 # Systems named in the brief that were not run, with the reason recorded in every results file.
 NOT_RUN = {
+    "chroma-fts": "Chroma 1.5.9 PersistentClient: creating a collection with a BM25 sparse-vector index (ChromaBm25EmbeddingFunction) fails with 'Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local'; the only local text query is the unranked where_document $contains/$regex filter (measured 2026-11-14)",
+    "qdrant-fts": "Qdrant embedded local mode has no ranked full-text index (the full-text payload index only filters, and payload indexes are server features); documentation, not exercised here",
     "mem0": "agent-memory systems belong to the next harness stage (plug in through the same adapter interface)",
     "zep": "agent-memory systems belong to the next harness stage",
     "letta": "agent-memory systems belong to the next harness stage",
