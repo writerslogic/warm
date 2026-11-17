@@ -47,7 +47,7 @@ def results_file(mode, reference, other, ref_qps, other_qps):
 
     def system(qps):
         runs = [{"build_s": 2.0, "peak_rss_bytes": 2**22, "index_bytes": 2**20}] * 2
-        return {"display": "x", "builds": {"b": {"build_runs": runs, "serve_rounds": [serve(qps * (1 + 0.01 * r)) for r in range(4)], "params": {}}}}
+        return {"display": "x", "builds": {"b": {"build_runs": runs, "serve_rounds": [serve(qps * (1 + 0.01 * r)) for r in range(10)], "params": {}}}}
 
     data = {"schema_version": 1, "kind": "ann", "suite": "t", "commit": "0" * 40, "date": "2026-01-01T00:00:00",
             "hardware": {"class": "test", "cpu": "c", "logical_cores": 1, "memory_bytes": 2**30, "os": "o"},
