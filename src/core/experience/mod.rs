@@ -10,6 +10,7 @@
 //! of a node is counted, so purging an episode frees exactly what no other episode shares.
 
 mod effects;
+pub mod form;
 mod regions;
 mod snapshot;
 pub mod store;
@@ -24,6 +25,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use self::effects::{delta, EffectTable, Frames, Templates};
+pub use self::form::{Control, ControlOption};
 use self::regions::{Region, RegionStore};
 use self::terms::{Sym, TermStore};
 use self::tree::{action_label, label, title_template, trunc, url_template};
@@ -56,6 +58,12 @@ pub struct ExperienceConfig {
     /// Bytes of the snapshot payload. A snapshot over this is refused when it is read, so a
     /// write that would take the store past it is refused before it is journaled.
     pub max_snapshot_bytes: u64,
+    /// Parse the controls of a step from the accessibility-tree text an observation carries
+    /// (`accessibility_tree`) and store them with the step. Off, the text is dropped unread.
+    pub form_state: bool,
+    /// Bytes of the accessibility-tree text of one observation. Its lines longer than
+    /// `max_text_bytes` are skipped by the form-state parser.
+    pub max_page_bytes: usize,
 }
 
 impl Default for ExperienceConfig {
@@ -68,6 +76,8 @@ impl Default for ExperienceConfig {
             max_goal_bytes: 64 * 1024,
             max_steps: 1 << 20,
             max_snapshot_bytes: snapshot::MAX_SNAPSHOT_BYTES,
+            form_state: true,
+            max_page_bytes: 4 << 20,
         }
     }
 }
@@ -131,6 +141,11 @@ pub struct OwnedObservation {
     pub goal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outcome: Option<String>,
+    /// The accessibility-tree text of the step, one `[id] role 'name' props` node per line. With
+    /// [`ExperienceConfig::form_state`] the controls are parsed from it and stored with the
+    /// step; the text itself is not stored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub accessibility_tree: Option<String>,
 }
 
 impl OwnedObservation {
@@ -193,6 +208,11 @@ pub fn check_observation_value(value: &Value, cfg: &ExperienceConfig) -> Result<
     text(o.get("url"), "url bytes", cfg.max_text_bytes)?;
     text(o.get("goal"), "goal bytes", cfg.max_goal_bytes)?;
     text(o.get("outcome"), "outcome bytes", cfg.max_goal_bytes)?;
+    text(
+        o.get("accessibilityTree"),
+        "accessibility tree bytes",
+        cfg.max_page_bytes,
+    )?;
     if let Some(Value::Object(a)) = o.get("action") {
         for v in a.values() {
             text(Some(v), "action bytes", cfg.max_text_bytes)?;
@@ -469,6 +489,8 @@ pub(crate) struct StepRec {
     pub label: Option<Sym>,
     pub flags: u8,
     pub regions: Vec<(u32, u32)>,
+    /// The form controls of the step, from its accessibility-tree text.
+    pub controls: Box<[Control]>,
 }
 
 pub(crate) struct Episode {
@@ -497,6 +519,9 @@ pub struct Experience {
     /// Steps stored over all episodes, and the region entries they carry.
     step_count: usize,
     step_region_count: usize,
+    /// Controls stored over all steps, and the bytes of text they hold.
+    step_controls: usize,
+    step_control_bytes: usize,
 }
 
 fn doc(id: String, text: String) -> DocumentInput {
@@ -557,6 +582,8 @@ impl Experience {
             dirty: BTreeSet::new(),
             step_count: 0,
             step_region_count: 0,
+            step_controls: 0,
+            step_control_bytes: 0,
         }
     }
 
@@ -665,7 +692,44 @@ impl Experience {
 
     /// Ingests one observation step. Retrying a step with identical content changes nothing.
     pub fn ingest(&mut self, o: &Observation<'_>) -> Result<Ingested> {
+        self.ingest_with_controls(o, Vec::new())
+    }
+
+    /// The form controls of an accessibility-tree text ([`form::extract_controls`]), bounded by
+    /// this store's limits; none when [`ExperienceConfig::form_state`] is off.
+    pub fn extract_controls(&self, accessibility_tree: &str) -> Result<Vec<Control>> {
+        Self::limit(
+            "accessibility tree bytes",
+            self.cfg.max_page_bytes,
+            accessibility_tree.len(),
+        )?;
+        if !self.cfg.form_state {
+            return Ok(Vec::new());
+        }
+        Ok(form::extract_controls(
+            accessibility_tree,
+            self.cfg.max_text_bytes,
+        ))
+    }
+
+    fn validate_controls(&self, controls: &[Control]) -> Result<()> {
+        Self::limit("step controls", form::MAX_CONTROLS, controls.len())?;
+        for c in controls {
+            Self::limit("control options", form::MAX_OPTIONS, c.options.len())?;
+            Self::limit("string bytes", self.cfg.max_text_bytes, c.longest_string())?;
+        }
+        Ok(())
+    }
+
+    /// [`Self::ingest`] storing `controls` with the step. The controls are part of the step's
+    /// content: the same step again with other controls is a conflict.
+    pub fn ingest_with_controls(
+        &mut self,
+        o: &Observation<'_>,
+        controls: Vec<Control>,
+    ) -> Result<Ingested> {
         self.validate(o)?;
+        self.validate_controls(&controls)?;
         let eid = self.episode_slot(o.episode);
         if let Some(id) = eid {
             let e = self.ep(id);
@@ -705,7 +769,10 @@ impl Experience {
             let e = self.ep(id);
             if let Ok(i) = e.steps.binary_search_by_key(&o.step, |s| s.step) {
                 let s = &e.steps[i];
-                let same = s.root == root && s.template == template && s.label == label_sym;
+                let same = s.root == root
+                    && s.template == template
+                    && s.label == label_sym
+                    && *s.controls == *controls;
                 self.terms.release(root);
                 self.templates.release(&mut self.terms.syms, template);
                 if let Some(l) = label_sym {
@@ -801,6 +868,8 @@ impl Experience {
         let regions: Vec<(u32, u32)> = counts.into_iter().collect();
         self.step_count += 1;
         self.step_region_count += regions.len();
+        self.step_controls += controls.len();
+        self.step_control_bytes += controls.iter().map(Control::text_bytes).sum::<usize>();
         e.steps.push(StepRec {
             step: o.step,
             root,
@@ -809,6 +878,7 @@ impl Experience {
             label: label_sym,
             flags,
             regions,
+            controls: controls.into_boxed_slice(),
         });
         self.dirty.insert(eid);
         Ok(Ingested::Applied)
@@ -1082,7 +1152,10 @@ impl Experience {
         const STEP: usize = 32;
         const STEP_REGION: usize = 12;
         const REGION: usize = 2048;
-        (self.terms.syms.live_bytes()
+        const CONTROL: usize = 48;
+        (self.step_control_bytes
+            + CONTROL * self.step_controls
+            + self.terms.syms.live_bytes()
             + SYMBOL * self.terms.syms.live()
             + NODE * self.terms.live_nodes()
             + STEP * self.step_count
@@ -1216,6 +1289,24 @@ impl Experience {
                 })
             })
             .collect())
+    }
+
+    /// The form controls stored with a step; `None` when the step is not stored.
+    pub fn step_controls(&self, episode: &str, step: u32) -> Option<&[Control]> {
+        let e = self.ep(self.episode_slot(episode)?);
+        let i = e.steps.binary_search_by_key(&step, |s| s.step).ok()?;
+        Some(&e.steps[i].controls)
+    }
+
+    /// The form tables of `states` in order ([`form::render_form_tables`]): each state's
+    /// controls, without those already shown for an earlier state of the list. A state that is
+    /// not stored or has no controls gives an empty string.
+    pub fn form_tables<S: AsRef<str>>(&self, states: &[(S, u32)]) -> Vec<String> {
+        form::render_form_tables(
+            states
+                .iter()
+                .map(|(e, s)| self.step_controls(e.as_ref(), *s).unwrap_or(&[])),
+        )
     }
 
     pub fn episode(&self, id: &str) -> Option<EpisodeView> {
@@ -1407,6 +1498,10 @@ impl Experience {
         let e = self.episodes[eid as usize].take()?;
         self.step_count -= e.steps.len();
         self.step_region_count -= e.steps.iter().map(|s| s.regions.len()).sum::<usize>();
+        for s in &e.steps {
+            self.step_controls -= s.controls.len();
+            self.step_control_bytes -= s.controls.iter().map(Control::text_bytes).sum::<usize>();
+        }
         self.episode_map.remove(id);
         self.free_episodes.push(eid);
         self.dirty.remove(&eid);

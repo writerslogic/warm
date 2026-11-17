@@ -114,3 +114,42 @@ def test_embedder_makes_recall_hybrid_in_the_engine(tmp_path):
     assert hits["results"][0]["explanation"]["semanticScore"] is not None
     lexical = store.recall("harbor", {"k": 1, "semanticWeight": 0, "explain": True})
     assert lexical["results"][0]["explanation"]["semanticScore"] is None
+
+
+FORM_PAGE = "\n".join([
+    "RootWebArea 'Checkout'",
+    "\t[12] textbox 'Email', required, value='a@b.c'",
+    "\t[13] combobox 'Country', expanded=False",
+    "\t\t[14] option 'Chile', selected=True",
+    "\t\t[15] option 'Peru'",
+    "\t[16] button 'Pay'",
+])
+
+
+def _observation(step, page):
+    return {"episode": "run-1", "step": step, "url": "http://shop/checkout",
+            "tree": {"role": "RootWebArea", "name": "Checkout"}, "accessibilityTree": page}
+
+
+def test_experience_form_tables_round_trip(tmp_path):
+    store = hm.Warm(1024, str(tmp_path / "store"))
+    store.remember(_observation(0, FORM_PAGE))
+    store.remember(_observation(1, FORM_PAGE.replace("a@b.c", "x@y.z")))
+    header = "- Form controls (structured from the page text; * = selected option):\n"
+    expected = [
+        header + "  textbox 'Email' value='a@b.c', required\n"
+        "  combobox 'Country' expanded=False options: *Chile | Peru\n  button 'Pay'\n",
+        header + "  textbox 'Email' value='x@y.z', required\n"
+        "  [2 controls unchanged from an earlier state omitted]\n",
+        "",
+    ]
+    assert store.experience_form_tables([("run-1", 0), ("run-1", 1), ("run-1", 9)]) == expected
+    del store
+    assert hm.Warm(1024, str(tmp_path / "store")).experience_form_tables(
+        [("run-1", 0), ("run-1", 1), ("run-1", 9)]) == expected
+
+
+def test_experience_form_state_switch_off_stores_no_controls(tmp_path):
+    store = hm.Warm(1024, str(tmp_path / "store"), experience_form_state=False)
+    store.remember(_observation(0, FORM_PAGE))
+    assert store.experience_form_tables([("run-1", 0)]) == [""]

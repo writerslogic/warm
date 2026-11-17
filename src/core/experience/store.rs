@@ -19,8 +19,8 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    Experience, ExperienceConfig, ExperienceError, Ingested, OwnedObservation, PurgeReport, Result,
-    SNAPSHOT_FILE,
+    Control, Experience, ExperienceConfig, ExperienceError, Ingested, OwnedObservation,
+    PurgeReport, Result, SNAPSHOT_FILE,
 };
 use crate::core::durable_file::{atomic_write, scrub_remove_file, sync_directory};
 use crate::core::failpoint;
@@ -48,10 +48,17 @@ pub(crate) trait Sealer: Send + Sync {
     fn unseal(&self, sealed: &[u8]) -> anyhow::Result<Vec<u8>>;
 }
 
-/// One journaled change.
+/// One journaled change. An observation is journaled without its accessibility-tree text; the
+/// controls parsed from it travel in `IngestForm`, so replay does not parse again and does not
+/// depend on the configuration it runs under. A reader that predates `IngestForm` refuses the
+/// record rather than dropping the controls.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 enum Op {
     Ingest(OwnedObservation),
+    IngestForm {
+        observation: OwnedObservation,
+        controls: Vec<Control>,
+    },
     Describe {
         episode: String,
         goal: String,
@@ -278,27 +285,33 @@ impl ExperienceStore {
         Self::create_journal(dir, Experience::new(cfg), 0, 0, sealer)
     }
 
+    /// The journaled form of an operation: the accessibility-tree text of an observation is
+    /// replaced by the controls parsed from it.
+    fn prepare(x: &Experience, op: Op) -> Result<Op> {
+        let Op::Ingest(mut o) = op else {
+            return Ok(op);
+        };
+        let Some(text) = o.accessibility_tree.take() else {
+            return Ok(Op::Ingest(o));
+        };
+        let controls = x.extract_controls(&text)?;
+        Ok(if controls.is_empty() {
+            Op::Ingest(o)
+        } else {
+            Op::IngestForm {
+                observation: o,
+                controls,
+            }
+        })
+    }
+
     fn apply(x: &mut Experience, op: &Op) -> Result<Ingested> {
         match op {
-            Op::Ingest(o) => {
-                let ingested = x.ingest(&o.as_observation())?;
-                if o.goal.is_none() && o.outcome.is_none() {
-                    return Ok(ingested);
-                }
-                let (goal, outcome) = x
-                    .episode_description(&o.episode)
-                    .map(|(g, o)| (g.to_string(), o.to_string()))
-                    .unwrap_or_default();
-                let (new_goal, new_outcome) = (
-                    o.goal.clone().unwrap_or_else(|| goal.clone()),
-                    o.outcome.clone().unwrap_or_else(|| outcome.clone()),
-                );
-                if (&new_goal, &new_outcome) == (&goal, &outcome) {
-                    return Ok(ingested);
-                }
-                x.describe_episode(&o.episode, &new_goal, &new_outcome)?;
-                Ok(Ingested::Applied)
-            }
+            Op::Ingest(o) => Self::apply_ingest(x, o, Vec::new()),
+            Op::IngestForm {
+                observation,
+                controls,
+            } => Self::apply_ingest(x, observation, controls.clone()),
             Op::Describe {
                 episode,
                 goal,
@@ -311,6 +324,35 @@ impl ExperienceStore {
                 Ok(Ingested::Applied)
             }
         }
+    }
+
+    fn apply_ingest(
+        x: &mut Experience,
+        o: &OwnedObservation,
+        controls: Vec<Control>,
+    ) -> Result<Ingested> {
+        if o.accessibility_tree.is_some() {
+            return Err(ExperienceError::Invalid(
+                "journaled observation with accessibility-tree text",
+            ));
+        }
+        let ingested = x.ingest_with_controls(&o.as_observation(), controls)?;
+        if o.goal.is_none() && o.outcome.is_none() {
+            return Ok(ingested);
+        }
+        let (goal, outcome) = x
+            .episode_description(&o.episode)
+            .map(|(g, o)| (g.to_string(), o.to_string()))
+            .unwrap_or_default();
+        let (new_goal, new_outcome) = (
+            o.goal.clone().unwrap_or_else(|| goal.clone()),
+            o.outcome.clone().unwrap_or_else(|| outcome.clone()),
+        );
+        if (&new_goal, &new_outcome) == (&goal, &outcome) {
+            return Ok(ingested);
+        }
+        x.describe_episode(&o.episode, &new_goal, &new_outcome)?;
+        Ok(Ingested::Applied)
     }
 
     pub fn experience(&self) -> &Experience {
@@ -398,9 +440,17 @@ impl ExperienceStore {
         let mut frames = Vec::new();
         let (start_seq, mut failed, mut ahead) = (self.seq, None, false);
         for (i, op) in ops.into_iter().enumerate() {
+            let op = match Self::prepare(&self.x, op) {
+                Ok(op) => op,
+                Err(e) => {
+                    failed = Some((i, e));
+                    break;
+                }
+            };
             // A step that adds a unit and finds none left is refused before it touches the
             // state, so the common rejection needs no reload.
-            if let (Op::Ingest(o), Some(b)) = (&op, budget) {
+            if let (Op::Ingest(o) | Op::IngestForm { observation: o, .. }, Some(b)) = (&op, budget)
+            {
                 if self.x.quota_units() >= b && !self.x.has_step(&o.episode, o.step) {
                     failed = Some((i, ExperienceError::Quota(b)));
                     break;

@@ -11,6 +11,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use super::effects::delta;
+use super::form::Control;
 use super::regions::{self, Region};
 use super::{
     doc, index_err, Episode, Experience, ExperienceConfig, ExperienceError, Result, StepRec,
@@ -21,8 +22,12 @@ use crate::core::documents::MemoryDocumentStore;
 pub const SNAPSHOT_FILE: &str = "experience.wexp";
 const MAGIC: &[u8; 4] = b"WEXP";
 /// Version 2 adds the journal sequence the snapshot covers and each episode's latest handle
-/// map. Version 1 files open with sequence 0 and empty handle maps.
-const VERSION: u8 = 2;
+/// map. Version 1 files open with sequence 0 and empty handle maps. Version 3 adds the form
+/// controls of steps; it is written only when a step has controls, so a store without them
+/// keeps writing version 2 byte for byte, and a reader that predates version 3 refuses the
+/// file rather than dropping the controls.
+const VERSION: u8 = 3;
+const VERSION_WITHOUT_CONTROLS: u8 = 2;
 const OLDEST_VERSION: u8 = 1;
 const HEADER: usize = 4 + 1 + 3 + 8 + 4;
 pub(super) const MAX_SNAPSHOT_BYTES: u64 = 1 << 30;
@@ -47,6 +52,8 @@ struct SnapStep {
     frame: u32,
     label: Option<u32>,
     regions: Vec<(u32, u32)>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    controls: Vec<Control>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -151,6 +158,7 @@ impl Experience {
                                 frame: s.frame,
                                 label: s.label,
                                 regions: s.regions.clone(),
+                                controls: s.controls.to_vec(),
                             })
                             .collect(),
                     })
@@ -167,9 +175,14 @@ impl Experience {
                 got: payload.len(),
             });
         }
+        let version = if self.step_controls > 0 {
+            VERSION
+        } else {
+            VERSION_WITHOUT_CONTROLS
+        };
         let mut out = Vec::with_capacity(HEADER + payload.len());
         out.extend_from_slice(MAGIC);
-        out.push(VERSION);
+        out.push(version);
         out.extend_from_slice(&[0; 3]);
         out.extend_from_slice(&(payload.len() as u64).to_le_bytes());
         out.extend_from_slice(&crc32fast::hash(&payload).to_le_bytes());
@@ -226,6 +239,15 @@ impl Experience {
         }
         let snap: Snap = ciborium::from_reader(payload).map_err(|e| bad(&e.to_string()))?;
         let seq = if bytes[4] >= 2 { snap.seq } else { 0 };
+        if bytes[4] < 3
+            && snap
+                .episodes
+                .iter()
+                .flatten()
+                .any(|e| e.steps.iter().any(|s| !s.controls.is_empty()))
+        {
+            return Err(bad("step controls in a snapshot older than version 3"));
+        }
         Self::rebuild(snap, cfg).map(|x| (x, seq))
     }
 
@@ -353,7 +375,8 @@ impl Experience {
                     && x.frames.get(s.frame).is_some()
                     && s.label.is_none_or(|l| live(&snap.symbols, l))
                     && s.regions.iter().all(|r| x.regions.get(r.0).is_some())
-                    && steps.last().is_none_or(|p: &StepRec| p.step < s.step);
+                    && steps.last().is_none_or(|p: &StepRec| p.step < s.step)
+                    && x.validate_controls(&s.controls).is_ok();
                 if !ok {
                     return Err(bad("invalid step"));
                 }
@@ -371,6 +394,7 @@ impl Experience {
                     label: s.label,
                     flags: 0,
                     regions: s.regions.clone(),
+                    controls: s.controls.clone().into_boxed_slice(),
                 });
             }
             while x.episodes.len() <= i {
@@ -394,6 +418,10 @@ impl Experience {
             .flat_map(|e| &e.steps)
             .map(|s| s.regions.len())
             .sum();
+        for s in x.episodes.iter().flatten().flat_map(|e| &e.steps) {
+            x.step_controls += s.controls.len();
+            x.step_control_bytes += s.controls.iter().map(Control::text_bytes).sum::<usize>();
+        }
         x.free_episodes = (0..x.episodes.len() as u32)
             .rev()
             .filter(|&i| x.episodes[i as usize].is_none())

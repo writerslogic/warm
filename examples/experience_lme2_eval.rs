@@ -101,6 +101,7 @@ fn observations(trajs: &[Traj]) -> (Vec<Vec<OwnedObservation>>, usize) {
                     action: s.action.clone().map(Action::Call),
                     goal: None,
                     outcome: None,
+                    accessibility_tree: None,
                 };
                 if batch.is_empty() {
                     o.goal = Some(t.goal.chars().take(1000).collect());

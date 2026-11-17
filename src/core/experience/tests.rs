@@ -392,7 +392,7 @@ fn snapshot_round_trips_and_rejects_damage() {
         Experience::from_bytes(&bytes[..bytes.len() - 1], ExperienceConfig::default()).is_err()
     );
     let mut future = bytes.clone();
-    future[4] = 3;
+    future[4] = 4;
     assert!(Experience::from_bytes(&future, ExperienceConfig::default()).is_err());
     assert!(Experience::from_bytes(b"WEXP", ExperienceConfig::default()).is_err());
 
@@ -603,6 +603,7 @@ fn props_step(episode: &str, step: u32, props: &str) -> OwnedObservation {
         action: None,
         goal: None,
         outcome: None,
+        accessibility_tree: None,
     }
 }
 
@@ -700,4 +701,77 @@ fn an_append_after_a_zeroed_header_is_damage_not_a_scrubbed_journal() {
     bytes.fill(0);
     std::fs::write(&journal, &bytes).unwrap();
     store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+}
+
+#[test]
+fn step_controls_round_trip_the_snapshot_and_purge_with_the_episode() {
+    let mut x = Experience::default();
+    let page_a = page("Form", vec![btn("Save")]);
+    let controls = x
+        .extract_controls(
+            "[1] textbox 'Name', value='Ada'\n[2] combobox 'Size'\n\t[3] option 'S', selected=True",
+        )
+        .unwrap();
+    assert_eq!(controls.len(), 2);
+    x.ingest_with_controls(&obs("a", 0, &page_a, None), controls.clone())
+        .unwrap();
+    x.ingest(&obs("b", 0, &page_a, None)).unwrap();
+    let bytes = x.to_bytes().unwrap();
+    assert_eq!(bytes[4], 3);
+    let y = Experience::from_bytes(&bytes, ExperienceConfig::default()).unwrap();
+    assert_eq!(y.step_controls("a", 0), Some(&controls[..]));
+    assert_eq!(y.step_controls("b", 0), Some(&[][..]));
+    assert_eq!(y.step_controls("a", 1), None);
+    assert_eq!(y.to_bytes().unwrap(), bytes);
+    assert_eq!(
+        y.form_tables(&[("a", 0), ("b", 0)]),
+        x.form_tables(&[("a", 0), ("b", 0)])
+    );
+
+    // A version 2 header over a payload with controls is refused, not read without them.
+    let mut old = bytes.clone();
+    old[4] = 2;
+    assert!(Experience::from_bytes(&old, ExperienceConfig::default()).is_err());
+
+    x.purge_episode("a").unwrap();
+    assert_eq!(x.to_bytes().unwrap()[4], 2);
+}
+
+#[test]
+fn caller_controls_are_bounded_and_the_switch_drops_the_page_text() {
+    let mut x = Experience::default();
+    let t = page("Form", vec![btn("Save")]);
+    let one = Control {
+        role: "checkbox".into(),
+        name: "c".into(),
+        ..Control::default()
+    };
+    let too_many = vec![one.clone(); form::MAX_CONTROLS + 1];
+    assert!(matches!(
+        x.ingest_with_controls(&obs("a", 0, &t, None), too_many),
+        Err(ExperienceError::Limit { .. })
+    ));
+    let mut wide = one.clone();
+    wide.options = vec![
+        ControlOption {
+            label: "o".into(),
+            selected: false,
+        };
+        form::MAX_OPTIONS + 1
+    ];
+    assert!(x
+        .ingest_with_controls(&obs("a", 0, &t, None), vec![wide])
+        .is_err());
+    let mut long = one;
+    long.name = "n".repeat(x.config().max_text_bytes + 1);
+    assert!(x
+        .ingest_with_controls(&obs("a", 0, &t, None), vec![long])
+        .is_err());
+    assert!(!x.has_episode("a"));
+
+    let off = Experience::new(ExperienceConfig {
+        form_state: false,
+        ..Default::default()
+    });
+    assert!(off.extract_controls("[1] textbox 'x'").unwrap().is_empty());
 }
