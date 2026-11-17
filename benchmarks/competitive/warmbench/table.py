@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 from . import analyze, jars, registry
-from .common import RESULTS, ROOT
+from .common import RESULTS, ROOT, round_ratio_ci
 
 DOCS = ROOT / "docs/benchmarks"
 COMPARISON = DOCS / "COMPARISON.md"
@@ -56,12 +56,12 @@ HEADLINE = {
 # Candidate levers per metric. These are hypotheses for the coordinator, not measurements, except
 # where a results file is named.
 LEVERS = {
-    "text:build_seconds": "profiled (samply, M4, memory corpus, lexical, 2026-11-05): ingest is tokenizing and stemming (parallel), the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; no single stage dominates, so the open levers are a parallel postings install and fewer syncs per batch",
-    "text:build_peak_rss_mib": "measured with a tracking allocator (M4, SciFact, 2026-11-05): a 4,096-document batch peaks about 37 MiB above its starting heap while the prepared documents and the postings install are both live, and the input JSON is held whole; smaller batches lower the peak at the cost of more durable commits",
+    "text:build_seconds": "hypothesis (profiles not committed): ingest is tokenizing and stemming, the serial postings install (postings::index_chunks), durable fsyncs and the checkpoint written at close; open levers are a parallel postings install and fewer syncs per batch",
+    "text:build_peak_rss_mib": "hypothesis (allocator traces not committed): the prepared documents and the postings install are live together within a batch and the input JSON is held whole; smaller batches would lower the peak at the cost of more durable commits",
     "text:cold_start_s": "the store is read into memory at open (open_s in the raw file); lazy or memory-mapped loading of the arena and postings is the lever",
     "text:serving_rss_mib": "the whole store is resident after open; memory-mapped postings and file-backed text (ledger 2A/2B) are the open levers",
     "text:p99_latency": "tail queries are the long ones; MaxScore-style early termination for long queries (the ledger's impact-index work, category 1C) is the candidate",
-    "text:qps": "measured (M4, same process, identical results, 2026-11-05): ranking from the mapped checkpoint is 1.5x to 1.9x slower than from the live store on all four corpora. On FiQA the flat varint postings cost most of it: 56% of postings carry a frequency above 1 and missed the one-byte fast path; the two-byte window decoder recovers 1.09x, and the rest needs a block-packed checkpoint posting encoding (a checkpoint format change). On the small corpora, rebuilding a StoredDocument per hit was about 45% of a query; checkpoint hits now decode straight into their results (paired M4, identical results: NFCorpus 1.17x, SciFact 1.11x, memory and FiQA unchanged); the record's JSON metadata parse, 13% of that profile, was still paid per hit. Cut on 2026-11-06 (paired M4, same process, identical results, against main after the block-packed checkpoint): a hit now decodes its record without building the chunk vector and a per-query cache shares repeated metadata values; NFCorpus 1.18x, memory 1.08x, FiQA 1.00x QPS, since hit decode is about 10% of a FiQA query and the exhaustive rank() pass is 82%. Block-max MaxScore was slower than the exhaustive pass at k=100, and a larger hot-list budget doubles serving RSS",
+    "text:qps": "hypothesis (profiles not committed): posting decoding from the mapped checkpoint and the exhaustive rank pass dominate long queries; per-hit record decoding matters on small corpora; a block-packed checkpoint posting encoding and early termination are the candidates",
     "text:p50_latency": "same as QPS: posting decoding from the mapped checkpoint and per-hit record decoding",
     "text:disk_mib": "compact postings and file-backed text (ledger 2B/2C) and removing preallocated arena slack",
     "text:recall@100": "none found: the paired per-query difference is within its interval on every corpus; a development-set search over BM25 k1, b and the idf form (benchmarks/results/lexical_ranking_selection.json) gave a default that raised some reported cells and lowered others, so it was not adopted (benchmarks/results/lexical_ranking_evaluation.json)",
@@ -83,6 +83,16 @@ LEVERS = {
     "install_mib": "strip symbols, split optional features out of the default binary",
     "install_distributions": "none needed",
 }
+
+
+# Display names of dataset ids whose id alone misleads. `memory` is a lexical search-speed corpus built from LongMemEval_S
+# dev sessions, not a memory-QA benchmark; the id stays, since committed results key on it.
+DATASET_LABELS = {"memory": "LongMemEval-dev session corpus (search speed only, not memory QA)"}
+
+
+def dataset_label(ds):
+    key = ds.get("id") or ds["name"]
+    return DATASET_LABELS.get(key, key)
 
 
 def fmt(value, decimals):
@@ -147,16 +157,57 @@ def rel(path):
         return str(Path(path).resolve())
 
 
-def _has_ci(c):
-    return c["n"] > 1 and c.get("uncertainty", "sampled") == "sampled" and c["ci"][0] <= c["ci"][1]
+# Interval kinds of an advantage factor. Only the bootstrap kinds can carry a verdict.
+BOOTSTRAP_KINDS = ("paired bootstrap", "bootstrap", "paired per-query bootstrap")
+
+
+def interval_label(adv):
+    """What the bracket printed after a factor is, in words."""
+    kind = adv.get("interval_kind")
+    if kind == "paired per-query bootstrap":
+        return f"paired per-query bootstrap, {adv['paired']['queries']} queries"
+    if kind == "paired bootstrap":
+        return f"paired bootstrap, {adv['observations'][0]} rounds"
+    if kind == "bootstrap":
+        return f"bootstrap, {adv['observations'][0]} and {adv['observations'][1]} observations"
+    if kind == "range":
+        return f"min-max range, {adv['observations'][0]} and {adv['observations'][1]} observations: too few for a verdict"
+    return ""
+
+
+def adv_interval_text(adv):
+    if not adv or not adv.get("ci"):
+        return ""
+    return f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}] ({interval_label(adv)})"
+
+
+def _sampled_factor(mine, theirs, higher, point):
+    """Interval of the advantage factor from the two cells' per-observation values. At least MIN_BOOTSTRAP_ROUNDS
+    observations on each side: a percentile bootstrap of the ratio of medians at the cell level, resampling rounds in
+    pairs when both cells come from the same interleaved rounds and independently otherwise. Fewer: the min-max range
+    (of the per-round ratios when paired), which carries no verdict."""
+    a, b = mine["rounds"], theirs["rounds"]
+    num, den = (a, b) if higher else (b, a)
+    paired = mine.get("pairing") is not None and mine.get("pairing") == theirs.get("pairing") and len(a) == len(b)
+    level = min(mine.get("level", 0.95), theirs.get("level", 0.95))
+    out = {"factor": point, "observations": [len(a), len(b)]}
+    if min(len(a), len(b)) >= analyze.MIN_BOOTSTRAP_ROUNDS:
+        ci = round_ratio_ci(num, den, paired, level=level)
+        return out | {"ci": ci, "interval_kind": "paired bootstrap" if paired else "bootstrap", "level": level}
+    ratios = [x / y for x, y in zip(num, den)] if paired else [x / y for x in num for y in den]
+    return out | {"ci": [min(ratios), max(ratios)], "interval_kind": "range"}
 
 
 def advantage(metric, mine, theirs):
-    """WARM advantage factor (>1 means WARM is better) with a conservative interval, or None."""
+    """WARM advantage factor (>1 means WARM is better) with the interval of the factor itself, or None.
+    An unverified side keeps its measured factor with `unverified` set: the ratio is printed, no verdict is drawn."""
     if mine["value"] is None or theirs["value"] is None:
         return None
     if any(c.get("validity", "valid") != "valid" for c in (mine, theirs)):
-        return {"factor": None, "ci": None, "unverified": True}
+        if metric in analyze.OPS_METRICS and mine.get("durability_class") != theirs.get("durability_class"):
+            return {"factor": None, "ci": None, "unverified": True}
+        adv = advantage(metric, {**mine, "validity": "valid"}, {**theirs, "validity": "valid"})
+        return {"factor": None, "ci": None, "unverified": True} if adv is None else adv | {"unverified": True}
     if analyze.comparison_note(metric, mine, theirs):
         return None
     higher = analyze.direction(metric) == analyze.HIGHER
@@ -167,14 +218,13 @@ def advantage(metric, mine, theirs):
         return {"factor": float("inf") if better else 0.0, "ci": None,
                 "deterministic": mine.get("uncertainty") == theirs.get("uncertainty") == "deterministic"}
     if metric in analyze.PAIRED and mine.get("per_query") and theirs.get("per_query"):
-        return analyze.paired_advantage(metric, mine, theirs)
+        adv = analyze.paired_advantage(metric, mine, theirs)
+        return adv | {"interval_kind": "paired per-query bootstrap" if adv["ci"] else None}
     point = mine["value"] / theirs["value"] if higher else theirs["value"] / mine["value"]
-    if _has_ci(mine) and _has_ci(theirs):
-        (ml, mh), (tl, th) = mine["ci"], theirs["ci"]
-        if min(ml, tl) <= 0:
+    if mine.get("rounds") and theirs.get("rounds") and min(len(mine["rounds"]), len(theirs["rounds"])) > 1:
+        if min(mine["rounds"] + theirs["rounds"]) <= 0:
             return {"factor": point, "ci": None}
-        lo, hi = (ml / th, mh / tl) if higher else (tl / mh, th / ml)
-        return {"factor": point, "ci": [lo, hi]}
+        return _sampled_factor(mine, theirs, higher, point)
     return {"factor": point, "ci": None, "deterministic": mine.get("uncertainty") == theirs.get("uncertainty") == "deterministic"}
 
 
@@ -187,11 +237,16 @@ def fx(factor):
 
 
 def verdict(adv):
+    """WIN or LOSS only when a bootstrap interval of the factor excludes 1 (each side with at least
+    analyze.MIN_BOOTSTRAP_ROUNDS observations, or a paired per-query bootstrap); a min-max range, a missing interval or
+    an unverified side gives n/v; deterministic byte counts use a 5 percent band."""
     if adv is None:
         return "n/m"
     if adv.get("unverified"):
         return "n/v"
     if adv["ci"]:
+        if adv.get("interval_kind") not in BOOTSTRAP_KINDS:
+            return "n/v"
         return "WIN" if adv["ci"][0] > 1 else "LOSS" if adv["ci"][1] < 1 else "TIE"
     if not adv.get("deterministic", False):
         return "n/v"
@@ -224,12 +279,18 @@ def is_server(data):
 def _mark_validity(data, metrics):
     revision = data.get("commit", "")
     pinned = bool(re.fullmatch(r"[0-9a-fA-F]{40}", revision))
+    if (data.get("source") or {}).get("draft"):
+        for systems in metrics.values():
+            for c in systems.values():
+                c.setdefault("unverified_reason", "draft result: " + ("; ".join(data["source"].get("draft_reasons") or []) or "marked WARM_BENCH_DRAFT"))
     for metric, systems in metrics.items():
         status = data.get("measurement_validity", {}).get(metric, {})
         for c in systems.values():
             validity = analyze.Validity(status.get("status", "valid"))
-            c["validity"] = analyze.Validity.UNVERIFIED if not pinned and validity == analyze.Validity.VALID else validity
-            c["validity_reason"] = status.get("reason", "") or ("" if pinned else "source revision is not pinned")
+            reason = status.get("reason", "") or ("" if pinned else "source revision is not a full 40-character commit id") or c.get("unverified_reason", "")
+            unverified = validity == analyze.Validity.VALID and (not pinned or c.get("unverified_reason"))
+            c["validity"] = analyze.Validity.UNVERIFIED if unverified else validity
+            c["validity_reason"] = reason
             if c["validity"] == "invalid":
                 c.update(value=None, ci=[None, None], n=0, note=c["validity_reason"])
 
@@ -300,7 +361,7 @@ def section(path, data, siblings=()):
     spec = ANN_METRICS if kind == "ann" else TEXT_METRICS
     hw = data["hardware"]
     ds = data["dataset"]
-    title = f"{ds.get('id') or ds['name']}" + (f" ({ds['n_train']:,} vectors, {ds['n_test']:,} queries)" if kind == "ann" else f" ({ds['documents']:,} documents, {ds['queries']:,} queries)")
+    title = dataset_label(ds) + (f" ({ds['n_train']:,} vectors, {ds['n_test']:,} queries)" if kind == "ann" else f" ({ds['documents']:,} documents, {ds['queries']:,} queries)")
     if is_server(data):
         title += ", server mode"
     if data.get("contract"):
@@ -316,6 +377,28 @@ def timing_boundary_lines(data):
     return ["Timing boundary (where each query is timed): " + "; ".join(f"{display(s, data)}: {boundary[s]}" for s in present) + ".", ""] if present else []
 
 
+def provenance_lines(data):
+    """Session and build-selection facts a reader needs before comparing rows: a WARM row rerun in another session, and
+    which builds each comparator ran and why."""
+    lines = []
+    rerun = data.get("warm_rerun")
+    if rerun:
+        lines += [f"The WARM row is a rerun in a separate session (commit `{rerun.get('commit', '')[:10]}`, {rerun.get('date', '')[:10]}), not interleaved with the "
+                  "comparators' rounds; its factors are resampled unpaired. " + rerun.get("note", ""), ""]
+    if data["kind"] == "ann":
+        selection = (data.get("protocol") or {}).get("build_selection")
+        runs = []
+        for s_, entry in data["systems"].items():
+            if registry.system(s_)["family"] == "warm":
+                continue
+            sel = (selection or {}).get(s_)
+            basis = f"{len(sel['run'])} of {len(sel['defined'])} defined builds, {sel['basis']}" if sel else "selection not recorded"
+            runs.append(f"{display(s_, data)}: {', '.join(entry['builds'])} ({basis})")
+        if runs:
+            lines += ["Comparator builds run: " + "; ".join(runs) + ".", ""]
+    return lines
+
+
 def contract_lines(data):
     name = data.get("contract")
     if not name:
@@ -328,12 +411,16 @@ def contract_lines(data):
 
 def interval_text(sec):
     data = sec["data"]
-    rounds = (data.get("protocol") or {}).get("rounds")
-    if rounds is not None and rounds < analyze.MIN_BOOTSTRAP_ROUNDS:
-        return (f"Intervals: min-max range of the {rounds} process rounds, not a confidence interval (a bootstrap of fewer than "
-                f"{analyze.MIN_BOOTSTRAP_ROUNDS} rounds has too few distinct resamples).")
-    return (f"Intervals: {sec['level'] * 100:.2f}% bootstrap over process rounds (Bonferroni family of {sec['family']} verdict metrics); "
-            "nDCG@10 and recall@100 are compared by a paired per-query bootstrap at the same level, since every system answers the same queries.")
+    protocol = data.get("protocol") or {}
+    rounds, builds = protocol.get("rounds"), protocol.get("build_repeats")
+    counts = f"{rounds} process rounds" + (f" and {builds} build runs" if builds is not None else "") + " per system. "
+    few = [what for what, n in (("serve rounds", rounds), ("build runs", builds)) if n is not None and n < analyze.MIN_BOOTSTRAP_ROUNDS]
+    return (counts + f"Advantage intervals: a {sec['level'] * 100:.2f}% percentile bootstrap of the factor (ratio of medians; Bonferroni family of "
+            f"{sec['family']} verdict metrics), rounds resampled in pairs where both rows ran in the same interleaved rounds and independently otherwise; "
+            "nDCG@10 and recall@100 by a paired per-query bootstrap at the same level. A WIN or LOSS needs that bootstrap with at least "
+            f"{analyze.MIN_BOOTSTRAP_ROUNDS} observations on each side; with fewer the bracket is the min-max range and the row is a measured ratio "
+            "with no verdict (n/v). Each bracket names its kind."
+            + (f" This file has fewer than {analyze.MIN_BOOTSTRAP_ROUNDS} {' and '.join(few)}: those rows carry no verdict." if few else ""))
 
 
 def render_section(sec, cells_out):
@@ -344,6 +431,7 @@ def render_section(sec, cells_out):
              f"{hw['os']}{', GitHub-hosted runner' if hw.get('hosted_runner') else ''}), commit `{data['commit'][:10]}`, {data['date'][:10]}. " +
              f"Raw results: [{path.name}](../../{rel(path)}). {interval_text(sec)}", "",
              *contract_lines(data),
+             *provenance_lines(data),
              *timing_boundary_lines(data),
              f"| Metric | {'warm-server' if is_server(data) else 'WARM'} | Best other | Advantage (WARM vs best other) | Verdict |", "|---|---|---|---|---|"]
     tally = {"WIN": [], "TIE": [], "LOSS": [], "n/m": [], "n/v": []}
@@ -375,7 +463,7 @@ def render_section(sec, cells_out):
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": hw["class"], "metric": key, "system": system,
                               "value": c["value"], "ci": c["ci"] if c["value"] is not None else None, "n": c["n"], "source": c["source"],
                               "validity": c["validity"], "validity_reason": c["validity_reason"], "uncertainty": c["uncertainty"],
-                              "text": fmt(c["value"], dec)})
+                              "interval_kind": c.get("interval_kind"), "text": fmt(c["value"], dec)})
         if mine is None:
             continue
         adv = advantage(key, mine, other) if other else None
@@ -386,8 +474,8 @@ def render_section(sec, cells_out):
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": hw["class"], "metric": key, "derived": True,
                               "warm": reference(data), "other": name, "factor": None if adv is None or adv["factor"] == float("inf") else adv["factor"],
                               "factor_infinite": bool(adv and adv["factor"] == float("inf")), "ci": adv["ci"] if adv else None, "verdict": v,
-                              "text": "n/m" if adv is None else fx(adv["factor"])})
-        adv_text = "n/m" if adv is None else fx(adv["factor"]) + (f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv["ci"] else " (no CI)")
+                              "interval_kind": (adv or {}).get("interval_kind"), "text": "n/m" if adv is None else fx(adv["factor"])})
+        adv_text = "n/m" if adv is None else fx(adv["factor"]) + (adv_interval_text(adv) or " (no interval)")
         if adv and adv.get("paired"):
             p_ = adv["paired"]
             adv_text += f"; paired difference {p_['difference']:+.4f} [{p_['ci'][0]:+.4f}, {p_['ci'][1]:+.4f}]"
@@ -478,7 +566,7 @@ def per_build_lines(sec, cells_out):
     builds = sorted({(e["system"], e["build"]) for e in entries})
     tally = {"WIN": 0, "TIE": 0, "LOSS": 0}
     lines = ["Per-build comparison. Each row is one comparator build; every figure in it, and WARM's factor against it, comes from that build alone "
-             f"(QPS at a recall target uses only that build's sweep). Intervals {level * 100:.2f}% bootstrap or the range of rounds as above.", "",
+             f"(QPS at a recall target uses only that build's sweep). Each bracket names its kind: a {level * 100:.2f}% bootstrap of the factor, or a min-max range that carries no verdict.", "",
              "| Comparator build | " + " | ".join(f"{LABELS[m][0]} ({LABELS[m][1]})" if LABELS[m][1] else LABELS[m][0] for m in PER_BUILD_METRICS) + " |",
              "|---|" + "---|" * len(PER_BUILD_METRICS)]
     by = {(e["system"], e["build"], e["metric"]): e for e in entries}
@@ -495,18 +583,19 @@ def per_build_lines(sec, cells_out):
             if e["verdict"] in tally:
                 tally[e["verdict"]] += 1
             if adv is not None and m not in analyze.NO_VERDICT:
-                text += f", {fx(adv['factor'])}" + (f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv["ci"] else "") + f" **{e['verdict']}**"
+                text += f", {fx(adv['factor'])}" + adv_interval_text(adv) + f" **{e['verdict']}**"
             row.append(text)
             for who, cell_ in ((ref, e["mine"]), (system, e["theirs"])):
                 cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": sec["hw"]["class"], "metric": m, "system": who, "build": build if who == system else None,
                                   "per_build": [system, build], "value": cell_["value"], "ci": cell_["ci"], "n": cell_["n"], "source": cell_["source"],
-                                  "validity": cell_["validity"], "validity_reason": cell_["validity_reason"], "uncertainty": cell_["uncertainty"], "text": fmt(cell_["value"], dec)})
+                                  "validity": cell_["validity"], "validity_reason": cell_["validity_reason"], "uncertainty": cell_["uncertainty"],
+                                  "interval_kind": cell_.get("interval_kind"), "text": fmt(cell_["value"], dec)})
             if m in analyze.NO_VERDICT:
                 continue
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": sec["hw"]["class"], "metric": m, "derived": True, "per_build": [system, build],
                               "warm": ref, "other": system, "factor": None if adv is None or adv["factor"] == float("inf") else adv["factor"],
                               "factor_infinite": bool(adv and adv["factor"] == float("inf")), "ci": adv["ci"] if adv else None, "verdict": e["verdict"],
-                              "text": "n/m" if adv is None else fx(adv["factor"])})
+                              "interval_kind": (adv or {}).get("interval_kind"), "text": "n/m" if adv is None else fx(adv["factor"])})
         lines.append("| " + " | ".join(row) + " |")
     lines += ["", f"Per-build verdicts: WARM wins {tally['WIN']}, ties {tally['TIE']}, losses {tally['LOSS']}. Index size carries no verdict.", ""]
     return lines
@@ -552,18 +641,18 @@ def across_hardware_lines(sections):
         if mine is None or mine["value"] is None or other is None:
             continue
         adv = advantage("qps", mine, other)
-        rows.setdefault((data["dataset"].get("id") or data["dataset"].get("name"), data["contract"]), []).append((sec["hw"]["class"], data, mine, name, other, adv, verdict(adv)))
+        rows.setdefault((dataset_label(data["dataset"]), data["contract"]), []).append((sec["hw"]["class"], data, mine, name, other, adv, verdict(adv)))
     rows = {k: sorted(v, key=lambda r: r[0]) for k, v in sorted(rows.items()) if len(v) > 1}
     if not rows:
         return []
     out = ["## Text verdicts across hardware classes", "",
-           "The same campaign (suite `standard`, one pinned core, ten interleaved rounds) on each hardware class. Each row is that class's own single-thread QPS verdict "
+           "The same campaign (suite `standard`, one pinned core, interleaved rounds; counts in each section) on each hardware class. Each row is that class's own single-thread QPS verdict "
            "of the WARM reference row of the contract against the fastest comparator of the same contract; the rows are never pooled or compared as absolute values across classes.", "",
            "| Dataset | Contract | Hardware class | WARM QPS | Fastest comparator | Comparator QPS | Advantage | Verdict |", "|---|---|---|---|---|---|---|---|"]
     differ = []
     for (ds, contract), group in rows.items():
         for hw, data, mine, name, other, adv, v in group:
-            ci = f" [{adv['ci'][0]:.2f}, {adv['ci'][1]:.2f}]" if adv and adv["ci"] else ""
+            ci = adv_interval_text(adv)
             out.append(f"| {ds} | {contract} | `{hw}` | {fmt(mine['value'], 0)} | {display(name, data)} | {fmt(other['value'], 0)} | {fx(adv['factor']) if adv else 'n/m'}{ci} | **{v}** |")
         if len({r[6] for r in group}) > 1:
             differ.append(f"{ds}, {contract} contract: " + "; ".join(f"`{r[0]}` {r[6]}" for r in group))
@@ -595,7 +684,10 @@ def build():
            "Generated by `./benchmarks/competitive/warm-bench table` from the committed files in `benchmarks/results/competitive/`; do not edit by hand. " +
            "Every cell is indexed with its source file and key path in [comparison.cells.json](comparison.cells.json). Method, caveats and how to reproduce: [README.md](README.md).", "",
            "Rows are never compared across hardware classes: each section is one dataset on one hardware class. " +
-           "A verdict is WIN or LOSS only when the 95% bootstrap interval of the advantage factor excludes 1 (deterministic byte counts use a 5% band); otherwise TIE. " +
+           f"A verdict is WIN or LOSS only when a 95% (Bonferroni-adjusted) percentile bootstrap interval of the advantage factor itself excludes 1, with at least {analyze.MIN_BOOTSTRAP_ROUNDS} "
+           + "process rounds or build runs on each side (quality metrics: a paired per-query bootstrap); deterministic byte counts use a 5% band; a bootstrap interval that "
+           + "contains 1 is a TIE. Rows with fewer observations, or with an unverified side, print the measured factor and its min-max range with no verdict (n/v), and the ones where "
+           + "WARM is behind are listed under \"Measured behind, no verdict\". " +
            "The advantage factor is always oriented so that more than 1 means WARM is better. Hosted-runner rows carry noise; trust the ratios, not the absolute values.", "",
            "## Scoreboard", "", "| Dataset | Hardware class | Suite | WARM wins | Ties | Losses | Not measured | Informational (no verdict) |", "|---|---|---|---|---|---|---|---|"]
     for sec, counts, _ in summary:
@@ -608,6 +700,19 @@ def build():
             out.append(f"| {sec['title']} ({sec['hw']['class']}) | {label} | {display(name.split('|')[0], sec['data']) + (' ' + name.split('|')[1] if '|' in name else '')} | {'the comparator has 0' if adv['factor'] == 0 else format(1 / adv['factor'], '.2f') + 'x worse'} | {LEVERS.get(sec['kind'] + ':' + key) or LEVERS.get(key, '')} |")
     else:
         out.append("No metric in the committed results is lost.")
+    behind_rows = [(sec, *row) for sec, _, tally in summary for row in behind(sec, tally)]
+    behind_rows += [(sec, e["metric"], f"{LABELS[e['metric']][0]}, per build", e["system"] + "|" + e["build"], e["adv"], no_verdict_reason(e["adv"], e["mine"], e["theirs"]))
+                    for sec, _, _ in summary for e in sec["per_build"]
+                    if e["verdict"] == "n/v" and e["metric"] not in analyze.NO_VERDICT and e["adv"] and e["adv"].get("factor") is not None and e["adv"]["factor"] < 1]
+    if behind_rows:
+        out += ["", "### Measured behind, no verdict", "",
+                "Rows whose measured factor puts WARM behind but which carry no verdict under the rule above (too few observations for a bootstrap, "
+                + "or a side whose measurement is not verified). They are losses as measured, not established ones.", "",
+                "| Dataset | Metric | Best other | WARM disadvantage (measured) | Interval | Why no verdict |", "|---|---|---|---|---|---|"]
+        for sec, key, label, name, adv, reason in behind_rows:
+            who = display(name.split('|')[0], sec['data']) + (' ' + name.split('|')[1] if '|' in name else '')
+            worse = 'the comparator has 0' if adv['factor'] == 0 else format(1 / adv['factor'], '.2f') + 'x worse'
+            out.append(f"| {sec['title']} ({sec['hw']['class']}) | {label} | {who} | {worse} | {adv_interval_text(adv).strip() or 'none'} | {reason} |")
     out += ["", "## Results", ""] + body
     if server_body:
         out += ["## Server mode results", "",
@@ -618,6 +723,7 @@ def build():
     nr = {}
     for _, data in results:
         nr.update(data.get("not_run", {}))
+    nr.update(registry.CAMPAIGN_NOT_RUN)  # platform-independent: adapters the published campaign does not run
     out += ["## Not run", "", *[f"- `{k}`: {v}" for k, v in nr.items()], ""]
     block = readme_block(summary)
     return "\n".join(out), cells, block, gaps_from(summary)
@@ -638,12 +744,38 @@ CODE_PATHS = {
 }
 
 
+BEHIND = "BEHIND, NO VERDICT"
+
+
+def no_verdict_reason(adv, mine, other):
+    """Why a measured factor carries no verdict, in words."""
+    if adv.get("unverified"):
+        return "; ".join(dict.fromkeys(c.get("validity_reason") or "unverified measurement" for c in (mine, other) if c.get("validity", "valid") != "valid"))
+    if adv.get("interval_kind") == "range":
+        return f"{adv['observations'][0]} and {adv['observations'][1]} observations, fewer than the {analyze.MIN_BOOTSTRAP_ROUNDS} a verdict needs"
+    return "no interval of the factor"
+
+
+def behind(sec, tally):
+    """(key, label, name, adv, reason) for every verdict-free row whose measured factor puts WARM behind: a stricter verdict
+    rule must not make a measured disadvantage disappear from the loss lists."""
+    out = []
+    for key, label, name, adv in tally["n/v"]:
+        if analyze.no_verdict(sec["kind"], key, sec["data"].get("mode", "embedded")) or not adv or adv.get("factor") is None or adv["factor"] >= 1:
+            continue
+        cells = sec["metrics"][key]
+        out.append((key, label, name, adv, no_verdict_reason(adv, cells[reference(sec["data"])], cells[name])))
+    return out
+
+
 def gaps_from(summary):
-    """Every metric where WARM loses or ties, with the numbers and the best hypothesis."""
+    """Every metric where WARM loses or ties, and every verdict-free row where the measured factor puts WARM behind, with
+    the numbers and the best hypothesis."""
     gaps = []
     for sec, _, tally in summary:
-        for status in ("LOSS", "TIE"):
-            for key, label, name, adv in tally[status]:
+        rows = {"LOSS": [(*r, "") for r in tally["LOSS"]], "TIE": [(*r, "") for r in tally["TIE"]], BEHIND: behind(sec, tally)}
+        for status in ("LOSS", "TIE", BEHIND):
+            for key, label, name, adv, reason in rows[status]:
                 cells = sec["metrics"][key]
                 mine, other = cells[reference(sec["data"])], cells[name]
                 paths = CODE_PATHS[sec["kind"]]
@@ -652,21 +784,27 @@ def gaps_from(summary):
                     "metric": key, "label": label, "comparator": display(name, sec["data"]),
                     "warm": mine["value"], "comparator_value": other["value"], "unit": mine["unit"],
                     "advantage_factor": adv["factor"] if adv and adv["factor"] != float("inf") else None,
-                    "advantage_ci": adv["ci"] if adv else None, "level": sec["level"], "file": rel(sec["path"]),
+                    "advantage_ci": adv["ci"] if adv else None, "interval_kind": (adv or {}).get("interval_kind"), "no_verdict_reason": reason,
+                    "level": sec["level"], "file": rel(sec["path"]),
                     "hypothesis": LEVERS.get(sec["kind"] + ":" + key) or LEVERS.get(key, ""),
                     "code_path": paths.get(key, paths["default"]),
                 })
     for sec, _, _ in summary:
         for e in sec["per_build"]:
-            if e["verdict"] not in ("LOSS", "TIE"):
-                continue
             adv, unit = e["adv"], e["mine"]["unit"]
+            status = e["verdict"]
+            if status == "n/v" and e["metric"] not in analyze.NO_VERDICT and adv and adv.get("factor") is not None and adv["factor"] < 1:
+                status = BEHIND
+            if status not in ("LOSS", "TIE", BEHIND):
+                continue
             gaps.append({
-                "status": e["verdict"], "dataset": sec["title"], "hardware_class": sec["hw"]["class"], "suite": sec["data"]["suite"],
+                "status": status, "dataset": sec["title"], "hardware_class": sec["hw"]["class"], "suite": sec["data"]["suite"],
                 "metric": e["metric"], "label": LABELS[e["metric"]][0] + ", per build", "comparator": f"{display(e['system'], sec['data'])} {e['build']}",
                 "warm": e["mine"]["value"], "comparator_value": e["theirs"]["value"], "unit": unit,
                 "advantage_factor": adv["factor"] if adv and adv["factor"] != float("inf") else None,
-                "advantage_ci": adv["ci"] if adv else None, "level": sec["build_level"], "file": rel(sec["path"]),
+                "advantage_ci": adv["ci"] if adv else None, "interval_kind": (adv or {}).get("interval_kind"),
+                "no_verdict_reason": no_verdict_reason(adv, e["mine"], e["theirs"]) if status == BEHIND else "",
+                "level": sec["build_level"], "file": rel(sec["path"]),
                 "hypothesis": LEVERS.get(e["metric"], ""), "code_path": CODE_PATHS["ann"].get(e["metric"], CODE_PATHS["ann"]["default"]),
             })
     return gaps
@@ -675,18 +813,21 @@ def gaps_from(summary):
 def gaps_markdown(gaps):
     lines = ["# Gaps: where WARM loses or ties", "",
              "Generated with the table from the committed results; a gap stays here until a measured change closes it. " +
-             "Factor is WARM advantage (below 1 = WARM worse). Hypotheses are unmeasured unless a file is cited.", "",
+             "Factor is WARM advantage (below 1 = WARM worse). Hypotheses are unmeasured unless a file is cited. " +
+             f"`{BEHIND}` rows are measured disadvantages without a verdict (too few observations for the verdict rule, or an unverified side); "
+             "they are listed so the verdict rule never hides a loss.", "",
              "| Status | Dataset | Hardware class | Metric | Comparator | WARM | Comparator value | Factor [interval] | Hypothesis | Code path |", "|---|---|---|---|---|---|---|---|---|---|"]
     for g in gaps:
-        f = "n/m" if g["advantage_factor"] is None else f"{g['advantage_factor']:.2f}x" + (f" [{g['advantage_ci'][0]:.2f}, {g['advantage_ci'][1]:.2f}]" if g["advantage_ci"] else " (no CI)")
+        f = "n/m" if g["advantage_factor"] is None else f"{g['advantage_factor']:.2f}x" + (f" [{g['advantage_ci'][0]:.2f}, {g['advantage_ci'][1]:.2f}] ({g['interval_kind']})" if g["advantage_ci"] else " (no interval)")
         lines.append(f"| {g['status']} | {g['dataset']} | `{g['hardware_class']}` | {g['label']} | {g['comparator']} | {g['warm']:.4g} {g['unit']} | {g['comparator_value']:.4g} | {f} | {g['hypothesis']} | {g['code_path']} |")
     return "\n".join(lines) + "\n"
 
 
 def readme_block(summary):
     lines = [START, "", "_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). " +
-             "W = WARM ahead (95% interval excludes parity), T = tie, L = a comparator is ahead, - = no verdict " +
-             "(unpinned source revision, no interval, or not comparable). Rows are compared only within one machine._", "",
+             f"W = WARM ahead (95% bootstrap interval of the factor excludes parity, at least {analyze.MIN_BOOTSTRAP_ROUNDS} rounds a side), T = tie, L = a comparator is ahead, "
+             + "- = no verdict (fewer rounds than the rule needs, unverified measurement or source revision, no interval, or not comparable): the factor is as measured. "
+             + "Rows are compared only within one machine._", "",
              "| Dataset | Machine | Metric | WARM | Best other | Advantage | |", "|---|---|---|---|---|---|---|"]
     for sec, counts, tally in summary:
         if sec["data"]["suite"] == "smoke":
