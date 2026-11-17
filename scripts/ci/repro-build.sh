@@ -50,6 +50,9 @@ cp "$out"/wheel/*.whl "$out/"
 cargo package --locked --no-verify --no-default-features --allow-dirty
 cp target/package/*.crate "$out/"
 
-rm -rf "$out/.venv" "$out/wheel"
-(cd "$out" && sha256sum -- * | sort -k2 > SHA256SUMS)
+rm -rf "$out/.venv" "$out/wheel" "$out/SHA256SUMS"
+# Hashed before SHA256SUMS exists: a redirect on the pipeline creates the file while the glob
+# may still be expanding, so on some runs the list would include itself.
+sums=$(cd "$out" && sha256sum -- * | sort -k2)
+printf '%s\n' "$sums" > "$out/SHA256SUMS"
 cat "$out/SHA256SUMS"
