@@ -38,6 +38,7 @@ class VersionTests(unittest.TestCase):
             "README.md",
             "CONTRIBUTING.md",
             "docs/INTEGRATION.md",
+            "bindings/python/README.md",
         ):
             destination = self.tree / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -84,6 +85,7 @@ class VersionTests(unittest.TestCase):
         for relative, old, new in (
             ("CITATION.cff", "version: 0.", "version: 9."),
             ("docs/INTEGRATION.md", "writerslogic-warm@0.", "writerslogic-warm@9."),
+            ("bindings/python/README.md", "uv add warm-python\n", "uv add warm-python==9.9.9\n"),
         ):
             with self.subTest(file=relative):
                 path = self.tree / relative

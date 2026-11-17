@@ -20,6 +20,8 @@ esac
 cflags=(-std=c11 -D_DEFAULT_SOURCE -Wall -Wextra -Werror -g -I"$here/include")
 cc "${cflags[@]}" "$here/tests/c/test_warm.c" -o "$out/test_warm" \
   -L"$target" -lwriterslogic_warm_c -lpthread -lm
+cc "${cflags[@]}" "$here/examples/quickstart.c" -o "$out/quickstart" \
+  -L"$target" -lwriterslogic_warm_c -lpthread -lm
 # The static archive must be self-contained too.
 cc "${cflags[@]}" "$here/tests/c/test_warm.c" "$target/libwriterslogic_warm_c.a" \
   -o "$out/test_warm_static" "${static[@]}" -lpthread -lm
@@ -30,5 +32,8 @@ case "${MODE:-}" in
   *)
     "$out/test_warm"
     "$out/test_warm_static"
+    # The documented quickstart must still run and find the harbor document first.
+    first="$("$out/quickstart" "$out/quickstart-store")"
+    [[ "$first" == "harbor "* ]] || { echo "quickstart printed: $first" >&2; exit 1; }
     ;;
 esac
