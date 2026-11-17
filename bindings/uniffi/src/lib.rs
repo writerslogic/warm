@@ -177,7 +177,7 @@ impl Inner {
         let _exclusive = self.gate.write();
         let core = self.core()?;
         guarded(|| {
-            core.compact()?;
+            core.compact_without_reorder()?;
             core.flush()?;
             Ok(())
         })?;

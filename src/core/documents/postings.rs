@@ -1455,6 +1455,31 @@ impl PostingList {
         self.last = postings.last().map_or(0, |p| p.0 as u64);
     }
 
+    /// See [`PostingLists::permute_slots`].
+    fn permute_slots(&mut self, map: &[u32], words: &[u32]) {
+        if self.is_empty() {
+            return;
+        }
+        let mut moved: Vec<(u32, u32, u32)> = Vec::with_capacity(self.len());
+        let mut positional = false;
+        self.for_each_with_ordinal(|slot, frequency, ordinal| {
+            positional |= ordinal != 0;
+            moved.push((map[slot], frequency, ordinal));
+        });
+        moved.sort_unstable_by_key(|posting| posting.0);
+        let postings: Vec<Posting> = moved
+            .iter()
+            .map(|&(slot, frequency, _)| (slot as usize, frequency))
+            .collect();
+        let ordinals: Vec<u32> = if positional {
+            moved.iter().map(|posting| posting.2).collect()
+        } else {
+            Vec::new()
+        };
+        drop(moved);
+        self.encode_with_ordinals(&postings, &ordinals, |slot| words[slot]);
+    }
+
     #[cfg(test)]
     pub(super) fn append_run(&mut self, run: &[Posting]) {
         self.append_run_with_lengths(run, |_| 0);
@@ -2208,6 +2233,21 @@ impl PostingLists {
         self.lists[id as usize].set_entry(slot, frequency, ordinal, |slot| {
             words.get(slot).copied().unwrap_or(0)
         });
+    }
+
+    /// Moves every posting from slot `s` to slot `map[s]` (`map` is injective on the slots
+    /// that hold postings), keeping its frequency and positional ordinal; `words` holds the
+    /// word count of each new slot. One list is decoded at a time per thread, so the extra
+    /// memory is bounded by the longest lists, not the index.
+    pub(super) fn permute_slots(&mut self, map: &[u32], words: &[u32]) {
+        self.lists
+            .par_iter_mut()
+            .for_each(|list| list.permute_slots(map, words));
+    }
+
+    /// The lists of at least `min_len` postings, in list id order.
+    pub(super) fn long_lists(&self, min_len: usize) -> impl Iterator<Item = &PostingList> {
+        self.lists.iter().filter(move |list| list.len() >= min_len)
     }
 
     /// Every live term has a non-empty, strictly slot-sorted list whose recorded final slot
