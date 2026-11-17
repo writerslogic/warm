@@ -1,19 +1,107 @@
 # Build profiles
 
 `BuildParams::profile` selects the insertion passes of a vector index build. The default,
-`max-recall`, is the schedule of earlier releases and builds a byte-identical graph (SIFT-1M:
-graph hash `e0e8972a8c1d1c4d`, index file sha256 `2320c858...3874`, unchanged in all five repeats).
-`public-bench ann-qgraph` takes `--build-profile`.
+`standard`, runs two passes and bounds each construction search (see below). `max-recall` is the
+unbounded schedule of releases up to 0.6.8 and builds a byte-identical graph (SIFT-1M graph hash
+`e0e8972a8c1d1c4d`, index file sha256 `2320c858...3874`, unchanged in all five repeats; a unit test
+pins it). `public-bench ann-qgraph` takes `--build-profile`.
 
 | Profile | Passes (`build_ef` 500) | Intent |
 |---|---|---|
-| `max-recall` | ef 200, then ef 500 | highest recall, slowest build (default) |
-| `high` | ef 100, then ef 300 | about 0.58x the default build time |
+| `standard` | ef 100, then ef 500, both bounded | default: about 0.3x the `max-recall` build time |
+| `max-recall` | ef 200, then ef 500, unbounded | highest recall, slowest build (earlier default) |
+| `high` | ef 100, then ef 300 | about 0.58x the `max-recall` build time |
 | `balanced` | ef 100, then ef 200 | about 0.45x |
 | `fast` | one pass at ef 100 | about 0.20x |
 
 Passes use `min(build_ef, ef)`. The profile is not recorded in a graph cache header: build with a
-fresh cache path when it changes. A saved index record names the profile unless it is the default.
+fresh cache path when it changes. A saved index record always names the profile; a record without
+one is an earlier release's `max-recall` build and does not match a `standard` request.
+
+## The bounded construction search
+
+A construction search keeps a pool of `ef` candidates and expands every one of them. The bounded
+search stops expanding once the best unexpanded candidate lies farther than 1.02 times the
+squared distance of the 64th best candidate in the pool (`BOUND_RANK`, `BOUND_SLACK` in
+`src/core/qgraph/mod.rs`). The pool is still `ef` long, so the lists and the prune see the same
+kind of candidate set; the tail beyond rank 64 is no longer searched for. On glove-100 the
+distances concentrate, so the unbounded search expanded most of a 500-entry pool.
+
+Selection used a 5,000-row train holdout (never the benchmark queries), `ann-qgraph` at 8 threads,
+estimates per query at recall 0.99 as the machine-independent quality measure.
+
+## Default profile measurements
+
+Heavy ANN suite, pinned core, foreign-CPU gate, GCP n2 Ice Lake 8 vCPU. WARM `standard` rerun
+(SIFT: 5 build repeats, 10 rounds; GloVe: 3 build repeats, 5 rounds) against the comparator rows of
+the earlier run on the same VM type; WARM `max-recall` in the same files was the previous default.
+Graph hashes are identical at 1, 2, 4 and 8 build threads (SIFT `a83e53a9a22731bd`, GloVe
+`51ef29295b67cf7d`, measured with the exploratory binary at the same parameters).
+
+| dataset | system | build s | QPS@0.90 | QPS@0.95 | QPS@0.99 |
+|---|---|---|---|---|---|
+| sift-128 | WARM standard | 59.2 | 21,032 | 12,732 | 5,653 |
+| sift-128 | WARM max-recall (previous default) | 184.7 | 22,424 | 16,856 | 8,262 |
+| sift-128 | hnswlib | 257.0 | 10,780 | 7,223 | 3,389 |
+| sift-128 | FAISS IVF-PQ fast-scan | 152.4 | 7,467 | 4,701 | 1,865 |
+| sift-128 | USearch | 130.5 | 4,549 | 2,751 | 1,511 |
+| glove-100 | WARM standard | 116.7 | 3,154 | 1,730 | 466 |
+| glove-100 | WARM max-recall (previous default) | 360.2 | 4,328 | 2,372 | 667 |
+| glove-100 | FAISS IVF-PQ fast-scan | 126.8 | 2,016 | 1,402 | not reached |
+| glove-100 | DiskANN | 607.6 | 1,543 | 856 | 318 |
+| glove-100 | hnswlib | 170.3 | 1,610 | 859 | 238 |
+
+The default costs 17-31% of QPS at recall 0.95 and 0.99 against the previous default and stays
+first at every recall level on both datasets with non-overlapping intervals. ScaNN builds in 31-35 s
+(IVF with quantisation) and is faster to build than any graph index here; it does not reach recall
+0.99 on GloVe. GloVe index size is unchanged at 913 MiB (the exact f32 rows are 461 MiB), above
+FAISS IVF-PQ fast-scan at 490 MiB.
+
+### Attempts to recover QPS at the same build time
+
+Held-out GloVe (5,000 train rows as queries, 8 build threads, Ice Lake VM; estimates per query,
+lower is better; `NR` = recall not reached within the ef range of that run). Experimental
+environment switches only; none is in the library.
+
+| construction | build s | est/q @0.95 | est/q @0.99 |
+|---|---|---|---|
+| `standard` (pass 1 ef 100 bounded, pass 2 ef 500 bounded at rank 64, slack 1.02) | 112.9 | 11,905 | 42,315 |
+| `max-recall` | 337.5 | NR | 28,293 |
+| standard with pass 2 unbounded | 308.2 | 9,842 | 30,479 |
+| standard with pass 2 bound at rank 128, slack 1.05 | 216.6 | 9,785 | 31,712 |
+| standard with pass 1 bound at rank 48, slack 1.01 | 106.2 | 12,942 | 47,662 |
+| standard with pass 1 bound at rank 32, slack 1.0 | 89.7 | 14,381 | NR |
+| standard with a first pass at ef 200 | 120.1 | 12,006 | NR |
+| standard plus an unbounded ef 500 repair of the vertices with in-degree at most 0 / 2 / 5 (1 / 372 / 4,669 vertices) | 114.9 / 115.3 / 116.3 | 11,905 / 11,897 / 11,913 | NR |
+
+Recall at 0.99 is paid for by the bound of the second pass, and the price is linear in build
+time: every point that is cheaper than `standard` is worse at 0.95, and every point that is
+better at 0.99 costs 100 s or more. The repair of poorly connected vertices changes nothing, so
+the loss is not unreachable vertices. QPS within 3% of `max-recall` and a build 10% faster than
+FAISS IVF-PQ (114 s) do not hold together on GloVe. The reverse-edge re-prune with the
+`max-recall` rule was not tried: it only reorders candidates that the bound already dropped.
+
+### Index size
+
+GloVe 913 MiB is the vertex file (452 MiB) plus the exact f32 rows (461 MiB). A clean index
+serves from the vertex file alone (the rows are read only to rescore after updates or deletes), so
+changing the rows changes size but not QPS or the reachable recall of a clean index.
+
+| change | GloVe MiB | measured |
+|---|---|---|
+| delta-coded neighbour ids (`id_bytes` 0) | vertex 450 -> 393 | same graph hash; single-thread QPS at 0.99 on SIFT 7,513 -> 6,053 (-19%), GloVe at 0.95 about -30% |
+| f16 rows | rows 461 -> 230 | top-10 of exact search over 200,000 rows changes in 0.05% of slots (overlap 0.9995) |
+| byte-plane transposition plus zlib level 1 on the f32 rows | rows 461 -> 397 | ratio 0.861 (lzma 0.854) |
+
+The best combination (delta ids plus f16 rows) is still well above FAISS IVF-PQ's 490 MiB, and the
+delta ids cost 19-30% of QPS. None of these is shipped. Below 490 MiB the exact rows would have to
+be dropped or rebuilt from the vertex residual codes, which makes returned scores and rebuilds
+approximate; that is a format and semantics decision, not made here.
+
+Results that were produced with `max-recall` as the default and are not regenerated:
+`benchmarks/results/qgraph_build_profiles_gcp_v1.json`, the `qgraph_*` results, the
+`heavy-ann-sift-128-euclidean-...-intel-ultra-9-185h-22c-27g.json` file, and every tabulated number
+below.
 
 All numbers below are from a GCP n2-standard-8 (Ice Lake, 8 vCPU = 4 physical cores), 8 build
 threads, nothing else running, builds interleaved, serving on one pinned core with its hyper-thread

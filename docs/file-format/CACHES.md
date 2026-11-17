@@ -18,7 +18,8 @@ part of the compatibility promise beyond "a cache that cannot be read is discard
 
 A record is a chunk's UTF-8 text (plaintext stores) or its sealed form. Locations
 `(offset, length)` live only in memory, so the file cannot be parsed without replaying the
-journal. The engine **truncates and recreates it on every open** and re-appends chunk text
+journal. A close that leaves a checkpoint holding every document (CHECKPOINT.md) cuts it to its
+header. The engine **truncates and recreates it on every open** and re-appends chunk text
 during replay. A file without `WARMT` (version 1: headerless plaintext) is overwritten the same
 way. Deleted text therefore remains in the file only until the next open. A delete zeroes the
 deleted records in place; a purge then rewrites the file in document id order through

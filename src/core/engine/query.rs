@@ -164,7 +164,8 @@ impl WarmCore {
             self.persist_indices(&self.shards.read())?;
         }
         self.flush_audit()?;
-        self.checkpoint_if_due()
+        self.checkpoint_if_due()?;
+        self.experience_checkpoint()
     }
 
     /// Energy-based associative retrieval using Hopfield-Fenchel-Young dynamics.

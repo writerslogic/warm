@@ -100,6 +100,7 @@ impl Delta {
                 norms: norms_opt(&self.norms),
                 codes: None,
                 quantized: false,
+                bound: None,
             };
             let candidates = SEEN.with(|seen| {
                 rows.greedy(
@@ -161,6 +162,7 @@ impl Delta {
             norms: norms_opt(&self.norms),
             codes: None,
             quantized: false,
+            bound: None,
         };
         rows.insert_pass(
             &mut self.edges,

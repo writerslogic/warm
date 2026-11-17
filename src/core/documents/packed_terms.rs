@@ -440,6 +440,32 @@ impl StoredTerms {
 }
 
 impl StoredTerms {
+    /// The terms as ids of their shared dictionary, in ascending id order, when they have one and
+    /// carry no positions; the id replaces hashing the term's text where a scan only counts terms.
+    pub(super) fn shared_ids(
+        &self,
+    ) -> Option<(
+        &Arc<SharedDictionary>,
+        impl Iterator<Item = (u32, u32)> + '_,
+    )> {
+        if self.positions.is_some() {
+            return None;
+        }
+        match self.terms.as_deref() {
+            Some(TermData::Shared(table)) => Some((
+                &table.dictionary,
+                (0..table.frequencies.len()).map(move |index| {
+                    (
+                        super::postings::unpack(&table.ids, index, table.bits) as u32,
+                        *table.frequencies.get(index).expect("frequency in range"),
+                    )
+                }),
+            )),
+            _ => None,
+        }
+    }
+}
+impl StoredTerms {
     pub(super) fn from_dictionary(
         dictionary: Arc<SharedDictionary>,
         ids: &[u32],

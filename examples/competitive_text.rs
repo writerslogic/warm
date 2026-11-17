@@ -18,15 +18,26 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 use writerslogic_warm::core::documents::{
-    BatchTooLarge, DocumentResult, EncodeMode, IngestOptions, LexicalOptions, LexicalQuery,
-    MAX_BATCH_ITEMS,
+    DocumentResult, EncodeMode, IngestOptions, LexicalOptions, LexicalQuery,
 };
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
+
+/// The shipped artifacts' allocator (`--features mimalloc`); without the feature the system allocator
+/// runs, and the row says which.
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: writerslogic_warm::allocator::Tuned = writerslogic_warm::allocator::Tuned;
+
+const ALLOCATOR: &str = if cfg!(feature = "mimalloc") {
+    "mimalloc-tuned"
+} else {
+    "system"
+};
 
 const USAGE: &str =
     "usage: competitive_text <build|serve|ops> --input FILE --store DIR --out FILE \
     [--passes N (3)] [--ops N (100)] [--t0-ns NS (0)] [--encode eager|deferred|lexical (eager)] [--analyzer NAME] \
-    [--batch N (0)] [--api documents|lexical (documents)] [--store-text true|false (false)] [--digest true|false (false)]";
+    [--batch N (0)] [--api documents|lexical (documents)] [--store-text true|false (false)] [--digest true|false (false)] [--index-budget BYTES] [--fold-fraction F]";
 
 /// Command line, parsed by hand: this binary is what the harness measures as WARM's install
 /// footprint, and an argument-parsing framework would be most of it.
@@ -47,6 +58,10 @@ struct Args {
     analyzer: Option<writerslogic_warm::core::documents::Analyzer>,
     /// `build` only: documents per atomic batch (0 = as many per batch as the engine accepts).
     batch: usize,
+    /// `build` only: `index_memory_budget` in bytes (the engine default when absent; 0 = never fold).
+    index_budget: Option<usize>,
+    /// `build` only: `index_fold_fraction` (the engine default when absent).
+    fold_fraction: Option<f64>,
     /// `serve` only: `documents` calls `search_documents` (the product path for document search) with the raw
     /// query string; `lexical` calls `search_lexical` on the query's word set.
     api: String,
@@ -77,6 +92,8 @@ impl Args {
             encode: "eager".into(),
             analyzer: None,
             batch: 0,
+            index_budget: None,
+            fold_fraction: None,
             api: "documents".into(),
             store_text: false,
             digest: false,
@@ -98,6 +115,8 @@ impl Args {
                 "--encode" => args.encode = value,
                 "--analyzer" => args.analyzer = Some(value.parse()?),
                 "--batch" => args.batch = value.parse().with_context(number)?,
+                "--index-budget" => args.index_budget = Some(value.parse().with_context(number)?),
+                "--fold-fraction" => args.fold_fraction = Some(value.parse().with_context(number)?),
                 "--api" => args.api = value,
                 "--store-text" => args.store_text = value.parse().with_context(number)?,
                 "--digest" => args.digest = value.parse().with_context(number)?,
@@ -238,40 +257,89 @@ fn epoch_ns() -> u128 {
         .unwrap_or(0)
 }
 
-/// Ingests `documents` in the fewest atomic batches the engine accepts. The engine bounds a
-/// batch by items, chunks, source and metadata bytes, embedding values and transaction bytes, and
-/// rejects an oversized batch before writing anything; so start at `MAX_BATCH_ITEMS` documents and
-/// halve on a batch-limit error, keeping the size that worked. A fixed size takes `fixed`.
-fn ingest(
-    core: &WarmCore,
-    documents: &mut [DocumentInput],
-    options: &IngestOptions,
+/// Largest batch the build phase commits: documents and source bytes. Documents are moved into
+/// the engine, so a batch that exceeds an engine limit is an error rather than a retry.
+const BATCH_DOCUMENTS: usize = 4096;
+const BATCH_SOURCE_BYTES: usize = 6 << 20;
+
+/// Streams the `documents` array of the input file through `commit` in batches, so the corpus is
+/// never resident next to the index: peak memory is one batch plus what the engine holds. The
+/// `queries` are skipped (the build phase does not read them). Returns the documents seen.
+fn stream_documents(
+    path: &std::path::Path,
     fixed: usize,
-) -> Result<()> {
-    let mut size = if fixed > 0 { fixed } else { MAX_BATCH_ITEMS };
-    let mut at = 0;
-    while at < documents.len() {
-        let end = (at + size).min(documents.len());
-        match core.memorize_documents_with(documents[at..end].to_vec(), options) {
-            Ok(_) => {
-                // The batch is committed; the corpus copy of its text is not read again, so
-                // release it instead of holding the whole input next to the growing index.
-                for document in &mut documents[at..end] {
-                    document.text = String::new();
-                    document.metadata = None;
+    commit: &mut dyn FnMut(Vec<DocumentInput>) -> Result<()>,
+) -> Result<usize> {
+    use serde::de::{DeserializeSeed, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
+    struct Documents<'a> {
+        limit: usize,
+        commit: &'a mut dyn FnMut(Vec<DocumentInput>) -> Result<()>,
+        seen: &'a mut usize,
+    }
+    impl<'de> Visitor<'de> for Documents<'_> {
+        type Value = ();
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            f.write_str("an array of documents")
+        }
+        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<(), A::Error> {
+            let mut batch: Vec<DocumentInput> = Vec::new();
+            let mut bytes = 0usize;
+            while let Some(document) = seq.next_element::<DocumentInput>()? {
+                bytes += document.text.len();
+                batch.push(document);
+                *self.seen += 1;
+                if batch.len() >= self.limit || bytes >= BATCH_SOURCE_BYTES {
+                    (self.commit)(std::mem::take(&mut batch)).map_err(serde::de::Error::custom)?;
+                    bytes = 0;
                 }
-                at = end;
             }
-            Err(error) if fixed == 0 && size > 1 && error.is::<BatchTooLarge>() => size /= 2,
-            Err(error) => return Err(error),
+            if !batch.is_empty() {
+                (self.commit)(batch).map_err(serde::de::Error::custom)?;
+            }
+            Ok(())
         }
     }
-    Ok(())
+    struct Seed<'a>(Documents<'a>);
+    impl<'de> DeserializeSeed<'de> for Seed<'_> {
+        type Value = ();
+        fn deserialize<D: Deserializer<'de>>(self, d: D) -> Result<(), D::Error> {
+            d.deserialize_seq(self.0)
+        }
+    }
+    struct Top<'a>(Documents<'a>);
+    impl<'de> Visitor<'de> for Top<'_> {
+        type Value = ();
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            f.write_str("the input object")
+        }
+        fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<(), A::Error> {
+            let mut documents = Some(self.0);
+            while let Some(key) = map.next_key::<String>()? {
+                match (key.as_str(), documents.take()) {
+                    ("documents", Some(documents)) => map.next_value_seed(Seed(documents))?,
+                    _ => {
+                        map.next_value::<IgnoredAny>()?;
+                    }
+                }
+            }
+            Ok(())
+        }
+    }
+    let mut seen = 0usize;
+    let limit = if fixed > 0 { fixed } else { BATCH_DOCUMENTS };
+    let reader = std::io::BufReader::with_capacity(1 << 16, std::fs::File::open(path)?);
+    let mut json = serde_json::Deserializer::from_reader(reader);
+    json.deserialize_map(Top(Documents {
+        limit,
+        commit,
+        seen: &mut seen,
+    }))?;
+    Ok(seen)
 }
 
 fn main() -> Result<()> {
     let args = Args::parse()?;
-    let input: Input = serde_json::from_slice(&std::fs::read(&args.input)?)?;
+    let load = || -> Result<Input> { Ok(serde_json::from_slice(&std::fs::read(&args.input)?)?) };
     let store = args.store.display().to_string();
     let report = match args.phase.as_str() {
         "build" => {
@@ -281,24 +349,43 @@ fn main() -> Result<()> {
                 encode: mode,
                 ..Default::default()
             };
-            let count = input.documents.len();
-            let mut documents = input.documents;
-            if args.store_text {
-                for document in &mut documents {
-                    document.store_text = Some(true);
-                }
-            }
-            let start = Instant::now();
-            let config = writerslogic_warm::core::WarmConfig {
+            let mut config = writerslogic_warm::core::WarmConfig {
                 analyzer: args.analyzer,
                 ..Default::default()
             };
+            // `WARM_COMPRESS_TEXT=1` builds the checkpoint with compressed chunk text.
+            config.document_checkpoint.compress_text =
+                std::env::var_os("WARM_COMPRESS_TEXT").is_some();
+            if let Some(budget) = args.index_budget {
+                config.document_checkpoint.index_memory_budget = budget;
+            }
+            if let Some(fraction) = args.fold_fraction {
+                config.document_checkpoint.index_fold_fraction = fraction;
+            }
             let core = WarmCore::new(1024, Some(store), Some(config))?;
-            ingest(&core, &mut documents, &options, args.batch)?;
-            json!({"documents": count, "ingest_s": start.elapsed().as_secs_f64(),
-                "encode": mode.name(), "store_text": args.store_text})
+            // Only the engine calls are timed: reading and parsing the corpus is the caller's.
+            let mut memorize = std::time::Duration::ZERO;
+            let count = stream_documents(&args.input, args.batch, &mut |mut batch| {
+                if args.store_text {
+                    for document in &mut batch {
+                        document.store_text = Some(true);
+                    }
+                }
+                let start = Instant::now();
+                core.memorize_documents_with(batch, &options)?;
+                memorize += start.elapsed();
+                Ok(())
+            })?;
+            let ingest_s = memorize.as_secs_f64();
+            // `close_s` is the durable close (the final checkpoint) that `drop` runs.
+            let closing = Instant::now();
+            drop(core);
+            json!({"documents": count, "ingest_s": ingest_s,
+                "close_s": closing.elapsed().as_secs_f64(),
+                "encode": mode.name(), "store_text": args.store_text, "allocator": ALLOCATOR})
         }
         "serve" => {
+            let input = load()?;
             ensure!(
                 args.passes > 0 && !input.queries.is_empty(),
                 "nothing to time"
@@ -435,6 +522,7 @@ fn main() -> Result<()> {
             return Ok(());
         }
         "ops" => {
+            let input = load()?;
             ensure!(
                 input.documents.len() >= 2 * args.ops,
                 "corpus too small for the ops count"

@@ -19,6 +19,8 @@ pub(crate) struct Symbols {
     refs: Vec<u32>,
     map: HashMap<Arc<str>, Sym>,
     free: Vec<Sym>,
+    /// Bytes of the live strings.
+    bytes: usize,
 }
 
 fn up(r: &mut u32) {
@@ -46,6 +48,7 @@ impl Symbols {
             }
         };
         self.map.insert(a, id);
+        self.bytes += s.len();
         id
     }
 
@@ -62,6 +65,7 @@ impl Symbols {
         if *r == 0 {
             if let Some(s) = self.strings[id as usize].take() {
                 self.map.remove(&*s);
+                self.bytes -= s.len();
             }
             self.free.push(id);
         }
@@ -77,6 +81,10 @@ impl Symbols {
 
     pub fn live(&self) -> usize {
         self.map.len()
+    }
+
+    pub fn live_bytes(&self) -> usize {
+        self.bytes
     }
 
     pub fn slots(&self) -> impl Iterator<Item = Option<&str>> {
@@ -96,6 +104,7 @@ impl Symbols {
             let a: Arc<str> = Arc::from(s);
             self.strings[id] = Some(a.clone());
             self.map.insert(a, id as Sym);
+            self.bytes += s.len();
         }
         true
     }

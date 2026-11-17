@@ -53,6 +53,8 @@ pub(super) struct ImageState {
     pub(super) other_state: AtomicBool,
     /// Set once the engine opened completely; only then may closing write a checkpoint.
     opened: AtomicBool,
+    /// Set when a fold failed: the engine stops folding and keeps the index in memory.
+    fold_failed: AtomicBool,
 }
 
 fn word(header: &[u8], index: usize) -> u64 {
@@ -234,7 +236,8 @@ impl WarmCore {
                 && documents::checkpoint_binding(&bytes) == (generation, self.dimensions as u64),
             "checkpoint checksum mismatch"
         );
-        ServingImage::new(bytes)
+        Ok(ServingImage::new(bytes)?
+            .with_text_cache(self.config.document_checkpoint.text_cache_bytes))
     }
 
     /// The sealed checkpoint of `store` for the generation directory `generation`, when this
@@ -252,12 +255,98 @@ impl WarmCore {
         {
             return Ok(None);
         }
-        let Some(image) =
-            documents::encode_checkpoint(store, Self::generation_crc(generation), self.dimensions)?
+        let Some(image) = documents::encode_checkpoint(
+            store,
+            Self::generation_crc(generation),
+            self.dimensions,
+            self.config.document_checkpoint.compress_text,
+        )?
         else {
             return Ok(None);
         };
         self.seal_checkpoint(image).map(Some)
+    }
+
+    /// Whether a compaction writes this store's checkpoint by streaming it
+    /// ([`documents::merge_checkpoint`]) instead of encoding it in memory: a plaintext store
+    /// that takes checkpoints. Sealed checkpoints are one AEAD message and stay in memory until
+    /// the sealed block container carries them.
+    #[cfg(feature = "security")]
+    pub(super) fn streams_checkpoints(&self) -> bool {
+        self.encryption.is_none() && self.streams_plain()
+    }
+
+    #[cfg(not(feature = "security"))]
+    pub(super) fn streams_checkpoints(&self) -> bool {
+        self.streams_plain()
+    }
+
+    /// A streamed merge writes inline text; compressed text needs the whole stream to train
+    /// its dictionary, so a store that compresses text encodes its checkpoint in memory.
+    fn streams_plain(&self) -> bool {
+        self.checkpoint_schema()
+            && self.config.document_checkpoint.enabled
+            && !self.config.document_checkpoint.compress_text
+            && !self.image.other_state.load(Ordering::Acquire)
+    }
+
+    /// Streams the checkpoint of the live store into the staging generation directory.
+    pub(super) fn stream_checkpoint(
+        &self,
+        store: &DocumentStore,
+        staging: &Path,
+        generation: &str,
+    ) -> Result<Option<u64>> {
+        documents::merge_checkpoint(
+            store,
+            Self::generation_crc(generation),
+            self.dimensions,
+            &staging.join(FILE),
+        )
+    }
+
+    /// After a streamed compaction published a checkpoint holding the whole document store:
+    /// replaces the live store (and with it the index in memory) by the store over that
+    /// checkpoint, the state a reopen would reach.
+    pub(super) fn serve_published_checkpoint(&self) -> Result<()> {
+        let path = self.arena.data_dir().join(FILE);
+        let image = Arc::new(
+            self.load_checkpoint(&path)
+                .with_context(|| format!("document checkpoint {}", path.display()))?,
+        );
+        image.release_pages();
+        *self.documents.write() = DocumentStore::over(CheckpointBase::new(Arc::clone(&image)));
+        *self.image.serving.write() = Some(image);
+        Ok(())
+    }
+
+    /// Folds the live index into the checkpoint when its estimated size reaches
+    /// `document_checkpoint.index_memory_budget`; called after each committed document batch.
+    /// A fold that fails leaves the store as it was (everything is committed) and ends folding
+    /// for this engine.
+    pub(super) fn fold_if_over_budget(&self) {
+        let budget = self.config.document_checkpoint.index_memory_budget;
+        if budget == 0
+            || !self.image.opened.load(Ordering::Acquire)
+            || self.image.fold_failed.load(Ordering::Acquire)
+            || !self.streams_checkpoints()
+        {
+            return;
+        }
+        let fraction = self.config.document_checkpoint.index_fold_fraction;
+        let (resident, base_bytes) = {
+            let documents = self.documents.read();
+            (documents.resident_estimate(), documents.base_bytes())
+        };
+        // Rounding the fractional threshold down is harmless: it only folds a byte early.
+        let threshold = budget.max((fraction.max(0.0) * base_bytes as f64) as usize);
+        if resident < threshold {
+            return;
+        }
+        if let Err(error) = self.compact() {
+            self.image.fold_failed.store(true, Ordering::Release);
+            tracing::warn!(%error, "folding the document index into the checkpoint failed");
+        }
     }
 
     /// Whether a compaction now would write a checkpoint: checkpoints enabled, only document
@@ -289,6 +378,26 @@ impl WarmCore {
             return Ok(());
         }
         self.compact()
+    }
+
+    /// At close: when the live generation is a checkpoint with no frames after it, every
+    /// document's text is in the checkpoint, so the text segment cache is cut to its header.
+    pub(super) fn release_text_cache(&self) {
+        if !self.config.document_checkpoint.compress_text
+            || !self.image.opened.load(Ordering::Acquire)
+            || self.arena.stats().used_bytes != 0
+            || self.arena.data_dir().join(FILE).symlink_metadata().is_err()
+        {
+            return;
+        }
+        match documents::TextSegment::release(&self.storage_path.join("documents.text")) {
+            Ok(()) => {}
+            Err(error)
+                if error
+                    .downcast_ref::<std::io::Error>()
+                    .is_some_and(|e| e.kind() == std::io::ErrorKind::NotFound) => {}
+            Err(error) => tracing::warn!(%error, "text cache not released at close"),
+        }
     }
 
     #[cfg(feature = "security")]
@@ -413,6 +522,171 @@ mod tests {
         let core = WarmCore::new(256, Some(path), Some(config))?;
         assert!(core.serves_from_checkpoint());
         assert_eq!(answers(&core)?, expected);
+        Ok(())
+    }
+
+    /// Chunk text is in compressed blocks of the checkpoint: it reads back byte for byte (hits,
+    /// records, text of a document written since), the text segment cache does not keep a
+    /// second copy at close, and a checkpoint that holds the text inline still opens, serves
+    /// the same answers and compacts to the blocks.
+    #[test]
+    fn compressed_text_round_trips_and_inline_text_checkpoints_still_open() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().display().to_string();
+        let mut config = WarmConfig::default();
+        config.document_checkpoint.min_journal_bytes = 0;
+        config.document_checkpoint.compress_text = true;
+        let options = documents::IngestOptions {
+            encode: documents::EncodeMode::Lexical,
+            ..Default::default()
+        };
+        let words = ["alpha", "beta", "gamma", "delta", "evidence", "caf\u{e9}"];
+        let text_of = |i: usize| -> String {
+            (0..2 + i % 40)
+                .map(|j| words[(i * 3 + j * j) % words.len()])
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        let queries = [
+            "evidence",
+            "alpha beta",
+            "gamma evidence delta",
+            "caf\u{e9}",
+        ];
+        let answers = |core: &WarmCore| -> Result<Vec<String>> {
+            queries
+                .iter()
+                .map(|q| {
+                    let hits = core.search_documents(q, &SearchOptions::default())?;
+                    Ok(serde_json::to_string(&hits)?)
+                })
+                .collect()
+        };
+        let feature_word = |bytes: &[u8]| u64::from_le_bytes(bytes[32..40].try_into().unwrap());
+        let expected = {
+            let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+            let documents = (0..600)
+                .map(|i| {
+                    serde_json::from_value(serde_json::json!({
+                        "id": format!("d{i:03}"), "text": text_of(i)
+                    }))
+                    .unwrap()
+                })
+                .collect();
+            core.memorize_documents_with(documents, &options)?;
+            drop(core);
+            let text_cache = std::fs::metadata(directory.path().join("documents.text"))?.len();
+            assert_eq!(
+                text_cache, 8,
+                "a closed checkpointed store keeps no text cache"
+            );
+            let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+            assert!(core.serves_from_checkpoint());
+            let mut checked = 0;
+            for q in queries {
+                for hit in core.search_documents(q, &SearchOptions::default())? {
+                    let i: usize = hit.document_id[1..].parse()?;
+                    assert_eq!(hit.text.as_deref(), Some(text_of(i).as_str()), "{q}");
+                    checked += 1;
+                }
+            }
+            assert!(checked >= 20, "{checked} hits read back");
+            answers(&core)?
+        };
+        let [file] = checkpoint_files(directory.path()).try_into().unwrap();
+        let bytes = std::fs::read(&file)?;
+        assert_eq!(feature_word(&bytes), 1, "text blocks feature");
+        let generation = file
+            .parent()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let dimensions = documents::checkpoint_binding(&bytes).1 as usize;
+        let store = ServingImage::new(Backing::Owned(bytes.clone()))?.hydrate(None)?;
+        let inline = documents::encode_checkpoint(
+            &store,
+            WarmCore::generation_crc(generation),
+            dimensions,
+            false,
+        )?
+        .expect("lexical-only store");
+        assert_eq!(feature_word(&inline), 0);
+        assert!(
+            inline.len() > bytes.len(),
+            "the blocks are smaller than inline text"
+        );
+        std::fs::write(&file, &inline)?;
+
+        let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+        assert!(core.serves_from_checkpoint());
+        assert_eq!(answers(&core)?, expected);
+        core.compact()?;
+        drop(core);
+        let [file] = checkpoint_files(directory.path()).try_into().unwrap();
+        assert_eq!(feature_word(&std::fs::read(&file)?), 1);
+        for budget in [0, 1, 64 << 20] {
+            let mut config = config.clone();
+            config.document_checkpoint.text_cache_bytes = budget;
+            let core = WarmCore::new(256, Some(path.clone()), Some(config))?;
+            assert!(core.serves_from_checkpoint());
+            assert_eq!(answers(&core)?, expected, "text cache of {budget} bytes");
+            assert_eq!(
+                answers(&core)?,
+                expected,
+                "second read, cache of {budget} bytes"
+            );
+        }
+        Ok(())
+    }
+
+    /// Erased text does not survive in a compressed block or in the dictionary sampled from
+    /// the stream: a scrubbing compaction rebuilds the text blocks from the live documents.
+    #[test]
+    fn purged_text_is_absent_from_blocks_and_dictionary() -> Result<()> {
+        const MARKER: &str = "quokkapurgemarker";
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().display().to_string();
+        let mut config = WarmConfig::default();
+        config.document_checkpoint.min_journal_bytes = 0;
+        config.document_checkpoint.compress_text = true;
+        let options = documents::IngestOptions {
+            encode: documents::EncodeMode::Lexical,
+            ..Default::default()
+        };
+        let filler = "common words repeat across the corpus so the dictionary samples them ";
+        let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
+        let documents = (0..400)
+            .map(|i| {
+                let text = if i % 20 == 3 {
+                    format!("{MARKER} {}", filler.repeat(1 + i % 5))
+                } else {
+                    format!("document {i} {}", filler.repeat(1 + i % 5))
+                };
+                serde_json::from_value(serde_json::json!({"id": format!("d{i:03}"), "text": text}))
+                    .unwrap()
+            })
+            .collect();
+        core.memorize_documents_with(documents, &options)?;
+        core.compact()?;
+        let stream = |dir: &Path| -> Result<(Vec<u8>, Vec<u8>)> {
+            let [file] = checkpoint_files(dir).try_into().unwrap();
+            ServingImage::new(Backing::Owned(std::fs::read(file)?))?.text_contents()
+        };
+        let holds = |bytes: &[u8]| bytes.windows(MARKER.len()).any(|w| w == MARKER.as_bytes());
+        let (dict, text) = stream(directory.path())?;
+        assert!(holds(&text), "the marked documents are in the stream");
+        assert!(!dict.is_empty());
+        for i in (3..400).step_by(20) {
+            core.delete_document(&format!("d{i:03}"))?;
+        }
+        core.compact_scrubbing()?;
+        let (dict, text) = stream(directory.path())?;
+        assert!(
+            !holds(&dict) && !holds(&text),
+            "erased text left in the blocks"
+        );
         Ok(())
     }
 

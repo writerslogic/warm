@@ -33,6 +33,12 @@ impl WarmCore {
         })
     }
 
+    /// The store's dense embedding space, when one is configured: the dimension caller-supplied
+    /// embeddings must have and the model an installed embedder must match.
+    pub fn embedding_space(&self) -> Option<&crate::core::EmbeddingSpace> {
+        self.config.embedding_space.as_ref()
+    }
+
     pub fn memorize_document(&self, input: DocumentInput) -> Result<u32> {
         self.memorize_document_with(input, &IngestOptions::default())
     }
@@ -137,6 +143,9 @@ impl WarmCore {
             })
             .collect();
         self.commit_serialized(&mutations, &payload)?;
+        // The fold's working set should not add to the batch's.
+        drop((mutations, payload));
+        self.fold_if_over_budget();
         Ok(counts)
     }
 

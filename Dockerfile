@@ -3,7 +3,7 @@ RUN apk add --no-cache build-base
 WORKDIR /src
 COPY . .
 ENV CARGO_PROFILE_RELEASE_LTO=false
-RUN cargo build --release --locked --features mcp,security --bin warm-mcp \
+RUN cargo build --release --locked --features mcp,security,mimalloc --bin warm-mcp \
  && strip target/release/warm-mcp \
  && mkdir -p /seed/data && chown -R 65532:65532 /seed
 

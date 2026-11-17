@@ -420,7 +420,15 @@ fn health_readiness_and_metrics() {
     let keys = scratch.path().join("keys.json");
     let reader = keygen(&keys, "r", "*", "read");
     let admin = keygen(&keys, "a", "*", "admin");
-    let s = Server::start(&["--keys-file", keys.to_str().unwrap()], &[]);
+    let s = Server::start(
+        &[
+            "--keys-file",
+            keys.to_str().unwrap(),
+            "--max-concurrent-work",
+            "4",
+        ],
+        &[],
+    );
     assert_eq!(s.req("GET", "/healthz").send().json()["status"], "ok");
     assert_eq!(s.req("GET", "/readyz").send().json()["status"], "ready");
     assert_eq!(s.req("GET", "/metrics").send().status, 401);

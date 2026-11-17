@@ -19,8 +19,8 @@ use rayon::prelude::*;
 use crate::core::error::WarmError;
 use crate::core::qgraph::connectivity::ConnectivityStats;
 use crate::core::qgraph::{
-    BuildParams, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph, Metric, Residency,
-    UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
+    Allow, BuildParams, BuildProfile, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph,
+    Metric, Residency, UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
 };
 
 /// Graphs below this many vertices store neighbour ids in three bytes.
@@ -134,6 +134,7 @@ struct PyVectorIndex {
     metric: Distance,
     degree: usize,
     build_ef: usize,
+    profile: BuildProfile,
     code_bits: u8,
     residual_bits: u8,
     compact_adjacency: bool,
@@ -148,6 +149,26 @@ struct PyVectorIndex {
     /// Bottom-layer connectivity measured during the last `fit` that was asked for it.
     connectivity: Option<ConnectivityStats>,
     query_buf: Vec<f32>,
+    /// Restricts every query to these ids while set (see `set_filter_range`).
+    filter: Option<Filter>,
+}
+
+/// An owned allowed set of row ids.
+enum Filter {
+    Range { start: u32, end: u32 },
+    Mask(Vec<u64>),
+}
+
+impl Filter {
+    fn allow(&self) -> Allow<'_> {
+        match self {
+            Self::Range { start, end } => Allow::Range {
+                start: *start,
+                end: *end,
+            },
+            Self::Mask(words) => Allow::Mask(words),
+        }
+    }
 }
 
 impl PyVectorIndex {
@@ -243,8 +264,10 @@ impl PyVectorIndex {
     /// 4-bit or no residual storage (0); smaller codes may reduce recall. Reranking still
     /// scores the primary codes with a float query when no residual is stored.
     /// `direct_ip` serves original coordinates with negative-IP scores on the lifted graph.
+    /// `build_profile` is the insertion schedule: "standard" (default), "max-recall", "high",
+    /// "balanced" or "fast"; "max-recall" is the slowest build and the highest recall.
     #[new]
-    #[pyo3(signature = (metric="angular", degree=64, build_ef=500, threads=0, code_bits=4, compact_adjacency=false, direct_ip=false, residual_bits=8))]
+    #[pyo3(signature = (metric="angular", degree=64, build_ef=500, threads=0, code_bits=4, compact_adjacency=false, direct_ip=false, residual_bits=8, build_profile="standard"))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         metric: &str,
@@ -255,7 +278,13 @@ impl PyVectorIndex {
         compact_adjacency: bool,
         direct_ip: bool,
         residual_bits: u8,
+        build_profile: &str,
     ) -> PyResult<Self> {
+        let profile = BuildProfile::from_name(build_profile).ok_or_else(|| {
+            PyValueError::new_err(
+                "build_profile must be standard, max-recall, high, balanced or fast",
+            )
+        })?;
         let metric = match metric {
             "angular" => Distance::Angular,
             "euclidean" => Distance::Euclidean,
@@ -300,6 +329,7 @@ impl PyVectorIndex {
             metric,
             degree,
             build_ef,
+            profile,
             code_bits,
             residual_bits,
             compact_adjacency,
@@ -313,6 +343,7 @@ impl PyVectorIndex {
             built: None,
             connectivity: None,
             query_buf: Vec::new(),
+            filter: None,
         })
     }
 
@@ -397,6 +428,7 @@ impl PyVectorIndex {
             metric: self.metric.graph_metric(),
             degree: self.degree,
             build_ef: self.build_ef,
+            profile: self.profile,
             quantized_search: true,
             ..BuildParams::default()
         };
@@ -565,6 +597,7 @@ impl PyVectorIndex {
             metric,
             dim,
             direct_ip,
+            filter,
             ..
         } = self;
         let built = built
@@ -588,8 +621,12 @@ impl PyVectorIndex {
         let mut out = Vec::with_capacity(k.min(built.graph.len()));
         let q = &query_buf[..];
         let searcher = &mut built.searcher;
-        py.detach(|| searcher.search(q, k, params, &mut out))
-            .map_err(err)?;
+        let filter = filter.as_ref();
+        py.detach(|| match filter {
+            None => searcher.search(q, k, params, &mut out),
+            Some(f) => searcher.search_allowed(q, k, params, &f.allow(), &mut out),
+        })
+        .map_err(err)?;
         Ok(ids_array(py, &out))
     }
 
@@ -616,6 +653,7 @@ impl PyVectorIndex {
         let mut queries = row_major(&x);
         let params = self.params();
         let graph = &*built.graph;
+        let filter = self.filter.as_ref();
         let metric = self.metric;
         if metric == Distance::InnerProduct && !self.direct_ip {
             queries = augment_queries(&queries, dim);
@@ -633,7 +671,13 @@ impl PyVectorIndex {
                             rows.chunks_exact(dim)
                                 .map(|q| {
                                     let mut out = Vec::with_capacity(k.min(graph.len()));
-                                    s.search(q, k, params, &mut out).map(|_| out)
+                                    match filter {
+                                        None => s.search(q, k, params, &mut out),
+                                        Some(f) => {
+                                            s.search_allowed(q, k, params, &f.allow(), &mut out)
+                                        }
+                                    }
+                                    .map(|_| out)
                                 })
                                 .collect::<Result<Vec<_>, WarmError>>()
                         })
@@ -671,6 +715,7 @@ impl PyVectorIndex {
         }
         let params = self.params();
         let graph = &*built.graph;
+        let filter = self.filter.as_ref();
         let dim = graph.dim();
         let mut ids = result_array(nq, k)?;
         py.detach(|| {
@@ -682,7 +727,12 @@ impl PyVectorIndex {
                         let mut s = graph.searcher();
                         let mut found = Vec::with_capacity(k.min(graph.len()));
                         for (q, slot) in rows.chunks_exact(dim).zip(out.chunks_exact_mut(k)) {
-                            s.search(q, k, params, &mut found)?;
+                            match filter {
+                                None => s.search(q, k, params, &mut found)?,
+                                Some(f) => {
+                                    s.search_allowed(q, k, params, &f.allow(), &mut found)?
+                                }
+                            };
                             for (o, &id) in slot.iter_mut().zip(&found) {
                                 *o = i64::from(id);
                             }
@@ -695,6 +745,46 @@ impl PyVectorIndex {
         let array = numpy::ndarray::Array2::from_shape_vec((nq, k), ids)
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
         Ok(array.into_pyarray(py))
+    }
+
+    /// Restricts later queries to row ids `start..end` (the rows' positions in the fitted
+    /// array). A selective range is scored directly, a permissive one by a wider graph
+    /// search. `clear_filter` removes it.
+    fn set_filter_range(&mut self, start: u64, end: u64) -> PyResult<()> {
+        let bound = |v: u64| {
+            u32::try_from(v).map_err(|_| PyValueError::new_err("filter bound exceeds u32"))
+        };
+        let (start, end) = (bound(start)?, bound(end)?);
+        if start > end {
+            return Err(PyValueError::new_err("filter start exceeds end"));
+        }
+        self.filter = Some(Filter::Range { start, end });
+        Ok(())
+    }
+
+    /// Restricts later queries to the rows where the boolean array is true; its length must
+    /// be the number of fitted rows.
+    fn set_filter_mask(&mut self, mask: PyArrayLike1<'_, bool, AllowTypeChange>) -> PyResult<()> {
+        let n = self.built.as_ref().map_or(0, |b| b.graph.len());
+        if mask.len() != n {
+            return Err(PyValueError::new_err(format!(
+                "the mask has {} entries, the index {n} rows",
+                mask.len()
+            )));
+        }
+        let mut words = vec![0u64; n.div_ceil(64)];
+        for (i, allowed) in mask.as_array().iter().enumerate() {
+            if *allowed {
+                words[i >> 6] |= 1 << (i & 63);
+            }
+        }
+        self.filter = Some(Filter::Mask(words));
+        Ok(())
+    }
+
+    /// Removes the filter set by `set_filter_range` or `set_filter_mask`.
+    fn clear_filter(&mut self) {
+        self.filter = None;
     }
 
     /// Writes the fitted index to `path` (replacing it atomically); `load` reads it back.
@@ -712,8 +802,27 @@ impl PyVectorIndex {
     /// and `direct_ip` setting, read into memory. Restores the serialized code widths;
     /// subsequent `fit` calls reuse those widths.
     /// `shared=True` maps a Linux memfd protected by write, shrink and grow seals.
-    #[pyo3(signature = (path, *, shared=false))]
-    fn load(&mut self, py: Python<'_>, path: std::path::PathBuf, shared: bool) -> PyResult<()> {
+    /// `residency` chooses where the arrays live: `heap` (a private copy, the default),
+    /// `mapped` (the file mapped read-only, shared by every process that maps it) or
+    /// `prefaulted` (mapped, every page touched on load).
+    #[pyo3(signature = (path, *, shared=false, residency="heap"))]
+    fn load(
+        &mut self,
+        py: Python<'_>,
+        path: std::path::PathBuf,
+        shared: bool,
+        residency: &str,
+    ) -> PyResult<()> {
+        let residency = match residency {
+            "heap" => Residency::Heap,
+            "mapped" => Residency::Mapped,
+            "prefaulted" => Residency::Prefaulted,
+            _ => {
+                return Err(PyValueError::new_err(
+                    "residency must be heap, mapped or prefaulted",
+                ))
+            }
+        };
         let graph = py
             .detach(|| {
                 if shared {
@@ -729,7 +838,7 @@ impl PyVectorIndex {
                         ))
                     }
                 } else {
-                    VGraph::open(&path, Residency::Heap)
+                    VGraph::open(&path, residency)
                 }
             })
             .map_err(|e| PyRuntimeError::new_err(format!("load {}: {e}", path.display())))?;

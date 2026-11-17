@@ -70,8 +70,9 @@ pub const MAX_K: usize = 1000;
 /// Mutations since the capture after which maintenance builds a fresh snapshot.
 pub const REBUILD_AFTER_MUTATIONS: u64 = 64;
 const MAX_ROWS: usize = 1 << 22;
-/// Upper bound on the graph build matrix: 512 Mi `f32` values (2 GiB).
-const MAX_MATRIX_VALUES: usize = 512 * 1024 * 1024;
+/// Upper bound on the graph build matrix: 1 Gi `f32` values (4 GiB), which holds 1M rows of 768
+/// dimensions and 500K rows of 1536.
+const MAX_MATRIX_VALUES: usize = 1024 * 1024 * 1024;
 
 /// Which implementation answered, or may answer, a vector query.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
