@@ -14,6 +14,10 @@
 //! A block with count zero has one undominated point, its two maxima. A one block list has no
 //! table (its block starts after the list header and its positions at zero).
 //!
+//! A dense list's table (one holding at least one of every [`DENSE_SPAN`] slots through its
+//! last) ends, after the frontier bytes, with its slot bitmap: `ceil((last + 1) / 64)`
+//! little-endian `u64` words, bit `s % 64` of word `s / 64` set for each slot `s` it holds.
+//!
 //! A block's positions are one width byte `w`, the byte length of each posting's positions
 //! packed at `w` bits, then those positions end to end: each posting's token positions as
 //! gaps (the first absolute) in unsigned LEB128, the bytes the chunk's own positional record
@@ -30,6 +34,10 @@ const SKIP_ENTRY: usize = 20;
 
 /// Blocks per run, the unit of a list's coarser frontier.
 pub(super) const RUN_BLOCKS: usize = 32;
+
+/// A list of two or more blocks holding at least one of every this many slots through its last
+/// is dense: its skip table ends with its slot bitmap.
+pub(super) const DENSE_SPAN: u64 = 8;
 
 /// The fewest bytes of skip table a list of `count` postings has: the arrays and the frontier
 /// directory, with no frontier bytes.
@@ -131,6 +139,8 @@ pub(super) struct Cursor<'a> {
     /// one bound.
     weight_block: std::cell::Cell<usize>,
     weight: std::cell::Cell<f64>,
+    /// A dense list's slot bitmap, empty for any other.
+    dense: &'a [u8],
 }
 
 impl<'a> Cursor<'a> {
@@ -169,9 +179,37 @@ impl<'a> Cursor<'a> {
             starts: [0; CHECKPOINT_BLOCK + 1],
             weight_block: std::cell::Cell::new(usize::MAX),
             weight: std::cell::Cell::new(0.0),
+            dense: &[],
         };
+        cursor.dense = cursor.find_dense();
         cursor.load(0, first_at, 0);
         cursor
+    }
+
+    /// The slot bitmap after the frontiers, when the table has one of the length its last slot
+    /// gives; empty otherwise (a list that is not dense, or a table written without bitmaps).
+    fn find_dense(&self) -> &'a [u8] {
+        if self.blocks < 2 {
+            return &[];
+        }
+        let skips = self.list.skips;
+        let directory = SKIP_ENTRY * self.blocks;
+        let entries = self.blocks + self.runs + 1;
+        let Some(end) = skips.get(directory + 4 * (entries - 1)..directory + 4 * entries) else {
+            return &[];
+        };
+        let end = u32::from_le_bytes([end[0], end[1], end[2], end[3]]) as usize;
+        let at = directory + 4 * entries + end;
+        let words = (u64::from(self.skip(0, self.blocks - 1)) + 1).div_ceil(64) as usize;
+        match skips.get(at..) {
+            Some(bits) if bits.len() == 8 * words => bits,
+            _ => &[],
+        }
+    }
+
+    /// A dense list's slot bitmap as little-endian `u64` words (see [`DENSE_SPAN`]).
+    pub(super) fn dense(&self) -> Option<&'a [u8]> {
+        (!self.dense.is_empty()).then_some(self.dense)
     }
 
     /// Reads block `block`'s header at `at`, the block before it ending at slot `previous`.
@@ -291,6 +329,18 @@ impl<'a> Cursor<'a> {
         self.last
     }
 
+    /// Every slot of the current block, from its first posting whatever the cursor's position in
+    /// it. A cursor that ended has none.
+    pub(super) fn block_slots(&mut self) -> &[u32] {
+        if self.ended {
+            return &[];
+        }
+        if !self.decoded {
+            self.decode();
+        }
+        &self.slots[..self.count]
+    }
+
     /// The largest frequency and least word count of the current block.
     #[inline]
     pub(super) fn block_bounds(&self) -> (u32, u32) {
@@ -407,6 +457,32 @@ impl<'a> Cursor<'a> {
             self.decode_frequencies();
         }
         (&self.slots[..self.count], &self.frequencies[..self.count])
+    }
+
+    /// A bound of the weights in the blocks from the current one through the one holding
+    /// slot `last`, from their maxima, when they are at most `most` blocks; `None` otherwise.
+    pub(super) fn span_weight(&self, last: u32, bound: Bound, most: usize) -> Option<f64> {
+        if self.blocks < 2 {
+            return Some(bound.at(self.list_frequency, self.list_words));
+        }
+        let mut weight = 0.0f64;
+        for block in self.block..(self.block + most).min(self.blocks) {
+            weight = weight.max(bound.at(self.skip(3, block), self.skip(4, block)));
+            if self.skip(0, block) >= last {
+                return Some(weight);
+            }
+        }
+        (self.block + most >= self.blocks).then_some(weight)
+    }
+
+    /// The list's block bytes, whose address identifies the list.
+    pub(super) fn list_bytes(&self) -> &'a [u8] {
+        self.list.bytes
+    }
+
+    /// The frequencies of the current block's postings, from its first.
+    pub(super) fn block_frequencies(&mut self) -> &[u32] {
+        self.block_postings().1
     }
 
     /// The run holding the current block.
@@ -537,6 +613,13 @@ impl<'a> Cursor<'a> {
         if !self.decoded {
             self.decode();
         }
+        let (start, end) = self.position_range(self.index);
+        &self.list.positions[start as usize..end as usize]
+    }
+
+    /// Where the positions of the current block's posting `index` lie in
+    /// [`Self::list_positions`]; the block's slots must have been decoded.
+    pub(super) fn position_range(&mut self, index: usize) -> (u32, u32) {
         if !self.positions_ready {
             let at = if self.blocks >= 2 {
                 self.skip(2, self.block) as usize
@@ -556,9 +639,13 @@ impl<'a> Cursor<'a> {
             self.positions_at = at + 1 + (self.count * usize::from(width)).div_ceil(8);
             self.positions_ready = true;
         }
-        let base = self.positions_at;
-        let (start, end) = (self.starts[self.index], self.starts[self.index + 1]);
-        &self.list.positions[base + start as usize..base + end as usize]
+        let base = self.positions_at as u32;
+        (base + self.starts[index], base + self.starts[index + 1])
+    }
+
+    /// The list's positions bytes.
+    pub(super) fn list_positions(&self) -> &'a [u8] {
+        self.list.positions
     }
 }
 
@@ -590,5 +677,21 @@ impl Iterator for PositionIter<'_> {
         self.bytes = &self.bytes[at..];
         self.position += gap;
         Some(self.position)
+    }
+}
+
+/// Whether the slot bitmap `bits` (see [`Cursor::dense`]) holds `slot`.
+#[inline(always)]
+pub(super) fn holds(bits: &[u8], slot: u32) -> bool {
+    let byte = slot as usize / 8;
+    byte < bits.len() && bits[byte] >> (slot % 8) & 1 == 1
+}
+
+/// Word `index` of the slot bitmap `bits`, zero past its end.
+#[inline(always)]
+pub(super) fn dense_word(bits: &[u8], index: usize) -> u64 {
+    match bits.get(8 * index..8 * index + 8) {
+        Some(word) => u64::from_le_bytes(word.try_into().expect("eight bytes")),
+        None => 0,
     }
 }

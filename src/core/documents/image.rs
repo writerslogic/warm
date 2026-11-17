@@ -349,6 +349,8 @@ fn pack_positions(
 pub(super) fn append_skips(
     infos: &[super::postings::BlockInfo],
     offsets: &[u32],
+    list: &[u8],
+    count: u64,
     skips: &mut Vec<u8>,
 ) -> bool {
     if infos.len() < 2 {
@@ -366,7 +368,43 @@ pub(super) fn append_skips(
             skips.extend_from_slice(&value.to_le_bytes());
         }
     }
-    pack_frontiers(infos, skips)
+    if !pack_frontiers(infos, skips) {
+        return false;
+    }
+    append_dense(list, count, infos[infos.len() - 1].last, skips);
+    true
+}
+
+/// Appends the slot bitmap of a dense list (see `lists`) after its frontiers: bit `s` of word
+/// `s / 64` for each slot `s` it holds, `ceil((last + 1) / 64)` little-endian `u64` words, when
+/// it holds at least one in [`super::lists::DENSE_SPAN`] of the slots through its last. The
+/// choice and the bytes depend only on the list's postings.
+fn append_dense(list: &[u8], count: u64, last: u32, skips: &mut Vec<u8>) {
+    use super::lists::{Cursor, ListRef, DENSE_SPAN};
+    let span = u64::from(last) + 1;
+    let Ok(count32) = u32::try_from(count) else {
+        return;
+    };
+    if count.saturating_mul(DENSE_SPAN) < span {
+        return;
+    }
+    let mut bits = vec![0u64; span.div_ceil(64) as usize];
+    // The block bytes alone decode the list in order; the skip table is not needed for that.
+    Cursor::open(ListRef {
+        bytes: list,
+        count: count32,
+        skips: &[],
+        positions: &[],
+    })
+    .for_each_block(|slots| {
+        for &slot in slots {
+            bits[slot as usize / 64] |= 1 << (slot % 64);
+        }
+    });
+    skips.reserve(8 * bits.len());
+    for word in bits {
+        skips.extend_from_slice(&word.to_le_bytes());
+    }
 }
 
 /// Appends a list's frontier directory and frontier bytes (see `lists`) after its skip arrays;
@@ -501,7 +539,8 @@ fn encode_as(
                     if positional && !pack_positions(store, list, &mut positions, &mut offsets)? {
                         return Ok(None);
                     }
-                    if !append_skips(&infos, &offsets, &mut skips) {
+                    let list_bytes = &postings[start..];
+                    if !append_skips(&infos, &offsets, list_bytes, list.len() as u64, &mut skips) {
                         return Ok(None);
                     }
                 }
