@@ -163,14 +163,14 @@ impl WarmCore {
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();
         }
-        let request = if !self.config.document_checkpoint.reorder {
+        // Whether a reorder is due is decided under the compaction's lease, in
+        // `reorder_for_checkpoint`.
+        let request = if self.config.document_checkpoint.reorder {
+            self.record_reorder(ReorderOutcome::NotApplicable, 0);
+            ReorderRequest::WithinBudget
+        } else {
             self.record_reorder(ReorderOutcome::Disabled, 0);
             ReorderRequest::None
-        } else if !self.documents.read().reorder_due() {
-            self.record_reorder(ReorderOutcome::NotDue, 0);
-            ReorderRequest::None
-        } else {
-            ReorderRequest::WithinBudget
         };
         self.compact_impl(
             || {},
@@ -233,6 +233,10 @@ impl WarmCore {
     ) -> Result<Option<crate::core::documents::SlotOrder>> {
         let request = job.reorder_request();
         if request == ReorderRequest::None {
+            return Ok(None);
+        }
+        if request == ReorderRequest::WithinBudget && !self.documents.read().reorder_due() {
+            self.record_reorder(ReorderOutcome::NotDue, 0);
             return Ok(None);
         }
         let budget = (request == ReorderRequest::WithinBudget)

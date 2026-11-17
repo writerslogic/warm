@@ -39,7 +39,9 @@ fn options(positions: bool) -> IngestOptions {
 fn text(i: usize) -> String {
     let source = if i % 50 == 49 { i - 1 } else { i };
     let topic = (source * 7919) % 4;
-    let mut state = source as u64 * 6364136223846793005 + 1442695040888963407;
+    let mut state = (source as u64)
+        .wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407);
     let mut next = move || {
         state = state
             .wrapping_mul(6364136223846793005)
