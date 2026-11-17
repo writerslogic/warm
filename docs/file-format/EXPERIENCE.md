@@ -47,7 +47,8 @@ produces version 3 only when some step has controls and version 2 otherwise, so 
 never stores controls writes the same bytes as before and stays readable by older releases; once
 it does, an older release refuses the file instead of dropping the controls. A loader refuses
 `controls` in a file older than version 3, more than 120 controls on a step, more than 25 options
-on a control and a control string over the configured string bound.
+on a control, a control string over the configured string bound and more than 1 MiB of control
+text on a step (the sum of the string bytes, plus one per option).
 
 ## Derived state
 
@@ -86,7 +87,8 @@ Record: `u32` body length, `u32` CRC32 (IEEE) of the body, body. The body is CBO
 `{seq, op}` (sealed when the store is encrypted); `op` is `Ingest` (an observation, with optional
 goal and outcome), `IngestForm` (an observation with the form controls parsed from its
 accessibility-tree text, as in the snapshot), `Describe` (episode, goal, outcome) or `Purge`
-(episode). An observation is journaled without its accessibility-tree text. A reader that
+(episode). An observation is journaled without its accessibility-tree text. Replay checks the
+controls of an `IngestForm` record against the same bounds as the snapshot loader. A reader that
 predates `IngestForm` refuses such a record rather than dropping it; the journal version stays 1,
 since a store without controls writes the same records as before. Sequence numbers
 start after the snapshot's and increase by one.

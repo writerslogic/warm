@@ -7,11 +7,32 @@
 //!
 //! The input is the indented text of an accessibility tree, one node per line:
 //! `[id] role 'name' props`, where `props` is the rest of the line (`value='x', checked=true,
-//! required`). The parser and the rendering are specified by the reference renderer of the
-//! LongMemEval-V2 adapter (`benchmarks/lme2/`), and the parity test
-//! (`tests/experience_form_parity.rs`) holds them to its output byte for byte. They follow its
-//! character classes: whitespace is Python's `str.isspace`, word characters are letters, digits
-//! and `_`, and names and values are rendered with Python's `repr`. Nothing depends on a site.
+//! required`). Nothing depends on a site.
+//!
+//! The grammar, defined here rather than by reference to another implementation:
+//!
+//! - A line is `indent '[' id ']' space+ role space* ('\'' name '\'')? rest`. `indent` and
+//!   `space` are the characters of `is_space` (the ASCII whitespace, the C0 separators
+//!   U+001C..U+001F, U+0085, U+00A0, U+1680, U+2000..U+200A, U+2028, U+2029, U+202F, U+205F
+//!   and U+3000). `id` and `role` are one or more word characters: [`char::is_alphanumeric`]
+//!   (Unicode Alphabetic or Numeric) or `_`. Inside the quoted name a backslash escapes the next
+//!   character; the escape is kept as written, and the name is stripped of `space`. A line
+//!   that does not match is skipped.
+//! - In `rest`, properties are found left to right: a word-character key, `=`, then a closed
+//!   quoted run or else the nonempty text up to the next `,`, with `'` removed at both ends. A
+//!   later property replaces an earlier one of the same key. Flags are the `,`-separated pieces
+//!   of `rest` without `=`, stripped of `space`.
+//! - Names and values are quoted as Python's `repr` quotes a `str`: `"` when the string holds
+//!   `'` and no `"`, else `'`; `\\`, `\n`, `\r`, `\t` and the quote escaped; a character
+//!   that `is_printable` refuses as `\xNN`, `\uNNNN` or `\UNNNNNNNN`. That table lists the
+//!   C0 and C1 controls, the format and separator characters other than U+0020, private use and
+//!   the noncharacters; other unassigned code points are shown as they are.
+//!
+//! The reference renderer of the LongMemEval-V2 adapter (`benchmarks/lme2/formstate.py`) uses
+//! Python's `\w`, which differs from [`char::is_alphanumeric`] on combining marks that are Unicode Alphabetic but not letters, and the
+//! Unicode database of its Python build. Agreement with it is tested, not proven: the parity
+//! test (`tests/experience_form_state.rs`) checks 28 real states, and the adapter's engine
+//! check compared 5,095 states of the small tier with no difference.
 
 use std::collections::HashSet;
 
@@ -21,6 +42,45 @@ use serde::{Deserialize, Serialize};
 pub const MAX_CONTROLS: usize = 120;
 /// Options kept for one combobox or listbox; the others are counted.
 pub const MAX_OPTIONS: usize = 25;
+/// Bytes of control text ([`text_bytes`]) one step stores at most: about two controls at
+/// the string and option bounds. The parser also stops
+/// before the controls of a page would hold more text than the page itself, which options
+/// repeated under nested listboxes could otherwise do.
+pub const MAX_CONTROL_BYTES: usize = 1 << 20;
+/// Bytes of control text per quota unit.
+pub const QUOTA_UNIT_BYTES: usize = 4096;
+
+/// CBOR bytes one control adds to a snapshot beyond its strings, at most: the map header (1),
+/// the twelve field keys (97), seven string headers (5 each), three booleans, the options
+/// array header (5) and the `moreOptions` integer (5) come to 146.
+const ENCODED_CONTROL: usize = 160;
+/// One option beyond its label: map header, `label` and `selected` keys, string header and
+/// boolean come to 22.
+const ENCODED_OPTION: usize = 24;
+/// A step with controls: the `controls` key (9) and the array header (5).
+const ENCODED_STEP: usize = 16;
+
+/// Bytes of text a list of controls holds.
+pub fn text_bytes(controls: &[Control]) -> usize {
+    controls.iter().map(Control::text_bytes).sum()
+}
+
+/// An upper bound of the CBOR bytes a step's controls add to a snapshot.
+pub(crate) fn encoded_bound(controls: &[Control]) -> usize {
+    if controls.is_empty() {
+        return 0;
+    }
+    ENCODED_STEP
+        + controls
+            .iter()
+            .map(|c| ENCODED_CONTROL + c.text_bytes() + ENCODED_OPTION * c.options.len())
+            .sum::<usize>()
+}
+
+/// Quota units of a step's controls: one per started [`QUOTA_UNIT_BYTES`] of text.
+pub(crate) fn quota_units(controls: &[Control]) -> usize {
+    text_bytes(controls).div_ceil(QUOTA_UNIT_BYTES)
+}
 
 const CONTROL_ROLES: [&str; 12] = [
     "textbox",
@@ -422,10 +482,13 @@ fn is_true(v: Option<&str>) -> bool {
     matches!(v, Some("True" | "true"))
 }
 
-/// The controls of one accessibility-tree text, at most [`MAX_CONTROLS`]. Lines that do not
-/// have the form `[id] role ...`, or are longer than `max_line_bytes`, are skipped. An unnamed
-/// button with no state is not a control.
+/// The controls of one accessibility-tree text, at most [`MAX_CONTROLS`], in page order. Lines
+/// that do not have the form `[id] role ...`, or are longer than `max_line_bytes`, are skipped.
+/// An unnamed button with no state is not a control. The parser stops before a control that
+/// would take the text of the list past `text.len()` or [`MAX_CONTROL_BYTES`].
 pub fn extract_controls(text: &str, max_line_bytes: usize) -> Vec<Control> {
+    let budget = text.len().min(MAX_CONTROL_BYTES);
+    let mut used = 0usize;
     let lines: Vec<Line<'_>> = text
         .split('\n')
         .filter(|l| l.len() <= max_line_bytes)
@@ -482,6 +545,10 @@ pub fn extract_controls(text: &str, max_line_bytes: usize) -> Vec<Control> {
             && c.readonly.is_none();
         if c.role == "button" && c.name.is_empty() && stateless {
             continue;
+        }
+        used += c.text_bytes();
+        if used > budget {
+            break;
         }
         out.push(c);
     }
@@ -756,5 +823,108 @@ mod tests {
             t.push_str(&format!("[{i}] listbox 'l'\n"));
         }
         assert_eq!(extract_controls(&t, LINE).len(), MAX_CONTROLS);
+    }
+
+    /// `n` textboxes whose control text totals `total` bytes, one per line of the page.
+    fn named_boxes(n: usize, total: usize) -> String {
+        let names = total - n * "textbox".len();
+        (0..n)
+            .map(|i| {
+                let len = names / n + usize::from(i < names % n);
+                format!("[{i}] textbox '{}'\n", "n".repeat(len))
+            })
+            .collect()
+    }
+
+    #[test]
+    fn control_text_stops_at_the_step_budget() {
+        let n = 65;
+        for (total, kept) in [
+            (MAX_CONTROL_BYTES - 1, n),
+            (MAX_CONTROL_BYTES, n),
+            (MAX_CONTROL_BYTES + 1, n - 1),
+        ] {
+            let page = named_boxes(n, total);
+            assert!(page.len() > MAX_CONTROL_BYTES);
+            let got = extract_controls(&page, LINE);
+            assert_eq!(got.len(), kept, "{total}");
+            assert!(text_bytes(&got) <= MAX_CONTROL_BYTES);
+            if kept == n {
+                assert_eq!(text_bytes(&got), total);
+            }
+        }
+    }
+
+    #[test]
+    fn nested_listboxes_store_no_more_text_than_the_page() {
+        // 120 nested listboxes over 25 options of near the line bound: stored once per
+        // enclosing control the options would come to about 48.7 MB.
+        let label = "o".repeat(LINE - 200);
+        let mut page = String::new();
+        for i in 0..MAX_CONTROLS {
+            page.push_str(&format!("{}[{i}] listbox 'l'\n", "\t".repeat(i)));
+        }
+        for j in 0..MAX_OPTIONS {
+            page.push_str(&format!(
+                "{}[o{j}] option '{label}', selected=True\n",
+                "\t".repeat(MAX_CONTROLS)
+            ));
+        }
+        let unbounded = MAX_CONTROLS * MAX_OPTIONS * (label.len() + 1);
+        assert!(unbounded > 48_000_000);
+        let got = extract_controls(&page, LINE);
+        assert!(!got.is_empty());
+        assert!(text_bytes(&got) <= page.len().min(MAX_CONTROL_BYTES));
+        assert_eq!(got[0].options.len(), MAX_OPTIONS);
+
+        // A page smaller than the budget bounds the controls by its own length.
+        let small = "[1] listbox 'a'\n\t[2] listbox 'b'\n\t\t[3] option 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'";
+        let got = extract_controls(small, LINE);
+        assert_eq!(got.len(), 1);
+        assert!(text_bytes(&got) <= small.len());
+    }
+
+    #[test]
+    fn the_encoded_bound_covers_the_cbor_bytes() {
+        let full = |s: &str, options: usize| Control {
+            role: s.into(),
+            name: s.into(),
+            value: Some(s.into()),
+            checked: Some(s.into()),
+            selected: Some(s.into()),
+            expanded: Some(s.into()),
+            pressed: Some(s.into()),
+            required: Some(true),
+            disabled: Some(false),
+            readonly: Some(true),
+            options: vec![
+                ControlOption {
+                    label: s.into(),
+                    selected: true,
+                };
+                options
+            ],
+            more_options: u32::MAX,
+        };
+        let cases: Vec<Vec<Control>> = vec![
+            vec![full("", MAX_OPTIONS)],
+            vec![full("a", MAX_OPTIONS); MAX_CONTROLS],
+            vec![full("", 0); MAX_CONTROLS],
+            vec![full(&"x".repeat(24), MAX_OPTIONS); MAX_CONTROLS],
+            vec![full(&"x".repeat(300), 1)],
+            vec![full(&"x".repeat(70_000), 1)],
+        ];
+        for controls in cases {
+            let mut actual = Vec::new();
+            ciborium::into_writer(&("controls", &controls), &mut actual).unwrap();
+            // The pair encodes as a 1-byte array header ahead of the key and the list.
+            assert!(
+                encoded_bound(&controls) >= actual.len() - 1,
+                "{} < {}",
+                encoded_bound(&controls),
+                actual.len() - 1
+            );
+        }
+        assert_eq!(encoded_bound(&[]), 0);
     }
 }

@@ -156,7 +156,7 @@ These are the 223 held-out questions (`held_ids.json`), with the gpt-5.2 judge r
 
 ## What runs without hosted models
 
-The frozen run's stage outputs (controller spans, VERIFY, CRUX, OPTCHECK, pass-2 and ANSWER-CHECK results, reader answers), the controller notes and the original research scripts are not in this repository. From the public repository alone, what reproduces without hosted models is the engine form table: `tests/experience_form_state.rs` holds it byte for byte to the reference renderer on 28 recorded states of the public trajectories. Everything else below needs those outputs, which a run of the hosted stages produces, and `check_frozen.py` and `smoke_test.py` need the reference files of the frozen run (`--reference-dir`), which are not published.
+The frozen run's stage outputs (controller spans, VERIFY, CRUX, OPTCHECK, pass-2 and ANSWER-CHECK results, reader answers), the controller notes and the original research scripts are not in this repository. From the public repository alone, what reproduces without hosted models is the engine form table: `tests/experience_form_state.rs` checks that it equals the reference renderer's output on 28 recorded states of the public trajectories. Everything else below needs those outputs, which a run of the hosted stages produces, and `check_frozen.py` and `smoke_test.py` need the reference files of the frozen run (`--reference-dir`), which are not published.
 
 **Offline**, given the stage outputs of a run:
 - the WARM engine form table and the rest of the renderer (`run_lme2.py prompts`)

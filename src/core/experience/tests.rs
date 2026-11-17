@@ -603,7 +603,6 @@ fn props_step(episode: &str, step: u32, props: &str) -> OwnedObservation {
         action: None,
         goal: None,
         outcome: None,
-        accessibility_tree: None,
     }
 }
 
@@ -774,4 +773,149 @@ fn caller_controls_are_bounded_and_the_switch_drops_the_page_text() {
         ..Default::default()
     });
     assert!(off.extract_controls("[1] textbox 'x'").unwrap().is_empty());
+}
+
+/// `n` textbox controls whose text totals `total` bytes.
+fn boxes_totalling(n: usize, total: usize) -> Vec<Control> {
+    let names = total - n * "textbox".len();
+    (0..n)
+        .map(|i| Control {
+            role: "textbox".into(),
+            name: "n".repeat(names / n + usize::from(i < names % n)),
+            ..Control::default()
+        })
+        .collect()
+}
+
+#[test]
+fn caller_controls_are_bounded_by_the_step_budget_and_charged_to_the_quota() {
+    let t = page("Form", vec![btn("Save")]);
+    for (step, total, ok) in [
+        (0, form::MAX_CONTROL_BYTES - 1, true),
+        (1, form::MAX_CONTROL_BYTES, true),
+        (2, form::MAX_CONTROL_BYTES + 1, false),
+    ] {
+        let mut x = Experience::default();
+        let mut plain = Experience::default();
+        plain.ingest(&obs("a", step, &t, None)).unwrap();
+        let controls = boxes_totalling(65, total);
+        assert_eq!(form::text_bytes(&controls), total);
+        let r = x.ingest_with_controls(&obs("a", step, &t, None), controls);
+        if ok {
+            r.unwrap();
+            assert_eq!(
+                x.quota_units() - plain.quota_units(),
+                total.div_ceil(form::QUOTA_UNIT_BYTES) as u64
+            );
+        } else {
+            assert!(matches!(r, Err(ExperienceError::Limit { .. })), "{r:?}");
+            assert!(!x.has_episode("a"));
+        }
+    }
+}
+
+#[test]
+fn the_snapshot_estimate_bounds_the_encoded_controls() {
+    let full = |s: &str| Control {
+        role: s.into(),
+        name: s.into(),
+        value: Some(s.into()),
+        checked: Some(s.into()),
+        selected: Some(s.into()),
+        expanded: Some(s.into()),
+        pressed: Some(s.into()),
+        required: Some(true),
+        disabled: Some(true),
+        readonly: Some(true),
+        options: vec![
+            ControlOption {
+                label: s.into(),
+                selected: true,
+            };
+            form::MAX_OPTIONS
+        ],
+        more_options: u32::MAX,
+    };
+    let t = page("Form", vec![btn("Save")]);
+    let mut x = Experience::default();
+    let mut plain = Experience::default();
+    for step in 0..8 {
+        x.ingest_with_controls(
+            &obs("a", step, &t, None),
+            vec![full(""); form::MAX_CONTROLS],
+        )
+        .unwrap();
+        plain.ingest(&obs("a", step, &t, None)).unwrap();
+    }
+    let added = x.to_bytes().unwrap().len() - plain.to_bytes().unwrap().len();
+    let estimated = x.snapshot_estimate() - plain.snapshot_estimate();
+    assert!(estimated >= added as u64, "{estimated} < {added}");
+    assert!(x.snapshot_estimate() >= x.to_bytes().unwrap().len() as u64);
+}
+
+/// Rewrites every `controls` list of a snapshot payload and reseals the header.
+fn mutate_controls(bytes: &[u8], f: &dyn Fn(&mut Vec<ciborium::Value>)) -> Vec<u8> {
+    fn walk(v: &mut ciborium::Value, f: &dyn Fn(&mut Vec<ciborium::Value>)) {
+        match v {
+            ciborium::Value::Map(m) => {
+                for (k, v) in m.iter_mut() {
+                    match (k.as_text(), v) {
+                        (Some("controls"), ciborium::Value::Array(a)) => f(a),
+                        (_, v) => walk(v, f),
+                    }
+                }
+            }
+            ciborium::Value::Array(a) => a.iter_mut().for_each(|v| walk(v, f)),
+            _ => {}
+        }
+    }
+    let mut v: ciborium::Value = ciborium::from_reader(&bytes[20..]).unwrap();
+    walk(&mut v, f);
+    let mut payload = Vec::new();
+    ciborium::into_writer(&v, &mut payload).unwrap();
+    let mut out = bytes[..20].to_vec();
+    out[8..16].copy_from_slice(&(payload.len() as u64).to_le_bytes());
+    out[16..20].copy_from_slice(&crc32fast::hash(&payload).to_le_bytes());
+    out.extend_from_slice(&payload);
+    out
+}
+
+#[test]
+fn a_version_3_snapshot_over_the_control_caps_is_refused() {
+    let mut x = Experience::default();
+    let t = page("Form", vec![btn("Save")]);
+    let listbox = Control {
+        role: "listbox".into(),
+        name: "l".into(),
+        options: vec![
+            ControlOption {
+                label: "o".into(),
+                selected: false,
+            };
+            form::MAX_OPTIONS
+        ],
+        ..Control::default()
+    };
+    x.ingest_with_controls(
+        &obs("a", 0, &t, None),
+        vec![listbox; form::MAX_CONTROLS],
+    )
+    .unwrap();
+    let bytes = x.to_bytes().unwrap();
+    assert_eq!(bytes[4], 3);
+    let same = mutate_controls(&bytes, &|_| {});
+    Experience::from_bytes(&same, ExperienceConfig::default()).unwrap();
+
+    let more_controls = mutate_controls(&bytes, &|a| a.push(a[0].clone()));
+    assert!(Experience::from_bytes(&more_controls, ExperienceConfig::default()).is_err());
+    let more_options = mutate_controls(&bytes, &|a| {
+        if let ciborium::Value::Map(m) = &mut a[0] {
+            for (k, v) in m.iter_mut() {
+                if let (Some("options"), ciborium::Value::Array(o)) = (k.as_text(), v) {
+                    o.push(o[0].clone());
+                }
+            }
+        }
+    });
+    assert!(Experience::from_bytes(&more_options, ExperienceConfig::default()).is_err());
 }

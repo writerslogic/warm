@@ -229,20 +229,35 @@ fn version_2_snapshot_opens_and_takes_controls() {
 #[test]
 fn a_retried_step_must_carry_the_same_controls() {
     let dir = tempfile::tempdir().unwrap();
-    let m = open(dir.path());
+    let mut m = open(dir.path());
     let o = |page: &str| json!({"episode": "e", "step": 0, "tree": {"role": "RootWebArea"}, "accessibilityTree": page});
     let first = m.call("remember", o("[1] textbox 'A'")).unwrap();
     assert_eq!(first["remembered"][0]["created"], true);
     let again = m.call("remember", o("[1] textbox 'A'")).unwrap();
     assert_eq!(again["remembered"][0]["created"], false);
-    let err = m.call("remember", o("[1] textbox 'B'")).unwrap_err();
-    assert!(
-        matches!(
-            err.downcast_ref::<MemoryError>(),
-            Some(MemoryError::Conflict(_))
-        ),
-        "{err}"
-    );
+    let conflict = |m: &Memory| {
+        let err = m.call("remember", o("[1] textbox 'B'")).unwrap_err();
+        assert!(
+            matches!(
+                err.downcast_ref::<MemoryError>(),
+                Some(MemoryError::Conflict(_))
+            ),
+            "{err}"
+        );
+    };
+    conflict(&m);
+    // After a reopen from the journal, then from the snapshot, the stored controls still
+    // decide: the same page is a duplicate and another one a conflict.
+    for checkpoint in [false, true] {
+        if checkpoint {
+            m.core().flush().unwrap();
+        }
+        drop(m);
+        m = open(dir.path());
+        let again = m.call("remember", o("[1] textbox 'A'")).unwrap();
+        assert_eq!(again["remembered"][0]["created"], false, "{checkpoint}");
+        conflict(&m);
+    }
 }
 
 #[test]

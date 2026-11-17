@@ -14,7 +14,7 @@ use super::effects::delta;
 use super::form::Control;
 use super::regions::{self, Region};
 use super::{
-    doc, index_err, Episode, Experience, ExperienceConfig, ExperienceError, Result, StepRec,
+    doc, index_err, ControlCounts, Episode, Experience, ExperienceConfig, ExperienceError, Result, StepRec,
     FLAG_ERROR, FLAG_NO_CHANGE,
 };
 use crate::core::documents::MemoryDocumentStore;
@@ -175,7 +175,7 @@ impl Experience {
                 got: payload.len(),
             });
         }
-        let version = if self.step_controls > 0 {
+        let version = if self.control_counts.controls > 0 {
             VERSION
         } else {
             VERSION_WITHOUT_CONTROLS
@@ -418,10 +418,11 @@ impl Experience {
             .flat_map(|e| &e.steps)
             .map(|s| s.regions.len())
             .sum();
+        let mut counts = ControlCounts::default();
         for s in x.episodes.iter().flatten().flat_map(|e| &e.steps) {
-            x.step_controls += s.controls.len();
-            x.step_control_bytes += s.controls.iter().map(Control::text_bytes).sum::<usize>();
+            counts.add(&s.controls);
         }
+        x.control_counts = counts;
         x.free_episodes = (0..x.episodes.len() as u32)
             .rev()
             .filter(|&i| x.episodes[i as usize].is_none())

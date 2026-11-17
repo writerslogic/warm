@@ -24,7 +24,7 @@ use super::types::*;
 use super::{HistoryMode, Memory, MemoryError};
 use crate::core::experience::{
     check_observation_value, is_observation_object, is_observation_shape, rank_fusion_score,
-    EffectHit, ExperienceError, Ingested, OwnedObservation, RegionHit,
+    EffectHit, ExperienceError, Ingested, ObservationInput, OwnedObservation, RegionHit,
 };
 
 const REGION_PREFIX: &str = "experience:r";
@@ -62,10 +62,10 @@ pub(super) fn carries_observation(map: &Map<String, Value>) -> bool {
 
 impl Memory {
     /// Parses and bounds an observation before any tree is built from it.
-    pub(super) fn parse_observation(&self, value: Value) -> Result<OwnedObservation> {
+    pub(super) fn parse_observation(&self, value: Value) -> Result<ObservationInput> {
         let limits = self.core.experience_limits();
         check_observation_value(&value, &limits).map_err(experience_error)?;
-        serde_json::from_value(value)
+        ObservationInput::from_value(value)
             .map_err(|error| MemoryError::Invalid(format!("invalid observation: {error}")).into())
     }
 
@@ -75,14 +75,14 @@ impl Memory {
         &self,
         observations: Vec<OwnedObservation>,
     ) -> Result<Vec<Remembered>> {
-        self.remember_observations_within(observations, None)
+        self.remember_observations_within(observations.into_iter().map(Into::into).collect(), None)
     }
 
     /// With a document `limit`, a step that would take the documents plus the experience units
     /// past it is refused with [`DocumentQuotaExceeded`](super::DocumentQuotaExceeded).
     pub(super) fn remember_observations_within(
         &self,
-        observations: Vec<OwnedObservation>,
+        observations: Vec<ObservationInput>,
         limit: Option<u64>,
     ) -> Result<Vec<Remembered>> {
         check!(
@@ -92,13 +92,13 @@ impl Memory {
         let now = self.clock.now_millis();
         let ids: Vec<String> = observations
             .iter()
-            .map(|o| format!("experience:{}:{}", o.episode, o.step))
+            .map(|o| format!("experience:{}:{}", o.observation.episode, o.observation.step))
             .collect();
         let outcomes = self
             .core
             .with_experience_mut(|store| {
                 let budget = limit.map(|l| l.saturating_sub(self.core.document_count() as u64));
-                store.ingest_many_within(observations, budget)
+                store.ingest_inputs_within(observations, budget)
             })
             .map_err(experience_error)?
             .map_err(|(position, error)| {

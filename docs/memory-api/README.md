@@ -383,7 +383,8 @@ states), stores them with the step and drops the text. Rendered, they are a comp
 before a step's page text; the in-process Python `Warm` returns it with
 `experience_form_tables([(episode, step), ...])`, one string per step, leaving out rows already
 shown for an earlier step of the list. `WarmConfig::experience.form_state` (Python
-`Warm(..., experience_form_state=False)`) turns the parsing off. See
+`Warm(..., experience_form_state=False)`) turns the parsing off; the 4 MiB bound still applies.
+A step retried after the switch changed is a conflict, since its controls differ. See
 [Form state](../concepts/experience-core.md#form-state).
 
 `warm-server` serves them as `POST /api/v1/memory/{op}` with the same tenant header, API key and

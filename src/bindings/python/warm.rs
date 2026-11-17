@@ -93,7 +93,8 @@ impl PyWarm {
     ///
     /// `experience_form_state` parses the form controls of an observation from the
     /// `accessibilityTree` text it carries and stores them with the step (see
-    /// `experience_form_tables`); off, that text is dropped unread.
+    /// `experience_form_tables`); off, that text is not parsed but is still refused over
+    /// 4 MiB.
     #[new]
     #[pyo3(signature = (
         dimensions=16384, path=None, *, embedder=None, embedding_dimensions=None,
