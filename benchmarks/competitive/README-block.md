@@ -8,8 +8,8 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency @ 0.95 (us) | 831 | FAISS IVF-PQ fast-scan (+refine) 793 | 0.95x | L |
 | glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | Index size (MiB) | 912.8 | FAISS IVF-PQ fast-scan (+refine) 490.3 | 0.54x | - |
 | glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W 9 / T 0 / L 0 | |
-| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS @ recall@10 >= 0.95 (QPS) | 12,732 | hnswlib (native C++) 7,427 | 1.71x | W |
-| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency @ 0.95 (us) | 114 | hnswlib (native C++) 194 | 1.70x | W |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS @ recall@10 >= 0.95 (QPS) | 14,645 | hnswlib (native C++) 7,427 | 1.97x | W |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency @ 0.95 (us) | 96 | hnswlib (native C++) 194 | 2.02x | W |
 | sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | Index size (MiB) | 576.3 | FAISS IVF-PQ fast-scan (+refine) 528.4 | 0.92x | - |
 | sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W 16 / T 0 / L 0 | |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | QPS @ recall@10 >= 0.95 (QPS) | 26,688 | hnswlib (native C++) 9,266 | 2.88x | W |
