@@ -1,27 +1,6 @@
 [
  {
   "status": "LOSS",
-  "dataset": "glove-100-angular (1,183,514 vectors, 10,000 queries)",
-  "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
-  "suite": "heavy",
-  "metric": "p99_latency@recall0.95",
-  "label": "p99 latency @ 0.95",
-  "comparator": "FAISS IVF-PQ fast-scan (+refine)",
-  "warm": 830.799,
-  "comparator_value": 792.945,
-  "unit": "us",
-  "advantage_factor": 0.9544366326873288,
-  "advantage_ci": [
-   0.9338078106877875,
-   0.9859926585177977
-  ],
-  "level": 0.99,
-  "file": "benchmarks/results/competitive/heavy-ann-glove-100-angular-n1183514-linux-x86_64-gcp-n2-icelake-8c-16g.json",
-  "hypothesis": "same as QPS at 0.95; tail latency comes from the slowest queries' expansion counts",
-  "code_path": "src/core/qgraph/vertex.rs (VGraph search/refine), src/bin/research/public-bench.rs (ann-qgraph)"
- },
- {
-  "status": "LOSS",
   "dataset": "beir:fiqa (57,600 documents, 500 queries), documents contract",
   "hardware_class": "linux-aarch64-neoverse-n1-8c-31g",
   "suite": "standard",
