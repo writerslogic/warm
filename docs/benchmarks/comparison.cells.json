@@ -6396,17 +6396,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "qps@recall0.90",
   "system": "warm",
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20775.637009955462,
-   21601.5825141322
+   24055.95519519652,
+   24547.365836821824
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -6560,14 +6560,14 @@
   "derived": true,
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.8859296803783172,
+  "factor": 2.18210617646238,
   "factor_infinite": false,
   "ci": [
-   1.8503826778061967,
-   2.022850020873568
+   2.142544306581002,
+   2.2987037853787053
   ],
   "verdict": "WIN",
-  "text": "1.89x"
+  "text": "2.18x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -6575,17 +6575,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "qps@recall0.95",
   "system": "warm",
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13204.515443324504
+   14549.186588971766,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -6739,14 +6739,14 @@
   "derived": true,
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.714261497991036,
+  "factor": 1.9719150976632582,
   "factor_infinite": false,
   "ci": [
-   1.641283439042942,
-   1.813386576346963
+   1.9326929653104425,
+   2.052215510031235
   ],
   "verdict": "WIN",
-  "text": "1.71x"
+  "text": "1.97x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -6754,17 +6754,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "qps@recall0.99",
   "system": "warm",
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5512.469994356408,
-   5926.314743466575
+   6515.438213962656,
+   6641.585181843896
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -6918,14 +6918,14 @@
   "derived": true,
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.6210221905668476,
+  "factor": 1.8857252805003994,
   "factor_infinite": false,
   "ci": [
-   1.5692932896047587,
-   1.7169811531747676
+   1.8548188885334251,
+   1.9242104204813733
   ],
   "verdict": "WIN",
-  "text": "1.62x"
+  "text": "1.89x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -6933,17 +6933,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "p50_latency@recall0.95",
   "system": "warm",
-  "value": 79.845,
+  "value": 69.42975,
   "ci": [
-   77.15549999999999,
-   82.076
+   67.9975,
+   69.876
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "80"
+  "text": "69"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7097,14 +7097,14 @@
   "derived": true,
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 1.669910451499781,
+  "factor": 1.9204159600171398,
   "factor_infinite": false,
   "ci": [
-   1.6125420342121937,
-   1.753212667923868
+   1.8940838055984885,
+   1.9893378433030622
   ],
   "verdict": "WIN",
-  "text": "1.67x"
+  "text": "1.92x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7112,17 +7112,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "p99_latency@recall0.95",
   "system": "warm",
-  "value": 114.16499999999999,
+  "value": 95.89875,
   "ci": [
-   108.019,
-   118.8745
+   93.179,
+   97.169
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "114"
+  "text": "96"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7276,14 +7276,14 @@
   "derived": true,
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.6953280777821578,
+  "factor": 2.018244554803895,
   "factor_infinite": false,
   "ci": [
-   1.5992795342987776,
-   1.8281681926327775
+   1.9565247661291154,
+   2.1193283894439734
   ],
   "verdict": "WIN",
-  "text": "1.70x"
+  "text": "2.02x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7291,17 +7291,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "build_seconds",
   "system": "warm",
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7452,11 +7452,11 @@
   "derived": true,
   "warm": "warm",
   "other": "scann",
-  "factor": 0.5892265479667452,
+  "factor": 0.5170738666107875,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.59x"
+  "text": "0.52x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7464,17 +7464,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "build_peak_rss_mib",
   "system": "warm",
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7625,11 +7625,11 @@
   "derived": true,
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 0.85528901322821,
+  "factor": 0.9062484961839163,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.86x"
+  "text": "0.91x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7637,17 +7637,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "serving_rss_mib",
   "system": "warm",
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.51171875,
-   529.65234375
+   513.126953125,
+   513.1796875
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7801,14 +7801,14 @@
   "derived": true,
   "warm": "warm",
   "other": "scann",
-  "factor": 1.1222436538114011,
+  "factor": 1.1581745865606028,
   "factor_infinite": false,
   "ci": [
-   1.1220729989453577,
-   1.122422632879643
+   1.1580906419839543,
+   1.1582629481465128
   ],
   "verdict": "n/v",
-  "text": "1.12x"
+  "text": "1.16x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -7989,10 +7989,10 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "cold_start_s",
   "system": "warm",
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.097148745,
-   0.10212966
+   0.096080116,
+   0.099059266
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -8153,14 +8153,14 @@
   "derived": true,
   "warm": "warm",
   "other": "usearch",
-  "factor": 6.5930474429862445,
+  "factor": 6.678406116390173,
   "factor_infinite": false,
   "ci": [
-   6.2166603560611104,
-   6.753445667260035
+   6.409349010318732,
+   6.82855931397918
   ],
   "verdict": "n/v",
-  "text": "6.59x"
+  "text": "6.68x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8168,17 +8168,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "replace_ms_per_op",
   "system": "warm",
-  "value": 1.499974230046064,
+  "value": 1.1119371700260672,
   "ci": [
-   1.499974230046064,
-   1.499974230046064
+   1.1119371700260672,
+   1.1119371700260672
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.ops.replace",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.500"
+  "text": "1.112"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8186,17 +8186,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "delete_ms_per_op",
   "system": "warm",
-  "value": 1.2531914999635774,
+  "value": 0.9138850699810064,
   "ci": [
-   1.2531914999635774,
-   1.2531914999635774
+   0.9138850699810064,
+   0.9138850699810064
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.ops.delete",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "1.253"
+  "text": "0.914"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8204,17 +8204,17 @@
   "hardware_class": "linux-x86_64-gcp-n2-icelake-8c-16g",
   "metric": "install_mib",
   "system": "warm",
-  "value": 5.1774444580078125,
+  "value": 5.8097686767578125,
   "ci": [
-   5.1774444580078125,
-   5.1774444580078125
+   5.8097686767578125,
+   5.8097686767578125
   ],
   "n": 1,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.install",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "unreplicated",
-  "text": "5.2"
+  "text": "5.8"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8350,11 +8350,11 @@
   "derived": true,
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 12.004768514834561,
+  "factor": 10.698192247386073,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "12.00x"
+  "text": "10.70x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8525,17 +8525,17 @@
    "diskann",
    "r64_l500"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8572,14 +8572,14 @@
   ],
   "warm": "warm",
   "other": "diskann",
-  "factor": 3.091329392554289,
+  "factor": 3.576808314305358,
   "factor_infinite": false,
   "ci": [
-   3.0377426213901604,
-   3.5556958843990896
+   3.475178095762974,
+   4.000830055630782
   ],
   "verdict": "WIN",
-  "text": "3.09x"
+  "text": "3.58x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8592,17 +8592,17 @@
    "diskann",
    "r64_l500"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8639,14 +8639,14 @@
   ],
   "warm": "warm",
   "other": "diskann",
-  "factor": 2.4710176863899043,
+  "factor": 2.8424117837888145,
   "factor_infinite": false,
   "ci": [
-   2.355804370038441,
-   2.79972566546038
+   2.7679039779687837,
+   3.165565017848936
   ],
   "verdict": "WIN",
-  "text": "2.47x"
+  "text": "2.84x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8659,17 +8659,17 @@
    "diskann",
    "r64_l500"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8706,14 +8706,14 @@
   ],
   "warm": "warm",
   "other": "diskann",
-  "factor": 1.7944359035859399,
+  "factor": 2.0874564008567424,
   "factor_infinite": false,
   "ci": [
-   1.7191201506427252,
-   2.0825082597021165
+   2.028573710485025,
+   2.332781624380512
   ],
   "verdict": "WIN",
-  "text": "1.79x"
+  "text": "2.09x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8726,17 +8726,17 @@
    "diskann",
    "r64_l500"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8773,11 +8773,11 @@
   ],
   "warm": "warm",
   "other": "diskann",
-  "factor": 6.596480695045929,
+  "factor": 5.788720468859995,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "6.60x"
+  "text": "5.79x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8790,17 +8790,17 @@
    "diskann",
    "r64_l500"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8837,11 +8837,11 @@
   ],
   "warm": "warm",
   "other": "diskann",
-  "factor": 1.1271228264588424,
+  "factor": 1.1942786013788589,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.13x"
+  "text": "1.19x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8854,17 +8854,17 @@
    "diskann",
    "r64_l500"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8901,14 +8901,14 @@
   ],
   "warm": "warm",
   "other": "diskann",
-  "factor": 1.6244325034022136,
+  "factor": 1.6764420423620758,
   "factor_infinite": false,
   "ci": [
-   1.6239223263737803,
-   1.6248994858099783
+   1.6759397036941193,
+   1.6768171990620908
   ],
   "verdict": "WIN",
-  "text": "1.62x"
+  "text": "1.68x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -8967,10 +8967,10 @@
    "diskann",
    "r64_l500"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -9014,14 +9014,14 @@
   ],
   "warm": "warm",
   "other": "diskann",
-  "factor": 12.658601011277863,
+  "factor": 12.822489015848765,
   "factor_infinite": false,
   "ci": [
-   11.318304936196496,
-   13.57969424904425
+   11.652858023489488,
+   13.71861586285623
   ],
   "verdict": "WIN",
-  "text": "12.66x"
+  "text": "12.82x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9034,17 +9034,17 @@
    "faiss-hnsw",
    "m16e500"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9081,14 +9081,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 3.197110545173846,
+  "factor": 3.6992019055861007,
   "factor_infinite": false,
   "ci": [
-   3.0993968313384994,
-   3.4528808349587035
+   3.5457105228406793,
+   3.8851436883638084
   ],
   "verdict": "WIN",
-  "text": "3.20x"
+  "text": "3.70x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9101,17 +9101,17 @@
    "faiss-hnsw",
    "m16e500"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9148,14 +9148,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 2.518302198656885,
+  "factor": 2.896803160911951,
   "factor_infinite": false,
   "ci": [
-   2.413915056290718,
-   2.702449783699686
+   2.8361799357205517,
+   3.0555781244254243
   ],
   "verdict": "WIN",
-  "text": "2.52x"
+  "text": "2.90x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9168,17 +9168,17 @@
    "faiss-hnsw",
    "m16e500"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9215,14 +9215,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 2.231320214310954,
+  "factor": 2.5956812692035873,
   "factor_infinite": false,
   "ci": [
-   2.149934127988617,
-   2.472098842305869
+   2.5369371941115944,
+   2.7691927396284925
   ],
   "verdict": "WIN",
-  "text": "2.23x"
+  "text": "2.60x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9235,17 +9235,17 @@
    "faiss-hnsw",
    "m16e500"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9282,11 +9282,11 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 3.8953920279773526,
+  "factor": 3.4183887756272044,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "3.90x"
+  "text": "3.42x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9299,17 +9299,17 @@
    "faiss-hnsw",
    "m16e500"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9346,11 +9346,11 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 0.9114627330226869,
+  "factor": 0.9657691357589018,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.91x"
+  "text": "0.97x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9363,17 +9363,17 @@
    "faiss-hnsw",
    "m16e500"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9410,14 +9410,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 1.320490361316924,
+  "factor": 1.3627685690905285,
   "factor_infinite": false,
   "ci": [
-   1.3201566452545486,
-   1.3208671147079003
+   1.3624438194764223,
+   1.3630705868022779
   ],
   "verdict": "WIN",
-  "text": "1.32x"
+  "text": "1.36x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9476,10 +9476,10 @@
    "faiss-hnsw",
    "m16e500"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -9523,14 +9523,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 10.306347895060538,
+  "factor": 10.439781817926907,
   "factor_infinite": false,
   "ci": [
-   5.024527574949581,
-   23.097517644963443
+   5.173045504256498,
+   23.33380753245593
   ],
   "verdict": "WIN",
-  "text": "10.31x"
+  "text": "10.44x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9543,17 +9543,17 @@
    "faiss-hnsw",
    "m32"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9590,14 +9590,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 3.1439479124629104,
+  "factor": 3.637690328350484,
   "factor_infinite": false,
   "ci": [
-   3.0810770052040186,
-   3.369630089815564
+   3.524752638504975,
+   3.7914708619604838
   ],
   "verdict": "WIN",
-  "text": "3.14x"
+  "text": "3.64x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9610,17 +9610,17 @@
    "faiss-hnsw",
    "m32"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9657,14 +9657,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 2.8935160832589744,
+  "factor": 3.3284117134967377,
   "factor_infinite": false,
   "ci": [
-   2.777355908982651,
-   3.1726342040214006
+   3.2631973038502973,
+   3.5872014085457455
   ],
   "verdict": "WIN",
-  "text": "2.89x"
+  "text": "3.33x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9677,17 +9677,17 @@
    "faiss-hnsw",
    "m32"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9724,14 +9724,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 2.093042870432706,
+  "factor": 2.434824073917151,
   "factor_infinite": false,
   "ci": [
-   1.9998120118521354,
-   2.3173202898310747
+   2.3597920550455487,
+   2.595813084887982
   ],
   "verdict": "WIN",
-  "text": "2.09x"
+  "text": "2.43x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9744,17 +9744,17 @@
    "faiss-hnsw",
    "m32"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9791,11 +9791,11 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 1.9616867129270095,
+  "factor": 1.721471880777208,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.96x"
+  "text": "1.72x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9808,17 +9808,17 @@
    "faiss-hnsw",
    "m32"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9855,11 +9855,11 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 1.0053379112810685,
+  "factor": 1.0652375467987565,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.01x"
+  "text": "1.07x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9872,17 +9872,17 @@
    "faiss-hnsw",
    "m32"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9919,14 +9919,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 1.5529288540902166,
+  "factor": 1.6026490570346548,
   "factor_infinite": false,
   "ci": [
-   1.552628085520639,
-   1.5532559220378745
+   1.6023617702240371,
+   1.6028845275434696
   ],
   "verdict": "WIN",
-  "text": "1.55x"
+  "text": "1.60x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -9985,10 +9985,10 @@
    "faiss-hnsw",
    "m32"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -10032,14 +10032,14 @@
   ],
   "warm": "warm",
   "other": "faiss-hnsw",
-  "factor": 12.011743075582311,
+  "factor": 12.167256358789649,
   "factor_infinite": false,
   "ci": [
-   5.646689125043256,
-   28.203473898455222
+   5.813597269895008,
+   28.4919982228783
   ],
   "verdict": "WIN",
-  "text": "12.01x"
+  "text": "12.17x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10052,17 +10052,17 @@
    "faiss-ivfpqfs",
    "ab_nl2048"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10099,14 +10099,14 @@
   ],
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 2.8167846645350116,
+  "factor": 3.2591476120219767,
   "factor_infinite": false,
   "ci": [
-   2.655626698918929,
-   3.0029893334436384
+   3.038037412920466,
+   3.3789306995275816
   ],
   "verdict": "WIN",
-  "text": "2.82x"
+  "text": "3.26x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10119,17 +10119,17 @@
    "faiss-ivfpqfs",
    "ab_nl2048"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10166,14 +10166,14 @@
   ],
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 2.708475660582762,
+  "factor": 3.1155597048733004,
   "factor_infinite": false,
   "ci": [
-   2.521981902738231,
-   2.974527556087702
+   2.9631508582525155,
+   3.3632082215564374
   ],
   "verdict": "WIN",
-  "text": "2.71x"
+  "text": "3.12x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10186,17 +10186,17 @@
    "faiss-ivfpqfs",
    "ab_nl2048"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10233,14 +10233,14 @@
   ],
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 3.0306963191367338,
+  "factor": 3.525590642603833,
   "factor_infinite": false,
   "ci": [
-   2.8632096403222547,
-   3.2681426794320174
+   3.378607249640751,
+   3.6609041778894187
   ],
   "verdict": "WIN",
-  "text": "3.03x"
+  "text": "3.53x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10253,17 +10253,17 @@
    "faiss-ivfpqfs",
    "ab_nl2048"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10300,11 +10300,11 @@
   ],
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 2.5751764046900245,
+  "factor": 2.259837791377125,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "2.58x"
+  "text": "2.26x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10317,17 +10317,17 @@
    "faiss-ivfpqfs",
    "ab_nl2048"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10364,11 +10364,11 @@
   ],
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 0.85528901322821,
+  "factor": 0.9062484961839163,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.86x"
+  "text": "0.91x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10381,17 +10381,17 @@
    "faiss-ivfpqfs",
    "ab_nl2048"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10428,14 +10428,14 @@
   ],
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 1.1633910756895707,
+  "factor": 1.2006394275600891,
   "factor_infinite": false,
   "ci": [
-   1.1631684526487356,
-   1.1636850530788696
+   1.2004269910073107,
+   1.2008663479399495
   ],
   "verdict": "WIN",
-  "text": "1.16x"
+  "text": "1.20x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10494,10 +10494,10 @@
    "faiss-ivfpqfs",
    "ab_nl2048"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -10541,14 +10541,14 @@
   ],
   "warm": "warm",
   "other": "faiss-ivfpqfs",
-  "factor": 8.602843663786427,
+  "factor": 8.714222707998127,
   "factor_infinite": false,
   "ci": [
-   4.4029012468488995,
-   19.405376379174022
+   4.533044781016169,
+   19.603895296741957
   ],
   "verdict": "WIN",
-  "text": "8.60x"
+  "text": "8.71x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10561,17 +10561,17 @@
    "hnswlib",
    "m16"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10608,14 +10608,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.9510840790410229,
+  "factor": 2.2574927707902566,
   "factor_infinite": false,
   "ci": [
-   1.8905475792475184,
-   2.094113490522021
+   2.1627867647957846,
+   2.3562735580234526
   ],
   "verdict": "WIN",
-  "text": "1.95x"
+  "text": "2.26x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10628,17 +10628,17 @@
    "hnswlib",
    "m16"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10675,14 +10675,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 2.0428149662482005,
+  "factor": 2.3498501706991903,
   "factor_infinite": false,
   "ci": [
-   1.9599276849996792,
-   2.2191107961932075
+   2.302776794557538,
+   2.509081369586611
   ],
   "verdict": "WIN",
-  "text": "2.04x"
+  "text": "2.35x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10695,17 +10695,17 @@
    "hnswlib",
    "m16"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10742,14 +10742,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 2.29969098271609,
+  "factor": 2.675216569324136,
   "factor_infinite": false,
   "ci": [
-   2.204743282090591,
-   2.510062511588781
+   2.6016123763922616,
+   2.8117188375129274
   ],
   "verdict": "WIN",
-  "text": "2.30x"
+  "text": "2.68x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10762,17 +10762,17 @@
    "hnswlib",
    "m16"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10809,11 +10809,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.3983660073325839,
+  "factor": 1.2271316030202968,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.40x"
+  "text": "1.23x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10826,17 +10826,17 @@
    "hnswlib",
    "m16"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10873,11 +10873,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 0.9910197136360471,
+  "factor": 1.050066248111207,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.99x"
+  "text": "1.05x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10890,17 +10890,17 @@
    "hnswlib",
    "m16"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -10937,14 +10937,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.4836933471511764,
+  "factor": 1.531196833311131,
   "factor_infinite": false,
   "ci": [
-   1.4816620327008032,
-   1.4839767471026093
+   1.5291225372856008,
+   1.5313917902493985
   ],
   "verdict": "WIN",
-  "text": "1.48x"
+  "text": "1.53x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11003,10 +11003,10 @@
    "hnswlib",
    "m16"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -11050,14 +11050,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 8.57928084056818,
+  "factor": 8.690354822310825,
   "factor_infinite": false,
   "ci": [
-   8.014524282761823,
-   23.511030088735584
+   8.251422286225907,
+   23.751550249381992
   ],
   "verdict": "WIN",
-  "text": "8.58x"
+  "text": "8.69x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11070,17 +11070,17 @@
    "hnswlib",
    "m16e500"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11117,14 +11117,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 2.00057597517604,
+  "factor": 2.3147571393214266,
   "factor_infinite": false,
   "ci": [
-   1.9391423739041993,
-   2.2526479385499005
+   2.2183792184717035,
+   2.534654782161795
   ],
   "verdict": "WIN",
-  "text": "2.00x"
+  "text": "2.31x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11137,17 +11137,17 @@
    "hnswlib",
    "m16e500"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11184,14 +11184,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 2.1102798569076016,
+  "factor": 2.4274550382234152,
   "factor_infinite": false,
   "ci": [
-   2.012696212384533,
-   2.3549104394576466
+   2.3647760924269567,
+   2.6626259134173313
   ],
   "verdict": "WIN",
-  "text": "2.11x"
+  "text": "2.43x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11204,17 +11204,17 @@
    "hnswlib",
    "m16e500"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11251,14 +11251,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.6681283753552918,
+  "factor": 1.9405236194993432,
   "factor_infinite": false,
   "ci": [
-   1.5957233870493726,
-   1.8313327698115225
+   1.88296467292542,
+   2.051420162988103
   ],
   "verdict": "WIN",
-  "text": "1.67x"
+  "text": "1.94x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11271,17 +11271,17 @@
    "hnswlib",
    "m16e500"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11318,11 +11318,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 3.140483513805137,
+  "factor": 2.7559212311701575,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "3.14x"
+  "text": "2.76x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11335,17 +11335,17 @@
    "hnswlib",
    "m16e500"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11382,11 +11382,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 0.9911135736755894,
+  "factor": 1.050165700481542,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.99x"
+  "text": "1.05x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11399,17 +11399,17 @@
    "hnswlib",
    "m16e500"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11446,14 +11446,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.483663842860146,
+  "factor": 1.531166384379698,
   "factor_infinite": false,
   "ci": [
-   1.4816104076169123,
-   1.4840173216380308
+   1.5290692585502856,
+   1.5314336611955297
   ],
   "verdict": "WIN",
-  "text": "1.48x"
+  "text": "1.53x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11512,10 +11512,10 @@
    "hnswlib",
    "m16e500"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -11559,14 +11559,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 8.851862927480177,
+  "factor": 8.966465966996738,
   "factor_infinite": false,
   "ci": [
-   8.115683998539282,
-   24.24845942043724
+   8.355572140139227,
+   24.496523556003368
   ],
   "verdict": "WIN",
-  "text": "8.85x"
+  "text": "8.97x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11579,17 +11579,17 @@
    "hnswlib",
    "m32"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11626,14 +11626,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 2.1614882192320457,
+  "factor": 2.5009399038625713,
   "factor_infinite": false,
   "ci": [
-   2.0861026468661037,
-   2.452260735649402
+   2.3865017967139774,
+   2.7592569146524317
   ],
   "verdict": "WIN",
-  "text": "2.16x"
+  "text": "2.50x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11646,17 +11646,17 @@
    "hnswlib",
    "m32"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11693,14 +11693,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 2.224224311937688,
+  "factor": 2.5585253512603447,
   "factor_infinite": false,
   "ci": [
-   2.1113770917313173,
-   2.525975344681623
+   2.48071916561557,
+   2.8560438209070704
   ],
   "verdict": "WIN",
-  "text": "2.22x"
+  "text": "2.56x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11713,17 +11713,17 @@
    "hnswlib",
    "m32"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11760,14 +11760,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.7527063882289171,
+  "factor": 2.038912708790287,
   "factor_infinite": false,
   "ci": [
-   1.655559955899741,
-   1.9663325571328774
+   1.9535722395053958,
+   2.202644064113749
   ],
   "verdict": "WIN",
-  "text": "1.75x"
+  "text": "2.04x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11780,17 +11780,17 @@
    "hnswlib",
    "m32"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11827,11 +11827,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.7764233793234292,
+  "factor": 1.5588946367983538,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.78x"
+  "text": "1.56x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11844,17 +11844,17 @@
    "hnswlib",
    "m32"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11891,11 +11891,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.0850977506895685,
+  "factor": 1.1497496045966245,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.09x"
+  "text": "1.15x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11908,17 +11908,17 @@
    "hnswlib",
    "m32"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -11955,14 +11955,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.7087705193124025,
+  "factor": 1.7634803128627705,
   "factor_infinite": false,
   "ci": [
-   1.7084473387269254,
-   1.709139598533415
+   1.763172215900658,
+   1.763748896129602
   ],
   "verdict": "WIN",
-  "text": "1.71x"
+  "text": "1.76x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12021,10 +12021,10 @@
    "hnswlib",
    "m32"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -12068,14 +12068,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 9.853245656677151,
+  "factor": 9.980813368763268,
   "factor_infinite": false,
   "ci": [
-   8.426592186159873,
-   27.973186438983202
+   8.675670334091992,
+   28.259354899943983
   ],
   "verdict": "WIN",
-  "text": "9.85x"
+  "text": "9.98x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12088,17 +12088,17 @@
    "hnswlib",
    "m32e500"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12135,14 +12135,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 2.350782235935632,
+  "factor": 2.719961666611121,
   "factor_infinite": false,
   "ci": [
-   2.2947597527019448,
-   2.5950203597028163
+   2.625205562668374,
+   2.919888479671659
   ],
   "verdict": "WIN",
-  "text": "2.35x"
+  "text": "2.72x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12155,17 +12155,17 @@
    "hnswlib",
    "m32e500"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12202,14 +12202,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.7627408198918544,
+  "factor": 2.0276808643754736,
   "factor_infinite": false,
   "ci": [
-   1.6888117165795302,
-   1.9630116528026023
+   1.9842346536968587,
+   2.21951782433652
   ],
   "verdict": "WIN",
-  "text": "1.76x"
+  "text": "2.03x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12222,17 +12222,17 @@
    "hnswlib",
    "m32e500"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12269,14 +12269,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.917715270855643,
+  "factor": 2.230866540938342,
   "factor_infinite": false,
   "ci": [
-   1.8356083715519411,
-   2.1438741201680083
+   2.166030619723894,
+   2.4015223609380745
   ],
   "verdict": "WIN",
-  "text": "1.92x"
+  "text": "2.23x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12289,17 +12289,17 @@
    "hnswlib",
    "m32e500"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12336,11 +12336,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 4.34487486088466,
+  "factor": 3.8128309934609965,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "4.34x"
+  "text": "3.81x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12353,17 +12353,17 @@
    "hnswlib",
    "m32e500"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12400,11 +12400,11 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.085488329563793,
+  "factor": 1.150163454782857,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.09x"
+  "text": "1.15x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12417,17 +12417,17 @@
    "hnswlib",
    "m32e500"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12464,14 +12464,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 1.7070813986509163,
+  "factor": 1.7617371115382419,
   "factor_infinite": false,
   "ci": [
-   1.7067252734285694,
-   1.7087559847439746
+   1.761394989515506,
+   1.7633530253661804
   ],
   "verdict": "WIN",
-  "text": "1.71x"
+  "text": "1.76x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12530,10 +12530,10 @@
    "hnswlib",
    "m32e500"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -12577,14 +12577,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib",
-  "factor": 8.740110968754797,
+  "factor": 8.853267181287391,
   "factor_infinite": false,
   "ci": [
-   8.293603250718503,
-   26.669772412368566
+   8.53875043379515,
+   26.942606819062608
   ],
   "verdict": "WIN",
-  "text": "8.74x"
+  "text": "8.85x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12597,17 +12597,17 @@
    "hnswlib-cpp",
    "m16"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12644,14 +12644,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.8859296803783172,
+  "factor": 2.18210617646238,
   "factor_infinite": false,
   "ci": [
-   1.8397909330286317,
-   2.0436010004813134
+   2.1047211525506153,
+   2.299437457606005
   ],
   "verdict": "WIN",
-  "text": "1.89x"
+  "text": "2.18x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12664,17 +12664,17 @@
    "hnswlib-cpp",
    "m16"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12711,14 +12711,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.9731224932698894,
+  "factor": 2.2696829151080955,
   "factor_infinite": false,
   "ci": [
-   1.8901828170305233,
-   2.1536130981160073
+   2.2208314938568763,
+   2.4350251060245447
   ],
   "verdict": "WIN",
-  "text": "1.97x"
+  "text": "2.27x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12731,17 +12731,17 @@
    "hnswlib-cpp",
    "m16"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12778,14 +12778,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 2.254400415060632,
+  "factor": 2.622530326721716,
   "factor_infinite": false,
   "ci": [
-   2.1749012558837295,
-   2.492623333738769
+   2.5663985783292165,
+   2.7921838400197454
   ],
   "verdict": "WIN",
-  "text": "2.25x"
+  "text": "2.62x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12798,17 +12798,17 @@
    "hnswlib-cpp",
    "m16"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12845,14 +12845,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.381184376002685,
+  "factor": 1.425405827164253,
   "factor_infinite": false,
   "ci": [
-   1.3809673065718733,
-   1.3814227645275279
+   1.4252023640535985,
+   1.425561070678157
   ],
   "verdict": "WIN",
-  "text": "1.38x"
+  "text": "1.43x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12865,10 +12865,10 @@
    "hnswlib-cpp",
    "m16"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -12912,14 +12912,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 7.554305526045882,
+  "factor": 7.652109387426739,
   "factor_infinite": false,
   "ci": [
-   7.133505145421098,
-   7.743363304490372
+   7.344361469143991,
+   7.822578676122763
   ],
   "verdict": "WIN",
-  "text": "7.55x"
+  "text": "7.65x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12932,17 +12932,17 @@
    "hnswlib-cpp",
    "m16e500"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12979,14 +12979,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.9375403140204728,
+  "factor": 2.2418220203845634,
   "factor_infinite": false,
   "ci": [
-   1.8901595320387297,
-   2.1049548813228176
+   2.1623428387203463,
+   2.368472172182491
   ],
   "verdict": "WIN",
-  "text": "1.94x"
+  "text": "2.24x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -12999,17 +12999,17 @@
    "hnswlib-cpp",
    "m16e500"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13046,14 +13046,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 2.0252646012431876,
+  "factor": 2.3296619848457234,
   "factor_infinite": false,
   "ci": [
-   1.948875789260202,
-   2.151343938552894
+   2.28979159656298,
+   2.4324594360299714
   ],
   "verdict": "WIN",
-  "text": "2.03x"
+  "text": "2.33x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13066,17 +13066,17 @@
    "hnswlib-cpp",
    "m16e500"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13113,14 +13113,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.6210221905668476,
+  "factor": 1.8857252805003994,
   "factor_infinite": false,
   "ci": [
-   1.563974976430911,
-   1.7482674467201207
+   1.845501328024125,
+   1.9583721482068457
   ],
   "verdict": "WIN",
-  "text": "1.62x"
+  "text": "1.89x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13133,17 +13133,17 @@
    "hnswlib-cpp",
    "m16e500"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13180,14 +13180,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.3812212563664727,
+  "factor": 1.425443888328544,
   "factor_infinite": false,
   "ci": [
-   1.3809709940778654,
-   1.3814596504688204
+   1.4252061696775495,
+   1.42559913517464
   ],
   "verdict": "WIN",
-  "text": "1.38x"
+  "text": "1.43x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13200,10 +13200,10 @@
    "hnswlib-cpp",
    "m16e500"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -13247,14 +13247,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 7.535145291778283,
+  "factor": 7.632701089999679,
   "factor_infinite": false,
   "ci": [
-   7.140499473860659,
-   7.67123929672261
+   7.351562540040678,
+   7.749716832629842
   ],
   "verdict": "WIN",
-  "text": "7.54x"
+  "text": "7.63x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13267,17 +13267,17 @@
    "hnswlib-cpp",
    "m32"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13314,14 +13314,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 2.0675499562618262,
+  "factor": 2.392249073039895,
   "factor_infinite": false,
   "ci": [
-   2.0027400411091967,
-   2.253178473882444
+   2.291134960994514,
+   2.5352517347058323
   ],
   "verdict": "WIN",
-  "text": "2.07x"
+  "text": "2.39x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13334,17 +13334,17 @@
    "hnswlib-cpp",
    "m32"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13381,14 +13381,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 2.122329470493908,
+  "factor": 2.441315709410216,
   "factor_infinite": false,
   "ci": [
-   2.0283988191653517,
-   2.327639717896001
+   2.383225547876604,
+   2.6317917344647133
   ],
   "verdict": "WIN",
-  "text": "2.12x"
+  "text": "2.44x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13401,17 +13401,17 @@
    "hnswlib-cpp",
    "m32"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13448,14 +13448,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.6666924498932731,
+  "factor": 1.9388532161202903,
   "factor_infinite": false,
   "ci": [
-   1.6183037822631599,
-   1.8433657726743695
+   1.9096096960123319,
+   2.0648992778169593
   ],
   "verdict": "WIN",
-  "text": "1.67x"
+  "text": "1.94x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13468,17 +13468,17 @@
    "hnswlib-cpp",
    "m32"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13515,14 +13515,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.6106097430545054,
+  "factor": 1.6621767179858031,
   "factor_infinite": false,
   "ci": [
-   1.610341241804518,
-   1.6108938939012785
+   1.6619235906823102,
+   1.6623641097475563
   ],
   "verdict": "WIN",
-  "text": "1.61x"
+  "text": "1.66x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13535,10 +13535,10 @@
    "hnswlib-cpp",
    "m32"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -13582,14 +13582,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 7.79949142217025,
+  "factor": 7.900469649125071,
   "factor_infinite": false,
   "ci": [
-   7.394835481730572,
-   7.947765641277048
+   7.6134163606150835,
+   8.029072069009272
   ],
   "verdict": "WIN",
-  "text": "7.80x"
+  "text": "7.90x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13602,17 +13602,17 @@
    "hnswlib-cpp",
    "m32e500"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13649,14 +13649,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 2.318711478462801,
+  "factor": 2.6828543456471423,
   "factor_infinite": false,
   "ci": [
-   2.234521336888069,
-   2.505880796754355
+   2.556292804330723,
+   2.8195896199871875
   ],
   "verdict": "WIN",
-  "text": "2.32x"
+  "text": "2.68x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13669,17 +13669,17 @@
    "hnswlib-cpp",
    "m32e500"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13716,14 +13716,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.714261497991036,
+  "factor": 1.9719150976632582,
   "factor_infinite": false,
   "ci": [
-   1.6402762794753007,
-   1.8697045744134062
+   1.927208938343823,
+   2.1140183366865553
   ],
   "verdict": "WIN",
-  "text": "1.71x"
+  "text": "1.97x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13736,17 +13736,17 @@
    "hnswlib-cpp",
    "m32e500"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13783,14 +13783,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.8862941833021438,
+  "factor": 2.194314580400571,
   "factor_infinite": false,
   "ci": [
-   1.8107688658403327,
-   2.179479920214128
+   2.136719830568655,
+   2.4414072236664635
   ],
   "verdict": "WIN",
-  "text": "1.89x"
+  "text": "2.19x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13803,17 +13803,17 @@
    "hnswlib-cpp",
    "m32e500"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13850,14 +13850,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 1.6105544225088235,
+  "factor": 1.6621196262393667,
   "factor_infinite": false,
   "ci": [
-   1.6103191167685647,
-   1.6108459421775985
+   1.661900756938604,
+   1.6623146259021286
   ],
   "verdict": "WIN",
-  "text": "1.61x"
+  "text": "1.66x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13870,10 +13870,10 @@
    "hnswlib-cpp",
    "m32e500"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -13917,14 +13917,14 @@
   ],
   "warm": "warm",
   "other": "hnswlib-cpp",
-  "factor": 7.834009460802928,
+  "factor": 7.935434584888655,
   "factor_infinite": false,
   "ci": [
-   7.394460058945027,
-   7.995277689482318
+   7.613029840862929,
+   8.07707017016177
   ],
   "verdict": "WIN",
-  "text": "7.83x"
+  "text": "7.94x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13937,17 +13937,17 @@
    "pynndescent",
    "ab_nn80_fast"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -13984,14 +13984,14 @@
   ],
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 2.291766471107572,
+  "factor": 2.6516777500474196,
   "factor_infinite": false,
   "ci": [
-   2.211007805970388,
-   2.573961974637602
+   2.5293933208050987,
+   2.896193815495902
   ],
   "verdict": "WIN",
-  "text": "2.29x"
+  "text": "2.65x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14004,17 +14004,17 @@
    "pynndescent",
    "ab_nn80_fast"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14051,14 +14051,14 @@
   ],
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 1.9079305851167412,
+  "factor": 2.194692659488797,
   "factor_infinite": false,
   "ci": [
-   1.810462875361352,
-   2.098637141868597
+   2.127166185108876,
+   2.3728654572894685
   ],
   "verdict": "WIN",
-  "text": "1.91x"
+  "text": "2.19x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14071,17 +14071,17 @@
    "pynndescent",
    "ab_nn80_fast"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14118,14 +14118,14 @@
   ],
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 1.651180502051007,
+  "factor": 1.920808261297225,
   "factor_infinite": false,
   "ci": [
-   1.5889342486808486,
-   1.8447927321116204
+   1.8749534425259136,
+   2.0664977275414427
   ],
   "verdict": "WIN",
-  "text": "1.65x"
+  "text": "1.92x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14138,17 +14138,17 @@
    "pynndescent",
    "ab_nn80_fast"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14185,11 +14185,11 @@
   ],
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 3.293913311545823,
+  "factor": 2.890563057891728,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "3.29x"
+  "text": "2.89x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14202,17 +14202,17 @@
    "pynndescent",
    "ab_nn80_fast"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14249,11 +14249,11 @@
   ],
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 3.6158974685039014,
+  "factor": 3.83133840433484,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "3.62x"
+  "text": "3.83x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14266,17 +14266,17 @@
    "pynndescent",
    "ab_nn80_fast"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14313,14 +14313,14 @@
   ],
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 4.269337296743095,
+  "factor": 4.406028888423696,
   "factor_infinite": false,
   "ci": [
-   4.267432684578113,
-   4.270536247814508
+   4.4041268186125455,
+   4.406985596394531
   ],
   "verdict": "WIN",
-  "text": "4.27x"
+  "text": "4.41x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14379,10 +14379,10 @@
    "pynndescent",
    "ab_nn80_fast"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -14426,14 +14426,14 @@
   ],
   "warm": "warm",
   "other": "pynndescent",
-  "factor": 117.10676477411594,
+  "factor": 118.62291920409481,
   "factor_infinite": false,
   "ci": [
-   108.57291591023517,
-   124.20779692572546
+   111.78217775809435,
+   125.47845495973584
   ],
   "verdict": "WIN",
-  "text": "117.11x"
+  "text": "118.62x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14446,17 +14446,17 @@
    "scann",
    "ab_scann4"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14493,14 +14493,14 @@
   ],
   "warm": "warm",
   "other": "scann",
-  "factor": 3.647675444365853,
+  "factor": 4.2205259293041015,
   "factor_infinite": false,
   "ci": [
-   3.5470405443115465,
-   3.9067617152376357
+   4.05781500959869,
+   4.395845482480544
   ],
   "verdict": "WIN",
-  "text": "3.65x"
+  "text": "4.22x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14513,17 +14513,17 @@
    "scann",
    "ab_scann4"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14560,14 +14560,14 @@
   ],
   "warm": "warm",
   "other": "scann",
-  "factor": 5.888069916208837,
+  "factor": 6.773047156151992,
   "factor_infinite": false,
   "ci": [
-   5.667126807073273,
-   6.325171442417405
+   6.6584742911805055,
+   7.151679786712653
   ],
   "verdict": "WIN",
-  "text": "5.89x"
+  "text": "6.77x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14580,17 +14580,17 @@
    "scann",
    "ab_scann4"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14627,14 +14627,14 @@
   ],
   "warm": "warm",
   "other": "scann",
-  "factor": 4.585206009785099,
+  "factor": 5.33394233544119,
   "factor_infinite": false,
   "ci": [
-   4.421425383416637,
-   4.895285193509642
+   5.2173126423518825,
+   5.48359474317512
   ],
   "verdict": "WIN",
-  "text": "4.59x"
+  "text": "5.33x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14647,17 +14647,17 @@
    "scann",
    "ab_scann4"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14694,11 +14694,11 @@
   ],
   "warm": "warm",
   "other": "scann",
-  "factor": 0.5892265479667452,
+  "factor": 0.5170738666107875,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.59x"
+  "text": "0.52x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14711,17 +14711,17 @@
    "scann",
    "ab_scann4"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14758,11 +14758,11 @@
   ],
   "warm": "warm",
   "other": "scann",
-  "factor": 1.1407446431653239,
+  "factor": 1.2087120276413428,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.14x"
+  "text": "1.21x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14775,17 +14775,17 @@
    "scann",
    "ab_scann4"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14822,14 +14822,14 @@
   ],
   "warm": "warm",
   "other": "scann",
-  "factor": 1.1222436538114011,
+  "factor": 1.1581745865606028,
   "factor_infinite": false,
   "ci": [
-   1.1211751344095935,
-   1.1224391935257796
+   1.1570885454524698,
+   1.1583026279728372
   ],
   "verdict": "WIN",
-  "text": "1.12x"
+  "text": "1.16x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14888,10 +14888,10 @@
    "scann",
    "ab_scann4"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -14935,14 +14935,14 @@
   ],
   "warm": "warm",
   "other": "scann",
-  "factor": 10.356328976214694,
+  "factor": 10.49040999267769,
   "factor_infinite": false,
   "ci": [
-   9.484624865168355,
-   24.074331173461957
+   9.764976962796524,
+   24.320613959858036
   ],
   "verdict": "WIN",
-  "text": "10.36x"
+  "text": "10.49x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -14955,17 +14955,17 @@
    "usearch",
    "m16"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15002,14 +15002,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 4.622970919342972,
+  "factor": 5.3489870283396,
   "factor_infinite": false,
   "ci": [
-   4.457349806207866,
-   4.9863298483767835
+   5.099208966096737,
+   5.610563718962755
   ],
   "verdict": "WIN",
-  "text": "4.62x"
+  "text": "5.35x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15022,17 +15022,17 @@
    "usearch",
    "m16"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15069,14 +15069,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 4.628886244252719,
+  "factor": 5.324608107400568,
   "factor_infinite": false,
   "ci": [
-   4.405115715314429,
-   4.9966804277601184
+   5.1757002690476615,
+   5.649595230926644
   ],
   "verdict": "WIN",
-  "text": "4.63x"
+  "text": "5.32x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15089,17 +15089,17 @@
    "usearch",
    "m16"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15136,14 +15136,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 4.9949364652699915,
+  "factor": 5.810579288713633,
   "factor_infinite": false,
   "ci": [
-   4.837707460865094,
-   5.731120693865405
+   5.708528383230909,
+   6.419879959404571
   ],
   "verdict": "WIN",
-  "text": "4.99x"
+  "text": "5.81x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15156,17 +15156,17 @@
    "usearch",
    "m16"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15203,11 +15203,11 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 2.206042527642751,
+  "factor": 1.9359055419554014,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "2.21x"
+  "text": "1.94x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15220,17 +15220,17 @@
    "usearch",
    "m16"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15267,11 +15267,11 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 0.9860511870267259,
+  "factor": 1.044801688765411,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "0.99x"
+  "text": "1.04x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15284,17 +15284,17 @@
    "usearch",
    "m16"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15331,14 +15331,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 1.5054822660770726,
+  "factor": 1.553683369174263,
   "factor_infinite": false,
   "ci": [
-   1.5051145708111775,
-   1.5059423251421953
+   1.553326305614437,
+   1.55405919790493
   ],
   "verdict": "WIN",
-  "text": "1.51x"
+  "text": "1.55x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15397,10 +15397,10 @@
    "usearch",
    "m16"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -15444,14 +15444,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 6.5930474429862445,
+  "factor": 6.678406116390173,
   "factor_infinite": false,
   "ci": [
-   6.175188018567929,
-   21.08950109796699
+   6.357717843296334,
+   21.305248777796034
   ],
   "verdict": "WIN",
-  "text": "6.59x"
+  "text": "6.68x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15464,17 +15464,17 @@
    "usearch",
    "m32"
   ],
-  "value": 21031.95403851895,
+  "value": 24334.92472599444,
   "ci": [
-   20707.9298313045,
-   21823.177784973
+   23689.875386945496,
+   24555.20056554259
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[1].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[11].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "21,032"
+  "text": "24,335"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15511,14 +15511,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 4.946527004029364,
+  "factor": 5.72335609319494,
   "factor_infinite": false,
   "ci": [
-   4.812881775530764,
-   5.468851109607605
+   5.505937601839086,
+   6.153491355964364
   ],
   "verdict": "WIN",
-  "text": "4.95x"
+  "text": "5.72x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15531,17 +15531,17 @@
    "usearch",
    "m32"
   ],
-  "value": 12731.712548636511,
+  "value": 14645.289661575527,
   "ci": [
-   12355.474681509677,
-   13216.585762723811
+   14516.81130894803,
+   14943.593246304388
   ],
   "n": 10,
-  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[13].report",
+  "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[3].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "12,732"
+  "text": "14,645"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15578,14 +15578,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 4.91302605699604,
+  "factor": 5.6514541499981465,
   "factor_infinite": false,
   "ci": [
-   4.710998669356754,
-   5.354002188710791
+   5.5350911658702096,
+   6.0536081242383295
   ],
   "verdict": "WIN",
-  "text": "4.91x"
+  "text": "5.65x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15598,17 +15598,17 @@
    "usearch",
    "m32"
   ],
-  "value": 5652.888096681886,
+  "value": 6575.970430130414,
   "ci": [
-   5506.9231931424765,
-   5950.537300383317
+   6498.207592466713,
+   6665.665792610404
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].configs[6].report",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "5,653"
+  "text": "6,576"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15645,14 +15645,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 3.7410192054546765,
+  "factor": 4.35190494714729,
   "factor_infinite": false,
   "ci": [
-   3.5996340768305592,
-   4.112649145765309
+   4.24759319637692,
+   4.606902426470013
   ],
   "verdict": "WIN",
-  "text": "3.74x"
+  "text": "4.35x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15665,17 +15665,17 @@
    "usearch",
    "m32"
   ],
-  "value": 59.161016769,
+  "value": 67.41636724649999,
   "ci": [
-   58.880883861,
-   59.322313986
+   67.336172232,
+   67.496562261
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "59.16"
+  "text": "67.42"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15712,11 +15712,11 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 2.7892896044928897,
+  "factor": 2.447732142873188,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "2.79x"
+  "text": "2.45x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15729,17 +15729,17 @@
    "usearch",
    "m32"
   ],
-  "value": 1290.15234375,
+  "value": 1217.60546875,
   "ci": [
-   1289.33203125,
-   1293.16015625
+   1217.58203125,
+   1217.62890625
   ],
-  "n": 5,
+  "n": 2,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.build_runs",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "1,290"
+  "text": "1,218"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15776,11 +15776,11 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 1.0807105507767676,
+  "factor": 1.1451010083187096,
   "factor_infinite": false,
   "ci": null,
   "verdict": "n/v",
-  "text": "1.08x"
+  "text": "1.15x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15793,17 +15793,17 @@
    "usearch",
    "m32"
   ],
-  "value": 529.583984375,
+  "value": 513.154296875,
   "ci": [
-   529.50390625,
-   529.66015625
+   513.109375,
+   513.220703125
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].rss_steady",
   "validity": "valid",
   "validity_reason": "",
   "uncertainty": "sampled",
-  "text": "530"
+  "text": "513"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15840,14 +15840,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 1.731949827953103,
+  "factor": 1.7874017546196739,
   "factor_infinite": false,
   "ci": [
-   1.7316159388759007,
-   1.7332039866325348
+   1.7870829511852615,
+   1.7885821736350072
   ],
   "verdict": "WIN",
-  "text": "1.73x"
+  "text": "1.79x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
@@ -15906,10 +15906,10 @@
    "usearch",
    "m32"
   ],
-  "value": 0.097825735,
+  "value": 0.0965753955,
   "ci": [
-   0.096868577,
-   0.1027508225
+   0.095887637,
+   0.09980085050000001
   ],
   "n": 10,
   "source": "benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json#systems.warm.builds.vertex-d32.serve_rounds[*].cold_start_s",
@@ -15953,14 +15953,14 @@
   ],
   "warm": "warm",
   "other": "usearch",
-  "factor": 7.300419286397388,
+  "factor": 7.394936140851735,
   "factor_infinite": false,
   "ci": [
-   6.896699410848997,
-   24.127740794623215
+   7.100556091954346,
+   24.37456996672053
   ],
   "verdict": "WIN",
-  "text": "7.30x"
+  "text": "7.39x"
  },
  {
   "section": "sift-128-euclidean (1,000,000 vectors, 10,000 queries)",
