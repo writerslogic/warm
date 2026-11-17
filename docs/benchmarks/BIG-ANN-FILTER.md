@@ -9,7 +9,7 @@ none of these different-host measurements establishes an official standing.
 yfcc-10M: 10M CLIP vectors, 192-d uint8, L2; every item has a bag of tags (200,386-tag
 vocabulary, 10.8 tags per item on average). 100k queries, each with 1 or 2 tags (61.6% / 38.4%)
 that must all be in the item's bag. Ranked by QPS at recall@10 >= 0.90 on the public queries.
-Live board (upstream 89a3aba, fetched 2026-10-23): pinecone 85,491 (closed), zilliz 84,596
+Board snapshot as of 2026-10-23 (upstream 89a3aba; not re-fetched since, so the live board may differ): pinecone 85,491 (closed), zilliz 84,596
 (closed), parlayivf 37,902, puck 19,193, hwtl_sdu_anns_filter 15,059 (closed), wm_filter 14,468,
 dhq 13,671, fdufilterdiskann 5,680, pyanns 5,185, faissplus 3,777, faiss 3,033, cufe 2,917.
 
@@ -273,27 +273,9 @@ python data_export.py --out res.csv
 with `neurips23/filter/warm` from the fork branch `filter/warm`, whose Dockerfile pins the WARM
 commit.
 
-## Per-class tuning (2026-11-12): fast-scan probe path and class table
+## Per-class tuning (2026-11-12): not reported
 
-Same hardware and protocol as above (GCP Ice Lake clone, unchanged `run.py`, 100,000 public queries, 5 runs per
-configuration, cold cache). Changes over the fast-scan entry (`881ef32f`, 84.3-88.2k QPS):
-the other-label bitsets are resolved once per query and prefetched before the probes, calibration
-reads one list instead of two, the PQ table is built with coordinate-major centroids, labels of
-1,500 members and more get an inverted file (`ivf_min 1500`), and `(target, rerank)` is set per
-class (single or multi-label query, rarest-label band with edges 5k/30k/150k) from the per-class
-time-recall fronts on the selection split.
-
-Profile before the change (selection split, 8 threads): other-label probes 24.4% of the time, 4-bit scan 14.4%,
-exact re-rank and exact routes 24.7%, PQ table 5.8%. Multi-label queries were 50% of the time at
-recall 0.97 while rarest labels above 150k members sat at 0.76-0.83.
-
-Official runs, qps at recall (run 1 / run 2); build 462 s, index 5.42e6 KB:
-
-| targets (single bands, multi bands) | reranks | recall | QPS |
-|---|---|---|---|
-| 2800 2800 5000 3600, 1200 450 800 800 | 64 64 64 96, 48 x4 | 0.9039 | 117,572 / 115,792 |
-| 2800 2800 5000 3600, 1200 450 600 600 | 64 64 64 96, 48 x4 | 0.9026 | 117,302 / 117,523 |
-| 2800 2800 3600 3600, 1200 600 600 600 | 64 64 64 96, 48 x4 | 0.9022 | 117,823 / 117,757 |
-| 2800 2800 5000 3600, 1200 450 600 600 | 64 64 96 96, 48 x4 | 0.9077 | 115,334 / 115,548 |
-
-Peak container memory (cgroup `memory.peak`, includes page cache): 11.6 GiB of 16 GiB in run 2. Run-to-run spread inside one process is about 3%.
+A per-class `(target, rerank)` tuning run on the GCP Ice Lake clone (2026-11-12) has no committed
+export, summary or pinned WARM commit, so its figures are not reported here. Its class targets were
+also chosen on a split of the public queries that the official run scores again. Until the export is
+committed, the Azure confirmation above is the headline for this track.

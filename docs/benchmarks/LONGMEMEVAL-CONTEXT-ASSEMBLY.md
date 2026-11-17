@@ -1,6 +1,12 @@
 # LongMemEval_S: what the reader sees (dev100 screen)
 
 Status: partial. Dev-only screen; no 500-question confirmation was run. Tags: [M] measured, [I] inferred.
+Source: [`longmemeval_context_assembly_dev_v1.json`](../../benchmarks/results/longmemeval_context_assembly_dev_v1.json).
+
+**What can be cited:** only the control, 90 / 88 of 100 (fresh rerun; the frozen run was 89 / 88). Every other arm was
+designed and scored on the same dev100, one pass each (S had two, 93 then 89 on the gpt-4o judge), and the best arms were
+picked on those scores; none was run on the held-out 400, and the 400 had already been exposed to the earlier k30 and
+preopen choices. The arm scores below are a screen, not results, and none is established above repeat noise.
 
 ## Fixed
 Reader gpt-4o-2024-08-06 (temperature 0), the official reading TEMPLATE unchanged, judges = official `evaluate_qa.py` (gpt-4o and gpt-4o-mini). Only the history content changes. The Engram board fixes only the judge; reader and prompt are free, we kept them fixed anyway. Dev = frozen dev100 (LongMemEval_S has exactly 500 questions, so no disjoint dev set exists outside the 400 held-out; dev100 is the only split not used for the held-out claim, and the 400 were already exposed to the earlier k30+preopen choice).
@@ -11,7 +17,7 @@ Reader gpt-4o-2024-08-06 (temperature 0), the official reading TEMPLATE unchange
 - gpt-4o k10 on dev100: 11 wrong (multi-session 5, preference 2, one each user, update, assistant, temporal).
 
 ## Dev100 screen [M] (k=10 base; score = correct of 100, gpt-4o judge / gpt-4o-mini judge)
-| arm | what the reader additionally sees | score |
+| arm | what the reader additionally sees | score (dev100 screen, selected on these questions) |
 |---|---|---|
 | control (fresh rerun; frozen run was 89/88) | nothing | 90 / 88 |
 | T | resolved dates for relative expressions in the question, per-session "N days before" | 90 / 90 |

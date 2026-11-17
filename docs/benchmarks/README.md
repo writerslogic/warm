@@ -14,7 +14,9 @@ One command reproduces the WARM comparison against the vector, text and embedded
 people actually use. The generated results are in [COMPARISON.md](COMPARISON.md); the rule that
 governs everything below is that **every number in that file traces to a committed results file
 under `benchmarks/results/competitive/`, and a comparator that beats WARM is reported as beating
-WARM.**
+WARM.** One exception: the "Candidate lever" column of "Where WARM loses" holds hypotheses, and
+its profiling and allocator notes (for example "profiled (samply, M4, ...)") have no committed
+profile behind them; read them as notes, not results.
 
 Historical source snapshots and large raw output caches are indexed in the
 [evidence archive guide](../../benchmarks/evidence/README.md). Restore their pinned
@@ -41,9 +43,13 @@ and network access for the first run (datasets, pinned wheels, two Lucene jars w
 | Family | Systems (version pinned in `benchmarks/competitive/requirements/*.txt`) |
 |---|---|
 | Vector / ANN | hnswlib (Python binding, and its own C++ `searchKnn` from a native driver on the same index file), FAISS (HNSW, IVF-PQ with and without exact refine, Flat), USearch (f32, int8), Annoy, sqlite-vec, LanceDB (IVF-PQ, IVF-HNSW-SQ), Chroma, Qdrant embedded local mode, Milvus Lite (HNSW, IVF-Flat), DuckDB vss, NGT (ONNG), PyNNDescent, ScaNN and DiskANN (Linux only), Voyager |
-| Text (BM25) | SQLite FTS5, tantivy, Apache Lucene 10.6.0 (JVM), Whoosh, bm25s |
+| Text (BM25) | SQLite FTS5, tantivy, Apache Lucene 10.6.0 (JVM). Whoosh and bm25s have adapters but no committed results file contains them |
 | Agent-memory systems | Mem0, Zep, Letta, LangMem: not run here; see "Plugging in more systems" |
 | Not run, with reasons | pgvector (needs a PostgreSQL server; not installable from pip/cargo/npm) |
+
+Version gaps: the heavy ANN suite ran faiss-cpu 1.12.0 and usearch 2.26.5 (per-system `version` in each
+results file), while the ann-benchmarks harness ran faiss-cpu 1.15.1; faiss-cpu 1.16.0 and usearch 2.26.6
+were on PyPI on 2026-11-16 and have not been run here.
 
 WARM is measured through its own binaries: `public-bench ann-qgraph` (the vertex graph with the
 accepted configuration recorded in `benchmarks/results/qgraph_pool_paired_x86_glove_v4.json`,
@@ -63,18 +69,34 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
   protocol: lexical only, top 100, one chunk per document, test qrels never read.
 * **BEIR FiQA (dev qrels)**, `standard` and `heavy` only: 57,600 documents (the 38 empty ones
   are left out for every system), 500 queries, same protocol.
-* **memory** (agent-memory-shaped): all sessions of the 100 LongMemEval_S dev questions as one
+* **memory** (LongMemEval-dev session corpus, search speed only; not a memory-QA benchmark, and its wins are not memory-quality results): all sessions of the 100 LongMemEval_S dev questions as one
   searchable memory (about 5,000 sessions, truncated to 4,000 words), relevant documents are the
-  answer sessions. The 400 held-out questions are never read.
+  answer sessions. The 400 held-out questions of the frozen split are never read by this corpus.
+
+The BEIR splits above (SciFact train, NFCorpus dev, FiQA dev) make these nDCG@10 values not comparable
+with published BEIR test-split numbers.
+
+Analysis is each engine's own default and is not identical: Lucene's `EnglishAnalyzer` and bm25s drop
+English stop words, while SQLite FTS5 (`porter unicode61`), tantivy (`en_stem`) and WARM keep them, and
+the stemmers differ.
 
 ## Protocol
 
 * Single client thread, one query at a time, per-query `perf_counter_ns` (or the Rust/JVM
-  equivalent) around the search call. Builds may use `threads` cores (4 light/standard, 8 heavy)
-  for every system that can; WARM builds with the same count.
+  equivalent) around the search call. Builds may use `threads` cores (4 light/standard, 8 heavy).
+  WARM's ingest and the ANN comparators' builds use that count. The text comparators do not: the
+  tantivy driver builds with one writer thread and is not force-merged, and SQLite FTS5 builds on one
+  thread, so text ingest-time and build-memory cells compare a multi-threaded WARM build with
+  single-threaded comparator builds. WARM's text `ingest_s` excludes its durable close (final
+  checkpoint), while comparators time their commit and merge inside it, so text ingest gaps
+  understate WARM's loss. Both are harness defects under rerun.
 * Every system runs each phase (build, serve, ops) in a fresh process; the orchestrator reads the
   child's peak RSS from `wait4`. Cold start is the wall time from spawning the serving process to
   the first answered query (interpreter, imports, open, first query; the file cache is warm).
+  The page cache is also warm for every system during serve rounds: nothing is dropped between build
+  and serve. WARM and the Python workers run 1 + 16 untimed queries before timing; Lucene runs
+  3 to 30 untimed passes until two agree within 5%, and rounds that stopped early ran before the JIT
+  settled, which widens Lucene's intervals.
 * Serve rounds are interleaved: each round runs WARM and every comparator once, in rotated order,
   so a load spike lands on all systems. Each phase takes a timing lock while it runs, never across a whole suite; the lock is a
   no-op on CI. Load averages are recorded per configuration; a load gate is not enforced on
@@ -107,7 +129,11 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
   Bonferroni-adjusted over the family of verdict metrics of the file ("family guard", as in the
   superiority ledger). The advantage factor is oriented so that above 1 means WARM is better; WIN or
   LOSS needs the interval of the factor to exclude 1; deterministic byte counts use a 5% band;
-  everything else is TIE. `index size` and `install distributions` are printed without a verdict
+  everything else is TIE. Two limits of the current table: the speed interval is the ratio of the two
+  systems' separate intervals (cross-bounds), not a paired-round bootstrap, so it is wider than a
+  paired interval and some comparator leads print as TIE; and sections with fewer than 8 rounds still
+  print WIN and LOSS over a min-max range (185H SIFT, 3 rounds; Ice Lake GloVe, 5 rounds), which are
+  not bootstrap verdicts. Both are harness defects under rerun. `index size` and `install distributions` are printed without a verdict
   because the two sides measure different things (WARM reports its in-memory index, comparators the
   persisted directory; Python wheels versus statically linked crates).
 * **Durability rows.** A replace/delete row compares only systems with the same commit contract; the table
