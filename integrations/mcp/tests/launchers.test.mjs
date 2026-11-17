@@ -137,7 +137,10 @@ for (const [name, run] of Object.entries(launchers)) {
       assert.equal((await run(["--version"], launcherEnv(cache))).status, 0);
       const cached = fs.readdirSync(cache, { recursive: true }).map(String).find((f) => f.endsWith("warm-mcp"));
       assert.ok(cached);
-      fs.appendFileSync(path.join(cache, cached), "corrupt");
+      // Swapped in by rename: a write into the binary that just ran can fail with ETXTBSY.
+      const corrupt = path.join(cache, `${cached}.corrupt`);
+      fs.writeFileSync(corrupt, "corrupt", { mode: 0o755 });
+      fs.renameSync(corrupt, path.join(cache, cached));
       hits = 0;
       const again = await run(["--version"], launcherEnv(cache));
       assert.equal(again.status, 0, again.stderr);
