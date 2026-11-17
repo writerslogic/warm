@@ -2049,6 +2049,12 @@ impl VGraph {
     }
 }
 
+/// Indexes of up to this many vertices clear the visited bits with one fill per search
+/// (`n / 8` bytes, 128 KiB at the limit) instead of listing the words a search sets: the fill
+/// costs less than the per-insert bookkeeping (3 to 7% of search time on 677k-vertex 384-d
+/// graphs, VIBE2 kill test). Larger indexes keep the list, whose clearing cost is the words set.
+const FILL_CLEAR_MAX: usize = 1 << 20;
+
 /// Visited marks of one search: a bit per vertex, with an 8-bit epoch for the trace records of
 /// the neighbour-block search.
 struct Marks {
@@ -2057,6 +2063,8 @@ struct Marks {
     /// million vertices fit the second-level cache) and clearing costs the words it set.
     words: Vec<u64>,
     touched: Vec<u32>,
+    /// Clear `words` with one fill instead of through `touched` (see [`FILL_CLEAR_MAX`]).
+    fill: bool,
     n: usize,
     epoch: u8,
     /// With neighbour blocks, one record per vertex instead of the bit.
@@ -2082,6 +2090,7 @@ impl Marks {
         Self {
             words: vec![0; n.div_ceil(64)],
             touched: Vec::new(),
+            fill: n <= FILL_CLEAR_MAX,
             n,
             epoch: 0,
             traces: vec![Trace::default(); if traces { n } else { 0 }],
@@ -2089,10 +2098,14 @@ impl Marks {
     }
 
     fn next(&mut self) {
-        for &w in &self.touched {
-            self.words[w as usize] = 0;
+        if self.fill {
+            self.words.fill(0);
+        } else {
+            for &w in &self.touched {
+                self.words[w as usize] = 0;
+            }
+            self.touched.clear();
         }
-        self.touched.clear();
         self.epoch = self.epoch.wrapping_add(1);
         if self.epoch == 0 {
             self.traces.fill(Trace::default());
@@ -2129,7 +2142,7 @@ impl Marks {
         if *w & bit != 0 {
             return false;
         }
-        if *w == 0 {
+        if !self.fill && *w == 0 {
             self.touched.push(id >> 6);
         }
         *w |= bit;
@@ -4860,24 +4873,28 @@ mod tests {
     fn visited_bits_reset_between_searches() {
         // Ids at word edges and the last vertex of a count that is not a multiple of 64.
         let n = 64 * 5 + 3;
-        let mut marks = Marks::new(n, false);
-        let mut rng = SplitMix(5);
-        for search in 0..300 {
-            marks.next();
-            let mut set = std::collections::HashSet::new();
-            let fixed = [0, 63, 64, 127, n as u32 - 1];
-            for i in 0..40 {
-                let id = if i < fixed.len() && search % 2 == 0 {
-                    fixed[i]
-                } else {
-                    (rng.next_u64() % n as u64) as u32
-                };
-                assert_eq!(marks.seen(id), set.contains(&id));
-                assert_eq!(marks.insert(id), set.insert(id));
-                assert!(marks.seen(id));
+        // Both clearing modes: one fill (small indexes) and the list of set words (large ones).
+        for fill in [true, false] {
+            let mut marks = Marks::new(n, false);
+            marks.fill = fill;
+            let mut rng = SplitMix(5);
+            for search in 0..300 {
+                marks.next();
+                let mut set = std::collections::HashSet::new();
+                let fixed = [0, 63, 64, 127, n as u32 - 1];
+                for i in 0..40 {
+                    let id = if i < fixed.len() && search % 2 == 0 {
+                        fixed[i]
+                    } else {
+                        (rng.next_u64() % n as u64) as u32
+                    };
+                    assert_eq!(marks.seen(id), set.contains(&id));
+                    assert_eq!(marks.insert(id), set.insert(id));
+                    assert!(marks.seen(id));
+                }
+                let ones: u32 = marks.words.iter().map(|w| w.count_ones()).sum();
+                assert_eq!(ones as usize, set.len());
             }
-            let ones: u32 = marks.words.iter().map(|w| w.count_ones()).sum();
-            assert_eq!(ones as usize, set.len());
         }
     }
 
@@ -4925,7 +4942,11 @@ mod tests {
                     .map(|&u| u >> 6)
                     .filter(|&word| words.insert(word))
                     .collect();
-                assert_eq!(visited.touched, touched);
+                if visited.fill {
+                    assert!(visited.touched.is_empty());
+                } else {
+                    assert_eq!(visited.touched, touched);
+                }
                 visited.next();
                 assert!(visited.words.iter().all(|&word| word == 0));
                 assert!(visited.touched.is_empty());
