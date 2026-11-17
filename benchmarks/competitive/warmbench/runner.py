@@ -17,7 +17,7 @@ from pathlib import Path
 
 from . import SCHEMA_VERSION, common, data, envs, jars, rawdata, registry, textdata
 from . import common
-from .common import T0_PLACEHOLDER, CACHE, RESULTS, ROOT, commit, dir_bytes, hardware, log, pass_summary, run_measured, write_json
+from .common import T0_PLACEHOLDER, CACHE, RESULTS, ROOT, commit, dir_bytes, source_record, hardware, log, pass_summary, run_measured, write_json
 
 WORK = Path(os.environ.get("WARM_BENCH_WORK", CACHE / "competitive" / "work"))
 WORKER_DIR = Path(__file__).resolve().parent
@@ -168,13 +168,37 @@ def _worker(system, args, threads_env, timeout=None):
     return result
 
 
-def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=None):
+def build_selection(systems, only_builds, screening=None):
+    """{system: {defined, run, basis}} for every swept comparator. A comparator runs every build it defines unless a
+    screening run that included it selected a subset (select_builds.py); a subset with no such screening is refused, so no
+    comparator is held to fewer builds than the others by hand."""
+    screened = set()
+    if screening:
+        screened = set(json.loads(Path(screening).read_text())["systems"])
+    out = {}
+    for system in systems:
+        if system == registry.WARM:
+            continue
+        defined = list(_adapter_class(system).BUILDS)
+        run = [b for b in defined if only_builds is None or b in only_builds.get(system, defined)]
+        if run == defined:
+            out[system] = {"defined": defined, "run": run, "basis": "all defined builds"}
+            continue
+        if system not in screened:
+            raise SystemExit(f"--builds runs {len(run)} of the {len(defined)} builds {system} defines ({', '.join(defined)}) without a screening "
+                             "run that included it: pass --screening FILE with that system screened, or let it run every build")
+        out[system] = {"defined": defined, "run": run, "basis": f"screening {Path(screening).name} (select_builds.py: best build per recall target)"}
+    return out
+
+
+def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=None, selection=None):
     directory, meta = data.ann_subset(dataset, n_train, n_test)
     rawdata.require_digests(meta, ("train_sha256", "test_sha256"))
     raw = rawdata.RawStore()
     threads = spec["threads"]
     hw = hardware()
-    results = {"schema_version": SCHEMA_VERSION, "kind": "ann", "suite": spec["name"], "commit": commit(), "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+    source = source_record(spec["name"])
+    results = {"schema_version": SCHEMA_VERSION, "kind": "ann", "suite": spec["name"], "commit": source["commit"], "source": source, "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                "hardware": hw, "dataset": {k: meta[k] for k in ("name", "metric", "n_train", "n_test", "dim") if k in meta} | {
                    "subset_of": meta.get("subset_of"), "train_sha256": meta.get("train_sha256"), "test_sha256": meta.get("test_sha256")},
                "protocol": {"k": 10, "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "build_threads": threads,
@@ -187,7 +211,8 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
                             "selection": "pooled-median-QPS argmax over sweep rows with recall >= target, computed on the selection half of the queries only",
                             "query_split": "even-indexed queries select the operating point, odd-indexed queries report its recall and QPS; "
                                            "per-half records are stored in each config (select, report)",
-                            "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems)},
+                            "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems),
+                            "build_selection": selection if selection is not None else build_selection(systems, only_builds)},
                "facts": registry.FACTS, "timing_boundary": registry.TIMING_BOUNDARY, "not_run": registry.NOT_RUN, "systems": {}, "skipped": {}}
     rounds = spec["rounds"]
     LOAD_LOG.clear()
@@ -356,8 +381,14 @@ def _warm_ann_build(directory, meta, threads, workdir):
             "memory_phases": raw["memory_phases"], "warm_threads": raw["build"]["threads"]}
 
 
-def _settings(systems):
-    return {s: registry.COMPARATOR_SETTINGS[s] for s in systems if s in registry.COMPARATOR_SETTINGS}
+def _settings(systems, kind="ann"):
+    out = {s: dict(registry.COMPARATOR_SETTINGS[s]) for s in systems if s in registry.COMPARATOR_SETTINGS}
+    if kind == "text":
+        for s in systems:
+            extra = registry.text_settings(s)
+            if extra:
+                out[s] = out.get(s, {}) | extra
+    return out
 
 
 def _warm_ann_round(directory, meta, workdir):
@@ -442,12 +473,18 @@ def run_text(dataset, spec, systems, out_path=None):
     meta = json.loads((folder / "meta.json").read_text())
     meta |= {"input_sha256": rawdata.sha256_file(folder / "input.json"), "qrels_sha256": rawdata.sha256_file(folder / "qrels.json")}
     rawdata.require_digests(meta, ("input_sha256", "qrels_sha256"))
+    meta["digests_pinned"] = textdata.verify_digests(dataset, meta)
     raw = rawdata.RawStore()
     hw = hardware()
-    results = {"schema_version": SCHEMA_VERSION, "kind": "text", "suite": spec["name"], "commit": commit(), "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+    source = source_record(spec["name"])
+    results = {"schema_version": SCHEMA_VERSION, "kind": "text", "suite": spec["name"], "commit": source["commit"], "source": source, "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                "hardware": hw, "dataset": meta | {"id": dataset},
                "protocol": {"measurement_version": 2, "resampling_unit": "independent process-round summaries", "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied", "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "k": 100, "passes_per_round": 3,
-                            "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems),
+                            "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems, "text"),
+                            "build_boundary": "every build ends with the data durable and searchable by a fresh process, inside the ingest clock: WARM memorize calls plus the durable close (final checkpoint); Lucene addDocument, forceMerge(1), commit and close; tantivy add, commit, merge to one segment; SQLite inserts, optimize, commit and close; DuckDB inserts, create_fts_index, CHECKPOINT and close; LanceDB table write and create_fts_index; tantivy-py add, commit and merge wait. Each build run records the child's cpu_s beside wall_s",
+                            "warm_up": {"every system": "the first query (cold start) and the first 16 queries are run untimed before the timed passes",
+                                        "lucene": registry.LUCENE_WARMUP | {"rule": "then whole untimed passes to steady state (see comparator_settings.lucene.warmup); warmup_passes, warmup_s and warmup_steady per round"}},
+                            "page_cache": "warm for every system: no cache drop between the build and the serve rounds; cold start is measured with the index files in the page cache",
                             "retrieval": "lexical only, OR over the lowercase alphanumeric query word set, top 100; each system's own analyzer and default BM25",
                             "timing": "one query at a time, single client thread; raw query string in and the engine's own query analysis and construction inside the timed region for every system, under two contracts measured in the same interleaved rounds: ids (top-100 (id, score) pairs out, no document text; indexes store no text) and documents (the top-100 hits come back with their stored document: id, score, stored text and the bucket metadata value; indexes store the same text and bucket); WARM timed inside its process, Python systems inside their worker",
                             "contracts": {c: {"label": registry.CONTRACT_LABEL[c], "reference": registry.CONTRACT_REFERENCE[c], "systems": [s for s in systems if registry.contract(s) == c]} for c in (registry.IDS, registry.DOCUMENTS)},
@@ -482,7 +519,7 @@ def run_text(dataset, spec, systems, out_path=None):
                 out = store.with_suffix(".build.json")
                 stdout, stderr, wall, peak = _text_cmd(system, "build", input_path, store, out, threads)
                 body = json.loads(out.read_text())
-                runs[system]["build_runs"].append(body | {"peak_rss_bytes": peak, "wall_s": wall, "disk_bytes": dir_bytes(store)})
+                runs[system]["build_runs"].append(body | {"peak_rss_bytes": peak, "wall_s": wall, "cpu_s": common.LAST_CPU_S, "disk_bytes": dir_bytes(store)})
             stores[system] = store
         except Exception as error:
             results["skipped"][system] = str(error)[-600:]

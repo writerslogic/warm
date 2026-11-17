@@ -10,6 +10,7 @@ import math
 import os
 import platform
 import random
+import re
 import resource
 import select
 import signal
@@ -72,13 +73,48 @@ def hardware():
     }
 
 
+FULL_COMMIT = re.compile(r"[0-9a-f]{40}")
+
+
 def commit():
-    if os.environ.get("WARM_BENCH_COMMIT"):  # a shipped source tree has no .git
-        return os.environ["WARM_BENCH_COMMIT"]
+    """Full 40-character source revision of the measured tree. The table treats anything shorter as unpinned and draws
+    no verdict from it, so an abbreviated WARM_BENCH_COMMIT is expanded through git and refused when it cannot be."""
+    given = os.environ.get("WARM_BENCH_COMMIT")  # a shipped source tree has no .git
+    revision = given or "HEAD"
     try:
-        return subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        full = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--verify", "--quiet", revision + "^{commit}"],
+                              capture_output=True, text=True, check=True).stdout.strip().lower()
     except (OSError, subprocess.CalledProcessError):
-        return "unknown"
+        full = (given or "").lower()
+    if given and not FULL_COMMIT.fullmatch(full):
+        raise SystemExit(f"WARM_BENCH_COMMIT={given!r} is not a full 40-character commit id and git cannot expand it here; "
+                         "pass the full id (git rev-parse HEAD in the measured tree)")
+    return full if FULL_COMMIT.fullmatch(full) else "unknown"
+
+
+def _git(*args):
+    return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True)
+
+
+def source_record(suite, revision=None):
+    """Where the measured tree came from, refusing a publishable result that nobody can rebuild. A non-smoke result needs
+    a clean tracked tree (untracked files ignored) at a commit reachable from origin/main; otherwise WARM_BENCH_DRAFT=1
+    must be set, and the file is marked a draft (the table draws no verdict from it)."""
+    revision = revision or commit()
+    draft = bool(os.environ.get("WARM_BENCH_DRAFT"))
+    if suite == "smoke":
+        return {"commit": revision, "draft": True, "checked": "smoke run, never published"}
+    if not (ROOT / ".git").exists():
+        reasons = ["no git metadata in the measured tree (shipped source); reachability not checked"]
+        dirty, reachable = None, None
+    else:
+        _git("fetch", "--quiet", "origin", "main")
+        dirty = bool(_git("status", "--porcelain", "--untracked-files=no").stdout.strip())
+        reachable = _git("merge-base", "--is-ancestor", revision, "origin/main").returncode == 0
+        reasons = (["tracked files differ from the commit"] if dirty else []) + ([] if reachable else [f"{revision} is not reachable from origin/main"])
+    if reasons and not draft:
+        raise SystemExit("refusing to write a publishable result: " + "; ".join(reasons) + ". Run from a clean checkout of main, or set WARM_BENCH_DRAFT=1 to mark the file a draft")
+    return {"commit": revision, "dirty_tree": dirty, "reachable_from_origin_main": reachable, "draft": bool(reasons) or draft, "draft_reasons": reasons}
 
 
 def quantile(values, q):
@@ -121,6 +157,22 @@ def ratio_ci(numerator, denominator, rounds=2000, seed=24731, level=0.95):
     )
     tail = (1 - level) / 2
     return point, [draws[int(tail * rounds)], draws[min(rounds - 1, int((1 - tail) * rounds))]]
+
+
+def round_ratio_ci(numerator, denominator, paired, rounds=4000, seed=24731, level=0.95):
+    """Percentile bootstrap interval of median(numerator) / median(denominator) over per-round observations. `paired`:
+    the two lists are the same rounds (index i of each ran in round i), so round indices are resampled with one draw
+    for both; otherwise each list is resampled on its own."""
+    import numpy as np
+    num, den = np.asarray(numerator, dtype=float), np.asarray(denominator, dtype=float)
+    if paired and len(num) != len(den):
+        raise ValueError(f"paired rounds need the same count: {len(num)} against {len(den)}")
+    rng = np.random.default_rng(seed)
+    pick = rng.integers(0, len(num), size=(rounds, len(num)))
+    other = pick if paired else rng.integers(0, len(den), size=(rounds, len(den)))
+    draws = np.sort(np.median(num[pick], axis=1) / np.median(den[other], axis=1))
+    tail = (1 - level) / 2
+    return [float(draws[int(tail * rounds)]), float(draws[min(rounds - 1, int((1 - tail) * rounds))])]
 
 
 def paired_bootstrap(first, second, rounds=2000, seed=24731, level=0.95):

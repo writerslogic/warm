@@ -326,19 +326,34 @@ public final class LuceneBm25 {
         run.apply(prepared[0]);
         double cold = (System.currentTimeMillis() * 1_000_000L - t0) / 1e9;
         for (int i = 0; i < Math.min(16, prepared.length); i++) run.apply(prepared[i]);
-        // JIT warm-up: whole untimed passes until two consecutive passes agree within 5 percent (at least
-        // 3, at most 30), so the timed passes run compiled code.
+        // JIT warm-up to steady state: whole untimed passes, at least `warm.minPasses` passes and `warm.minSeconds`
+        // seconds, then until `warm.stablePasses` consecutive passes each agree with the previous one within
+        // `warm.band`, capped at `warm.maxPasses` passes or `warm.maxSeconds` seconds. The rule is passed by the
+        // harness (registry.LUCENE_WARMUP) and recorded in the results; each round records what it ran.
+        int minPasses = Integer.getInteger("warm.minPasses", 20), stablePasses = Integer.getInteger("warm.stablePasses", 3);
+        int maxPasses = Integer.getInteger("warm.maxPasses", 400);
+        double band = Double.parseDouble(System.getProperty("warm.band", "0.03"));
+        double minSeconds = Double.parseDouble(System.getProperty("warm.minSeconds", "5"));
+        double maxSeconds = Double.parseDouble(System.getProperty("warm.maxSeconds", "120"));
         int warmPasses = 0, stable = 0;
         double previous = -1;
-        while (warmPasses < 30) {
+        long warmStart = System.nanoTime();
+        boolean steady = false;
+        while (true) {
           long t = System.nanoTime();
           for (String q : prepared) run.apply(q);
           double took = System.nanoTime() - t;
           warmPasses++;
-          stable = previous > 0 && Math.abs(took - previous) / previous < 0.05 ? stable + 1 : 0;
+          stable = previous > 0 && Math.abs(took - previous) / previous < band ? stable + 1 : 0;
           previous = took;
-          if (warmPasses >= 3 && stable >= 2) break;
+          double elapsed = (System.nanoTime() - warmStart) / 1e9;
+          if (warmPasses >= minPasses && elapsed >= minSeconds && stable >= stablePasses) {
+            steady = true;
+            break;
+          }
+          if (warmPasses >= maxPasses || elapsed >= maxSeconds) break;
         }
+        double warmSeconds = (System.nanoTime() - warmStart) / 1e9;
         ScoreDoc[][] first = new ScoreDoc[prepared.length][];
         long[][] passNs = new long[passes][];
         for (int n = 0; n < passes; n++) {
@@ -353,7 +368,7 @@ public final class LuceneBm25 {
         }
         // Streamed to the file: the report is never held as one string.
         try (java.io.BufferedWriter w = Files.newBufferedWriter(out, StandardCharsets.UTF_8)) {
-          w.write("{\"open_s\":" + openS + ",\"cold_start_s\":" + cold + ",\"warmup_passes\":" + warmPasses + ",\"rows\":[");
+          w.write("{\"open_s\":" + openS + ",\"cold_start_s\":" + cold + ",\"warmup_passes\":" + warmPasses + ",\"warmup_s\":" + warmSeconds + ",\"warmup_steady\":" + steady + ",\"rows\":[");
           for (int i = 0; i < first.length; i++) {
             if (i > 0) w.write(',');
             w.write("{\"id\":" + esc(queries.get(i).id) + ",\"results\":[");

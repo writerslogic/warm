@@ -41,7 +41,7 @@ and network access for the first run (datasets, pinned wheels, two Lucene jars w
 | Family | Systems (version pinned in `benchmarks/competitive/requirements/*.txt`) |
 |---|---|
 | Vector / ANN | hnswlib (Python binding, and its own C++ `searchKnn` from a native driver on the same index file), FAISS (HNSW, IVF-PQ with and without exact refine, Flat), USearch (f32, int8), Annoy, sqlite-vec, LanceDB (IVF-PQ, IVF-HNSW-SQ), Chroma, Qdrant embedded local mode, Milvus Lite (HNSW, IVF-Flat), DuckDB vss, NGT (ONNG), PyNNDescent, ScaNN and DiskANN (Linux only), Voyager |
-| Text (BM25) | SQLite FTS5, tantivy, Apache Lucene 10.6.0 (JVM), Whoosh, bm25s, LanceDB FTS (native), DuckDB fts |
+| Text (BM25) | SQLite FTS5, tantivy, Apache Lucene 10.6.0 (JVM), LanceDB FTS (native), DuckDB fts; Whoosh and bm25s have adapters but are not in the published campaign (`registry.CAMPAIGN_NOT_RUN` gives the reasons) |
 | Agent-memory systems | Mem0, Zep, Letta, LangMem: not run here; see "Plugging in more systems" |
 | Not run, with reasons | pgvector (needs a PostgreSQL server; not installable from pip/cargo/npm) |
 
@@ -63,15 +63,23 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
   protocol: lexical only, top 100, one chunk per document, test qrels never read.
 * **BEIR FiQA (dev qrels)**, `standard` and `heavy` only: 57,600 documents (the 38 empty ones
   are left out for every system), 500 queries, same protocol.
-* **memory** (agent-memory-shaped): all sessions of the 100 LongMemEval_S dev questions as one
+* **memory**, shown in the tables as "LongMemEval-dev session corpus (search speed only, not memory QA)": all sessions of the 100 LongMemEval_S dev questions as one
   searchable memory (about 5,000 sessions, truncated to 4,000 words), relevant documents are the
   answer sessions. The 400 held-out questions are never read.
 
 ## Protocol
 
 * Single client thread, one query at a time, per-query `perf_counter_ns` (or the Rust/JVM
-  equivalent) around the search call. Builds may use `threads` cores (4 light/standard, 8 heavy)
-  for every system that can; WARM builds with the same count.
+  equivalent) around the search call. ANN builds use `threads` cores (4 light/standard, 8 heavy) for
+  every system that can, WARM included. Text builds index on one thread for every engine that has the
+  setting (WARM through `RAYON_NUM_THREADS=1`, tantivy one writer thread, Lucene one indexing thread,
+  SQLite); LanceDB and DuckDB keep their default pools. Each text build records `cpu_s` beside `wall_s`,
+  and `comparator_settings` records every system's analyzer, stop words and build threads.
+* **Build boundary.** Every build time ends when the data is durable and searchable by a fresh process:
+  WARM's ingest time holds its durable close (the final checkpoint; `memorize_s` and `close_s` are kept
+  apart), as Lucene's holds forceMerge, commit and close, tantivy's commit and merge, SQLite's optimize and
+  commit, DuckDB's CHECKPOINT. WARM build rows written before `close_s` was recorded print their ratio
+  with no verdict.
 * Every system runs each phase (build, serve, ops) in a fresh process; the orchestrator reads the
   child's peak RSS from `wait4`. Cold start is the wall time from spawning the serving process to
   the first answered query (interpreter, imports, open, first query; the file cache is warm).
@@ -95,19 +103,29 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
   against that build alone.
   Comparators are never tuned below their documented defaults.
 * **Rounds.** The standard and heavy suites run 10 independent process rounds by default
-  (`--rounds N` changes it). With fewer than 8 rounds a bootstrap has too few distinct resamples, so the
-  interval printed is the min-max range of the rounds and the section says so. `--pin-cpus LIST` runs the
+  (`--rounds N` changes it; `--build-repeats N` the build runs). With fewer than 8 observations a bootstrap
+  has too few distinct resamples, so the interval printed is the min-max range and the row carries no verdict. `--pin-cpus LIST` runs the
   single-threaded serve and ops phases under `taskset -c LIST` (Linux) and the pinning is recorded in the
   results.
+* **Source and build selection.** A published result records a full 40-character commit reachable from
+  `origin/main` from a clean tracked tree (`protocol`-level `source`); otherwise the harness refuses to write
+  it unless `WARM_BENCH_DRAFT=1` marks it a draft, which draws no verdict. A swept ANN comparator runs every
+  build it defines unless `--screening FILE` names a screening run that included it (`select_builds.py`);
+  `protocol.build_selection` records the builds run and why. Text corpora are pinned by the sha256 of the
+  built input and qrels (`textdata.DATASET_DIGESTS`); a rebuild that differs is refused.
 * **Raw data.** Every results file has `raw_latency`: the name and sha256 of `<result>.latency.npz`, which holds
   the per-query nanoseconds of every timed pass (and the per-query hit counts of every ANN configuration), so
   every interval can be recomputed. Dataset digests (`train_sha256`, `test_sha256`; `input_sha256`,
   `qrels_sha256` for text) are recorded and a run with a missing digest refuses to start.
-* **Intervals and verdicts.** 95% bootstrap intervals over rounds (or queries, for quality),
-  Bonferroni-adjusted over the family of verdict metrics of the file ("family guard", as in the
-  superiority ledger). The advantage factor is oriented so that above 1 means WARM is better; WIN or
-  LOSS needs the interval of the factor to exclude 1; deterministic byte counts use a 5% band;
-  everything else is TIE. `index size` and `install distributions` are printed without a verdict
+* **Intervals and verdicts.** The advantage factor (ratio of medians, oriented so that above 1 means
+  WARM is better) gets its own percentile bootstrap at 95%, Bonferroni-adjusted over the family of verdict
+  metrics of the file ("family guard"). Rounds are resampled in pairs when both rows ran in the same
+  interleaved rounds and independently otherwise (build runs, a WARM row rerun in a separate session);
+  nDCG@10 and recall@100 use a paired per-query bootstrap. WIN or LOSS needs that interval to exclude 1
+  with at least 8 observations on each side; a bootstrap interval containing 1 is a TIE; deterministic byte
+  counts use a 5% band. Anything else (a min-max range, no interval, an unverified side) prints the measured
+  factor with no verdict, and the generated tables list every such row where WARM is behind under
+  "Measured behind, no verdict" and in GAPS as `BEHIND, NO VERDICT`, so the rule never hides a loss. `index size` and `install distributions` are printed without a verdict
   because the two sides measure different things (WARM reports its in-memory index, comparators the
   persisted directory; Python wheels versus statically linked crates).
 * **Durability rows.** A replace/delete row compares only systems with the same commit contract; the table
@@ -143,7 +161,12 @@ existing bytes and do not claim a fresh performance measurement.
 ## Known measurement boundaries (read before quoting a ratio)
 
 * WARM is timed through its Rust API; Python comparators through their bindings; Lucene through the
-  JVM after untimed warm-up passes to steady state (query analysis, document-id lookup and JVM flags: `comparator_settings` in each results file). Each section prints the boundary per system. The existing
+  JVM after untimed warm-up passes to steady state: at least 20 passes and 5 s, then 3 consecutive passes
+  each within 3% of the one before (caps 400 passes, 120 s; `registry.LUCENE_WARMUP`). Every round records
+  `warmup_passes`, `warmup_s` and `warmup_steady`; a Lucene row with any round not verified steady prints its
+  ratio with no verdict (query analysis, document-id lookup and JVM flags: `comparator_settings` in each results file).
+  Every system runs the cold-start query and 16 more untimed first, and the page cache is warm for every
+  system (no drop between build and serve); both are recorded in `protocol`. Each section prints the boundary per system. The existing
   accepted serving rows (`benchmarks/results/serving_memory_v40.json`) drive both arms from Node,
   which narrows WARM's lead against SQLite; the two protocols are not interchangeable.
 * Text timing, two contracts measured in the same interleaved rounds. For every system the input is the raw
@@ -166,7 +189,7 @@ existing bytes and do not claim a fresh performance measurement.
   while the run is written (CRC-32 and length of each returned text, byte range, bucket, and the ordered id lists
   against the engine's ids row); a mismatch aborts the run. Results written before the two contracts (the single
   `search_documents` contract of runs 8 and 9, and the mixed contract before that) are kept as evidence only.
-* tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, a mechanism inferred from that measurement and not profiled, see `benchmarks/results/tantivy_collector_microbench_20261114.txt`; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
+* tantivy is three rows (the native crate runs with and without a Count collector, because the bare top-100 collector takes tantivy's pruning path and adding a Count collector forces exhaustive scoring; on all four corpora here the exhaustive path was faster, see `benchmarks/results/tantivy_collector_microbench_20261114.txt` and, for the mechanism, the per-query analysis in the PR that added this note; the verdict is always drawn against the faster of the two rows; tantivy-py always wraps its collector in a MultiCollector with Count):  `tantivy-py` (the CPython binding, ids fetched through Python objects) and
   `tantivy-rs` (the native crate in its own process, ids from an array built at open, built by
   `examples/competitive_text_tantivy.rs`, the same tantivy version as the binding). The binding row is
   never a stand-in for the crate.

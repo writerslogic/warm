@@ -138,14 +138,14 @@ def test_published_tables_regenerate_byte_for_byte(tmp_path):
         assert (tmp_path / path).read_bytes() == content, f"stale generated file: {path}"
 
 
-def fake_ann(warm_qps, other_qps, spread=0.01):
+def fake_ann(warm_qps, other_qps, spread=0.01, rounds=10):
     def serve(qps):
         return {"configs": [{"params": {"ef": 64}, "recall_at_10": 0.96,
                              "repeats": [{"qps": qps * (1 + spread * i), "p50_us": 1, "p99_us": 2} for i in range(2)]}],
                 "rss_steady": 2**20, "peak_rss_bytes": 2**21, "cold_start_s": 1.0, "index_bytes": 2**20, "build_s": 1.0, "graph_built": True}
 
     def system(qps, build_runs):
-        return {"display": "x", "builds": {"b": {"build_runs": build_runs, "serve_rounds": [serve(qps * (1 + 0.01 * r)) for r in range(4)], "params": {}}}}
+        return {"display": "x", "builds": {"b": {"build_runs": build_runs, "serve_rounds": [serve(qps * (1 + 0.01 * r)) for r in range(rounds)], "params": {}}}}
 
     runs = [{"build_s": 2.0, "peak_rss_bytes": 2**22, "index_bytes": 2**20}] * 2
     return {"schema_version": 1, "kind": "ann", "suite": "t", "commit": "0" * 40, "date": "2026-01-01T00:00:00", "hardware": {"class": "test"},
@@ -297,8 +297,9 @@ def test_quality_verdict_is_a_paired_comparison_of_the_same_queries():
     assert table.verdict(adv) == "WIN"
     assert adv["paired"]["difference"] == pytest.approx(0.005)
     assert adv["paired"]["ci"][0] > 0
+    # Without the per-query scores there is no interval of the factor itself, so no verdict.
     unpaired = {k: {key: v for key, v in c.items() if key != "per_query"} for k, c in cells.items()}
-    assert table.verdict(table.advantage("ndcg@10", unpaired["ahead"], unpaired["base"])) == "TIE"
+    assert table.verdict(table.advantage("ndcg@10", unpaired["ahead"], unpaired["base"])) == "n/v"
     with pytest.raises(ValueError):
         table.advantage("ndcg@10", cells["ahead"], cells["base"] | {"per_query": base[:10]})
 
