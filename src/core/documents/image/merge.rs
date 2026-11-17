@@ -291,14 +291,14 @@ fn merge_form(
             if !placed.finish() || u32::try_from(scratch.len()).is_err() {
                 return Ok(None);
             }
-            if !append_skips(&infos, &placed.offsets, &mut skip_scratch) {
+            let count =
+                lists[i].len() as u64 + base_term.as_ref().map_or(0, |b| u64::from(b.count));
+            if !append_skips(&infos, &placed.offsets, &scratch, count, &mut skip_scratch) {
                 return Ok(None);
             }
             streams.postings.write(&scratch)?;
             streams.skips.write(&skip_scratch)?;
             streams.positions.write(&placed.out)?;
-            let count =
-                lists[i].len() as u64 + base_term.as_ref().map_or(0, |b| u64::from(b.count));
             let term = match base_term {
                 Some(b) => b.term,
                 None => terms[offsets[i] as usize..offsets[i + 1] as usize].to_vec(),
