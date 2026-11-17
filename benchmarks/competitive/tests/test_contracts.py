@@ -18,8 +18,8 @@ def fake_text(qps):
     """A text results file whose systems carry the given single-thread QPS, ten rounds each with a 1% spread."""
     def system(rate):
         rounds = [{"passes": [{"queries": 1000, "total_ns": int(1000 / (rate * (1 + 0.005 * (i % 3 - 1))) * 1e9), "p50_ns": 1000, "p99_ns": 5000}] * 3,
-                   "peak_rss_bytes": 2**20, "cold_start_s": 0.1} for i in range(10)]
-        return {"serve_rounds": rounds, "build_runs": [{"ingest_s": 1.0, "peak_rss_bytes": 2**20, "disk_bytes": 2**20}] * 3,
+                   "peak_rss_bytes": 2**20, "cold_start_s": 0.1, "warmup_steady": True, "warmup_passes": 20} for i in range(10)]
+        return {"serve_rounds": rounds, "build_runs": [{"ingest_s": 1.0, "close_s": 0.1, "peak_rss_bytes": 2**20, "disk_bytes": 2**20}] * 3,
                 "contract": None, "ops": {}}
     systems = {name: system(rate) for name, rate in qps.items()}
     for name, entry in systems.items():
