@@ -34,6 +34,7 @@ mod multilingual_tests;
 mod overlay;
 mod positions;
 mod postings;
+mod reorder;
 mod search;
 mod text;
 mod text_blocks;

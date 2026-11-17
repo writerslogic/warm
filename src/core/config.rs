@@ -88,6 +88,12 @@ pub struct DocumentCheckpointConfig {
     /// the checkpoint then at most grows by a constant factor per fold and the number of
     /// rewrites is logarithmic in the corpus. 0 keeps the fixed budget.
     pub index_fold_fraction: f64,
+    /// Let [`crate::core::WarmCore::compact`] renumber the document slots of a store that takes a
+    /// checkpoint so that documents sharing terms sit together (recursive graph bisection), which
+    /// shortens posting lists and speeds up conjunctions, phrases and pruned ranking. Results are
+    /// unchanged. Only that explicit call reorders: folds, `flush` and closing never do. On by
+    /// default; see `docs/file-format/CHECKPOINT.md`, "Document order".
+    pub reorder: bool,
 }
 
 impl Default for DocumentCheckpointConfig {
@@ -99,6 +105,7 @@ impl Default for DocumentCheckpointConfig {
             text_cache_bytes: 64 << 20,
             index_memory_budget: 64 << 20,
             index_fold_fraction: 20.0,
+            reorder: true,
         }
     }
 }

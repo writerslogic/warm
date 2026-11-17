@@ -113,11 +113,50 @@ enum DocumentMutation<'a> {
 impl WarmCore {
     /// Compacts. Purges that are waiting for a scrub (`defer_purge`) make this a scrubbing
     /// compaction, so the next compaction of a store with deferred deletes erases them.
+    ///
+    /// With `document_checkpoint.reorder` (the default) a store that takes a checkpoint first has
+    /// its slots put in document order (see [`Self::reorder_documents`]); the compactions an
+    /// engine starts itself (folds, `flush`, close) never reorder.
     pub fn compact(&self) -> Result<()> {
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();
         }
+        if self.config.document_checkpoint.reorder {
+            self.reorder_documents()?;
+        }
+        self.compact_routine()
+    }
+
+    /// [`Self::compact`] without the reorder: the compaction a fold, `flush` or close runs.
+    pub(super) fn compact_routine(&self) -> Result<()> {
+        if self.purge.status().committed > 0 {
+            return self.compact_scrubbing();
+        }
         self.compact_impl(|| {}, || {}, false, &JobState::foreground())
+    }
+
+    /// Puts the document slots in bisection order (`DocumentStore::reorder_slots`) when the
+    /// next compaction writes a checkpoint, so the checkpoint records that order. A store served
+    /// from its checkpoint is rebuilt in memory first. Only memory changes here: the journal and
+    /// the published checkpoint stay as they were until the compaction publishes, so a failure
+    /// or a crash before then reopens to the old order, and the results are the same in both.
+    /// Returns whether the slots were reordered.
+    pub fn reorder_documents(&self) -> Result<bool> {
+        if !self.takes_checkpoint() {
+            return Ok(false);
+        }
+        // Held so no compaction swaps the store (`serve_published_checkpoint`) between the
+        // order and its installation; writers wait on the lease.
+        let _compaction = self.compaction.lock();
+        self.hydrate_documents()?;
+        let _transaction = self.mutation_gate.maintenance();
+        let Some(order) = self.documents.read().bisection_order()? else {
+            return Ok(false);
+        };
+        self.documents.write().apply_slot_order(&order);
+        #[cfg(test)]
+        crate::core::storage::compaction_crash_point("reordered");
+        Ok(true)
     }
 
     /// Compacts and then physically erases what the compaction replaced: the old generation

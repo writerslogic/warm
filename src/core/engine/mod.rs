@@ -43,6 +43,8 @@ mod document_memory_census;
 mod document_snapshot_tests;
 #[cfg(test)]
 mod fold_tests;
+#[cfg(test)]
+mod reorder_tests;
 
 #[cfg(all(test, feature = "local-models"))]
 mod document_stage_tests;

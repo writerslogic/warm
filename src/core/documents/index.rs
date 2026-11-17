@@ -160,6 +160,20 @@ pub(crate) struct DocumentStore {
     screen: ScreenCache,
 }
 
+/// Documents below which [`DocumentStore::reorder_slots`] leaves a store in its order.
+pub(crate) const REORDER_MIN_DOCUMENTS: usize = 1024;
+/// Most (document, term) pairs the reorder's forward index holds (4 bytes each).
+const REORDER_MAX_EDGES: usize = 1 << 28;
+
+/// Ends the process when dropped; forgotten once the state it guards is consistent again.
+struct AbortOnUnwind;
+
+impl Drop for AbortOnUnwind {
+    fn drop(&mut self) {
+        std::process::abort();
+    }
+}
+
 /// Rows of embedded chunks below which a store is scored by a plain scan and keeps no screen table.
 const SCREEN_TABLE_MIN_CHUNKS: usize = 2048;
 
@@ -1373,6 +1387,162 @@ impl DocumentStore {
             crate::core::durable_file::sync_directory(parent)?;
         }
         Ok(())
+    }
+
+    /// The document order (positions of the documents in id order) in which documents sharing
+    /// terms sit together (recursive graph bisection, see `reorder`), for
+    /// [`Self::apply_slot_order`]; `None` for a store under [`REORDER_MIN_DOCUMENTS`]
+    /// documents, which keeps its order. Takes only `&self`, so readers keep reading.
+    pub(crate) fn bisection_order(&self) -> anyhow::Result<Option<Vec<u32>>> {
+        anyhow::ensure!(
+            self.base.is_none(),
+            "slot reorder of a store still served from its checkpoint"
+        );
+        if self.slots.len() < REORDER_MIN_DOCUMENTS {
+            return Ok(None);
+        }
+        anyhow::ensure!(
+            u32::try_from(self.slot_count).is_ok(),
+            "slot count over u32"
+        );
+        Ok(Some(super::reorder::order(&self.forward_index())))
+    }
+
+    /// Renumbers the slots in `order` (from [`Self::bisection_order`] of this same store
+    /// state): the chunks of `order[0]` take slots `0..`, then those of `order[1]`, so every
+    /// document's chunks stay in ascending slot order and no slot is left free. Ids, chunks,
+    /// text and every result are unchanged: ties break on (document id, chunk index), never on
+    /// the slot.
+    pub(crate) fn apply_slot_order(&mut self, order: &[u32]) {
+        assert_eq!(order.len(), self.slots.len(), "slot order of another store");
+        // From here the slot table and the lists disagree until both are rewritten. A panic
+        // in between must not leave a store that serves either half; the journal and the
+        // published checkpoint are untouched, so the process ends and the next open recovers.
+        let abort = AbortOnUnwind;
+        let mut map = vec![u32::MAX; self.slot_count];
+        let mut slot_lists: Vec<&mut Vec<usize>> = self.slots.values_mut().collect();
+        let mut next = 0u32;
+        for &document in order {
+            for slot in slot_lists[document as usize].iter_mut() {
+                map[*slot] = next;
+                *slot = next as usize;
+                next += 1;
+            }
+        }
+        drop(slot_lists);
+        let count = next as usize;
+        let mut owners = vec![None; count];
+        let mut word_counts = vec![0; count];
+        let mut position_sources = if self.position_sources.is_empty() {
+            Vec::new()
+        } else {
+            vec![None; count]
+        };
+        for (old, &new) in map.iter().enumerate() {
+            if new == u32::MAX {
+                continue;
+            }
+            let new = new as usize;
+            owners[new] = self.owners[old].take();
+            word_counts[new] = self.word_counts[old];
+            if let Some(source) = self.position_sources.get_mut(old) {
+                position_sources[new] = source.take();
+            }
+        }
+        for postings in &mut self.postings {
+            postings.permute_slots(&map, &word_counts);
+        }
+        self.owners = owners;
+        self.word_counts = word_counts;
+        self.position_sources = position_sources;
+        self.free.clear();
+        self.slot_count = count;
+        std::mem::forget(abort);
+        self.advance_generation();
+        #[cfg(not(target_arch = "wasm32"))]
+        self.vector_changes.write().record(
+            self.generation - 1,
+            self.generation,
+            std::iter::empty::<&str>(),
+        );
+    }
+
+    /// Each document's terms (in id order) among the lists of both forms long enough to say
+    /// something about the order, at most [`REORDER_MAX_EDGES`] in all: the lists of at least
+    /// `documents / 1024` postings (capped at 4096, Lucene's `minDocFreq`), raised until
+    /// the cap holds.
+    fn forward_index(&self) -> super::reorder::ForwardIndex {
+        let documents = self.slots.len();
+        let mut owner = vec![u32::MAX; self.slot_count];
+        for (index, slots) in self.slots.values().enumerate() {
+            for &slot in slots {
+                owner[slot] = index as u32;
+            }
+        }
+        let mut min_len = (documents / 1024).clamp(2, 4096);
+        let mut lengths: Vec<usize> = self
+            .postings
+            .iter()
+            .flat_map(|postings| postings.long_lists(min_len))
+            .map(|list| list.len())
+            .collect();
+        lengths.sort_unstable_by(|a, b| b.cmp(a));
+        let mut total = 0usize;
+        for &length in &lengths {
+            total += length;
+            if total > REORDER_MAX_EDGES {
+                // Lists exactly as long as the one that overflows are left out with it.
+                min_len = length + 1;
+                break;
+            }
+        }
+        let lists: Vec<&super::postings::PostingList> = self
+            .postings
+            .iter()
+            .flat_map(|postings| postings.long_lists(min_len))
+            .collect();
+        let mut offsets = vec![0usize; documents + 1];
+        for list in &lists {
+            list.for_each(|slot, _| offsets[owner[slot] as usize + 1] += 1);
+        }
+        for at in 1..offsets.len() {
+            offsets[at] += offsets[at - 1];
+        }
+        let mut fill = offsets.clone();
+        let mut terms = vec![0u32; offsets[documents]];
+        for (term, list) in lists.iter().enumerate() {
+            list.for_each(|slot, _| {
+                let document = owner[slot] as usize;
+                terms[fill[document]] = term as u32;
+                fill[document] += 1;
+            });
+        }
+        drop(fill);
+        // A document whose chunks share a term holds it once.
+        let mut write = 0;
+        for document in 0..documents {
+            let (start, end) = (offsets[document], offsets[document + 1]);
+            offsets[document] = write;
+            let row = &mut terms[start..end];
+            row.sort_unstable();
+            let mut previous = None;
+            for at in start..end {
+                let term = terms[at];
+                if previous != Some(term) {
+                    terms[write] = term;
+                    write += 1;
+                    previous = Some(term);
+                }
+            }
+        }
+        offsets[documents] = write;
+        terms.truncate(write);
+        terms.shrink_to_fit();
+        super::reorder::ForwardIndex {
+            offsets,
+            terms,
+            term_count: lists.len(),
+        }
     }
 
     /// Removes document `id`, returning it when it was one of the store's own; a live

@@ -250,6 +250,38 @@ inline text opens and serves as one with compressed blocks and is replaced by on
 compaction. A release that predates feature bit 0 refuses a checkpoint that sets it (its section
 table does not end at the end of the file).
 
+## Document order
+
+Slots are internal: the slot table maps a slot to its chunk, and ids, documents and every
+result are in id order. Ranking ties break on (document id, chunk index), never on the slot, so
+any assignment of chunks to slots serves the same results. The order still decides how long the
+posting lists are and how well their block bounds prune.
+
+`WarmCore::compact`, the explicit call, first renumbers the slots of a store that takes a
+checkpoint (`WarmCore::reorder_documents`; `document_checkpoint.reorder`, on by default, turns
+it off). The order is recursive graph bisection (Dhulipala et al., KDD 2016; the order of
+Lucene's `BPIndexReorderer` and PISA's `recursive_graph_bisection`) over the documents' terms
+that occur in at least `documents / 1024` chunks (at most 4096), with the smallest such lists
+left out until at most 2^28 (document, term) pairs remain: 20 swap rounds per bisection, down
+to partitions of 32 documents. The chunks of the first document take slots `0..`, then the
+next document's, so every document's chunks stay in ascending slot order and no slot is free.
+The file is a version 4 checkpoint like any other: no header word or flag records the order,
+and any version 4 reader serves it.
+
+What the reorder holds and when it runs:
+
+1. it runs only in that explicit call. Folds, `flush`, closing, background and scrubbing
+   compactions never reorder, so a fold still writes byte for byte the checkpoint a single pass
+   encodes of the same store, and a store below 1024 documents keeps its order;
+2. a store served from its checkpoint is rebuilt in memory first, as a scrubbing compaction
+   rebuilds it. The posting lists are then permuted in place one list at a time per thread, so
+   beyond the rebuilt index the reorder holds its forward index (at most 1 GiB) and the lists
+   being permuted, never a second copy of the index;
+3. it changes only memory. The journal and the published checkpoint stay as they were until the
+   compaction publishes its generation, so a failure or a crash before then reopens to the old
+   order and one after it to the new, and both serve the same results. A panic while the lists
+   are being permuted ends the process instead of serving a half-permuted store.
+
 ## Durability and crash safety
 
 The checkpoint is written with the compaction's staging generation: temporary file, sync,

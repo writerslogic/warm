@@ -358,7 +358,7 @@ impl WarmCore {
         if resident < threshold {
             return;
         }
-        if let Err(error) = self.compact() {
+        if let Err(error) = self.compact_routine() {
             self.image.fold_failed.store(true, Ordering::Release);
             tracing::warn!(%error, "folding the document index into the checkpoint failed");
         }
@@ -392,7 +392,7 @@ impl WarmCore {
         if !self.takes_checkpoint() {
             return Ok(());
         }
-        self.compact()
+        self.compact_routine()
     }
 
     /// At close: when the live generation is a checkpoint with no frames after it, every
