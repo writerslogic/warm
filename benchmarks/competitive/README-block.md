@@ -4,8 +4,8 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 
 | Dataset | Machine | Metric | WARM | Best other | Advantage | |
 |---|---|---|---|---|---|---|
-| glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS @ recall@10 >= 0.95 (QPS) | 1,730 | FAISS IVF-PQ fast-scan (+refine) 1,402 | 1.23x | - |
-| glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency @ 0.95 (us) | 831 | FAISS IVF-PQ fast-scan (+refine) 793 | 0.95x | - |
+| glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS @ recall@10 >= 0.95 (QPS) | 1,895 | FAISS IVF-PQ fast-scan (+refine) 1,402 | 1.35x | - |
+| glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency @ 0.95 (us) | 721 | FAISS IVF-PQ fast-scan (+refine) 793 | 1.10x | - |
 | glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | Index size (MiB) | 912.8 | FAISS IVF-PQ fast-scan (+refine) 490.3 | 0.54x | - |
 | glove-100-angular | `linux-x86_64-gcp-n2-icelake-8c-16g` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W 0 / T 0 / L 0 | |
 | sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS @ recall@10 >= 0.95 (QPS) | 14,645 | hnswlib (native C++) 7,427 | 1.97x | W |
