@@ -25,7 +25,8 @@ NO_VERDICT = {"install_distributions", "index_bytes_mib"}
 # best-of cell that takes each metric from whichever build suits it.
 ANN_PER_BUILD = {"build_seconds", "build_peak_rss_mib", "serving_rss_mib", "cold_start_s"}
 # Fewer rounds than this and a percentile bootstrap has too few distinct resamples to be a 95 percent interval
-# (3 observations give at most 10); the interval reported is then the min-max range of the rounds.
+# (3 observations give at most 10); the interval reported is then the min-max range of the rounds, and a comparison
+# with fewer than this many observations on either side is a measured ratio without a verdict (table.verdict).
 MIN_BOOTSTRAP_ROUNDS = 8
 OPS_METRICS = ("replace_ms_per_op", "delete_ms_per_op")
 
@@ -39,6 +40,20 @@ def interval(values, level):
     if 1 < len(values) < MIN_BOOTSTRAP_ROUNDS:
         return [min(values), max(values)]
     return bootstrap_ci(values, level=level)
+
+
+def interval_kind(n):
+    """What a cell's interval over `n` observations is: a percentile bootstrap, the min-max range, or none."""
+    return "bootstrap" if n >= MIN_BOOTSTRAP_ROUNDS else "range" if n > 1 else "none"
+
+
+def sampled(values, level, source, unit, note="", pairing=None):
+    """Cell of a metric observed once per process round (or build run). It keeps the per-observation values so the
+    advantage factor gets its own bootstrap (table.advantage); `pairing` names the interleaved rounds the values
+    belong to: two cells with the same pairing were measured in the same rounds and are resampled together."""
+    values = list(values)
+    return cell(_med(values), interval(values, level), len(values), source, unit, note) | {
+        "rounds": values, "pairing": pairing, "level": level, "interval_kind": interval_kind(len(values))}
 
 
 class Validity(str, Enum):
@@ -168,12 +183,11 @@ def ann_metrics(path, results, level=0.95):
     def put(metric, system, c):
         out.setdefault(metric, {})[system] = c
 
-    def ci(values):
-        return interval(values, level)
-
     for system, entry in results["systems"].items():
         builds = entry["builds"]
         chosen = {}
+        # A row rerun in another session (`warm_rerun`) shares no rounds with the comparators: resampled unpaired.
+        pairing = f"{path}#warm_rerun" if system == registry.WARM and results.get("warm_rerun") else f"{path}#serve_rounds"
         for t in TARGETS:
             best, closest = pick_config(builds, t)
             tag = f"{t:.2f}"
@@ -191,12 +205,11 @@ def ann_metrics(path, results, level=0.95):
                 continue
             per_round = [_med([x["qps"] for x in v["repeats"]]) for v in reported]
             how = f"selected on the even-indexed queries, reported on the odd-indexed; report recall {held_out:.3f}" if split else f"recall {recall:.3f}"
-            put(f"qps@recall{tag}", system, cell(_med(per_round), ci(per_round), len(per_round), src, "QPS",
-                                                 f"{build_id} {rounds[0]['configs'][idx]['params']} {how}"))
+            put(f"qps@recall{tag}", system, sampled(per_round, level, src, "QPS", f"{build_id} {rounds[0]['configs'][idx]['params']} {how}", pairing))
             if all("p50_us" in x for v in reported for x in v["repeats"]):
                 for name in ("p50_us", "p99_us"):
                     vals = [_med([x[name] for x in v["repeats"]]) for v in reported]
-                    put(f"{name[:-3]}_latency@recall{tag}", system, cell(_med(vals), ci(vals), len(vals), src, "us"))
+                    put(f"{name[:-3]}_latency@recall{tag}", system, sampled(vals, level, src, "us", pairing=pairing))
             chosen[t] = (build_id, idx)
         build_id = (chosen.get(0.95) or chosen.get(0.90) or (next(iter(builds)), 0))[0]
         build = builds[build_id]
@@ -216,17 +229,16 @@ def ann_metrics(path, results, level=0.95):
                 ib = build["serve_rounds"][0]["index_bytes"]
                 ib_note = "in-memory index_bytes reported by the binary (WARM has no persisted ANN index)"
             bt = [r["build_s"] for r in runs]
-            put("build_seconds", system, cell(_med(bt), ci(bt), len(bt), f"{src}.{runs_key}", "s", build_id))
+            put("build_seconds", system, sampled(bt, level, f"{src}.{runs_key}", "s", build_id))
             pk = [r["peak_rss_bytes"] / 2**20 for r in runs]
-            put("build_peak_rss_mib", system, cell(_med(pk), ci(pk), len(pk), f"{src}.{runs_key}", "MiB"))
+            put("build_peak_rss_mib", system, sampled(pk, level, f"{src}.{runs_key}", "MiB"))
             put("index_bytes_mib", system, cell(ib / 2**20, None, 1, src, "MiB", ib_note))
         steady = [r["rss_steady"] / 2**20 for r in build["serve_rounds"] if r.get("rss_steady")]
         if steady:
-            put("serving_rss_mib", system, cell(_med(steady), ci(steady), len(steady), src + ".serve_rounds[*].rss_steady", "MiB",
-                                                "fresh serving process"))
+            put("serving_rss_mib", system, sampled(steady, level, src + ".serve_rounds[*].rss_steady", "MiB", "fresh serving process", pairing))
         cold = [r["cold_start_s"] for r in build["serve_rounds"] if r.get("cold_start_s") is not None]
-        put("cold_start_s", system, cell(_med(cold) if cold else None, ci(cold) if cold else None, len(cold), src + ".serve_rounds[*].cold_start_s", "s",
-                                         "" if cold else "not measured"))
+        put("cold_start_s", system, sampled(cold, level, src + ".serve_rounds[*].cold_start_s", "s", pairing=pairing) if cold
+            else cell(None, None, 0, src + ".serve_rounds[*].cold_start_s", "s", "not measured"))
         ops = entry.get("ops", {})
         for name in (("replace", "delete") if "ops" in entry else ()):  # a run without the ops phase has no operation cells
             o = ops.get(name)
@@ -238,6 +250,30 @@ def ann_metrics(path, results, level=0.95):
                 put(f"{name}_ms_per_op", system, cell(None, None, 0, f"{path}#systems.{system}.ops", "ms", reason))
         _install_cells(put, system, entry, f"{path}#systems.{system}")
     return out
+
+
+def steady_state_note(system, rounds):
+    """Why a JVM row's serve timings are not at a verified steady state, or "". Every Lucene round must record that its
+    untimed warm-up met the rule in registry.LUCENE_WARMUP (`warmup_steady`); rounds written before that rule stopped
+    on a 5 percent agreement after as few as 3 passes and are not steady-state evidence."""
+    if not system.startswith("lucene"):
+        return ""
+    unsteady = [r.get("warmup_passes") for r in rounds if r.get("warmup_steady") is not True]
+    if not unsteady:
+        return ""
+    passes = sorted(p for p in unsteady if p is not None)
+    seen = f" (warm-up passes {passes[0]} to {passes[-1]})" if passes else ""
+    return (f"JIT warm-up not verified at steady state in {len(unsteady)} of {len(rounds)} rounds{seen}; "
+            f"the rule needs at least {registry.LUCENE_WARMUP['min_passes']} passes and {registry.LUCENE_WARMUP['min_seconds']:g} s, then "
+            f"{registry.LUCENE_WARMUP['stable_passes']} passes within {registry.LUCENE_WARMUP['band'] * 100:g} percent")
+
+
+def build_boundary_note(system, build_runs):
+    """Why a WARM text build time is not on the common build boundary (data durable and searchable), or "". The WARM
+    build records `close_s` once its ingest time holds the durable close; older runs timed the ingest calls alone."""
+    if registry.system(system)["family"] != "warm" or all("close_s" in b for b in build_runs):
+        return ""
+    return "WARM ingest time excludes the durable close (final checkpoint) that every comparator's build time includes"
 
 
 def _passes(serve_round):
@@ -253,9 +289,6 @@ def text_metrics(path, results, level=0.95):
 
     def put(metric, system, c):
         out.setdefault(metric, {})[system] = c
-
-    def ci(values):
-        return interval(values, level)
 
     for system, entry in results["systems"].items():
         rounds = entry["serve_rounds"]
@@ -274,18 +307,22 @@ def text_metrics(path, results, level=0.95):
             qps.append(_med([p["queries"] / (p["total_ns"] / 1e9) for p in passes]))
             p50.append(_med([p["p50_ns"] / 1e3 for p in passes]))
             p99.append(_med([p["p99_ns"] / 1e3 for p in passes]))
-        put("qps", system, cell(_med(qps), ci(qps), len(qps), src + ".serve_rounds[*].passes", "QPS", results.get("timing_boundary", {}).get(system, "")))
-        put("p50_latency", system, cell(_med(p50), ci(p50), len(p50), src + ".serve_rounds[*].passes", "us"))
-        put("p99_latency", system, cell(_med(p99), ci(p99), len(p99), src + ".serve_rounds[*].passes", "us"))
+        serve = f"{path}#serve_rounds"
+        steady = steady_state_note(system, rounds)
+        for metric, values in (("qps", qps), ("p50_latency", p50), ("p99_latency", p99)):
+            c = sampled(values, level, src + ".serve_rounds[*].passes", "QPS" if metric == "qps" else "us",
+                        results.get("timing_boundary", {}).get(system, "") if metric == "qps" else "", serve)
+            put(metric, system, c | ({"unverified_reason": steady} if steady else {}))
         bt = [b["ingest_s"] for b in entry["build_runs"]]
-        put("build_seconds", system, cell(_med(bt), ci(bt), len(bt), src + ".build_runs", "s"))
+        boundary = build_boundary_note(system, entry["build_runs"])
+        put("build_seconds", system, sampled(bt, level, src + ".build_runs", "s") | ({"unverified_reason": boundary} if boundary else {}))
         pk = [b["peak_rss_bytes"] / 2**20 for b in entry["build_runs"]]
-        put("build_peak_rss_mib", system, cell(_med(pk), ci(pk), len(pk), src + ".build_runs", "MiB"))
+        put("build_peak_rss_mib", system, sampled(pk, level, src + ".build_runs", "MiB"))
         sv = [r["peak_rss_bytes"] / 2**20 for r in rounds]
-        put("serving_rss_mib", system, cell(_med(sv), ci(sv), len(sv), src + ".serve_rounds[*].peak_rss_bytes", "MiB", "peak RSS of the serving process"))
+        put("serving_rss_mib", system, sampled(sv, level, src + ".serve_rounds[*].peak_rss_bytes", "MiB", "peak RSS of the serving process", serve))
         put("disk_mib", system, cell(entry["build_runs"][0]["disk_bytes"] / 2**20, None, 1, src + ".build_runs[0].disk_bytes", "MiB", "allocated bytes (du)", uncertainty="deterministic"))
         cs = [r["cold_start_s"] for r in rounds]
-        put("cold_start_s", system, cell(_med(cs), ci(cs), len(cs), src + ".serve_rounds[*].cold_start_s", "s"))
+        put("cold_start_s", system, sampled(cs, level, src + ".serve_rounds[*].cold_start_s", "s", pairing=serve))
         ops = entry.get("ops", {})
         for name in (("replace", "delete") if "ops" in entry else ()):  # a run without the ops phase has no operation cells
             o = ops.get(name)

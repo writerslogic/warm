@@ -36,6 +36,28 @@ SELECTION_SEED = 20261114
 K = 100
 
 
+# sha256 of the input.json and qrels.json every published text result was measured on (recorded in the committed
+# results). A rebuilt corpus must reproduce them byte for byte: runner.run_text refuses a dataset whose digests differ,
+# so a rerun is verified against the same corpus, query sample and qrels as the files it replaces.
+DATASET_DIGESTS = {
+    "beir:fiqa": ("7fe83497b0c8813ef8ee483fdf2455e8203af4fe8572d5e1a5799904a54bd909", "2a452780739c94439cc450914dc4d166cc0545cf349a6abcec4792143e0dcb64"),
+    "beir:nfcorpus": ("7a1eae2847157995688d60e6c050dfd83488a3ae21b47d55e2705d04308b1c56", "9f010528ad8fb88fc89ef205b6d2aa8550916136fba375e62105e5a0a0b37351"),
+    "beir:scifact": ("ba86e1768ffbe9f10f5be45ecd91438fd1892efb438418798dad9b6f94b4eb82", "62c5b26204d9ac6ef7af8d232ca301902fc98b03c8480d0b91294d5762a7a023"),
+    "memory": ("e16b2179512b0d6a00e8ab1963d60954400428f892f778d39999e2880a418471", "2bed929ae2ffcabaf040718b6c346b8bd1b9bf5ab73c425330211a477726500d"),
+    "msmarco:100k": ("c1be37adb7525a21f7f86e77f1588b335b0ed815bd48298726ecd1ccbb8a1d08", "27b9f56e4075c75bf04c015b2212014ec7567ad30181c8e89059aab4df4afd0e"),
+    "msmarco:1m": ("81a924faf764987f8e9a98d96f716c8c221bbc8393658da9dd41baa8d11456ae", "27b9f56e4075c75bf04c015b2212014ec7567ad30181c8e89059aab4df4afd0e"),
+}
+
+
+def verify_digests(dataset, meta):
+    """Raise when a pinned dataset's rebuilt input or qrels differ from the published digests."""
+    pinned = DATASET_DIGESTS.get(dataset)
+    if pinned and (meta.get("input_sha256"), meta.get("qrels_sha256")) != pinned:
+        raise SystemExit(f"{dataset}: input/qrels sha256 {meta.get('input_sha256')}/{meta.get('qrels_sha256')} differ from the pinned "
+                         f"{pinned[0]}/{pinned[1]}; the corpus source changed, so results would not be comparable with the published files")
+    return bool(pinned)
+
+
 def _fetch(url, dest):
     if not dest.exists():
         dest.parent.mkdir(parents=True, exist_ok=True)
