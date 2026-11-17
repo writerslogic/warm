@@ -223,6 +223,11 @@ impl JobState {
         self.begin_slice();
     }
 
+    #[cfg(test)]
+    pub(super) fn request_cancel(&self) {
+        self.cancel.store(true, Ordering::Release);
+    }
+
     pub(super) fn check_cancel(&self) -> Result<()> {
         if self.cancel.load(Ordering::Acquire) {
             return Err(Stop::Cancelled.into());

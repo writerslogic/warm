@@ -65,7 +65,7 @@ Restore uploads emit `restore_stage` events for receive, upload sync (including 
 
 ## Compaction
 
-`--compaction-interval-seconds N` compacts every open store that changed since its last compaction, one at a time. `GET /api/v1/compaction` shows the schedule and the last run (`runs`, `failures`, `last_trigger`, `last_started_at`, `last_duration_ms`); `POST /api/v1/compaction` runs it now. Compaction rewrites the store's logs without the superseded and deleted entries. It runs on a blocking worker outside the request slots; the engine decides how long it holds writers back, so schedule it for quiet periods on large stores.
+`--compaction-interval-seconds N` compacts every open store that changed since its last compaction, one at a time. `GET /api/v1/compaction` shows the schedule and the last run (`runs`, `failures`, `last_trigger`, `last_started_at`, `last_duration_ms`); `POST /api/v1/compaction` runs it now. Compaction rewrites the store's logs without the superseded and deleted entries. It runs on a blocking worker outside the request slots; the engine decides how long it holds writers back, so schedule it for quiet periods on large stores. Only `POST /api/v1/compaction` reorders the document slots of a store without chunk vectors (the first run after a bulk ingest, then once a quarter of the slots are new; see [COMPACTION.md](../file-format/COMPACTION.md#document-reorder)), and that run holds the tenant's writers 3 to 5 times as long as a plain one (measured 325 s against 64.5 s at 5M documents, 71.5 s against 17.7 s at 1M); the scheduled pass never reorders.
 
 ## Capacity planning
 

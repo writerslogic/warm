@@ -55,6 +55,8 @@ struct Snapshot {
     /// The document store as the new generation's checkpoint (sealed for an encrypted store),
     /// in place of `documents` frames, when the store takes one (`image::encode_checkpoint`).
     document_checkpoint: Option<DocumentCheckpoint>,
+    /// The reorder outcome and estimate to report once the generation is published.
+    reorder: Option<(ReorderOutcome, usize)>,
 }
 
 /// The document checkpoint of a compaction: encoded in memory for the caller to write, or
@@ -108,7 +110,10 @@ fn retained_bytes(mutation: &Mutation) -> Result<usize> {
 /// Whether a compaction reorders the document slots (see [`WarmCore::compact`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum ReorderRequest {
+    /// A compaction the engine or a schedule starts: no reorder, nothing reported.
     None,
+    /// An explicit compaction with `document_checkpoint.reorder` off: no reorder, reported.
+    Disabled,
     /// When the estimate is within `document_checkpoint.reorder_memory_budget`.
     WithinBudget,
     /// Whatever the estimate.
@@ -129,8 +134,12 @@ pub enum ReorderOutcome {
     Reordered,
     /// Skipped: the estimate was over `document_checkpoint.reorder_memory_budget`.
     OverBudget,
-    /// Skipped: no checkpoint was written, or the store has fewer than 1024 documents.
+    /// Skipped: the store has fewer than 1024 documents.
     NotApplicable,
+    /// Skipped: the store writes no checkpoint (`document_checkpoint.enabled` off, state
+    /// other than documents such as relations, triples, rules or atoms, chunk vectors, or a
+    /// schema older than checkpoints), so a reorder would not be persisted.
+    NoCheckpoint,
 }
 
 /// The outcome of the last explicit compaction's reorder, with the working-memory estimate it
@@ -140,6 +149,18 @@ pub struct ReorderReport {
     pub outcome: ReorderOutcome,
     pub estimate_bytes: usize,
     pub budget_bytes: usize,
+}
+
+impl ReorderRequest {
+    /// The report of a compaction that does not reorder for `outcome`, or none for a
+    /// compaction nobody asked for by name.
+    fn skipped(self, outcome: ReorderOutcome) -> Option<(ReorderOutcome, usize)> {
+        match self {
+            ReorderRequest::None => None,
+            ReorderRequest::Disabled => Some((ReorderOutcome::Disabled, 0)),
+            ReorderRequest::WithinBudget | ReorderRequest::Forced => Some((outcome, 0)),
+        }
+    }
 }
 
 fn planned_over(estimate: usize, budget: Option<usize>) -> bool {
@@ -155,10 +176,19 @@ impl WarmCore {
     /// Compacts. Purges that are waiting for a scrub (`defer_purge`) make this a scrubbing
     /// compaction, so the next compaction of a store with deferred deletes erases them.
     ///
-    /// With `document_checkpoint.reorder` (the default) a store that takes a checkpoint first has
+    /// This is the compaction a caller asks for by name. Writers (ingests, deletes and every
+    /// other mutation) wait for most of it: its snapshot, which includes any reorder and the
+    /// writing of a streamed checkpoint, and its publication; searches keep running. With
+    /// `document_checkpoint.reorder` (the default) a store that writes a checkpoint first has
     /// its slots put in document order (see [`Self::reorder_documents`]) when it was never
-    /// reordered or at least a quarter of its slots were written since the last reorder; the
-    /// compactions an engine starts itself (folds, `flush`, close) never reorder.
+    /// reordered, as after a bulk ingest, or at least a quarter of its slots were written since
+    /// the last reorder. That compaction takes 3 to 5 times as long: 325 s against 64.5 s
+    /// without the reorder at 5M documents, 71.5 s against 17.7 s at 1M
+    /// (`docs/file-format/CHECKPOINT.md`, "Document order"). A store with compressed text or
+    /// encryption renumbers its slots in memory, and searches also wait while it does.
+    /// `document_checkpoint.reorder = false` turns the reorder off, and
+    /// [`Self::compact_without_reorder`] skips it for one call. [`Self::last_reorder`] reports
+    /// what the call did.
     pub fn compact(&self) -> Result<()> {
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();
@@ -166,22 +196,17 @@ impl WarmCore {
         // Whether a reorder is due is decided under the compaction's lease, in
         // `reorder_for_checkpoint`.
         let request = if self.config.document_checkpoint.reorder {
-            self.record_reorder(ReorderOutcome::NotApplicable, 0);
             ReorderRequest::WithinBudget
         } else {
-            self.record_reorder(ReorderOutcome::Disabled, 0);
-            ReorderRequest::None
+            ReorderRequest::Disabled
         };
-        self.compact_impl(
-            || {},
-            || {},
-            false,
-            &JobState::foreground().reordering(request),
-        )
+        self.compact_reordering(request).map(drop)
     }
 
-    /// [`Self::compact`] without the reorder: the compaction a fold, `flush` or close runs.
-    pub(super) fn compact_routine(&self) -> Result<()> {
+    /// [`Self::compact`] without the reorder: the compaction folds, `flush`, closing,
+    /// warm-server's scheduled pass and snapshots run. Writers still wait for its snapshot and
+    /// publication, and [`Self::last_reorder`] is left as it was.
+    pub fn compact_without_reorder(&self) -> Result<()> {
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();
         }
@@ -190,54 +215,66 @@ impl WarmCore {
 
     /// Compacts with the document slots in bisection order whether or not a reorder is due or
     /// within `document_checkpoint.reorder_memory_budget` (see `docs/file-format/CHECKPOINT.md`,
-    /// "Document order"). Returns whether the written checkpoint is reordered: a store that
-    /// takes no checkpoint, has purges waiting (the scrubbing compaction runs instead) or holds
-    /// fewer than 1024 documents is compacted as it is.
+    /// "Document order"). Writers wait for it as for [`Self::compact`]. Returns whether the
+    /// written checkpoint is reordered: a store that takes no checkpoint, has purges waiting
+    /// (the scrubbing compaction runs instead) or holds fewer than 1024 documents is compacted
+    /// as it is, and the call returns false.
     pub fn reorder_documents(&self) -> Result<bool> {
         if self.purge.status().committed > 0 {
             self.compact_scrubbing()?;
             return Ok(false);
         }
-        self.record_reorder(ReorderOutcome::NotApplicable, 0);
-        self.compact_impl(
-            || {},
-            || {},
-            false,
-            &JobState::foreground().reordering(ReorderRequest::Forced),
-        )?;
-        Ok(self.last_reorder().outcome == ReorderOutcome::Reordered)
+        let report = self.compact_reordering(ReorderRequest::Forced)?;
+        Ok(report.is_some_and(|report| report.outcome == ReorderOutcome::Reordered))
     }
 
-    /// What the last [`Self::compact`] or [`Self::reorder_documents`] did about the slot order.
+    /// What the last [`Self::compact`] or [`Self::reorder_documents`] that published a
+    /// generation did about the slot order.
     pub fn last_reorder(&self) -> ReorderReport {
         self.image.reorder.lock().clone()
     }
 
-    fn record_reorder(&self, outcome: ReorderOutcome, estimate_bytes: usize) {
-        *self.image.reorder.lock() = ReorderReport {
+    /// An explicit compaction with `request`, and the reorder report it recorded on publishing.
+    fn compact_reordering(&self, request: ReorderRequest) -> Result<Option<ReorderReport>> {
+        let report = self.compact_documents(
+            || {},
+            || {},
+            false,
+            &JobState::foreground().reordering(request),
+        )?;
+        self.experience_checkpoint()?;
+        Ok(report)
+    }
+
+    fn reorder_report(&self, (outcome, estimate_bytes): (ReorderOutcome, usize)) -> ReorderReport {
+        ReorderReport {
             outcome,
             estimate_bytes,
             budget_bytes: self.config.document_checkpoint.reorder_memory_budget,
-        };
+        }
     }
 
-    /// Under the compaction lease, before the checkpoint is written: the slot order a streamed
-    /// checkpoint is merged in, or for a store the compaction rebuilt in memory, the slots
-    /// renumbered in place (only memory changes: the journal and the published checkpoint stay
-    /// as they were until the compaction publishes, so a crash before then reopens to the old
-    /// order). `streamed` says which of the two the compaction writes.
+    /// Under the compaction lease, before the checkpoint is written, for a store that writes
+    /// one: the slot order a streamed checkpoint is merged in, or for a store the compaction
+    /// rebuilt in memory, the slots renumbered in place (only memory changes: the journal and
+    /// the published checkpoint stay as they were until the compaction publishes, so a crash
+    /// before then reopens to the old order). `streamed` says which of the two the compaction
+    /// writes. Also returns the outcome and estimate to report once the compaction publishes
+    /// (none for a compaction that does not report).
     fn reorder_for_checkpoint(
         &self,
         job: &JobState,
         streamed: bool,
-    ) -> Result<Option<crate::core::documents::SlotOrder>> {
+    ) -> Result<(
+        Option<crate::core::documents::SlotOrder>,
+        Option<(ReorderOutcome, usize)>,
+    )> {
         let request = job.reorder_request();
-        if request == ReorderRequest::None {
-            return Ok(None);
+        if matches!(request, ReorderRequest::None | ReorderRequest::Disabled) {
+            return Ok((None, request.skipped(ReorderOutcome::Disabled)));
         }
         if request == ReorderRequest::WithinBudget && !self.documents.read().reorder_due() {
-            self.record_reorder(ReorderOutcome::NotDue, 0);
-            return Ok(None);
+            return Ok((None, Some((ReorderOutcome::NotDue, 0))));
         }
         let budget = (request == ReorderRequest::WithinBudget)
             .then_some(self.config.document_checkpoint.reorder_memory_budget);
@@ -245,34 +282,28 @@ impl WarmCore {
             let planned =
                 crate::core::documents::checkpoint_slot_order(&self.documents.read(), budget)?;
             let (estimate, order) = planned.unwrap_or((0, None));
-            self.record_reorder(
-                match (&order, planned_over(estimate, budget)) {
-                    (Some(_), _) => ReorderOutcome::Reordered,
-                    (None, true) => ReorderOutcome::OverBudget,
-                    (None, false) => ReorderOutcome::NotApplicable,
-                },
-                estimate,
-            );
+            let outcome = match (&order, planned_over(estimate, budget)) {
+                (Some(_), _) => ReorderOutcome::Reordered,
+                (None, true) => ReorderOutcome::OverBudget,
+                (None, false) => ReorderOutcome::NotApplicable,
+            };
             #[cfg(test)]
             if order.is_some() {
                 crate::core::storage::compaction_crash_point("reordered");
             }
-            return Ok(order);
+            return Ok((order, Some((outcome, estimate))));
         }
         let estimate = self.documents.read().reorder_estimate();
         if planned_over(estimate, budget) {
-            self.record_reorder(ReorderOutcome::OverBudget, estimate);
-            return Ok(None);
+            return Ok((None, Some((ReorderOutcome::OverBudget, estimate))));
         }
         let Some(order) = self.documents.read().bisection_order()? else {
-            self.record_reorder(ReorderOutcome::NotApplicable, estimate);
-            return Ok(None);
+            return Ok((None, Some((ReorderOutcome::NotApplicable, estimate))));
         };
         self.documents.write().apply_slot_order(&order);
-        self.record_reorder(ReorderOutcome::Reordered, estimate);
         #[cfg(test)]
         crate::core::storage::compaction_crash_point("reordered");
-        Ok(None)
+        Ok((None, Some((ReorderOutcome::Reordered, estimate))))
     }
 
     /// Compacts and then physically erases what the compaction replaced: the old generation
@@ -399,13 +430,14 @@ impl WarmCore {
         self.experience_checkpoint()
     }
 
+    /// The document compaction; returns the reorder report it recorded, if `job` reports one.
     fn compact_documents(
         &self,
         after_snapshot: impl FnOnce(),
         before_publication: impl FnOnce(),
         scrub: bool,
         job: &JobState,
-    ) -> Result<()> {
+    ) -> Result<Option<ReorderReport>> {
         let _compaction = if job.background() {
             self.compaction.try_lock().ok_or(Stop::Busy)?
         } else {
@@ -441,6 +473,7 @@ impl WarmCore {
             snapshot.document_checkpoint,
             Some(DocumentCheckpoint::Streamed { .. })
         );
+        let wrote_checkpoint = snapshot.document_checkpoint.is_some();
         let (generation, mut cursor) = snapshot.checkpoint;
         after_snapshot();
         job.set_stage(CompactionStage::Staging);
@@ -595,6 +628,19 @@ impl WarmCore {
                 .store(true, std::sync::atomic::Ordering::Release);
         }
         replaced?;
+        // Recorded only now, under the compaction lock: a compaction that stops, fails or is
+        // cancelled before publishing leaves the last report standing, and a reorder counts
+        // only when the generation holds the checkpoint it was written into.
+        let reorder = snapshot.reorder.map(|(outcome, estimate)| {
+            let outcome = if outcome == ReorderOutcome::Reordered && !wrote_checkpoint {
+                ReorderOutcome::NoCheckpoint
+            } else {
+                outcome
+            };
+            let report = self.reorder_report((outcome, estimate));
+            *self.image.reorder.lock() = report.clone();
+            report
+        });
         if streamed && job.tail_frames.load(Relaxed) == 0 {
             // Nothing was written since the snapshot, so the published checkpoint is the
             // whole store: serve from it and let the index in memory go. With a tail the store
@@ -642,7 +688,7 @@ impl WarmCore {
         }
         #[cfg(test)]
         crate::core::storage::compaction_crash_point("finished");
-        Ok(())
+        Ok(reorder)
     }
 
     /// Writes one staged frame within the job's disk budget, observing cancellation and the
@@ -758,11 +804,16 @@ impl WarmCore {
             }
         }
         drop(atom_ids);
-        let order = if shard_vectors == 0 {
+        // Only a store that writes a checkpoint keeps a reorder; `takes_checkpoint` would
+        // take the shards this frame holds.
+        let (order, reorder) = if shard_vectors == 0 && self.writes_checkpoints() {
             let streamed = streams && self.documents.read().can_merge_checkpoint();
             self.reorder_for_checkpoint(job, streamed)?
         } else {
-            None
+            (
+                None,
+                job.reorder_request().skipped(ReorderOutcome::NoCheckpoint),
+            )
         };
         let (documents, text, document_checkpoint) = {
             let store = self.documents.read();
@@ -861,6 +912,7 @@ impl WarmCore {
             documents,
             text,
             document_checkpoint,
+            reorder,
         })
     }
 

@@ -94,7 +94,9 @@ pub struct DocumentCheckpointConfig {
     /// Let [`crate::core::WarmCore::compact`] renumber the document slots of a store that takes a
     /// checkpoint so that documents sharing terms sit together (recursive graph bisection), which
     /// shortens posting lists and speeds up conjunctions, phrases and pruned ranking. Results are
-    /// unchanged. Only that explicit call reorders: folds, `flush` and closing never do. On by
+    /// unchanged. Only that explicit call reorders: folds, `flush`, closing, background jobs,
+    /// warm-server's scheduled pass and snapshots never do. The compaction that reorders holds
+    /// writers 3 to 5 times as long as one that does not (see `WarmCore::compact`). On by
     /// default; see `docs/file-format/CHECKPOINT.md`, "Document order".
     pub reorder: bool,
     /// Most bytes the reorder of [`crate::core::WarmCore::compact`] may hold beyond a plain

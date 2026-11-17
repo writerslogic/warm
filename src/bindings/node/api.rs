@@ -746,6 +746,12 @@ impl WarmMemorySystem {
         run_async(move || core.delete(&id)).await
     }
 
+    /// Compacts the store. Searches keep running; writes wait for most of the call (its snapshot
+    /// and its publication). The first compaction after a bulk ingest, and then whenever at least a
+    /// quarter of the slots are new, also renumbers the document slots of a store without chunk
+    /// vectors, which makes it 3 to 5 times as long (measured: 325 s against 64.5 s at 5M documents,
+    /// 71.5 s against 17.7 s at 1M); with compressed text or encryption, searches also wait while
+    /// the slots are renumbered in memory. `startCompaction` never renumbers.
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn compact(&self) -> Result<()> {

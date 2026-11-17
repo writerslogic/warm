@@ -138,6 +138,15 @@ impl WarmCore {
         self.schema >= crate::core::format::CHECKPOINT_SCHEMA_VERSION
     }
 
+    /// Whether a compaction of this store may write a document checkpoint at all: the schema
+    /// holds checkpoints, `document_checkpoint.enabled`, and nothing but document state was
+    /// written. Takes no lock (unlike [`Self::takes_checkpoint`]).
+    pub(super) fn writes_checkpoints(&self) -> bool {
+        self.checkpoint_schema()
+            && self.config.document_checkpoint.enabled
+            && !self.image.other_state.load(Ordering::Acquire)
+    }
+
     fn fresh_text_segment(&self) -> Result<Arc<TextSegment>> {
         Ok(Arc::new(TextSegment::create(
             &self.storage_path.join("documents.text"),
@@ -266,10 +275,7 @@ impl WarmCore {
         store: &DocumentStore,
         generation: &str,
     ) -> Result<Option<Vec<u8>>> {
-        if !self.checkpoint_schema()
-            || !self.config.document_checkpoint.enabled
-            || self.image.other_state.load(Ordering::Acquire)
-        {
+        if !self.writes_checkpoints() {
             return Ok(None);
         }
         let Some(image) = documents::encode_checkpoint(
@@ -301,10 +307,7 @@ impl WarmCore {
     /// A streamed merge writes inline text; compressed text needs the whole stream to train
     /// its dictionary, so a store that compresses text encodes its checkpoint in memory.
     fn streams_plain(&self) -> bool {
-        self.checkpoint_schema()
-            && self.config.document_checkpoint.enabled
-            && !self.config.document_checkpoint.compress_text
-            && !self.image.other_state.load(Ordering::Acquire)
+        self.writes_checkpoints() && !self.config.document_checkpoint.compress_text
     }
 
     /// Streams the checkpoint of the live store into the staging generation directory.
@@ -362,7 +365,7 @@ impl WarmCore {
         if resident < threshold {
             return;
         }
-        if let Err(error) = self.compact_routine() {
+        if let Err(error) = self.compact_without_reorder() {
             self.image.fold_failed.store(true, Ordering::Release);
             tracing::warn!(%error, "folding the document index into the checkpoint failed");
         }
@@ -371,10 +374,7 @@ impl WarmCore {
     /// Whether a compaction now would write a checkpoint: checkpoints enabled, only document
     /// state, no vector shards, and every chunk lexical-only.
     pub(super) fn takes_checkpoint(&self) -> bool {
-        if !self.checkpoint_schema()
-            || !self.config.document_checkpoint.enabled
-            || self.image.other_state.load(Ordering::Acquire)
-        {
+        if !self.writes_checkpoints() {
             return false;
         }
         // One lock at a time: commits take the shards before the store.
@@ -396,7 +396,7 @@ impl WarmCore {
         if !self.takes_checkpoint() {
             return Ok(());
         }
-        self.compact_routine()
+        self.compact_without_reorder()
     }
 
     /// At close: when the live generation is a checkpoint with no frames after it, every

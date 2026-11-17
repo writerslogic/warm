@@ -49,6 +49,20 @@ error occurs; any of these also removes the staging generation. A cancel that ar
 generation live, and the next compaction removes the stale one. A crash after it opens the new
 generation with every acknowledged write.
 
+## Document reorder
+
+The explicit `compact()` (Rust `WarmCore::compact`, C `hms1_store_compact`, Node and
+Swift/Kotlin `compact`, warm-server's `POST /api/v1/compaction`) can renumber the document
+slots before it writes the checkpoint: the first one after a bulk ingest, then whenever at
+least a quarter of the slots were written since the last reorder, for a store that writes a
+checkpoint ([CHECKPOINT.md](CHECKPOINT.md), "Document order"). The reorder runs in the
+`snapshot` stage, so writers wait for it. That compaction takes 3 to 5 times as long as one
+without it: measured 325 s against 64.5 s at 5M documents and 71.5 s against 17.7 s at 1M.
+A store with compressed text or encryption renumbers its slots in memory, and searches wait
+while it does. `document_checkpoint.reorder = false` turns the reorder off and
+`WarmCore::compact_without_reorder` skips it for one call. Background jobs, folds, `flush`,
+closing, warm-server's scheduled pass and snapshots never reorder.
+
 ## Budgets
 
 - **CPU.** One worker thread. With `maxCpuFraction = f`, the worker sleeps `t·(1/f − 1)` after
