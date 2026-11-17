@@ -372,6 +372,12 @@ impl WarmCore {
         options: &documents::LexicalOptions,
     ) -> Result<documents::LexicalResults> {
         let query = query.for_analyzer(self.analyzer)?;
+        // Answered from the checkpoint's mapping when the store is served from one.
+        if let Some(result) =
+            self.capture_from_checkpoint(|store| documents::served_lexical(store, &query, options))
+        {
+            return result;
+        }
         if let Some(prepared) = documents::plain_lexical_search(&query, options)? {
             // Ranked as `search_documents` ranks the same words, from the checkpoint when the
             // store is served from one; a store that is not hydrates as any other query does.
@@ -385,7 +391,11 @@ impl WarmCore {
             }
             self.hydrate_documents()?;
             let _transaction = self.mutation_gate.read();
-            return Ok(documents::rank_lexical(&self.documents.read(), &prepared));
+            let store = self.documents.read();
+            if documents::prefers_pruned_lexical(&store) {
+                return documents::execute_lexical(&store, &query, options);
+            }
+            return Ok(documents::rank_lexical(&store, &prepared));
         }
         self.hydrate_documents()?;
         let _transaction = self.mutation_gate.read();

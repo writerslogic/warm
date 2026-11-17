@@ -14,8 +14,9 @@ A compaction (`WarmCore::compact`, `compact_scrubbing`, purge and forget) of a s
 checkpoints writes one in place of the document frames it would otherwise write. A store takes
 one when checkpoints are enabled (`WarmConfig::document_checkpoint.enabled`, on by default), every
 mutation applied since the open was a document write, encoding or delete, the vector shards are
-empty, and every chunk is lexical-only (no vector, embedding or pending encoding) and holds no
-word positions (`IngestOptions::positions`). Explicit schema 7 native vector records are
+empty, every chunk is lexical-only (no vector, embedding or pending encoding), and either every
+chunk or none holds word positions (`IngestOptions::positions`; version 4 stores them beside the
+postings, earlier versions could not hold them). Explicit schema 7 native vector records are
 not representable, even though their HDC state is lexical: they retain a dense embedding
 and a distinct record kind. They remain in the journal/live overlay; any store containing
 them compacts to frames and its next generation has no checkpoint. Any other ineligible
@@ -36,7 +37,13 @@ checkpoint; later writes append frames after it until the next one folds them in
    checkpoint that fails any check fails the open: it is never skipped, since the frames it
    replaced are gone.
 4. The file is mapped and unfiltered lexical queries without a query embedding rank from the
-   mapping with the live store's scoring code, so the results are the live store's.
+   mapping with the live store's scoring code, so the results are the live store's. A version 4
+   checkpoint with no documents written since and no dead document also answers explicit
+   Boolean and phrase queries and counts (`WarmCore::search_lexical`) from the mapping: required
+   clauses are intersected by leapfrogging posting cursors that skip blocks through the skip
+   tables, a phrase checks the words' positions on the documents that hold all of them, and the
+   result, scores to the bit, is the exhaustive scorer's. Any other store builds the live store
+   first, as before.
 5. Document writes in every encode mode (eager, deferred, lexical), deferred encodings and
    document deletes go to a store over the checkpoint that holds the documents written since;
    a checkpoint document they replace or delete is marked dead. Queries rank the checkpoint's
@@ -131,15 +138,18 @@ to `3 B`), so the parameter bounds the index, not the process.
 All integers little endian; varints are LEB128.
 
 ```
-0    8  magic "HMSCKP\0\x03" (version 3; versions 2, "HMSCKP\0\x02", and 1, "HMSCKP\0\x01", are still read)
+0    8  magic "HMSCKP\0\x04" (version 4; versions 3, "HMSCKP\0\x03", 2, "HMSCKP\0\x02", and 1, "HMSCKP\0\x01", are still read)
 8    8  u64: CRC32 of bytes 16.. (low 32 bits)
 16   8  u64: CRC32 of the generation directory's name (low 32 bits)
 24   8  u64: vector dimensions of the store
-32   8  u64: feature bits (bit 0: chunk text is in compressed blocks; any other bit is refused as newer than supported)
-40   32 u64: reserved, zero
+32   8  u64: feature bits (bit 0: chunk text is in compressed blocks; any other bit is refused as newer than supported; a version 4 checkpoint keeps its text inline)
+40   8  u64: flags (version 4; bit 0: every chunk holds word positions; bit 1: no posting has
+         frequency zero, which the Boolean executor over the mapping requires), zero before version 4
+48   24 u64: reserved, zero
 72   32 u64: slots, chunks, words, documents
 104  16 u64: terms per posting form (unstemmed, stemmed)
-120  208 (offset, length) of each section, in the order below (the last three only with feature bit 0; unused words are not read), to byte 328
+120  208 (offset, length) of each section, in the order below (twelve from version 4, ten
+         before, thirteen in version 3 with compressed text; unused words are not read), to byte 328
 328  sections, back to back, ending at the end of the file
 ```
 
@@ -196,7 +206,37 @@ built, so a scrubbing compaction writes none of an erased document's text, in a 
 dictionary. Without text (every chunk stored without it) the feature bit is clear and the file
 is byte for byte what version 2 wrote.
 
-Every compaction writes version 3, so an older checkpoint is replaced at the store's next
+Version 4 adds, after the version 3 sections, two more:
+
+6. skip tables: for each list of two or more blocks, in dictionary order across both forms, five
+    little-endian `u32` arrays one after the other, each as long as the list has blocks: the last
+    slot of each block, the offset of the block's header in the list's bytes, the offset of the
+    block's positions in the list's positions bytes, the block's largest frequency and the block's
+    least word count. Then the frontier directory, `blocks + runs + 1` `u32` byte offsets into the
+    frontier bytes that follow it (a run is 32 blocks, the last one shorter): the offset of each
+    block's frontier, of each run's, and the end. A frontier is a varint point count and that many
+    `(frequency, words)` varint pairs, by frequency descending: the points of the block's (run's)
+    postings that no other point dominates with a larger frequency at no greater word count. A
+    reader bounds the BM25 weight of every posting in the block (run) by the largest weight of any
+    point, which is tighter than the block's two maxima; a block whose count is zero has the single
+    point of its two maxima. A list of one block has no table;
+7. positions: for each list, in dictionary order, one region per block when the flags say
+    positional: a width byte `w` (the bits needed for the longest posting's byte length), the
+    byte length of each posting's positions packed at `w` bits (the packing of the frequencies),
+    then each posting's positions end to end. A posting's positions are the token positions of
+    the term in the chunk as unsigned LEB128 gaps (the first absolute), the very bytes of the
+    chunk's positional record for the term (LEXICAL.md). There are no more of them than the
+    posting's frequency.
+
+A dictionary entry gains two final varints, the byte length of its list's positions (zero without
+positions) and the byte length of its skip table (zero for a list of one block), and a block table entry is four `u64`s: the offsets of the block's first entry in the
+dictionary and of its first list in the postings, skip tables and positions. The `WHOLE` chunk
+flag (bit 3) marks a chunk whose positions are a whole article's (positional record version 2).
+Opening checks the dictionary, every offset it implies and the section totals, not the
+posting, skip or position bytes beyond the CRC; the rebuild of the live store checks each list
+as before and validates every chunk's positions.
+
+Every compaction writes version 4, so an older checkpoint is replaced at the store's next
 compaction; until then it opens, serves and rebuilds the live store exactly as version 3 does,
 ranking it exhaustively where a version 3 checkpoint is pruned (the ranking is the same to the
 bit, and a version 1 or 2 checkpoint serves from the checkpoint only up to 2^19 slots). A checkpoint with

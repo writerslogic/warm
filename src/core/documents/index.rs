@@ -654,13 +654,14 @@ impl DocumentStore {
     /// Whether [`super::merge_checkpoint`] can write this store's checkpoint.
     pub(crate) fn can_merge_checkpoint(&self) -> bool {
         self.merge_base()
-            .is_some_and(|base| base.is_none_or(super::image::ServingImage::mergeable))
-            && super::image::representable(self)
+            .is_some_and(|base| super::image::can_merge(base, self))
     }
 
-    /// Bytes of the checkpoint under this store; 0 when there is none.
+    /// Bytes of the checkpoint under this store, for the fold schedule; 0 when there is none.
     pub(crate) fn base_bytes(&self) -> usize {
-        self.base.as_ref().map_or(0, |base| base.image.byte_len())
+        self.base
+            .as_ref()
+            .map_or(0, |base| base.image.schedule_bytes())
     }
 
     /// Whether the store is served from a checkpoint (see [`Self::over`]).
@@ -935,6 +936,11 @@ impl DocumentStore {
     /// Word count of the chunk occupying `slot`.
     pub(super) fn slot_word_count(&self, slot: usize) -> u32 {
         self.word_counts[slot]
+    }
+
+    /// The positional record of the chunk in `slot`, when it has one.
+    pub(super) fn position_source(&self, slot: usize) -> Option<&Positions> {
+        self.position_sources.get(slot)?.as_deref()
     }
 
     #[cfg(test)]

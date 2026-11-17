@@ -32,6 +32,7 @@ use anyhow::{bail, ensure, Context, Result};
 
 use super::binary::{put_bytes, put_varint, Reader};
 use super::index::{DocumentStore, StoreIdentity};
+use super::lists::{Cursor, ListRef};
 use super::packed_terms::StoredTerms;
 use super::postings::{PostingList, PostingLists, Postings, RestoredList};
 use super::search::LexicalSource;
@@ -40,8 +41,11 @@ use super::text_blocks::{BlockCache, DecodedBlocks, TextBlocks, TextBuilder};
 use super::{StoredChunk, StoredDocument, VectorState};
 use crate::core::entangled::EntangledHVec;
 
-/// The magic of the version written: block-encoded postings with per-list and per-block impacts.
-pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x03";
+/// The magic of the version written: version 3's postings plus per-list skip tables and word
+/// positions beside the postings.
+pub(crate) const MAGIC: &[u8; 8] = b"HMSCKP\x00\x04";
+/// Version 3, still read: block-encoded postings with per-list and per-block impacts.
+const MAGIC_V3: &[u8; 8] = b"HMSCKP\x00\x03";
 /// Version 2, still read: block-encoded postings without impacts.
 const MAGIC_V2: &[u8; 8] = b"HMSCKP\x00\x02";
 /// Version 1, still read: flat varint postings.
@@ -49,10 +53,10 @@ const MAGIC_V1: &[u8; 8] = b"HMSCKP\x00\x01";
 
 /// Whether `magic` opens a plaintext checkpoint of a version this build reads.
 pub(crate) fn known_magic(magic: &[u8]) -> bool {
-    magic == MAGIC || magic == MAGIC_V2 || magic == MAGIC_V1
+    magic == MAGIC || magic == MAGIC_V3 || magic == MAGIC_V2 || magic == MAGIC_V1
 }
 mod merge;
-pub(crate) use merge::merge;
+pub(crate) use merge::{can_merge, merge};
 
 const HEADER_WORDS: usize = 40;
 pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;
@@ -61,6 +65,11 @@ pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;
 const BLOCK: usize = 32;
 
 const H_CRC: usize = 0;
+/// Version 4 flags: bit 0, every chunk holds word positions.
+const H_FLAGS: usize = 4;
+const FLAG_POSITIONAL: u64 = 1;
+/// Version 4 flags: bit 1, no posting has frequency zero.
+const FLAG_POSITIVE: u64 = 2;
 const H_GENERATION: usize = 1;
 const H_DIMENSIONS: usize = 2;
 const H_SLOTS: usize = 8;
@@ -90,7 +99,18 @@ enum Section {
     TextTable,
     TextBlocks,
 }
+
+#[allow(non_upper_case_globals)]
+impl Section {
+    /// Version 4's skip tables and positions share the slots of the compressed text's first two
+    /// sections; a version 4 checkpoint keeps its text inline.
+    const Skips: Section = Section::TextDict;
+    const Positions: Section = Section::TextTable;
+}
 const SECTIONS: usize = 13;
+/// Sections of version 4: the skip tables and positions take the disk slots the compressed text
+/// takes in a version 3 checkpoint; a checkpoint holds one or the other.
+const V4_SECTIONS: usize = 12;
 /// Sections of a checkpoint without the text blocks feature.
 const BASE_SECTIONS: usize = 10;
 const _: () = assert!(H_SECTIONS + 2 * SECTIONS <= HEADER_WORDS);
@@ -108,6 +128,8 @@ const OWN_ID: u8 = 1;
 const STEMMED: u8 = 2;
 /// Terms from a store analyzer other than the legacy one (see `StoredChunk::analyzed`).
 const ANALYZED: u8 = 4;
+/// Version 4: the chunk's positions are a whole article's (`positions::DOCUMENT_VERSION`).
+const WHOLE: u8 = 8;
 
 fn word(bytes: &[u8], index: usize) -> u64 {
     let at = 8 + 8 * index;
@@ -135,17 +157,16 @@ pub(crate) fn recorded_crc(header: &[u8]) -> u32 {
 /// Offset the checkpoint CRC starts at.
 pub(crate) const CRC_START: usize = 16;
 
-/// Whether every chunk of `store` is lexical-only without word positions, the only chunks a
-/// checkpoint holds.
+/// Whether every chunk of `store` is lexical-only and either every chunk or none holds word
+/// positions, the only chunks a checkpoint holds.
 pub(crate) fn representable(store: &DocumentStore) -> bool {
-    store.nonpositional_chunks == store.chunk_count
+    (store.nonpositional_chunks == store.chunk_count || store.nonpositional_chunks == 0)
         && store.documents.values().all(|document| {
             !document.vector_record
                 && document.chunks.iter().all(|chunk| {
                     chunk.vector_state == VectorState::Lexical
                         && chunk.embedding.is_none()
                         && chunk.vector.indices.is_empty()
-                        && chunk.terms.positions.is_none()
                 })
         })
 }
@@ -157,7 +178,7 @@ pub(crate) fn encode(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, 3, false)
+    encode_as(store, generation, dimensions, 4, false)
 }
 
 /// [`encode`] with the chunk text in compressed blocks (feature bit 0).
@@ -189,8 +210,214 @@ pub(crate) fn encode_v2(
     encode_as(store, generation, dimensions, 2, false)
 }
 
-/// [`encode`] with impact-carrying block postings (version 3), plain block postings (version
-/// 2) or flat ones (version 1), and the chunk text in compressed blocks or inline.
+/// [`encode`] in version 3, for tests of reading it.
+#[cfg(test)]
+pub(crate) fn encode_v3(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, 3, false)
+}
+
+/// Appends the positions of one block of postings, `(slot, ordinal)` each, to `out`; `false`
+/// when the block would start beyond what a `u32` offset from `base` holds.
+fn pack_position_block(
+    store: &DocumentStore,
+    block: &mut Vec<(usize, u32)>,
+    out: &mut Vec<u8>,
+    base: usize,
+    offsets: &mut Vec<u32>,
+) -> Result<bool> {
+    let mut sources = Vec::with_capacity(block.len());
+    for &(slot, ordinal) in block.iter() {
+        ensure!(ordinal > 0, "positional posting lacks its term ordinal");
+        let positions = store
+            .position_source(slot)
+            .context("positional posting in a chunk without positions")?;
+        sources.push(positions.bytes(ordinal as usize - 1));
+    }
+    block.clear();
+    Ok(write_position_block(&sources, out, base, offsets))
+}
+
+/// Appends one block of postings' position bytes to `out`, recording where it starts (from
+/// `base`) in `offsets`; `false` when that offset does not fit a `u32`.
+fn write_position_block(
+    sources: &[&[u8]],
+    out: &mut Vec<u8>,
+    base: usize,
+    offsets: &mut Vec<u32>,
+) -> bool {
+    let Ok(at) = u32::try_from(out.len() - base) else {
+        return false;
+    };
+    offsets.push(at);
+    let longest = sources
+        .iter()
+        .map(|b| b.len() as u64)
+        .max()
+        .unwrap_or(1)
+        .max(1);
+    let width = (64 - longest.leading_zeros()) as u8;
+    out.push(width);
+    super::postings::pack(out, sources.iter().map(|b| b.len() as u64), width);
+    for bytes in sources {
+        out.extend_from_slice(bytes);
+    }
+    true
+}
+
+/// Packs the position bytes of postings pushed in order into a list's blocks of
+/// `CHECKPOINT_BLOCK`, as [`pack_positions`] does from a store.
+pub(super) struct PositionPacker<'a> {
+    pending: Vec<&'a [u8]>,
+    pub(super) out: Vec<u8>,
+    pub(super) offsets: Vec<u32>,
+    fits: bool,
+}
+
+impl<'a> PositionPacker<'a> {
+    pub(super) fn new() -> Self {
+        Self {
+            pending: Vec::with_capacity(super::postings::CHECKPOINT_BLOCK),
+            out: Vec::new(),
+            offsets: Vec::new(),
+            fits: true,
+        }
+    }
+
+    pub(super) fn push(&mut self, bytes: &'a [u8]) {
+        self.pending.push(bytes);
+        if self.pending.len() == super::postings::CHECKPOINT_BLOCK {
+            self.flush();
+        }
+    }
+
+    fn flush(&mut self) {
+        if !self.pending.is_empty() {
+            self.fits &= write_position_block(&self.pending, &mut self.out, 0, &mut self.offsets);
+            self.pending.clear();
+        }
+    }
+
+    /// Ends the list; `false` when an offset overflowed a `u32`. The packer is then empty.
+    pub(super) fn finish(&mut self) -> bool {
+        self.flush();
+        std::mem::replace(&mut self.fits, true) && u32::try_from(self.out.len()).is_ok()
+    }
+
+    pub(super) fn reset(&mut self) {
+        self.pending.clear();
+        self.out.clear();
+        self.offsets.clear();
+        self.fits = true;
+    }
+}
+
+/// Appends the positions of `list`'s postings to `out`, block by block as `lists::Cursor` reads
+/// them, and records where each block starts (from the first byte this call appends) in
+/// `offsets`. `false` when an offset would not fit a `u32`.
+fn pack_positions(
+    store: &DocumentStore,
+    list: &PostingList,
+    out: &mut Vec<u8>,
+    offsets: &mut Vec<u32>,
+) -> Result<bool> {
+    let base = out.len();
+    offsets.clear();
+    let mut block: Vec<(usize, u32)> = Vec::with_capacity(super::postings::CHECKPOINT_BLOCK);
+    let mut outcome: Result<bool> = Ok(true);
+    list.for_each_with_ordinal(|slot, _, ordinal| {
+        if !matches!(outcome, Ok(true)) {
+            return;
+        }
+        block.push((slot, ordinal));
+        if block.len() == super::postings::CHECKPOINT_BLOCK {
+            outcome = pack_position_block(store, &mut block, out, base, offsets);
+        }
+    });
+    if matches!(outcome, Ok(true)) && !block.is_empty() {
+        outcome = pack_position_block(store, &mut block, out, base, offsets);
+    }
+    Ok(outcome? && u32::try_from(out.len() - base).is_ok())
+}
+
+/// Appends a list's skip table (see `lists`) to `skips`: the five arrays and the frontiers when
+/// it has two or more blocks, nothing otherwise. `offsets` holds the start of each block's
+/// positions (empty without positions). False when an offset outgrows its `u32`.
+pub(super) fn append_skips(
+    infos: &[super::postings::BlockInfo],
+    offsets: &[u32],
+    skips: &mut Vec<u8>,
+) -> bool {
+    if infos.len() < 2 {
+        return true;
+    }
+    for field in 0..5 {
+        for (block, info) in infos.iter().enumerate() {
+            let value = match field {
+                0 => info.last,
+                1 => info.offset,
+                2 => offsets.get(block).copied().unwrap_or(0),
+                3 => info.max_frequency,
+                _ => info.min_words,
+            };
+            skips.extend_from_slice(&value.to_le_bytes());
+        }
+    }
+    pack_frontiers(infos, skips)
+}
+
+/// Appends a list's frontier directory and frontier bytes (see `lists`) after its skip arrays;
+/// false when the frontier bytes outgrow the `u32` offsets.
+fn pack_frontiers(infos: &[super::postings::BlockInfo], skips: &mut Vec<u8>) -> bool {
+    use super::lists::RUN_BLOCKS;
+    let runs = infos.len().div_ceil(RUN_BLOCKS);
+    let mut data: Vec<u8> = Vec::new();
+    let mut directory: Vec<u32> = Vec::with_capacity(infos.len() + runs + 1);
+    let put = |data: &mut Vec<u8>, points: &[(u32, u32)]| {
+        put_varint(data, points.len() as u64);
+        for &(frequency, words) in points {
+            put_varint(data, u64::from(frequency));
+            put_varint(data, u64::from(words));
+        }
+    };
+    for info in infos {
+        let Ok(at) = u32::try_from(data.len()) else {
+            return false;
+        };
+        directory.push(at);
+        put(&mut data, info.frontier.as_deref().unwrap_or(&[]));
+    }
+    for run in infos.chunks(RUN_BLOCKS) {
+        let Ok(at) = u32::try_from(data.len()) else {
+            return false;
+        };
+        directory.push(at);
+        let points: Vec<(u32, u32)> = run
+            .iter()
+            .flat_map(|info| match info.frontier.as_deref() {
+                Some(points) => points.to_vec(),
+                None => vec![(info.max_frequency, info.min_words)],
+            })
+            .collect();
+        put(&mut data, &super::postings::pareto(points));
+    }
+    let Ok(end) = u32::try_from(data.len()) else {
+        return false;
+    };
+    directory.push(end);
+    for at in directory {
+        skips.extend_from_slice(&at.to_le_bytes());
+    }
+    skips.extend_from_slice(&data);
+    true
+}
+
+/// [`encode`] with a skip table and word positions per list (version 4), impact-carrying block
+/// postings (version 3), plain block postings (version 2) or flat ones (version 1); the chunk
+/// text is in compressed blocks (version 3 only) or inline.
 fn encode_as(
     store: &DocumentStore,
     generation: u32,
@@ -198,33 +425,55 @@ fn encode_as(
     version: u8,
     text_blocks: bool,
 ) -> Result<Option<Vec<u8>>> {
-    let (blocked, impacts) = (version >= 2, version >= 3);
+    let (blocked, impacts, extended) = (version >= 2, version >= 3, version >= 4);
     if !representable(store) {
         return Ok(None);
     }
+    let positional = store.chunk_count > 0 && store.nonpositional_chunks == 0;
+    debug_assert!(
+        !(extended && text_blocks),
+        "version 4 keeps its text inline"
+    );
+    if positional && !extended && !text_blocks {
+        return Ok(None);
+    }
     let mut words = [0u64; HEADER_WORDS];
+    if positional {
+        words[H_FLAGS] |= FLAG_POSITIONAL;
+    }
     let mut sections: Vec<Vec<u8>> = vec![Vec::new(); SECTIONS];
     let mut postings = Vec::new();
+    let (mut skips, mut positions) = (Vec::new(), Vec::new());
+    let mut positive = true;
+    let mut infos: Vec<super::postings::BlockInfo> = Vec::new();
+    let mut offsets: Vec<u32> = Vec::new();
     for form in 0..2 {
-        let (terms, offsets, lists) = store.postings[form].sorted_terms();
+        let (terms, term_offsets, lists) = store.postings[form].sorted_terms();
         let (mut dict, mut blocks) = (Vec::new(), Vec::new());
         let mut count = 0u64;
         for (i, list) in lists.iter().enumerate() {
             if list.is_empty() {
                 continue;
             }
-            let term = &terms[offsets[i] as usize..offsets[i + 1] as usize];
+            positive &= list.positive_len() == list.len();
+            let term = &terms[term_offsets[i] as usize..term_offsets[i + 1] as usize];
             let prefix = if (count as usize).is_multiple_of(BLOCK) {
-                let (Ok(at), Ok(posting)) =
-                    (u32::try_from(dict.len()), u32::try_from(postings.len()))
-                else {
-                    return Ok(None);
-                };
-                blocks.extend_from_slice(&at.to_le_bytes());
-                blocks.extend_from_slice(&posting.to_le_bytes());
+                if extended {
+                    for value in [dict.len(), postings.len(), skips.len(), positions.len()] {
+                        blocks.extend_from_slice(&(value as u64).to_le_bytes());
+                    }
+                } else {
+                    let (Ok(at), Ok(posting)) =
+                        (u32::try_from(dict.len()), u32::try_from(postings.len()))
+                    else {
+                        return Ok(None);
+                    };
+                    blocks.extend_from_slice(&at.to_le_bytes());
+                    blocks.extend_from_slice(&posting.to_le_bytes());
+                }
                 0
             } else {
-                let previous = previous_term(&terms, &offsets, &lists, i);
+                let previous = previous_term(&terms, &term_offsets, &lists, i);
                 previous
                     .iter()
                     .zip(term)
@@ -233,16 +482,39 @@ fn encode_as(
             };
             put_varint(&mut dict, prefix as u64);
             put_bytes(&mut dict, &term[prefix..]);
-            let start = postings.len();
+            let (start, positions_start, skips_start) =
+                (postings.len(), positions.len(), skips.len());
             if blocked {
-                let words = |slot: usize| DocumentStore::slot_word_count(store, slot);
-                super::postings::pack_checkpoint(list, &words, impacts, &mut postings);
+                let slot_words = |slot: usize| DocumentStore::slot_word_count(store, slot);
+                infos.clear();
+                super::postings::pack_checkpoint(
+                    list,
+                    &slot_words,
+                    impacts,
+                    &mut postings,
+                    extended.then_some(&mut infos),
+                );
+                if extended {
+                    if u32::try_from(postings.len() - start).is_err() {
+                        return Ok(None);
+                    }
+                    if positional && !pack_positions(store, list, &mut positions, &mut offsets)? {
+                        return Ok(None);
+                    }
+                    if !append_skips(&infos, &offsets, &mut skips) {
+                        return Ok(None);
+                    }
+                }
             } else {
                 #[cfg(test)]
                 super::postings::pack_checkpoint_flat(list, &mut postings);
             }
             put_varint(&mut dict, list.len() as u64);
             put_varint(&mut dict, (postings.len() - start) as u64);
+            if extended {
+                put_varint(&mut dict, (positions.len() - positions_start) as u64);
+                put_varint(&mut dict, (skips.len() - skips_start) as u64);
+            }
             count += 1;
         }
         words[H_TERMS + form] = count;
@@ -254,10 +526,15 @@ fn encode_as(
         sections[d as usize] = dict;
         sections[b as usize] = blocks;
     }
-    if u32::try_from(postings.len()).is_err() {
+    if !extended && u32::try_from(postings.len()).is_err() {
         return Ok(None);
     }
     sections[Section::Postings as usize] = postings;
+    if positive && extended {
+        words[H_FLAGS] |= FLAG_POSITIVE;
+    }
+    sections[Section::Skips as usize] = skips;
+    sections[Section::Positions as usize] = positions;
 
     let segment = store.text_segment();
     let mut slots = Vec::with_capacity(store.slot_count * SLOT_BYTES);
@@ -316,22 +593,30 @@ fn encode_as(
     words[H_CHUNKS] = store.chunk_count as u64;
     words[H_WORDS] = store.word_count as u64;
     words[H_DOCS] = store.documents.len() as u64;
+    let section_count = if extended {
+        V4_SECTIONS
+    } else if text_blocks {
+        SECTIONS
+    } else {
+        BASE_SECTIONS
+    };
     let mut at = HEADER_LEN as u64;
-    for (i, section) in sections.iter().enumerate() {
+    for (i, section) in sections.iter().take(section_count).enumerate() {
         words[H_SECTIONS + 2 * i] = at;
         words[H_SECTIONS + 2 * i + 1] = section.len() as u64;
         at += section.len() as u64;
     }
     let mut out = Vec::with_capacity(at as usize);
     out.extend_from_slice(match version {
-        3 => MAGIC,
+        4 => MAGIC,
+        3 => MAGIC_V3,
         2 => MAGIC_V2,
         _ => MAGIC_V1,
     });
     for value in words {
         out.extend_from_slice(&value.to_le_bytes());
     }
-    for section in &sections {
+    for section in sections.iter().take(section_count) {
         out.extend_from_slice(section);
     }
     let crc = crc32fast::hash(&out[CRC_START..]);
@@ -374,7 +659,12 @@ fn encode_document(
         out.push(
             if own_id { OWN_ID } else { 0 }
                 | if chunk.stemmed { STEMMED } else { 0 }
-                | if chunk.analyzed { ANALYZED } else { 0 },
+                | if chunk.analyzed { ANALYZED } else { 0 }
+                | if chunk.terms.is_whole_document() {
+                    WHOLE
+                } else {
+                    0
+                },
         );
         if own_id {
             put_bytes(out, chunk.id.as_bytes());
@@ -410,9 +700,20 @@ pub(crate) enum Backing {
 }
 
 impl ServingImage {
-    /// Size of the checkpoint file in bytes.
-    pub(crate) fn byte_len(&self) -> usize {
-        self.bytes.len()
+    /// The checkpoint's size as version 3 would hold it, for the fold schedule: without the
+    /// skip tables and positions of version 4 and the extra length varints and block table
+    /// words its dictionaries carry, so that the format's additions do not delay
+    /// folds, and raise the ingest peak, by their share of the file.
+    pub(crate) fn schedule_bytes(&self) -> usize {
+        if !self.extended {
+            return self.bytes.len();
+        }
+        let extra: usize = self.dictionaries.iter().map(|d| d.extra).sum();
+        self.bytes
+            .len()
+            .saturating_sub(self.section(Section::Skips).len())
+            .saturating_sub(self.section(Section::Positions).len())
+            .saturating_sub(extra)
     }
 }
 
@@ -427,12 +728,37 @@ impl std::ops::Deref for Backing {
     }
 }
 
+/// Where a block of dictionary entries starts in the dictionary, posting, skip and positions
+/// sections.
+#[derive(Clone, Copy)]
+struct BlockBase {
+    dict: usize,
+    posting: usize,
+    skip: usize,
+    pos: usize,
+}
+
+/// A dictionary entry's counts, after its term.
+struct Entry {
+    count: u64,
+    len: usize,
+    pos_len: usize,
+    skip_len: usize,
+}
+
+/// Bytes of the LEB128 varint of `value`.
+fn varint_len(value: u64) -> usize {
+    (64 - (value | 1).leading_zeros() as usize).div_ceil(7)
+}
+
 /// One posting form's dictionary.
 #[derive(Clone, Copy, Default)]
 struct Dictionary {
     dict: (usize, usize),
     blocks: (usize, usize),
     terms: usize,
+    /// Bytes version 4 adds to the dictionary and block table over version 3.
+    extra: usize,
 }
 
 /// A validated checkpoint. The CRC was checked by whoever produced `bytes`; construction
@@ -447,10 +773,17 @@ pub(crate) struct ServingImage {
     dimensions: usize,
     dictionaries: [Dictionary; 2],
     sections: [(usize, usize); SECTIONS],
-    /// Versions 2 and 3: postings in the block encoding (see `postings::Postings`).
+    /// Versions 2 to 4: postings in the block encoding (see `postings::Postings`).
     blocked: bool,
-    /// Version 3: the block encoding with impacts.
+    /// Versions 3 and 4: the block encoding with impacts.
     impacts: bool,
+    /// Version 4: skip tables beside the postings, positions after them, and the larger
+    /// dictionary entries and block table that address both.
+    extended: bool,
+    /// Version 4: every chunk holds word positions.
+    positional: bool,
+    /// Version 4: no posting has frequency zero, so a posting is a match.
+    positive: bool,
     /// Direct frequency tables of the longest lists, built by queries (see `impact`).
     dense: super::impact::DenseTables,
     /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
@@ -489,6 +822,7 @@ struct RecordChunk<'a> {
     id: Option<&'a str>,
     stemmed: bool,
     analyzed: bool,
+    whole: bool,
     start_byte: u32,
     end_byte: u32,
     text: Option<RecordText<'a>>,
@@ -566,8 +900,15 @@ impl ServingImage {
             bytes.len() >= HEADER_LEN && known_magic(&bytes[..8]),
             "not a document checkpoint of this version"
         );
-        let impacts = &bytes[..8] == MAGIC;
+        let extended = &bytes[..8] == MAGIC;
+        let impacts = extended || &bytes[..8] == MAGIC_V3;
         let blocked = impacts || &bytes[..8] == MAGIC_V2;
+        let positional = extended && word(&bytes, H_FLAGS) & FLAG_POSITIONAL != 0;
+        let positive = extended && word(&bytes, H_FLAGS) & FLAG_POSITIVE != 0;
+        ensure!(
+            !extended || word(&bytes, H_FLAGS) & !(FLAG_POSITIONAL | FLAG_POSITIVE) == 0,
+            "checkpoint flags"
+        );
         let count = |index: usize| usize::try_from(word(&bytes, index)).ok();
         let features = word(&bytes, H_FEATURES);
         ensure!(
@@ -575,9 +916,19 @@ impl ServingImage {
             "checkpoint feature bits {features:#x} are newer than supported"
         );
         let text_blocks = features & FEATURE_TEXT_BLOCKS != 0;
+        ensure!(
+            !(extended && text_blocks),
+            "a version 4 checkpoint holds no compressed text"
+        );
         let mut sections = [(0usize, 0usize); SECTIONS];
         let mut end = HEADER_LEN;
-        let present = if text_blocks { SECTIONS } else { BASE_SECTIONS };
+        let present = if extended {
+            V4_SECTIONS
+        } else if text_blocks {
+            SECTIONS
+        } else {
+            BASE_SECTIONS
+        };
         for (i, section) in sections.iter_mut().enumerate() {
             if i >= present {
                 *section = (end, 0);
@@ -593,6 +944,9 @@ impl ServingImage {
             );
             *section = (at, len);
             end = at + len;
+        }
+        for section in &mut sections[present..] {
+            *section = (end, 0);
         }
         ensure!(end == bytes.len(), "checkpoint has trailing bytes");
         let (Some(slots), Some(chunks), Some(words), Some(docs), Some(dimensions)) = (
@@ -616,6 +970,9 @@ impl ServingImage {
             sections,
             blocked,
             impacts,
+            extended,
+            positional,
+            positive,
             dense: Default::default(),
             word_classes: std::sync::OnceLock::new(),
             word_counts: std::sync::OnceLock::new(),
@@ -627,9 +984,22 @@ impl ServingImage {
         }
         image.check_documents()?;
         image.check_slots()?;
+        let mut totals = (0usize, 0usize);
         for form in 0..2 {
-            image.dictionaries[form] = image.check_dictionary(form)?;
+            image.dictionaries[form] = image.check_dictionary(form, &mut totals)?;
         }
+        ensure!(
+            totals
+                == if extended {
+                    (
+                        image.section(Section::Skips).len(),
+                        image.section(Section::Positions).len(),
+                    )
+                } else {
+                    (0, 0)
+                },
+            "checkpoint skip tables or positions disagree with the dictionary"
+        );
         Ok(image)
     }
 
@@ -688,11 +1058,10 @@ impl ServingImage {
         })
     }
 
-    /// Whether [`merge::merge`] reads this checkpoint: block-encoded postings and inline chunk
-    /// text. Its document records are copied as bytes, and a record of compressed text points
+    /// Whether [`merge::merge`] reads this checkpoint: version 4 and inline chunk text. Its document records are copied as bytes, and a record of compressed text points
     /// into text sections the merge does not carry.
     pub(crate) fn mergeable(&self) -> bool {
-        self.blocked && !self.text_blocks
+        self.extended && !self.text_blocks
     }
 
     /// Drops the resident pages of a mapped checkpoint after a pass over it, so a merge that
@@ -783,9 +1152,64 @@ impl ServingImage {
         Ok(())
     }
 
+    /// Bytes per entry of a dictionary block table.
+    fn block_stride(&self) -> usize {
+        if self.extended {
+            32
+        } else {
+            8
+        }
+    }
+
+    /// Where the entries of dictionary block `block` begin in each section.
+    fn block_base(&self, blocks: &[u8], block: usize) -> BlockBase {
+        if self.extended {
+            let at = |field: usize| {
+                let start = block * 32 + field * 8;
+                u64::from_le_bytes(blocks[start..start + 8].try_into().expect("eight bytes"))
+                    as usize
+            };
+            BlockBase {
+                dict: at(0),
+                posting: at(1),
+                skip: at(2),
+                pos: at(3),
+            }
+        } else {
+            BlockBase {
+                dict: u32_at(blocks, block * 8) as usize,
+                posting: u32_at(blocks, block * 8 + 4) as usize,
+                skip: 0,
+                pos: 0,
+            }
+        }
+    }
+
+    /// The count, byte length and positions byte length of the entry `reader` is at, after its
+    /// term.
+    fn read_entry(&self, reader: &mut Reader<'_>) -> Result<Entry> {
+        let count = reader.varint()?;
+        let len = usize::try_from(reader.varint()?)?;
+        let (pos_len, skip_len) = if self.extended {
+            (
+                usize::try_from(reader.varint()?)?,
+                usize::try_from(reader.varint()?)?,
+            )
+        } else {
+            (0, 0)
+        };
+        Ok(Entry {
+            count,
+            len,
+            pos_len,
+            skip_len,
+        })
+    }
+
     /// Checks form `form`'s dictionary: blocks in order, entries well formed with terms in
-    /// strictly ascending byte order, posting ranges inside the posting section.
-    fn check_dictionary(&self, form: usize) -> Result<Dictionary> {
+    /// strictly ascending byte order, posting, skip and positions ranges inside their sections.
+    /// `totals` accumulates the skip and positions bytes the forms' entries address.
+    fn check_dictionary(&self, form: usize, totals: &mut (usize, usize)) -> Result<Dictionary> {
         let (dict_section, block_section) = if form == 0 {
             (Section::Dict0, Section::Blocks0)
         } else {
@@ -795,27 +1219,30 @@ impl ServingImage {
         let (dict, blocks) = (self.section(dict_section), self.section(block_section));
         let block_count = terms.div_ceil(BLOCK);
         ensure!(
-            blocks.len() == block_count * 8,
+            blocks.len() == block_count * self.block_stride(),
             "checkpoint block table size"
         );
         let postings = self.section(Section::Postings).len();
         let mut previous = Vec::new();
         let mut reader = Reader::new(dict);
-        let mut posting_at = None::<usize>;
+        let mut at = None::<BlockBase>;
+        let mut extra = 0usize;
         for i in 0..terms {
             let position = reader.position();
             if i.is_multiple_of(BLOCK) {
-                let block = i / BLOCK;
-                ensure!(
-                    u32_at(blocks, block * 8) as usize == position,
-                    "checkpoint block offset"
-                );
-                let start = u32_at(blocks, block * 8 + 4) as usize;
-                ensure!(
-                    posting_at.is_none_or(|at| at == start),
-                    "checkpoint block postings"
-                );
-                posting_at = Some(start);
+                let base = self.block_base(blocks, i / BLOCK);
+                ensure!(base.dict == position, "checkpoint block offset");
+                match at {
+                    Some(at) => ensure!(
+                        at.posting == base.posting && at.skip == base.skip && at.pos == base.pos,
+                        "checkpoint block postings"
+                    ),
+                    None => ensure!(
+                        !self.extended || (base.skip, base.pos) == *totals,
+                        "checkpoint block postings"
+                    ),
+                }
+                at = Some(base);
             }
             let prefix = usize::try_from(reader.varint()?)?;
             let suffix = reader.bytes()?;
@@ -829,31 +1256,57 @@ impl ServingImage {
                 std::str::from_utf8(&term).is_ok() && (i == 0 || previous < term),
                 "checkpoint terms out of order"
             );
-            let count = reader.varint()?;
-            let len = usize::try_from(reader.varint()?)?;
+            let entry = self.read_entry(&mut reader)?;
             ensure!(
-                count > 0
-                    && super::postings::checkpoint_min_len(count, self.blocked, self.impacts)
-                        <= len as u64
-                    && count <= u64::from(u32::MAX),
+                entry.count > 0
+                    && super::postings::checkpoint_min_len(entry.count, self.blocked, self.impacts)
+                        <= entry.len as u64
+                    && entry.count <= u64::from(u32::MAX),
                 "checkpoint posting count"
             );
-            let at = posting_at.expect("set at the first entry");
             ensure!(
-                at.checked_add(len).is_some_and(|end| end <= postings),
+                self.positional || entry.pos_len == 0,
+                "checkpoint positions without positional chunks"
+            );
+            ensure!(
+                !self.positional || entry.pos_len as u64 >= entry.count,
+                "checkpoint positions length"
+            );
+            let base = at.as_mut().expect("set at the first entry");
+            ensure!(
+                base.posting
+                    .checked_add(entry.len)
+                    .is_some_and(|end| end <= postings),
                 "checkpoint posting range"
             );
-            posting_at = Some(at + len);
+            base.posting += entry.len;
+            base.pos += entry.pos_len;
+            if self.extended {
+                extra += varint_len(entry.pos_len as u64) + varint_len(entry.skip_len as u64);
+            }
+            if self.extended {
+                let minimum = super::lists::skip_min_len(entry.count);
+                ensure!(
+                    entry.skip_len >= minimum && (minimum > 0 || entry.skip_len == 0),
+                    "checkpoint skip table length"
+                );
+                base.skip += entry.skip_len;
+            }
             previous = term;
         }
         ensure!(
             reader.is_empty(),
             "checkpoint dictionary has trailing bytes"
         );
+        if let Some(base) = at {
+            totals.0 = base.skip;
+            totals.1 = base.pos;
+        }
         Ok(Dictionary {
             dict: self.sections[dict_section as usize],
             blocks: self.sections[block_section as usize],
             terms,
+            extra: extra + if self.extended { 24 * block_count } else { 0 },
         })
     }
 
@@ -1017,7 +1470,7 @@ impl ServingImage {
         for _ in 0..count {
             let flags = reader.byte()?;
             ensure!(
-                flags & !(OWN_ID | STEMMED | ANALYZED) == 0,
+                flags & !(OWN_ID | STEMMED | ANALYZED | WHOLE) == 0,
                 "checkpoint chunk flags {flags}"
             );
             let id = if flags & OWN_ID != 0 {
@@ -1057,6 +1510,7 @@ impl ServingImage {
                     id,
                     stemmed: flags & STEMMED != 0,
                     analyzed: flags & ANALYZED != 0,
+                    whole: flags & WHOLE != 0,
                     start_byte,
                     end_byte,
                     text,
@@ -1206,75 +1660,139 @@ impl ServingImage {
             }
         }
         // Each slot's `(term, frequency)` pairs, in term order per form (a chunk's terms are
-        // all in its own form), read from one pass over the postings.
+        // all in its own form), read from one pass over the postings; with positions, each
+        // slot's position offsets and bytes in the same order.
         let mut forward: Vec<Vec<(u32, u32)>> = vec![Vec::new(); self.slots];
+        let mut slot_positions: Vec<(Vec<u32>, Vec<u8>)> = if self.positional {
+            vec![(vec![0], Vec::new()); self.slots]
+        } else {
+            Vec::new()
+        };
         let mut lists: [Vec<RestoredList>; 2] = [Vec::new(), Vec::new()];
         for (form, out) in lists.iter_mut().enumerate() {
             let dictionary = self.dictionaries[form];
             let dict = &self.bytes[dictionary.dict.0..dictionary.dict.0 + dictionary.dict.1];
             let postings = self.section(Section::Postings);
+            let (skips, positions) = (
+                self.section(Section::Skips),
+                self.section(Section::Positions),
+            );
             let mut reader = Reader::new(dict);
             let mut term = Vec::new();
-            let mut at = if dictionary.terms == 0 {
-                0
+            let mut base = if dictionary.terms == 0 {
+                BlockBase {
+                    dict: 0,
+                    posting: 0,
+                    skip: 0,
+                    pos: 0,
+                }
             } else {
-                let blocks = &self.bytes[dictionary.blocks.0..dictionary.blocks.0 + 8];
-                u32_at(blocks, 4) as usize
+                let blocks =
+                    &self.bytes[dictionary.blocks.0..dictionary.blocks.0 + dictionary.blocks.1];
+                self.block_base(blocks, 0)
             };
             out.reserve_exact(dictionary.terms);
             for _ in 0..dictionary.terms {
                 let prefix = usize::try_from(reader.varint()?)?;
                 term.truncate(prefix);
                 term.extend_from_slice(reader.bytes()?);
-                let count = u32::try_from(reader.varint()?)?;
-                let len = usize::try_from(reader.varint()?)?;
-                let bytes = &postings[at..at + len];
-                at += len;
+                let entry = self.read_entry(&mut reader)?;
+                let count = u32::try_from(entry.count)?;
+                let len = entry.len;
+                let bytes = &postings[base.posting..base.posting + len];
+                let skip_len = entry.skip_len;
+                let list = ListRef {
+                    bytes,
+                    count,
+                    skips: &skips[base.skip..base.skip + skip_len],
+                    positions: &positions[base.pos..base.pos + entry.pos_len],
+                };
+                base.posting += len;
+                base.skip += skip_len;
+                base.pos += entry.pos_len;
                 let mut last = 0usize;
                 let mut seen = 0u32;
                 let mut failure = None;
                 let mut live = Vec::with_capacity(count as usize);
+                let mut ordinals = Vec::new();
                 // The term's position among the lists kept: a list of dead documents only is
                 // left out, and no live slot refers to it.
                 let position = out.len() as u32;
-                Postings {
-                    bytes,
-                    count,
-                    blocked: self.blocked,
-                    impacts: self.impacts,
+                let mut visit = |slot: usize, frequency: u32, positions: Option<&[u8]>| {
+                    let fits = slot < self.slots
+                        && form_of[slot] == form as u8
+                        && (seen == 0 || slot > last);
+                    if !fits {
+                        failure = Some(slot);
+                        return false;
+                    }
+                    if dead_slot.get(slot) != Some(&true) {
+                        forward[slot].push((position, frequency));
+                        if let Some(bytes) = positions {
+                            let (offsets, data) = &mut slot_positions[slot];
+                            data.extend_from_slice(bytes);
+                            offsets.push(data.len() as u32);
+                            ordinals.push(forward[slot].len() as u32);
+                        }
+                        live.push((slot, frequency));
+                    }
+                    last = slot;
+                    seen += 1;
+                    true
+                };
+                if self.positional {
+                    // The block decoder checks the list's postings before the unchecked
+                    // cursor reads its skip table and positions.
+                    Postings {
+                        bytes,
+                        count,
+                        blocked: self.blocked,
+                        impacts: self.impacts,
+                    }
+                    .try_for_each(
+                        &|slot| {
+                            if slot < self.slots {
+                                self.slot(slot).0
+                            } else {
+                                0
+                            }
+                        },
+                        |_, _| true,
+                    )?;
+                    let mut cursor = Cursor::open(list);
+                    while !cursor.is_end() {
+                        let (slot, frequency) = (cursor.doc() as usize, cursor.frequency());
+                        let bytes = cursor.position_bytes();
+                        if !visit(slot, frequency, Some(bytes)) {
+                            break;
+                        }
+                        cursor.next();
+                    }
+                } else {
+                    Postings {
+                        bytes,
+                        count,
+                        blocked: self.blocked,
+                        impacts: self.impacts,
+                    }
+                    .try_for_each(
+                        &|slot| {
+                            if slot < self.slots {
+                                self.slot(slot).0
+                            } else {
+                                0
+                            }
+                        },
+                        |slot, frequency| visit(slot, frequency, None),
+                    )?;
                 }
-                .try_for_each(
-                    &|slot| {
-                        if slot < self.slots {
-                            self.slot(slot).0
-                        } else {
-                            0
-                        }
-                    },
-                    |slot, frequency| {
-                        let fits = slot < self.slots
-                            && form_of[slot] == form as u8
-                            && (seen == 0 || slot > last);
-                        if !fits {
-                            failure = Some(slot);
-                            return false;
-                        }
-                        if dead_slot.get(slot) != Some(&true) {
-                            forward[slot].push((position, frequency));
-                            live.push((slot, frequency));
-                        }
-                        last = slot;
-                        seen += 1;
-                        true
-                    },
-                )?;
                 ensure!(
                     failure.is_none() && seen == count,
                     "checkpoint posting list for a slot it cannot hold"
                 );
                 let term = std::str::from_utf8(&term).context("checkpoint term")?;
                 if !live.is_empty() {
-                    out.push((term.to_owned(), live));
+                    out.push((term.to_owned(), live, ordinals));
                 }
             }
         }
@@ -1291,11 +1809,27 @@ impl ServingImage {
                 let pairs = std::mem::take(&mut forward[slot]);
                 let names = &terms[usize::from(chunk.stemmed)];
                 let bytes = pairs.iter().map(|&(t, _)| names[t as usize].len()).sum();
-                let stored = StoredTerms::from_sorted_refs(
+                let mut stored = StoredTerms::from_sorted_refs(
                     pairs.len(),
                     bytes,
                     pairs.iter().map(|&(t, f)| (names[t as usize], f)),
                 );
+                if self.positional {
+                    let (offsets, data) = std::mem::take(&mut slot_positions[slot]);
+                    let positions = super::positions::Positions {
+                        version: if chunk.whole {
+                            super::positions::DOCUMENT_VERSION
+                        } else {
+                            super::positions::VERSION
+                        },
+                        offsets: offsets.into(),
+                        data: data.into_boxed_slice(),
+                    };
+                    positions
+                        .validate(&stored)
+                        .context("checkpoint positions")?;
+                    stored.positions = Some(Arc::new(positions));
+                }
                 let mut stored_chunk = self.stored_chunk(
                     id,
                     index,
@@ -1340,6 +1874,85 @@ impl ServingImage {
 }
 
 impl ServingImage {
+    /// The posting list of `term` in posting form `form`, with its skip table and positions.
+    pub(super) fn list(&self, form: usize, term: &str) -> Option<ListRef<'_>> {
+        let dictionary = &self.dictionaries[form];
+        if dictionary.terms == 0 {
+            return None;
+        }
+        let dict = &self.bytes[dictionary.dict.0..dictionary.dict.0 + dictionary.dict.1];
+        let blocks = &self.bytes[dictionary.blocks.0..dictionary.blocks.0 + dictionary.blocks.1];
+        let first_term = |block: usize| -> &[u8] {
+            let mut reader = Reader::new(&dict[self.block_base(blocks, block).dict..]);
+            reader.varint().expect("dictionary checked at open");
+            reader.bytes().expect("dictionary checked at open")
+        };
+        let target = term.as_bytes();
+        // The last block whose first term is at or below the target.
+        let (mut lo, mut hi) = (0usize, blocks.len() / self.block_stride());
+        while hi - lo > 1 {
+            let mid = lo + (hi - lo) / 2;
+            if first_term(mid) <= target {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        let block = lo;
+        let entries = (dictionary.terms - block * BLOCK).min(BLOCK);
+        let mut base = self.block_base(blocks, block);
+        let mut reader = Reader::new(&dict[base.dict..]);
+        let postings = self.section(Section::Postings);
+        let (skips, positions) = (
+            self.section(Section::Skips),
+            self.section(Section::Positions),
+        );
+        let mut current: Vec<u8> = Vec::with_capacity(target.len() + 8);
+        for _ in 0..entries {
+            let prefix = reader.varint().expect("dictionary checked at open") as usize;
+            let suffix = reader.bytes().expect("dictionary checked at open");
+            current.truncate(prefix);
+            current.extend_from_slice(suffix);
+            let entry = self
+                .read_entry(&mut reader)
+                .expect("dictionary checked at open");
+            let skip_len = entry.skip_len;
+            match current.as_slice().cmp(target) {
+                std::cmp::Ordering::Equal => {
+                    return Some(ListRef {
+                        bytes: &postings[base.posting..base.posting + entry.len],
+                        count: entry.count as u32,
+                        skips: &skips[base.skip..base.skip + skip_len],
+                        positions: &positions[base.pos..base.pos + entry.pos_len],
+                    })
+                }
+                std::cmp::Ordering::Greater => return None,
+                std::cmp::Ordering::Less => {
+                    base.posting += entry.len;
+                    base.skip += skip_len;
+                    base.pos += entry.pos_len;
+                }
+            }
+        }
+        None
+    }
+
+    /// The terms of posting form `form`.
+    pub(super) fn term_count(&self, form: usize) -> usize {
+        self.dictionaries[form].terms
+    }
+
+    /// Whether every chunk holds word positions (so phrases can be matched from the mapping).
+    pub(super) fn has_positions(&self) -> bool {
+        self.positional
+    }
+
+    /// Whether this checkpoint's lists carry skip tables (version 4) and every posting is a
+    /// match (none has frequency zero), what the executors over the mapping rely on.
+    pub(super) fn has_skips(&self) -> bool {
+        self.extended && self.positive
+    }
+
     /// Whether this checkpoint's postings carry the impacts block-max pruning reads.
     pub(super) fn has_impacts(&self) -> bool {
         self.impacts
@@ -1399,55 +2012,12 @@ impl LexicalSource for ServingImage {
     }
 
     fn postings(&self, form: usize, term: &str) -> Option<Postings<'_>> {
-        let dictionary = &self.dictionaries[form];
-        if dictionary.terms == 0 {
-            return None;
-        }
-        let dict = &self.bytes[dictionary.dict.0..dictionary.dict.0 + dictionary.dict.1];
-        let blocks = &self.bytes[dictionary.blocks.0..dictionary.blocks.0 + dictionary.blocks.1];
-        let first_term = |block: usize| -> &[u8] {
-            let mut reader = Reader::new(&dict[u32_at(blocks, block * 8) as usize..]);
-            reader.varint().expect("dictionary checked at open");
-            reader.bytes().expect("dictionary checked at open")
-        };
-        let target = term.as_bytes();
-        // The last block whose first term is at or below the target.
-        let (mut lo, mut hi) = (0usize, blocks.len() / 8);
-        while hi - lo > 1 {
-            let mid = lo + (hi - lo) / 2;
-            if first_term(mid) <= target {
-                lo = mid;
-            } else {
-                hi = mid;
-            }
-        }
-        let block = lo;
-        let entries = (dictionary.terms - block * BLOCK).min(BLOCK);
-        let mut reader = Reader::new(&dict[u32_at(blocks, block * 8) as usize..]);
-        let postings = self.section(Section::Postings);
-        let mut at = u32_at(blocks, block * 8 + 4) as usize;
-        let mut current: Vec<u8> = Vec::with_capacity(target.len() + 8);
-        for _ in 0..entries {
-            let prefix = reader.varint().expect("dictionary checked at open") as usize;
-            let suffix = reader.bytes().expect("dictionary checked at open");
-            current.truncate(prefix);
-            current.extend_from_slice(suffix);
-            let count = reader.varint().expect("dictionary checked at open") as u32;
-            let len = reader.varint().expect("dictionary checked at open") as usize;
-            match current.as_slice().cmp(target) {
-                std::cmp::Ordering::Equal => {
-                    return Some(Postings {
-                        bytes: &postings[at..at + len],
-                        count,
-                        blocked: self.blocked,
-                        impacts: self.impacts,
-                    })
-                }
-                std::cmp::Ordering::Greater => return None,
-                std::cmp::Ordering::Less => at += len,
-            }
-        }
-        None
+        self.list(form, term).map(|list| Postings {
+            bytes: list.bytes,
+            count: list.count,
+            blocked: self.blocked,
+            impacts: self.impacts,
+        })
     }
 
     fn slot_word_count(&self, slot: usize) -> u32 {
