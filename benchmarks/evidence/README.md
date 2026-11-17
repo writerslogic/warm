@@ -9,8 +9,10 @@ restored by `scripts/fetch_evidence.py`. Git LFS inputs are identified by `.gita
 and by their result guides.
 
 The [retired-input manifest](retired-inputs.json) records frozen source copies,
-copied build directories and oversized model-output caches removed from the active
-tree. Their original bytes remain at the manifest's immutable Git revision. Maintained
+copied build directories, oversized model-output caches and the non-markdown session evidence
+under `docs/research/` (logs, archives, review and merge records, patches and git bundles) removed
+from the active tree. Their original bytes remain at the manifest's immutable Git revision, or at
+the record's own `revision` when it names one. Maintained
 summaries and reproduction code remain in the checkout.
 
 From the repository root:
@@ -19,6 +21,7 @@ From the repository root:
 uv run scripts/restore-retired-inputs.py
 uv run scripts/restore-retired-inputs.py --path benchmarks/results/query_aware_graph_v1/sources
 uv run scripts/restore-retired-inputs.py --path benchmarks/results/longmemeval_dev_answers_v3.json
+uv run scripts/restore-retired-inputs.py --path docs/research/technical-audit-20261029/query-memory-20261101
 ```
 
 The first command lists available inputs. Restoration verifies the recorded size and

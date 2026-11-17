@@ -18,6 +18,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_BYTES = 128 * 1024 * 1024
+RETIRED_TREES = (("benchmarks", "results"), ("docs", "research"))
 
 
 def file_hash(path):
@@ -29,14 +30,18 @@ def restore(root, revision, record, *, max_bytes=MAX_BYTES):
     root = root.resolve(strict=True)
     if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise ValueError("invalid source revision")
-    if not isinstance(record, dict) or set(record) != {"path", "bytes", "sha256", "mode"}:
+    # A record may name its own revision; records retired before that field use the manifest's.
+    if not isinstance(record, dict) or set(record) - {"revision"} != {"path", "bytes", "sha256", "mode"}:
         raise ValueError("invalid historical input record")
+    revision = record.get("revision", revision)
+    if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("invalid source revision")
     name, size, expected, mode = (record[key] for key in ("path", "bytes", "sha256", "mode"))
     if not isinstance(name, str) or len(name) > 4096 or "\0" in name:
         raise ValueError("invalid historical input path")
     relative = Path(name)
-    if relative.is_absolute() or ".." in relative.parts or relative.parts[:2] != ("benchmarks", "results"):
-        raise ValueError("historical input must be under benchmarks/results")
+    if relative.is_absolute() or ".." in relative.parts or relative.parts[:2] not in RETIRED_TREES:
+        raise ValueError("historical input must be under benchmarks/results or docs/research")
     if type(size) is not int or not 0 <= size <= max_bytes:
         raise ValueError("historical input exceeds its byte limit")
     if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):

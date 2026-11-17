@@ -59,6 +59,10 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      # The pinned study's plan, build records and logs are retired from the tree; restore their
+      # recorded bytes before the harness hashes them.
+      - name: Restore the retired study inputs
+        run: python3 scripts/restore-retired-inputs.py --path docs/research/technical-audit-20261029/vector-contention-20261101
       - name: Record runner and source before setup
         run: |
           mkdir -p "$EVIDENCE"

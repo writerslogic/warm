@@ -77,6 +77,17 @@ bindings/embed-models/**/packs/
 benchmarks/results/research/ann/*.graph
 
 # Historical benchmark inputs are restored locally from benchmarks/evidence/retired-inputs.json.
+/docs/research/**/*.gz
+/docs/research/**/*.json
+/docs/research/**/*.jsonl
+/docs/research/**/*.log
+/docs/research/**/*.patch
+/docs/research/**/*.bundle
+/docs/research/**/*.sh
+/docs/research/**/*.txt
+/docs/research/**/*.sha256
+/docs/research/**/*.tsv
+/docs/research/**/SHA256SUMS
 /benchmarks/results/metal_sdpa_draft_2026-10-09/isolated/
 /benchmarks/results/metal_sdpa_draft_2026-10-09/dependencies/
 /benchmarks/results/query_aware_graph_v1/sources/
