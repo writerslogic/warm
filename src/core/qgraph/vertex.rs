@@ -146,8 +146,9 @@ impl Default for VSearchParams {
 ///   the second-nearest unexpanded candidate; 3 adds a lookahead that, after an expansion,
 ///   prefetches the code rows (or screen rows) of the next candidate's unvisited neighbours.
 /// * `batch_est` (`WARM_QGRAPH_BATCH_EST`, results never change): the admitted neighbours'
-///   4-bit rows are estimated four at a time with shared query loads (`dot_i4_inline_x4` in
-///   the kernels module); the integer sums are the same.
+///   rows are estimated four at a time with shared query loads; the integer sums are the
+///   same. The query paths already do this for 8-bit and 4-bit rows, so it only affects
+///   searches instantiated without four-row estimates.
 /// * `frontier` (`WARM_QGRAPH_FRONTIER`, `0.0..=1.0`, 1.0 = off): with a full pool, stop when
 ///   the nearest unexpanded estimate is past the point `frontier` of the way from the `k`-th
 ///   best to the `ef`-th best. Fewer expansions, so lower recall at a given `ef`; the
@@ -2488,7 +2489,7 @@ impl SearchScratch {
         let qc = &self.qc[..];
         let n = self.fresh.len();
         let mut i = 0;
-        if self.knobs.batch_est || (QUERY_X4 && g.bits == 8) {
+        if QUERY_X4 || self.knobs.batch_est {
             while i + 4 <= n {
                 let ids = [
                     self.fresh[i],
@@ -2543,7 +2544,7 @@ impl SearchScratch {
             pending.push(key);
         };
         let mut i = 0;
-        if self.knobs.batch_est || (QUERY_X4 && g.bits == 8) {
+        if QUERY_X4 || self.knobs.batch_est {
             while i + 4 <= n {
                 let ids = [
                     self.fresh[i],
