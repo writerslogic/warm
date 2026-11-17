@@ -6,6 +6,7 @@ reader model (Qwen3.5-9B) with the upstream NOTE_GENERATION prompt (qwen_v6_retr
 Text-only (URL, thought, action per state); screenshots are not sent. Resumable.
 Environment: LME2_DATA, LME2_UPSTREAM, READER_BASE_URL (default http://localhost:8023/v1)."""
 import argparse, asyncio, json, os, sys
+import fileio  # noqa: E402
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common  # noqa: E402
@@ -26,8 +27,8 @@ a = ap.parse_args()
 if a.traj is None: a.traj = str(common.data_dir() / "trajectories.jsonl")
 out = Path(a.out)
 notes = json.loads(out.read_text()) if out.exists() else {}
-want = set(json.load(open(a.ids))) if a.ids else None
-trajs = [t for t in map(json.loads, open(a.traj)) if (want is None or t["id"] in want) and t["id"] not in notes]
+want = set(fileio.read_json(a.ids)) if a.ids else None
+trajs = [t for t in map(json.loads, fileio.lines(a.traj)) if (want is None or t["id"] in want) and t["id"] not in notes]
 print(len(trajs), "to do", flush=True)
 
 def messages(t):

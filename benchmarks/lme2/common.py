@@ -10,6 +10,7 @@ Environment:
   LME2_NOTES       per-trajectory procedure/hint notes (notes_stage.py output), used by the controller tools
 """
 import json, os, pickle, re, sys
+import fileio  # noqa: E402
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -37,15 +38,15 @@ def add_upstream_path():
 
 
 def questions():
-    return {json.loads(l)["id"]: json.loads(l) for l in open(data_dir() / "questions.jsonl")}
+    return {json.loads(l)["id"]: json.loads(l) for l in fileio.lines(data_dir() / "questions.jsonl")}
 
 
 def haystack():
-    return json.load(open(data_dir() / "haystacks/lme_v2_small.json"))
+    return fileio.read_json(data_dir() / "haystacks/lme_v2_small.json")
 
 
 def notes():
-    return json.load(open(_env_path("LME2_NOTES")))
+    return fileio.read_json(_env_path("LME2_NOTES"))
 
 
 _ID = re.compile(r'^\{"id":\s*"([^"]+)"')
@@ -55,7 +56,7 @@ def trajectories():
     """Small-tier trajectories {id: trajectory}, records unchanged from trajectories.jsonl."""
     cache = Path(os.environ.get("LME2_TRAJ_CACHE") or data_dir() / "lme2_small_trajectories.pkl")
     if cache.exists():
-        return pickle.load(open(cache, "rb"))
+        return fileio.read_pickle(cache)
     want = {t for ids in haystack().values() for t in ids}
     out = {}
     with open(data_dir() / "trajectories.jsonl") as f:
@@ -79,13 +80,13 @@ def trajectories():
 def load_jsonl_by_id(paths):
     out = {}
     for f in paths:
-        for l in open(f):
+        for l in fileio.lines(f):
             r = json.loads(l); out[r["id"]] = r
     return out
 
 
 def done_ids(out):
-    return {json.loads(l)["id"] for l in open(out)} if out.exists() else set()
+    return {json.loads(l)["id"] for l in fileio.lines(out)} if out.exists() else set()
 
 
 # Rendering and grounding below are the reference stage functions unchanged; they read the module global T.

@@ -12,6 +12,7 @@ Environment: LME2_DATA, LME2_UPSTREAM; OPENAI_API_KEY for the judge (full stage 
 from __future__ import annotations
 
 import argparse
+import fileio  # noqa: E402
 import hashlib
 import json
 import os
@@ -128,7 +129,7 @@ def main() -> None:
         qids = [x for raw in args.question_ids for x in raw.split(",") if x]
     elif args.ids_file:
         Q = common.questions()
-        qids = [i for i in json.load(open(args.ids_file)) if Q[i]["domain"] == args.domain]
+        qids = [i for i in fileio.read_json(args.ids_file) if Q[i]["domain"] == args.domain]
     questions = materialize_runtime_questions(data_root=data_root, domain=args.domain, question_ids=qids, limit=args.limit, output_path=rt / "questions.json")
     materialize_runtime_haystack(data_root=data_root, tier=args.tier, selected_questions=questions, output_path=rt / "haystack.json")
     store = out / "warm_store"

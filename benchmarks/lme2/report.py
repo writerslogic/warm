@@ -5,6 +5,7 @@
 pre-reader latency and Gemini cost per question.
 usage: report.py --g1 judged/g1_{}/per_question.jsonl --base judged/span_v_{}/per_question.jsonl --stages-dir run/  ({} = web, enterprise)"""
 import argparse, json, random, statistics as S
+import fileio  # noqa: E402
 from pathlib import Path
 import common
 
@@ -13,7 +14,7 @@ Q = common.questions()
 def load(p):
     o = {}
     for d in ('web', 'enterprise'):
-        for l in open(p.format(d)): x = json.loads(l); o[x['question_id']] = float(x['score'])
+        for l in fileio.lines(p.format(d)): x = json.loads(l); o[x['question_id']] = float(x['score'])
     return o
 g = load(a.g1); b = load(a.base)
 ids = sorted(g); ab = lambda i: Q[i]['question_type'].endswith('-abs')
@@ -25,7 +26,7 @@ for k, fn in SEL.items():
     print(f'{k:11s} n={len(s):3d} G1 {m:5.1f} [{lo:.1f},{hi:.1f}]  SPAN_V {mb:5.1f}  diff {m-mb:+5.1f} [{dl:+.1f},{dh:+.1f}]')
 print('wins', sum(g[i] > b[i] for i in ids), 'losses', sum(g[i] < b[i] for i in ids))
 D = Path(a.stages_dir)
-L = lambda f: {json.loads(l)['id']: json.loads(l) for l in open(D / f)}
+L = lambda f: {json.loads(l)['id']: json.loads(l) for l in fileio.lines(D / f)}
 C, V, X, O, A, P2 = L('span_v.jsonl'), L('verify.jsonl'), L('crux.jsonl'), L('opt.jsonl'), L('anscheck.jsonl'), L('pass2.jsonl')
 lat = [C[i]['stats']['seconds'] + max(V[i]['seconds'], X[i]['seconds'], O[i]['seconds'] if i in O else 0) + (P2[i]['stats']['seconds'] if i in P2 else 0) for i in ids]
 lat2 = [l + A[i]['seconds'] for l, i in zip(lat, ids)]

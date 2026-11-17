@@ -8,6 +8,7 @@
   anscheck  ANSWER-CHECK: the reader pass-1 answer against verbatim state text (needs --answers)
 usage: check_stages.py <stage> --spans ctl.jsonl... --out out.jsonl [--ids ids.json] [--model gemini-3.6-flash] [--workers 8] [--cap USD]"""
 import argparse, json, threading, time
+import fileio  # noqa: E402
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import common, ctl_g
@@ -21,8 +22,8 @@ a = ap.parse_args()
 if a.stage == "anscheck" and not a.answers: ap.error("anscheck needs --answers")
 Q = common.questions(); common.init(); render, ground = common.render, common.ground
 ctl = common.load_jsonl_by_id(a.spans)
-ids = json.load(open(a.ids)) if a.ids else sorted(ctl)
-ANS = {json.loads(l)["id"]: json.loads(l)["answer"] for l in open(a.answers)} if a.answers else {}
+ids = fileio.read_json(a.ids) if a.ids else sorted(ctl)
+ANS = {json.loads(l)["id"]: json.loads(l)["answer"] for l in fileio.lines(a.answers)} if a.answers else {}
 out = Path(a.out); done = common.done_ids(out); lock = threading.Lock(); spent = [0.0]
 
 
@@ -48,7 +49,7 @@ def one(i):
         g = ground(r, (res or {}).get("quotes")) if res else []
         rec = {"id": i, "c": res, "grounded": g, "n_quotes": len((res or {}).get("quotes") or []), "err": err, "seconds": time.perf_counter() - t0, "cost_usd": cost}
         msg = (i, (res or {}).get("verdict"), rec["n_quotes"], len(g), round(rec["seconds"]), round(cost, 3), err)
-    with lock: spent[0] += cost; open(out, "a").write(json.dumps(rec) + "\n")
+    with lock: spent[0] += cost; fileio.append_line(out, json.dumps(rec) + "\n")
     print(*msg, flush=True)
 
 

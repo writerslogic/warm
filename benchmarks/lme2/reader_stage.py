@@ -4,6 +4,7 @@
 """Run the fixed reader (Qwen3.5-9B on a vLLM OpenAI-compatible endpoint) over prompt_rows.jsonl files; resumable, writes a reader cache
 {question_id: {messages_sha256, output}}. Environment: LME2_UPSTREAM, READER_BASE_URL (default http://localhost:8023/v1), READER_API_KEY (default EMPTY)."""
 import argparse, asyncio, hashlib, json, os, sys
+import fileio  # noqa: E402
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -30,7 +31,7 @@ cache_path = Path(a.cache)
 cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
 rows = []
 for p in a.rows:
-    rows += [json.loads(l) for l in open(p) if l.strip()]
+    rows += [json.loads(l) for l in fileio.lines(p) if l.strip()]
 todo = [r for r in rows if r["question_id"] not in cache]
 print(f"{len(rows)} rows, {len(todo)} to run", flush=True)
 

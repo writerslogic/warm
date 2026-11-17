@@ -15,6 +15,7 @@ Needs LME2_DATA and LME2_UPSTREAM; --reference-dir holds the frozen run's files 
      exactly what form_backend=reference renders, both passes, every selected question
 usage: smoke_test.py --reference-dir DIR [--questions all|N] [--loader REF_PKL] [--engine]"""
 import argparse, json, os, pickle, sys
+import fileio  # noqa: E402
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -27,23 +28,23 @@ fails = []
 def check(name, ok, detail=""):
     print(("ok   " if ok else "FAIL ") + name + (f"  {detail}" if detail else ""), flush=True)
     if not ok: fails.append(name)
-jl = lambda p: [json.loads(l) for l in open(p)]
+jl = lambda p: [json.loads(l) for l in fileio.lines(p)]
 
 Q = common.questions(); QT = {i: q["question"] for i, q in Q.items()}
 C = common.load_jsonl_by_id([R / "arch3/held_span_v.jsonl"])
 V = {r["id"]: r["v"] for r in jl(A6 / "held_verify_v1.jsonl")}; X = {r["id"]: r["c"] for r in jl(A6 / "held_crux_v1.jsonl")}
 f1 = rules.final_rule(C, V, X, QT)
-check("final rule == spans_held_f1.json", f1 == json.load(open(A6 / "spans_held_f1.json")), f"absent {sum(o['support'] == 'absent' for o in f1.values())}/{len(f1)}")
-held = json.load(open(HERE / "held_ids.json"))
-check("choice ids == held_choice_ids.json", rules.choice_ids(held, Q) == json.load(open(A6 / "held_choice_ids.json")))
-check("undecided ids == held_undecided_ids.json", rules.undecided_ids(jl(A6 / "held_opt_v1.jsonl")) == json.load(open(A6 / "held_undecided_ids.json")))
-ans = rules.pass1_answers(json.load(open(A6 / "gpu_out/out_held1.json")))
+check("final rule == spans_held_f1.json", f1 == fileio.read_json(A6 / "spans_held_f1.json"), f"absent {sum(o['support'] == 'absent' for o in f1.values())}/{len(f1)}")
+held = fileio.read_json(HERE / "held_ids.json")
+check("choice ids == held_choice_ids.json", rules.choice_ids(held, Q) == fileio.read_json(A6 / "held_choice_ids.json"))
+check("undecided ids == held_undecided_ids.json", rules.undecided_ids(jl(A6 / "held_opt_v1.jsonl")) == fileio.read_json(A6 / "held_undecided_ids.json"))
+ans = rules.pass1_answers(fileio.read_json(A6 / "gpu_out/out_held1.json"))
 check("pass-1 answers == held_f1_answers.jsonl", ans == jl(A6 / "held_f1_answers.jsonl"))
 base = {v["id"]: v for v in f1.values()}
 first = rules.reread_first(jl(A6 / "held_anscheck_v1.jsonl"), base, QT)
-check("reread Evidence Check rows == held_reread_first.json", first == json.load(open(A6 / "held_reread_first.json")), f"fires {len(first)}")
+check("reread Evidence Check rows == held_reread_first.json", first == fileio.read_json(A6 / "held_reread_first.json"), f"fires {len(first)}")
 P2 = jl(A6 / "held_pass2_v1.jsonl")
-check("pass-2 application == spans_held_s2.json", rules.apply_pass2(base, P2, QT) == json.load(open(A6 / "spans_held_s2.json")), f"{len(P2)} pass-2 records")
+check("pass-2 application == spans_held_s2.json", rules.apply_pass2(base, P2, QT) == fileio.read_json(A6 / "spans_held_s2.json"), f"{len(P2)} pass-2 records")
 
 sp = lambda t, x, y: {"trajectory_id": t, "start_state_index": x, "end_state_index": y}
 check("merge: pass-2 spans first, first-pass 19 states fits", rules.merge_pass2([sp("a", 0, 0)], [sp("b", 0, 18)]) == [sp("a", 0, 0), sp("b", 0, 18)])
@@ -132,7 +133,7 @@ check("build_tree clamps a 200-deep tree below depth 128", md < formtable.MAX_DE
 check("build_tree fallback root", formtable.build_tree("") == {"role": "RootWebArea", "name": ""})
 
 if a.loader:
-    ref_t = pickle.load(open(a.loader, "rb"))
+    ref_t = fileio.read_pickle(a.loader)
     check("trajectory loader == reference pickle", T == ref_t, f"{len(T)} trajectories")
 
 print(f"\n{'FAILED ' + str(len(fails)) if fails else 'all passed'}")

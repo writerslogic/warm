@@ -12,6 +12,7 @@
                  pass-2 spans applied over f1 (support kept from f1; analysis kept when f1 said absent); Evidence Check text
                  for answers ANSWER-CHECK finds contradicted with >=1 grounded quote when the f1 verdict is not absent"""
 import argparse, hashlib, json
+import fileio  # noqa: E402
 from prompts import CHOICE_PATTERN, evidence_check
 
 
@@ -67,7 +68,7 @@ def apply_pass2(base, P2, Q):
     return S
 
 
-def _jsonl(p): return [json.loads(l) for l in open(p)]
+def _jsonl(p): return [json.loads(l) for l in fileio.lines(p)]
 
 
 def main():
@@ -83,22 +84,22 @@ def main():
         Q = {i: q['question'] for i, q in common.questions().items()}
         C = common.load_jsonl_by_id(a.ctl)
         V = {r['id']: r['v'] for r in _jsonl(a.verify)}; X = {r['id']: r['c'] for r in _jsonl(a.crux)}
-        out = final_rule(C, V, X, Q); json.dump(out, open(a.out, 'w')); print(a.out, len(out), 'absent', sum(o['support'] == 'absent' for o in out.values()))
+        out = final_rule(C, V, X, Q); fileio.write_json(out, a.out); print(a.out, len(out), 'absent', sum(o['support'] == 'absent' for o in out.values()))
     elif a.cmd == "choice-ids":
-        out = choice_ids(json.load(open(a.ids)), common.questions()); json.dump(out, open(a.out, 'w')); print(len(out))
+        out = choice_ids(fileio.read_json(a.ids), common.questions()); fileio.write_json(out, a.out); print(len(out))
     elif a.cmd == "undecided-ids":
-        out = undecided_ids(_jsonl(a.opt)); json.dump(out, open(a.out, 'w')); print(len(out))
+        out = undecided_ids(_jsonl(a.opt)); fileio.write_json(out, a.out); print(len(out))
     elif a.cmd == "answers":
         with open(a.out, 'w') as f:
-            for r in pass1_answers(json.load(open(a.cache))): f.write(json.dumps(r) + '\n')
+            for r in pass1_answers(fileio.read_json(a.cache)): f.write(json.dumps(r) + '\n')
     else:
         Q = {i: q['question'] for i, q in common.questions().items()}
-        base = {v['id']: v for v in json.load(open(a.base)).values()}
+        base = {v['id']: v for v in fileio.read_json(a.base).values()}
         if a.anscheck:
             A = _jsonl(a.anscheck); first = reread_first(A, base, Q)
-            json.dump(first, open(a.out_first, 'w')); print('reread fires', len(first), 'of', len(A))
+            fileio.write_json(first, a.out_first); print('reread fires', len(first), 'of', len(A))
         if a.pass2:
-            P2 = _jsonl(a.pass2); json.dump(apply_pass2(base, P2, Q), open(a.out_spans, 'w')); print('pass2 applied', len(P2))
+            P2 = _jsonl(a.pass2); fileio.write_json(apply_pass2(base, P2, Q), a.out_spans); print('pass2 applied', len(P2))
 
 
 if __name__ == "__main__":
