@@ -401,6 +401,56 @@ fn order_hits(a: &LexicalHit, b: &LexicalHit) -> std::cmp::Ordering {
         .then_with(|| a.chunk_index.cmp(&b.chunk_index))
 }
 
+/// The result of `query` ranked and counted from the checkpoint under `store`, when `store` is
+/// that checkpoint alone and the query is one [`served::execute`] answers; `None` when the
+/// live store must answer it.
+pub(crate) fn served(
+    store: &DocumentStore,
+    query: &LexicalQuery,
+    options: &LexicalOptions,
+) -> Option<Result<LexicalResults>> {
+    let base = store.base.as_ref()?;
+    if !base.intact() || !store.documents.is_empty() {
+        return None;
+    }
+    let bm25 = match prepare(options) {
+        Ok(bm25) => bm25,
+        Err(error) => return Some(Err(error)),
+    };
+    // A bare disjunction the block-max executor does not take is ranked as `search_documents`
+    // ranks the same words.
+    let mut prepared_search = None;
+    if query.disjunction_terms().is_some() {
+        match plain_search(
+            query,
+            &LexicalOptions {
+                count: false,
+                ..options.clone()
+            },
+        ) {
+            Ok(Some(prepared)) => {
+                if !super::overlay_serves(store, std::slice::from_ref(&prepared)) {
+                    return None;
+                }
+                prepared_search = Some(prepared);
+            }
+            Ok(None) => {}
+            Err(error) => return Some(Err(error)),
+        }
+    }
+    let ranker = prepared_search
+        .as_ref()
+        .map(|prepared| move || super::rank_lexical_overlaid(store, prepared).hits);
+    served::execute(
+        &base.image,
+        query,
+        options,
+        bm25,
+        ranker.as_ref().map(|f| f as &dyn Fn() -> Vec<LexicalHit>),
+    )
+    .transpose()
+}
+
 pub(crate) fn execute(
     store: &DocumentStore,
     query: &LexicalQuery,
@@ -515,6 +565,7 @@ fn exhaustive(
 }
 
 pub(super) mod execution;
+pub(in crate::core::documents) mod served;
 pub(in crate::core::documents) mod wand;
 use execution::document_at_a_time;
 
