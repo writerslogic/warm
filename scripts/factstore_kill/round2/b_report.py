@@ -5,11 +5,12 @@ usage: b_report.py select OUTDIR SRC   -> writes OUTDIR/wanted_SRC.json from OUT
 """
 import glob
 import json
+import os
 import sys
 
 import numpy as np
 
-sys.path.insert(0, "/Volumes/A/.hms-lb/factstore-20261114/kill")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import boot_ci  # noqa: E402
 
 FLAG = {("locomo", 100, 16384, "sub", 0.3): "C1", ("locomo", 300, 16384, "sub", 0.2): "C2",
