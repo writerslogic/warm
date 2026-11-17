@@ -17,8 +17,10 @@ use serde_json::json;
 const DOCUMENTS: usize = 1600;
 
 fn config(reorder: bool) -> WarmConfig {
-    let mut config = WarmConfig::default();
-    config.embedding_space = None;
+    let mut config = WarmConfig {
+        embedding_space: None,
+        ..Default::default()
+    };
     config.document_checkpoint.min_journal_bytes = 0;
     config.document_checkpoint.reorder = reorder;
     config

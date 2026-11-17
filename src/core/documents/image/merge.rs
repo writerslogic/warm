@@ -378,16 +378,9 @@ pub(crate) fn merge(
     for form in 0..2 {
         let mut out = FormWriter::new(directory)?;
         let merged = match order {
-            Some(order) => merge_form_ordered(
-                base,
-                store,
-                form,
-                split,
-                order,
-                &new_word,
-                &mut out,
-                &mut streams,
-            )?,
+            Some(order) => {
+                merge_form_ordered(base, store, form, order, &new_word, &mut out, &mut streams)?
+            }
             None => merge_form(base, store, form, split, &mut out, &mut streams)?,
         };
         if merged.is_none() {
@@ -914,12 +907,12 @@ fn merge_form_ordered(
     base: Option<&ServingImage>,
     store: &DocumentStore,
     form: usize,
-    split: usize,
     order: &SlotOrder,
     words: &dyn Fn(usize) -> u32,
     out: &mut FormWriter,
     streams: &mut Streams<'_>,
 ) -> Result<Option<()>> {
+    let split = base.map_or(0, |image| image.slots);
     let terms = store.postings[form].sorted_terms();
     let positional = streams.positional;
     let mut packer = CheckpointPacker::with_info(true, words, true);
