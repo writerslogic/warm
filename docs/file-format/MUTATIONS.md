@@ -83,7 +83,7 @@ schema in a new copy; normal opens never opt old stores into these mutations.
 ## Binary frames (`HMS-TXN-3`, schemas 3–7)
 
 A store records its journal format in `store.json` `version`: 2 writes the JSON array above,
-3 (new stores since 0.6.3) writes binary payloads; readers accept both in any store. Varints
+3 and later (new stores since 0.6.3) write binary payloads; readers accept both in any store. Varints
 are unsigned LEB128 (at most 10 bytes); `str` and `bytes` are a varint length then the bytes.
 
 ```
