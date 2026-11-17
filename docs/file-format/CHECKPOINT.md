@@ -145,7 +145,8 @@ All integers little endian; varints are LEB128.
 32   8  u64: feature bits (bit 0: chunk text is in compressed blocks; any other bit is refused as newer than supported; a version 4 checkpoint keeps its text inline)
 40   8  u64: flags (version 4; bit 0: every chunk holds word positions; bit 1: no posting has
          frequency zero, which the Boolean executor over the mapping requires), zero before version 4
-48   24 u64: reserved, zero
+48   8  u64: slots laid out by the last document reorder, the leading slots `0..` of this many (version 4; zero when none did, and in every file written before it; readers do not read it)
+56   16 u64: reserved, zero
 72   32 u64: slots, chunks, words, documents
 104  16 u64: terms per posting form (unstemmed, stemmed)
 120  208 (offset, length) of each section, in the order below (twelve from version 4, ten
@@ -261,18 +262,25 @@ posting lists are and how well their block bounds prune.
 checkpoint (`WarmCore::reorder_documents`; `document_checkpoint.reorder`, on by default, turns
 it off). The order is recursive graph bisection (Dhulipala et al., KDD 2016; the order of
 Lucene's `BPIndexReorderer` and PISA's `recursive_graph_bisection`) over the documents' terms
-that occur in at least `documents / 1024` chunks (at most 4096), with the smallest such lists
+that occur in at least `documents / 1024` chunks (at most 4096), with the longest such lists
 left out until at most 2^28 (document, term) pairs remain: 20 swap rounds per bisection, down
 to partitions of 32 documents. The chunks of the first document take slots `0..`, then the
 next document's, so every document's chunks stay in ascending slot order and no slot is free.
-The file is a version 4 checkpoint like any other: no header word or flag records the order,
-and any version 4 reader serves it.
+The file is a version 4 checkpoint like any other; header word 5 (bytes 48..56, reserved and
+zero before) records how many leading slots the reorder laid out, and any version 4 reader,
+which never reads that word, serves the file.
 
 What the reorder holds and when it runs:
 
-1. it runs only in that explicit call. Folds, `flush`, closing, background and scrubbing
-   compactions never reorder, so a fold still writes byte for byte the checkpoint a single pass
-   encodes of the same store, and a store below 1024 documents keeps its order;
+1. it runs only in that explicit call, and only when it is due: the store was never
+   reordered, or at least a quarter of its slots (the checkpoint's under it included) come
+   after the reordered ones. Slots written since a checkpoint follow its slots, so a fold or an
+   encode carries the word forward, and `reorder_documents` reorders whenever it is called.
+   Folds, `flush`, closing, background and scrubbing compactions never reorder, so a fold still
+   writes byte for byte the checkpoint a single pass encodes of the same store, and a store
+   below 1024 documents keeps its order. Under the quarter rule a store compacted as it grows
+   reorders at most each time it grows by a third, so the reorders of a growing store cost at
+   most about four reorders of its final size;
 2. a store served from its checkpoint is rebuilt in memory first, as a scrubbing compaction
    rebuilds it. The posting lists are then permuted in place one list at a time per thread, so
    beyond the rebuilt index the reorder holds its forward index (at most 1 GiB) and the lists

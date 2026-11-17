@@ -115,13 +115,14 @@ impl WarmCore {
     /// compaction, so the next compaction of a store with deferred deletes erases them.
     ///
     /// With `document_checkpoint.reorder` (the default) a store that takes a checkpoint first has
-    /// its slots put in document order (see [`Self::reorder_documents`]); the compactions an
-    /// engine starts itself (folds, `flush`, close) never reorder.
+    /// its slots put in document order (see [`Self::reorder_documents`]) when it was never
+    /// reordered or at least a quarter of its slots were written since the last reorder; the
+    /// compactions an engine starts itself (folds, `flush`, close) never reorder.
     pub fn compact(&self) -> Result<()> {
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();
         }
-        if self.config.document_checkpoint.reorder {
+        if self.config.document_checkpoint.reorder && self.documents.read().reorder_due() {
             self.reorder_documents()?;
         }
         self.compact_routine()
@@ -140,7 +141,9 @@ impl WarmCore {
     /// from its checkpoint is rebuilt in memory first. Only memory changes here: the journal and
     /// the published checkpoint stay as they were until the compaction publishes, so a failure
     /// or a crash before then reopens to the old order, and the results are the same in both.
-    /// Returns whether the slots were reordered.
+    /// Runs whenever called, due or not ([`Self::compact`] calls it only when due); a
+    /// `compact` right after it finds the store ordered. Returns whether the slots were
+    /// reordered.
     pub fn reorder_documents(&self) -> Result<bool> {
         if !self.takes_checkpoint() {
             return Ok(false);

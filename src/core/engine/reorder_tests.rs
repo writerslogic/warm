@@ -214,6 +214,45 @@ fn reorder_switch_decides_the_checkpoint_and_never_the_results() -> Result<()> {
     Ok(())
 }
 
+fn header_word(directory: &std::path::Path, index: usize) -> Result<u64> {
+    let bytes = checkpoint(directory)?;
+    Ok(u64::from_le_bytes(
+        bytes[8 + 8 * index..16 + 8 * index].try_into()?,
+    ))
+}
+
+/// `compact` reorders a store that was never reordered, then only once a quarter of its slots
+/// came after the last reorder; header word 5 records the reordered slots and word 8 all.
+#[test]
+fn compaction_reorders_again_only_after_a_quarter_of_the_slots_are_new() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().display().to_string();
+    let core = WarmCore::new(1024, Some(path), Some(config(true)))?;
+    let options = options(true);
+    let add = |range: std::ops::Range<usize>| {
+        core.memorize_documents_with(range.map(|i| document(i, "1", text(i))).collect(), &options)
+    };
+    add(0..1200)?;
+    core.compact()?;
+    let (ordered, slots) = (header_word(directory.path(), 5)?, header_word(directory.path(), 8)?);
+    assert_eq!((ordered, slots), (1200, 1200));
+    add(1200..1500)?;
+    core.compact()?;
+    assert_eq!(
+        (header_word(directory.path(), 5)?, header_word(directory.path(), 8)?),
+        (1200, 1500),
+        "300 of 1500 slots are new: not due"
+    );
+    add(1500..1600)?;
+    core.compact()?;
+    assert_eq!(
+        (header_word(directory.path(), 5)?, header_word(directory.path(), 8)?),
+        (1600, 1600),
+        "400 of 1600 slots are new: due"
+    );
+    Ok(())
+}
+
 #[test]
 fn reorder_crash_child() -> Result<()> {
     let Ok(root) = crate::compatibility::var("WARM_TEST_REORDER_ROOT") else {
@@ -230,6 +269,9 @@ fn reordering_compaction_crash_reopens_to_old_or_new() -> Result<()> {
     for positions in [false, true] {
         for phase in [
             "reordered",
+            "fold-postings",
+            "fold-spooled",
+            "fold-written",
             "caught-up",
             "staged",
             "published",

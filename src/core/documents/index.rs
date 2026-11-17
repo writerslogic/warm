@@ -153,6 +153,9 @@ pub(crate) struct DocumentStore {
     /// The checkpoint this store is served from, whose live documents count as the store's
     /// (`overlay`): the store holds only documents written since.
     pub(super) base: Option<super::overlay::Base>,
+    /// Leading slots the last document reorder laid out ([`Self::apply_slot_order`]), as the
+    /// checkpoint records them; the slots written since follow them.
+    pub(super) ordered_slots: usize,
     /// Estimated resident bytes of the documents installed since the store was created
     /// (see [`Self::resident_estimate`]); never lowered by deletes, which keeps it an upper bound.
     resident_estimate: usize,
@@ -162,6 +165,8 @@ pub(crate) struct DocumentStore {
 
 /// Documents below which [`DocumentStore::reorder_slots`] leaves a store in its order.
 pub(crate) const REORDER_MIN_DOCUMENTS: usize = 1024;
+/// A compaction reorders once one slot in this many was written after the last reorder's.
+pub(crate) const REORDER_DUE_SHARE: usize = 4;
 /// Most (document, term) pairs the reorder's forward index holds (4 bytes each).
 const REORDER_MAX_EDGES: usize = 1 << 28;
 
@@ -1389,6 +1394,20 @@ impl DocumentStore {
         Ok(())
     }
 
+    /// Whether [`crate::core::WarmCore::compact`] reorders: the store was never reordered, or at
+    /// least one in [`REORDER_DUE_SHARE`] of its slots (the checkpoint's under it included) was
+    /// written after the last reorder's. Rewrites into freed slots are not counted.
+    pub(crate) fn reorder_due(&self) -> bool {
+        let (ordered, slots) = match &self.base {
+            Some(base) => {
+                let (ordered, slots) = base.image.ordered_slots();
+                (ordered, slots + self.slot_count)
+            }
+            None => (self.ordered_slots.min(self.slot_count), self.slot_count),
+        };
+        ordered == 0 || (slots - ordered) * REORDER_DUE_SHARE >= slots
+    }
+
     /// The document order (positions of the documents in id order) in which documents sharing
     /// terms sit together (recursive graph bisection, see `reorder`), for
     /// [`Self::apply_slot_order`]; `None` for a store under [`REORDER_MIN_DOCUMENTS`]
@@ -1457,6 +1476,7 @@ impl DocumentStore {
         self.position_sources = position_sources;
         self.free.clear();
         self.slot_count = count;
+        self.ordered_slots = count;
         std::mem::forget(abort);
         self.advance_generation();
         #[cfg(not(target_arch = "wasm32"))]
@@ -1467,10 +1487,11 @@ impl DocumentStore {
         );
     }
 
-    /// Each document's terms (in id order) among the lists of both forms long enough to say
-    /// something about the order, at most [`REORDER_MAX_EDGES`] in all: the lists of at least
-    /// `documents / 1024` postings (capped at 4096, Lucene's `minDocFreq`), raised until
-    /// the cap holds.
+    /// Each document's terms (in id order) among the lists of both forms that say something
+    /// about the order: those of at least `documents / 1024` postings (at most 4096, Lucene's
+    /// `minDocFreq`), and of those, when they hold more than [`REORDER_MAX_EDGES`] postings in
+    /// all, the shortest that fit. The longest lists are the ones left out: they cost the most
+    /// pairs and separate documents the least.
     fn forward_index(&self) -> super::reorder::ForwardIndex {
         let documents = self.slots.len();
         let mut owner = vec![u32::MAX; self.slot_count];
@@ -1479,20 +1500,21 @@ impl DocumentStore {
                 owner[slot] = index as u32;
             }
         }
-        let mut min_len = (documents / 1024).clamp(2, 4096);
+        let min_len = (documents / 1024).clamp(2, 4096);
         let mut lengths: Vec<usize> = self
             .postings
             .iter()
             .flat_map(|postings| postings.long_lists(min_len))
             .map(|list| list.len())
             .collect();
-        lengths.sort_unstable_by(|a, b| b.cmp(a));
+        lengths.sort_unstable();
+        let mut max_len = usize::MAX;
         let mut total = 0usize;
         for &length in &lengths {
             total += length;
             if total > REORDER_MAX_EDGES {
                 // Lists exactly as long as the one that overflows are left out with it.
-                min_len = length + 1;
+                max_len = length - 1;
                 break;
             }
         }
@@ -1500,6 +1522,7 @@ impl DocumentStore {
             .postings
             .iter()
             .flat_map(|postings| postings.long_lists(min_len))
+            .filter(|list| list.len() <= max_len)
             .collect();
         let mut offsets = vec![0usize; documents + 1];
         for list in &lists {

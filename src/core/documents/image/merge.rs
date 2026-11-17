@@ -17,7 +17,7 @@ use anyhow::{ensure, Context, Result};
 use super::{
     append_skips, encode_document, put_bytes, put_varint, DocumentStore, PositionPacker, Reader,
     ServingImage, BLOCK, FLAG_POSITIONAL, FLAG_POSITIVE, FREE, HEADER_LEN, HEADER_WORDS, H_CHUNKS,
-    H_DIMENSIONS, H_DOCS, H_FLAGS, H_GENERATION, H_SECTIONS, H_SLOTS, H_TERMS, H_WORDS, MAGIC,
+    H_DIMENSIONS, H_DOCS, H_FLAGS, H_GENERATION, H_ORDERED, H_SECTIONS, H_SLOTS, H_TERMS, H_WORDS, MAGIC,
     SLOT_BYTES, V4_SECTIONS,
 };
 use super::{u32_at, Section};
@@ -493,6 +493,10 @@ pub(crate) fn merge(
     words[H_GENERATION] = u64::from(generation);
     words[H_DIMENSIONS] = dimensions as u64;
     words[H_SLOTS] = (split + store.slot_count) as u64;
+    // Slots written since the checkpoint follow its slots, so its reordered prefix stays one.
+    words[H_ORDERED] = base.map_or(store.ordered_slots.min(store.slot_count), |image| {
+        image.ordered
+    }) as u64;
     words[H_CHUNKS] = (base.map_or(0, |image| image.chunks) + store.chunk_count) as u64;
     words[H_WORDS] = (base.map_or(0, |image| image.words) + store.word_count) as u64;
     words[H_DOCS] = (base_documents + store.documents.len()) as u64;
