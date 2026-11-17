@@ -5,15 +5,15 @@ WARM Benchmark Visualization
 Generates publication-quality figures from WARM scaling and research benchmark data.
 
 Usage:
-    uv run python scripts/plot_benchmarks.py
+    uv run python benchmarks/figures/plot_benchmarks.py
 
 Output:
-    figures/capacity_wall.png
-    figures/throughput_scaling.png
-    figures/noise_tolerance.png
-    figures/interference.png
-    figures/sequence_encoding.png
-    figures/compression.png
+    benchmarks/figures/capacity_wall.png
+    benchmarks/figures/throughput_scaling.png
+    benchmarks/figures/noise_tolerance.png
+    benchmarks/figures/interference.png
+    benchmarks/figures/sequence_encoding.png
+    benchmarks/figures/compression.png
 """
 
 import json
@@ -33,10 +33,10 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 SCALING_PATH = ROOT / "benchmarks" / "results" / "benchmark_scaling_results.json"
 RESEARCH_PATH = ROOT / "benchmarks" / "results" / "research_bench_16384_256.json"
-FIG_DIR = ROOT / "figures"
+FIG_DIR = Path(__file__).resolve().parent
 FIG_DIR.mkdir(exist_ok=True)
 
 # ---------------------------------------------------------------------------
@@ -501,4 +501,4 @@ if __name__ == "__main__":
     fig_sequence_encoding()
     fig_compression()
 
-    log.info("Done. All figures saved to figures/")
+    log.info("Done. All figures saved to benchmarks/figures/")
