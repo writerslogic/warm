@@ -29,12 +29,22 @@ def test_cosine_query_scaling_preserves_complete_ranking(bits, scale):
     np.testing.assert_array_equal(index.batch_query_array(query[None], 16)[0], expected)
 
 
-@pytest.mark.parametrize("k", [15, 16, 17, sys.maxsize])
-def test_requested_count_larger_than_index_does_not_overallocate(k):
-    rows = np.random.default_rng(898).normal(size=(16, 16)).astype(np.float32)
-    index = hm.VectorIndex("euclidean", degree=4, build_ef=16, threads=1)
-    index.fit(rows)
-    index.set_query_arguments(ef=16, rerank=16)
+@pytest.mark.parametrize(
+    "configured, k",
+    [(True, 15), (True, 16), (True, 17), (True, sys.maxsize), (False, 50)],
+    ids=["k=15", "k=16", "k=17", "k=maxsize", "defaults-k=50"],
+)
+def test_requested_count_larger_than_index_does_not_overallocate(configured, k):
+    if configured:
+        rows = np.random.default_rng(898).normal(size=(16, 16)).astype(np.float32)
+        index = hm.VectorIndex("euclidean", degree=4, build_ef=16, threads=1)
+        index.fit(rows)
+        index.set_query_arguments(ef=16, rerank=16)
+    else:
+        # Default metric and query arguments.
+        rows = clustered(12, 8, 3)
+        index = hm.VectorIndex(degree=4, build_ef=16)
+        index.fit(rows)
     expected = index.query(rows[0], min(k, len(rows)))
     np.testing.assert_array_equal(index.query(rows[0], k), expected)
     if k >= len(rows):
