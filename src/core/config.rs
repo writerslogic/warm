@@ -66,6 +66,28 @@ pub struct DocumentCheckpointConfig {
     /// Journal bytes after the last checkpoint at or above which `flush` or closing the engine
     /// writes a new one: below it, replaying the frames is about as fast.
     pub min_journal_bytes: usize,
+    /// Store chunk text in the checkpoint compressed (see `docs/file-format/CHECKPOINT.md`), and
+    /// cut the text cache file at close: the checkpoint is much smaller and a served hit decodes
+    /// its block unless `text_cache_bytes` holds it. Off by default.
+    pub compress_text: bool,
+    /// Most bytes of decoded chunk text a store served from a checkpoint keeps for later hits (never
+    /// more than the compression saves on that store). The
+    /// checkpoint holds chunk text compressed, so a hit decodes a block; blocks decoded once stay
+    /// here, first come first kept, until the budget is used. `0` decodes on every hit.
+    pub text_cache_bytes: usize,
+    /// Estimated resident bytes of the live lexical index at which ingest folds it into the
+    /// store's checkpoint and drops it from memory (see `docs/file-format/CHECKPOINT.md`,
+    /// "Streaming folds"). The estimate counts postings and per-chunk records, so the process
+    /// holds roughly this much more than its base footprint, not exactly this much. 0 never
+    /// folds: the index then grows with the corpus until the engine closes. Folding applies
+    /// to unencrypted lexical-only stores that take checkpoints.
+    pub index_memory_budget: usize,
+    /// A fold rewrites the whole checkpoint, so folding at a fixed budget does work quadratic
+    /// in the corpus. Ingest therefore folds once the estimate reaches the larger of
+    /// `index_memory_budget` and this fraction of the current checkpoint's size in bytes:
+    /// the checkpoint then at most grows by a constant factor per fold and the number of
+    /// rewrites is logarithmic in the corpus. 0 keeps the fixed budget.
+    pub index_fold_fraction: f64,
 }
 
 impl Default for DocumentCheckpointConfig {
@@ -73,6 +95,10 @@ impl Default for DocumentCheckpointConfig {
         Self {
             enabled: true,
             min_journal_bytes: 256 << 10,
+            compress_text: false,
+            text_cache_bytes: 64 << 20,
+            index_memory_budget: 64 << 20,
+            index_fold_fraction: 20.0,
         }
     }
 }

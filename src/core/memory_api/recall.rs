@@ -9,6 +9,12 @@
 //! options the caller gave, so its ranking and scores are document search's own. Otherwise it
 //! resolves temporal eligibility before candidate selection, then applies recency policies
 //! within the caller's candidate budget.
+//!
+//! Recall is hybrid whenever the store has vectors to compare: with an installed embedder
+//! (or a caller-supplied `embedding`) document search blends BM25 with exact cosine, so no
+//! separate fusion exists here. A store without an embedder and a query without an embedding
+//! ranks lexically, exactly as before. `semanticWeight: 0` asks for lexical ranking even when
+//! vectors exist; `fusion: "rrf"` selects reciprocal-rank fusion.
 
 use anyhow::Result;
 use std::collections::{BTreeSet, HashSet};
@@ -98,7 +104,7 @@ pub(super) struct ExplainTerms {
     words: Vec<(String, String)>,
 }
 
-fn query_terms(analyzer: Analyzer, query: &str) -> ExplainTerms {
+pub(super) fn query_terms(analyzer: Analyzer, query: &str) -> ExplainTerms {
     let text = analyzer.prepare(query);
     let mut lower = String::new();
     let words = analyzer
@@ -114,7 +120,7 @@ fn query_terms(analyzer: Analyzer, query: &str) -> ExplainTerms {
     ExplainTerms { analyzer, words }
 }
 
-fn matched_terms(query: &ExplainTerms, text: &str) -> Vec<String> {
+pub(super) fn matched_terms(query: &ExplainTerms, text: &str) -> Vec<String> {
     let stems = terms_with(query.analyzer, text, true);
     let raw = terms_with(query.analyzer, text, false);
     let mut matched: Vec<String> = Vec::new();
@@ -134,10 +140,23 @@ impl Memory {
     /// ranks them. `options` selects history, an `as_of` or `known_at` time, a subject or
     /// entities, and per-result explanations.
     pub fn recall(&self, query: &str, options: &RecallOptions) -> Result<Vec<Recalled>> {
+        self.check_recall_embedding(options)?;
         self.with_revision(|| self.recall_once(query, options))
     }
 
+    fn check_recall_embedding(&self, options: &RecallOptions) -> Result<()> {
+        if let Some(embedding) = &options.embedding {
+            self.check_embedding(embedding, "query embedding")?;
+        }
+        Ok(())
+    }
+
     fn recall_once(&self, query: &str, options: &RecallOptions) -> Result<Vec<Recalled>> {
+        let documents = self.recall_documents(query, options)?;
+        self.merge_regions(query, options, documents)
+    }
+
+    fn recall_documents(&self, query: &str, options: &RecallOptions) -> Result<Vec<Recalled>> {
         let k = options.k.unwrap_or(self.config.default_k);
         self.core
             .validate_document_search(query, &options.search_options(k))
@@ -174,10 +193,27 @@ impl Memory {
     /// the position in a current-only recall. A fact outside the candidates is still
     /// explained, with `retrieved: false`.
     pub fn explain(&self, query: &str, id: &str, options: &RecallOptions) -> Result<Explanation> {
+        self.check_recall_embedding(options)?;
         self.with_revision(|| self.explain_once(query, id, options))
     }
 
     fn explain_once(&self, query: &str, id: &str, options: &RecallOptions) -> Result<Explanation> {
+        // An id shaped like an experience id is one only when the experience store holds it;
+        // otherwise it may be a fact stored under that id.
+        if let Some(region) = super::experience::region_id(id).filter(|&r| {
+            self.core
+                .with_experience(|s| s.region_hit(r).is_some())
+                .unwrap_or(false)
+        }) {
+            return self.explain_region(query, region, options);
+        }
+        if let Some(effect) = super::experience::effect_id(id).filter(|&e| {
+            self.core
+                .with_experience(|s| s.effect_hit(e).is_some())
+                .unwrap_or(false)
+        }) {
+            return self.explain_effect(query, effect, options);
+        }
         self.core
             .validate_document_search(
                 query,
@@ -239,6 +275,7 @@ impl Memory {
                 s.valid_from.is_none_or(|from| from <= now) && s.valid_to.is_none_or(|to| now < to)
             }),
             chain: self.chain(&index, id)?,
+            provenance: None,
         })
     }
 
@@ -666,6 +703,7 @@ impl Memory {
                     && s.valid_to.is_none_or(|to| run.now < to)
             }),
             chain: self.chain(index, id)?,
+            provenance: None,
         })
     }
 

@@ -35,6 +35,7 @@ mod positions;
 mod postings;
 mod search;
 mod text;
+mod text_blocks;
 #[cfg(not(target_arch = "wasm32"))]
 mod vector_index;
 pub(crate) use dense::{build_dense_index, capture_dense_index, publish_dense_index};
@@ -991,11 +992,10 @@ type SeededMap<K, V> = std::collections::HashMap<K, V, foldhash::fast::RandomSta
 struct Interner {
     /// Word exactly as it appears in the text -> term id.
     words: WordMap,
-    /// Term -> id, so the words of one stem count as one term.
-    ids: SeededMap<Box<str>, u32>,
-    /// Term by id, and its first eight bytes big-endian (zero-padded): a term never contains
+    /// Term <-> id, so the words of one stem count as one term.
+    terms: TermStore,
+    /// Each term's first eight bytes big-endian (zero-padded), by id: a term never contains
     /// a NUL byte, so comparing keys orders terms as their bytes do except on equal keys.
-    terms: Vec<Box<str>>,
     keys: Vec<u64>,
     /// Count per term id for the chunk being counted, and the ids counted so far. Zero and
     /// empty between chunks.
@@ -1010,24 +1010,74 @@ struct Interner {
     analyzer: Analyzer,
 }
 
+/// Distinct terms in one arena: id -> bytes through end offsets, and term -> id through a
+/// table keyed by the term's hash with a chain through ids of equal hash. A term costs its
+/// bytes plus about 24 bytes of tables, with no allocation of its own.
+#[derive(Default)]
+struct TermStore {
+    arena: String,
+    ends: Vec<u32>,
+    heads: SeededMap<u64, u32>,
+    chain: Vec<u32>,
+}
+
+impl TermStore {
+    fn term(&self, id: u32) -> &str {
+        let end = self.ends[id as usize] as usize;
+        let start = match id {
+            0 => 0,
+            _ => self.ends[id as usize - 1] as usize,
+        };
+        &self.arena[start..end]
+    }
+
+    fn hash(&self, term: &str) -> u64 {
+        std::hash::BuildHasher::hash_one(self.heads.hasher(), term)
+    }
+
+    fn get(&self, term: &str) -> Option<u32> {
+        let mut id = *self.heads.get(&self.hash(term))?;
+        while id != u32::MAX {
+            if self.term(id) == term {
+                return Some(id);
+            }
+            id = self.chain[id as usize];
+        }
+        None
+    }
+
+    /// Adds `term`, which is not present, and returns its id.
+    fn push(&mut self, term: &str) -> u32 {
+        let id = u32::try_from(self.ends.len()).expect("batch vocabulary over u32");
+        let end = u32::try_from(self.arena.len() + term.len()).expect("batch terms over 4 GiB");
+        let hash = self.hash(term);
+        self.arena.push_str(term);
+        self.ends.push(end);
+        let head = self.heads.insert(hash, id).unwrap_or(u32::MAX);
+        self.chain.push(head);
+        id
+    }
+}
+
 /// Word -> term id. A word of at most 16 bytes (nearly every word) is keyed by its bytes
 /// zero-padded into a `u128`, unambiguous because a word holds no NUL byte, so a lookup
 /// compares integers rather than following a pointer to compare strings.
 #[derive(Default)]
 struct WordMap {
-    short: SeededMap<u128, u32>,
+    short: SeededMap<[u64; 2], u32>,
     long: SeededMap<Box<str>, u32>,
 }
 
 impl WordMap {
     #[inline]
-    fn short_key(word: &str) -> Option<u128> {
+    fn short_key(word: &str) -> Option<[u64; 2]> {
         debug_assert!(!word.contains('\0'));
         let bytes = word.as_bytes();
         (bytes.len() <= 16).then(|| {
             let mut key = [0u8; 16];
             key[..bytes.len()].copy_from_slice(bytes);
-            u128::from_le_bytes(key)
+            let key = u128::from_le_bytes(key);
+            [key as u64, (key >> 64) as u64]
         })
     }
 
@@ -1072,19 +1122,15 @@ impl Interner {
             self.words.insert(word, EMPTY_TERM);
             return EMPTY_TERM;
         }
-        let id = match self.ids.get(stem.as_ref()) {
-            Some(&id) => id,
+        let id = match self.terms.get(stem.as_ref()) {
+            Some(id) => id,
             None => {
-                let id = u32::try_from(self.terms.len()).expect("batch vocabulary over u32");
-                let term: Box<str> = stem.into();
                 let mut key = [0u8; 8];
-                let prefix = term.len().min(8);
-                key[..prefix].copy_from_slice(&term.as_bytes()[..prefix]);
+                let prefix = stem.len().min(8);
+                key[..prefix].copy_from_slice(&stem.as_bytes()[..prefix]);
                 self.keys.push(u64::from_be_bytes(key));
-                self.ids.insert(term.clone(), id);
-                self.terms.push(term);
                 self.counts.push(0);
-                id
+                self.terms.push(stem.as_ref())
             }
         };
         self.words.insert(word, id);
@@ -1194,21 +1240,20 @@ impl Interner {
         let (terms, keys, counts) = (&self.terms, &self.keys, &mut self.counts);
         self.counted.sort_unstable_by(|&a, &b| {
             let (a, b) = (a as usize, b as usize);
-            keys[a]
-                .cmp(&keys[b])
-                .then_with(|| terms[a].as_bytes().cmp(terms[b].as_bytes()))
+            keys[a].cmp(&keys[b]).then_with(|| {
+                terms
+                    .term(a as u32)
+                    .as_bytes()
+                    .cmp(terms.term(b as u32).as_bytes())
+            })
         });
-        let bytes = self
-            .counted
-            .iter()
-            .map(|&id| terms[id as usize].len())
-            .sum();
+        let bytes = self.counted.iter().map(|&id| terms.term(id).len()).sum();
         let mut table = StoredTerms::from_sorted_refs(
             self.counted.len(),
             bytes,
             self.counted
                 .iter()
-                .map(|&id| (&*terms[id as usize], counts[id as usize])),
+                .map(|&id| (terms.term(id), counts[id as usize])),
         );
         if let Some(whole_document) = positions {
             // Each word's term as its rank among the chunk's sorted terms, through `counts`
@@ -1577,6 +1622,7 @@ pub(crate) fn overlay_serves(store: &DocumentStore, prepared: &[PreparedSearch])
         .all(|query| search::overlay_serves(query, store))
 }
 
+#[cfg(test)]
 /// [`capture_search`] over the checkpoint under `store` and the store's own documents, for
 /// queries [`overlay_serves`] accepts.
 #[cfg(test)]
@@ -1609,8 +1655,26 @@ pub(crate) fn encode_checkpoint(
     store: &DocumentStore,
     generation: u32,
     dimensions: usize,
+    compress_text: bool,
 ) -> Result<Option<Vec<u8>>> {
-    image::encode(store, generation, dimensions)
+    if compress_text {
+        image::encode_compressed(store, generation, dimensions)
+    } else {
+        image::encode(store, generation, dimensions)
+    }
+}
+/// Streams the checkpoint of `store` (with the checkpoint under it, if any) to `destination`;
+/// see `image::merge`.
+pub(crate) fn merge_checkpoint(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+    destination: &std::path::Path,
+) -> Result<Option<u64>> {
+    let Some(base) = store.merge_base() else {
+        return Ok(None);
+    };
+    image::merge(base, store, generation, dimensions, destination)
 }
 #[cfg(test)]
 pub(crate) fn search(

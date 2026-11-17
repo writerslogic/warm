@@ -43,6 +43,9 @@ struct Args {
     child: Option<String>,
     #[arg(long, default_value_t = 0)]
     n: usize,
+    /// Observation steps (with actions, so effect rows exist) stored before the recall timings.
+    #[arg(long, default_value_t = 0)]
+    experience_steps: usize,
 }
 
 const VOCABULARY: u64 = 20_000;
@@ -159,6 +162,21 @@ fn child(args: &Args, kind: &str) -> Result<Value> {
         }
     }
     let build_seconds = build_start.elapsed().as_secs_f64();
+    // Episodes of 20 steps whose labels reuse the fact vocabulary, so queries can hit them.
+    for step in 0..args.experience_steps {
+        let words: Vec<String> = text(step).split(' ').map(str::to_string).collect();
+        let children: Vec<Value> = words
+            .chunks(4)
+            .map(|w| json!({"role": "button", "name": w.join(" ")}))
+            .collect();
+        let mut o = json!({"episode": format!("ep{}", step / 20), "step": step % 20,
+            "url": format!("http://bench/p{}", step % 7),
+            "tree": {"role": "RootWebArea", "name": format!("page {}", step % 7), "children": children}});
+        if step % 20 != 0 {
+            o["action"] = json!({"label": format!("click {}", words[0])});
+        }
+        memory.call("remember", o)?;
+    }
     let queries: Vec<String> = (0..args.queries).map(|q| query(q, n)).collect();
     // Warm both paths: builds the index (for `history`) and faults in the postings.
     for q in queries.iter().take(20) {
@@ -257,6 +275,7 @@ fn main() -> Result<()> {
                 .args(["--queries", &args.queries.to_string()])
                 .args(["--passes", &args.passes.to_string()])
                 .args(["--dimensions", &args.dimensions.to_string()])
+                .args(["--experience-steps", &args.experience_steps.to_string()])
                 .output()
                 .context("child failed to start")?;
             ensure!(

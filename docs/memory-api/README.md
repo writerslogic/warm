@@ -371,6 +371,11 @@ serde form of the Rust types, unknown fields rejected.
 | `applyForgetting` | `{"includeChain", "dryRun" (default true), "purge"}` | as `forget` |
 | `consolidate` | `{"dryRun" (default true), "allowDestructive"}` | `{"created", "forgotten", "dryRun"}` |
 
+Observations of tree-structured agent trajectories use the same operations: `remember` routes an
+object with `episode`, `step` and `tree` to the experience core, `recall` merges region and action-effect
+hits with fact results by rank, `explain` returns their provenance and `forget` takes the scope
+`{"kind": "episode", "episode": "<id>"}`. See [Experience core](../concepts/experience-core.md).
+
 `warm-server` serves them as `POST /api/v1/memory/{op}` with the same tenant header, API key and
 body limits as the document routes. Errors: 422 `invalid_request`, 404 `not_found`, 409
 `conflict`. Embeddings must have the server's `--input-dim` values; without one a fact is
