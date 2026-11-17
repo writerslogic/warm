@@ -10,11 +10,15 @@ yanked = "warn"
 # advisories concern ZipArchive::extract (SUID bits, symlink targets, path traversal), which
 # neither WARM nor candle calls: candle reads .pth archives by entry name. Drop these when
 # candle moves to zip 9 (RUSTSEC-2026-0367, -0368, -0369).
+# chrono is unmaintained with no vulnerability reported (RUSTSEC-2026-0543). It enters the tree only
+# through rmcp, which the `mcp` feature enables; rmcp 3.10, its newest release, requires it. Drop this
+# when rmcp moves to jiff or time.
 ignore = [
     { id = "RUSTSEC-2026-0367", reason = "zip extract SUID bits; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2026-0368", reason = "zip extract symlink targets; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2026-0369", reason = "zip extract path handling; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2024-0436", reason = "paste is a transitive dep via nalgebra/simba; no upstream fix available" },
+    { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained; required by rmcp 3.10 (mcp feature); no rmcp release without it" },
 ]
 
 [licenses]
