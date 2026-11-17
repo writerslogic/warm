@@ -6,10 +6,12 @@ Status 2026-11-14. This page records free work only. No paid model call was made
 
 Update: the paid run this page costed was made afterwards and is recorded in [LOCOMO.md](LOCOMO.md) ("Mem0's own harness, top 200, gpt-5"),
 with its evidence in `benchmarks/results/locomo_mem0_harness_v1/`. Its cost was 41.55 USD, not the 57.57 estimated in section 4.
+The result is a tie: 92.0% against Mem0's file at 91.6%, +0.5 pp [-1.0, +1.9], one WARM pass. WARM's measured answer prompt
+was 9,970 tokens per call (`full1540-analysis.txt`), above the estimate of about 8,000 in the table below.
 
 ## 1. Two protocols, two numbers
 
-[LOCOMO.md](LOCOMO.md) compares WARM with the Mem0 paper's 66.88 under the paper-era protocol. Mem0 now publishes its own harness
+[LOCOMO.md](LOCOMO.md) compares WARM with the Mem0 paper's 66.88 under the paper-era protocol (a self-reported paper figure, not re-run here). Mem0 now publishes its own harness
 (`mem0ai/memory-benchmarks` at 4b61c5d, 2026-05-13) and a Platform "v3" LoCoMo score that its README gives as 92.5 percent (1,425 of 1,540) at top-200. The per-question file it
 publishes (`results/platform/locomo_results.json`, top-200 only) sums to 1,410 correct, 91.56 percent, with 1 error, and the
 README's per-category figures are averages over cutoffs 10 to 200 that the file cannot reproduce. The two protocols are not

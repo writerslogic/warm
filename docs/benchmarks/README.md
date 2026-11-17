@@ -14,7 +14,8 @@ One command reproduces the WARM comparison against the vector, text and embedded
 people actually use. The generated results are in [COMPARISON.md](COMPARISON.md); the rule that
 governs everything below is that **every number in that file traces to a committed results file
 under `benchmarks/results/competitive/`, and a comparator that beats WARM is reported as beating
-WARM.**
+WARM.** One exception: the "Candidate lever" column of "Where WARM loses" holds hypotheses, not
+results; a lever whose profile or trace is not committed says so and carries no number.
 
 Historical source snapshots and large raw output caches are indexed in the
 [evidence archive guide](../../benchmarks/evidence/README.md). Restore their pinned
@@ -45,6 +46,10 @@ and network access for the first run (datasets, pinned wheels, two Lucene jars w
 | Agent-memory systems | Mem0, Zep, Letta, LangMem: not run here; see "Plugging in more systems" |
 | Not run, with reasons | pgvector (needs a PostgreSQL server; not installable from pip/cargo/npm) |
 
+Version gaps: the heavy ANN suite ran faiss-cpu 1.12.0 and usearch 2.26.5 (per-system `version` in each
+results file), while the ann-benchmarks harness ran faiss-cpu 1.15.1; faiss-cpu 1.16.0 and usearch 2.26.6
+were on PyPI on 2026-11-16 and have not been run here. The next rerun bumps both pins first.
+
 WARM is measured through its own binaries: `public-bench ann-qgraph` (the vertex graph with the
 accepted configuration recorded in `benchmarks/results/qgraph_pool_paired_x86_glove_v4.json`,
 tuned on a train holdout, never on the benchmark queries) and `examples/competitive_text.rs`
@@ -63,9 +68,17 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
   protocol: lexical only, top 100, one chunk per document, test qrels never read.
 * **BEIR FiQA (dev qrels)**, `standard` and `heavy` only: 57,600 documents (the 38 empty ones
   are left out for every system), 500 queries, same protocol.
-* **memory**, shown in the tables as "LongMemEval-dev session corpus (search speed only, not memory QA)": all sessions of the 100 LongMemEval_S dev questions as one
+* **memory**, shown in the tables as "LongMemEval-dev session corpus (search speed only, not memory QA)": not a memory-QA benchmark, and its wins are not memory-quality results; all sessions of the 100 LongMemEval_S dev questions as one
   searchable memory (about 5,000 sessions, truncated to 4,000 words), relevant documents are the
-  answer sessions. The 400 held-out questions are never read.
+  answer sessions. The 400 held-out questions of the frozen split are never read by this corpus.
+
+The BEIR splits above (SciFact train, NFCorpus dev, FiQA dev) make these nDCG@10 values not comparable
+with published BEIR test-split numbers.
+
+Analysis is each engine's own default and is not identical: Lucene's `EnglishAnalyzer`, LanceDB FTS, DuckDB fts
+and bm25s drop English stop words, while SQLite FTS5 (`porter unicode61`), tantivy (`en_stem`) and WARM keep them,
+and the stemmers differ. Each results file records every system's analyzer and stop words in
+`protocol.comparator_settings`.
 
 ## Protocol
 
@@ -83,6 +96,10 @@ tuned on a train holdout, never on the benchmark queries) and `examples/competit
 * Every system runs each phase (build, serve, ops) in a fresh process; the orchestrator reads the
   child's peak RSS from `wait4`. Cold start is the wall time from spawning the serving process to
   the first answered query (interpreter, imports, open, first query; the file cache is warm).
+  The page cache is also warm for every system during serve rounds: nothing is dropped between build
+  and serve. Every system runs 1 + 16 untimed queries before timing; Lucene then runs untimed passes to
+  a verified steady state (the rule is under "Known measurement boundaries"). Lucene rows from runs before
+  that rule, whose warm-up could stop after 3 passes, print their ratio with no verdict.
 * Serve rounds are interleaved: each round runs WARM and every comparator once, in rotated order,
   so a load spike lands on all systems. Each phase takes a timing lock while it runs, never across a whole suite; the lock is a
   no-op on CI. Load averages are recorded per configuration; a load gate is not enforced on
