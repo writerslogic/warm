@@ -40,11 +40,13 @@ thread_local! {
 mod allowed;
 mod file;
 mod gated;
+mod lists;
 #[cfg(feature = "experimental")]
 mod navigation;
 pub use allowed::Allow;
 pub use file::Residency;
 use file::Slab;
+pub use lists::QueryLists;
 
 /// Scoring contract of the serving codes, independent of graph construction geometry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -118,6 +120,12 @@ pub struct VSearchParams {
     /// Per-row search: estimate only the first this many neighbours of each expanded vertex
     /// (lists keep the build's order, nearest first); 0 = all.
     pub neighbour_cap: usize,
+    /// With query lists ([`VGraph::set_query_lists`]): estimate every row of the lists of the
+    /// `probes` centres nearest the query into the pool before the traversal; 0 = off.
+    pub probes: usize,
+    /// With `probes`: return the best of the listed rows without traversing the graph, unless
+    /// they are fewer than `k`.
+    pub probe_only: bool,
 }
 
 impl Default for VSearchParams {
@@ -131,6 +139,8 @@ impl Default for VSearchParams {
             screen: true,
             fuse: false,
             neighbour_cap: 0,
+            probes: 0,
+            probe_only: false,
         }
     }
 }
@@ -490,6 +500,8 @@ pub struct VGraph {
     /// Error model of the block estimates: `var = block_kappa * s^2 * |q - x_v|^2` for an
     /// edge of scale `s` seen from the expanded vertex `v`, calibrated at build.
     block_kappa: f32,
+    /// Candidate lists learned from construction queries ([`VGraph::set_query_lists`]).
+    lists: Option<QueryLists>,
 }
 
 /// Seed of the screen's rotation (fixed: the screen is a property of the encoding).
@@ -1187,6 +1199,7 @@ impl VGraph {
             blocks: Lines::zeroed(0),
             block_rot: None,
             block_kappa: 0.0,
+            lists: None,
         };
         if screen {
             out.screen_sigma = out.measure_screen_sigma(g);
@@ -1676,6 +1689,30 @@ impl VGraph {
         }
     }
 
+    /// Attaches candidate lists built over this index's base rows (row ids as passed to the
+    /// build), which a search consults when `probes > 0`. [`VGraph::save`] keeps them.
+    pub fn set_query_lists(&mut self, mut lists: QueryLists) -> Result<(), WarmError> {
+        if lists.dim() != self.dim {
+            return Err(invalid(format!(
+                "query lists have {} dimensions, the index is queried in {}",
+                lists.dim(),
+                self.dim
+            )));
+        }
+        let mut map = vec![0u32; self.n];
+        for v in 0..self.n as u32 {
+            map[self.original(v) as usize] = v;
+        }
+        lists.remap(&map)?;
+        self.lists = Some(lists);
+        Ok(())
+    }
+
+    /// The attached candidate lists, if any.
+    pub fn query_lists(&self) -> Option<&QueryLists> {
+        self.lists.as_ref()
+    }
+
     /// Removes unused adjacency slots without changing neighbors or their order.
     /// Saving expands the lists into the original persisted format; reopening uses that
     /// format until this method is called again. Delta-coded lists already have exact spans.
@@ -1943,6 +1980,8 @@ impl VGraph {
                 reservoir: Reservoir::default(),
                 keys: Vec::new(),
                 results: Vec::new(),
+                probe_query: Vec::new(),
+                probed: Vec::new(),
             },
         }
     }
@@ -2409,6 +2448,9 @@ pub(super) struct SearchScratch {
     reservoir: Reservoir,
     keys: Vec<u64>,
     results: Vec<(f32, u32)>,
+    /// Query lists: the normalized query and the probed `(score, list)` pairs.
+    probe_query: Vec<f32>,
+    probed: Vec<(f32, u32)>,
     knobs: SearchKnobs,
 }
 
@@ -2732,6 +2774,36 @@ impl SearchScratch {
             self.visited.trace(entry).1.key = k0;
         }
         evals += 1;
+        let probe_only = params.probes > 0 && params.probe_only && g.lists.is_some();
+        if let (Some(lists), true) = (g.lists.as_ref(), params.probes > 0) {
+            if blocks {
+                return Err(invalid(
+                    "query lists require row-code search, not neighbour blocks".into(),
+                ));
+            }
+            lists.probe(
+                query,
+                params.probes,
+                &mut self.probe_query,
+                &mut self.probed,
+            );
+            for &(_, c) in &self.probed {
+                let ids = lists.list(c);
+                for (i, &v) in ids.iter().enumerate() {
+                    if let Some(&u) = ids.get(i + 8) {
+                        prefetch_bytes(g.code(u));
+                        g.prefetch_scale(u);
+                    }
+                    if !self.visited.insert(v) {
+                        continue;
+                    }
+                    let candidate = key(g.est(qc, self.qsum, v, w), v);
+                    self.reservoir.offer(candidate);
+                    self.pool.insert(candidate);
+                    evals += 1;
+                }
+            }
+        }
         // Best-first expansion of the nearest unexpanded candidate among the `ef` best seen;
         // the pool holds exactly those, so the search ends when none is left. With
         // `patience`, it also ends after that many expansions without an insert among the
@@ -2756,6 +2828,9 @@ impl SearchScratch {
         };
         let mut seed_cursor = 0usize;
         loop {
+            if probe_only && enough(self) {
+                break;
+            }
             let c = match self.pool.next() {
                 Some(c) => c,
                 None => {
@@ -6218,5 +6293,77 @@ mod tests {
             skipped += sb.last_screened();
         }
         assert!(skipped > 0, "the screen never skipped a neighbour");
+    }
+
+    #[test]
+    fn query_lists_find_neighbours_without_changing_plain_search_and_survive_reopening() {
+        let d = 16;
+        let data = clustered(3000, d, 41);
+        // Training and evaluation queries share one distribution (the same cluster centres), and
+        // the evaluation queries are held out of the lists.
+        let drawn = clustered(660, d, 42);
+        let (training, queries) = drawn.split_at(600 * d);
+        let (k, per_query) = (10, 20);
+        let neighbours: Vec<u32> = training
+            .chunks_exact(d)
+            .flat_map(|q| brute_force(&data, d, q, per_query))
+            .collect();
+        let graph = Graph::build(&data, d, &BuildParams::default()).unwrap();
+        let plain = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+        let mut listed = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+        let lists = QueryLists::build(
+            training,
+            d,
+            true,
+            &neighbours,
+            per_query,
+            per_query,
+            24,
+            3000,
+        )
+        .unwrap();
+        assert_eq!(lists.lists(), 24);
+        assert!(
+            QueryLists::build(training, d + 1, true, &neighbours, per_query, 5, 24, 3000).is_err()
+        );
+        listed.set_query_lists(lists).unwrap();
+        let base = VSearchParams {
+            ef: 32,
+            rerank: 32,
+            ..VSearchParams::default()
+        };
+        let probe = VSearchParams {
+            probes: 3,
+            probe_only: true,
+            ..base
+        };
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("lists.idx");
+        listed.save(&path).unwrap();
+        let reopened = VGraph::open(&path, Residency::Heap).unwrap();
+        assert_eq!(
+            reopened.query_lists().map(QueryLists::listed),
+            listed.query_lists().map(QueryLists::listed)
+        );
+        let (mut a, mut b, mut c, mut e) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        let mut hits = 0;
+        for q in queries.chunks_exact(d) {
+            plain.searcher().search(q, k, base, &mut a).unwrap();
+            listed.searcher().search(q, k, base, &mut b).unwrap();
+            assert_eq!(a, b, "lists changed a search without probes");
+            listed.searcher().search(q, k, probe, &mut c).unwrap();
+            reopened.searcher().search(q, k, probe, &mut e).unwrap();
+            assert_eq!(c, e, "reopened lists answer differently");
+            assert_eq!(c.len(), k);
+            let truth = brute_force(&data, d, q, k);
+            hits += c.iter().filter(|x| truth.contains(x)).count();
+        }
+        let recall = hits as f64 / (queries.len() / d * k) as f64;
+        assert!(recall >= 0.9, "probe-only recall {recall}");
+        let mut damaged = std::fs::read(&path).unwrap();
+        let at = damaged.len() - 1;
+        damaged.truncate(at);
+        std::fs::write(&path, &damaged).unwrap();
+        assert!(VGraph::open(&path, Residency::Heap).is_err());
     }
 }

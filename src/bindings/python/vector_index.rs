@@ -21,7 +21,7 @@ use crate::core::error::WarmError;
 use crate::core::qgraph::connectivity::ConnectivityStats;
 use crate::core::qgraph::{
     Allow, BuildParams, BuildProfile, Consolidation, ConsolidationMode, ConsolidationPolicy, Graph,
-    Metric, Residency, UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
+    Metric, QueryLists, Residency, UpdatableVGraph, UpdateError, VGraph, VSearchParams, VSearcher,
 };
 
 /// Graphs below this many vertices store neighbour ids in three bytes.
@@ -141,6 +141,8 @@ struct PyVectorIndex {
     rerank: usize,
     reservoir: usize,
     patience: usize,
+    probes: usize,
+    probe_only: bool,
     dim: usize,
     built: Option<Built>,
     /// Bottom-layer connectivity measured during the last `fit` that was asked for it.
@@ -182,6 +184,8 @@ impl PyVectorIndex {
             rerank: self.rerank,
             reservoir: self.reservoir,
             patience: self.patience,
+            probes: self.probes,
+            probe_only: self.probe_only,
             ..VSearchParams::default()
         }
     }
@@ -328,6 +332,8 @@ impl PyVectorIndex {
             rerank: 64,
             reservoir: 0,
             patience: 0,
+            probes: 0,
+            probe_only: false,
             dim: 0,
             built: None,
             connectivity: None,
@@ -349,7 +355,12 @@ impl PyVectorIndex {
     /// nearest row of the largest component, and `reach_edges` gives every vertex the entry
     /// cannot reach an in-edge from the nearest reachable one (data only, no queries). `report` measures the
     /// bottom layer's connectivity after construction; `connectivity()` returns it.
-    #[pyo3(signature = (x, training_queries=None, training_limit=32768, training_neighbors=100, projected_degree=32, training_ef=0, escape_edges=false, report=false, reach_edges=false))]
+    ///
+    /// `query_lists` > 0 also clusters the training queries into that many centres and keeps,
+    /// per centre, the union of the first `list_neighbors` neighbours of its queries: a search
+    /// with `probes` > 0 (see `set_query_arguments`) starts from the rows listed under its
+    /// nearest centres. `save` keeps the lists.
+    #[pyo3(signature = (x, training_queries=None, training_limit=32768, training_neighbors=100, projected_degree=32, training_ef=0, escape_edges=false, report=false, reach_edges=false, query_lists=0, list_neighbors=100))]
     #[allow(clippy::too_many_arguments)]
     fn fit(
         &mut self,
@@ -363,8 +374,15 @@ impl PyVectorIndex {
         escape_edges: bool,
         report: bool,
         reach_edges: bool,
+        query_lists: usize,
+        list_neighbors: usize,
     ) -> PyResult<()> {
         let (n, dim) = (x.shape()[0], x.shape()[1]);
+        if query_lists > 0 && (training_queries.is_none() || list_neighbors == 0) {
+            return Err(PyValueError::new_err(
+                "query_lists needs training_queries and a positive list_neighbors",
+            ));
+        }
         if n == 0 || dim == 0 {
             return Err(PyValueError::new_err(format!(
                 "fit expects a non-empty matrix, got shape ({n}, {dim})"
@@ -455,18 +473,42 @@ impl PyVectorIndex {
                     };
                     let graph_dim = metric.graph_dim(dim);
                     let mut g = Graph::build_owned(data, graph_dim, &params)?;
+                    let mut lists = None;
                     if let Some(queries) = training_data {
                         let lifted = match metric {
                             Distance::InnerProduct => augment_queries(&queries, dim),
                             Distance::Angular | Distance::Euclidean => queries.clone(),
                         };
+                        // The lists cluster queries in the coordinates a search receives them in.
+                        let (served, served_dim) = if direct_ip || metric != Distance::InnerProduct
+                        {
+                            (&queries, dim)
+                        } else {
+                            (&lifted, graph_dim)
+                        };
+                        let list = |ids: &[u32], per_query: usize| {
+                            let count = ids.len() / per_query.max(1);
+                            QueryLists::build(
+                                &served[..count * served_dim],
+                                served_dim,
+                                metric == Distance::Angular,
+                                ids,
+                                per_query,
+                                list_neighbors,
+                                query_lists,
+                                n,
+                            )
+                        };
                         if training_ef == 0 {
-                            g.apply_training_queries_with(
+                            let (_, ids, per_query) = g.apply_training_queries_keeping(
                                 &lifted,
                                 training_limit,
                                 training_neighbors,
                                 projected_degree,
                             )?;
+                            if query_lists > 0 {
+                                lists = Some(list(&ids, per_query)?);
+                            }
                         } else {
                             let k = training_neighbors.min(n);
                             let pd = projected_degree.min(n.saturating_sub(1)).max(1);
@@ -489,6 +531,9 @@ impl PyVectorIndex {
                             if k >= 2 && pd < n {
                                 g.project_training_neighbors(&lifted, &ids, k, pd)?;
                             }
+                            if query_lists > 0 {
+                                lists = Some(list(&ids, k)?);
+                            }
                         }
                     }
                     let mut stats = None;
@@ -510,6 +555,9 @@ impl PyVectorIndex {
                     let mut index = encode(&g)?;
                     if compact_adjacency {
                         index.compact_adjacency()?;
+                    }
+                    if let Some(lists) = lists {
+                        index.set_query_lists(lists)?;
                     }
                     Ok::<_, WarmError>((index, stats))
                 })
@@ -551,14 +599,18 @@ impl PyVectorIndex {
     /// candidates are re-scored with the residual code (0 returns the pool order).
     /// `reservoir` retains candidates independently of traversal (0 uses the final beam).
     /// `patience` stops after that many expansions without improving the estimated top k
-    /// (0 disables this early stop).
-    #[pyo3(signature = (ef, rerank=64, patience=0, reservoir=0))]
+    /// (0 disables this early stop). `probes` > 0 starts from the rows of that many query lists
+    /// (an index fitted with `query_lists`; ignored otherwise), and `probe_only` returns the best
+    /// of those rows without traversing the graph.
+    #[pyo3(signature = (ef, rerank=64, patience=0, reservoir=0, probes=0, probe_only=false))]
     fn set_query_arguments(
         &mut self,
         ef: usize,
         rerank: usize,
         patience: usize,
         reservoir: usize,
+        probes: usize,
+        probe_only: bool,
     ) -> PyResult<()> {
         if ef == 0 {
             return Err(PyValueError::new_err("ef must be positive"));
@@ -567,6 +619,8 @@ impl PyVectorIndex {
         self.rerank = rerank;
         self.patience = patience;
         self.reservoir = reservoir;
+        self.probes = probes;
+        self.probe_only = probe_only;
         Ok(())
     }
 

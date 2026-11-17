@@ -434,6 +434,12 @@ impl VGraph {
                 }
                 pos = *off as usize + *len as usize;
             }
+            // Query lists follow the last section at the next boundary; readers that predate
+            // them stop at the section table and ignore the tail.
+            if let Some(lists) = &self.lists {
+                w.write_all(&zeros[..pos.next_multiple_of(ALIGN) - pos])?;
+                w.write_all(&lists.encode())?;
+            }
             w.flush()?;
         }
         temp.as_file().sync_all()?;
@@ -643,6 +649,13 @@ impl VGraph {
             }
             end = off + len;
         }
+        let tail = end.next_multiple_of(ALIGN);
+        let lists = match bytes.get(tail..) {
+            Some(rest) if !rest.is_empty() => {
+                Some(super::QueryLists::decode(rest, dim, n).map_err(|e| bad(e.to_string()))?)
+            }
+            _ => None,
+        };
         let row_lines = mul(n, stride, "code rows")?.div_ceil(128);
         let block_bytes = mul(mul(n, blocks_per_vertex, "blocks")?, record, "blocks")?;
         let nd = mul(n, degree, "adjacency")?;
@@ -785,6 +798,7 @@ impl VGraph {
             },
             block_rot,
             block_kappa,
+            lists,
         })
     }
 }
