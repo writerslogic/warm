@@ -299,6 +299,24 @@ What the reorder holds and when it runs:
    and both serve the same results. A panic while lists are being renumbered in place ends the
    process instead of serving a half-permuted store.
 
+Measured cost of the streamed reorder (one process per mode; n2-highmem-8, Cascade Lake 2.80 GHz,
+8 vCPU; game ingest options: positions, whole article, unstemmed; peak is the process VmHWM,
+which includes the ingest before the compaction, except at 5M, where an existing index is opened
+and only compacted):
+
+| corpus | compact, reorder off | compact, reorder | peak, off / reorder | estimate |
+|---|---|---|---|---|
+| FiQA (57,638) | 0.49 s | 2.37 s | 155 / 152 MiB | 22 MiB |
+| MS MARCO 250k | 1.54 s | 5.84 s | 263 / 275 MiB | 52 MiB |
+| Wikipedia 250k | 4.87 s | 14.47 s | 644 / 647 MiB | 98 MiB |
+| Wikipedia 1M | 17.7 s | 71.5 s | 2.24 / 2.20 GiB | 494 MiB |
+| Wikipedia 5M (4.64M documents) | 64.5 s | 324.6 s | 3.49 / 3.49 GiB | 1.39 GiB |
+
+The reorder costs 3 to 5 times a plain compaction in time, which is why it is gated by the
+quarter rule, and adds no measurable peak memory over it in the tested range: the estimate is
+an upper bound on what the reorder holds, not a measurement of it. These figures hold for the
+tested range only.
+
 ## Durability and crash safety
 
 The checkpoint is written with the compaction's staging generation: temporary file, sync,
