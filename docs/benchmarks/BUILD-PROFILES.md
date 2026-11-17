@@ -32,30 +32,47 @@ estimates per query at recall 0.99 as the machine-independent quality measure.
 
 ## Default profile measurements
 
-Heavy ANN suite, pinned core, foreign-CPU gate, GCP n2 Ice Lake 8 vCPU. WARM `standard` rerun
-(SIFT: 5 build repeats, 10 rounds; GloVe: 3 build repeats, 5 rounds) against the comparator rows of
-the earlier run on the same VM type; WARM `max-recall` in the same files was the previous default.
-Graph hashes are identical at 1, 2, 4 and 8 build threads (SIFT `a83e53a9a22731bd`, GloVe
-`51ef29295b67cf7d`, measured with the exploratory binary at the same parameters).
+Heavy ANN suite, pinned core, foreign-CPU gate, GCP n2 Ice Lake 8 vCPU. Sources:
+[`heavy-ann-sift-...-icelake-8c-16g.json`](../../benchmarks/results/competitive/heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-n2-icelake-8c-16g.json)
+and [`heavy-ann-glove-...-icelake-8c-16g.json`](../../benchmarks/results/competitive/heavy-ann-glove-100-angular-n1183514-linux-x86_64-gcp-n2-icelake-8c-16g.json),
+with the per-build tables in [COMPARISON.md](COMPARISON.md). The WARM `standard` row is a rerun in a
+separate session (`warm_rerun` in each file: SIFT 2026-11-17 after PR 477, 10 rounds; GloVe
+2026-11-15, 5 rounds), on another host of the same VM type, against the comparator rows of the
+2026-11-14 run; it is not interleaved with them. The `max-recall` rows (the previous default) are
+the WARM rows of the same files as committed at `0c268b36`, superseded since. Graph hashes are
+identical at 1, 2, 4 and 8 build threads (SIFT `a83e53a9a22731bd`, GloVe `51ef29295b67cf7d`,
+measured with the exploratory binary at the same parameters).
+
+QPS at a recall target is the best build of each system for that target, so a comparator row can
+mix builds. Each comparator cell names the build and that build's own build time.
 
 | dataset | system | build s | QPS@0.90 | QPS@0.95 | QPS@0.99 |
 |---|---|---|---|---|---|
-| sift-128 | WARM standard | 59.2 | 21,032 | 12,732 | 5,653 |
-| sift-128 | WARM max-recall (previous default) | 184.7 | 22,424 | 16,856 | 8,262 |
-| sift-128 | hnswlib | 257.0 | 10,780 | 7,223 | 3,389 |
-| sift-128 | FAISS IVF-PQ fast-scan | 152.4 | 7,467 | 4,701 | 1,865 |
-| sift-128 | USearch | 130.5 | 4,549 | 2,751 | 1,511 |
+| sift-128 | WARM standard | 67.42 | 24,335 | 14,645 | 6,576 |
+| sift-128 | WARM max-recall (previous default, at `0c268b36`) | 184.7 | 22,424 | 16,856 | 8,262 |
+| sift-128 | hnswlib (Python binding) | per cell | 10,780 (m16, 82.73 s) | 7,223 (m32e500, 257.05 s) | 3,389 (m16e500, 185.79 s) |
+| sift-128 | FAISS IVF-PQ fast-scan (ab_nl2048) | 152.4 | 7,467 | 4,701 | 1,865 |
+| sift-128 | USearch | per cell | 4,549 (m16, 130.51 s) | 2,750 (m16, 130.51 s) | 1,511 (m32, 165.02 s) |
 | glove-100 | WARM standard | 116.7 | 3,154 | 1,730 | 466 |
-| glove-100 | WARM max-recall (previous default) | 360.2 | 4,328 | 2,372 | 667 |
-| glove-100 | FAISS IVF-PQ fast-scan | 126.8 | 2,016 | 1,402 | not reached |
-| glove-100 | DiskANN | 607.6 | 1,543 | 856 | 318 |
-| glove-100 | hnswlib | 170.3 | 1,610 | 859 | 238 |
+| glove-100 | WARM max-recall (previous default, at `0c268b36`) | 360.2 | 4,328 | 2,372 | 667 |
+| glove-100 | FAISS IVF-PQ fast-scan (ab_nl2048) | 126.8 | 2,016 | 1,402 | not reached |
+| glove-100 | DiskANN (r64_l500) | 607.6 | 1,543 | 856 | 318 |
+| glove-100 | hnswlib (m32) | 170.3 | 1,610 | 859 | 238 |
 
-The default costs 17-31% of QPS at recall 0.95 and 0.99 against the previous default and stays
-first at every recall level on both datasets with non-overlapping intervals. ScaNN builds in 31-35 s
-(IVF with quantisation) and is faster to build than any graph index here; it does not reach recall
-0.99 on GloVe. GloVe index size is unchanged at 913 MiB (the exact f32 rows are 461 MiB), above
-FAISS IVF-PQ fast-scan at 490 MiB.
+The default costs QPS at recall 0.95 and 0.99 against the previous default (SIFT 14,645 against
+16,856 and 6,576 against 8,262; GloVe 1,730 against 2,372 and 466 against 667), and in this suite it
+is ahead of every comparator build that was run at every recall level on both datasets. That does
+not cover the fastest ScaNN configuration for GloVe: the heavy suite ran one ScaNN build
+(`ab_scann4`; ScaNN builds in 31-35 s and is faster to build than any graph index here, and that
+build does not reach recall 0.99 on GloVe). `ab_scann1` (2,000 leaves, AVQ 0.2, 2 dimensions per
+block), the ScaNN family that wins GloVe in the ann-benchmarks harness, is defined in
+`benchmarks/competitive/warmbench/ann_worker.py` but was not run. In the ann-benchmarks harness
+([`ann_benchmarks_harness_wl02_v1.json`](../../benchmarks/results/ann_benchmarks_harness_wl02_v1.json),
+`standing`; Core Ultra 9 185H under WSL2, one pinned CPU, an older WARM revision) that ScaNN
+configuration is ahead of WARM on GloVe: 2,985.0 against 1,456.8 QPS at recall 0.90, 1,535.2 against
+1,018.6 at 0.95 and 592.1 against 511.3 at 0.99. The two suites therefore disagree on GloVe until
+`ab_scann1` runs in the heavy suite. GloVe index size is unchanged at 912.8 MiB (the exact f32 rows
+are 461 MiB), above FAISS IVF-PQ fast-scan at 490.3 MiB.
 
 ### Attempts to recover QPS at the same build time
 

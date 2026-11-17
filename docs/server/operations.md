@@ -75,17 +75,27 @@ Restore uploads emit `restore_stage` events for receive, upload sync (including 
 
 ## Measured behavior
 
-All numbers come from `benchmarks/results/server_v1.json`, `server_soak_v1.json` and the container checks below. The machine was a shared 10-core M4 at load average 25 to 40, with client and servers on one host, so absolute figures are indicative. Synthetic clustered vectors, 384 dimensions, top 10, 6 s per level, one run.
+Two runs of the same harness (`deploy/bench`), on a shared 10-core Apple M4 with client and servers on one host, so absolute figures are indicative. Synthetic clustered vectors, 384 dimensions, top 10, 6 s per level after a 2 s warm-up, a fresh server per system and size, one run each. Recall at 10 was 1.0 for every system and size in both runs. Neither run is at the current release, and the two were not run as a pair.
 
-**Query throughput (QPS at 1 / 4 / 16 clients, and p50 at 16)**
+**Run 1, exact scan** ([`benchmarks/results/server_v1.json`](../../benchmarks/results/server_v1.json): 2026-10-20, `hms-server 0.6.1`, `git_commit` not recorded, load average 25 at the start, Qdrant 1.19.2). QPS at 1 / 4 / 16 clients and p50 at 16:
 
 | N | warm-server (exact) | Qdrant HNSW | Qdrant exact | SQLite + FastAPI |
 |---|---|---|---|---|
-| 1,000 | 829 / 2538 / **7781**, 1.2 ms | 599 / 1654 / 3499, 1.2 ms | 517 / 1980 / 3329, 1.1 ms | 381 / 476 / 911, 14.5 ms |
-| 10,000 | 135 / 487 / 895, 13 ms | **451 / 1572 / 2442**, 3.1 ms | 452 / 1550 / 2500, 3.0 ms | 300 / 538 / 818, 17 ms |
-| 50,000 | 22 / 92 / 178, 85 ms | **621 / 1561 / 1867**, 5.0 ms | 247 / 573 / 646, 20 ms | 172 / 176 / 167, 93 ms |
+| 1,000 | 828 / 2,538 / **7,780**, 1.2 ms | 772 / **2,676** / 4,398, 1.6 ms | 777 / 2,491 / 4,310, 2.4 ms | 570 / 933 / 1,316, 10.8 ms |
+| 10,000 | 135 / 487 / 895, 12.9 ms | 480 / 1,159 / **2,458**, 3.0 ms | **579 / 1,363** / 2,137, 2.9 ms | 206 / 190 / 377, 35.2 ms |
+| 50,000 | 22 / 92 / 178, 85.2 ms | **693 / 1,440 / 1,899**, 5.7 ms | 591 / 847 / 1,198, 9.6 ms | 422 / 502 / 504, 31.3 ms |
 
-Recall at 10 was 1.0 for every system and size. warm-server wins at 1,000 documents and loses at 10,000 and 50,000: its vector query is an exact scan inside the engine (about 6.9 of 7.2 ms at 10,000 documents is spent in the engine search), slower than a numpy scan from 10,000 up, and the optional document index (`/index/maintain`) did not help in these runs. This is an engine cost, not server overhead, and it is the largest open performance item. Ingest was 2.1k to 2.9k documents/s for warm-server against 3.1k to 4.7k for the others (batches of 500, durable commit per batch).
+In run 1 the exact-scan route is fastest only at 1,000 documents with 1 and 16 clients; Qdrant HNSW is ahead at 1,000 documents with 4 clients. At 10,000 and 50,000 documents both Qdrant variants are ahead at every client count, and SQLite + FastAPI is ahead at 50,000 and at 10,000 with 1 client. The `exact+index` variant in this run (a bounding-box tree, since replaced) was not faster than exact. The exact route's vector query is an exact scan inside the engine (about 6.9 of 7.2 ms at 10,000 documents is spent in the engine search). Ingest was 2,141 to 2,899 documents/s for warm-server (exact) against 1,461 to 4,667 for the others (batches of 500, durable commit per batch).
+
+**Run 2, graph route** ([`benchmarks/research/server-ann/server_v2.json`](../../benchmarks/research/server-ann/server_v2.json): 2026-10-21, `warm-server 0.6.1` at `9c3e4521`, load average 10 to 13 at the start). The `exact+index` variant serves vector queries from the vertex graph after `index/maintain`. QPS at 1 / 4 / 16 clients and p99 at 16:
+
+| N | warm-server (graph) | warm-server (exact) | Qdrant HNSW | Qdrant exact | SQLite + FastAPI |
+|---|---|---|---|---|---|
+| 1,000 | **5,856 / 10,690 / 16,066**, 2.4 ms | 2,578 / 5,580 / 7,669, 5.1 ms | 4,148 / 4,277 / 3,151, 19.8 ms | 4,427 / 4,168 / 3,202, 18.0 ms | 2,417 / 3,198 / 3,323, 5.7 ms |
+| 10,000 | **5,491 / 7,904 / 12,708**, 4.0 ms | 353 / 932 / 924, 39.1 ms | 1,721 / 2,126 / 2,505, 30.1 ms | 1,514 / 1,930 / 2,526, 28.4 ms | 1,207 / 1,408 / 1,475, 20.3 ms |
+| 50,000 | **3,099 / 6,838 / 11,332**, 5.0 ms | 66 / 107 / 168, 146.5 ms | 930 / 1,662 / 1,801, 42.1 ms | 388 / 620 / 623, 108.5 ms | 345 / 420 / 434, 60.7 ms |
+
+In run 2 the graph route is fastest at every size and client count. It loses on memory: peak server RSS during the query levels at 50,000 documents was 674 MB against 213 MB for Qdrant HNSW, and its ingest (3,337 to 3,952 documents/s) is below Qdrant HNSW (4,861 to 5,976). Run 2 also measured every other system faster than run 1 on a less loaded host, so the two runs' absolute figures are not comparable; the verdict that holds for the graph route is run 2's, and a paired rerun at the current release has not been made.
 
 **Soak** (4 minutes, 16 clients, 137,634 successful mixed requests, tenants rotating through 12 ids with at most 6 open): no errors other than 27 expected `tenant_limit` refusals, open file descriptors 26 to 35, work slots idle at the end, every tenant's contents matched the client's model both before and after a SIGTERM restart, SIGTERM exit code 0. RSS moved between 55 and 270 MB following tenant open and eviction cycles and ended at 144 MB from 139 MB at the start; the second-half linear fit reads +4.4 MB/min over that oscillation, so a longer run is needed to call it flat.
 
