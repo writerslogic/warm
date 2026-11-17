@@ -59,6 +59,10 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      # The pinned study's plan, build records and logs are retired from the tree; restore their
+      # recorded bytes before the harness hashes them.
+      - name: Restore the retired study inputs
+        run: python3 scripts/restore-retired-inputs.py --path docs/research/technical-audit-20261029/vector-contention-20261101
       - name: Record runner and source before setup
         run: |
           mkdir -p "$EVIDENCE"
@@ -73,16 +77,18 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: false
-      - name: Verify dependency manifests match both pinned revisions
+      # The offline builds compile the two revisions pinned in plan.json, so fetch each revision's
+      # own locked dependencies rather than the checkout's, which change with every manifest edit.
+      - name: Fetch the locked dependencies of both pinned revisions
         shell: bash
         run: |
-          printf '%s\n' \
-            'dc1a38eb7e8052aa72e7ccf3ccb065cf12632ed1a1ee8e475aead922a6384f4a  Cargo.lock' \
-            '48c91fe73f15894f42a7086f3fce50a49b76677924907e8cf8c8937cec42501c  Cargo.toml' \
-            | sha256sum --check | tee "$EVIDENCE/cargo-manifest-check.log"
-      - name: Fetch locked dependencies before offline builds
-        shell: bash
-        run: cargo +1.99.0 fetch --locked 2>&1 | tee "$EVIDENCE/cargo-fetch.log"
+          for variant in baseline current; do
+            revision="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "$EVIDENCE/plan.json" "$variant")"
+            tree="$RUNNER_TEMP/fetch-$variant"
+            mkdir -p "$tree"
+            git archive "$revision" | tar -x -C "$tree"
+            cargo +1.99.0 fetch --locked --manifest-path "$tree/Cargo.toml"
+          done 2>&1 | tee "$EVIDENCE/cargo-fetch.log"
       - name: Build pinned baseline offline
         run: uv run --no-project python "$EVIDENCE/probe.py" build baseline
       - name: Build pinned candidate offline

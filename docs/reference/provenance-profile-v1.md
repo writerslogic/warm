@@ -37,7 +37,7 @@ Legacy WARM credentials use a `did:key` status-list URI, an older `#key-0` proof
 
 ## Evidence and limits
 
-Integration validation passed 121 focused provenance tests, scoped Clippy, and fresh independent Digital Bazaar proof/status-list verification. The [integration receipt](evidence/integration-core-20261028.json) binds this evidence to source inputs. No live status endpoint or production C2PA configuration was exercised.
+Integration validation passed 121 focused provenance tests, scoped Clippy, and fresh independent Digital Bazaar proof/status-list verification. The [integration receipt](https://github.com/writerslogic/warm/blob/cd2f4c11865c638166ed6bfc370fd9eb6ff221c9/docs/reference/evidence/integration-core-20261028.json) binds this evidence to source inputs. No live status endpoint or production C2PA configuration was exercised.
 
 Run [the W3C interop check](https://github.com/writerslogic/warm/blob/main/scripts/check-w3c-interop.sh) to generate fresh credentials in Rust and verify their VC model and EdDSA proofs with Digital Bazaar's JavaScript implementation. Its Bitstring Status List reader accepts index 7, rejects revoked index 8, and the proof verifier rejects altered documents. Versions are pinned in `interop/w3c/package-lock.json`.
 

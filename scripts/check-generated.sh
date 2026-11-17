@@ -7,7 +7,7 @@ scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 TS_RS_EXPORT_DIR="$scratch/bindings" WARM_SCHEMA_EXPORT_DIR="$scratch/schemas" \
   cargo test --locked --lib --features node-api,server export
-if ! diff -ru schemas "$scratch/schemas" || ! diff -ru bindings/bindings "$scratch/bindings/bindings"; then
+if ! diff -ru schemas "$scratch/schemas" || ! diff -ru bindings/types "$scratch/bindings/types"; then
   echo 'Generated artifacts are stale. Regenerate with: cargo test --locked --lib --features node-api,server export' >&2
   exit 1
 fi
