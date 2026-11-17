@@ -268,11 +268,7 @@ impl WarmCore {
     /// before then reopens to the old order). `streamed` says which of the two the compaction
     /// writes. Also returns the outcome and estimate to report once the compaction publishes
     /// (none for a compaction that does not report).
-    fn reorder_for_checkpoint(
-        &self,
-        job: &JobState,
-        streamed: bool,
-    ) -> Result<PlannedReorder> {
+    fn reorder_for_checkpoint(&self, job: &JobState, streamed: bool) -> Result<PlannedReorder> {
         let request = job.reorder_request();
         if matches!(request, ReorderRequest::None | ReorderRequest::Disabled) {
             return Ok((None, request.skipped(ReorderOutcome::Disabled)));
