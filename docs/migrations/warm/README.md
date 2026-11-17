@@ -18,7 +18,7 @@ The user authorized the rebrand, publication and deployment of existing edits, a
 | CLI | `warm-server`, `warm-mcp`, `warm-admin`, `warm-embed`, `warm-format`, `warm-eval` | Rust executables |
 | Benchmark tooling | `warmbench` | historical result keys remain unchanged |
 
-`scripts/rename-warm.zsh` invokes the bounded Python renamer. `rename-plan.json` and `rename-applied.json` record the initial transformation and hashes; subsequent fixes and naming decisions are in Git history. Original bytes remain locally in `.git/warm-migration-backup/`. Do not reapply the initial transform to the final source.
+A bounded Python renamer applied the initial transformation once. It was removed after the rename was complete; `scripts/rename_warm.py`, `scripts/rename-warm.zsh` and `restore-wire.py` remain in Git history at `cd2f4c11`. `rename-plan.json` and `rename-applied.json` record the initial transformation and hashes; subsequent fixes and naming decisions are in Git history. Do not reapply the initial transform to the final source.
 
 ## Preserved identities
 
