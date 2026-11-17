@@ -18,7 +18,7 @@ The user authorized the rebrand, publication and deployment of existing edits, a
 | CLI | `warm-server`, `warm-mcp`, `warm-admin`, `warm-embed`, `warm-format`, `warm-eval` | Rust executables |
 | Benchmark tooling | `warmbench` | historical result keys remain unchanged |
 
-`scripts/rename-warm.zsh` invokes the bounded Python renamer. `rename-plan.json` and `rename-applied.json` record the initial transformation and hashes; subsequent fixes and naming decisions are in Git history. Original bytes remain locally in `.git/warm-migration-backup/`. Do not reapply the initial transform to the final source.
+A bounded Python renamer applied the initial transformation once. It was removed after the rename was complete; `scripts/rename_warm.py`, `scripts/rename-warm.zsh` and `restore-wire.py` remain in Git history at `cd2f4c11`. `rename-plan.json` and `rename-applied.json` record the initial transformation and hashes; subsequent fixes and naming decisions are in Git history. Do not reapply the initial transform to the final source.
 
 ## Preserved identities
 
@@ -103,10 +103,3 @@ pass 10 SDK memory tests and three renamer tests. Finding 151 is intentional:
 `docs/research/technical-audit-20261030/python_reproduction.py` must catch PyO3
 `PanicException` to record the original native assertion failures (shown in the
 adjacent `python-reproduction.log`). Its historical evidence remains unchanged.
-
-Already-integrated audit branch tips are retained locally under
-`refs/archive/20261031/` before obsolete branch removal. Their original worktrees
-remain intact and detached. Clean temporary crate-release worktrees were removed.
-The user confirmed the C2PA conformance application was submitted as
-`holographic-memory`; `/Volumes/A/.hms-c2pa-24` and its historical submission files
-are preserved unchanged, separately from this cleanup.

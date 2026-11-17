@@ -4,7 +4,24 @@ Module `github.com/writerslogic/warm/bindings/go`, package `warm` (cgo, Go 1.24+
 
 The binding is in this repository. No prebuilt native library or tagged Go module release is available yet; build the C ABI library from source before using it.
 
+## Build the native library
+From a clean clone of the repository (needs Rust 1.89+ and a C compiler):
+```sh
+bindings/go/scripts/build-native.sh     # installs bindings/go/lib/<GOOS>_<GOARCH>/
+cd bindings/go && go test ./...
+```
+
+## Use
+From your own module, require the package and point it at the checkout, since no tagged module is published:
+
+```sh
+go mod edit -require=github.com/writerslogic/warm/bindings/go@v0.0.0 \
+  -replace=github.com/writerslogic/warm/bindings/go=/path/to/warm/bindings/go
+```
+
 ```go
+import warm "github.com/writerslogic/warm/bindings/go"
+
 store, _ := warm.Open("/data/store", 2048, warm.WithEncryptionKey(key))
 defer store.Close()
 store.Ingest(ctx, warm.Document{ID: "a", Text: "...", TitleWeight: 3})
@@ -15,10 +32,4 @@ hits, _ := store.Search(ctx, "query", &warm.SearchOptions{K: 5, BM25K1: &k1, BM2
 
 Context: checked before the call; with a cancellable context the call runs on its own goroutine and returns `ctx.Err()` at once. The native call cannot be interrupted, so it completes in the background (inputs stay pinned); after a cancelled mutation the outcome is unknown.
 
-## Build the native library
-From a clean clone of the repository (needs Rust 1.89+ and a C compiler):
-```sh
-bindings/go/scripts/build-native.sh     # installs bindings/go/lib/<GOOS>_<GOARCH>/
-cd bindings/go && go test ./...
-```
 The `warm-fetch` helper is prepared for future checksummed release assets, but its default download URL cannot be used until those assets are published. Planned platforms: darwin arm64/amd64, linux arm64/amd64, windows amd64 (MinGW). Verified here: darwin/arm64 (build from source, warm-fetch via `file://`, `go test -race`). The helper's HTTP path and checksum rejection are unit tested.

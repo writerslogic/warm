@@ -14,7 +14,7 @@ pytestmark = pytest.mark.skipif(sys.platform != "linux", reason="Linux sealed sn
 
 @pytest.fixture(scope="module")
 def protocol():
-    path = Path(__file__).resolve().parents[2] / "scripts/lowlevel/sealed_index_run.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/research/lowlevel/sealed_index_run.py"
     spec = importlib.util.spec_from_file_location("warm_snapshot_protocol", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

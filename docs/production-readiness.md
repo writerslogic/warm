@@ -4,8 +4,10 @@
 
 Rust `WarmCore` and Node `WarmMemorySystem` expose persistent vector, document, and
 structured knowledge operations. `writerslogic-warm/semantic` adds bounded ingestion, local
-ONNX embeddings, hybrid retrieval, and optional local cross-encoder reranking. Python currently
-exposes the quantized-phase substrate, not the document engine. The Rust MSRV is 1.89.
+ONNX embeddings, hybrid retrieval, and optional local cross-encoder reranking. The published
+Python wheel (`warm-python` 0.6.8) exposes vector indexes and phase vectors. The in-process `Warm`
+engine (document search, `remember`, `recall`, `forget`, `explain`) is on `main` and ships with the
+release after 0.6.8. The Rust MSRV is 1.89.
 
 ## Compatibility and migration
 
