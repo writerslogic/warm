@@ -21,6 +21,44 @@ uvx warm-mcp             # PyPI launcher
 
 Both verify the download against a SHA-256 table shipped inside the package and refuse to run a binary that does not match. `WARM_MCP_BINARY=/path/to/warm-mcp` makes them run your own build. The release assets are named `warm-mcp-<rust target triple>[.exe]` under the `mcp-v<version>` release; `integrations/mcp/scripts/build-release.sh` builds one and records its checksum.
 
+## Connect a client
+
+Most clients take an `mcpServers` entry that starts the launcher. For Claude Desktop, merge
+[`integrations/editors/claude-desktop/claude_desktop_config.json`](../../../integrations/editors/claude-desktop/claude_desktop_config.json)
+into its `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "writerslogic-warm": {
+      "command": "npx",
+      "args": ["-y", "writerslogic-warm-mcp"]
+    }
+  }
+}
+```
+
+Other editors are in [editor integrations](../editors/README.md).
+
+## First tool call
+
+Over stdio, a client sends newline-delimited JSON-RPC: `initialize`, the `initialized`
+notification, then `tools/call`. Wait for each reply before sending a call that depends on it;
+the server handles requests concurrently, so a `recall` sent before the `remember` reply can miss
+that memory.
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"quickstart","version":"1"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized"}
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"remember","arguments":{"text":"The harbor opens at six in the morning.","tags":["travel"]}}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"recall","arguments":{"query":"when does the harbor open","k":1}}}
+```
+
+The `remember` reply carries the new memory's `id`, `version` and `created: true`. The `recall`
+reply's `structuredContent` is `{"count": 1, "results": [{"memory": {"text": "The harbor opens at
+six in the morning.", "tags": ["travel"], ...}, "score": 1.0, "lexical_score": ...}]}`.
+`--store DIR` keeps a trial store out of the default data directory.
+
 ## Tools
 
 | Tool | Purpose | Read-only |
