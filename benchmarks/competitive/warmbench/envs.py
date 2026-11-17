@@ -36,8 +36,8 @@ def python_for(name):
 # Pins: library name -> (requirement lines, importable distributions that report the version).
 PINS = {
     "hnswlib": ["hnswlib==0.8.0"],
-    "faiss": ["faiss-cpu==1.12.0"],
-    "usearch": ["usearch==2.26.5"],
+    "faiss": ["faiss-cpu==1.16.0"],
+    "usearch": ["usearch==2.26.6"],
     "annoy": ["annoy==1.17.3"],
     "sqlite-vec": ["sqlite-vec==0.1.9"],
     "lancedb": ["lancedb==0.40.0"],
