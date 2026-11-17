@@ -16,6 +16,7 @@ use pyo3::exceptions::{PyMemoryError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+use super::value_err as err;
 use crate::core::error::WarmError;
 use crate::core::qgraph::connectivity::ConnectivityStats;
 use crate::core::qgraph::{
@@ -25,10 +26,6 @@ use crate::core::qgraph::{
 
 /// Graphs below this many vertices store neighbour ids in three bytes.
 const THREE_BYTE_IDS_BELOW: usize = (1 << 24) - 1;
-
-fn err(e: WarmError) -> PyErr {
-    PyValueError::new_err(e.to_string())
-}
 
 pub(super) fn result_array(rows: usize, cols: usize) -> PyResult<Vec<i64>> {
     let max_items = isize::MAX as usize / std::mem::size_of::<i64>();
@@ -316,15 +313,7 @@ impl PyVectorIndex {
                 "residual_bits must be 0, 4 or 8, not {residual_bits}"
             )));
         }
-        let pool = match threads {
-            0 => None,
-            n => Some(
-                rayon::ThreadPoolBuilder::new()
-                    .num_threads(n)
-                    .build()
-                    .map_err(|e| PyRuntimeError::new_err(format!("thread pool: {e}")))?,
-            ),
-        };
+        let pool = thread_pool(threads)?;
         Ok(Self {
             metric,
             degree,
@@ -522,7 +511,7 @@ impl PyVectorIndex {
                     if compact_adjacency {
                         index.compact_adjacency()?;
                     }
-                    Ok((index, stats))
+                    Ok::<_, WarmError>((index, stats))
                 })
             })
             .map_err(err)?;

@@ -7,27 +7,14 @@
 //! source matrix is never copied into Python. Build and search run without the GIL.
 
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray1, PyUntypedArrayMethods};
-use pyo3::exceptions::{PyRuntimeError, PyValueError};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
+use super::value_err;
+use super::vector_index::thread_pool;
 use crate::core::index::sparse_impact::{
     CsrView, SparseBuildParams, SparseImpactIndex, SparseSearchParams,
 };
-
-fn value_err(e: impl std::fmt::Display) -> PyErr {
-    PyValueError::new_err(e.to_string())
-}
-
-fn thread_pool(threads: usize) -> PyResult<Option<rayon::ThreadPool>> {
-    match threads {
-        0 => Ok(None),
-        n => rayon::ThreadPoolBuilder::new()
-            .num_threads(n)
-            .build()
-            .map(Some)
-            .map_err(|e| PyRuntimeError::new_err(format!("thread pool: {e}"))),
-    }
-}
 
 /// Top-k inner-product search over non-negative learned sparse vectors.
 ///
