@@ -5,6 +5,76 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [0.7.0] - 2026-11-17
+
+### Added
+- Parse form state from accessibility-tree text at experience ingest (#494)
+- Run hybrid recall in the memory API (#475)
+- Route tree observations through the default memory path (#472)
+- Add the experience core for tree-structured agent observations (#468)
+- Back memorize_vector with the vertex graph and add in-process Warm to the Python wheel (#440)
+- Back memorize_vector with the vertex graph and add in-process Warm to the Python wheel
+
+### Changed
+- Consolidate tests, remove duplicate helpers and trim session comments (#490)
+
+### Documentation
+- Describe the editor plugins as on-device with no service calls (#492)
+- Restate benchmark claims from their committed results files (#482)
+
+### Fixed
+- Retry an interrupted template copy in the store_open fuzz target (#487)
+- Finish interrupted purges at open, purge by default with durable tickets, and grow segments on Windows (#453)
+- Read block-addressed rows on Windows with positional reads
+- Commit the byte-row golden logs and leave the f32 golden README unchanged
+- Build the sparse sweep example against the current index parameters
+- Satisfy the Rust 1.100 range-loop lint in the operand retriever
+- Iterate the centroid norms directly in the list ranking tail
+- Satisfy the Rust 1.100 range-loop lint in the operand retriever
+- Iterate the centroid norms directly in the list ranking tail
+
+### Performance
+- Keep 512-bit gathers out of the block-wise conjunction loops (#488)
+- Estimate 4-bit neighbour rows four at a time on the default query path (#484)
+- Count intersections a block at a time (#476)
+- Serve positional lexical queries from checkpoint version 4 with skip tables (#470)
+- Make four-row batched neighbour estimates the default query path (#477)
+- Bound the construction search and make standard the default build profile (#469)
+- Add opt-in compressed checkpoint text (#473)
+- Fold the text index to disk in bounded memory during ingest (#457)
+- Add a binary vector query, queueing defaults and engine-side filtered search to warm-server (#471)
+- Keep live-store posting lists decoded per thread for hybrid queries (#474)
+- Serve large lexical corpora from the checkpoint with an exact impact-pruned ranker (#467)
+- Add vector build profiles, run construction batches in locality order and release committed text in the text benchmark (#456)
+- Speed up the streaming index with AVX-512 GEMM dispatch and packed selection keys (#463)
+- Cut vertex build memory and store byte-valued rows as one byte per coordinate (#441)
+- Weigh postings a block at a time in the lexical rank pass (#439)
+- Speed up partition retrain placement and add block-sketch pruning to the sparse index (#437)
+- Score sparse candidates through a per-document sketch and seed the block threshold
+- Screen filtered IVF lists with 4-bit fast-scan codes (#434)
+- Columnar block summaries, residual bound and byte forward rows for the sparse index
+- Retrain the partition tier after 6M inserts by default
+- Speed up partition placement with a fused SIMD spill-candidate filter and the gemm crate
+- Weigh postings a block at a time and skip empty score chunks in the lexical rank pass
+- Cut the filtered fast-scan probe cost and tune per query class
+- Store byte-valued base rows as one byte per coordinate
+- Screen filtered IVF lists with 4-bit fast-scan codes
+- Cut peak build memory and the duplicate vertex file, and add block-addressed base rows
+
+### Bench
+- Record machine, commit and date in the hybrid results and report (#493)
+- Pin faiss-cpu 1.16.0 and usearch 2.26.6 for the rerun (#491)
+- Hold every comparison to one timing boundary and one verdict rule (#483)
+- Add the hybrid contract (#466)
+- Add vector baselines on a second machine class with a clean SIFT-1M final and GloVe (#458)
+- Fold the three-machine text results, paired quality bootstrap, fact-store kill tests and LoCoMo context shapes (#464)
+- Time every text engine on matched contracts, fix search_lexical, and fold the first-use, membership, sparse-docs and LoCoMo work (#454)
+- Time hnswlib natively in C++ and report its Python call overhead (#444)
+- Refresh the 185H competitive results at d41fc949 (#443)
+- Refresh the 185H competitive results at d41fc949
+
+### Merge
+- Bring in the sparse index block-sketch pruning (#438)
 ## [0.6.8] - 2026-11-11
 
 ### Fixed
