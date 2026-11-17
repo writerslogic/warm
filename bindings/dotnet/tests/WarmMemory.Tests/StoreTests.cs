@@ -79,7 +79,9 @@ public sealed class StoreTests : IDisposable
         Assert.Equal("fox", bySource[0].DocumentId);
         Assert.Equal("file:///fox.txt", bySource[0].SourceUri);
 
-        foreach (var r in store.Search("river language", new SearchOptions { DocumentIds = new[] { "rust" }, Fusion = "rrf" }))
+        var byDocument = store.Search("river language", new SearchOptions { DocumentIds = new[] { "rust" }, Fusion = "rrf" });
+        Assert.NotEmpty(byDocument);
+        foreach (var r in byDocument)
         {
             Assert.Equal("rust", r.DocumentId);
         }

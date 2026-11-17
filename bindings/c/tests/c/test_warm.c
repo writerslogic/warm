@@ -264,6 +264,7 @@ static void test_lifecycle_and_search(void) {
   options.document_id_count = 1;
   options.fusion = S("rrf");
   CHECK(warm_store_search(store, S("river language"), &options, &results) == WARM_OK);
+  CHECK(warm_results_count(results) >= 1);
   for (size_t i = 0; i < warm_results_count(results); i++) {
     CHECK(warm_results_get(results, i, &hit) == WARM_OK);
     CHECK(str_eq(hit.document_id, "rust"));

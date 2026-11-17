@@ -121,8 +121,10 @@ class StoreTest {
             assertEquals("fox", bySource.get(0).documentId());
             assertEquals("file:///fox.txt", bySource.get(0).sourceUri());
 
-            for (Result r : store.search("river language",
-                    SearchOptions.builder().documentIds(List.of("rust")).fusion("rrf").build())) {
+            List<Result> byDocument = store.search("river language",
+                    SearchOptions.builder().documentIds(List.of("rust")).fusion("rrf").build());
+            assertFalse(byDocument.isEmpty());
+            for (Result r : byDocument) {
                 assertEquals("rust", r.documentId());
             }
 

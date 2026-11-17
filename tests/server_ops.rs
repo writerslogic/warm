@@ -11,14 +11,6 @@ use std::time::{Duration, Instant};
 use serde_json::json;
 use server_support::*;
 
-fn wait_until(what: &str, mut ok: impl FnMut() -> bool) {
-    let deadline = Instant::now() + Duration::from_secs(15);
-    while !ok() {
-        assert!(Instant::now() < deadline, "timed out waiting for {what}");
-        std::thread::sleep(Duration::from_millis(50));
-    }
-}
-
 fn count(s: &Server, tenant: &str) -> u64 {
     s.req("GET", "/api/v1/stats").tenant(tenant).send().json()["documents"]
         .as_u64()
