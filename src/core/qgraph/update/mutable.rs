@@ -365,6 +365,7 @@ impl MutableBase {
             norms: norms_opt(&self.norms),
             codes: self.codes.as_ref(),
             quantized: false,
+            bound: None,
         };
         // The construction pass links each of its internal batches only to the graph before it,
         // so rows that arrive cluster by cluster must be spread out first, as the build and
@@ -378,6 +379,7 @@ impl MutableBase {
             self.params.build_ef,
             self.params.alpha,
             self.params.degree,
+            &[],
         );
         // A parent that was in the graph before this slot keeps the tree acyclic and rooted at
         // the entry; inside the batch only an earlier slot qualifies.
@@ -574,6 +576,7 @@ impl MutableBase {
                     norms: norms_opt(&self.norms),
                     codes: self.codes.as_ref(),
                     quantized: false,
+                    bound: None,
                 };
                 (base as u32..end as u32)
                     .into_par_iter()
@@ -595,6 +598,7 @@ impl MutableBase {
                 norms: norms_opt(&self.norms),
                 codes: None,
                 quantized: false,
+                bound: None,
             };
             let at = medoid_by(&rows, live.len(), |i| live[i as usize], self.params.metric);
             self.entry = live[at as usize];
