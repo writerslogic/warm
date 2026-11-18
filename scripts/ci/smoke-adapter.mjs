@@ -10,12 +10,12 @@ import { join } from 'node:path'
 const pkg = process.argv[2]
 const esm = await import(pkg)
 // The Claude memory tool is ESM-only.
-const esmOnly = pkg === 'writerslogic-warm-claude-tool'
+const esmOnly = pkg === 'warm-claude-tool'
 const cjs = esmOnly ? {} : createRequire(import.meta.url)(pkg)
 const names = Object.keys(esm).filter((k) => k !== 'default')
 if (names.length === 0 || (!esmOnly && Object.keys(cjs).length === 0)) throw new Error(`${pkg} exports nothing`)
 console.log(pkg, 'esm', names.length, 'cjs', Object.keys(cjs).length)
-if (pkg === '@writerslogic/warm-core') {
+if (pkg === 'warm-core') {
   const store = new esm.WarmStore({ path: mkdtempSync(join(tmpdir(), 'warm-smoke-')) })
   await store.remember([{ id: 'a', text: 'Ada wrote the first program' }])
   const hits = await store.recall('first program', { k: 1 })

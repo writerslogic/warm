@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [project]
-name = "writerslogic-warm-integrations"
+name = "warm-integrations"
 version = "0.1.0"
 description = "Agent and RAG framework adapters for WARM"
 readme = "README.md"

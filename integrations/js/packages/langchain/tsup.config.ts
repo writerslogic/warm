@@ -8,5 +8,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   shims: true,
-  external: ['@writerslogic/warm-core', '@langchain/core', 'writerslogic-warm'],
+  external: ['warm-core', '@langchain/core', 'writerslogic-warm'],
 })

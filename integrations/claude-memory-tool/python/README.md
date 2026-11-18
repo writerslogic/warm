@@ -1,11 +1,11 @@
-# writerslogic-warm-claude-tool (Python)
+# warm-claude-tool (Python)
 
 Backs Anthropic's client-side memory tool (`memory_20250818`) with WARM: Claude's `/memories` directory is stored in a `warm-mcp` server and every file is searchable by meaning.
 
 ## Install
 
 ```sh
-pip install writerslogic-warm-claude-tool   # plus a warm-mcp binary: npx -y writerslogic-warm-mcp, or uvx warm-mcp
+pip install warm-claude-tool   # plus a warm-mcp binary: npx -y writerslogic-warm-mcp, or uvx warm-mcp
 ```
 
 ## Quickstart

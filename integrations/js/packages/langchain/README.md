@@ -1,20 +1,20 @@
-# @writerslogic/warm-langchain
+# warm-langchain
 
 A LangChain.js `VectorStore`, retriever support and chat message history on the WARM native engine, in process.
 
 ## Install
 
 ```sh
-npm install @writerslogic/warm-langchain @langchain/core
+npm install warm-langchain @langchain/core
 ```
 
-The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
+The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 
 ```js
 import { Document } from '@langchain/core/documents'
-import { HashingEmbedder, WarmVectorStore } from '@writerslogic/warm-langchain'
+import { HashingEmbedder, WarmVectorStore } from 'warm-langchain'
 
 const h = new HashingEmbedder(384) // lexical; use any LangChain Embeddings for semantic search
 const embeddings = { embedDocuments: (t) => h.encodeDocuments(t), embedQuery: (t) => h.encodeQuery(t) }

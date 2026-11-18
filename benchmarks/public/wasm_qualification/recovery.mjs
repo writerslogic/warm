@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import process from "node:process";
-import { openStore } from "@writerslogic/warm-wasm";
-import { FileStorage } from "@writerslogic/warm-wasm/storage/file";
+import { openStore } from "warm-wasm";
+import { FileStorage } from "warm-wasm/storage/file";
 
 const [mode, directory, encryptionMode] = process.argv.slice(2);
 assert.ok(["writer", "reader"].includes(mode));

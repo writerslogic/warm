@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { Document, Settings, VectorStoreIndex, storageContextFromDefaults } from 'llamaindex'
 import { BaseEmbedding } from '@llamaindex/core/embeddings'
 import { MockLLM } from '@llamaindex/core/llms/mock'
-import { HashingEmbedder, WarmKVStore, WarmStore, WarmVectorStore } from '@writerslogic/warm-llamaindex'
+import { HashingEmbedder, WarmKVStore, WarmStore, WarmVectorStore } from 'warm-llamaindex'
 
 // Any LlamaIndex embedding works (OpenAIEmbedding, HuggingFaceEmbedding, OllamaEmbedding...).
 // This one is the dependency-free hashing embedder (lexical, not semantic).

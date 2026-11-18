@@ -10,7 +10,7 @@ import {
   type VectorStoreQuery,
   type VectorStoreQueryResult,
 } from '@llamaindex/core/vector-store'
-import { HashingEmbedder, WarmError, WarmStore, type Embedder, type Filter, type Hit, type WarmStoreOptions } from '@writerslogic/warm-core'
+import { HashingEmbedder, WarmError, WarmStore, type Embedder, type Filter, type Hit, type WarmStoreOptions } from 'warm-core'
 import { toFilter } from './filters.js'
 
 export interface WarmVectorStoreOptions extends Omit<WarmStoreOptions, 'embedder'> {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { embed, embedMany, rerank, tool, type EmbeddingModel, type LanguageModelMiddleware, type RerankingModel, type Tool } from 'ai'
 import { z } from 'zod'
-import type { Embedder, FilterLike, Hit, WarmStore, Metadata, Reranker } from '@writerslogic/warm-core'
+import type { Embedder, FilterLike, Hit, WarmStore, Metadata, Reranker } from 'warm-core'
 
 type Params = Parameters<NonNullable<LanguageModelMiddleware['transformParams']>>[0]['params']
 

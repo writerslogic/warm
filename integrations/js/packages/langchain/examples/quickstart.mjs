@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { Document } from '@langchain/core/documents'
 import { FakeListChatModel } from '@langchain/core/utils/testing'
 import { RunnableWithMessageHistory } from '@langchain/core/runnables'
-import { HashingEmbedder, WarmChatMessageHistory, WarmStore, WarmVectorStore } from '@writerslogic/warm-langchain'
+import { HashingEmbedder, WarmChatMessageHistory, WarmStore, WarmVectorStore } from 'warm-langchain'
 
 // Any LangChain Embeddings works. This one is the dependency-free hashing embedder (lexical, not semantic);
 // swap in OpenAIEmbeddings, OllamaEmbeddings, HuggingFaceTransformersEmbeddings, ...

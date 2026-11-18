@@ -68,8 +68,8 @@ writeFileSync(join(consumer, "package.json"), JSON.stringify({ name: "consumer",
 sh("npm", ["install", "--no-audit", "--no-fund", join(scratch, tarName), "typescript@5", "@types/node@22"], { cwd: consumer });
 
 const program = `
-import { openStore } from "@writerslogic/warm-wasm";
-import { FileStorage } from "@writerslogic/warm-wasm/storage/file";
+import { openStore } from "warm-wasm";
+import { FileStorage } from "warm-wasm/storage/file";
 const dir = await (await import("node:fs/promises")).mkdtemp((await import("node:os")).tmpdir() + "/warm-consumer-");
 const store = await openStore({ dimensions: 512, storage: new FileStorage(dir), encryption: { passphrase: "p", iterations: 1000 } });
 await store.memorizeDocument({ id: "a", text: "installed from the tarball" });
@@ -98,10 +98,10 @@ for (const [name, [command, runnerArgs]] of runners) {
 
 writeFileSync(
   join(consumer, "types.ts"),
-  `import { openStore, type DocumentResult, type StorageAdapter } from "@writerslogic/warm-wasm";
-import { IndexedDbStorage } from "@writerslogic/warm-wasm/storage/indexeddb";
-import { OpfsStorage } from "@writerslogic/warm-wasm/storage/opfs";
-import { FileStorage } from "@writerslogic/warm-wasm/storage/file";
+  `import { openStore, type DocumentResult, type StorageAdapter } from "warm-wasm";
+import { IndexedDbStorage } from "warm-wasm/storage/indexeddb";
+import { OpfsStorage } from "warm-wasm/storage/opfs";
+import { FileStorage } from "warm-wasm/storage/file";
 const adapters: StorageAdapter[] = [new IndexedDbStorage(), new OpfsStorage(), new FileStorage("x")];
 const store = await openStore({ storage: adapters[0] });
 const hits: DocumentResult[] = await store.searchDocuments("q", { k: 3, bm25K1: 1.2 });

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { BaseKVStore } from '@llamaindex/core/storage/kv-store'
 import type { StoredValue } from '@llamaindex/core/schema'
-import { WarmError, type WarmStore } from '@writerslogic/warm-core'
+import { WarmError, type WarmStore } from 'warm-core'
 
 const DEFAULT_COLLECTION = 'data'
 

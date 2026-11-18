@@ -167,7 +167,7 @@ def test_register_tools_through_letta_client_wire():
     assert [t.id for t in tools] == ["tool-1", "tool-2"]
     assert [m for m, _, _ in seen] == ["PUT", "PUT"] and all(p == "/v1/tools/" for _, p, _ in seen)
     for _, _, body in seen:
-        assert body["pip_requirements"] == [{"name": "writerslogic-warm-integrations", "version": "0.1.0"}]
+        assert body["pip_requirements"] == [{"name": "warm-integrations", "version": "0.1.0"}]
         compile(body["source_code"], "<tool>", "exec")
     assert "def warm_archival_insert(" in seen[0][2]["source_code"] and "def warm_archival_search(" in seen[1][2]["source_code"]
     assert agent_secrets("http://h:8080", api_key="k", input_dim=384) == {"WARM_URL": "http://h:8080", "WARM_API_KEY": "k", "WARM_INPUT_DIM": "384"}
