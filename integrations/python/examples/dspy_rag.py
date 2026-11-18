@@ -11,6 +11,7 @@ The language model is DSPy's DummyLM so the example runs offline; replace it wit
 """
 
 import os
+from importlib.metadata import version
 
 import dspy
 from dspy.utils import DummyLM
@@ -46,7 +47,9 @@ class RAG(dspy.Module):
         return self.answer(context=self.retrieve(question).passages, question=question)
 
 
-with dspy.context(lm=DummyLM([{"reasoning": "the first passage says so", "answer": "on your machine"}])):
+# dspy 3.5 asks a non-reasoning LM for a "plan"; 3.4 asks for "reasoning".
+thought = "plan" if tuple(int(n) for n in version("dspy").split(".")[:2]) >= (3, 5) else "reasoning"
+with dspy.context(lm=DummyLM([{thought: "the first passage says so", "answer": "on your machine"}])):
     out = RAG()("Where does WARM run?")
 print(out.answer)
 print(retriever("Where does WARM run?").ids)
