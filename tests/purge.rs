@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: re-executes this binary by test name to abort a child.
 
 //! A purge is physically complete when it returns: no deleted text remains in any file under
 //! the store directory, including after an abrupt process death and a reopen.

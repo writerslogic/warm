@@ -274,7 +274,11 @@ jobs:
         run: >-
           cargo nextest run --locked --features server,mcp --no-fail-fast --test-threads 1
           --bin warm-server --bin warm-mcp
-          --test server --test server_api --test server_ops --test server_abuse --test server_ann
+      - name: HTTP server integration tests
+        run: >-
+          cargo nextest run --locked --features server,mcp --no-fail-fast --test-threads 1
+          --test integration_tests
+          server:: server_api:: server_ops:: server_abuse:: server_ann::
       - name: Unit and integration tests
         run: cargo nextest run --locked --no-fail-fast
 

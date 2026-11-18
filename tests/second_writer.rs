@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: re-executes this binary by test name to hold the store from a second process.
 
 //! The concurrency model: one engine (one process) owns a store directory and serves any
 //! number of reader and writer threads; a second engine, in this or another process, is

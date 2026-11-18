@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: installs a counting #[global_allocator], which applies to the whole binary.
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;

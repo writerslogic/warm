@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: re-executes this binary by test name to abort a child.
 
 //! Invariants of the memory API: history is never lost, as-of queries are consistent and
 //! independent of arrival order, forget is complete for its scope, retries are idempotent,

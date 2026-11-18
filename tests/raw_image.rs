@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: re-executes this binary by test name and arms process-wide failpoints.
 
 //! Writes the store half of the raw-device erasure check. Linux, and only when run by
 //! `scripts/ci/raw-image-erase.sh`, which mounts a file-backed ext4 image at

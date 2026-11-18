@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: its crash module re-executes this binary by test name and arms process-wide failpoints.
 
 //! What `forget` leaves on disk. The default `forget` is a purge: when it returns, and after a
 //! crash at any point during it followed by a reopen, no file of the store directory holds
