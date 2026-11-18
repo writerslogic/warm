@@ -279,7 +279,7 @@ fn parse_header(ctx: &SegmentCtx, path: &Path) -> Result<Parsed> {
         "segment header nonce is beyond the key table mark"
     );
     let mut entries = Vec::with_capacity(count as usize);
-    for raw in body[HDR_FIXED..].chunks_exact(INDEX_ENTRY_BYTES) {
+    for raw in body[HDR_FIXED..].as_chunks::<INDEX_ENTRY_BYTES>().0 {
         let entry = Entry {
             offset: le_u64(&raw[0..8]),
             len: le_u32(&raw[8..12]),

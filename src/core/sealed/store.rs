@@ -168,7 +168,7 @@ impl Table {
             .open_with_nonce(nonce, &bytes[..body_len], &bytes[body_len + 12..])
             .map_err(|_| anyhow!("key table failed authentication"))?;
         let mut entries = BTreeMap::new();
-        for raw in bytes[TBL_HEAD..body_len].chunks_exact(TBL_ENTRY) {
+        for raw in bytes[TBL_HEAD..body_len].as_chunks::<TBL_ENTRY>().0 {
             let id = le_u64(&raw[0..8]);
             let entry = TEntry {
                 gen: le_u32(&raw[8..12]),
