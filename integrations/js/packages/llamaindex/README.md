@@ -4,7 +4,11 @@ A LlamaIndex.TS `BaseVectorStore` and `BaseKVStore` on the WARM native engine, i
 
 ## Install
 
-Source workspace only (not published); setup in [JS core](../core/README.md#install). Peers: `llamaindex`, `@llamaindex/core`.
+```sh
+npm install @writerslogic/warm-llamaindex llamaindex @llamaindex/core
+```
+
+The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 

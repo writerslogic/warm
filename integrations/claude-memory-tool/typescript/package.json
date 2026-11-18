@@ -2,12 +2,25 @@
   "name": "writerslogic-warm-claude-tool",
   "version": "0.1.0",
   "description": "Backend for Anthropic's client-side memory tool (memory_20250818) on WARM: a /memories virtual filesystem with semantic recall.",
+  "keywords": [
+    "warm",
+    "writerslogic",
+    "anthropic",
+    "claude",
+    "memory-tool",
+    "mcp",
+    "agent-memory"
+  ],
   "license": "Apache-2.0",
   "author": "WritersLogic, Inc. <david@writerslogic.com>",
+  "homepage": "https://github.com/writerslogic/warm/tree/main/integrations/claude-memory-tool/typescript",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/writerslogic/warm.git",
     "directory": "integrations/claude-memory-tool/typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/writerslogic/warm/issues"
   },
   "type": "module",
   "main": "./dist/src/index.js",
@@ -18,13 +31,20 @@
       "default": "./dist/src/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist/src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "tsc -p tsconfig.json && node --test --test-concurrency=1 dist/test/"
-  },
-  "engines": {
-    "node": ">=18"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1"

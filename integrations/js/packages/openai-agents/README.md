@@ -4,7 +4,11 @@ A `Session` and memory tools for the OpenAI Agents SDK (JS) on the WARM native e
 
 ## Install
 
-Source workspace only (not published); setup in [JS core](../core/README.md#install). Peers: `@openai/agents`, `zod`.
+```sh
+npm install @writerslogic/warm-openai-agents @openai/agents zod
+```
+
+The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 
