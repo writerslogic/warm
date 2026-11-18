@@ -193,20 +193,40 @@ impl Graph {
         neighbors: usize,
         projected_degree: usize,
     ) -> Result<ProjectionStats, WarmError> {
+        self.apply_training_queries_keeping(queries, limit, neighbors, projected_degree)
+            .map(|(stats, _, _)| stats)
+    }
+
+    /// [`Graph::apply_training_queries_with`], also returning the exact neighbour lists it
+    /// projected (row ids, nearest first) and their length per query; the lists cover the
+    /// first `ids.len() / per_query` queries.
+    pub fn apply_training_queries_keeping(
+        &mut self,
+        queries: &[f32],
+        limit: usize,
+        neighbors: usize,
+        projected_degree: usize,
+    ) -> Result<(ProjectionStats, Vec<u32>, usize), WarmError> {
         validate_queries(queries, self.dim, self.metric)?;
         if self.n == 1 {
-            return self.project_neighborhoods(None, &[], 0, 0);
+            let count = (queries.len() / self.dim).min(limit.max(1));
+            return Ok((
+                self.project_neighborhoods(None, &[], 0, 0)?,
+                vec![0; count],
+                1,
+            ));
         }
         let count = (queries.len() / self.dim).min(limit.max(1));
         let queries = &queries[..count * self.dim];
         let neighbors = self.n.min(neighbors.max(2));
         let ids = self.training_neighbors(queries, neighbors)?;
-        self.project_neighborhoods(
+        let stats = self.project_neighborhoods(
             Some(queries),
             &ids,
             neighbors,
             (self.n - 1).min(projected_degree.max(1)),
-        )
+        )?;
+        Ok((stats, ids, neighbors))
     }
 
     /// Projects neighbour lists the caller found for construction queries (for example by an

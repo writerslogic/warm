@@ -264,8 +264,8 @@ impl<'a> Cursor<'a> {
             self.frequency_bits,
             &mut frequencies,
         );
-        for i in 0..self.count {
-            self.frequencies[i] = frequencies[i] as u32;
+        for (slot, &value) in self.frequencies.iter_mut().zip(&frequencies[..self.count]) {
+            *slot = value as u32;
         }
         self.frequencies_ready = true;
     }
@@ -632,8 +632,8 @@ impl<'a> Cursor<'a> {
             unpack_values(&region[1..], self.count, width, &mut lengths);
             let mut total = 0u32;
             self.starts[0] = 0;
-            for i in 0..self.count {
-                total += lengths[i] as u32;
+            for (i, &length) in lengths[..self.count].iter().enumerate() {
+                total += length as u32;
                 self.starts[i + 1] = total;
             }
             self.positions_at = at + 1 + (self.count * usize::from(width)).div_ceil(8);
