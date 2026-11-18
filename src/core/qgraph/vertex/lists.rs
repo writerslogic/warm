@@ -192,16 +192,22 @@ impl QueryLists {
             return Err(bad("length does not match the header"));
         }
         let centres: Vec<f32> = bytes[centres_at..offsets_at]
-            .chunks_exact(4)
-            .map(|c| f32::from_le_bytes(c.try_into().unwrap()))
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|c| f32::from_le_bytes(*c))
             .collect();
         let offsets: Vec<u64> = bytes[offsets_at..ids_at]
-            .chunks_exact(8)
-            .map(|c| u64::from_le_bytes(c.try_into().unwrap()))
+            .as_chunks::<8>()
+            .0
+            .iter()
+            .map(|c| u64::from_le_bytes(*c))
             .collect();
         let ids: Vec<u32> = bytes[ids_at..]
-            .chunks_exact(4)
-            .map(|c| u32::from_le_bytes(c.try_into().unwrap()))
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|c| u32::from_le_bytes(*c))
             .collect();
         if offsets[0] != 0
             || offsets[lists] != count as u64
