@@ -13,6 +13,7 @@ warm-server --input-dim 384                               # the vector length yo
 
 ## Quickstart
 
+<!-- quickstart-check: python langchain -->
 ```python
 from langchain_core.documents import Document
 from writerslogic_warm_integrations.core import HashingEmbedder
