@@ -33,7 +33,6 @@ fn fused_fwht_returns_the_reference_bits_at_every_size() {
             assert_eq!(bits(&a), bits(&b), "n {n}");
         }
     }
-    // The integer instantiation too.
     let mut a: Vec<i64> = (0..64).map(|i| i * 7 - 200).collect();
     let mut b = a.clone();
     fwht(&mut a);
