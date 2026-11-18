@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-/// Errors of [`FilteredIndex`].
+/// Errors of [`super::FilteredIndex`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterError {
     /// An argument has the wrong shape or an out-of-range value.
@@ -18,7 +18,7 @@ impl std::fmt::Display for FilterError {
 
 impl std::error::Error for FilterError {}
 
-/// Build parameters of a [`FilteredIndex`].
+/// Build parameters of a [`super::FilteredIndex`].
 #[derive(Debug, Clone, Copy)]
 pub struct FilterBuildParams {
     /// Labels with more members than this get an inverted file of their own.
@@ -65,7 +65,7 @@ impl Default for FilterBuildParams {
     }
 }
 
-/// Search parameters of [`FilteredIndex::search`].
+/// Search parameters of [`super::FilteredIndex::search`].
 #[derive(Debug, Clone, Copy)]
 pub struct FilterSearchParams {
     /// Queries whose rarest label has at most this many members are answered exactly by
@@ -98,7 +98,7 @@ impl Default for FilterSearchParams {
 /// Execution choices that never change a result: the same ids and distances for any value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FilterTuning {
-    /// [`FilteredIndex::search_batch`] runs queries that share a rarest label back to back on
+    /// [`super::FilteredIndex::search_batch`] runs queries that share a rarest label back to back on
     /// one thread, so the label's rows and lists stay cached for the next of them.
     pub sort_queries: bool,
     /// Rows ahead of the one being scored whose cache lines are prefetched.
