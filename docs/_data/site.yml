@@ -43,7 +43,7 @@ runtimes:
   - id: python
     name: Python
     status: available
-    install: uv pip install warm-sdk
+    install: uv venv && uv pip install warm-sdk
     requires: [bindings/python/warm-sdk/pyproject.toml, examples/quickstart/python/quickstart.py]
     snippets:
       - examples/quickstart/python/quickstart.py:ingest
@@ -59,7 +59,7 @@ runtimes:
     snippets:
       - examples/quickstart/js-client/quickstart.mjs:ingest
       - examples/quickstart/js-client/quickstart.mjs:hit
-    note: Portable warm-sdk 0.2.1 HTTP client. Run warm-server separately and set WARM_URL and WARM_API_KEY. No native or runtime dependencies. The relative import above is for this checkout.
+    note: Portable warm-sdk 0.2.2 HTTP client. Run warm-server separately and set WARM_URL and WARM_API_KEY. No native or runtime dependencies. The relative import above is for this checkout.
   - id: node-embedded
     name: Embedded Node
     status: available
@@ -70,7 +70,7 @@ runtimes:
     snippets:
       - examples/quickstart/node/quickstart.mjs:ingest
       - examples/quickstart/node/quickstart.mjs:hit
-    note: Optional writerslogic-warm 0.6.8 engine. Source builds require Rust; native npm releases select one of eight platform binaries.
+    note: Optional writerslogic-warm 0.7.0 engine. Source builds require Rust; native npm releases select one of eight platform binaries.
 
 features:
   - title: Hybrid search

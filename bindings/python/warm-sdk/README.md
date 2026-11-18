@@ -24,6 +24,7 @@ adapter in this repository is a separate API, not a drop-in replacement; its
 framework-integration distribution is not published by the SDK release.
 
 ```bash
+uv init   # only outside an existing uv project
 uv add warm-sdk
 ```
 

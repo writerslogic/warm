@@ -115,13 +115,13 @@ entire checkpoint or hold store locks during text I/O.
 <details>
 <summary><strong>JavaScript and TypeScript: portable client</strong></summary>
 
-`warm-sdk` 0.2.1 is the portable HTTP client for a separately running `warm-server`.
+`warm-sdk` 0.2.2 is the portable HTTP client for a separately running `warm-server`.
 It has no native binaries or runtime dependencies and uses standard Fetch and Web Streams APIs
 (Node 18 or newer). Installing or importing it does not load the embedded engine or download models.
 For a published release, install the client in your application:
 
 ```sh
-npm install warm-sdk@0.2.1
+npm install warm-sdk@0.2.2
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
@@ -162,7 +162,8 @@ const hits = await warm.memory.recall('restore backups', { filter: { project: 'a
 console.log(hits[0]?.text)
 ```
 
-Set `WARM_API_KEY` to the server's key before running the client. This memory example uses
+Save it as an ES module (`app.mjs`, or set `"type": "module"` in `package.json`); it uses
+`import` and top-level `await`. Set `WARM_API_KEY` to the server's key before running the client. This memory example uses
 lexical retrieval and needs no embedding model. A runnable source example also checks retrieval
 and deletion in an isolated namespace:
 
@@ -184,7 +185,7 @@ Browser deployments must permit the application's origin at the HTTP service bou
 install it explicitly with npm's optional dependencies enabled:
 
 ```sh
-npm install writerslogic-warm@0.6.8
+npm install writerslogic-warm@0.7.0
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
@@ -224,15 +225,14 @@ main().catch(error => { console.error(error); process.exit(1) })
 <summary><strong>Server and Python</strong></summary>
 
 The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores vectors you
-supply. `warm-python` (imported as `writerslogic_warm`) is the in-process native package: vector
-indexes and phase vectors in 0.6.8, which has no document search. The in-process `Warm` class
-(document search, `remember`, `recall`, `forget`, `explain`) is on `main` and ships with the
-release after 0.6.8; until then, `maturin develop --release` from a checkout provides it.
+supply. `warm-python` (imported as `writerslogic_warm`) is the in-process native package. From
+0.7.0 it includes the in-process `Warm` class (document search, `remember`, `recall`, `forget`,
+`explain`) beside the vector indexes and phase vectors; the 0.6.8 wheel has no document search.
 
 ```sh
 cargo install --locked --features server --bin warm-server warm-rust
 WARM_API_KEY=change-me warm-server --input-dim 384 &
-uv pip install warm-sdk
+uv venv && uv pip install warm-sdk   # run the example with .venv/bin/python
 ```
 
 ```python
@@ -309,8 +309,8 @@ provide the evidence for evaluating WARM on your own workload.
 | On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |
-| JavaScript/TypeScript client (`warm-sdk` 0.2.1) | Source and release builds | Portable HTTP client; requires a separately running server |
-| Embedded Node.js (`writerslogic-warm` 0.6.8) | Source and release builds | Eight optional native platform packages; separate from the client |
+| JavaScript/TypeScript client (`warm-sdk` 0.2.2) | Source and release builds | Portable HTTP client; requires a separately running server |
+| Embedded Node.js (`writerslogic-warm` 0.7.0) | Source and release builds | Eight optional native platform packages; separate from the client |
 | C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
 | Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | No in-process document search |
 | Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |
