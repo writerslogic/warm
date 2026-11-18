@@ -10,6 +10,7 @@ pip install writerslogic-warm-claude-tool   # plus a warm-mcp binary: npx -y wri
 
 ## Quickstart
 
+<!-- quickstart-check: skip: requires API key (ANTHROPIC_API_KEY) -->
 ```python
 import anthropic
 from warm_memory_tool import WarmMemoryToolSync
@@ -24,6 +25,8 @@ with WarmMemoryToolSync.connect(command="warm-mcp") as memory:   # or url="http:
     )
     print(runner.until_done().content)
 ```
+
+Needs `ANTHROPIC_API_KEY`, so it is not run by the docs check; the tool itself is tested offline against a real `warm-mcp` in `tests/`.
 
 ## Options
 

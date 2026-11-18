@@ -10,6 +10,7 @@ npm install writerslogic-warm-claude-tool @anthropic-ai/sdk   # plus a warm-mcp 
 
 ## Quickstart
 
+<!-- quickstart-check: skip: requires API key (ANTHROPIC_API_KEY) -->
 ```ts
 import Anthropic from "@anthropic-ai/sdk";
 import { WarmMemoryTool } from "writerslogic-warm-claude-tool";
@@ -24,6 +25,8 @@ const final = await client.beta.messages.toolRunner({
 });
 await memory.close();
 ```
+
+Needs `ANTHROPIC_API_KEY`, so it is not run by the docs check; the tool itself is tested offline against a real `warm-mcp` in `test/`.
 
 ## Options
 

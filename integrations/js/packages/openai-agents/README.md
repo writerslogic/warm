@@ -8,6 +8,7 @@ Source workspace only (not published); setup in [JS core](../core/README.md#inst
 
 ## Quickstart
 
+<!-- quickstart-check: skip: requires API key (offline: examples/quickstart.mjs) -->
 ```js
 import { Agent, run } from '@openai/agents'
 import { WarmSession, WarmStore, createMemoryTools } from '@writerslogic/warm-openai-agents'
