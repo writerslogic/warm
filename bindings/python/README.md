@@ -124,6 +124,7 @@ store.remember({"text": "Ada prefers tea", "subject": "ada"})
 store.recall("what does Ada drink")                       # hybrid
 
 # Or supply the vectors: declare the space, then pass `embedding` on remember and recall.
+vector = query_vector = [1.0] * 384   # your model's output
 store = Warm(16384, "./warm-ext", embedding_dimensions=384)
 store.remember({"text": "Ada prefers tea", "embedding": vector})
 store.recall("what does Ada drink", {"embedding": query_vector})

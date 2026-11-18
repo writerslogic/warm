@@ -2,18 +2,52 @@
   "name": "@writerslogic/warm-core",
   "version": "0.1.0",
   "description": "Memory API (remember, recall, get, list, forget) over the WARM native engine, shared by the framework adapters",
+  "keywords": [
+    "warm",
+    "writerslogic",
+    "memory",
+    "agents",
+    "vector-search",
+    "local-first"
+  ],
   "license": "Apache-2.0",
+  "author": "WritersLogic, Inc. <david@writerslogic.com>",
+  "homepage": "https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/js-core.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/writerslogic/warm.git",
+    "directory": "integrations/js/packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/writerslogic/warm/issues"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsup",
     "test": "tsup && node --test test/*.test.mjs"

@@ -1,13 +1,15 @@
 # Quickstart examples
 
-The code behind the [five-minute quickstart](../../docs/quickstart/index.md). The same corpus and
-queries drive all three languages, and CI runs each one on every pull request.
+Ingest, search, compare with SQLite FTS5, encrypt, remember changing facts. The code behind the [five-minute quickstart](../../docs/quickstart/index.md): one corpus and one query set drive every language, CI runs each on every pull request, and the docs page includes these files rather than copying them.
 
 | File | Run from the repository root |
 |------|------------------------------|
 | `rust/` | `cargo run --release --manifest-path examples/quickstart/rust/Cargo.toml` |
 | `node/quickstart.mjs` | `npm ci --omit=optional && npm run build && node examples/quickstart/node/quickstart.mjs` (Node 24+) |
-| `python/quickstart.py` | start `warm-server` first; see the header of the file |
+| `python/quickstart.py` | `WARM_API_KEY=quickstart uv run --no-project --with warm-sdk python examples/quickstart/python/quickstart.py` against a running `warm-server --input-dim 384` |
+| `js-client/quickstart.mjs` | `WARM_URL=http://127.0.0.1:8080 WARM_API_KEY=quickstart node examples/quickstart/js-client/quickstart.mjs` against the same server, with `bindings/js/warm-sdk` built |
+
+Build the server once with `cargo build --release --features server --bin warm-server`. Compatibility: Rust 1.89+, Node 24+ (embedded) or 18+ (client), Python 3.11+.
 
 ## Data
 

@@ -1,7 +1,16 @@
-# writerslogic-warm-claude-tool
+# writerslogic-warm-claude-tool (TypeScript)
 
-A backend for Anthropic's client-side memory tool (`memory_20250818`) on WARM. Claude's `/memories` directory becomes a virtual filesystem stored in an `warm-mcp` server, so every file is also searchable by meaning.
+Backs Anthropic's client-side memory tool (`memory_20250818`) with WARM: Claude's `/memories` directory is stored in a `warm-mcp` server and every file is searchable by meaning.
 
+## Install
+
+```sh
+npm install writerslogic-warm-claude-tool @anthropic-ai/sdk   # plus a warm-mcp binary: npx -y writerslogic-warm-mcp
+```
+
+## Quickstart
+
+<!-- quickstart-check: skip: requires API key (ANTHROPIC_API_KEY) -->
 ```ts
 import Anthropic from "@anthropic-ai/sdk";
 import { WarmMemoryTool } from "writerslogic-warm-claude-tool";
@@ -12,13 +21,28 @@ const final = await client.beta.messages.toolRunner({
   model: "claude-sonnet-5-5",
   max_tokens: 1024,
   messages: [{ role: "user", content: "Remember that Acme Corp prefers email follow-ups." }],
-  tools: [memory.asTool(), memory.recallTool()], // recallTool adds semantic search over the files
+  tools: [memory.asTool(), memory.recallTool()],
 });
 await memory.close();
 ```
 
-`WarmMemoryTool` implements the SDK's `MemoryToolHandlers`: `view`, `create`, `str_replace`, `insert`, `delete`, `rename` with the documented result strings. It rejects any path outside `/memories` (traversal, encoded separators, hidden or oversized segments), applies edits with compare-and-set so concurrent writers do not lose updates, and pages long files through `view_range`.
+Needs `ANTHROPIC_API_KEY`, so it is not run by the docs check; the tool itself is tested offline against a real `warm-mcp` in `test/`.
 
-Pass `namespace: "user-123"` (server started with `--namespace-arg`) for one store per user. See `docs/integrations/mcp/memory-tool.md` in the repository for the full reference.
+## Options
 
-Licensed Apache-2.0.
+| Name | Type | Default | Meaning |
+|---|---|---|---|
+| `connection.command`, `args`, `env` | string, string[], record | `warm-mcp` | Start `warm-mcp` over stdio |
+| `connection.url`, `token` | string, string | none, `WARM_MCP_TOKEN` | Connect to a shared `warm-mcp --transport http` |
+| `namespace` | string | none | One store per user (server needs `--namespace-arg`) |
+| `maxFileBytes` | number | server limit | Lower the per-file size cap |
+| `maxViewChars` | number | 16000 | Longest `view` result before paging with `view_range` |
+| `editRetries` | number | 25 | Compare-and-set retries when another writer edits the same file |
+
+## Compatibility
+
+Node 18+, `@anthropic-ai/sdk` >= 0.135.0 (tested 0.135.0), `@modelcontextprotocol/sdk` 1.32.1, a `warm-mcp` server. 29 tests against a real `warm-mcp`.
+
+## Reference
+
+Commands, safety rules and semantic recall: [Anthropic memory tool on WARM](https://github.com/writerslogic/warm/blob/main/docs/integrations/mcp/memory-tool.md). Python sibling: [`../python`](../python/README.md).

@@ -6,7 +6,7 @@
 Start a server first (dimension must match the embedder; MockEmbedding is used so no model or
 API key is needed):
 
-    WARM_API_KEY= warm-server --input-dim 8 --data-dir ./hms-data
+    warm-server --no-auth --input-dim 8 --data-dir ./hms-data
     WARM_URL=http://127.0.0.1:8080 python examples/llamaindex_quickstart.py
 """
 

@@ -58,7 +58,7 @@ export interface RecallOptions {
 export interface WarmStoreOptions {
   /** An existing native memory. Its embedding space must match `embedder` (default: the hashing embedder). */
   memory?: WarmMemorySystem
-  /** Storage directory for a store this class creates. Omit for an in-memory store. */
+  /** Storage directory for a store this class creates. Omitted, the engine uses the current working directory (there is no in-memory mode). */
   path?: string
   /** Hypervector dimensions of a store this class creates (default 4096). */
   dimensions?: number

@@ -4,9 +4,9 @@
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { HolographicVector } from '../dist/index.js'
+import { WarmVector } from '../dist/index.js'
 
-const vector = new HolographicVector({ id: 'warm', dimension: 4, path: mkdtempSync(join(tmpdir(), 'warm-mastra-ex-')) })
+const vector = new WarmVector({ id: 'warm', dimension: 4, path: mkdtempSync(join(tmpdir(), 'warm-mastra-ex-')) })
 await vector.createIndex({ indexName: 'notes', dimension: 4 })
 await vector.upsert({
   indexName: 'notes',

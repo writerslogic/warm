@@ -40,6 +40,8 @@ CommonJS is also supported:
 const { WarmClient, WarmError } = require('warm-sdk')
 ```
 
+Compatibility: Node 18+ (building from a checkout needs 20.19+), browsers, Bun, Deno, `warm-server` 0.6.x. A runnable version with the server steps is [`examples/quickstart/js-client`](https://github.com/writerslogic/warm/blob/main/examples/quickstart/js-client/quickstart.mjs).
+
 Run the service separately using the [server guide](https://github.com/writerslogic/warm/blob/main/docs/SERVER.md). Browser requests also require the server deployment to permit the application's origin. This client does not start a server or provide embeddings, an LLM, a vector mask, or an embedded store.
 
 ## Connection and cancellation
