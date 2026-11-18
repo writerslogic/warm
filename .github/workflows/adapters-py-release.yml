@@ -3,7 +3,7 @@
 #
 # Publishes warm-integrations (15 framework extras) and
 # warm-claude-tool to PyPI in lockstep, from a `py-adapters-vX.Y.Z` tag. Runs without
-# publishing on pull requests and on dispatch with publish=false. Publishing needs the `pypi`
+# publishing on pull requests and on dispatch with publish=false. Publishing needs the `pypi` (warm-integrations) and `pypi-claude-tool`
 # environment approval and a Trusted Publisher registered for each project.
 name: Python adapters release
 
@@ -141,8 +141,8 @@ jobs:
           uv pip install --python "$RUNNER_TEMP/venv/bin/python" "$PWD"/dist/warm_claude_tool-*.whl
           "$RUNNER_TEMP/venv/bin/python" -I -c "import warm_memory_tool; print(warm_memory_tool.__version__)"
 
-  publish:
-    name: Publish the adapters to PyPI
+  publish-integrations:
+    name: Publish warm-integrations to PyPI
     if: startsWith(github.ref, 'refs/tags/py-adapters-v') || (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main')
     needs: [build, smoke, smoke-claude-tool]
     runs-on: ubuntu-latest
@@ -152,8 +152,35 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          path: dist
+          path: all
           name: adapters-py-dist
+      - name: Keep only this distribution
+        run: |
+          mkdir dist
+          cp all/warm_integrations-* dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: dist
+          skip-existing: true
+
+  publish-claude-tool:
+    name: Publish warm-claude-tool to PyPI
+    if: startsWith(github.ref, 'refs/tags/py-adapters-v') || (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main')
+    needs: [build, smoke, smoke-claude-tool]
+    runs-on: ubuntu-latest
+    environment: pypi-claude-tool
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: all
+          name: adapters-py-dist
+      - name: Keep only this distribution
+        run: |
+          mkdir dist
+          cp all/warm_claude_tool-* dist/
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
@@ -162,7 +189,7 @@ jobs:
 
   verify-published:
     name: Verify the registry install
-    needs: [build, publish]
+    needs: [build, publish-integrations, publish-claude-tool]
     runs-on: ubuntu-latest
     steps:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
