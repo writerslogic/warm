@@ -56,7 +56,7 @@ pub(crate) fn known_magic(magic: &[u8]) -> bool {
     magic == MAGIC || magic == MAGIC_V3 || magic == MAGIC_V2 || magic == MAGIC_V1
 }
 mod merge;
-pub(crate) use merge::{can_merge, merge};
+pub(crate) use merge::{bisection_order, can_merge, merge, SlotOrder, REORDER_MAX_EDGES};
 
 const HEADER_WORDS: usize = 40;
 pub(crate) const HEADER_LEN: usize = 8 + 8 * HEADER_WORDS;
@@ -71,6 +71,10 @@ const FLAG_POSITIONAL: u64 = 1;
 /// Version 4 flags: bit 1, no posting has frequency zero.
 const FLAG_POSITIVE: u64 = 2;
 const H_GENERATION: usize = 1;
+/// Version 4: how many leading slots the last document reorder laid out
+/// (`DocumentStore::apply_slot_order`); zero when none did. It was a reserved zero word, which
+/// readers do not read, so any version 4 reader opens a checkpoint that sets it.
+const H_ORDERED: usize = 5;
 const H_DIMENSIONS: usize = 2;
 const H_SLOTS: usize = 8;
 const H_CHUNKS: usize = 9;
@@ -629,6 +633,7 @@ fn encode_as(
     words[H_GENERATION] = u64::from(generation);
     words[H_DIMENSIONS] = dimensions as u64;
     words[H_SLOTS] = store.slot_count as u64;
+    words[H_ORDERED] = store.ordered_slots.min(store.slot_count) as u64;
     words[H_CHUNKS] = store.chunk_count as u64;
     words[H_WORDS] = store.word_count as u64;
     words[H_DOCS] = store.documents.len() as u64;
@@ -739,6 +744,11 @@ pub(crate) enum Backing {
 }
 
 impl ServingImage {
+    /// The leading slots the last document reorder laid out, and all the slots.
+    pub(crate) fn ordered_slots(&self) -> (usize, usize) {
+        (self.ordered, self.slots)
+    }
+
     /// The checkpoint's size as version 3 would hold it, for the fold schedule: without the
     /// skip tables and positions of version 4 and the extra length varints and block table
     /// words its dictionaries carry, so that the format's additions do not delay
@@ -823,6 +833,8 @@ pub(crate) struct ServingImage {
     positional: bool,
     /// Version 4: no posting has frequency zero, so a posting is a match.
     positive: bool,
+    /// Leading slots laid out by the last document reorder ([`H_ORDERED`]), at most `slots`.
+    ordered: usize,
     /// Direct frequency tables of the longest lists, built by queries (see `impact`).
     dense: super::impact::DenseTables,
     /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
@@ -944,6 +956,7 @@ impl ServingImage {
         let blocked = impacts || &bytes[..8] == MAGIC_V2;
         let positional = extended && word(&bytes, H_FLAGS) & FLAG_POSITIONAL != 0;
         let positive = extended && word(&bytes, H_FLAGS) & FLAG_POSITIVE != 0;
+        let ordered = if extended { word(&bytes, H_ORDERED) } else { 0 };
         ensure!(
             !extended || word(&bytes, H_FLAGS) & !(FLAG_POSITIONAL | FLAG_POSITIVE) == 0,
             "checkpoint flags"
@@ -1012,6 +1025,7 @@ impl ServingImage {
             extended,
             positional,
             positive,
+            ordered: usize::try_from(ordered).map_or(slots, |ordered| ordered.min(slots)),
             dense: Default::default(),
             word_classes: std::sync::OnceLock::new(),
             word_counts: std::sync::OnceLock::new(),
@@ -1903,7 +1917,8 @@ impl ServingImage {
             PostingLists::from_sorted(zero, &words),
             PostingLists::from_sorted(one, &words),
         ];
-        let store = DocumentStore::restore(documents, self.slots, postings, text);
+        let mut store = DocumentStore::restore(documents, self.slots, postings, text);
+        store.ordered_slots = self.ordered;
         ensure!(
             (store.chunk_count, store.word_count) == (self.chunks, self.words),
             "checkpoint counts disagree with its slots"

@@ -145,7 +145,8 @@ All integers little endian; varints are LEB128.
 32   8  u64: feature bits (bit 0: chunk text is in compressed blocks; any other bit is refused as newer than supported; a version 4 checkpoint keeps its text inline)
 40   8  u64: flags (version 4; bit 0: every chunk holds word positions; bit 1: no posting has
          frequency zero, which the Boolean executor over the mapping requires), zero before version 4
-48   24 u64: reserved, zero
+48   8  u64: slots laid out by the last document reorder, the leading slots `0..` of this many (version 4; zero when none did, and in every file written before it; readers do not read it)
+56   16 u64: reserved, zero
 72   32 u64: slots, chunks, words, documents
 104  16 u64: terms per posting form (unstemmed, stemmed)
 120  208 (offset, length) of each section, in the order below (twelve from version 4, ten
@@ -249,6 +250,84 @@ bit, and a version 1 or 2 checkpoint serves from the checkpoint only up to 2^19 
 inline text opens and serves as one with compressed blocks and is replaced by one at the next
 compaction. A release that predates feature bit 0 refuses a checkpoint that sets it (its section
 table does not end at the end of the file).
+
+## Document order
+
+Slots are internal: the slot table maps a slot to its chunk, and ids, documents and every
+result are in id order. Ranking ties break on (document id, chunk index), never on the slot, so
+any assignment of chunks to slots serves the same results. The order still decides how long the
+posting lists are and how well their block bounds prune.
+
+`WarmCore::compact`, the explicit call, first renumbers the slots of a store that takes a
+checkpoint (`WarmCore::reorder_documents`; `document_checkpoint.reorder`, on by default, turns
+it off, and `WarmCore::compact_without_reorder` skips it for one call). The order is recursive graph bisection (Dhulipala et al., KDD 2016; the order of
+Lucene's `BPIndexReorderer` and PISA's `recursive_graph_bisection`) over the documents' terms
+that occur in at least `documents / 1024` chunks (at most 4096), with the longest such lists
+left out until at most 2^28 (document, term) pairs remain: 20 swap rounds per bisection, down
+to partitions of 32 documents. The chunks of the first document take slots `0..`, then the
+next document's, so every document's chunks stay in ascending slot order and no slot is free.
+The file is a version 4 checkpoint like any other; header word 5 (bytes 48..56, reserved and
+zero before) records how many leading slots the reorder laid out, and any version 4 reader,
+which never reads that word, serves the file.
+
+What the reorder holds and when it runs:
+
+1. it runs only in a compaction a caller asks for by name (`WarmCore::compact`, C
+   `hms1_store_compact`, Node and Swift/Kotlin `compact`, warm-server's
+   `POST /api/v1/compaction`), and only when it is due: the store was never reordered, as
+   after a bulk ingest, or at least a quarter of its slots (the checkpoint's under it
+   included) come after the reordered ones. Slots written since a checkpoint follow its
+   slots, so a fold or an encode carries the word forward, and `reorder_documents` reorders
+   whenever it is called. Folds, `flush`, closing, background and scrubbing compactions,
+   warm-server's scheduled pass and snapshots never reorder, so a fold still writes byte for
+   byte the checkpoint a single pass encodes of the same store, and a store below 1024
+   documents keeps its order. A store that writes no checkpoint (`document_checkpoint.enabled`
+   off, state other than documents such as relations, triples, rules or atoms, chunk vectors,
+   or a schema before 4) is not reordered at all, and `WarmCore::last_reorder` reports
+   `NoCheckpoint`; the report is recorded only once the compaction has published its
+   generation. Under the quarter rule a store compacted as it grows reorders at most each time
+   it grows by a third, so the reorders of a growing store cost at most about four reorders of
+   its final size;
+2. it does not rebuild the store. When the compaction streams its checkpoint (a plaintext store
+   without compressed text whose checkpoint has no dead document), the order is built from the
+   checkpoint's lists where they lie and the live store's lists, and the merge writes every list
+   unpacked, sorted by new slot with its positions, and packed again, one list at a time. A store
+   whose checkpoint is encoded in memory (sealed or compressed text) has its slots renumbered
+   in place, one list per thread, under the document lock, so its searches wait for the
+   permutation. Before it builds anything the reorder
+   estimates what it will hold beyond the plain compaction (forward index, per-document and
+   per-slot tables, the longest list being moved); over `document_checkpoint.reorder_memory_budget`
+   (2 GiB by default) `compact` writes the checkpoint in its old order and
+   `WarmCore::last_reorder` reports `OverBudget` with the estimate, while
+   `WarmCore::reorder_documents` reorders regardless. The forward index is capped at 2^28 pairs
+   (1 GiB) either way;
+3. nothing on disk changes before the compaction publishes its generation: the streamed order is
+   only written into the staged checkpoint, and an in-place renumbering changes only memory. A
+   failure or a crash before publication reopens to the old order and one after it to the new,
+   and both serve the same results. A panic while lists are being renumbered in place ends the
+   process instead of serving a half-permuted store.
+
+Measured cost of the streamed reorder (one process per mode; n2-highmem-8, Cascade Lake 2.80 GHz,
+8 vCPU; game ingest options: positions, whole article, unstemmed; peak is the process VmHWM,
+which includes the ingest before the compaction, except at 5M, where an existing index is opened
+and only compacted):
+
+| corpus | compact, reorder off | compact, reorder | peak, off / reorder | estimate |
+|---|---|---|---|---|
+| FiQA (57,638) | 0.49 s | 2.37 s | 155 / 152 MiB | 22 MiB |
+| MS MARCO 250k | 1.54 s | 5.84 s | 263 / 275 MiB | 52 MiB |
+| Wikipedia 250k | 4.87 s | 14.47 s | 644 / 647 MiB | 98 MiB |
+| Wikipedia 1M | 17.7 s | 71.5 s | 2.24 / 2.20 GiB | 494 MiB |
+| Wikipedia 5M (4.64M documents) | 64.5 s | 324.6 s | 3.49 / 3.49 GiB | 1.39 GiB |
+
+Writers wait for most of a compaction (its snapshot, which includes the reorder and the
+streamed merge, and its publication; see [COMPACTION.md](COMPACTION.md)), so the compaction
+that reorders holds them back for most of these times; searches keep running, except that a
+store renumbered in place (compressed text or encryption) also holds searches while its lists
+are permuted. The reorder costs 3 to 5 times a plain compaction in time, which is why it is
+gated by the quarter rule, and adds no measurable peak memory over it in the tested range: the estimate is
+an upper bound on what the reorder holds, not a measurement of it. These figures hold for the
+tested range only.
 
 ## Durability and crash safety
 

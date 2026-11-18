@@ -628,7 +628,14 @@ pub extern "C" fn hms1_store_flush(store: *mut warm_store_t) -> warm_status_t {
 }
 
 /// Rewrite the transaction log without superseded and deleted records, reclaiming space.
-/// Safe alongside concurrent searches and ingests.
+/// Searches keep running; ingests, deletes and other mutations wait for most of the call (its
+/// snapshot and its publication). The first compaction after a bulk ingest, and then whenever
+/// at least a quarter of the slots are new, also renumbers the document slots of a store
+/// without chunk vectors so that searches read shorter lists, which makes it 3 to 5 times as
+/// long (measured: 325 s against 64.5 s at 5M documents, 71.5 s against 17.7 s at 1M). In a
+/// store with compressed text or encryption, searches also wait while the slots are renumbered
+/// in memory. The reorder is the engine's `document_checkpoint.reorder` setting, on by default;
+/// this binding does not change it.
 #[no_mangle]
 pub extern "C" fn hms1_store_compact(store: *mut warm_store_t) -> warm_status_t {
     guard(|| {
