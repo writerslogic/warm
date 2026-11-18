@@ -1,6 +1,6 @@
 # wasm browser demo
 
-A static note-search page on `@writerslogic/warm-wasm`: add notes or text files, search with BM25 settings, persist to OPFS or IndexedDB (optionally encrypted with a passphrase), download or restore a snapshot. A service worker caches the app so it reloads offline.
+A static note-search page on `warm-wasm`: add notes or text files, search with BM25 settings, persist to OPFS or IndexedDB (optionally encrypted with a passphrase), download or restore a snapshot. A service worker caches the app so it reloads offline.
 
 ```sh
 cd bindings/wasm/npm && npm install && node scripts/build.mjs     # once

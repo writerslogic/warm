@@ -1,8 +1,8 @@
 # Copyright 2024-2026 WritersLogic Contributors
 # SPDX-License-Identifier: Apache-2.0
 #
-# Publishes the JavaScript framework adapters (@writerslogic/warm-core and the langchain,
-# llamaindex, mastra, openai-agents and vercel-ai packages) and writerslogic-warm-claude-tool
+# Publishes the JavaScript framework adapters (warm-core and the langchain,
+# llamaindex, mastra, openai-agents and vercel-ai packages) and warm-claude-tool
 # in lockstep, from a `js-adapters-vX.Y.Z` tag. Runs without publishing on pull requests and on
 # dispatch with publish=false. Publishing needs the `npm` environment approval.
 name: JavaScript adapters release
@@ -100,13 +100,13 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - "@writerslogic/warm-core"
-          - "@writerslogic/warm-langchain"
-          - "@writerslogic/warm-llamaindex"
-          - "@writerslogic/warm-mastra"
-          - "@writerslogic/warm-openai-agents"
-          - "@writerslogic/warm-vercel-ai"
-          - writerslogic-warm-claude-tool
+          - "warm-core"
+          - "warm-langchain"
+          - "warm-llamaindex"
+          - "warm-mastra"
+          - "warm-openai-agents"
+          - "warm-vercel-ai"
+          - warm-claude-tool
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -136,8 +136,8 @@ jobs:
           # The adapters depend on warm-core at the same version, which is not on the registry
           # before the first publish, so install the core tarball beside the one under test.
           case "$PACKAGE" in
-            @writerslogic/warm-core | writerslogic-warm-claude-tool) ;;
-            *) args+=("$tarballs/writerslogic-warm-core-${VERSION}.tgz") ;;
+            warm-core | warm-claude-tool) ;;
+            *) args+=("$tarballs/warm-core-${VERSION}.tgz") ;;
           esac
           npm install --no-audit --no-fund "${args[@]}"
           node smoke-adapter.mjs "$PACKAGE"
@@ -189,9 +189,9 @@ jobs:
               npm publish "$1" --provenance --access public
             fi
           }
-          publish writerslogic-warm-core-*.tgz
+          publish warm-core-*.tgz
           for tarball in *.tgz; do
-            case "$tarball" in writerslogic-warm-core-*) continue ;; esac
+            case "$tarball" in warm-core-*) continue ;; esac
             publish "$tarball"
           done
 
@@ -212,7 +212,7 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
         run: |
           set -euo pipefail
-          packages=(@writerslogic/warm-core @writerslogic/warm-langchain @writerslogic/warm-llamaindex @writerslogic/warm-mastra @writerslogic/warm-openai-agents @writerslogic/warm-vercel-ai writerslogic-warm-claude-tool)
+          packages=(warm-core warm-langchain warm-llamaindex warm-mastra warm-openai-agents warm-vercel-ai warm-claude-tool)
           for attempt in {1..20}; do
             ready=1
             for package in "${packages[@]}"; do

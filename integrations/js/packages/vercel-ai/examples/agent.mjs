@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { ToolLoopAgent, wrapLanguageModel } from 'ai'
 import { MockLanguageModelV4 } from 'ai/test'
-import { WarmStore } from '@writerslogic/warm-core'
+import { WarmStore } from 'warm-core'
 import { memoryMiddleware, memoryTools } from '../dist/index.js'
 
 const store = new WarmStore({ path: mkdtempSync(join(tmpdir(), 'warm-example-')), dimensions: 1024 })

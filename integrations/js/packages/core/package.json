@@ -1,5 +1,5 @@
 {
-  "name": "@writerslogic/warm-core",
+  "name": "warm-core",
   "version": "0.1.0",
   "description": "Memory API (remember, recall, get, list, forget) over the WARM native engine, shared by the framework adapters",
   "keywords": [

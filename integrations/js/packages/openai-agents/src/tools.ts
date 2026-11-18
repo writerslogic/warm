@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { tool } from '@openai/agents'
 import { z } from 'zod'
-import type { WarmStore } from '@writerslogic/warm-core'
+import type { WarmStore } from 'warm-core'
 
 export interface MemoryToolOptions {
   /** Tool name prefix; default `memory_` gives memory_remember, memory_recall, memory_forget. */

@@ -18,7 +18,7 @@ import {
   type UpsertVectorParams,
   type VectorFilter,
 } from '@mastra/core/vector'
-import { WarmError, WarmStore, parseFilter, type Embedder, type FilterLike, type WarmStoreOptions, type Metadata, type StoredRecord } from '@writerslogic/warm-core'
+import { WarmError, WarmStore, parseFilter, type Embedder, type FilterLike, type WarmStoreOptions, type Metadata, type StoredRecord } from 'warm-core'
 import type { WarmMemorySystem } from 'writerslogic-warm'
 
 const REGISTRY = '__warm_indexes__'

@@ -1,5 +1,5 @@
 {
-  "name": "writerslogic-warm-integrations",
+  "name": "warm-integrations",
   "private": true,
   "license": "Apache-2.0",
   "workspaces": [

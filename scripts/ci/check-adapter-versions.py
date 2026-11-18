@@ -5,7 +5,7 @@
 usage: check-adapter-versions.py {js,py} [--tag js-adapters-v0.1.0]
 
 js: the six packages under integrations/js/packages and the TypeScript Claude memory tool share
-one version, equal to the tag, and each adapter depends on `@writerslogic/warm-core` at `^version`.
+one version, equal to the tag, and each adapter depends on `warm-core` at `^version`.
 py: the integrations package and the Python Claude memory tool share one version, equal to the
 tag and to each package's `__version__`. Every package carries a copy of the root LICENSE.
 Prints the version on success.
@@ -21,11 +21,11 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 JS_DIRS = [f"integrations/js/packages/{n}" for n in ("core", "langchain", "llamaindex", "mastra", "openai-agents", "vercel-ai")]
 JS_DIRS.append("integrations/claude-memory-tool/typescript")
 PY = {
-    "integrations/python": ("writerslogic-warm-integrations", "src/writerslogic_warm_integrations/__init__.py"),
-    "integrations/claude-memory-tool/python": ("writerslogic-warm-claude-tool", "src/warm_memory_tool/__init__.py"),
+    "integrations/python": ("warm-integrations", "src/writerslogic_warm_integrations/__init__.py"),
+    "integrations/claude-memory-tool/python": ("warm-claude-tool", "src/warm_memory_tool/__init__.py"),
 }
 SEMVER = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?")
-CORE = "@writerslogic/warm-core"
+CORE = "warm-core"
 
 
 def check_license(directory: str, problems: list[str]) -> None:
