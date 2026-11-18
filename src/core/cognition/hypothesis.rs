@@ -69,7 +69,6 @@ impl HypothesisEngine {
         atom_memory: &AtomMemory,
         beta: f64,
     ) -> Option<Hypothesis> {
-        // Collect what peers have as objects for this relation
         let mut filler_vecs: Vec<EntangledHVec> = Vec::new();
         let mut evidence_count = 0;
 
@@ -124,7 +123,6 @@ mod tests {
         let atom_mem = AtomMemory::new(dim, 3.0);
         let triple_store = TripleStore::new();
 
-        // Setup: cities in continents
         atom_mem.get_or_insert("paris");
         atom_mem.get_or_insert("berlin");
         atom_mem.get_or_insert("tokyo");

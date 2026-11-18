@@ -160,7 +160,6 @@ mod tests {
         let atom_mem = AtomMemory::new(dim, 3.0);
         let triple_store = TripleStore::new();
 
-        // Insert atoms
         atom_mem.get_or_insert("paris");
         atom_mem.get_or_insert("berlin");
         atom_mem.get_or_insert("tokyo");
