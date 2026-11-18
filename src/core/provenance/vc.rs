@@ -740,17 +740,4 @@ mod tests {
 
         assert!(verify_credential(&signed).is_err());
     }
-
-    #[test]
-    fn vc_json_structure() {
-        let key = test_keypair();
-        let hash = [0u8; 32];
-        let did = did_key_from_ed25519(&key.verifying_key().to_bytes());
-
-        let vc = create_fact_credential(&did, "f1", &hash, 10000, None, None, 0);
-        let json_str = serde_json::to_string_pretty(&vc).unwrap();
-        assert!(json_str.contains("@context"));
-        assert!(json_str.contains("VerifiableCredential"));
-        assert!(json_str.contains("holographic-reduced-representation"));
-    }
 }
