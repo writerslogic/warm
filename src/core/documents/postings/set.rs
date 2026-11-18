@@ -213,7 +213,12 @@ impl PostingLists {
     /// Appends each run to its term's list. The serial prologue resolves ids and allocates
     /// lists for new terms in run order, so list ids do not depend on `parallel`; the appends
     /// then touch disjoint lists.
-    pub(super) fn install_runs(&mut self, runs: &[TermRun<'_>], word_counts: &[u32], parallel: bool) {
+    pub(super) fn install_runs(
+        &mut self,
+        runs: &[TermRun<'_>],
+        word_counts: &[u32],
+        parallel: bool,
+    ) {
         if runs.is_empty() {
             return;
         }

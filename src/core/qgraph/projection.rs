@@ -232,7 +232,11 @@ impl Graph {
     /// Exact nearest base rows of every Euclidean training query: f32 products of a query block
     /// against base chunks, blocks of queries spread over the rayon pool, memory independent of
     /// the base size.
-    fn training_neighbors_f32(&self, queries: &[f32], neighbors: usize) -> Result<Vec<u32>, WarmError> {
+    fn training_neighbors_f32(
+        &self,
+        queries: &[f32],
+        neighbors: usize,
+    ) -> Result<Vec<u32>, WarmError> {
         const BLOCK: usize = 128;
         const CHUNK: usize = 2048;
         let dim = self.dim;
@@ -249,8 +253,9 @@ impl Graph {
             .zip(queries.par_chunks(BLOCK * dim))
             .try_for_each(|(out, block)| -> Result<(), WarmError> {
                 let width = block.len() / dim;
-                let mut heaps: Vec<BinaryHeap<Nearest>> =
-                    (0..width).map(|_| BinaryHeap::with_capacity(neighbors + 1)).collect();
+                let mut heaps: Vec<BinaryHeap<Nearest>> = (0..width)
+                    .map(|_| BinaryHeap::with_capacity(neighbors + 1))
+                    .collect();
                 let mut scores = vec![0f32; width * CHUNK];
                 for start in (0..self.n).step_by(CHUNK) {
                     let rows = CHUNK.min(self.n - start);
@@ -259,8 +264,20 @@ impl Graph {
                     // `scores` holds at least width x rows floats, all row-major and contiguous.
                     unsafe {
                         matrixmultiply::sgemm(
-                            width, dim, rows, 1.0, block.as_ptr(), dim as isize, 1,
-                            base.as_ptr(), 1, dim as isize, 0.0, scores.as_mut_ptr(), rows as isize, 1,
+                            width,
+                            dim,
+                            rows,
+                            1.0,
+                            block.as_ptr(),
+                            dim as isize,
+                            1,
+                            base.as_ptr(),
+                            1,
+                            dim as isize,
+                            0.0,
+                            scores.as_mut_ptr(),
+                            rows as isize,
+                            1,
                         );
                     }
                     for (heap, row) in heaps.iter_mut().zip(scores.chunks_exact(rows)) {

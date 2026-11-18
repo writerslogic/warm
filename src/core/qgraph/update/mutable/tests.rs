@@ -424,5 +424,8 @@ fn cluster_ordered_batch_keeps_recall() {
     m.index.insert_batch(&ids, &flat).unwrap();
     m.check(false);
     let recall = m.recall(200, 10, 64);
-    assert!(recall >= 0.9, "recall@10 at ef 64 on cluster-ordered input: {recall}");
+    assert!(
+        recall >= 0.9,
+        "recall@10 at ef 64 on cluster-ordered input: {recall}"
+    );
 }

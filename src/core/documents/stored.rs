@@ -42,7 +42,10 @@ pub(crate) struct SharedMetadata(pub(super) Arc<Value>);
 
 impl SharedMetadata {
     /// Shares the allocation of an earlier equal value in `seen`, or records this one.
-    pub(crate) fn intern(&mut self, seen: &mut std::collections::HashMap<u64, Vec<SharedMetadata>>) {
+    pub(crate) fn intern(
+        &mut self,
+        seen: &mut std::collections::HashMap<u64, Vec<SharedMetadata>>,
+    ) {
         use std::hash::Hasher;
         struct Feed<'a>(&'a mut std::collections::hash_map::DefaultHasher);
         impl std::io::Write for Feed<'_> {
@@ -140,7 +143,9 @@ where
     Ok(value)
 }
 
-pub(super) fn deserialize_compact_metadata<'de, D>(deserializer: D) -> Result<SharedMetadata, D::Error>
+pub(super) fn deserialize_compact_metadata<'de, D>(
+    deserializer: D,
+) -> Result<SharedMetadata, D::Error>
 where
     D: serde::Deserializer<'de>,
 {

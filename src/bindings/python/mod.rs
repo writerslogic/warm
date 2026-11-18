@@ -69,10 +69,10 @@ fn resonator_work(dim: usize, items: usize, factors: usize, iterations: usize) -
 #[cfg(feature = "local-embed")]
 mod embed;
 mod filter_index;
+mod mutable_index;
 #[cfg(feature = "experimental")]
 mod partition_index;
 mod sparse_index;
-mod mutable_index;
 mod vector_index;
 mod warm;
 
