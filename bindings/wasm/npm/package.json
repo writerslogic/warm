@@ -1,5 +1,5 @@
 {
-  "name": "@writerslogic/warm-wasm",
+  "name": "warm-wasm",
   "version": "0.1.0",
   "description": "Local-first document search in WebAssembly: BM25 passages, metadata filters, optional dense embeddings, encrypted persistence. Runs in browsers, Node, Deno and Bun with no service calls.",
   "license": "Apache-2.0",

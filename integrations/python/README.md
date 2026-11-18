@@ -1,4 +1,4 @@
-# writerslogic-warm-integrations
+# warm-integrations
 
 Adapters that put WARM behind the memory, vector-store and retriever interfaces of Python agent and RAG frameworks, over the `warm-server` HTTP service.
 
@@ -7,7 +7,7 @@ Adapters that put WARM behind the memory, vector-store and retriever interfaces 
 Framework dependency trees conflict: install exactly one extra per environment.
 
 ```sh
-pip install "writerslogic-warm-integrations[langchain]"   # or another extra from the table
+pip install "warm-integrations[langchain]"   # or another extra from the table
 warm-server --input-dim 384                               # the vector length your embeddings produce
 ```
 

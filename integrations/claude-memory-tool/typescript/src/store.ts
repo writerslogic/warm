@@ -90,7 +90,7 @@ export class McpFileStore implements FileStore {
 
   static async connect(options: McpFileStoreOptions = {}): Promise<McpFileStore> {
     const connection = options.connection ?? {};
-    const client = new Client({ name: "writerslogic-warm-claude-tool", version: "0.1.0" });
+    const client = new Client({ name: "warm-claude-tool", version: "0.1.0" });
     if ("url" in connection) {
       const token = connection.token ?? process.env["WARM_MCP_TOKEN"];
       const requestInit = token ? { headers: { authorization: `Bearer ${token}` } } : undefined;

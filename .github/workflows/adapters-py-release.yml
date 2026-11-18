@@ -1,8 +1,8 @@
 # Copyright 2024-2026 WritersLogic Contributors
 # SPDX-License-Identifier: Apache-2.0
 #
-# Publishes writerslogic-warm-integrations (15 framework extras) and
-# writerslogic-warm-claude-tool to PyPI in lockstep, from a `py-adapters-vX.Y.Z` tag. Runs without
+# Publishes warm-integrations (15 framework extras) and
+# warm-claude-tool to PyPI in lockstep, from a `py-adapters-vX.Y.Z` tag. Runs without
 # publishing on pull requests and on dispatch with publish=false. Publishing needs the `pypi`
 # environment approval and a Trusted Publisher registered for each project.
 name: Python adapters release
@@ -123,7 +123,7 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" -I -c "from importlib.resources import files; assert files('writerslogic_warm_integrations').joinpath('py.typed').is_file(), 'wheel is missing its PEP 561 marker'"
 
   smoke-claude-tool:
-    name: Clean install of writerslogic-warm-claude-tool
+    name: Clean install of warm-claude-tool
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -175,7 +175,7 @@ jobs:
           set -euo pipefail
           uv venv --python 3.12 "$RUNNER_TEMP/venv"
           for attempt in {1..20}; do
-            if uv pip install --no-cache --python "$RUNNER_TEMP/venv/bin/python" "writerslogic-warm-integrations[langchain]==${VERSION}" "writerslogic-warm-claude-tool==${VERSION}"; then break; fi
+            if uv pip install --no-cache --python "$RUNNER_TEMP/venv/bin/python" "warm-integrations[langchain]==${VERSION}" "warm-claude-tool==${VERSION}"; then break; fi
             [ "$attempt" = 20 ] && { echo "Published distributions did not become installable" >&2; exit 1; }
             echo "not installable yet (attempt $attempt/20)"
             sleep 30

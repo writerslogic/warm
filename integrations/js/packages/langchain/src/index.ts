@@ -3,4 +3,4 @@
 export * from './vectorstore.js'
 export * from './history.js'
 export { OrderedLog, type LogEntry } from './log.js'
-export { WarmStore, HashingEmbedder, WarmError, type FilterLike, type WarmStoreOptions } from '@writerslogic/warm-core'
+export { WarmStore, HashingEmbedder, WarmError, type FilterLike, type WarmStoreOptions } from 'warm-core'

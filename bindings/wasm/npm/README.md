@@ -1,4 +1,4 @@
-# @writerslogic/warm-wasm
+# warm-wasm
 
 Local-first document search in WebAssembly. Ingest text, search it with BM25 (optionally fused with
 your own dense embeddings), filter on metadata, and keep the store on the device in IndexedDB, OPFS or a
@@ -8,8 +8,8 @@ and Node bindings; result lists match them exactly.
 Runs in browsers, Node 20+, Deno 2 and Bun.
 
 ```js
-import { openStore } from "@writerslogic/warm-wasm";
-import { OpfsStorage } from "@writerslogic/warm-wasm/storage/opfs";
+import { openStore } from "warm-wasm";
+import { OpfsStorage } from "warm-wasm/storage/opfs";
 
 const store = await openStore({
   storage: new OpfsStorage(),            // loaded on open, autosaved after changes
@@ -25,15 +25,15 @@ await store.close();                     // flushes pending saves
 
 | Import | For |
 | --- | --- |
-| `@writerslogic/warm-wasm` | picks `web`, `node` or `deno` by runtime (Bun uses `node`) |
-| `@writerslogic/warm-wasm/web` | browsers and any ES-module host with `fetch` / `new URL` assets (Vite, Rollup, esbuild, webpack 5) |
-| `@writerslogic/warm-wasm/bundler` | bundlers with WebAssembly ESM integration (webpack 5 `asyncWebAssembly`, Vite + `vite-plugin-wasm`) |
-| `@writerslogic/warm-wasm/node` | Node and Bun (CommonJS wasm-bindgen glue) |
-| `@writerslogic/warm-wasm/deno` | Deno (`--allow-read`) |
-| `@writerslogic/warm-wasm/storage/indexeddb` | `IndexedDbStorage` (browser) |
-| `@writerslogic/warm-wasm/storage/opfs` | `OpfsStorage` (browser, origin private file system) |
-| `@writerslogic/warm-wasm/storage/file` | `FileStorage` (Node, Deno, Bun) |
-| `@writerslogic/warm-wasm/wasm/*` | the raw wasm-bindgen packages, one directory per target and `scalar` / `simd` build |
+| `warm-wasm` | picks `web`, `node` or `deno` by runtime (Bun uses `node`) |
+| `warm-wasm/web` | browsers and any ES-module host with `fetch` / `new URL` assets (Vite, Rollup, esbuild, webpack 5) |
+| `warm-wasm/bundler` | bundlers with WebAssembly ESM integration (webpack 5 `asyncWebAssembly`, Vite + `vite-plugin-wasm`) |
+| `warm-wasm/node` | Node and Bun (CommonJS wasm-bindgen glue) |
+| `warm-wasm/deno` | Deno (`--allow-read`) |
+| `warm-wasm/storage/indexeddb` | `IndexedDbStorage` (browser) |
+| `warm-wasm/storage/opfs` | `OpfsStorage` (browser, origin private file system) |
+| `warm-wasm/storage/file` | `FileStorage` (Node, Deno, Bun) |
+| `warm-wasm/wasm/*` | the raw wasm-bindgen packages, one directory per target and `scalar` / `simd` build |
 
 A SIMD and a scalar build ship together; `openStore` validates SIMD support at run time and falls back
 to scalar (`simd: false` forces scalar). Threads are not used: the document path is single-threaded, so

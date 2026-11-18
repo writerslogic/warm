@@ -6,7 +6,7 @@
 Letta runs custom tools in its own sandbox, so each tool is a self-contained function whose source is uploaded with
 `client.tools.upsert`. It receives the injected `agent_state`, builds an `ArchivalMemory` from environment secrets
 (`WARM_URL`, `WARM_API_KEY`, `WARM_TENANT_ID`, `WARM_INPUT_DIM`, `WARM_ZERO_TRUST_KEY`, `WARM_TIMEZONE`) and uses the agent id as the
-collection. The sandbox needs the `writerslogic-warm-integrations[letta]` package and network access to your warm-server.
+collection. The sandbox needs the `warm-integrations[letta]` package and network access to your warm-server.
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def agent_secrets(url: str, *, api_key: Optional[str] = None, tenant_id: Optiona
     return {k: v for k, v in pairs.items() if v}
 
 
-def register_tools(client: Any, *, requirement: str = "writerslogic-warm-integrations", version: Optional[str] = None) -> List[Any]:
+def register_tools(client: Any, *, requirement: str = "warm-integrations", version: Optional[str] = None) -> List[Any]:
     """Upload both tools with `client.tools.upsert` and return the Letta `Tool` objects (attach by id)."""
     pip = {"name": requirement} if version is None else {"name": requirement, "version": version}
     return [

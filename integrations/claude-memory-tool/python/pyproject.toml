@@ -5,7 +5,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "writerslogic-warm-claude-tool"
+name = "warm-claude-tool"
 version = "0.1.0"
 description = "Backend for Anthropic's client-side memory tool (memory_20250818) on WARM: a /memories virtual filesystem with semantic recall."
 readme = "README.md"

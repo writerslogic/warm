@@ -1,19 +1,19 @@
-# @writerslogic/warm-mastra
+# warm-mastra
 
 `WarmVector`, a Mastra `MastraVector` on the WARM native engine, in process. Plugs into Mastra Memory semantic recall and RAG tools.
 
 ## Install
 
 ```sh
-npm install @writerslogic/warm-mastra @mastra/core
+npm install warm-mastra @mastra/core
 ```
 
-The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
+The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 
 ```js
-import { WarmVector } from '@writerslogic/warm-mastra'
+import { WarmVector } from 'warm-mastra'
 
 const vector = new WarmVector({ id: 'warm', dimension: 4, path: './memory' })
 await vector.createIndex({ indexName: 'notes', dimension: 4 })
