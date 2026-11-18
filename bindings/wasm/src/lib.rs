@@ -50,7 +50,6 @@ impl WasmEntangledHVec {
         }
         indices.sort_unstable();
         indices.dedup();
-        // Simplified fill for demo purposes
         while indices.len() < active_count {
             indices.push(rng.random_range(0..dim as u32));
             indices.sort_unstable();
@@ -61,7 +60,7 @@ impl WasmEntangledHVec {
 
     pub fn bind(&self, other: &WasmEntangledHVec) -> Result<WasmEntangledHVec, JsError> {
         validate_same_dim(self.dim, other.dim).map_err(JsError::new)?;
-        let mut result = Vec::new();
+        let mut result = Vec::with_capacity(self.indices.len() + other.indices.len());
         let mut i = 0;
         let mut j = 0;
 
