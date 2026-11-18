@@ -760,7 +760,7 @@ fn vector_format_golden_and_drift_gate() {
     index.commit().unwrap();
     // `consolidated` holds a generation written with 4-byte neighbour ids, before
     // consolidation chose 3-byte ids below 2^24 - 1 rows; it must still open and search the
-    // same. Consolidation now writes `consolidated-3-byte-ids`.
+    // same.
     for phase in ["logged", "consolidated-3-byte-ids"] {
         if phase != "logged" {
             index.consolidate().unwrap();
@@ -1818,7 +1818,7 @@ fn deleted_base_search_rescores_only_the_rerank_budget() {
     for q in 0..16 {
         let query = &rows[q * 97 * dim..(q * 97 + 1) * dim];
         let all = search(query, 1 << 20);
-        // A budget at or above the live candidate count rescores them all, as before.
+        // A budget at or above the live candidate count rescores them all.
         assert_eq!(search(query, 128), all);
         let narrow = search(query, 10);
         assert_eq!(narrow.len(), 10);
