@@ -112,7 +112,6 @@ impl DistributionalRefiner {
                 None => continue,
             };
 
-            // Collect peer vectors across all relations this atom participates in
             let mut peer_index_freq: FastMap<u32, f64> = FastMap::default();
             let mut contributing_relations = 0usize;
 
@@ -121,14 +120,12 @@ impl DistributionalRefiner {
                     Some(p) => p,
                     None => continue,
                 };
-                // Exclude self, check minimum peer count
                 let other_peers: Vec<&String> = peers.iter().filter(|p| *p != atom_id).collect();
                 if other_peers.len() < config.min_peers_per_relation {
                     continue;
                 }
                 contributing_relations += 1;
 
-                // Weight each peer's indices by 1/num_peers for this relation
                 let weight = 1.0 / other_peers.len() as f64;
                 for peer_id in &other_peers {
                     if let Some(peer_vec) = atom_memory.get(peer_id) {
@@ -155,7 +152,6 @@ impl DistributionalRefiner {
             let ctx_slots = ((target_count as f64) * config.alpha).round() as usize;
             let orig_slots = target_count.saturating_sub(ctx_slots);
 
-            // Top context indices by frequency (excluding those already in original)
             let orig_set: crate::core::hash::FastSet<u32> =
                 original.indices().iter().copied().collect();
             let mut ctx_scored: Vec<(u32, f64)> = peer_index_freq
@@ -181,7 +177,6 @@ impl DistributionalRefiner {
 
             let refined = EntangledHVec::from_indices(new_indices, dim);
 
-            // Only update if the refined vector is meaningfully different
             if original.similarity(&refined) < 0.999 {
                 atom_memory.delete(atom_id);
                 atom_memory.load_atom(atom_id.clone(), refined);
@@ -210,7 +205,6 @@ mod tests {
         let atom_mem = AtomMemory::new(dim, 3.0);
         let triple_store = TripleStore::new();
 
-        // Create atoms
         atom_mem.get_or_insert("paris");
         atom_mem.get_or_insert("berlin");
         atom_mem.get_or_insert("tokyo");
@@ -230,7 +224,6 @@ mod tests {
         let berlin_before = atom_mem.get("berlin").unwrap();
         let sim_before = paris_before.similarity(&berlin_before);
 
-        // Run refinement
         let config = RefinerConfig {
             alpha: 0.3,
             min_context_relations: 2,
@@ -312,7 +305,6 @@ mod tests {
         };
         let report = DistributionalRefiner::refine(&atom_mem, &triple_store, &config);
 
-        // Check sparsity is maintained
         let target = dim / 256;
         for city in &["a", "b", "c", "d", "e"] {
             let vec = atom_mem.get(city).unwrap();
@@ -357,7 +349,6 @@ mod tests {
             .unwrap()
             .similarity(&atom_mem.get("b").unwrap());
 
-        // Run 3 rounds of refinement
         for _ in 0..3 {
             DistributionalRefiner::refine(&atom_mem, &triple_store, &config);
         }

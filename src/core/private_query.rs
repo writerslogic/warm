@@ -314,7 +314,7 @@ impl Server {
         let params = matrix.params;
         let mut offsets = Vec::with_capacity(rows.len() + 1);
         offsets.push(0);
-        let mut indices = Vec::new();
+        let mut indices = Vec::with_capacity(rows.iter().map(|code| code.indices().len()).sum());
         for (row, code) in rows.iter().enumerate() {
             check_code(code, params.dim)?;
             let weight = code.indices().len();
