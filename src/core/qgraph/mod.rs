@@ -39,7 +39,8 @@ mod vnni;
 #[cfg(not(target_arch = "wasm32"))]
 pub use repair::{RepairParams, RepairStats};
 pub use update::{
-    Consolidation, ConsolidationMode, ConsolidationPolicy, RowStore, UpdatableVGraph, UpdateError,
+    Consolidation, ConsolidationMode, ConsolidationPolicy, MutableBase, MutableOptions,
+    MutableStats, RowStore, ScanStats, UpdatableVGraph, UpdateError,
 };
 
 #[cfg(feature = "experimental")]
@@ -503,6 +504,32 @@ struct CodeMeta {
     n: f32,
 }
 
+/// The computed dot product and squared norms are each within `dim * 2^-24` of the
+/// magnitudes summed; twice that, and at least the unit-row slack, covers them.
+fn code_rel_slack(dim: usize) -> f32 {
+    1e-4f32.max((dim as f32 + 4.0) * 2.0 * f32::EPSILON)
+}
+
+/// One row's 8-bit code `q` and its scale and residual bound in `m`.
+fn encode_code_row(x: &[f32], q: &mut [i8], m: &mut CodeMeta) {
+    let (s, e) = (&mut m.scale, &mut m.err);
+    let max = x.iter().fold(0f32, |m, v| m.max(v.abs()));
+    *s = if max > 0.0 { max / 127.0 } else { 0.0 };
+    let mut e2 = 0f64;
+    for (o, &v) in q.iter_mut().zip(x) {
+        let c = if *s > 0.0 {
+            (v / *s).round().clamp(-127.0, 127.0)
+        } else {
+            0.0
+        };
+        *o = c as i8;
+        let r = f64::from(v) - f64::from(*s) * f64::from(c);
+        e2 += r * r;
+    }
+    // Rounded up so that `err` bounds the true residual norm.
+    *e = (e2.sqrt() * (1.0 + 1e-6)) as f32 + 1e-7;
+}
+
 impl BuildCodes {
     fn new(data: &[f32], dim: usize, norms: Option<&[f32]>) -> Self {
         let n = data.len() / dim;
@@ -512,24 +539,7 @@ impl BuildCodes {
         q.par_chunks_mut(width)
             .zip(meta.par_iter_mut())
             .zip(data.par_chunks(dim))
-            .for_each(|((q, m), x)| {
-                let (s, e) = (&mut m.scale, &mut m.err);
-                let max = x.iter().fold(0f32, |m, v| m.max(v.abs()));
-                *s = if max > 0.0 { max / 127.0 } else { 0.0 };
-                let mut e2 = 0f64;
-                for (o, &v) in q.iter_mut().zip(x) {
-                    let c = if *s > 0.0 {
-                        (v / *s).round().clamp(-127.0, 127.0)
-                    } else {
-                        0.0
-                    };
-                    *o = c as i8;
-                    let r = f64::from(v) - f64::from(*s) * f64::from(c);
-                    e2 += r * r;
-                }
-                // Rounded up so that `err` bounds the true residual norm.
-                *e = (e2.sqrt() * (1.0 + 1e-6)) as f32 + 1e-7;
-            });
+            .for_each(|((q, m), x)| encode_code_row(x, q, m));
         if let Some(norms) = norms {
             for (m, &n2) in meta.iter_mut().zip(norms) {
                 (m.n2, m.n) = (n2, n2.sqrt());
@@ -542,10 +552,34 @@ impl BuildCodes {
             meta,
             sums,
             euclidean: norms.is_some(),
-            // The computed dot product and squared norms are each within `dim * 2^-24` of the
-            // magnitudes summed; twice that, and at least the unit-row slack, covers them.
-            rel_slack: 1e-4f32.max((dim as f32 + 4.0) * 2.0 * f32::EPSILON),
+            rel_slack: code_rel_slack(dim),
         }
+    }
+
+    /// Codes for `n` rows that are all zero until [`Self::set_row`] fills them.
+    fn with_rows(n: usize, dim: usize, euclidean: bool) -> Self {
+        let width = dim.next_multiple_of(16);
+        Self {
+            width,
+            q: vec![0i8; n * width],
+            meta: vec![CodeMeta::default(); n],
+            sums: vec![0; n],
+            euclidean,
+            rel_slack: code_rel_slack(dim),
+        }
+    }
+
+    /// Encodes row `i` from `x`; `n2` is its squared norm for Euclidean rows.
+    fn set_row(&mut self, i: usize, x: &[f32], n2: Option<f32>) {
+        let q = &mut self.q[i * self.width..(i + 1) * self.width];
+        q.fill(0);
+        let m = &mut self.meta[i];
+        *m = CodeMeta::default();
+        encode_code_row(x, q, m);
+        if let Some(n2) = n2 {
+            (m.n2, m.n) = (n2, n2.sqrt());
+        }
+        self.sums[i] = vnni::query_sum(q);
     }
 
     fn code(&self, i: u32) -> &[i8] {

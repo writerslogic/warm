@@ -915,7 +915,7 @@ impl PyVectorIndex {
     }
 }
 
-fn update_err(e: UpdateError) -> PyErr {
+pub(super) fn update_err(e: UpdateError) -> PyErr {
     match e {
         UpdateError::Io(_) | UpdateError::Persistence(_) | UpdateError::RecoveryRequired => {
             PyRuntimeError::new_err(e.to_string())

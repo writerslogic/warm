@@ -950,6 +950,11 @@ impl PartitionTier {
         self.params.nprobe = nprobe.max(1);
     }
 
+    /// Candidates re-ranked exactly per query for later searches.
+    pub fn set_reorder(&mut self, reorder: usize) {
+        self.params.reorder = reorder.max(1);
+    }
+
     /// Sets the adaptive rule and its floor (the cap is `nprobe`, see `set_nprobe`).
     pub fn set_probe_rule(&mut self, rule: ProbeRule, nprobe_min: usize) {
         self.params.probe_rule = rule;

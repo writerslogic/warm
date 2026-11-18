@@ -20,7 +20,8 @@
 //! 3. Each run is looked up once in the dictionary (parallel, read-only), then appended to
 //!    its list in one bitpacking pass; nothing stored is re-encoded unless the run starts
 //!    at or below the list's final slot (a slot reused after deletes), which merges that one
-//!    list once.
+//!    list once. Ids are resolved and new lists allocated serially; the appends, which touch
+//!    disjoint lists, run in parallel for large batches, and the two forms install together.
 //! 4. Terms new to the dictionary are merged into a fresh sorted base in one pass together
 //!    with the overlay when there are many, or added to the overlay when there are few.
 //!
@@ -2153,11 +2154,18 @@ impl PostingLists {
     }
 
     fn insert_runs_with_lengths(&mut self, runs: &[TermRun<'_>], word_counts: &[u32]) {
+        self.install_runs(runs, word_counts, runs.len() >= PARALLEL_LOOKUPS);
+    }
+
+    /// Appends each run to its term's list. The serial prologue resolves ids and allocates
+    /// lists for new terms in run order, so list ids do not depend on `parallel`; the appends
+    /// then touch disjoint lists.
+    fn install_runs(&mut self, runs: &[TermRun<'_>], word_counts: &[u32], parallel: bool) {
         if runs.is_empty() {
             return;
         }
         let dictionary = &self.dictionary;
-        let ids: Vec<Option<u32>> = if runs.len() >= PARALLEL_LOOKUPS {
+        let found: Vec<Option<u32>> = if parallel {
             runs.par_iter()
                 .map(|run| dictionary.get(run.term))
                 .collect()
@@ -2165,17 +2173,33 @@ impl PostingLists {
             runs.iter().map(|run| dictionary.get(run.term)).collect()
         };
         let mut new_terms = Vec::new();
-        for (run, id) in runs.iter().zip(ids) {
+        let mut targets: Vec<(u32, u32)> = Vec::with_capacity(runs.len());
+        for (index, (run, id)) in runs.iter().zip(found).enumerate() {
             let id = id.unwrap_or_else(|| {
                 let id = self.allocate_list();
                 new_terms.push((run.term, id));
                 id
             });
-            self.lists[id as usize].append_run_with_ordinals(
-                &run.postings,
-                &run.ordinals,
-                |slot| word_counts.get(slot).copied().unwrap_or(0),
+            targets.push((id, index as u32));
+        }
+        let words = |slot: usize| word_counts.get(slot).copied().unwrap_or(0);
+        if parallel {
+            // Runs hold distinct terms and each live term has one list, so ids are distinct.
+            targets.sort_unstable_by_key(|&(id, _)| id);
+            debug_assert!(
+                targets.windows(2).all(|pair| pair[0].0 < pair[1].0),
+                "duplicate list id in install targets"
             );
+            append_disjoint(&mut self.lists, 0, &targets, runs, &words);
+        } else {
+            for &(id, index) in &targets {
+                let run = &runs[index as usize];
+                self.lists[id as usize].append_run_with_ordinals(
+                    &run.postings,
+                    &run.ordinals,
+                    words,
+                );
+            }
         }
         self.dictionary.insert_many(new_terms);
     }
@@ -2433,6 +2457,39 @@ fn merge_bucket<'a>(maps: Vec<RunMap<'a>>) -> Vec<TermRun<'a>> {
     runs
 }
 
+/// Targets per task below which `append_disjoint` stops splitting.
+const APPEND_LEAF: usize = 256;
+
+/// Appends `runs[index]` to `lists[id - base]` for every `(id, index)` of `targets`, which is
+/// sorted by strictly ascending id with every id inside `lists`' window starting at `base`.
+/// The window is split at a target's id so each half owns the lists of its targets.
+fn append_disjoint(
+    lists: &mut [PostingList],
+    base: u32,
+    targets: &[(u32, u32)],
+    runs: &[TermRun<'_>],
+    words: &(impl Fn(usize) -> u32 + Sync),
+) {
+    if targets.len() <= APPEND_LEAF {
+        for &(id, index) in targets {
+            let run = &runs[index as usize];
+            lists[(id - base) as usize].append_run_with_ordinals(
+                &run.postings,
+                &run.ordinals,
+                words,
+            );
+        }
+        return;
+    }
+    let (head, tail) = targets.split_at(targets.len() / 2);
+    let split = tail[0].0;
+    let (left, right) = lists.split_at_mut((split - base) as usize);
+    rayon::join(
+        || append_disjoint(left, base, head, runs, words),
+        || append_disjoint(right, split, tail, runs, words),
+    );
+}
+
 /// Indexes `chunks`, given as `(slot, chunk)` in strictly ascending slot order with every
 /// slot absent from the lists, into the unstemmed (`postings[0]`) and stemmed (`postings[1]`)
 /// lists. See the module head for the phases.
@@ -2492,15 +2549,101 @@ fn index_group<'a>(
     }
     let merged: Vec<Vec<TermRun<'a>>> = by_bucket.into_par_iter().map(merge_bucket).collect();
     let mut merged = merged.into_iter();
-    for lists in postings.iter_mut() {
-        let runs: Vec<TermRun<'a>> = merged.by_ref().take(buckets).flatten().collect();
-        lists.insert_runs_with_lengths(&runs, word_counts);
-    }
+    let unstemmed: Vec<TermRun<'a>> = merged.by_ref().take(buckets).flatten().collect();
+    let stemmed: Vec<TermRun<'a>> = merged.by_ref().take(buckets).flatten().collect();
+    let [first, second] = postings;
+    rayon::join(
+        || first.insert_runs_with_lengths(&unstemmed, word_counts),
+        || second.insert_runs_with_lengths(&stemmed, word_counts),
+    );
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parallel_install_matches_serial_install_list_for_list() {
+        let mut state = 0x9E37_79B9_7F4A_7C15u64;
+        let mut next = move || {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            state
+        };
+        let names: Vec<String> = (0..4000).map(|i| format!("term{i:05}")).collect();
+        let word_counts: Vec<u32> = (0..4000).map(|i| 1 + (i % 37) as u32).collect();
+        let (mut serial, mut parallel) = (PostingLists::default(), PostingLists::default());
+        let mut next_slot = 0usize;
+        // Early batches add new terms; later ones append to existing lists and add more.
+        for batch in 0..6 {
+            let slots: Vec<usize> = (0..300)
+                .map(|_| {
+                    next_slot += 1 + (next() % 3) as usize;
+                    next_slot
+                })
+                .collect();
+            let mut runs: Vec<TermRun<'_>> = Vec::new();
+            for name in names.iter().take(1500 + 400 * batch) {
+                if next() % 4 == 0 {
+                    continue;
+                }
+                let mut postings: Vec<Posting> = Vec::new();
+                for &slot in &slots {
+                    if next() % 5 == 0 {
+                        postings.push((slot, 1 + (next() % 9) as u32));
+                    }
+                }
+                if postings.is_empty() {
+                    continue;
+                }
+                let ordinals = postings.iter().map(|_| (next() % 70_000) as u32).collect();
+                runs.push(TermRun {
+                    term: name,
+                    postings,
+                    ordinals,
+                });
+            }
+            assert!(runs.len() >= PARALLEL_LOOKUPS);
+            if batch > 0 {
+                // Empty some lists so this batch's new terms reuse freed ids out of run order.
+                for name in names.iter().step_by(7).take(150) {
+                    let Some(id) = serial.dictionary.get(name) else {
+                        continue;
+                    };
+                    let mut slots = Vec::new();
+                    let mut cursor = serial.lists[id as usize].iter();
+                    while let Some((slot, _)) = cursor.peek() {
+                        slots.push(slot);
+                        cursor.next();
+                    }
+                    for slot in slots {
+                        serial.remove(name, slot, &word_counts);
+                        parallel.remove(name, slot, &word_counts);
+                    }
+                }
+                assert!(!serial.free.is_empty());
+                assert_eq!(serial.free, parallel.free);
+            }
+            serial.install_runs(&runs, &word_counts, false);
+            parallel.install_runs(&runs, &word_counts, true);
+            parallel.assert_valid();
+            assert_eq!(serial.lists.len(), parallel.lists.len());
+            for (id, (a, b)) in serial.lists.iter().zip(&parallel.lists).enumerate() {
+                let (mut x, mut y) = (Vec::new(), Vec::new());
+                pack_checkpoint(a, &|_| 1, false, &mut x, None);
+                pack_checkpoint(b, &|_| 1, false, &mut y, None);
+                assert_eq!(x, y, "list {id} after batch {batch}");
+                assert_eq!(a.block_count(), b.block_count());
+                for block in 0..a.block_count() {
+                    assert_eq!(a.block_bounds(block), b.block_bounds(block));
+                }
+            }
+            for name in &names {
+                assert_eq!(serial.dictionary.get(name), parallel.dictionary.get(name));
+            }
+        }
+    }
 
     #[test]
     fn positional_ordinals_survive_block_edits_without_changing_checkpoint_bytes() {

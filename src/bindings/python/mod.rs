@@ -72,6 +72,7 @@ mod filter_index;
 #[cfg(feature = "experimental")]
 mod partition_index;
 mod sparse_index;
+mod mutable_index;
 mod vector_index;
 mod warm;
 
@@ -223,6 +224,7 @@ fn writerslogic_warm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyPhaseHVec>()?;
     m.add_function(wrap_pyfunction!(resonator_factorize, m)?)?;
     vector_index::register(m)?;
+    mutable_index::register(m)?;
     filter_index::register(m)?;
     sparse_index::register(m)?;
     warm::register(m)?;

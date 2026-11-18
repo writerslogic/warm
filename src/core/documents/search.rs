@@ -2159,7 +2159,7 @@ fn execute_chunks(captured: &CapturedQuery, chunks: &[CapturedChunk]) -> Vec<Ran
                             document_id: document.id.clone(),
                             source_uri: document.source_uri.clone(),
                             version: document.version.clone(),
-                            metadata: document.metadata.clone(),
+                            metadata: (*document.metadata).clone(),
                             text: None,
                             start_byte: chunk.start_byte,
                             end_byte: chunk.end_byte,
@@ -2428,7 +2428,7 @@ mod tests {
             expected
         );
         let mut replacement = document(0, 99);
-        replacement.metadata = json!({"group": 1});
+        replacement.metadata = json!({"group": 1}).into();
         store.insert(replacement.id.clone(), replacement);
         store.remove("d002").unwrap();
         let added = document(1000, 1);

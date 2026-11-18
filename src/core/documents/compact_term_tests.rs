@@ -23,7 +23,7 @@ fn rebuilt_terms_preserve_complete_document_bytes_and_legacy_frequencies() {
             id: "document:é".into(),
             source_uri: Some("source:é".into()),
             version: "1".into(),
-            metadata: serde_json::json!({"nested":[null, false, "é"]}),
+            metadata: serde_json::json!({"nested":[null, false, "é"]}).into(),
             chunks: vec![StoredChunk {
                 id: "chunk:é".into(),
                 text: Some("é\0 running".into()),

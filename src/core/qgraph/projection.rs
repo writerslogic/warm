@@ -229,11 +229,82 @@ impl Graph {
         )
     }
 
+    /// Exact nearest base rows of every Euclidean training query: f32 products of a query block
+    /// against base chunks, blocks of queries spread over the rayon pool, memory independent of
+    /// the base size.
+    fn training_neighbors_f32(&self, queries: &[f32], neighbors: usize) -> Result<Vec<u32>, WarmError> {
+        const BLOCK: usize = 128;
+        const CHUNK: usize = 2048;
+        let dim = self.dim;
+        let count = queries.len() / dim;
+        let norms: Vec<f32> = self
+            .vectors
+            .par_chunks_exact(dim)
+            .map(|row| row.iter().map(|&v| v * v).sum())
+            .collect();
+        let mut result = reserved(count * neighbors)?;
+        result.resize(count * neighbors, 0u32);
+        result
+            .par_chunks_mut(BLOCK * neighbors)
+            .zip(queries.par_chunks(BLOCK * dim))
+            .try_for_each(|(out, block)| -> Result<(), WarmError> {
+                let width = block.len() / dim;
+                let mut heaps: Vec<BinaryHeap<Nearest>> =
+                    (0..width).map(|_| BinaryHeap::with_capacity(neighbors + 1)).collect();
+                let mut scores = vec![0f32; width * CHUNK];
+                for start in (0..self.n).step_by(CHUNK) {
+                    let rows = CHUNK.min(self.n - start);
+                    let base = &self.vectors[start * dim..(start + rows) * dim];
+                    // SAFETY: `block` is width x dim, `base` is rows x dim (read transposed) and
+                    // `scores` holds at least width x rows floats, all row-major and contiguous.
+                    unsafe {
+                        matrixmultiply::sgemm(
+                            width, dim, rows, 1.0, block.as_ptr(), dim as isize, 1,
+                            base.as_ptr(), 1, dim as isize, 0.0, scores.as_mut_ptr(), rows as isize, 1,
+                        );
+                    }
+                    for (heap, row) in heaps.iter_mut().zip(scores.chunks_exact(rows)) {
+                        let mut bound = if heap.len() < neighbors {
+                            f64::INFINITY
+                        } else {
+                            heap.peek().map_or(f64::INFINITY, |worst| worst.0)
+                        };
+                        for (offset, &product) in row.iter().enumerate() {
+                            let score = f64::from(norms[start + offset] - 2.0 * product);
+                            if score < bound {
+                                heap.push(Nearest(score, (start + offset) as u32));
+                                if heap.len() > neighbors {
+                                    heap.pop();
+                                }
+                                if heap.len() == neighbors {
+                                    bound = heap.peek().map_or(f64::INFINITY, |worst| worst.0);
+                                }
+                            }
+                        }
+                    }
+                }
+                for (heap, slot) in heaps.into_iter().zip(out.chunks_exact_mut(neighbors)) {
+                    let ordered = heap.into_sorted_vec();
+                    if ordered.len() != neighbors || ordered.iter().any(|c| !c.0.is_finite()) {
+                        return Err(invalid("training neighbor score is nonfinite".into()));
+                    }
+                    for (dst, c) in slot.iter_mut().zip(ordered) {
+                        *dst = c.1;
+                    }
+                }
+                Ok(())
+            })?;
+        Ok(result)
+    }
+
     pub(super) fn training_neighbors(
         &self,
         queries: &[f32],
         neighbors: usize,
     ) -> Result<Vec<u32>, WarmError> {
+        if self.metric == Metric::Euclidean {
+            return self.training_neighbors_f32(queries, neighbors);
+        }
         let count = queries.len() / self.dim;
         let base_len = self
             .n

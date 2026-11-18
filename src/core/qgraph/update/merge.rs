@@ -187,7 +187,7 @@ pub(super) fn merge_structure(
     })
 }
 
-fn shuffle(order: &mut [u32], seed: u64) {
+pub(super) fn shuffle(order: &mut [u32], seed: u64) {
     let mut rng = SplitMix(seed);
     for i in (1..order.len()).rev() {
         order.swap(i, (rng.next_u64() % (i as u64 + 1)) as usize);
