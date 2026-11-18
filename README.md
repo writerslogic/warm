@@ -33,16 +33,7 @@ WARM is a Rust library that stores text, vectors and facts in a
 directory on your machine and finds them again. It ships with optional Node.js, C, WASM and UniFFI
 bindings, an HTTP server with portable JavaScript and Python clients, and an MCP server.
 The embedded engine makes no service calls or telemetry requests: the `offline` job in [ci.yml](.github/workflows/ci.yml) runs the default-feature test suite in a network namespace without external interfaces and checks that the default dependency tree has no HTTP, TLS or socket client. HTTP clients connect to the
-server you configure; model stages are opt-in.
-
-| Capability | What you get |
-|------------|--------------|
-| Document search | Chunking, stemmed BM25 over blocked postings, Boolean and phrase queries, hybrid fusion with embeddings you supply, metadata filters, byte offsets |
-| Vector index | Graph index with a memory-mapped vertex file, an updatable delta for inserts and deletes, optional query-aware routing trained on sample queries |
-| Memory API | `remember`, `recall`, `forget` and `explain` with time validity and supersession; conversation memory with source provenance |
-| Storage | Atomic replace and delete, crash-safe journal and checkpoints, verified compaction, one writer per store |
-| Security | Optional AES-256-GCM storage encryption with [documented coverage and limits](docs/SECURITY.md), signed audit log, COSE/SCITT provenance |
-| Vector-symbolic layer | Sparse hypervectors with bind, bundle and permute, triples with multi-hop queries, Hopfield cleanup |
+server you configure; model stages are opt-in. Capabilities and limits: [What ships today](#what-ships-today).
 
 ## Who it's for
 
@@ -54,9 +45,20 @@ server you configure; model stages are opt-in.
 
 ## Get started
 
-For an editor or agent host, start with the [MCP integration](docs/integrations/mcp/README.md).
-For an application, choose the Rust library or HTTP server below. WARM runs locally or on your
-own infrastructure. This repository contains no hosted service. WritersLogic sells WARM Sync, a separate encrypted multi-device sync service with its own client package; the engine here does not contact it.
+| You are using | Install | Next |
+|---|---|---|
+| An editor or agent host (MCP) | `npx -y writerslogic-warm-mcp` (or `uvx warm-mcp`; add `--transport http` for `http://127.0.0.1:8765/mcp`) | [MCP integration](docs/integrations/mcp/README.md) |
+| Rust | `cargo add warm-rust` | below |
+| Node, embedded engine | `npm install writerslogic-warm@0.6.8` | below |
+| JavaScript or TypeScript, HTTP client | `npm install warm-sdk@0.2.1` | [client API](bindings/js/warm-sdk/README.md) |
+| Python, HTTP client | `uv pip install warm-sdk` | [Python quickstart](examples/quickstart/python/quickstart.py) |
+| A server for the HTTP clients | `cargo install --locked --features server --bin warm-server warm-rust` | [server docs](https://writerslogic.com/warm/docs/latest/server/) |
+
+All options, source builds, version requirements and the HTTP-client-or-embedded choice:
+[Install](docs/get-started/install.md) and [Choose an integration](docs/get-started/choose.md).
+WARM runs locally or on your own infrastructure. This repository contains no hosted service.
+WritersLogic sells WARM Sync, a separate encrypted multi-device sync service with its own client
+package; the engine here does not contact it.
 
 To try the offline memory demo from source:
 
@@ -66,18 +68,7 @@ cd warm
 cargo run --release --example demo-offline-agent
 ```
 
-<details open>
-<summary><strong>Rust</strong></summary>
-
-From your own Rust project, add the current Apache-2.0 source. The crate is `warm-rust`; the library is imported as `writerslogic_warm`. The MSRV is Rust 1.89; `local-models` and `--all-features` need Rust 1.94 or newer.
-
-```sh
-cargo add warm-rust
-```
-
-The historical [v0.6.1 source](https://github.com/writerslogic/warm/tree/v0.6.1)
-remains AGPL-3.0-or-later; it is available from that Git tag, not as a
-`warm-rust` 0.6.1 release on crates.io.
+**Rust.** The crate is `warm-rust`; the library is imported as `writerslogic_warm`. MSRV is Rust 1.89; `local-models` and `--all-features` need 1.94 or newer.
 
 ```rust quickstart-check
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
@@ -102,103 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Rust API change in 0.6.6 (0.6.5 returns these values directly): `WarmCore::query`, `query_batch`, and
-`analyze_components` return `Result`. Handle the result with `?` or an explicit
-error branch; deferred-encoding failures no longer become successful partial
-query results. `get_document`, `list_documents`, `get_document_info`, and `list_document_info`
-also return `Result`; retained-text and checkpoint decoding failures propagate
-instead of panicking, and reads no longer hydrate the
-entire checkpoint or hold store locks during text I/O.
-
-</details>
-
-<details>
-<summary><strong>JavaScript and TypeScript: portable client</strong></summary>
-
-`warm-sdk` 0.2.1 is the portable HTTP client for a separately running `warm-server`.
-It has no native binaries or runtime dependencies and uses standard Fetch and Web Streams APIs
-(Node 18 or newer). Installing or importing it does not load the embedded engine or download models.
-For a published release, install the client in your application:
-
-```sh
-npm install warm-sdk@0.2.1
-```
-
-Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
-To build the client from this checkout (the build needs Node 20.19 or newer; the built client
-and the published package run on Node 18):
-
-```sh
-npm ci --prefix bindings/js/warm-sdk
-npm run build --prefix bindings/js/warm-sdk
-```
-
-In your application, install that directory with
-`npm install /absolute/path/to/warm/bindings/js/warm-sdk`.
-
-Start the server in a separate terminal:
-
-```sh
-cargo install --locked --path . --features server --bin warm-server
-WARM_API_KEY=change-me warm-server --input-dim 384
-```
-
-`cargo install` builds `warm-server` from the checkout into `~/.cargo/bin`. From the first
-`server-v<version>` GitHub release, `scripts/install-warm-server.sh` will instead download a
-prebuilt, checksum-verified binary (Linux glibc x86_64 and aarch64, macOS, no Alpine); no such
-release is published yet.
-
-```js
-import { WarmClient } from 'warm-sdk'
-
-const warm = new WarmClient({
-  url: process.env.WARM_URL ?? 'http://127.0.0.1:8080',
-  apiKey: process.env.WARM_API_KEY, tenantId: 'demo',
-})
-await warm.memory.remember('Restore deleted documents from verified backups.', {
-  id: 'backups', metadata: { project: 'alpha' },
-})
-const hits = await warm.memory.recall('restore backups', { filter: { project: 'alpha' } })
-console.log(hits[0]?.text)
-```
-
-Set `WARM_API_KEY` to the server's key before running the client. This memory example uses
-lexical retrieval and needs no embedding model. A runnable source example also checks retrieval
-and deletion in an isolated namespace:
-
-```sh
-WARM_URL=http://127.0.0.1:8080 WARM_API_KEY=change-me \
-  node examples/quickstart/js-client/quickstart.mjs
-```
-
-See the [client API](bindings/js/warm-sdk/README.md) and
-[release availability](docs/RELEASING.md#javascript-package-availability).
-Browser deployments must permit the application's origin at the HTTP service boundary.
-
-</details>
-
-<details>
-<summary><strong>Node.js: optional embedded engine</strong></summary>
-
-`writerslogic-warm` embeds the Rust engine in Node. For a published engine release,
-install it explicitly with npm's optional dependencies enabled:
-
-```sh
-npm install writerslogic-warm@0.6.8
-```
-
-Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
-To build from the cloned repository, with Rust installed:
-
-```sh
-npm ci --omit=optional
-npm run build
-```
-
-The portable client and embedded engine are separate packages with different APIs.
-`listDocuments` supports scoped pruning. See the
-[integration guide](docs/integrations/organizational-knowledge.md) for source
-provenance, namespace isolation, dry runs and deletion limits.
+**Node.js** (`writerslogic-warm`; the portable client is a separate package with a different API; `listDocuments` supports scoped pruning, see the [integration guide](docs/integrations/organizational-knowledge.md)):
 
 ```js quickstart-check
 const { WarmMemorySystem } = require('writerslogic-warm')
@@ -218,66 +113,8 @@ async function main() {
 main().catch(error => { console.error(error); process.exit(1) })
 ```
 
-</details>
-
-<details>
-<summary><strong>Server and Python</strong></summary>
-
-The Python package `warm-sdk` is an HTTP client for `warm-server`, which stores vectors you
-supply. `warm-python` (imported as `writerslogic_warm`) is the in-process native package: vector
-indexes and phase vectors in 0.6.8, which has no document search. The in-process `Warm` class
-(document search, `remember`, `recall`, `forget`, `explain`) is on `main` and ships with the
-release after 0.6.8; until then, `maturin develop --release` from a checkout provides it.
-
-```sh
-cargo install --locked --features server --bin warm-server warm-rust
-WARM_API_KEY=change-me warm-server --input-dim 384 &
-uv pip install warm-sdk
-```
-
-```python
-from writerslogic_warm_sdk import WarmClient
-
-client = WarmClient(url="http://127.0.0.1:8080", api_key="change-me", tenant_id="demo")
-client.add_documents([{"id": "a", "vector": [0.1] * 384, "text": "hello", "metadata": {}}])
-print(client.query([0.1] * 384, top_k=1)["matches"][0]["id"])
-```
-
-Endpoints, flags, tenants and limits are in the
-[server docs](https://writerslogic.com/warm/docs/latest/server/). A runnable Python quickstart
-(memory API plus a toy-embedder vector section; `uv run --no-project --with warm-sdk`) is in [`examples/quickstart/python`](examples/quickstart/python/quickstart.py).
-
-</details>
-
-<details>
-<summary><strong>MCP</strong></summary>
-
-`warm-mcp` serves a store to any Model Context Protocol client over stdio or HTTP:
-
-```sh
-npx -y writerslogic-warm-mcp                                # stdio; downloads a verified binary on first run
-uvx warm-mcp                                                # the same launcher from PyPI
-npx -y writerslogic-warm-mcp --transport http               # http://127.0.0.1:8765/mcp
-```
-
-The [MCP package](https://www.npmjs.com/package/writerslogic-warm-mcp) is a separate launcher. To build the server from source:
-
-```sh
-cargo build --release --features mcp,security --bin warm-mcp   # add local-models for semantic recall
-./target/release/warm-mcp                                       # stdio
-./target/release/warm-mcp --transport http                      # http://127.0.0.1:8765/mcp
-```
-
-Client setup, data directory and the one-writer rule: [MCP integration](docs/integrations/mcp/README.md).
-
-For normalized content from multiple applications, see the [organizational knowledge adapter](docs/integrations/organizational-knowledge.md).
-
-</details>
-
-The [five-minute quickstart](https://writerslogic.com/warm/docs/latest/quickstart/)
-walks through ingest, search, a SQLite FTS5 comparison and encryption in Rust, Python and Node,
-and CI runs that code on every pull request. For a whole agent memory with no embeddings and no
-network, run `cargo run --example demo-offline-agent`.
+The [five-minute quickstart](https://writerslogic.com/warm/docs/latest/quickstart/) adds a SQLite
+FTS5 comparison and encryption in Rust, Python and Node; CI runs that code on every pull request.
 
 <a id="headline-results"></a>
 <a id="where-its-behind"></a>
@@ -301,7 +138,7 @@ provide the evidence for evaluating WARM on your own workload.
 | Query-aware graph routing (trained on sample queries) | Ships (opt-in) | Needs representative training queries; tested on VIBE llama and yi ([report](benchmarks/results/query_aware_graph_v1/README.md)) |
 | Memory API: remember, recall, forget, explain | Ships | Forgetting removes a fact from the store; it does not cover what a model inferred ([docs](docs/memory-api/README.md)) |
 | Conversation memory (`conversation-memory`) | Ships | Bounded context with exact source provenance; native recall not yet benchmarked on LongMemEval end to end (the LongMemEval result in [EVALUATION.md](docs/benchmarks/EVALUATION.md) is a research pipeline with external Qwen3 models, not this API) |
-| Meaning memory: triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on a set of 2,000 synthetic plus 120 real facts ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
+| Meaning memory: sparse hypervectors with bind, bundle and permute, triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on a set of 2,000 synthetic plus 120 real facts ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
 | Union-bundle membership (`experimental`) | Research | At D = 16,384: positive gap to N = 500 (4% false positives), tested to 2,500 ([`benchmark_scaling_results.json`](benchmarks/results/benchmark_scaling_results.json)) |
 | Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS on one thread of an Apple M4 under load, on or below the hnswlib and FAISS HNSW curves in the same file, with a 478 s build ([`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json), `hms` row). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
 | Encrypted stores (`security`) | Ships | AES-256-GCM, Argon2id; covers the log, index caches and the text segment. Metadata, file names and sizes are not encrypted |
@@ -323,71 +160,19 @@ storage-format migration rules.
 
 ## Architecture
 
-```mermaid
-flowchart TB
-  subgraph bindings["Bindings and servers"]
-    rust["Rust crate"]
-    node["Node: writerslogic-warm (napi)"]
-    ffi["C, WASM, UniFFI"]
-    clients["JavaScript and Python: warm-sdk"]
-    server["warm-server (HTTP)"]
-    mcp["warm-mcp (stdio, HTTP)"]
-  end
-  subgraph engine["Engine API"]
-    core["WarmCore: documents, vectors, facts, mutation gate"]
-    prov["Security and provenance: signed audit log, COSE/SCITT"]
-  end
-  subgraph indexes["Indexes and memory"]
-    text["Text index: blocked postings, BM25, Boolean and phrase"]
-    vector["Vector index (qgraph): vertex file, updatable delta, query-aware projection"]
-    memory["Memory API: remember, recall, forget, conversation memory"]
-    vsa["Vector-symbolic layer: bind, bundle, Hopfield cleanup"]
-  end
-  subgraph storage["Storage"]
-    journal["Journal and checkpoints"]
-    segments["Append-only segments (CRC32, LZ4)"]
-    mapped["Memory-mapped files"]
-    crypto["AES-256-GCM encryption (optional)"]
-  end
-  clients --> server
-  rust --> core
-  node --> core
-  ffi --> core
-  server --> core
-  mcp --> core
-  core --> text
-  core --> vector
-  core --> memory
-  core --> vsa
-  core --> prov
-  memory --> text
-  text --> journal
-  vector --> journal
-  memory --> journal
-  journal --> segments
-  segments --> mapped
-  segments --> crypto
-```
-
-Module map: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Diagram and module map: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Limits
 
-- **Not anonymous.** Hypervector sketches and term counts are not encryption; anyone with a store
-  can encode candidate text and compare. `storeText: false` keeps term counts, IDs and
-  embeddings, so it is not a privacy control.
-- **Document search is conventional.** It does not use the hypervectors; the holographic parts
-  are the algebra and the meaning memory.
-- **One writer per store.** A second writing process fails at open with a lock error.
-- **Capacity numbers are points, not guarantees**, and are stated only over the tested range
-  ([capacity](https://writerslogic.com/warm/docs/latest/concepts/capacity/)).
-- **Benchmark results are single machines.** Conditions are in each results file; the single-core
-  ann-benchmarks run and the VIBE high-recall points are losses (see [Where it's behind](docs/benchmarks/EVALUATION.md#where-its-behind)).
-- **Masking is obfuscation.** Client-side vector masking preserves every pairwise similarity.
-- A store is a directory and `WarmCore::new(.., None, ..)` uses the current directory.
+| Limit | Detail |
+|---|---|
+| Not anonymous | Sketches and term counts are not encryption; `storeText: false` keeps term counts, IDs and embeddings and is not a privacy control. Client-side vector masking is obfuscation. [Privacy limits](docs/concepts/privacy-limits.md), [PRIVACY.md](docs/PRIVACY.md) |
+| Document search is conventional | It does not use the hypervectors; the holographic parts are the algebra and the meaning memory. [Concepts](docs/concepts/holographic.md) |
+| One writer per store | A second writing process fails at open with a lock error. A store is a directory; `WarmCore::new(.., None, ..)` uses the current directory |
+| Capacity numbers are points | Stated only over the tested range. [Capacity](https://writerslogic.com/warm/docs/latest/concepts/capacity/) |
+| Benchmarks are single machines | Conditions are in each results file; the single-core ann-benchmarks run and the VIBE high-recall points are losses ([Where it's behind](docs/benchmarks/EVALUATION.md#where-its-behind)) |
 
-Full statement: [docs/PRIVACY.md](docs/PRIVACY.md). Report vulnerabilities privately via
-[SECURITY.md](SECURITY.md).
+Report vulnerabilities privately via [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
