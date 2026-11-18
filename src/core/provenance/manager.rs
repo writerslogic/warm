@@ -711,7 +711,7 @@ impl ProvenanceManager {
     /// level's sibling, flagged when it sits to the left; an odd last node has none.
     pub(super) fn merkle_proof(levels: &[Vec<[u8; 32]>], index: usize) -> Vec<(bool, [u8; 32])> {
         let mut idx = index;
-        let mut proof = Vec::new();
+        let mut proof = Vec::with_capacity(levels.len() - 1);
         for level in &levels[..levels.len() - 1] {
             if let Some(sibling) = level.get(idx ^ 1) {
                 proof.push((idx % 2 == 1, *sibling));
