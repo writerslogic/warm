@@ -13,6 +13,7 @@ import (
 	warm "github.com/writerslogic/warm/bindings/go"
 )
 
+// --8<-- [start:example]
 func Example() {
 	dir, err := os.MkdirTemp("", "warm-example-")
 	if err != nil {
@@ -42,3 +43,5 @@ func Example() {
 	fmt.Println(hits[0].DocumentID)
 	// Output: rust
 }
+
+// --8<-- [end:example]
