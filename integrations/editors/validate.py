@@ -81,6 +81,13 @@ def main() -> int:
         for hook in group["hooks"]:
             assert hook["type"] == "command" and hook["command"] == "node" and hook["args"][0].startswith("${CLAUDE_PLUGIN_ROOT}/scripts/")
             assert (ROOT / "claude-code" / "plugin" / hook["args"][0].replace("${CLAUDE_PLUGIN_ROOT}/", "")).is_file()
+    readme = (ROOT / "README.md").read_text()
+    rows = [line.split("|")[1:3] for line in readme.splitlines() if line.startswith("| ") and "`" in line.split("|")[2]]
+    listed = {cell.strip().strip("`").split("`")[0].split("/")[0] for _, cell in rows}
+    hosts = {p.name for p in ROOT.iterdir() if p.is_dir()}
+    assert listed == hosts, f"README.md table hosts {sorted(listed)} differ from directories {sorted(hosts)}"
+    for _, cell in rows:
+        assert (ROOT / cell.strip().strip("`").split("`")[0]).exists(), f"README.md lists a missing path: {cell.strip()}"
     print("all host configs are structurally valid")
     return 0
 

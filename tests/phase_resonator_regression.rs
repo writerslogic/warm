@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: the benchmark modules it includes by path import each other as crate-root modules.
 
 use writerslogic_warm::core::{phase_hvec, phase_resonator};
 

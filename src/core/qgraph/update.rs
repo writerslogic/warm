@@ -24,8 +24,10 @@ mod delta_rows;
 mod diagnostics;
 mod format;
 mod merge;
+mod mutable;
 use delta::Delta;
 use format::{BaseRows, BaseRowsWriter};
+pub use mutable::{MutableBase, MutableOptions, MutableStats, ScanStats};
 
 const MAX_DIM: usize = 1 << 20;
 const MAX_PAYLOAD: usize = 64 << 20;

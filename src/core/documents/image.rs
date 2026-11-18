@@ -1904,7 +1904,7 @@ impl ServingImage {
                     id: id.to_owned(),
                     source_uri: record.source_uri.map(str::to_owned),
                     version: record.version.to_owned(),
-                    metadata: record.metadata.clone(),
+                    metadata: record.metadata.clone().into(),
                     chunks,
                 }),
                 slots.clone(),

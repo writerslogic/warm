@@ -13,12 +13,19 @@ yanked = "warn"
 # chrono is unmaintained with no vulnerability reported (RUSTSEC-2026-0543). It enters the tree only
 # through rmcp, which the `mcp` feature enables; rmcp 3.10, its newest release, requires it. Drop this
 # when rmcp moves to jiff or time.
+# zbus, zvariant and their derive crates are unmaintained as standalone crates (RUSTSEC-2026-0370,
+# -0371, -0372) with no vulnerability reported. They enter the tree only through secret-service,
+# which the `keychain` feature enables for the Linux Secret Service key provider. Drop these when
+# secret-service moves to a maintained zbus.
 ignore = [
     { id = "RUSTSEC-2026-0367", reason = "zip extract SUID bits; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2026-0368", reason = "zip extract symlink targets; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2026-0369", reason = "zip extract path handling; extract is never called; blocked on candle-core > 0.11" },
     { id = "RUSTSEC-2024-0436", reason = "paste is a transitive dep via nalgebra/simba; no upstream fix available" },
     { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained; required by rmcp 3.10 (mcp feature); no rmcp release without it" },
+    { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained; required by secret-service via zbus (keychain feature); no fixed release" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained; required by secret-service via zbus (keychain feature); no fixed release" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained; required by secret-service via zbus (keychain feature); no fixed release" },
 ]
 
 [licenses]

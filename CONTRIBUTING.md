@@ -1,12 +1,9 @@
 # Contributing to WARM
 
-Thank you for helping. WARM is a Rust vector-symbolic memory engine with Node.js bindings, a
-Python client and an HTTP server, licensed under Apache-2.0. There is no CLA: you keep your
-copyright and certify your right to contribute with a sign-off on each commit (see
-[Sign off your commits](#sign-off-your-commits-dco)).
-
-Participation is covered by the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities
-privately as described in [SECURITY.md](SECURITY.md), never in a public issue.
+WARM is Apache-2.0. There is no CLA: you keep your copyright and certify your right to
+contribute with a [sign-off on each commit](#sign-off-your-commits-dco). Participation is covered
+by the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately per
+[SECURITY.md](SECURITY.md), never in a public issue.
 
 ## Ways to help
 
@@ -76,12 +73,12 @@ Also:
 - **Security features.** With the `security` feature in scope: zeroize key material after cipher
   initialisation, compare secrets in constant time, never branch on secret values, and validate
   public keys and algorithm parameters before use.
-- **Docs.** Pages live under `docs/`; put new pages in the folder for their area (`docs/api/`,
-  `docs/security/`, ...) and they join the navigation without editing `mkdocs.yml`. Preview with
-  `uv run --no-project --python 3.12 --with-requirements docs/requirements.txt mkdocs serve`.
-  Generated API pages also require `npm ci --prefix scripts/docs-api`. CI builds the
-  versioned site and checks internal links and fragments; the weekly external-link
-  job checks HTTP and HTTPS destinations.
+- **Docs.** Put new pages in the `docs/` folder for their area; they join the navigation without
+  editing `mkdocs.yml`. Preview with
+  `uv run --no-project --python 3.12 --with-requirements docs/requirements.txt mkdocs serve`
+  (generated API pages also need `npm ci --prefix scripts/docs-api`). CI builds the versioned site
+  and checks internal links and fragments; a weekly job checks external links. Each concept has
+  one home page: link to it instead of restating it. More: [docs pipeline](docs/community/docs-pipeline.md).
 - **New files** start with the licence header: `// Copyright 2024-2026 WritersLogic Contributors`
   and `// SPDX-License-Identifier: Apache-2.0` (`#` comments for Python, YAML, TOML and shell).
 
@@ -98,9 +95,9 @@ Signed-off-by: Your Name <you@example.com>
 `git commit -s` adds it from your `user.name` and `user.email`. To add it to commits you have
 already made: `git rebase --signoff origin/main`, then `git push --force-with-lease`.
 
-A workflow checks every non-merge commit in a pull request from a contributor without write
-access. Maintainers and bots are exempt from the check, not from the certificate. Maintainers
-squash-merge, so your commits do not need a GPG or SSH signature.
+A workflow checks every non-merge commit from a contributor without write access (maintainers and
+bots are exempt from the check, not the certificate). Maintainers squash-merge, so commits need no
+GPG or SSH signature.
 
 ## Commits and pull requests
 

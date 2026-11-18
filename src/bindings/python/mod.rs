@@ -69,6 +69,7 @@ fn resonator_work(dim: usize, items: usize, factors: usize, iterations: usize) -
 #[cfg(feature = "local-embed")]
 mod embed;
 mod filter_index;
+mod mutable_index;
 #[cfg(feature = "experimental")]
 mod partition_index;
 mod sparse_index;
@@ -223,6 +224,7 @@ fn writerslogic_warm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyPhaseHVec>()?;
     m.add_function(wrap_pyfunction!(resonator_factorize, m)?)?;
     vector_index::register(m)?;
+    mutable_index::register(m)?;
     filter_index::register(m)?;
     sparse_index::register(m)?;
     warm::register(m)?;

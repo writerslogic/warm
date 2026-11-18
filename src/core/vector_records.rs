@@ -225,7 +225,7 @@ pub(crate) fn prepare(
         id: record.id.clone(),
         source_uri: None,
         version: VERSION.into(),
-        metadata,
+        metadata: metadata.into(),
         chunks: vec![StoredChunk {
             id: format!("hms:chunk:{}:0", record.id),
             text: None,

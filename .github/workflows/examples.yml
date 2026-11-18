@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Runs the code the documentation shows, so it cannot rot: the three quickstarts, the offline
-# agent demo, and the code blocks in the README. Each program's printed result table is diffed
+# agent demo, the code blocks in the README, and the integration-page quickstarts. Each program's printed result table is diffed
 # against the committed expected output the docs include.
 name: Examples
 
@@ -113,6 +113,29 @@ jobs:
           uv run --no-project --with "$(ls "$RUNNER_TEMP"/wheel/*.whl)" python examples/quickstart/python/quickstart.py | tee "$RUNNER_TEMP/python.out"
           awk '/^query /,/^top-1 correct/' "$RUNNER_TEMP/python.out" | diff - examples/quickstart/expected-search-python.txt
 
+  docs-integration-quickstarts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-docs-quickstarts-${{ hashFiles('Cargo.toml') }}
+      - run: cargo build --release --features server --bin warm-server
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - name: Integration doc quickstarts run as written (blocks marked quickstart-check; API-key blocks are skipped)
+        env:
+          WARM_SERVER_BIN: ${{ github.workspace }}/target/release/warm-server
+        run: python3 scripts/check-readme-snippets.py docs
+
   demo-offline-agent:
     runs-on: ubuntu-latest
     steps:
@@ -166,5 +189,7 @@ jobs:
           persist-credentials: false
       - name: Snippet extractor tests
         run: python3 -m unittest scripts/check-readme-snippets.py
+      - name: Docs includes resolve to existing example sections
+        run: python3 scripts/check-readme-snippets.py includes
       - name: Documentation redirect tests
         run: node --test scripts/test-docs-redirects.mjs

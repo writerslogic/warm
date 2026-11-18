@@ -13,6 +13,7 @@ Native Python bindings for WARM's vector search and vector-symbolic algebra.
 Python 3.9 or newer is required. Install the native binding; NumPy (`>=1.26`, which the vector-index API needs) is installed with it:
 
 ```sh
+uv init   # only outside an existing uv project
 uv add warm-python
 ```
 
@@ -96,8 +97,7 @@ or allocating the resonator index.
 search, the memory API and vector search. Requests and results are dicts and lists with the
 camelCase fields of the Node binding. One process may write a store at a time.
 
-`Warm` is on `main` and ships with the release after 0.6.8; the 0.6.8 wheel that `uv add warm-python`
-installs does not have it. Until that release, build it from a checkout with `maturin develop --release`.
+`Warm` ships in `warm-python` 0.7.0 and later; the earlier 0.6.8 wheel does not have it.
 
 ```python
 from writerslogic_warm import Warm
@@ -124,6 +124,7 @@ store.remember({"text": "Ada prefers tea", "subject": "ada"})
 store.recall("what does Ada drink")                       # hybrid
 
 # Or supply the vectors: declare the space, then pass `embedding` on remember and recall.
+vector = query_vector = [1.0] * 384   # your model's output
 store = Warm(16384, "./warm-ext", embedding_dimensions=384)
 store.remember({"text": "Ada prefers tea", "embedding": vector})
 store.recall("what does Ada drink", {"embedding": query_vector})

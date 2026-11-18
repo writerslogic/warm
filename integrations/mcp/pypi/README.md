@@ -10,39 +10,46 @@ Persistent local memory for AI agents through the Model Context Protocol. The se
 
 <br clear="left">
 
-## Run
+## Install
 
-Python 3.9 or newer is required for this launcher. Run it directly with `uvx`:
-
-```sh
-uvx warm-mcp
-```
-
-The default stdio transport works with MCP clients that launch a local command. To share one server between clients, use streamable HTTP:
+None: the launcher runs on demand. Python 3.9+ is required.
 
 ```sh
-uvx warm-mcp --transport http
+uvx warm-mcp                      # stdio, for clients that start a local command
+uvx warm-mcp --transport http     # shared server at http://127.0.0.1:8765/mcp
 ```
 
-The HTTP endpoint defaults to `http://127.0.0.1:8765/mcp`. See the [MCP guide](https://writerslogic.com/warm/docs/latest/integrations/mcp/) for client configuration, storage locations, encryption, authentication, and available flags.
+## Quickstart
 
-## What the server provides
+Add the server to a client's `mcpServers` (Claude Desktop, Cursor, Windsurf and others):
 
-| Tool | Purpose |
-| --- | --- |
-| `remember` | Save or update a memory. |
-| `recall` | Find memories relevant to a query. |
-| `search` | Search with explicit filters and ranking options. |
-| `get`, `list` | Read one memory or page through a store. |
-| `forget` | Delete selected memories. |
-| `stats`, `export` | Inspect and export a store. |
+```json
+{
+  "mcpServers": {
+    "writerslogic-warm": {
+      "command": "uvx",
+      "args": ["warm-mcp"]
+    }
+  }
+}
+```
 
-The server also exposes memory resources and prompts. Memories persist across client sessions. By default, recall uses lexical search; semantic recall requires a build configured with a local embedding model.
+## Options
 
-## Launcher and binary
+| Name | Type | Default | Meaning |
+|---|---|---|---|
+| `--transport` | `stdio` or `http` | `stdio` | Transport; http serves `http://127.0.0.1:8765/mcp` |
+| `WARM_MCP_BINARY` | path | unset | Run your own `warm-mcp` build, no download |
+| `WARM_MCP_CACHE_DIR` | path | user cache dir | Where the verified binary is cached |
+| `WARM_MCP_RELEASE_BASE` | URL | GitHub release | Download base; plain HTTP is refused except on loopback |
+| `WARM_MCP_CHECKSUMS` | path | shipped table | SHA-256 table the download is checked against |
 
-The package installs a small Python launcher. On first run, it downloads the matching prebuilt `warm-mcp` binary from the [GitHub release](https://github.com/writerslogic/warm/releases) and verifies its SHA-256 against a checksum table shipped in the package. The server itself runs locally; the launcher needs network access for that first binary download.
+Everything else (`--data-dir`, `--store`, namespaces, encryption, authentication, the tools and resources the server exposes) is `warm-mcp` itself: see the reference.
 
-Set `WARM_MCP_BINARY` to run your own `warm-mcp` build. `WARM_MCP_CACHE_DIR` changes the download cache. The [MCP guide](https://writerslogic.com/warm/docs/latest/integrations/mcp/) covers the server's `WARM_MCP_*` configuration variables.
+## Compatibility
 
-The same launcher is [available on npm](https://www.npmjs.com/package/writerslogic-warm-mcp).
+Python 3.9+; downloads the `warm-mcp` binary release tagged with the launcher version (`mcp-v<version>`). First run needs network access for the binary download; the server itself runs locally. The same launcher is [available on npm](https://www.npmjs.com/package/writerslogic-warm-mcp).
+
+## Reference
+
+[MCP guide](https://writerslogic.com/warm/docs/latest/integrations/mcp/) (also `docs/integrations/mcp/README.md` in the repository).

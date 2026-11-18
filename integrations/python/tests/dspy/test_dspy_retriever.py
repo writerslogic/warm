@@ -9,11 +9,15 @@ import pytest
 dspy = pytest.importorskip("dspy")
 
 from dspy.utils import DummyLM  # noqa: E402
+from importlib.metadata import version as _version  # noqa: E402
 
 from writerslogic_warm_integrations.core import HashingEmbedder  # noqa: E402
 from writerslogic_warm_integrations.dspy import WarmRetriever, WarmRM  # noqa: E402
 
 DIM = 64
+# dspy 3.5 asks a non-reasoning LM for a "plan" and calls tools natively; 3.4 used "reasoning" and next_tool_* fields.
+DSPY35 = tuple(int(x) for x in _version("dspy").split(".")[:2]) >= (3, 5)
+THOUGHT = "plan" if DSPY35 else "reasoning"
 FACTS = [
     "The telescope observed a distant galaxy last night",
     "Fresh pasta needs ripe tomato and basil",
@@ -70,7 +74,7 @@ def test_delete_and_replace_by_id(server):
 
 def test_real_program_with_dummy_lm(server):
     r = retriever(server, corpus=FACTS)
-    lm = DummyLM([{"reasoning": "the context mentions a goal", "answer": "the striker"}])
+    lm = DummyLM([{THOUGHT: "the context mentions a goal", "answer": "the striker"}])
     with dspy.context(lm=lm):
         out = RAG(r)("who scored the football goal")
     assert out.answer == "the striker"
@@ -89,18 +93,25 @@ def test_program_deepcopy_and_state_survive_optimizer_style_copy(server):
 
 def test_react_tool(server):
     r = retriever(server, corpus=FACTS)
-    lm = DummyLM(
-        [
+    if DSPY35:
+        call = dspy.ToolCalls.from_dict_list([{"name": "search_memory", "args": {"query": "telescope galaxy"}}])
+        steps = [
+            {"next_thought": "look it up", "tool_calls": call},
+            {"next_thought": "done", "tool_calls": dspy.ToolCalls.from_dict_list([{"name": "submit", "args": {"answer": "a galaxy"}}])},
+        ]
+    else:
+        steps = [
             {"next_thought": "look it up", "next_tool_name": "search_memory", "next_tool_args": {"query": "telescope galaxy"}},
             {"next_thought": "done", "next_tool_name": "finish", "next_tool_args": {}},
             {"reasoning": "found", "answer": "a galaxy"},
         ]
-    )
+    lm = DummyLM(steps)
     agent = dspy.ReAct("question -> answer", tools=[r.as_tool()])
     with dspy.context(lm=lm):
         out = agent(question="what did the telescope see?")
     assert out.answer == "a galaxy"
-    assert "distant galaxy" in str(out.trajectory["observation_0"])
+    observed = str(out.history) if DSPY35 else str(out.trajectory["observation_0"])
+    assert "distant galaxy" in observed
 
 
 def test_legacy_rm_with_dspy_retrieve(server):

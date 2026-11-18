@@ -5,7 +5,7 @@ The portable JavaScript and TypeScript HTTP client for WARM. Connect to a separa
 For a published release, install the portable client in your application:
 
 ```sh
-npm install warm-sdk@0.2.1
+npm install warm-sdk@0.2.2
 ```
 
 Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
@@ -39,6 +39,8 @@ CommonJS is also supported:
 ```js
 const { WarmClient, WarmError } = require('warm-sdk')
 ```
+
+Compatibility: Node 18+ (building from a checkout needs 20.19+), browsers, Bun, Deno, `warm-server` 0.6.x. A runnable version with the server steps is [`examples/quickstart/js-client`](https://github.com/writerslogic/warm/blob/main/examples/quickstart/js-client/quickstart.mjs).
 
 Run the service separately using the [server guide](https://github.com/writerslogic/warm/blob/main/docs/SERVER.md). Browser requests also require the server deployment to permit the application's origin. This client does not start a server or provide embeddings, an LLM, a vector mask, or an embedded store.
 
@@ -130,7 +132,7 @@ Local invalid inputs throw `TypeError` or `RangeError`. `WarmError` carries `cod
 Applications that need a local native store can install the separate `writerslogic-warm` package explicitly. It has its own engine version and platform binaries. It is not a dependency or optional dependency of this HTTP client. For a published engine release, keep npm's optional dependencies enabled:
 
 ```sh
-npm install writerslogic-warm@0.6.8
+npm install writerslogic-warm@0.7.0
 ```
 
 Check the [available native package versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).

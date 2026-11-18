@@ -5,6 +5,116 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [0.7.0] - 2026-11-18
+
+### Added
+- Accept BM25 k1 and b on the server text search
+- Add Windows DPAPI and Linux Secret Service key providers
+- Add the sealed block container with per-segment keys and crypto-erase
+- Expose MutableBase to Python as MutableIndex
+- Add the stage 1 in-place mutable base
+- Parse form state from accessibility-tree text at experience ingest (#494)
+- Run hybrid recall in the memory API (#475)
+- Route tree observations through the default memory path (#472)
+- Add the experience core for tree-structured agent observations (#468)
+- Back memorize_vector with the vertex graph and add in-process Warm to the Python wheel (#440)
+- Back memorize_vector with the vertex graph and add in-process Warm to the Python wheel
+
+### Changed
+- Split the engine and mutation modules into submodules
+- Split the provenance module into submodules
+- Split the qgraph, vertex, partition, kernels and filter modules into submodules
+- Split the documents, search, postings and vector index modules into submodules
+- Consolidate tests, remove duplicate helpers and trim session comments (#490)
+
+### Documentation
+- Trim change-history wording from qgraph comments
+- Remove narrating comments in cognition, agency and graph
+- Describe the editor plugins as on-device with no service calls (#492)
+- Restate benchmark claims from their committed results files (#482)
+
+### Fixed
+- Satisfy needless_range_loop and rustfmt after the merge
+- Port MutableBase onto the bounded construction search
+- Bound the MutableIndex search result allocation
+- Shuffle the insertion order inside MutableBase::insert_batch
+- Close two races in CI test scripts (#498)
+- Retry an interrupted template copy in the store_open fuzz target (#487)
+- Finish interrupted purges at open, purge by default with durable tickets, and grow segments on Windows (#453)
+- Read block-addressed rows on Windows with positional reads
+- Commit the byte-row golden logs and leave the f32 golden README unchanged
+- Build the sparse sweep example against the current index parameters
+- Satisfy the Rust 1.100 range-loop lint in the operand retriever
+- Iterate the centroid norms directly in the list ranking tail
+- Satisfy the Rust 1.100 range-loop lint in the operand retriever
+- Iterate the centroid norms directly in the list ranking tail
+
+### Performance
+- Probe candidate lists learned from construction queries before the graph search (#500)
+- Size the Merkle proof vector up front
+- Size the private-query hint index buffer up front
+- Leave single-term ranked queries to the live store's frontier-pruned ranker
+- Install postings runs into their lists in parallel
+- Add set_reorder to the partition index binding
+- Search Euclidean training neighbours exactly on all threads
+- Share equal document metadata within an ingest batch
+- Reorder document slots by graph bisection in the explicit compaction (#495)
+- Clear visited marks with one fill on graphs up to 2^20 vertices
+- Keep 512-bit gathers out of the block-wise conjunction loops (#488)
+- Estimate 4-bit neighbour rows four at a time on the default query path (#484)
+- Count intersections a block at a time (#476)
+- Serve positional lexical queries from checkpoint version 4 with skip tables (#470)
+- Make four-row batched neighbour estimates the default query path (#477)
+- Bound the construction search and make standard the default build profile (#469)
+- Add opt-in compressed checkpoint text (#473)
+- Fold the text index to disk in bounded memory during ingest (#457)
+- Add a binary vector query, queueing defaults and engine-side filtered search to warm-server (#471)
+- Keep live-store posting lists decoded per thread for hybrid queries (#474)
+- Serve large lexical corpora from the checkpoint with an exact impact-pruned ranker (#467)
+- Add vector build profiles, run construction batches in locality order and release committed text in the text benchmark (#456)
+- Speed up the streaming index with AVX-512 GEMM dispatch and packed selection keys (#463)
+- Cut vertex build memory and store byte-valued rows as one byte per coordinate (#441)
+- Weigh postings a block at a time in the lexical rank pass (#439)
+- Speed up partition retrain placement and add block-sketch pruning to the sparse index (#437)
+- Score sparse candidates through a per-document sketch and seed the block threshold
+- Screen filtered IVF lists with 4-bit fast-scan codes (#434)
+- Columnar block summaries, residual bound and byte forward rows for the sparse index
+- Retrain the partition tier after 6M inserts by default
+- Speed up partition placement with a fused SIMD spill-candidate filter and the gemm crate
+- Weigh postings a block at a time and skip empty score chunks in the lexical rank pass
+- Cut the filtered fast-scan probe cost and tune per query class
+- Store byte-valued base rows as one byte per coordinate
+- Screen filtered IVF lists with 4-bit fast-scan codes
+- Cut peak build memory and the duplicate vertex file, and add block-addressed base rows
+
+### Bench
+- Index session-opening assistant turns as their own LongMemEval unit
+- Add GCP Ice Lake text and sift-250k results for embedded vector stores
+- Record machine, commit and date in the hybrid results and report (#493)
+- Pin faiss-cpu 1.16.0 and usearch 2.26.6 for the rerun (#491)
+- Hold every comparison to one timing boundary and one verdict rule (#483)
+- Add the hybrid contract (#466)
+- Add vector baselines on a second machine class with a clean SIFT-1M final and GloVe (#458)
+- Fold the three-machine text results, paired quality bootstrap, fact-store kill tests and LoCoMo context shapes (#464)
+- Time every text engine on matched contracts, fix search_lexical, and fold the first-use, membership, sparse-docs and LoCoMo work (#454)
+- Time hnswlib natively in C++ and report its Python call overhead (#444)
+- Refresh the 185H competitive results at d41fc949 (#443)
+- Refresh the 185H competitive results at d41fc949
+
+### Merge
+- Release/0.7.0
+- Perf/vector-vibe2
+- Origin/main
+- Cleanup/itests
+- Cleanup/qgraph
+- Cleanup/core
+- Cleanup/docs
+- Cleanup/edge
+- Integrate/lexical-splits
+- Integrate/dirty-work
+- Integrate/perf-features
+- Integrate/bench-docs
+- Bring in the sparse index block-sketch pruning (#438)
 ## [0.6.8] - 2026-11-11
 
 ### Fixed
@@ -33,8 +143,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record the balanced warm-retrain streaming study and Ice Lake runs
 - Record the second E2 Ice Lake run
 - Record the rescore-budget A/B and the pending consolidation measurements
-- Correct the streaming run hosts to Zen 4 and Zen 2 and note the live leaderboard CSV
-- Mark the filter operating point in the pinned-run table
 
 ### Fixed
 - Defer documentation search loading until requested
@@ -106,8 +214,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Keep compact-layout LongMemEval runs in their own summary arm
 - Add base-with-deletes search and staged consolidation cgroup fixtures
 - Re-measure the ann-benchmarks entry through the harness and add the held-out candidate search tooling
-- Add the 8 GiB streaming final-runbook run
-- Record the pinned-commit yfcc-10M filter and msturing-30M streaming harness runs
 
 ### Research
 - Validate upper seed bounds and reject speculative traversal
@@ -193,6 +299,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record the L22 search profile, live sweep and nprobe selection
 - Record the L22 partition-tier kill tests, kernels and acceptance with their scripts and results
 - Avoid an intra-doc link to the private fastscan module
+- Correct the streaming run hosts to Zen 4 and Zen 2 and note the live leaderboard CSV
+- Mark the filter operating point in the pinned-run table
 - Correct the RSS range and the measured binary commit in the consolidation heap peak record
 - Record the consolidation heap peak measurement
 - Record the landed checkpoint hit decode in the FiQA QPS gap lever
@@ -422,6 +530,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Report every repetition of the partition step with mean, median and p90
 - Carry the reused table's base and scale in the scan-only mode
 - Time one partition-tier search step over the LUT16 block scan
+- Add the 8 GiB streaming final-runbook run
+- Record the pinned-commit yfcc-10M filter and msturing-30M streaming harness runs
 - Pin the text comparison and speed up mapped-checkpoint posting decode (#389)
 - Rerun SIFT-1M against hnswlib at a pinned commit
 - Rerun the text comparison at pinned commits against the current comparator pins

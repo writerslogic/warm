@@ -177,7 +177,7 @@ fn info(document: &StoredDocument) -> DocumentInfo {
         id: document.id.clone(),
         source_uri: document.source_uri.clone(),
         version: document.version.clone(),
-        metadata: document.metadata.clone(),
+        metadata: (*document.metadata).clone(),
         chunk_count: document.chunks.len(),
     }
 }

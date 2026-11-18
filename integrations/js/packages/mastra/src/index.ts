@@ -24,7 +24,7 @@ import type { WarmMemorySystem } from 'writerslogic-warm'
 const REGISTRY = '__warm_indexes__'
 const STORE_NAME = 'HOLOGRAPHIC'
 
-export interface HolographicVectorOptions
+export interface WarmVectorOptions
   extends Pick<WarmStoreOptions, 'path' | 'warmConfig' | 'maxFetch' | 'overfetch' | 'dimensions'> {
   id: string
   /** Vector length of every index in this store. Fixed when the store is created. Default 1536. */
@@ -61,16 +61,16 @@ function normalizeDates(value: unknown): unknown {
  * An index is a collection inside one engine store; all indexes share the store's vector dimension.
  * Scores are cosine similarity. Filters use Mastra's MongoDB-style syntax.
  */
-export class HolographicVector extends MastraVector<VectorFilter> {
+export class WarmVector extends MastraVector<VectorFilter> {
   readonly dimension: number
   private readonly memory: WarmMemorySystem
-  private readonly options: HolographicVectorOptions
+  private readonly options: WarmVectorOptions
   private readonly embedder: Embedder
   private readonly registry: WarmStore
   private readonly stores = new Map<string, WarmStore>()
   private lock: Promise<unknown> = Promise.resolve()
 
-  constructor(options: HolographicVectorOptions) {
+  constructor(options: WarmVectorOptions) {
     super({ id: options.id })
     this.options = options
     this.dimension = options.dimension ?? 1536
@@ -135,7 +135,7 @@ export class HolographicVector extends MastraVector<VectorFilter> {
     return rec.metadata as { dimension: number; metric: 'cosine'; count: number }
   }
 
-  private async requireIndex(indexName: string): Promise<NonNullable<Awaited<ReturnType<HolographicVector['describe']>>>> {
+  private async requireIndex(indexName: string): Promise<NonNullable<Awaited<ReturnType<WarmVector['describe']>>>> {
     const d = await this.describe(indexName)
     if (!d) this.user('INDEX_NOT_FOUND', `Index ${indexName} does not exist; call createIndex first`, { indexName })
     return d as NonNullable<typeof d>

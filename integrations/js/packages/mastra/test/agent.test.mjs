@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-// A real Mastra Agent with Memory semantic recall backed by HolographicVector, driven by a scripted model.
+// A real Mastra Agent with Memory semantic recall backed by WarmVector, driven by a scripted model.
 import assert from 'node:assert/strict'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -9,7 +9,7 @@ import { test } from 'node:test'
 import { Agent } from '@mastra/core/agent'
 import { LibSQLStore } from '@mastra/libsql'
 import { Memory } from '@mastra/memory'
-import { HolographicVector } from '../dist/index.js'
+import { WarmVector } from '../dist/index.js'
 
 const DIM = 64
 const words = ['neovim', 'editor', 'favorite', 'deploy', 'friday', 'rotation', 'weather', 'sunny', 'coffee', 'tea', 'lunch', 'meeting']
@@ -58,9 +58,9 @@ const model = {
   },
 }
 
-test('semantic recall retrieves an old message through HolographicVector', async () => {
+test('semantic recall retrieves an old message through WarmVector', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'warm-mastra-agent-'))
-  const vector = new HolographicVector({ id: 'warm-vector', dimension: DIM, path: join(dir, 'warm'), hypervectorDimensions: 1024 })
+  const vector = new WarmVector({ id: 'warm-vector', dimension: DIM, path: join(dir, 'warm'), hypervectorDimensions: 1024 })
   const memory = new Memory({
     storage: new LibSQLStore({ id: 'store', url: `file:${join(dir, 'mastra.db')}` }),
     vector,
@@ -77,11 +77,11 @@ test('semantic recall retrieves an old message through HolographicVector', async
   await agent.generate('which editor is my favorite', { memory: thread })
 
   const prompt = JSON.stringify(seen[0])
-  assert.match(prompt, /neovim/, 'the old message was recalled from HolographicVector into the prompt')
+  assert.match(prompt, /neovim/, 'the old message was recalled from WarmVector into the prompt')
   assert.match(prompt, /which editor is my favorite/)
 
   const indexes = await vector.listIndexes()
-  assert.ok(indexes.length >= 1, 'Memory created its message index in the HolographicVector store')
+  assert.ok(indexes.length >= 1, 'Memory created its message index in the WarmVector store')
   const { count } = await vector.describeIndex({ indexName: indexes[0] })
   assert.ok(count >= 3)
 })

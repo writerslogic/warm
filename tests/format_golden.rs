@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: sets a process environment variable and builds goldens through its own generator module.
 //! Golden stores: small committed stores for every storage format that has existed, opened by
 //! the current code. See `tests/golden/README.md`.
 //!
@@ -27,12 +28,10 @@ use writerslogic_warm::{DocumentInput, EntangledHVec, WarmCore};
 
 const DIM: u32 = 1024;
 
-// ---------------------------------------------------------------------------------------
 // The golden stores and how each is built. `provenance` says what produced the bytes:
 //   released-code      the code of a tagged release, built and run unmodified
 //   current-code       the code in this tree
 //   synthesized        current code, steered into an older layout (see `description`)
-// ---------------------------------------------------------------------------------------
 
 #[derive(Clone, Copy, PartialEq)]
 enum Kind {
@@ -839,9 +838,7 @@ fn generate_goldens() -> Result<()> {
     Ok(())
 }
 
-// ---------------------------------------------------------------------------------------
 // The tests CI runs.
-// ---------------------------------------------------------------------------------------
 
 #[test]
 fn golden_files_match_their_manifest() -> Result<()> {

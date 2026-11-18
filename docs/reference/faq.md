@@ -4,9 +4,7 @@ description: Answers to the questions people ask about WARM, each traced to a do
 
 # FAQ
 
-Each answer points to the page or issue that backs it. If your question is not here, open an
-[issue](https://github.com/writerslogic/warm/issues) or ask in
-[Discussions](https://github.com/writerslogic/warm/discussions).
+Each answer links its source. Not here? Open an [issue](https://github.com/writerslogic/warm/issues) or ask in [Discussions](https://github.com/writerslogic/warm/discussions).
 
 ## Is the document search actually holographic?
 
@@ -24,23 +22,18 @@ paraphrases. The [quickstart](../quickstart/index.md) runs both ways.
 
 ## Why does the SDK need a server?
 
-`warm-sdk` on npm and PyPI provides HTTP clients for `warm-server`. The server wraps one store
-per tenant and owns the engine; client processes do not load it. For an embedded Node engine,
-use the separate `writerslogic-warm` package. The
-`warm-python` wheel on PyPI runs the engine in-process instead (`writerslogic_warm.Warm`:
-document search, the memory API and vector search, one writer per store). See the
-[server page](../SERVER.md).
+`warm-sdk` is an HTTP client; the server owns the engine and one store per tenant. To run the
+engine in-process, use `writerslogic-warm` (Node) or `warm-python` (`writerslogic_warm.Warm`:
+document search, the memory API and vector search, one writer per store). See
+[which package](../get-started/choose.md#which-package) and the [server page](../SERVER.md).
 
 ## Does it send anything over the network?
 
-The HTTP clients send requests to the server URL you configure. They do not start a server
-or download models. A remote deployment needs the authentication and transport controls in
-the [server guide](../SERVER.md).
-
-The library makes no network calls and sends no telemetry. Two opt-in Cargo features touch a
-network: `server` listens for HTTP requests, and `provenance-scitt` uses an HTTP client to submit
+The library makes no network calls and sends no telemetry. The HTTP clients send requests only
+to the server URL you configure; they do not start a server or download models. Two opt-in Cargo
+features touch a network: `server` listens for HTTP requests, and `provenance-scitt` submits
 signed statements to a transparency service you configure. Neither is on by default
-(`default = []`).
+(`default = []`). A remote deployment needs the controls in the [server guide](../SERVER.md).
 
 ## Is my data encrypted on disk?
 
@@ -68,10 +61,10 @@ below exact search on recall, and the quantized graph index does not reach 0.95 
 nytimes-256 where FAISS, hnswlib, Lucene and RaBitQ do. On SciFact the hybrid search is the
 best WARM configuration. Start at [Public benchmarks](../PUBLIC-BENCHMARKS.md).
 
-## Which Rust version do I need?
+## Which Rust or Node version do I need? (MSRV)
 
-Rust 1.89 or newer (the MSRV). Node 18 or newer for the bindings, and Node 24 for the
-quickstart, which uses `node:sqlite`.
+The MSRV (minimum supported Rust version) is Rust 1.89; Node 18 or newer for the bindings. See the
+[requirements table](../get-started/install.md#requirements) for every MSRV and runtime requirement.
 
 ## Why is `npm run build` changing `index.d.ts`?
 
@@ -81,9 +74,9 @@ commit that diff by accident. The cleanup is tracked in
 
 ## Why do the docs have three versions?
 
-`latest` is the newest tagged release that carries these docs, `dev` is the `main` branch, and
-each release tag keeps its own copy. The selector in the header switches between them, and an
-old version shows a banner. [How the docs are built](../community/docs-pipeline.md) explains it.
+`latest` is the newest tagged release that carries these docs, `dev` is `main`, and each release
+tag keeps its own copy; an old version shows a banner. See
+[how the docs are built](../community/docs-pipeline.md).
 
 ## Which license is it under?
 

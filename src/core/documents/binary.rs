@@ -515,7 +515,7 @@ pub(crate) fn read_document(
         id,
         source_uri,
         version,
-        metadata,
+        metadata: metadata.into(),
         chunks,
     })
 }

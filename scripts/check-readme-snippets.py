@@ -8,10 +8,26 @@ A block opened with ```rust quickstart-check is a complete program (its own `fn 
 written verbatim as a bin of the quickstart crate (examples/quickstart/rust) and run with cargo.
 `cargo test` also compiles and runs it as a doctest of README.md (src/lib.rs).
 
-Usage: python scripts/check-readme-snippets.py [js|rust|all]
+Integration docs (docs/integrations/**/*.md and integrations/**/README.md) mark a block with an HTML
+comment on the line before the fence, so the rendered page keeps a plain code fence:
+
+    <!-- quickstart-check: python langchain -->        run with `uv run --extra langchain` in integrations/python
+    <!-- quickstart-check: python langchain,ag2 -->    several extras (use `-` for none)
+    <!-- quickstart-check: skip: requires API key -->  not run; the reason is printed
+
+`docs` mode starts a fresh warm-server (WARM_SERVER_BIN, `--no-auth --input-dim 384` on 127.0.0.1:8080)
+for each Python block, so the blocks run exactly as written.
+
+`includes` checks every `--8<--` include in docs/ and README.md: the file exists and a named
+section (`--8<-- "file:name"`) has its `[start:name]` and `[end:name]` markers, so a docs page
+cannot embed a missing or renamed example.
+
+Usage: python scripts/check-readme-snippets.py [js|rust|all|docs [path-substring]|includes]
 """
 
+import os
 import re
+import socket
 import subprocess
 import sys
 import tempfile
@@ -20,10 +36,39 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FENCE = re.compile(r"^```(\w+) quickstart-check\n(.*?)^```$", re.S | re.M)
+MARKED = re.compile(r"^<!--\s*quickstart-check:\s*(.+?)\s*-->[ \t]*\n+```(\w+)[^\n]*\n(.*?)^```$", re.S | re.M)
+DOC_GLOBS = ("docs/integrations/**/*.md", "integrations/**/README.md")
+SERVER_ADDR = ("127.0.0.1", 8080)
 
 
 def blocks(text: str, language: str) -> list[str]:
     return [body for lang, body in FENCE.findall(text) if lang == language]
+
+
+INCLUDE = re.compile(r'^\s*--8<--\s+"([^":]+)(?::([A-Za-z0-9_-]+))?"\s*$', re.M)
+
+
+def broken_includes(text: str, root: Path) -> list[str]:
+    """Describe each include in `text` whose file or section is missing under `root`."""
+    problems = []
+    for path, section in INCLUDE.findall(text):
+        target = root / path
+        if not target.is_file():
+            problems.append(f"{path}: file not found")
+        elif section:
+            body = target.read_text()
+            if f"[start:{section}]" not in body or f"[end:{section}]" not in body:
+                problems.append(f"{path}: section {section} has no start/end markers")
+    return problems
+
+
+def check_includes() -> int:
+    failures = 0
+    for page in [ROOT / "README.md", *sorted((ROOT / "docs").rglob("*.md"))]:
+        for problem in broken_includes(page.read_text(), ROOT):
+            print(f"{page.relative_to(ROOT)}: {problem}", file=sys.stderr)
+            failures += 1
+    return 1 if failures else 0
 
 
 def run_js(body: str) -> None:
@@ -52,15 +97,102 @@ def run_rust(body: str) -> None:
             target.parent.rmdir()
 
 
+def doc_blocks(text: str) -> list[tuple[str, str, str]]:
+    """(spec, language, body) for every block preceded by a quickstart-check comment."""
+    return [(spec, lang, body) for spec, lang, body in MARKED.findall(text)]
+
+
+def doc_files() -> list[Path]:
+    found = {path for pattern in DOC_GLOBS for path in ROOT.glob(pattern) if "node_modules" not in path.parts}
+    return sorted(found)
+
+
+class WarmServer:
+    """A throwaway warm-server on the address the docs use; one per block so no state leaks between pages."""
+
+    def __enter__(self):
+        binary = os.environ.get("WARM_SERVER_BIN")
+        if not binary or not Path(binary).exists():
+            raise SystemExit("set WARM_SERVER_BIN to a warm-server binary (cargo build --release --features server --bin warm-server)")
+        with socket.socket() as probe:
+            if probe.connect_ex(SERVER_ADDR) == 0:
+                raise SystemExit(f"{SERVER_ADDR[0]}:{SERVER_ADDR[1]} is already in use; stop it first")
+        self.data = tempfile.TemporaryDirectory()
+        self.proc = subprocess.Popen(
+            [binary, "--bind", "%s:%d" % SERVER_ADDR, "--no-auth", "--input-dim", "384", "--dim", "1024", "--data-dir", self.data.name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        line = self.proc.stdout.readline()
+        if "listening on" not in line:
+            self.proc.kill()
+            raise SystemExit(f"warm-server did not start: {line!r}")
+        return self
+
+    def __exit__(self, *exc):
+        self.proc.terminate()
+        self.proc.wait(timeout=30)
+        self.data.cleanup()
+
+
+def run_doc_python(spec: str, body: str) -> None:
+    extras = [] if spec == "-" else spec.split(",")
+    command = ["uv", "run", "--isolated", "--python", "3.12"]
+    for extra in extras:
+        command += ["--extra", extra]
+    with tempfile.TemporaryDirectory() as scratch, WarmServer():
+        script = Path(scratch) / "quickstart.py"
+        script.write_text(body)
+        subprocess.run([*command, "python", str(script)], cwd=ROOT / "integrations" / "python", check=True)
+
+
+def run_docs(only: str = "") -> int:
+    ran = skipped = 0
+    for path in (p for p in doc_files() if only in str(p)):
+        for spec, lang, body in doc_blocks(path.read_text()):
+            where = path.relative_to(ROOT)
+            if spec.startswith("skip:"):
+                skipped += 1
+                print(f"SKIP {where}: {spec[5:].strip()}")
+                continue
+            kind, _, rest = spec.partition(" ")
+            if kind != lang or lang != "python":
+                raise SystemExit(f"{where}: unsupported marker {spec!r} on a {lang} block")
+            print(f"RUN  {where} ({rest})", flush=True)
+            run_doc_python(rest.strip(), body)
+            ran += 1
+    print(f"docs quickstarts: {ran} ran, {skipped} skipped")
+    return 0 if ran else 1
+
+
 class ExtractionTests(unittest.TestCase):
+    def test_includes_report_missing_files_and_sections(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "a.py").write_text("# --8<-- [start:x]\nok\n# --8<-- [end:x]\n")
+            text = '--8<-- "a.py:x"\n--8<-- "a.py:y"\n--8<-- "b.py"\n--8<-- "a.py"\n'
+            self.assertEqual(
+                broken_includes(text, root),
+                ["a.py: section y has no start/end markers", "b.py: file not found"],
+            )
+
     def test_only_marked_blocks_of_the_language_are_extracted(self):
         text = "```js\nskip()\n```\n```js quickstart-check\nrun()\n```\n```rust quickstart-check\nfn main() {}\n```\n"
         self.assertEqual(blocks(text, "js"), ["run()\n"])
         self.assertEqual(blocks(text, "rust"), ["fn main() {}\n"])
 
+    def test_comment_marked_blocks(self):
+        text = "<!-- quickstart-check: python a,b -->\n\n```python\nrun()\n```\n```python\nplain()\n```\n<!-- quickstart-check: skip: requires API key -->\n```ts\nx()\n```\n"
+        self.assertEqual(doc_blocks(text), [("python a,b", "python", "run()\n"), ("skip: requires API key", "ts", "x()\n")])
+
 
 def main() -> int:
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
+    if which == "docs":
+        return run_docs(sys.argv[2] if len(sys.argv) > 2 else "")
+    if which == "includes":
+        return check_includes()
     text = (ROOT / "README.md").read_text()
     found = 0
     for language, runner in (("js", run_js), ("rust", run_rust)):

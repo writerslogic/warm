@@ -104,12 +104,10 @@ mod tests {
     #[test]
     fn test_detect_gaps() {
         let store = TripleStore::new();
-        // Paris and Berlin are in Europe and are capitals
         store.add("paris", "capital_of", "france", "c1");
         store.add("paris", "located_in", "europe", "c2");
         store.add("berlin", "capital_of", "germany", "c3");
         store.add("berlin", "located_in", "europe", "c4");
-        // Tokyo is a capital but missing located_in
         store.add("tokyo", "capital_of", "japan", "c5");
 
         let gaps = GapDetector::detect(&store, 1, 0.5);
@@ -131,7 +129,6 @@ mod tests {
         let store = TripleStore::new();
         store.add("a", "r1", "x", "c1");
         store.add("b", "r1", "y", "c2");
-        // Both have the same relation, no gaps
         assert!(GapDetector::detect(&store, 1, 0.5).is_empty());
     }
 

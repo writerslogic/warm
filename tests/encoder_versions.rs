@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: re-executes this binary by test name to exit a child abruptly.
 
 use anyhow::Result;
 use serde::Deserialize;
