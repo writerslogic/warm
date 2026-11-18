@@ -63,7 +63,8 @@ best WARM configuration. Start at [Public benchmarks](../PUBLIC-BENCHMARKS.md).
 
 ## Which Rust or Node version do I need? (MSRV)
 
-See the [requirements table](../get-started/install.md#requirements).
+The MSRV (minimum supported Rust version) is Rust 1.89; Node 18 or newer for the bindings. See the
+[requirements table](../get-started/install.md#requirements) for every MSRV and runtime requirement.
 
 ## Why is `npm run build` changing `index.d.ts`?
 
