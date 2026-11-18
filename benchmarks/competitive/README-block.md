@@ -16,6 +16,10 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | p99 latency @ 0.95 (us) | 67 | hnswlib 178 | 2.66x | - |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Index size (MiB) | 576.3 | hnswlib 751.8 | 1.30x | - |
 | sift-128-euclidean | `linux-x86_64-intel-ultra-9-185h-22c-27g` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W 0 / T 0 / L 0 | |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | QPS @ recall@10 >= 0.95 (QPS) | 25,204 | hnswlib 7,444 | 3.39x | - |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | p99 latency @ 0.95 (us) | 60 | hnswlib 197 | 3.30x | - |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | Index size (MiB) | 144.0 | LanceDB 127.5 | 0.89x | - |
+| sift-128-euclidean | `linux-x86_64-gcp-n2-icelake-8c-16g` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W 0 / T 0 / L 0 | |
 | beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | nDCG@10 | 0.2654 | n/m | n/m | - |
 | beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | QPS (single thread) (QPS) | 1,802 | n/m | n/m | - |
 | beir:fiqa (documents) | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | p99 latency (us) | 1,156 | n/m | n/m | - |

@@ -11,6 +11,7 @@ Rows are never compared across hardware classes: each section is one dataset on 
 | glove-100-angular (1,183,514 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 0 | 0 | 0 | 2 | 12 |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | heavy | 5 | 0 | 0 | 2 | 7 |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) | `linux-x86_64-intel-ultra-9-185h-22c-27g` | heavy | 0 | 0 | 0 | 0 | 12 |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) | `linux-x86_64-gcp-n2-icelake-8c-16g` | standard | 0 | 0 | 0 | 0 | 14 |
 | beir:fiqa (57,600 documents, 500 queries), documents contract | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | scale | 0 | 0 | 0 | 13 | 1 |
 | beir:fiqa (57,600 documents, 500 queries), ids contract | `linux-x86_64-intel-xeon-2-60ghz-8c-47g` | scale | 0 | 0 | 0 | 2 | 12 |
 | beir:fiqa (57,600 documents, 500 queries), documents contract | `linux-aarch64-neoverse-n1-8c-31g` | standard | 2 | 2 | 2 | 0 | 8 |
@@ -112,6 +113,7 @@ Rows whose measured factor puts WARM behind but which carry no verdict under the
 
 | Dataset | Metric | Best other | WARM disadvantage (measured) | Interval | Why no verdict |
 |---|---|---|---|---|---|
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Install size | sqlite-vec (exact) | 32.74x worse | none | no interval of the factor |
 | beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-47g) | nDCG@10 | Apache Lucene 10.6.0 (JVM) | 1.00x worse | [0.97, 1.03] (paired per-query bootstrap, 500 queries) | source revision is not a full 40-character commit id |
 | beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-47g) | recall@100 | Apache Lucene 10.6.0 (JVM) | 1.00x worse | [0.98, 1.02] (paired per-query bootstrap, 500 queries) | source revision is not a full 40-character commit id |
 | beir:fiqa (57,600 documents, 500 queries), ids contract (linux-x86_64-intel-xeon-2-60ghz-8c-47g) | Peak RSS, build | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | 1.49x worse | none | source revision is not a full 40-character commit id |
@@ -183,6 +185,13 @@ Rows whose measured factor puts WARM behind but which carry no verdict under the
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Build time, per build | hnswlib m16 | 2.23x worse | [0.45, 0.45] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Peak RSS, build, per build | hnswlib m16 | 1.02x worse | [0.97, 0.99] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
 | sift-128-euclidean (1,000,000 vectors, 10,000 queries) (linux-x86_64-intel-ultra-9-185h-22c-27g) | Build time, per build | hnswlib m32 | 1.75x worse | [0.57, 0.58] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Build time, per build | USearch m16 | 1.36x worse | [0.73, 0.74] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Peak RSS, build, per build | USearch m16 | 1.04x worse | [0.92, 1.02] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Build time, per build | sqlite-vec (exact) exact | 24.39x worse | [0.04, 0.04] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Peak RSS, build, per build | sqlite-vec (exact) exact | 1.31x worse | [0.73, 0.80] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | RSS, serving, per build | sqlite-vec (exact) exact | 3.59x worse | none | no interval of the factor |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Build time, per build | LanceDB ivf_pq | 3.39x worse | [0.29, 0.30] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
+| sift-128-euclidean (250,000 vectors, 2,000 queries) (linux-x86_64-gcp-n2-icelake-8c-16g) | Build time, per build | DuckDB vss hnsw_m16 | 1.21x worse | [0.82, 0.83] (min-max range, 2 and 2 observations: too few for a verdict) | 2 and 2 observations, fewer than the 8 a verdict needs |
 
 ## Results
 
@@ -424,6 +433,80 @@ Per-build comparison. Each row is one comparator build; every figure in it, and 
 | hnswlib (native C++) m32 | 12,885; WARM 35,668, 2.77x [2.71, 2.80] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | 7,520; WARM 26,688, 3.55x [3.49, 3.58] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | 4,254; WARM 13,059, 3.07x [3.05, 3.18] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | n/m | n/m | 853; WARM 489, 1.74x [1.73, 1.74] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | n/m | 0.55; WARM 0.18, 2.96x [2.96, 3.36] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** |
 | hnswlib (native C++) m32e500 | 11,651; WARM 35,668, 3.06x [2.95, 3.19] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | 9,266; WARM 26,688, 2.88x [2.85, 2.88] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | 3,812; WARM 13,059, 3.43x [3.40, 3.55] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | n/m | n/m | 853; WARM 489, 1.74x [1.73, 1.74] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | n/m | 0.50; WARM 0.18, 2.72x [2.72, 3.12] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** |
 | hnswlib (native C++) m48e500 | 10,019; WARM 35,668, 3.56x [3.45, 3.71] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | 8,193; WARM 26,688, 3.26x [3.24, 3.26] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | 3,313; WARM 13,059, 3.94x [3.94, 4.00] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | n/m | n/m | 975; WARM 489, 1.99x [1.98, 1.99] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** | n/m | 0.67; WARM 0.18, 3.60x [2.87, 4.11] (min-max range, 3 and 3 observations: too few for a verdict) **n/v** |
+
+Per-build verdicts: WARM wins 0, ties 0, losses 0. Index size carries no verdict.
+
+### sift-128-euclidean (250,000 vectors, 2,000 queries)
+
+Suite `standard`, hardware class `linux-x86_64-gcp-n2-icelake-8c-16g` (Intel(R) Xeon(R) CPU @ 2.60GHz, 8 logical cores, 16 GiB, Linux 6.8.0-1073-gcp), commit `5e2d3c8b8d`, 2026-11-14. Raw results: [standard-ann-sift-128-euclidean-n250000-linux-x86_64-gcp-n2-icelake-8c-16g.json](../../benchmarks/results/competitive/standard-ann-sift-128-euclidean-n250000-linux-x86_64-gcp-n2-icelake-8c-16g.json). 1 process rounds and 2 build runs per system. Advantage intervals: a 95.00% percentile bootstrap of the factor (ratio of medians; Bonferroni family of 0 verdict metrics), rounds resampled in pairs where both rows ran in the same interleaved rounds and independently otherwise; nDCG@10 and recall@100 by a paired per-query bootstrap at the same level. A WIN or LOSS needs that bootstrap with at least 8 observations on each side; with fewer the bracket is the min-max range and the row is a measured ratio with no verdict (n/v). Each bracket names its kind. This file has fewer than 8 serve rounds and build runs: those rows carry no verdict.
+
+Comparator builds run: hnswlib: m32e500 (selection not recorded); USearch: m16 (selection not recorded); sqlite-vec (exact): exact (selection not recorded); LanceDB: ivf_pq (selection not recorded); Chroma: m16 (selection not recorded); DuckDB vss: hnsw_m16 (selection not recorded).
+
+Timing boundary (where each query is timed): WARM: native Rust API call in the engine process (no language binding); text: BM25 index only (`--encode lexical`); ANN: public-bench loop; hnswlib: CPython binding call per query; USearch: CPython binding call per query; sqlite-vec (exact): CPython sqlite3 call per query; LanceDB: CPython + Arrow call per query (multi-threaded Rust runtime inside); Chroma: CPython client call per query (Rust core inside); DuckDB vss: CPython duckdb call per query.
+
+| Metric | WARM | Best other | Advantage (WARM vs best other) | Verdict |
+|---|---|---|---|---|
+| QPS @ recall@10 >= 0.90 (QPS) | 25,204 | hnswlib 8,902 | 2.83x (no interval) | **n/v** |
+| QPS @ recall@10 >= 0.95 (QPS) | 25,204 | hnswlib 7,444 | 3.39x (no interval) | **n/v** |
+| QPS @ recall@10 >= 0.99 (QPS) | 11,453 | hnswlib 4,331 | 2.64x (no interval) | **n/v** |
+| p50 latency @ 0.95 (us) | 40 | hnswlib 136 | 3.45x (no interval) | **n/v** |
+| p99 latency @ 0.95 (us) | 60 | hnswlib 197 | 3.30x (no interval) | **n/v** |
+| Build time (s) | 52.82 | per build, see below | per build | **n/v** |
+| Peak RSS, build (MiB) | 364 | per build, see below | per build | **n/v** |
+| RSS, serving (MiB) | 132 | per build, see below | per build | **n/v** |
+| Index size (MiB) | 144.0 | LanceDB 127.5 | 0.89x (no interval) | **n/v** |
+| Cold start to first answer (s) | 0.03 | per build, see below | per build | **n/v** |
+| Replace one vector (durable) (ms) | 1.484 | sqlite-vec (exact) 10.314 | 6.95x (no interval) | **n/v** |
+| Delete one vector (durable) (ms) | 1.374 | sqlite-vec (exact) 4.619 | 3.36x (no interval) | **n/v** |
+| Install size (MiB) | 5.1 | sqlite-vec (exact) 0.2 | 0.03x (no interval) | **n/v** |
+| Install distributions (count) | 0 | sqlite-vec (exact) 1 | inf (no interval) | **n/v** |
+
+<details><summary>All systems</summary>
+
+| Metric | WARM | hnswlib | USearch | sqlite-vec (exact) | LanceDB | Chroma | DuckDB vss |
+|---|---|---|---|---|---|---|---|
+| QPS @ recall@10 >= 0.90 (QPS) | **25,204** | 8,902 | 4,922 | 18 | 133 | 733 | 97 |
+| QPS @ recall@10 >= 0.95 (QPS) | **25,204** | 7,444 | 3,704 | 18 | 129 | 667 | 91 |
+| QPS @ recall@10 >= 0.99 (QPS) | **11,453** | 4,331 | 2,051 | 18 | n/m (not reached (max recall 0.990)) | 505 | 91 |
+| p50 latency @ 0.95 (us) | **40** | 136 | 273 | 56,230 | 7,720 | 1,445 | 11,018 |
+| p99 latency @ 0.95 (us) | **60** | 197 | 377 | 58,257 | 10,594 | 2,441 | 12,430 |
+| Build time (s) | 52.82 | 65.52 | 38.82 | **2.17** | 15.60 | 55.62 | 43.50 |
+| Peak RSS, build (MiB) | 364 | 375 | 351 | **278** | 757 | 508 | 862 |
+| RSS, serving (MiB) | 132 | 252 | 230 | **37** | 195 | 354 | 515 |
+| Index size (MiB) | 144.0 | 187.9 | 157.5 | 128.1 | **127.5** | 200.8 | 188.8 |
+| Cold start to first answer (s) | **0.03** | 0.30 | 0.28 | 0.17 | 1.02 | 1.14 | 0.52 |
+| Replace one vector (durable) (ms) | **1.484** | n/c | n/c | 10.314 | n/c | n/c | n/c |
+| Delete one vector (durable) (ms) | **1.374** | n/c | n/c | 4.619 | n/c | n/c | n/c |
+| Install size (MiB) | 5.1 | 62.2 | 90.8 | **0.2** | 386.8 | 350.2 | 58.2 |
+| Install distributions (count) | **0** | 2 | 4 | 1 | 16 | 84 | 1 |
+
+n/c: not comparable, the system's durable-operation contract differs from WARM's (see the commit contracts below).
+Bold marks the best value in the row. Operating points for the QPS rows: WARM: vertex-d32 {'ef': 16, 'rerank': 64} recall 0.951; hnswlib: m32e500 {'ef': 32} recall 0.966; USearch: m16 {'ef': 48} recall 0.965; sqlite-vec (exact): exact {} recall 1.000; LanceDB: ivf_pq {'nprobes': 32, 'refine_factor': 10} recall 0.975; Chroma: m16 {'ef': 64} recall 0.979; DuckDB vss: hnsw_m16 {'ef': 128} recall 0.996.
+
+</details>
+
+Commit contract of one durable replace or delete, per system (rows compare only systems of the same class):
+
+| System | Class | What one operation does |
+|---|---|---|
+| WARM | incremental-durable-commit | one fsynced journal frame per commit (F_FULLFSYNC on macOS) |
+| hnswlib | full-index-rewrite | save_index of the whole index plus fsync per operation; the library has no incremental durable API |
+| USearch | full-index-rewrite | save of the whole index plus fsync per operation |
+| sqlite-vec (exact) | incremental-durable-commit | one SQLite transaction per operation with fullfsync on (ann_worker SqliteVec) |
+| LanceDB | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| Chroma | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+| DuckDB vss | unaudited | adapter's flush semantics not audited as equivalent to an incremental commit |
+
+Per-build comparison. Each row is one comparator build; every figure in it, and WARM's factor against it, comes from that build alone (QPS at a recall target uses only that build's sweep). Each bracket names its kind: a 95.00% bootstrap of the factor, or a min-max range that carries no verdict.
+
+| Comparator build | QPS @ recall@10 >= 0.90 (QPS) | QPS @ recall@10 >= 0.95 (QPS) | QPS @ recall@10 >= 0.99 (QPS) | Build time (s) | Peak RSS, build (MiB) | RSS, serving (MiB) | Index size (MiB) | Cold start to first answer (s) |
+|---|---|---|---|---|---|---|---|---|
+| Chroma m16 | 733; WARM 25,204, 34.39x **n/v** | 667; WARM 25,204, 37.79x **n/v** | 505; WARM 11,453, 22.66x **n/v** | 55.62; WARM 52.82, 1.05x [1.04, 1.07] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 508; WARM 364, 1.40x [1.32, 1.47] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 354; WARM 132, 2.69x **n/v** | 200.8; WARM 144.0 | 1.14; WARM 0.03, 38.80x **n/v** |
+| DuckDB vss hnsw_m16 | 97; WARM 25,204, 259.83x **n/v** | 91; WARM 25,204, 278.48x **n/v** | 91; WARM 11,453, 126.54x **n/v** | 43.50; WARM 52.82, 0.82x [0.82, 0.83] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 862; WARM 364, 2.37x [2.19, 2.56] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 515; WARM 132, 3.91x **n/v** | 188.8; WARM 144.0 | 0.52; WARM 0.03, 17.68x **n/v** |
+| hnswlib m32e500 | 8,902; WARM 25,204, 2.83x **n/v** | 7,444; WARM 25,204, 3.39x **n/v** | 4,331; WARM 11,453, 2.64x **n/v** | 65.52; WARM 52.82, 1.24x [1.24, 1.24] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 375; WARM 364, 1.03x [0.98, 1.09] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 252; WARM 132, 1.91x **n/v** | 187.9; WARM 144.0 | 0.30; WARM 0.03, 10.11x **n/v** |
+| LanceDB ivf_pq | 133; WARM 25,204, 189.67x **n/v** | 129; WARM 25,204, 195.76x **n/v** | n/m | 15.60; WARM 52.82, 0.30x [0.29, 0.30] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 757; WARM 364, 2.08x [1.95, 2.23] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 195; WARM 132, 1.48x **n/v** | 127.5; WARM 144.0 | 1.02; WARM 0.03, 34.80x **n/v** |
+| sqlite-vec (exact) exact | 18; WARM 25,204, 1419.80x **n/v** | 18; WARM 25,204, 1419.80x **n/v** | 18; WARM 11,453, 645.17x **n/v** | 2.17; WARM 52.82, 0.04x [0.04, 0.04] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 278; WARM 364, 0.76x [0.73, 0.80] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 37; WARM 132, 0.28x **n/v** | 128.1; WARM 144.0 | 0.17; WARM 0.03, 5.65x **n/v** |
+| USearch m16 | 4,922; WARM 25,204, 5.12x **n/v** | 3,704; WARM 25,204, 6.80x **n/v** | 2,051; WARM 11,453, 5.58x **n/v** | 38.82; WARM 52.82, 0.73x [0.73, 0.74] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 351; WARM 364, 0.96x [0.92, 1.02] (min-max range, 2 and 2 observations: too few for a verdict) **n/v** | 230; WARM 132, 1.75x **n/v** | 157.5; WARM 144.0 | 0.28; WARM 0.03, 9.56x **n/v** |
 
 Per-build verdicts: WARM wins 0, ties 0, losses 0. Index size carries no verdict.
 
@@ -2603,6 +2686,10 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 | ScaNN | no | no | documentation (not exercised) |
 | PyNNDescent | no | no | documentation (not exercised) |
 | DiskANN (in-memory Vamana) | no | no | documentation (not exercised) |
+| sqlite-vec (exact) | no | no (SQLCipher is a separate build) | documentation (not exercised) |
+| LanceDB | no (embedded) | no built-in | documentation (not exercised) |
+| Chroma | no (PersistentClient) | no built-in | documentation (not exercised) |
+| DuckDB vss | no | database-file encryption (DuckDB 1.4+); not exercised with the vss index | documentation (not exercised) |
 | WARM (lexical-only API search_lexical; reference) | no | yes | measured: benchmarks/results/security_matrix_v2.json |
 | Apache Lucene (JVM) | no (library; needs a JVM) | no (filesystem-level only) | documentation (not exercised) |
 | tantivy 0.27.0 (native Rust, pruning collector) | no | no | documentation (not exercised) |
@@ -2621,7 +2708,7 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 
 | System | Pinned version(s) |
 |---|---|
-| WARM | writerslogic-warm 0.6.8, commit f7ed8acf24ae4b760191d3530e8946bbc9fc9a46; writerslogic-warm 0.6.8, commit cfc35343b481b59a37fe5f8e200e49a0246c2568; writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit c3e0bfdb; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
+| WARM | writerslogic-warm 0.6.8, commit f7ed8acf24ae4b760191d3530e8946bbc9fc9a46; writerslogic-warm 0.6.8, commit cfc35343b481b59a37fe5f8e200e49a0246c2568; writerslogic-warm 0.6.8, commit d69407e589876654ee2a9276f64a8bea36c82318; writerslogic-warm 0.6.8, commit 5e2d3c8b8d7fcd76b07de9ab4144caec258a9e83; writerslogic-warm 0.6.8, commit c3e0bfdb; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
 | hnswlib | hnswlib 0.8.0, python 3.13.18; hnswlib 0.8.0, python 3.13.15 |
 | hnswlib (native C++) | hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux); hnswlib 0.8.0, source sdist headers (the bytes the Python binding compiles), compiler g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, flags -O3 -march=native -fopenmp -std=c++14 (hnswlib 0.8.0 setup.py, Linux) |
 | FAISS HNSW | faiss-cpu 1.12.0, python 3.13.18 |
@@ -2630,6 +2717,10 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 | ScaNN | scann 1.4.2, python 3.13.18 |
 | PyNNDescent | pynndescent 0.6.0, python 3.13.18 |
 | DiskANN (in-memory Vamana) | diskannpy 0.7.0, python 3.11.18 |
+| sqlite-vec (exact) | sqlite-vec 0.1.9, python 3.13.18 |
+| LanceDB | lancedb 0.40.0, python 3.13.18 |
+| Chroma | chromadb 1.5.9, python 3.13.18 |
+| DuckDB vss | duckdb 1.5.6, python 3.13.18 |
 | WARM (lexical-only API search_lexical; reference) | writerslogic-warm 0.6.8, commit c3e0bfdb; writerslogic-warm 0.6.8, commit 14ca7ff3b1b21164c558e0e97770ef2bd5a85332; writerslogic-warm 0.6.8, commit 5f5d72a3304234e55eb209be9ff94bab0e0bf594 |
 | Apache Lucene (JVM) | lucene 10.6.0, jvm openjdk version "21.0.13.0.3" 2026-10-24; lucene 10.6.0, jvm openjdk version "21.0.13.0.2" 2026-10-22 |
 | tantivy 0.27.0 (native Rust, pruning collector) | tantivy 0.27.0, rustc rustc 1.100.0 (0ef1bc386 2026-11-09); tantivy 0.27.0, rustc rustc 1.99.1 (58cf8f9c3 2026-10-13) |
@@ -2651,6 +2742,8 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 - `letta`: agent-memory systems belong to the next harness stage
 - `langmem`: agent-memory systems belong to the next harness stage
 - `milvus-standalone`: no non-Docker artifact: releases 3.0.3 and 2.6.25 ship only Docker Compose files; the last native package (milvus_2.6.4 .deb/.rpm, Linux only) is superseded
+- `chroma-fts`: Chroma 1.5.9 PersistentClient: creating a collection with a BM25 sparse-vector index (ChromaBm25EmbeddingFunction) fails with 'Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local'; the only local text query is the unranked where_document $contains/$regex filter (measured 2026-11-14)
+- `qdrant-fts`: Qdrant embedded local mode has no ranked full-text index (the full-text payload index only filters, and payload indexes are server features); documentation, not exercised here
 - `whoosh`: adapter kept for local runs, not in the published text campaign: pure-Python engine, orders of magnitude below the native engines here, so no row it produced would be the fastest comparator of any cell
 - `bm25s`: adapter kept for local runs, not in the published text campaign: an in-memory NumPy retriever whose saved index has no durable update or delete path (no ops rows) and no stored-document variant (no documents-contract row); its pin trails the current release
 
