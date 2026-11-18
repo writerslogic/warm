@@ -4,7 +4,11 @@ Shared record API of the WARM JS adapters: `remember`, `recall`, `get`, `list` a
 
 ## Install
 
-Source workspace only (not published): from the repository root, `npm ci --omit=optional && npm run build && npm ci --ignore-scripts --prefix integrations/js && npm run build --prefix integrations/js`.
+```sh
+npm install @writerslogic/warm-core writerslogic-warm
+```
+
+From source (repository root): `npm ci --omit=optional && npm run build && npm ci --ignore-scripts --prefix integrations/js && npm run build --prefix integrations/js`.
 
 ## Quickstart
 

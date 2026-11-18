@@ -2,18 +2,51 @@
   "name": "@writerslogic/warm-openai-agents",
   "version": "0.1.0",
   "description": "OpenAI Agents SDK (JS) Session and memory tools backed by WARM",
+  "keywords": [
+    "warm",
+    "writerslogic",
+    "openai-agents",
+    "session",
+    "agent-memory"
+  ],
   "license": "Apache-2.0",
+  "author": "WritersLogic, Inc. <david@writerslogic.com>",
+  "homepage": "https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/openai-agents-js.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/writerslogic/warm.git",
+    "directory": "integrations/js/packages/openai-agents"
+  },
+  "bugs": {
+    "url": "https://github.com/writerslogic/warm/issues"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",

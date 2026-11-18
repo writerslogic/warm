@@ -4,7 +4,11 @@ Memory tools and recall middleware for the Vercel AI SDK on the WARM native engi
 
 ## Install
 
-Source workspace only (not published); setup in [JS core](../core/README.md#install). Peers: `ai`, `zod`.
+```sh
+npm install @writerslogic/warm-vercel-ai ai zod
+```
+
+The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 

@@ -1,0 +1,233 @@
+# Copyright 2024-2026 WritersLogic Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Publishes the JavaScript framework adapters (@writerslogic/warm-core and the langchain,
+# llamaindex, mastra, openai-agents and vercel-ai packages) and writerslogic-warm-claude-tool
+# in lockstep, from a `js-adapters-vX.Y.Z` tag. Runs without publishing on pull requests and on
+# dispatch with publish=false. Publishing needs the `npm` environment approval.
+name: JavaScript adapters release
+
+on:
+  push:
+    tags: ["js-adapters-v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the validated adapter packages to npm (only from main)
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - .github/workflows/adapters-js-release.yml
+      - integrations/js/**
+      - integrations/claude-memory-tool/typescript/**
+      - scripts/ci/check-adapter-versions.py
+      - scripts/ci/verify-adapter-artifacts.py
+      - scripts/ci/smoke-adapter.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, test and pack the adapters
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - name: Packages share one version equal to the tag
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            version=$(python3 scripts/ci/check-adapter-versions.py js --tag "$GITHUB_REF_NAME")
+          else
+            version=$(python3 scripts/ci/check-adapter-versions.py js)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Peer dependency on the native engine resolves on npm
+        run: |
+          set -euo pipefail
+          peer=$(node -p 'require("./integrations/js/packages/core/package.json").peerDependencies["writerslogic-warm"]')
+          resolved=$(npm view "writerslogic-warm@${peer}" version --json)
+          echo "writerslogic-warm@${peer} resolves to ${resolved}"
+          test -n "$resolved"
+      - name: Install, typecheck and build the adapter workspace
+        working-directory: integrations/js
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          npm run typecheck --workspaces --if-present
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - name: Build warm-mcp for the Claude memory tool tests
+        run: cargo build --locked --features mcp --bin warm-mcp
+      - name: Build and test the Claude memory tool
+        working-directory: integrations/claude-memory-tool/typescript
+        env:
+          WARM_MCP_BIN: ${{ github.workspace }}/target/debug/warm-mcp
+        run: |
+          npm ci --ignore-scripts
+          npm test
+      - name: Pack in dependency order
+        run: |
+          set -euo pipefail
+          mkdir tarballs
+          for directory in integrations/js/packages/core integrations/js/packages/{langchain,llamaindex,mastra,openai-agents,vercel-ai} integrations/claude-memory-tool/typescript; do
+            npm pack --ignore-scripts --pack-destination tarballs "$directory"
+          done
+          ls -l tarballs
+      - name: Verify tarball contents
+        run: python3 scripts/ci/verify-adapter-artifacts.py npm tarballs/*.tgz
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: adapters-js-dist
+          path: tarballs
+          if-no-files-found: error
+
+  smoke:
+    name: Clean install of ${{ matrix.package }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - "@writerslogic/warm-core"
+          - "@writerslogic/warm-langchain"
+          - "@writerslogic/warm-llamaindex"
+          - "@writerslogic/warm-mastra"
+          - "@writerslogic/warm-openai-agents"
+          - "@writerslogic/warm-vercel-ai"
+          - writerslogic-warm-claude-tool
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: adapters-js-dist
+          path: tarballs
+      - name: Install the tarball with its peers from the registry and import it as ESM and CJS
+        env:
+          PACKAGE: ${{ matrix.package }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          tarballs="$(pwd)/tarballs"
+          tarball="$tarballs/$(echo "${PACKAGE#@}" | tr '/' '-')-${VERSION}.tgz"
+          test -f "$tarball"
+          mkdir "$RUNNER_TEMP/room"
+          cp scripts/ci/smoke-adapter.mjs "$RUNNER_TEMP/room/"
+          cd "$RUNNER_TEMP/room"
+          npm init -y > /dev/null
+          args=("$tarball")
+          # The adapters depend on warm-core at the same version, which is not on the registry
+          # before the first publish, so install the core tarball beside the one under test.
+          case "$PACKAGE" in
+            @writerslogic/warm-core | writerslogic-warm-claude-tool) ;;
+            *) args+=("$tarballs/writerslogic-warm-core-${VERSION}.tgz") ;;
+          esac
+          npm install --no-audit --no-fund "${args[@]}"
+          node smoke-adapter.mjs "$PACKAGE"
+
+  publish:
+    name: Publish the adapters to npm
+    if: startsWith(github.ref, 'refs/tags/js-adapters-v') || (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main')
+    needs: [build, smoke]
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: adapters-js-dist
+          path: dist
+      - name: Attest the tarballs
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*.tgz
+      - name: Publish core first, then the packages that depend on it
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd dist
+          # A rerun after a partial publish skips versions the registry already has, and
+          # refuses a published version whose contents differ from the verified tarball.
+          publish() {
+            local spec
+            spec=$(tar -xzOf "$1" package/package.json | node -e 'const p=JSON.parse(require("fs").readFileSync(0,"utf8"));process.stdout.write(p.name+"@"+p.version)')
+            if npm view "$spec" dist.integrity --json > existing.json 2>/dev/null; then
+              node - "$1" <<'JS'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const actual = 'sha512-' + crypto.createHash('sha512').update(fs.readFileSync(process.argv[2])).digest('base64');
+          if (actual !== JSON.parse(fs.readFileSync('existing.json', 'utf8'))) throw new Error(`Published ${process.argv[2]} differs from the verified tarball`);
+          JS
+              echo "skip $spec: already published and identical"
+            else
+              npm publish "$1" --provenance --access public
+            fi
+          }
+          publish writerslogic-warm-core-*.tgz
+          for tarball in *.tgz; do
+            case "$tarball" in writerslogic-warm-core-*) continue ;; esac
+            publish "$tarball"
+          done
+
+  verify-published:
+    name: Verify the registry install
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - name: Install every package from the registry, verify signatures and import
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          packages=(@writerslogic/warm-core @writerslogic/warm-langchain @writerslogic/warm-llamaindex @writerslogic/warm-mastra @writerslogic/warm-openai-agents @writerslogic/warm-vercel-ai writerslogic-warm-claude-tool)
+          for attempt in {1..20}; do
+            ready=1
+            for package in "${packages[@]}"; do
+              if ! npm_config_cache="$RUNNER_TEMP/npm-adapters-$attempt" npm view "${package}@${VERSION}" version > /dev/null 2>&1; then
+                echo "${package}@${VERSION} is not available yet (attempt $attempt/20)"
+                ready=0
+              fi
+            done
+            [ "$ready" = 1 ] && break
+            [ "$attempt" = 20 ] && { echo "Published packages did not all become available" >&2; exit 1; }
+            sleep 30
+          done
+          for package in "${packages[@]}"; do
+            room="$RUNNER_TEMP/verify-$(echo "${package#@}" | tr '/' '-')"
+            mkdir "$room"
+            cp scripts/ci/smoke-adapter.mjs "$room/"
+            (cd "$room" && npm init -y > /dev/null && npm install --no-audit --no-fund "${package}@${VERSION}" && npm audit signatures && node smoke-adapter.mjs "$package")
+          done
