@@ -1,6 +1,6 @@
 # Java binding
 
-`com.writerslogic:writerslogic-warm` 0.1.0: Foreign Function & Memory API over the C ABI, no JNI.
+Maven artifact `com.writerslogic:writerslogic-warm`, version 0.1.0: Foreign Function & Memory API over the C ABI, no JNI.
 
 ```sh
 cargo build --release --manifest-path bindings/c/Cargo.toml

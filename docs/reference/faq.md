@@ -61,7 +61,7 @@ below exact search on recall, and the quantized graph index does not reach 0.95 
 nytimes-256 where FAISS, hnswlib, Lucene and RaBitQ do. On SciFact the hybrid search is the
 best WARM configuration. Start at [Public benchmarks](../PUBLIC-BENCHMARKS.md).
 
-## Which Rust or Node version do I need?
+## Which Rust or Node version do I need? (MSRV)
 
 See the [requirements table](../get-started/install.md#requirements).
 
