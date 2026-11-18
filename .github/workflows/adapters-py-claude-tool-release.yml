@@ -1,0 +1,136 @@
+# Copyright 2024-2026 WritersLogic Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Publishes warm-claude-tool to PyPI from the same `py-adapters-vX.Y.Z` tag as warm-integrations. Runs without publishing on pull requests and on dispatch with
+# publish=false. Publishing needs the `pypi` environment approval and a Trusted Publisher
+# registered for warm-claude-tool (PyPI allows one workflow file per pending project, so each
+# distribution has its own workflow).
+name: Claude memory tool release
+
+on:
+  push:
+    tags: ["py-adapters-v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the validated distribution to PyPI (only from main)
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - .github/workflows/adapters-py-claude-tool-release.yml
+      - integrations/claude-memory-tool/python/**
+      - scripts/ci/check-adapter-versions.py
+      - scripts/ci/verify-adapter-artifacts.py
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, test and verify warm-claude-tool
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: false
+      - name: Packages share one version equal to the tag
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            version=$(uv run --no-project --python 3.12 python scripts/ci/check-adapter-versions.py py --tag "$GITHUB_REF_NAME")
+          else
+            version=$(uv run --no-project --python 3.12 python scripts/ci/check-adapter-versions.py py)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Build the distribution
+        run: |
+          set -euo pipefail
+          mkdir dist
+          uv build --out-dir dist integrations/claude-memory-tool/python
+          ls -l dist
+      - name: Verify wheel and sdist contents
+        run: |
+          uv run --no-project --python 3.12 python scripts/ci/verify-adapter-artifacts.py wheel dist/*.whl
+          uv run --no-project --python 3.12 python scripts/ci/verify-adapter-artifacts.py sdist dist/*.tar.gz
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - name: Build warm-mcp for the Claude memory tool tests
+        run: cargo build --locked --features mcp --bin warm-mcp
+      - name: Test the Claude memory tool against the real server
+        working-directory: integrations/claude-memory-tool/python
+        env:
+          WARM_MCP_BIN: ${{ github.workspace }}/target/debug/warm-mcp
+        run: uv run --isolated --python 3.12 pytest -q
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: claude-tool-dist
+          path: dist
+          if-no-files-found: error
+
+  smoke-claude-tool:
+    name: Clean install of warm-claude-tool
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: claude-tool-dist
+          path: dist
+      - name: Install the wheel in a clean environment and import it
+        run: |
+          set -euo pipefail
+          uv venv --python 3.12 "$RUNNER_TEMP/venv"
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" "$PWD"/dist/warm_claude_tool-*.whl
+          "$RUNNER_TEMP/venv/bin/python" -I -c "import warm_memory_tool; print(warm_memory_tool.__version__)"
+
+
+  publish:
+    name: Publish warm-claude-tool to PyPI
+    if: startsWith(github.ref, 'refs/tags/py-adapters-v') || (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main')
+    needs: [build, smoke-claude-tool]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          name: claude-tool-dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: dist
+          skip-existing: true
+
+  verify-published:
+    name: Verify the registry install
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: false
+      - name: Install from PyPI (bounded wait for propagation) and import
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          uv venv --python 3.12 "$RUNNER_TEMP/venv"
+          for attempt in {1..20}; do
+            if uv pip install --no-cache --python "$RUNNER_TEMP/venv/bin/python" "warm-claude-tool==${VERSION}"; then break; fi
+            [ "$attempt" = 20 ] && { echo "Published distribution did not become installable" >&2; exit 1; }
+            echo "not installable yet (attempt $attempt/20)"
+            sleep 30
+          done
+          "$RUNNER_TEMP/venv/bin/python" -I -c "import warm_memory_tool"
