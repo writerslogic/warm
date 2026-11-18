@@ -114,7 +114,7 @@ jobs:
           MODULE: ${{ matrix.module }}
         run: |
           set -euo pipefail
-          wheel=$(ls "$PWD"/dist/writerslogic_warm_integrations-*.whl)
+          wheel=$(ls "$PWD"/dist/warm_integrations-*.whl)
           spec="$wheel"
           [ -n "$EXTRA" ] && spec="${wheel}[${EXTRA}]"
           uv venv --python 3.12 "$RUNNER_TEMP/venv"
@@ -138,7 +138,7 @@ jobs:
         run: |
           set -euo pipefail
           uv venv --python 3.12 "$RUNNER_TEMP/venv"
-          uv pip install --python "$RUNNER_TEMP/venv/bin/python" "$PWD"/dist/writerslogic_warm_claude_tool-*.whl
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" "$PWD"/dist/warm_claude_tool-*.whl
           "$RUNNER_TEMP/venv/bin/python" -I -c "import warm_memory_tool; print(warm_memory_tool.__version__)"
 
   publish:
