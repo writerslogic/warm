@@ -394,6 +394,10 @@ path = "src/bin/research/qgraph-repair-bench.rs"
 required-features = ["cli"]
 
 [[example]]
+name = "kmer_encoder"
+required-features = ["experimental"]
+
+[[example]]
 name = "sparse_composition"
 required-features = ["experimental"]
 

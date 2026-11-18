@@ -12,103 +12,18 @@ The client talks to `warm-server`, which ships in the WARM repository. The serve
 stores vectors you supply and exposes document and query endpoints. See the
 [server guide](https://writerslogic.com/warm/docs/latest/SERVER/) to run it.
 
-## Installation
-
-Version 0.2.1 requires Python 3.11 or newer and retains the API removals introduced
-in 0.2.0. Version 0.2.0 removed the legacy `embedchain`,
-`phidata` and `semantic_kernel` modules and their extras, including the old
-`all` extra. These retired integrations were not maintained through a published
-six-month deprecation period. Install individual supported extras and update
-imports before upgrading. The newer Semantic Kernel `WarmStore`/`WarmCollection`
-adapter in this repository is a separate API, not a drop-in replacement; its
-framework-integration distribution is not published by the SDK release.
+## Install
 
 ```bash
-uv add warm-sdk
+uv add warm-sdk                  # core client
+uv add "warm-sdk[langchain]"     # plus one adapter extra
 ```
 
-Framework adapters are optional extras. Install only the integration you need:
+Compatibility: Python 3.11+, `warm-server` 0.6.x. The client sends vectors you supply; it computes none.
 
-```bash
-uv add "warm-sdk[langchain]"
-```
+## Quick start
 
-The `all`, `embedchain`, `phidata`, and legacy `semantic-kernel` extras are retired.
-Install individual maintained integrations instead of the former aggregate.
-Embedchain forces obsolete dependencies; its incomplete adapter has been removed.
-The legacy `writerslogic_warm_sdk.semantic_kernel` module has also been removed.
-Phidata's upstream is archived, and its WARM adapter could not instantiate because
-six abstract methods were unimplemented. Its module is removed rather than
-advertising a working vector store. Agno is the upstream successor; WARM does not
-yet provide or claim a compatible Agno adapter.
-The separate [current Semantic Kernel adapter](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/semantic-kernel.md)
-uses a different API and is not a drop-in replacement; its dependency environment
-still needs a security review before deployment.
-
-Other extras bring their own dependency trees; audit the environment you deploy.
-See the [dependency security notes](https://github.com/writerslogic/warm/blob/main/docs/SECURITY.md#optional-python-integration-dependencies).
-
-The earlier standalone `langchain-holographic` distribution is retired. For LangChain, install
-`warm-sdk[langchain]` and import `WarmVectorStore` from
-`writerslogic_warm_sdk.langchain`. This adapter connects to `warm-server`; update the old
-`langchain_holographic` import and its local-store configuration when migrating.
-
-The LangChain adapter requires `langchain-core>=0.3.86`. It preserves supplied
-IDs through `add_texts`, `add_documents`, `from_texts`, and search results. Supply
-stable IDs for writes you may need to reconcile or retry. The adapter forwards `filter` from similarity retrievers to WARM. Metadata and ID counts must
-match the input texts before embedding begins; the embedder must return one
-vector per text before any upload. Call `store.close()` when finished. Similarity
-retrieval is supported; scored retrieval, MMR, and the adapter's deletion APIs are
-not implemented. The security notes track unresolved dependency advisories in other extras;
-these contract tests do not establish their safety.
-
-The Haystack adapter is partial: it supports writes with `OVERWRITE` and tenant-scoped
-counts and deletion. `NONE` (and an omitted policy) also means overwrite for WARM.
-`FAIL` and `SKIP` raise `NotImplementedError` before writing because atomic duplicate
-handling is not exposed by the server. Document enumeration/filtering raises
-`NotImplementedError`; it cannot be implemented faithfully from IDs/metadata-only
-listing or similarity search. This adapter does not yet implement the complete
-Haystack DocumentStore protocol or support FilterRetriever. Call `store.close()`
-when finished. Do not treat unsupported operations as empty successful results.
-
-The SDK's `WarmRM` bypasses caching on supplied `dspy.Embedder` calls without
-changing global settings. DSPy users must still configure memory-only caching
-before other application cache or LM use:
-`dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)`.
-See the [tested dependency profile and its limits](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/dspy.md#cache-safety):
-newer LiteLLM versions can force an older vulnerable Filelock. The DSPy extra
-requires `dspy>=3.4.1` and `filelock>=4.2.6` in published package metadata, which
-selects a compatible LiteLLM or rejects conflicting application pins. The SDK
-lock alone does not constrain a consumer installation.
-
-The CrewAI tool requires `crewai>=1.15.33` (currently Python 3.11–3.13 for this SDK)
-and closes its per-call HTTP client on
-success or failure. Its Chroma dependency remains subject to the security notes;
-the tested tool path does not certify CrewAI's built-in storage or other features.
-The SmolAgents tool requires `smolagents>=1.26.0`. Its optional `top_k` input accepts
-omission or `None` as the default of three results. Use it as a context manager,
-or call `tool.close()` when finished, to release its persistent HTTP connection:
-
-```python
-from writerslogic_warm_sdk.smolagents import WarmSearchTool
-
-with WarmSearchTool(embedder=my_embedder, url="http://localhost:8080", api_key=my_api_key) as tool:
-    context = tool("notes about retention", top_k=3)
-```
-
-The `pydantic-ai` extra installs `pydantic-ai-slim>=2.64.0`, which provides the
-framework without every provider SDK. Add the provider extra you actually use,
-for example `pydantic-ai-slim[openai]`; local tests need no paid provider.
-
-The `fast` extra adds `orjson` for request encoding, which cuts the per-query cost of sending an embedding:
-
-```bash
-uv add "warm-sdk[fast]"
-```
-
-Requires Python 3.11 or newer. Python 3.10 reached end of life on October 1, 2026.
-
-## Quick Start
+Start a server whose input dimension matches your vectors (`WARM_API_KEY=... warm-server --input-dim 3` for this sample), then:
 
 ```python
 from writerslogic_warm_sdk import WarmClient
@@ -125,7 +40,41 @@ client.delete_document("doc-1")
 client.close()
 ```
 
-`AsyncWarmClient` has the same methods as coroutines; close it with `await client.aclose()`. Embeddings come from your own model: the SDK sends vectors, it does not compute them.
+`AsyncWarmClient` has the same methods as coroutines; close it with `await client.aclose()`. A runnable end-to-end version, with the server steps, is [`examples/quickstart/python`](https://github.com/writerslogic/warm/blob/main/examples/quickstart/python/quickstart.py).
+
+## Extras
+
+| Extra | Installs | Notes |
+|---|---|---|
+| `langchain` | `langchain-core>=0.3.86` | `WarmVectorStore` in `writerslogic_warm_sdk.langchain`; similarity retrieval only |
+| `haystack` | `haystack-ai>=2.0.0` | partial DocumentStore; see below |
+| `dspy` | `dspy>=3.4.1`, `filelock>=4.2.6` | `WarmRM`; see cache note below |
+| `crewai` | `crewai>=1.15.33` | Python 3.11-3.13 |
+| `smolagents` | `smolagents>=1.26.0` | `WarmSearchTool` |
+| `pydantic-ai` | `pydantic-ai-slim>=2.64.0` | add your provider extra, e.g. `pydantic-ai-slim[openai]` |
+| `llamaindex` | `llama-index-core>=0.10.0` | |
+| `fast` | `orjson>=3.9` | cheaper request encoding for embeddings |
+| `import-*` | one source library each | used by `warm-import` |
+
+Extras bring their own dependency trees; audit the environment you deploy. See the [dependency security notes](https://github.com/writerslogic/warm/blob/main/docs/SECURITY.md#optional-python-integration-dependencies).
+
+Adapter notes:
+
+- Retired in 0.2.0, with no deprecation period: `embedchain`, `phidata`, legacy `semantic_kernel` and the `all` extra. The [current Semantic Kernel adapter](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/semantic-kernel.md) has a different API and still needs a dependency security review. The old `langchain-holographic` distribution is retired: import `WarmVectorStore` from `writerslogic_warm_sdk.langchain` and update its configuration to point at `warm-server`.
+- LangChain: preserves supplied IDs through `add_texts`, `add_documents`, `from_texts` and search results; supply stable IDs for writes you may retry. Metadata and ID counts must match the texts, and the embedder must return one vector per text, before any upload. Scored retrieval, MMR and deletion APIs are not implemented.
+- Haystack: writes with `OVERWRITE` (`NONE` or an omitted policy also overwrites); `FAIL` and `SKIP` raise `NotImplementedError`, as does document enumeration or filtering. `FilterRetriever` is unsupported. Do not treat unsupported operations as empty successes.
+- DSPy: `WarmRM` bypasses caching on supplied `dspy.Embedder` calls. Configure memory-only caching before other cache or LM use: `dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)`. [Tested profile and limits](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/dspy.md#cache-safety).
+- CrewAI: the tool closes its per-call HTTP client. Its Chroma dependency remains subject to the security notes.
+- SmolAgents: `top_k` accepts omission or `None` as the default of three. Use the tool as a context manager or call `tool.close()`:
+
+```python
+from writerslogic_warm_sdk.smolagents import WarmSearchTool
+
+with WarmSearchTool(embedder=my_embedder, url="http://localhost:8080", api_key=my_api_key) as tool:
+    context = tool("notes about retention", top_k=3)
+```
+
+## Client methods
 
 `client.stats()` returns authenticated, tenant-scoped server statistics, including
 `documents`. The async equivalent is `await client.stats()`; authorization and

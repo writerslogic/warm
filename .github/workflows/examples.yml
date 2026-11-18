@@ -166,5 +166,7 @@ jobs:
           persist-credentials: false
       - name: Snippet extractor tests
         run: python3 -m unittest scripts/check-readme-snippets.py
+      - name: Docs includes resolve to existing example sections
+        run: python3 scripts/check-readme-snippets.py includes
       - name: Documentation redirect tests
         run: node --test scripts/test-docs-redirects.mjs
