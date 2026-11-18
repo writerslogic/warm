@@ -742,6 +742,12 @@ pub struct SearchIn {
     /// Extra fields per hit: any of `"text"` and `"metadata"`. Default: ids and scores only.
     #[serde(default)]
     pub include: Vec<String>,
+    /// BM25 `k1` (finite, at least 0); the engine default when omitted.
+    #[serde(default)]
+    pub bm25_k1: Option<f64>,
+    /// BM25 `b` in [0, 1]; the engine default when omitted.
+    #[serde(default)]
+    pub bm25_b: Option<f64>,
 }
 
 /// Most chunks one text search asks the engine for (its `k` limit).
@@ -769,6 +775,12 @@ pub async fn search(State(state): State<Arc<AppState>>, req: Request) -> ApiResu
                 state.cfg.max_top_k
             )));
         }
+        if q.bm25_k1.is_some_and(|k1| !k1.is_finite() || k1 < 0.0) {
+            return Err(ApiError::bad("bm25_k1 must be finite and at least 0"));
+        }
+        if q.bm25_b.is_some_and(|b| !(0.0..=1.0).contains(&b)) {
+            return Err(ApiError::bad("bm25_b must be in [0, 1]"));
+        }
         let (mut text, mut metadata) = (false, false);
         for field in &q.include {
             match field.as_str() {
@@ -791,6 +803,8 @@ pub async fn search(State(state): State<Arc<AppState>>, req: Request) -> ApiResu
                 candidate_limit: Some(chunks),
                 lexical_weight: Some(1.0),
                 semantic_weight: Some(0.0),
+                bm25_k1: q.bm25_k1,
+                bm25_b: q.bm25_b,
                 ..SearchOptions::default()
             };
             let mut results = core
