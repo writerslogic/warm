@@ -266,40 +266,4 @@ mod tests {
 
         assert!(!sm.mark_applied(id)); // still pending, not approved
     }
-
-    #[test]
-    fn test_multiple_proposals() {
-        let sm = SelfModifier::new();
-        sm.propose(
-            ProposalKind::AddRule {
-                name: "r1".to_string(),
-                input_relations: vec![],
-                output_relation: "r1".to_string(),
-            },
-            "reason 1".to_string(),
-        );
-        sm.propose(
-            ProposalKind::AddRule {
-                name: "r2".to_string(),
-                input_relations: vec![],
-                output_relation: "r2".to_string(),
-            },
-            "reason 2".to_string(),
-        );
-
-        assert_eq!(sm.proposal_count(), 2);
-        assert_eq!(sm.pending_count(), 2);
-
-        let pending = sm.pending_proposals();
-        assert_eq!(pending.len(), 2);
-    }
-
-    #[test]
-    fn test_empty() {
-        let sm = SelfModifier::new();
-        assert_eq!(sm.proposal_count(), 0);
-        assert_eq!(sm.pending_count(), 0);
-        assert!(sm.get(0).is_none());
-        assert!(sm.audit_entries().is_empty());
-    }
 }

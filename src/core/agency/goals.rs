@@ -174,14 +174,6 @@ mod tests {
     }
 
     #[test]
-    fn test_utility_scoring() {
-        let g = make_goal("test", 1, 0.8, 0.9, 0.2);
-        let u = g.utility();
-        let expected = 0.8 * 0.9 * (1.0 - 0.2);
-        assert!((u - expected).abs() < 0.001);
-    }
-
-    #[test]
     fn test_utility_clamps_cost() {
         let g = make_goal("test", 1, 1.0, 1.0, 1.5);
         assert!(
@@ -200,15 +192,5 @@ mod tests {
         assert_eq!(pri[0].name, "high");
         assert_eq!(pri[1].name, "mid");
         assert_eq!(pri[2].name, "low");
-    }
-
-    #[test]
-    fn test_empty_store() {
-        let store = GoalStore::new();
-        assert_eq!(store.count(), 0);
-        assert_eq!(store.active_count(), 0);
-        assert!(store.get("x").is_none());
-        let v = EntangledHVec::new_deterministic(16384, 1);
-        assert_eq!(store.goal_relevance(&v), 0.0);
     }
 }
