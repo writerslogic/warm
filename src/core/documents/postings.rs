@@ -2631,8 +2631,8 @@ mod tests {
             assert_eq!(serial.lists.len(), parallel.lists.len());
             for (id, (a, b)) in serial.lists.iter().zip(&parallel.lists).enumerate() {
                 let (mut x, mut y) = (Vec::new(), Vec::new());
-                pack_checkpoint(a, &mut x);
-                pack_checkpoint(b, &mut y);
+                pack_checkpoint(a, &|_| 1, false, &mut x, None);
+                pack_checkpoint(b, &|_| 1, false, &mut y, None);
                 assert_eq!(x, y, "list {id} after batch {batch}");
                 assert_eq!(a.block_count(), b.block_count());
                 for block in 0..a.block_count() {
