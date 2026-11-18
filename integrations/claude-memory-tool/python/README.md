@@ -1,6 +1,14 @@
-# writerslogic-warm-claude-tool
+# writerslogic-warm-claude-tool (Python)
 
-A backend for Anthropic's client-side memory tool (`memory_20250818`) on WARM. Claude's `/memories` directory becomes a virtual filesystem stored in an `warm-mcp` server, so every file is also searchable by meaning.
+Backs Anthropic's client-side memory tool (`memory_20250818`) with WARM: Claude's `/memories` directory is stored in a `warm-mcp` server and every file is searchable by meaning.
+
+## Install
+
+```sh
+pip install writerslogic-warm-claude-tool   # plus a warm-mcp binary: npx -y writerslogic-warm-mcp, or uvx warm-mcp
+```
+
+## Quickstart
 
 ```python
 import anthropic
@@ -12,13 +20,28 @@ with WarmMemoryToolSync.connect(command="warm-mcp") as memory:   # or url="http:
         model="claude-sonnet-5-5",
         max_tokens=1024,
         messages=[{"role": "user", "content": "Remember that Acme Corp prefers email follow-ups."}],
-        tools=[memory, memory.recall_tool()],   # recall_tool adds semantic search over the files
+        tools=[memory, memory.recall_tool()],
     )
     print(runner.until_done().content)
 ```
 
-`WarmMemoryTool` is the async variant (`BetaAsyncAbstractMemoryTool`). Both implement the six commands (`view`, `create`, `str_replace`, `insert`, `delete`, `rename`) with the documented result strings, reject any path outside `/memories` (traversal, encoded separators, hidden or oversized segments), apply edits with compare-and-set so concurrent writers do not lose updates, and page long files through `view_range`.
+## Options
 
-Pass `namespace="user-123"` (server started with `--namespace-arg`) for one store per user. See `docs/integrations/mcp/memory-tool.md` in the repository for the full reference.
+`WarmMemoryTool` (async, `BetaAsyncAbstractMemoryTool`) and `WarmMemoryToolSync` (`BetaAbstractMemoryTool`) take the same arguments to `connect(...)`.
 
-Licensed Apache-2.0.
+| Name | Type | Default | Meaning |
+|---|---|---|---|
+| `command`, `args`, `env` | str, list, dict | none | Start `warm-mcp` over stdio |
+| `url`, `token` | str, str | none, `WARM_MCP_TOKEN` | Connect to a shared `warm-mcp --transport http` |
+| `namespace` | str | none | One store per user (server needs `--namespace-arg`) |
+| `max_view_chars` | int | 16000 | Longest `view` result before paging with `view_range` |
+| `edit_retries` | int | 25 | Compare-and-set retries when another writer edits the same file |
+| `request_timeout` | float | 60.0 | Seconds per MCP request |
+
+## Compatibility
+
+Python 3.10+, `anthropic` >= 1.16, `mcp` 2.3 to <3, a `warm-mcp` server. Tested on Python 3.12 (31 tests against a real `warm-mcp`).
+
+## Reference
+
+Commands, safety rules and semantic recall: [Anthropic memory tool on WARM](https://github.com/writerslogic/warm/blob/main/docs/integrations/mcp/memory-tool.md). TypeScript sibling: [`../typescript`](../typescript/README.md).
