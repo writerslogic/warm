@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: re-executes this binary by test name to kill a child, and arms process-wide failpoints.
 
 //! Process death at every durability point of the commit, compaction and purge paths.
 //!

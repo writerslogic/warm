@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: arms process-wide failpoints that would fire in unrelated tests sharing the process.
 
 //! A purge interrupted by a crash must not make the store unopenable when the disk is full:
 //! the store opens, reports the purge as pending (never as complete), keeps every acknowledged
