@@ -147,6 +147,15 @@ impl PyPartitionIndex {
         Ok(())
     }
 
+    /// Exactly re-ranked candidates per query for later searches.
+    fn set_reorder(&mut self, reorder: usize) -> PyResult<()> {
+        if reorder == 0 {
+            return Err(PyValueError::new_err("reorder must be positive"));
+        }
+        self.tier.set_reorder(reorder);
+        Ok(())
+    }
+
     /// Adds rows under new ids; a live id is refused and nothing is added.
     fn insert(
         &mut self,

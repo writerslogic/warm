@@ -202,7 +202,6 @@ impl RelationStore {
                 continue;
             }
 
-            // Collect neighbors: direct outgoing + symmetric incoming
             let mut neighbors: Vec<(String, String)> = Vec::new();
 
             for rel in self.outgoing(&node_id, relation_type, at_time) {
@@ -219,7 +218,6 @@ impl RelationStore {
                     }
                 }
             } else {
-                // No type filter: check each incoming relation's type for symmetry
                 let rels = self.relations.read();
                 let incoming_indices = self.by_target.read();
                 if let Some(indices) = incoming_indices.get(&node_id) {
@@ -370,7 +368,6 @@ mod tests {
         });
         store.add(&rel("alice", "friend_of", "bob"));
 
-        // Bob should see Alice via symmetric inference
         let paths = store.traverse("bob", Some("friend_of"), 1, 0.0, &dummy_sim);
         assert!(!paths.is_empty());
         assert!(paths.iter().any(|p| p.hops[0].node_id == "alice"));

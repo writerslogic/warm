@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: arms process-wide failpoints that would fire in unrelated tests sharing the process.
 
 //! ENOSPC and EIO at every durability point (see `core::failpoint`), in process.
 //!

@@ -617,7 +617,6 @@ impl WarmMemorySystem {
                 .collect::<anyhow::Result<_>>()?;
             let results = core.factorize_diffusion(&vec, &domain_vecs, max_iter as usize);
 
-            // Map EntangledHVec results back to IDs from the domain strings
             let mapped = results
                 .into_iter()
                 .enumerate()
@@ -816,8 +815,6 @@ impl WarmMemorySystem {
         .await
     }
 
-    // === Meaning Memory API ===
-
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_meaning(&self, id: String, text: String) -> Result<()> {
@@ -932,8 +929,6 @@ impl WarmMemorySystem {
         self.core.meaning_enabled()
     }
 
-    // === Cognition API ===
-
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn start_cognition(&self) -> Result<()> {
@@ -986,8 +981,6 @@ impl WarmMemorySystem {
         let core = self.core.clone();
         run_async(move || core.govern_memory().map(governance_report)).await
     }
-
-    // === Agency API ===
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
@@ -1103,8 +1096,6 @@ impl WarmMemorySystem {
     pub fn active_goal_count(&self) -> u32 {
         self.core.active_goal_count() as u32
     }
-
-    // === Graph API ===
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings

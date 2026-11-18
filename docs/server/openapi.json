@@ -1935,6 +1935,24 @@
         "additionalProperties": false,
         "description": "A lexical text query over the tenant's documents (memory facts included).",
         "properties": {
+          "bm25_b": {
+            "default": null,
+            "description": "BM25 `b` in [0, 1]; the engine default when omitted.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "bm25_k1": {
+            "default": null,
+            "description": "BM25 `k1` (finite, at least 0); the engine default when omitted.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
           "include": {
             "default": [],
             "description": "Extra fields per hit: any of `\"text\"` and `\"metadata\"`. Default: ids and scores only.",
@@ -2156,7 +2174,7 @@
     },
     "summary": "WARM HTTP service",
     "title": "warm-server",
-    "version": "0.6.8"
+    "version": "0.7.0"
   },
   "openapi": "3.1.0",
   "paths": {

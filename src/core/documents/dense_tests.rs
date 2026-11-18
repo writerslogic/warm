@@ -490,7 +490,7 @@ fn bounded_delta_keeps_base_and_matches_live_oracle_across_mutations() {
     for revision in 0..6 {
         let mut replacement = document(7, &vec![vec![1.0, 0.0, 0.0, 0.0]; 1 + revision % 2]);
         replacement.version = revision.to_string();
-        replacement.metadata = json!({"group": revision % 2});
+        replacement.metadata = json!({"group": revision % 2}).into();
         store.insert(replacement.id.clone(), replacement);
         store.remove("d0003");
         let fresh = document(999, &[vec![1.0, 0.0, 0.0, 0.0]]);

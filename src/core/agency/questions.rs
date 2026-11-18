@@ -127,7 +127,6 @@ impl QuestionGenerator {
     }
 
     fn score_relevance(text: &str, atom_memory: &AtomMemory, goal_store: &GoalStore) -> f64 {
-        // Encode the question text as a vector by bundling its word atoms
         let vecs: Vec<EntangledHVec> = text
             .split_whitespace()
             .filter_map(|w| atom_memory.get(&w.to_lowercase()))

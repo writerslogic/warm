@@ -220,16 +220,13 @@ mod tests {
     #[test]
     fn test_simple_backward_chain() {
         let store = TripleStore::new();
-        // A causes B, B causes C
         store.add("action_a", "causes", "state_b", "c1");
         store.add("state_b", "causes", "goal_c", "c2");
 
         let plan = Planner::backward_chain(&store, "goal_c", &["causes"], 5);
         assert!(!plan.actions.is_empty());
-        // First action should be the leaf (action_a causes state_b)
         assert_eq!(plan.actions[0].subject, "action_a");
         assert_eq!(plan.actions[0].object, "state_b");
-        // Second should be the direct step (state_b causes goal_c)
         assert_eq!(plan.actions[1].subject, "state_b");
         assert_eq!(plan.actions[1].object, "goal_c");
     }
@@ -254,7 +251,6 @@ mod tests {
         store.add("b", "causes", "a", "c2");
 
         let plan = Planner::backward_chain(&store, "a", &["causes"], 10);
-        // Should not infinite loop
         assert!(plan.actions.len() <= 4);
     }
 

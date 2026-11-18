@@ -199,27 +199,23 @@ fn run_cycle(
 ) -> Vec<Insight> {
     let mut insights = Vec::new();
 
-    // 1. Pattern scanning
     let patterns = PatternScanner::scan_relation_patterns(triple_store, config.min_pattern_freq);
     for p in patterns {
         insights.push(Insight::Pattern(p));
     }
 
-    // 2. Abstraction
     let abstractions =
         AbstractionEngine::discover(triple_store, atom_memory, config.min_abstraction_members);
     for a in abstractions {
         insights.push(Insight::Abstraction(a));
     }
 
-    // 3. Gap detection
     let gaps = GapDetector::detect(
         triple_store,
         config.min_shared_relations,
         config.min_peer_coverage,
     );
 
-    // 4. Hypothesis generation (from gaps)
     let hypotheses = HypothesisEngine::propose(
         &gaps,
         triple_store,
@@ -236,7 +232,6 @@ fn run_cycle(
         insights.push(Insight::Gap(g));
     }
 
-    // 5. Analogy detection
     let analogies = AnalogyDetector::detect(triple_store, config.min_analogy_relations);
     for a in analogies {
         insights.push(Insight::Analogy(a));
@@ -282,7 +277,6 @@ mod tests {
         let insights = CognitionLoop::run_once(&atom_mem, &triple_store, &config);
         assert!(!insights.is_empty());
 
-        // Should find patterns
         assert!(insights.iter().any(|i| matches!(i, Insight::Pattern(_))));
     }
 
@@ -319,7 +313,6 @@ mod tests {
 
         assert!(cognition.state().is_running());
 
-        // Let it run a couple cycles
         std::thread::sleep(Duration::from_millis(200));
 
         let cycles = cognition.state().cycle_count();

@@ -1,5 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
+// Separate test target, outside integration_tests: changes the process working directory.
 //! `VGraph::save` to a bare file name (relative to the working directory) succeeds and the file
 //! opens. Its own test binary, since it changes the process's working directory.
 

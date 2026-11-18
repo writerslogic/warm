@@ -1300,7 +1300,7 @@ mod tests {
             (t.elapsed().as_secs_f64(), check)
         };
         // Modes interleave per repetition so a sustained run (WARM_L22_REPS) shows each mode's
-        // trajectory over the whole run; the min is reported as before, plus mean/median/p90.
+        // trajectory over the whole run; the min is reported, plus mean/median/p90.
         let reps = knob("REPS", 3).max(1);
         let mut times: [Vec<f64>; 3] = [Vec::new(), Vec::new(), Vec::new()];
         let mut checks = [0u64; 3];
