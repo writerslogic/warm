@@ -320,24 +320,28 @@ fn refused_huge_page_advice_changes_nothing_but_the_counter() {
 fn visited_bits_reset_between_searches() {
     // Ids at word edges and the last vertex of a count that is not a multiple of 64.
     let n = 64 * 5 + 3;
-    let mut marks = Marks::new(n, false);
-    let mut rng = SplitMix(5);
-    for search in 0..300 {
-        marks.next();
-        let mut set = std::collections::HashSet::new();
-        let fixed = [0, 63, 64, 127, n as u32 - 1];
-        for i in 0..40 {
-            let id = if i < fixed.len() && search % 2 == 0 {
-                fixed[i]
-            } else {
-                (rng.next_u64() % n as u64) as u32
-            };
-            assert_eq!(marks.seen(id), set.contains(&id));
-            assert_eq!(marks.insert(id), set.insert(id));
-            assert!(marks.seen(id));
+    // Both clearing modes: one fill (small indexes) and the list of set words (large ones).
+    for fill in [true, false] {
+        let mut marks = Marks::new(n, false);
+        marks.fill = fill;
+        let mut rng = SplitMix(5);
+        for search in 0..300 {
+            marks.next();
+            let mut set = std::collections::HashSet::new();
+            let fixed = [0, 63, 64, 127, n as u32 - 1];
+            for i in 0..40 {
+                let id = if i < fixed.len() && search % 2 == 0 {
+                    fixed[i]
+                } else {
+                    (rng.next_u64() % n as u64) as u32
+                };
+                assert_eq!(marks.seen(id), set.contains(&id));
+                assert_eq!(marks.insert(id), set.insert(id));
+                assert!(marks.seen(id));
+            }
+            let ones: u32 = marks.words.iter().map(|w| w.count_ones()).sum();
+            assert_eq!(ones as usize, set.len());
         }
-        let ones: u32 = marks.words.iter().map(|w| w.count_ones()).sum();
-        assert_eq!(ones as usize, set.len());
     }
 }
 
@@ -381,7 +385,11 @@ fn neighbor_admission_matches_ordered_set_model_at_boundaries() {
                 .map(|&u| u >> 6)
                 .filter(|&word| words.insert(word))
                 .collect();
-            assert_eq!(visited.touched, touched);
+            if visited.fill {
+                assert!(visited.touched.is_empty());
+            } else {
+                assert_eq!(visited.touched, touched);
+            }
             visited.next();
             assert!(visited.words.iter().all(|&word| word == 0));
             assert!(visited.touched.is_empty());

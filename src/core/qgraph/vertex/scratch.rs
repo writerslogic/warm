@@ -4,6 +4,12 @@
 #[cfg(feature = "experimental-batch-pool")]
 use super::*;
 
+/// Indexes of up to this many vertices clear the visited bits with one fill per search
+/// (`n / 8` bytes, 128 KiB at the limit) instead of listing the words a search sets: the fill
+/// costs less than the per-insert bookkeeping (3 to 7% of search time on 677k-vertex 384-d
+/// graphs, VIBE2 kill test). Larger indexes keep the list, whose clearing cost is the words set.
+const FILL_CLEAR_MAX: usize = 1 << 20;
+
 /// Visited marks of one search: a bit per vertex, with an 8-bit epoch for the trace records of
 /// the neighbour-block search.
 pub(super) struct Marks {
@@ -12,6 +18,8 @@ pub(super) struct Marks {
     /// million vertices fit the second-level cache) and clearing costs the words it set.
     pub(super) words: Vec<u64>,
     pub(super) touched: Vec<u32>,
+    /// Clear `words` with one fill instead of through `touched` (see [`FILL_CLEAR_MAX`]).
+    pub(super) fill: bool,
     pub(super) n: usize,
     pub(super) epoch: u8,
     /// With neighbour blocks, one record per vertex instead of the bit.
@@ -37,6 +45,7 @@ impl Marks {
         Self {
             words: vec![0; n.div_ceil(64)],
             touched: Vec::new(),
+            fill: n <= FILL_CLEAR_MAX,
             n,
             epoch: 0,
             traces: vec![Trace::default(); if traces { n } else { 0 }],
@@ -44,10 +53,14 @@ impl Marks {
     }
 
     pub(super) fn next(&mut self) {
-        for &w in &self.touched {
-            self.words[w as usize] = 0;
+        if self.fill {
+            self.words.fill(0);
+        } else {
+            for &w in &self.touched {
+                self.words[w as usize] = 0;
+            }
+            self.touched.clear();
         }
-        self.touched.clear();
         self.epoch = self.epoch.wrapping_add(1);
         if self.epoch == 0 {
             self.traces.fill(Trace::default());
@@ -84,7 +97,7 @@ impl Marks {
         if *w & bit != 0 {
             return false;
         }
-        if *w == 0 {
+        if !self.fill && *w == 0 {
             self.touched.push(id >> 6);
         }
         *w |= bit;
