@@ -389,16 +389,10 @@ mod tests {
     }
 
     #[test]
-    fn empty_trusts_nothing() {
-        let store = TrustStore::new();
-        assert!(store.is_empty());
-        assert!(!store.is_trusted(&key().verifying_key()));
-    }
-
-    #[test]
     fn trusts_added_key_only() {
         let trusted = key();
         let other = key();
+        assert!(!TrustStore::new().is_trusted(&trusted.verifying_key()));
         let store = TrustStore::trusting_key(&trusted.verifying_key());
         assert!(store.is_trusted(&trusted.verifying_key()));
         assert!(!store.is_trusted(&other.verifying_key()));
