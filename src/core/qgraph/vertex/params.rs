@@ -75,6 +75,12 @@ pub struct VSearchParams {
     /// Per-row search: estimate only the first this many neighbours of each expanded vertex
     /// (lists keep the build's order, nearest first); 0 = all.
     pub neighbour_cap: usize,
+    /// With query lists ([`VGraph::set_query_lists`]): estimate every row of the lists of the
+    /// `probes` centres nearest the query into the pool before the traversal; 0 = off.
+    pub probes: usize,
+    /// With `probes`: return the best of the listed rows without traversing the graph, unless
+    /// they are fewer than `k`.
+    pub probe_only: bool,
 }
 
 impl Default for VSearchParams {
@@ -88,6 +94,8 @@ impl Default for VSearchParams {
             screen: true,
             fuse: false,
             neighbour_cap: 0,
+            probes: 0,
+            probe_only: false,
         }
     }
 }

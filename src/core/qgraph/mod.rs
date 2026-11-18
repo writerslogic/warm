@@ -72,8 +72,8 @@ use kernels::{
 #[cfg(feature = "experimental")]
 pub use vertex::QueryProfile;
 pub use vertex::{
-    huge_page_status, Allow, HugePageStatus, Residency, SearchKnobs, VGraph, VGraphMemoryBreakdown,
-    VMetric, VSearchParams, VSearcher,
+    huge_page_status, Allow, HugePageStatus, QueryLists, Residency, SearchKnobs, VGraph,
+    VGraphMemoryBreakdown, VMetric, VSearchParams, VSearcher,
 };
 
 /// Default out-degree of every vertex; one batch of edge codes per expansion.

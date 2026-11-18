@@ -287,6 +287,7 @@ impl VGraph {
             blocks: Lines::zeroed(0),
             block_rot: None,
             block_kappa: 0.0,
+            lists: None,
         };
         if screen {
             out.screen_sigma = out.measure_screen_sigma(g);
@@ -782,6 +783,30 @@ impl VGraph {
         }
     }
 
+    /// Attaches candidate lists built over this index's base rows (row ids as passed to the
+    /// build), which a search consults when `probes > 0`. [`VGraph::save`] keeps them.
+    pub fn set_query_lists(&mut self, mut lists: QueryLists) -> Result<(), WarmError> {
+        if lists.dim() != self.dim {
+            return Err(invalid(format!(
+                "query lists have {} dimensions, the index is queried in {}",
+                lists.dim(),
+                self.dim
+            )));
+        }
+        let mut map = vec![0u32; self.n];
+        for v in 0..self.n as u32 {
+            map[self.original(v) as usize] = v;
+        }
+        lists.remap(&map)?;
+        self.lists = Some(lists);
+        Ok(())
+    }
+
+    /// The attached candidate lists, if any.
+    pub fn query_lists(&self) -> Option<&QueryLists> {
+        self.lists.as_ref()
+    }
+
     /// Removes unused adjacency slots without changing neighbors or their order.
     /// Saving expands the lists into the original persisted format; reopening uses that
     /// format until this method is called again. Delta-coded lists already have exact spans.
@@ -1061,6 +1086,8 @@ impl VGraph {
                 reservoir: Reservoir::default(),
                 keys: Vec::new(),
                 results: Vec::new(),
+                probe_query: Vec::new(),
+                probed: Vec::new(),
             },
         }
     }

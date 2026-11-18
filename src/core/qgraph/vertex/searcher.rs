@@ -39,6 +39,9 @@ pub(in super::super) struct SearchScratch {
     pub(super) reservoir: Reservoir,
     pub(super) keys: Vec<u64>,
     pub(super) results: Vec<(f32, u32)>,
+    /// Query lists: the normalized query and the probed `(score, list)` pairs.
+    pub(super) probe_query: Vec<f32>,
+    pub(super) probed: Vec<(f32, u32)>,
     pub(super) knobs: SearchKnobs,
 }
 
@@ -362,6 +365,36 @@ impl SearchScratch {
             self.visited.trace(entry).1.key = k0;
         }
         evals += 1;
+        let probe_only = params.probes > 0 && params.probe_only && g.lists.is_some();
+        if let (Some(lists), true) = (g.lists.as_ref(), params.probes > 0) {
+            if blocks {
+                return Err(invalid(
+                    "query lists require row-code search, not neighbour blocks".into(),
+                ));
+            }
+            lists.probe(
+                query,
+                params.probes,
+                &mut self.probe_query,
+                &mut self.probed,
+            );
+            for &(_, c) in &self.probed {
+                let ids = lists.list(c);
+                for (i, &v) in ids.iter().enumerate() {
+                    if let Some(&u) = ids.get(i + 8) {
+                        prefetch_bytes(g.code(u));
+                        g.prefetch_scale(u);
+                    }
+                    if !self.visited.insert(v) {
+                        continue;
+                    }
+                    let candidate = key(g.est(qc, self.qsum, v, w), v);
+                    self.reservoir.offer(candidate);
+                    self.pool.insert(candidate);
+                    evals += 1;
+                }
+            }
+        }
         // Best-first expansion of the nearest unexpanded candidate among the `ef` best seen;
         // the pool holds exactly those, so the search ends when none is left. With
         // `patience`, it also ends after that many expansions without an insert among the
@@ -386,6 +419,9 @@ impl SearchScratch {
         };
         let mut seed_cursor = 0usize;
         loop {
+            if probe_only && enough(self) {
+                break;
+            }
             let c = match self.pool.next() {
                 Some(c) => c,
                 None => {

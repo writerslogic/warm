@@ -1666,3 +1666,73 @@ fn screen_is_transparent_at_a_wide_margin() {
     }
     assert!(skipped > 0, "the screen never skipped a neighbour");
 }
+
+#[test]
+fn query_lists_find_neighbours_without_changing_plain_search_and_survive_reopening() {
+    let d = 16;
+    let data = clustered(3000, d, 41);
+    // Training and evaluation queries share one distribution (the same cluster centres), and
+    // the evaluation queries are held out of the lists.
+    let drawn = clustered(660, d, 42);
+    let (training, queries) = drawn.split_at(600 * d);
+    let (k, per_query) = (10, 20);
+    let neighbours: Vec<u32> = training
+        .chunks_exact(d)
+        .flat_map(|q| brute_force(&data, d, q, per_query))
+        .collect();
+    let graph = Graph::build(&data, d, &BuildParams::default()).unwrap();
+    let plain = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+    let mut listed = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+    let lists = QueryLists::build(
+        training,
+        d,
+        true,
+        &neighbours,
+        per_query,
+        per_query,
+        24,
+        3000,
+    )
+    .unwrap();
+    assert_eq!(lists.lists(), 24);
+    assert!(QueryLists::build(training, d + 1, true, &neighbours, per_query, 5, 24, 3000).is_err());
+    listed.set_query_lists(lists).unwrap();
+    let base = VSearchParams {
+        ef: 32,
+        rerank: 32,
+        ..VSearchParams::default()
+    };
+    let probe = VSearchParams {
+        probes: 3,
+        probe_only: true,
+        ..base
+    };
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("lists.idx");
+    listed.save(&path).unwrap();
+    let reopened = VGraph::open(&path, Residency::Heap).unwrap();
+    assert_eq!(
+        reopened.query_lists().map(QueryLists::listed),
+        listed.query_lists().map(QueryLists::listed)
+    );
+    let (mut a, mut b, mut c, mut e) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let mut hits = 0;
+    for q in queries.chunks_exact(d) {
+        plain.searcher().search(q, k, base, &mut a).unwrap();
+        listed.searcher().search(q, k, base, &mut b).unwrap();
+        assert_eq!(a, b, "lists changed a search without probes");
+        listed.searcher().search(q, k, probe, &mut c).unwrap();
+        reopened.searcher().search(q, k, probe, &mut e).unwrap();
+        assert_eq!(c, e, "reopened lists answer differently");
+        assert_eq!(c.len(), k);
+        let truth = brute_force(&data, d, q, k);
+        hits += c.iter().filter(|x| truth.contains(x)).count();
+    }
+    let recall = hits as f64 / (queries.len() / d * k) as f64;
+    assert!(recall >= 0.9, "probe-only recall {recall}");
+    let mut damaged = std::fs::read(&path).unwrap();
+    let at = damaged.len() - 1;
+    damaged.truncate(at);
+    std::fs::write(&path, &damaged).unwrap();
+    assert!(VGraph::open(&path, Residency::Heap).is_err());
+}

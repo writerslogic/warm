@@ -264,8 +264,8 @@ impl<'a> Cursor<'a> {
             self.frequency_bits,
             &mut frequencies,
         );
-        for (out, &value) in self.frequencies.iter_mut().zip(&frequencies[..self.count]) {
-            *out = value as u32;
+        for (slot, &value) in self.frequencies.iter_mut().zip(&frequencies[..self.count]) {
+            *slot = value as u32;
         }
         self.frequencies_ready = true;
     }

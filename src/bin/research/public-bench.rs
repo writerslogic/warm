@@ -1023,6 +1023,7 @@ fn ann_qgraph_count<const K: usize>(a: &QgraphArgs) -> Result<()> {
                         screen: sigmas >= 0.0,
                         fuse: a.fuse,
                         neighbour_cap: a.neighbour_cap,
+                        ..VSearchParams::default()
                     },
                     out,
                 )

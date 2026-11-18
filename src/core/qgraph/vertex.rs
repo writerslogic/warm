@@ -40,11 +40,13 @@ thread_local! {
 mod allowed;
 mod file;
 mod gated;
+mod lists;
 #[cfg(feature = "experimental")]
 mod navigation;
 pub use allowed::Allow;
 pub use file::Residency;
 use file::Slab;
+pub use lists::QueryLists;
 
 /// One 128-byte cache line (the line size of Apple cores).
 #[repr(C, align(128))]
@@ -191,6 +193,8 @@ pub struct VGraph {
     /// Error model of the block estimates: `var = block_kappa * s^2 * |q - x_v|^2` for an
     /// edge of scale `s` seen from the expanded vertex `v`, calibrated at build.
     block_kappa: f32,
+    /// Candidate lists learned from construction queries ([`VGraph::set_query_lists`]).
+    lists: Option<QueryLists>,
 }
 
 mod cache;
