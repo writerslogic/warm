@@ -25,6 +25,12 @@ mod segment;
 mod store;
 
 pub use keys::KeySource;
+
+/// A fresh random master key, for callers outside the container.
+#[cfg(feature = "security")]
+pub(crate) fn fresh_key() -> anyhow::Result<keys::Key> {
+    keys::random_key()
+}
 pub use segment::{SegmentReader, SegmentWriter};
 pub use store::{default_mode, Mode, SealedStore, StoreOptions};
 

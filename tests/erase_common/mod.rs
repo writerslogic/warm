@@ -13,7 +13,11 @@ use writerslogic_warm::WarmCore;
 pub const DIM: u32 = 4096;
 
 pub fn open(path: &Path) -> anyhow::Result<Memory> {
-    let core = Arc::new(WarmCore::new(DIM, Some(path.display().to_string()), None)?);
+    let core = Arc::new(WarmCore::new(
+        DIM,
+        Some(path.display().to_string()),
+        Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+    )?);
     Ok(Memory::new(core).with_clock(Arc::new(ManualClock::new(1))))
 }
 

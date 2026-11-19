@@ -18,7 +18,7 @@ fn input(id: &str, text: &str, store_text: bool) -> DocumentInput {
 #[test]
 fn stored_chunks_preserve_spans_text_and_metadata_across_reopen() -> Result<()> {
     let dir = tempfile::tempdir()?;
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.document_checkpoint.min_journal_bytes = 0;
     let mut core = WarmCore::new(
         256,
@@ -96,7 +96,7 @@ fn stored_chunks_preserve_spans_text_and_metadata_across_reopen() -> Result<()> 
 #[test]
 fn encrypted_chunk_reads_work_live_and_from_a_sealed_checkpoint() -> Result<()> {
     let dir = tempfile::tempdir()?;
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.document_checkpoint.min_journal_bytes = 0;
     config.security.encryption_enabled = true;
     config.security.encryption_passphrase = Some("chunk-fixture".into());
@@ -135,7 +135,7 @@ fn encrypted_chunk_reads_work_live_and_from_a_sealed_checkpoint() -> Result<()> 
 #[test]
 fn closing_after_damaged_text_cache_preserves_journal_recovery() -> Result<()> {
     let dir = tempfile::tempdir()?;
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.document_checkpoint.min_journal_bytes = 0;
     let core = WarmCore::new(
         256,
@@ -188,7 +188,7 @@ fn same_length_cache_damage_cannot_enter_compacted_journal_frames() -> Result<()
 
 fn reject_damaged_cache(compact: bool, checkpoints: bool) -> Result<()> {
     let dir = tempfile::tempdir()?;
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.document_checkpoint.min_journal_bytes = 0;
     config.document_checkpoint.enabled = checkpoints;
     let core = WarmCore::new(

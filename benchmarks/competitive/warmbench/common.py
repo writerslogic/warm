@@ -76,6 +76,22 @@ def hardware():
 FULL_COMMIT = re.compile(r"[0-9a-f]{40}")
 
 
+ENCRYPTION_CHOICES = ("on", "off")
+
+
+def encryption():
+    """Encryption at rest of the WARM store for this run, from the WARM_ENCRYPTION switch.
+
+    `on` builds WARM with the `security` feature and encrypts (AES-256-GCM, master key);
+    `off`, the default of the harness, stores plaintext. The engine reads the same variable,
+    so a binary built with `security` also honors `off`.
+    """
+    switch = os.environ.get("WARM_ENCRYPTION", "off").strip().lower() or "off"
+    if switch not in ENCRYPTION_CHOICES:
+        raise SystemExit(f"WARM_ENCRYPTION must be one of {ENCRYPTION_CHOICES}, got {switch!r}")
+    return {"switch": switch, "effective": "aes-256-gcm" if switch == "on" else "plaintext"}
+
+
 def commit():
     """Full 40-character source revision of the measured tree. The table treats anything shorter as unpinned and draws
     no verdict from it, so an abbreviated WARM_BENCH_COMMIT is expanded through git and refused when it cannot be."""

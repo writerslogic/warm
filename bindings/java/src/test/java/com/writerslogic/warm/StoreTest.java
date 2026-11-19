@@ -161,7 +161,7 @@ class StoreTest {
             assertTrue(stats.vectorCount() >= 3);
             SecurityStatus security = store.securityStatus();
             assertTrue(security.securityCompiled());
-            assertFalse(security.encryptionActive());
+            assertTrue(security.encryptionActive());
             store.flush();
             store.compact();
             store.maintain();

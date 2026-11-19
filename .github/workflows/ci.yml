@@ -241,7 +241,7 @@ jobs:
           shared-key: mimalloc-${{ matrix.os }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: The shipped binaries build with the tuned allocator
-        run: cargo build --locked --features server,mcp,cli,mimalloc --bin warm-server --bin warm-mcp --bin warm-admin
+        run: cargo build --locked --features server,mcp,security,cli,mimalloc --bin warm-server --bin warm-mcp --bin warm-admin
       - name: The allocator sets its footprint options before the first allocation
         run: cargo test --locked --lib --features mimalloc allocator
 
@@ -363,7 +363,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - name: Build warm-server
-        run: cargo build --locked --features server --bin warm-server
+        run: cargo build --locked --features server,security --bin warm-server
       - name: Memory replies match the served OpenAPI schemas
         run: uv run --locked --script scripts/check_memory_openapi.py --server-binary target/debug/warm-server
       - name: SDK tests against the real server

@@ -14,7 +14,14 @@ use writerslogic_warm::WarmCore;
 const DIM: u32 = 4096;
 
 fn open(dir: &Path) -> Memory {
-    let core = Arc::new(WarmCore::new(DIM, Some(dir.display().to_string()), None).unwrap());
+    let core = Arc::new(
+        WarmCore::new(
+            DIM,
+            Some(dir.display().to_string()),
+            Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+        )
+        .unwrap(),
+    );
     Memory::new(core).with_clock(Arc::new(ManualClock::new(1)))
 }
 
@@ -384,7 +391,7 @@ fn an_encrypted_store_keeps_observations_sealed_and_reopens() {
     use writerslogic_warm::core::WarmConfig;
     let dir = tempfile::tempdir().unwrap();
     let open_encrypted = |dir: &Path| {
-        let mut config = WarmConfig::default();
+        let mut config = WarmConfig::unencrypted();
         config.security.encryption_enabled = true;
         config.security.encryption_passphrase = Some("experience-default-fixture".into());
         let core =
@@ -684,7 +691,7 @@ fn hybrid_document_ranking_composes_with_the_region_merge() {
             normalization: "l2".into(),
             metric: "cosine".into(),
         }),
-        ..WarmConfig::default()
+        ..WarmConfig::unencrypted()
     };
     let core =
         Arc::new(WarmCore::new(DIM, Some(dir.path().display().to_string()), Some(config)).unwrap());

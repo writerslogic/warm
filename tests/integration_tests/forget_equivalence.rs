@@ -35,7 +35,7 @@ fn config() -> WarmConfig {
             normalization: "l2".into(),
             metric: "cosine".into(),
         }),
-        ..Default::default()
+        ..WarmConfig::unencrypted()
     }
 }
 
@@ -226,7 +226,11 @@ fn purge_leaves_the_store_of_a_document_never_stored() -> Result<()> {
 /// Documents 0..240 lexical-only in three transactions (no vectors, so compactions write a
 /// document checkpoint), with `extra` committed as its own transaction after the first.
 fn build_lexical(dir: &Path, extra: Option<usize>) -> Result<WarmCore> {
-    let core = WarmCore::new(256, Some(dir.display().to_string()), None)?;
+    let core = WarmCore::new(
+        256,
+        Some(dir.display().to_string()),
+        Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+    )?;
     let options = IngestOptions {
         encode: EncodeMode::Lexical,
         ..Default::default()
@@ -288,7 +292,13 @@ fn purge_of_a_checkpointed_store_leaves_the_store_of_a_document_never_stored() -
         Vec::<String>::new()
     );
     drop((a, b));
-    let reopen = |dir: &Path| WarmCore::new(256, Some(dir.display().to_string()), None);
+    let reopen = |dir: &Path| {
+        WarmCore::new(
+            256,
+            Some(dir.display().to_string()),
+            Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+        )
+    };
     let (a, b) = (reopen(a_dir.path())?, reopen(b_dir.path())?);
     assert!(a.serves_from_checkpoint() && b.serves_from_checkpoint());
     assert_eq!(observe_lexical(&a)?, observe_lexical(&b)?);
@@ -313,7 +323,7 @@ fn open_scrubs_a_canonical_segment_left_by_an_interrupted_purge() -> Result<()> 
 #[test]
 fn encrypted_purge_keeps_surviving_text_readable() -> Result<()> {
     let dir = tempfile::tempdir()?;
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.security.encryption_enabled = true;
     config.security.encryption_passphrase = Some("forget-equivalence".into());
     let open = || {
@@ -351,7 +361,11 @@ fn encrypted_purge_keeps_surviving_text_readable() -> Result<()> {
 fn compaction_output_does_not_depend_on_vector_arrival_order() -> Result<()> {
     let (forward, backward) = (tempfile::tempdir()?, tempfile::tempdir()?);
     for (dir, reverse) in [(forward.path(), false), (backward.path(), true)] {
-        let core = WarmCore::new(256, Some(dir.display().to_string()), None)?;
+        let core = WarmCore::new(
+            256,
+            Some(dir.display().to_string()),
+            Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+        )?;
         let mut items = raw_items(0..3000);
         if reverse {
             items.reverse();
@@ -371,7 +385,11 @@ fn compaction_output_does_not_depend_on_vector_arrival_order() -> Result<()> {
 /// Facts `f0..f8` remembered at times 10, 20, ... and, with `target`, fact `x` at time 35.
 fn facts(dir: &Path, limit: usize, target: bool) -> Result<Memory> {
     let clock = Arc::new(ManualClock::new(0));
-    let core = Arc::new(WarmCore::new(256, Some(dir.display().to_string()), None)?);
+    let core = Arc::new(WarmCore::new(
+        256,
+        Some(dir.display().to_string()),
+        Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+    )?);
     let memory = Memory::new(core)
         .with_clock(clock.clone())
         .with_forgetting(Arc::new(MaxFacts { limit }));

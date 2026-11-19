@@ -23,7 +23,7 @@ fn open_with(dir: &Path, config: WarmConfig) -> Memory {
 }
 
 fn open(dir: &Path) -> Memory {
-    open_with(dir, WarmConfig::default())
+    open_with(dir, WarmConfig::unencrypted())
 }
 
 fn tree_of(accessibility_tree: &str) -> Value {
@@ -171,7 +171,7 @@ fn a_store_without_controls_keeps_writing_version_2() {
         (true, Some("[1] textbox 'Name'"), 3),
     ] {
         let dir = tempfile::tempdir().unwrap();
-        let mut config = WarmConfig::default();
+        let mut config = WarmConfig::unencrypted();
         config.experience.form_state = form_state;
         let m = open_with(dir.path(), config.clone());
         let mut o =
@@ -264,7 +264,7 @@ fn a_retried_step_must_carry_the_same_controls() {
 fn accessibility_tree_bytes_are_bounded_before_parsing() {
     const LIMIT: usize = 64;
     let dir = tempfile::tempdir().unwrap();
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.experience.max_page_bytes = LIMIT;
     let m = open_with(dir.path(), config);
     let line = "[1] textbox 'x'";

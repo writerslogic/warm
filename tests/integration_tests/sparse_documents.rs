@@ -16,7 +16,7 @@ fn open(dir: &Path) -> WarmCore {
     WarmCore::new(
         1024,
         Some(dir.to_string_lossy().into_owned()),
-        Some(WarmConfig::default()),
+        Some(WarmConfig::unencrypted()),
     )
     .unwrap()
 }
@@ -260,7 +260,7 @@ fn fused_ranking_combines_text_and_sparse_lists() -> Result<()> {
 #[test]
 fn encrypted_store_refuses_sparse_vectors_and_writes_no_file() -> Result<()> {
     let dir = tempfile::tempdir()?;
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.security.encryption_enabled = true;
     config.security.encryption_passphrase = Some("pw".into());
     let core = WarmCore::new(

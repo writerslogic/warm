@@ -200,7 +200,10 @@ pub fn verify_store(
     config.meaning.enabled = schema["meaning_enabled"].as_bool().unwrap_or(false);
     config.embedding_space = serde_json::from_value(schema["embedding_space"].clone())
         .context("store.json embedding_space")?;
-    let expected = if schema["encrypted"].as_bool().unwrap_or(false) {
+    let master_key = schema["key_scheme"].as_str() == Some(super::schema::MASTER_KEY_SCHEME);
+    let expected = if master_key && schema["encrypted"].as_bool().unwrap_or(false) {
+        None
+    } else if schema["encrypted"].as_bool().unwrap_or(false) {
         let Some(env) = encryption_passphrase_env else {
             inspection.documents = Some(DocumentCheck {
                 checked: false,

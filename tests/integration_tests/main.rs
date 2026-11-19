@@ -21,6 +21,8 @@ mod conversation_context;
 mod conversation_memory;
 #[cfg(all(feature = "conversation-memory", feature = "local-models"))]
 mod conversation_models;
+#[cfg(feature = "security")]
+mod default_encryption;
 mod document_checkpoint;
 mod document_chunks;
 mod document_competition;

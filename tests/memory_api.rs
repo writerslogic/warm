@@ -35,7 +35,14 @@ fn retry_contention<T>(mut call: impl FnMut() -> anyhow::Result<T>) -> T {
 }
 
 fn open(path: &std::path::Path) -> Arc<WarmCore> {
-    Arc::new(WarmCore::new(DIM, Some(path.display().to_string()), None).unwrap())
+    Arc::new(
+        WarmCore::new(
+            DIM,
+            Some(path.display().to_string()),
+            Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+        )
+        .unwrap(),
+    )
 }
 
 fn memory_at(path: &std::path::Path, clock: &Arc<ManualClock>) -> Memory {
@@ -924,7 +931,7 @@ fn explain_reports_semantic_scores_with_an_embedding_space() {
             normalization: "l2".into(),
             metric: "cosine".into(),
         }),
-        ..WarmConfig::default()
+        ..WarmConfig::unencrypted()
     };
     let core =
         Arc::new(WarmCore::new(DIM, Some(dir.path().display().to_string()), Some(config)).unwrap());
@@ -1639,7 +1646,7 @@ fn identical_inputs_give_byte_identical_results_in_separate_stores() {
 #[test]
 fn encrypted_stores_hold_facts_and_hide_text_on_disk() {
     let dir = tempfile::tempdir().unwrap();
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.security.encryption_enabled = true;
     config.security.encryption_passphrase = Some("memory-api-test-passphrase".into());
     let open_encrypted = || {
