@@ -15,7 +15,7 @@ const DIM: u32 = 256;
 const CHECKPOINT: &str = "documents.ckpt";
 
 fn config(checkpoints: bool) -> WarmConfig {
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.document_checkpoint.enabled = checkpoints;
     config.document_checkpoint.min_journal_bytes = 0;
     config

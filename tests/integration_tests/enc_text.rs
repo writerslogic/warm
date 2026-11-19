@@ -10,7 +10,7 @@ use writerslogic_warm::{core::WarmConfig, DocumentInput, SearchOptions, WarmCore
 const MARKER: &str = "zqxjmarkerplaintextcanary";
 
 fn config(passphrase: Option<&str>) -> WarmConfig {
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.security.encryption_enabled = passphrase.is_some();
     config.security.encryption_passphrase = passphrase.map(str::to_owned);
     config

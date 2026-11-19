@@ -89,7 +89,7 @@ impl Golden {
 
     /// The configuration the golden was written with.
     pub fn config(&self) -> Result<WarmConfig> {
-        let mut config = WarmConfig::default();
+        let mut config = WarmConfig::unencrypted();
         if let Some(name) = self.str("textEncoder") {
             config.text_encoder = name.parse()?;
         }

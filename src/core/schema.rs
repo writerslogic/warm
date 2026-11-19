@@ -56,16 +56,102 @@ struct StoreSchema {
     /// open them; any other analyzer also marks each chunk it wrote (binary flag bit 7).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     lexical_analyzer: Option<String>,
+    /// `"master-key"` for a store sealed under a random master key; absent for plaintext
+    /// stores and for passphrase stores (key derived with Argon2 from `encryption.salt`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    key_scheme: Option<String>,
+}
+
+/// How a store's frames and checkpoints are protected.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) enum Protection {
+    Plaintext,
+    Passphrase,
+    MasterKey,
+}
+
+/// The protection chosen for a store and whether the store is being created.
+#[derive(Clone, Copy, Debug)]
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) struct Resolved {
+    pub(crate) protection: Protection,
+    #[cfg_attr(not(feature = "security"), allow(dead_code))]
+    pub(crate) new_store: bool,
+}
+
+pub(crate) const MASTER_KEY_SCHEME: &str = "master-key";
+
+/// Decides the protection of the store at `path`. An existing store keeps the protection its
+/// `store.json` records, so a plaintext store written by an earlier release opens unchanged
+/// under the default configuration; asking for the other protection is an error. A new store
+/// is sealed under a master key unless `security.plaintext` (or `WARM_ENCRYPTION=off`) opts
+/// out, or `security.encryption_enabled` selects a passphrase.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn resolve_protection(path: &Path, config: &WarmConfig) -> Result<Resolved> {
+    let security = &config.security;
+    let schema_path = path.join("store.json");
+    if !schema_path.exists() {
+        let passphrase = security.encryption_passphrase.is_some()
+            || security.encryption_passphrase_env.is_some();
+        // An explicit encryption request outranks the plaintext opt-out, which only declines
+        // the default.
+        let protection = if security.plaintext && !security.encryption_enabled {
+            Protection::Plaintext
+        } else if security.encryption_enabled && passphrase {
+            Protection::Passphrase
+        } else if security.encryption_enabled
+            || super::sealed::default_mode()? == super::sealed::Mode::Aes256Gcm
+        {
+            Protection::MasterKey
+        } else {
+            Protection::Plaintext
+        };
+        return Ok(Resolved {
+            protection,
+            new_store: true,
+        });
+    }
+    let value: serde_json::Value = serde_json::from_slice(&std::fs::read(schema_path)?)?;
+    let recorded = if !value["encrypted"].as_bool().unwrap_or(false) {
+        Protection::Plaintext
+    } else if value["key_scheme"].as_str() == Some(MASTER_KEY_SCHEME) {
+        Protection::MasterKey
+    } else {
+        Protection::Passphrase
+    };
+    let incompatible =
+        (security.plaintext && !security.encryption_enabled && recorded != Protection::Plaintext)
+            || (security.encryption_enabled && recorded == Protection::Plaintext);
+    if incompatible {
+        bail!("incompatible store schema: dimensions, encoder, embedding model, encryption, or meaning configuration changed; reopen with the original configuration or re-encode source documents into a new store");
+    }
+    Ok(Resolved {
+        protection: recorded,
+        new_store: false,
+    })
 }
 
 /// Checks the store's `store.json` against `config` (writing it for a new store) and returns
 /// its schema version, which fixes the journal format the store is written in, and its lexical
 /// analyzer: the one recorded, else `config.analyzer` for a new store, else the legacy one.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 pub(crate) fn validate_store(
     path: &Path,
     dimensions: usize,
     config: &WarmConfig,
+) -> Result<(u32, Analyzer)> {
+    let resolved = resolve_protection(path, config)?;
+    validate_store_resolved(path, dimensions, config, resolved)
+}
+
+/// [`validate_store`] with the protection already resolved by [`resolve_protection`].
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn validate_store_resolved(
+    path: &Path,
+    dimensions: usize,
+    config: &WarmConfig,
+    resolved: Resolved,
 ) -> Result<(u32, Analyzer)> {
     let mut expected = StoreSchema {
         version: if config.vector_records {
@@ -77,10 +163,12 @@ pub(crate) fn validate_store(
         text_encoder: config.text_encoder.name().into(),
         vector_encoder: "signed-projection-v2".into(),
         metric: "jaccard".into(),
-        encrypted: config.security.encryption_enabled,
+        encrypted: resolved.protection != Protection::Plaintext,
         meaning_enabled: config.meaning.enabled,
         embedding_space: config.embedding_space.clone(),
         lexical_analyzer: None,
+        key_scheme: (resolved.protection == Protection::MasterKey)
+            .then(|| MASTER_KEY_SCHEME.to_owned()),
     };
     let schema_path = path.join("store.json");
     if schema_path.exists() {

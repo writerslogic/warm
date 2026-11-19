@@ -38,7 +38,14 @@ impl WarmCore {
         }
 
         let store_lock = StoreLock::acquire(&base_path)?;
-        let (schema, analyzer) = super::super::schema::validate_store(&base_path, dim, &config)?;
+        let resolved = super::super::schema::resolve_protection(&base_path, &config)?;
+        #[cfg(feature = "security")]
+        {
+            config.security.encryption_enabled =
+                resolved.protection != super::super::schema::Protection::Plaintext;
+        }
+        let (schema, analyzer) =
+            super::super::schema::validate_store_resolved(&base_path, dim, &config, resolved)?;
         let dense = dense_vectors::DenseVectors::open(&base_path)?;
         let base_path_sparse = base_path.clone();
 
@@ -70,7 +77,15 @@ impl WarmCore {
         };
 
         #[cfg(feature = "security")]
-        let encryption = if config.security.encryption_enabled {
+        let encryption = if resolved.protection == super::super::schema::Protection::MasterKey {
+            Some(std::sync::Arc::new(
+                super::super::security::EncryptionManager::open_master(
+                    &base_path,
+                    config.security.master_key_file.as_deref(),
+                    resolved.new_store,
+                )?,
+            ))
+        } else if resolved.protection == super::super::schema::Protection::Passphrase {
             use zeroize::Zeroize;
             let mut passphrase = config
                 .security

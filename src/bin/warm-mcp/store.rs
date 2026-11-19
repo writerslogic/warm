@@ -37,6 +37,9 @@ pub struct StoreOptions {
     pub dim: u32,
     pub max_stores: usize,
     pub encrypt: Option<String>,
+    /// Opt out of the encrypted default for a new store (`WARM_ENCRYPTION=off` does the same
+    /// for the process).
+    pub plaintext: bool,
     #[cfg(feature = "local-models")]
     pub stages: Option<Arc<writerslogic_warm::core::models::ModelStages>>,
     #[cfg(feature = "local-models")]
@@ -262,6 +265,7 @@ impl WarmBackend {
         {
             config.embedding_space = Some(embedder.space());
         }
+        config.security.plaintext = self.options.plaintext;
         if let Some(env) = &self.options.encrypt {
             config.security.encryption_enabled = true;
             config.security.encryption_passphrase_env = Some(env.clone());
@@ -876,6 +880,7 @@ mod tests {
                 dim: 256,
                 max_stores: 2,
                 encrypt: None,
+                plaintext: true,
                 #[cfg(feature = "local-models")]
                 stages: None,
                 #[cfg(feature = "local-models")]

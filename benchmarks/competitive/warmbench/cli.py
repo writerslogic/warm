@@ -25,6 +25,7 @@ def main(argv=None):
                      help="ANN only: restrict a comparator to these builds (systems not named keep all builds)")
     run.add_argument("--screening", metavar="FILE", help="screening results file (select_builds.py input) that justifies a --builds subset; "
                      "required whenever --builds drops builds of a swept system, which must appear in that file")
+    run.add_argument("--encryption", choices=["on", "off"], help="encryption at rest of the WARM store: on builds WARM with the security feature and encrypts; off (the default) stores plaintext. Recorded in the result JSON")
     run.add_argument("--rounds", type=int, help=f"independent process rounds (published suites default to {runner.PUBLISHED_MIN_ROUNDS})")
     run.add_argument("--pin-cpus", metavar="LIST", help="Linux: run the single-threaded serve and ops phases under `taskset -c LIST` (recorded in the results)")
     run.add_argument("--build-repeats", type=int)
@@ -51,6 +52,8 @@ def main(argv=None):
         for key, why in registry.NOT_RUN.items():
             print(f"not run: {key}: {why}")
     elif a.cmd == "run":
+        if a.encryption:
+            os.environ["WARM_ENCRYPTION"] = a.encryption
         spec = {**runner.SUITES[a.suite], "name": a.suite}
         if a.rounds:
             spec["rounds"] = a.rounds

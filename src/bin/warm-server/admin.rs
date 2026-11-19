@@ -394,6 +394,17 @@ fn unpack_archive(mut file: std::fs::File, dst: &Path, max_bytes: u64) -> Result
             return Err(invalid("entry escapes the destination"));
         }
     }
+    // Archives carry deterministic 0644 modes, and the engine refuses a master key that is
+    // readable by group or others.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let key = dst.join("master.key");
+        if key.is_file() {
+            std::fs::set_permissions(&key, std::fs::Permissions::from_mode(0o600))
+                .map_err(ApiError::internal)?;
+        }
+    }
     Ok(())
 }
 

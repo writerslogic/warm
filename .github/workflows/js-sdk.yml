@@ -45,7 +45,7 @@ jobs:
         with:
           toolchain: stable
       - name: Build warm-server for the live tests
-        run: cargo build --locked --features server --bin warm-server
+        run: cargo build --locked --features server,security --bin warm-server
       - name: Test transport, server contracts and packed ESM/CJS consumers
         working-directory: bindings/js/warm-sdk
         env:

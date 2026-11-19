@@ -322,6 +322,7 @@ fn config_for(spec: &Spec) -> Result<WarmConfig> {
         text_encoder: spec.encoder.parse()?,
         ..Default::default()
     };
+    config.security.plaintext = true;
     if matches!(spec.kind, Kind::Embed | Kind::VectorRecords) {
         config.embedding_space = Some(embedding_space());
     }

@@ -68,7 +68,7 @@ jobs:
         with:
           toolchain: stable
       - name: Build warm-mcp for the Claude memory tool tests
-        run: cargo build --locked --features mcp --bin warm-mcp
+        run: cargo build --locked --features mcp,security --bin warm-mcp
       - name: Build and test the Claude memory tool
         working-directory: integrations/claude-memory-tool/typescript
         env:

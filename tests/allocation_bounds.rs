@@ -60,7 +60,7 @@ fn malformed_identity_files_do_not_allocate_their_declared_length() {
     let mut baseline = None;
     for size in [31, 33, 128 << 20] {
         std::fs::File::create(&path).unwrap().set_len(size).unwrap();
-        let mut config = WarmConfig::default();
+        let mut config = WarmConfig::unencrypted();
         config.security.signing_enabled = true;
         config.security.key_path = Some(path.display().to_string());
         let store = directory.path().join(format!("store-{size}"));
@@ -80,7 +80,7 @@ fn malformed_identity_files_do_not_allocate_their_declared_length() {
 fn extreme_privacy_scale_fails_before_store_creation() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("must-not-create");
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.privacy.epsilon = 1e-308;
     let error = WarmCore::new(256, Some(path.display().to_string()), Some(config))
         .err()
@@ -111,7 +111,7 @@ fn scanner_reuses_a_single_raw_buffer() {
 #[test]
 fn recent_audit_query_uses_bounded_scratch() {
     let dir = tempfile::tempdir().unwrap();
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.security.audit_enabled = true;
     let core = WarmCore::new(256, Some(dir.path().display().to_string()), Some(config)).unwrap();
     let mut entry = [0u8; 105];
@@ -128,7 +128,7 @@ fn recent_audit_query_uses_bounded_scratch() {
 #[test]
 fn audit_entries_match_across_read_buffer_boundaries() {
     let dir = tempfile::tempdir().unwrap();
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.security.audit_enabled = true;
     let core = WarmCore::new(256, Some(dir.path().display().to_string()), Some(config)).unwrap();
     for count in [623u64, 624, 625] {
@@ -179,7 +179,12 @@ fn metadata_listing_does_not_allocate_stored_text() {
     use writerslogic_warm::core::documents::{DocumentInput, EncodeMode, IngestOptions};
 
     let dir = tempfile::tempdir().unwrap();
-    let mut core = WarmCore::new(256, Some(dir.path().display().to_string()), None).unwrap();
+    let mut core = WarmCore::new(
+        256,
+        Some(dir.path().display().to_string()),
+        Some(WarmConfig::unencrypted()),
+    )
+    .unwrap();
     for index in 0..18 {
         core.memorize_document_with(
             DocumentInput {
@@ -206,7 +211,12 @@ fn metadata_listing_does_not_allocate_stored_text() {
             core.compact().unwrap();
         } else if phase == "reopened" {
             drop(core);
-            core = WarmCore::new(256, Some(dir.path().display().to_string()), None).unwrap();
+            core = WarmCore::new(
+                256,
+                Some(dir.path().display().to_string()),
+                Some(WarmConfig::unencrypted()),
+            )
+            .unwrap();
         }
         let (count, allocated, _, _) = measured(|| core.document_count());
         assert_eq!(count, 18);

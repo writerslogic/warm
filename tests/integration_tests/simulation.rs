@@ -368,7 +368,7 @@ impl Sim {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("store");
         let mut rng = Rng(seed);
-        let mut config = WarmConfig::default();
+        let mut config = WarmConfig::unencrypted();
         let tiny_checkpoint = rng.chance(12);
         if tiny_checkpoint {
             config.document_checkpoint.min_journal_bytes = 1;
@@ -1793,7 +1793,14 @@ fn j<T: serde::Serialize>(value: &T) -> Value {
 }
 
 fn open_store(path: &Path) -> Arc<WarmCore> {
-    Arc::new(WarmCore::new(DIM, Some(path.display().to_string()), None).unwrap())
+    Arc::new(
+        WarmCore::new(
+            DIM,
+            Some(path.display().to_string()),
+            Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+        )
+        .unwrap(),
+    )
 }
 
 fn statuses(memory: &Memory, as_of: Millis) -> BTreeMap<String, FactStatus> {

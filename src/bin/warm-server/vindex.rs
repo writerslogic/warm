@@ -1358,7 +1358,7 @@ mod tests {
         let dir = tempfile::tempdir()?;
         let store = dir.path().join("store");
         let vdir = dir.path().join("vindex");
-        let mut config = writerslogic_warm::core::WarmConfig::default();
+        let mut config = writerslogic_warm::core::WarmConfig::unencrypted();
         config.document_checkpoint.enabled = true;
         config.document_checkpoint.min_journal_bytes = 0;
         let version = version_stamp(12);

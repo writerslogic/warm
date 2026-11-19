@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "security")]
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 #[cfg(feature = "security")]
 use std::path::Path;
 
@@ -182,6 +182,59 @@ impl EncryptionManager {
         // of the key in callee frames.
         scrub_stack();
         Ok(Self { cipher: cipher? })
+    }
+
+    /// A manager over a 256-bit master key, such as the one a default-encrypted store holds in
+    /// `<store>/master.key`. No passphrase derivation runs.
+    pub fn from_key(key: &[u8; 32]) -> Result<Self> {
+        let cipher = Self::build_cipher(key);
+        scrub_stack();
+        Ok(Self { cipher: cipher? })
+    }
+
+    /// Opens (or, for a new store, creates) the master key of the store at `dir` and returns
+    /// its cipher. A new store also gets `key.check`, a sealed constant that a later open
+    /// verifies, so a wrong key is refused even before the store holds a frame. An existing
+    /// store whose key is missing is an error; a fresh key would only make it unreadable.
+    pub(crate) fn open_master(dir: &Path, key_file: Option<&str>, create: bool) -> Result<Self> {
+        use super::sealed::KeySource;
+        const CHECK: &[u8] = b"warm master key check v1";
+        let mut source = KeySource::file(
+            key_file
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| dir.join("master.key")),
+        );
+        let key = match source.load()? {
+            Some(key) => key,
+            None if create => {
+                let key = super::sealed::fresh_key()?;
+                source.store_new(&key)?;
+                key
+            }
+            None => bail!("the store is encrypted but its master key is missing"),
+        };
+        let manager = Self::from_key(&key)?;
+        let check = dir.join("key.check");
+        match std::fs::read(&check) {
+            Ok(sealed) => {
+                let opened = manager.decrypt_with_aad(&sealed, b"key.check");
+                ensure!(
+                    opened.is_ok_and(|plain| plain == CHECK),
+                    "the master key does not open this store (wrong key, or key.check is damaged)"
+                );
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound && create => {
+                super::durable_file::atomic_create(
+                    &check,
+                    &manager.encrypt_with_aad(CHECK, b"key.check")?,
+                )?;
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                bail!("the store is encrypted but key.check is missing")
+            }
+            Err(e) => return Err(e.into()),
+        }
+        Ok(manager)
     }
 
     /// Builds the cipher in its own frame so the pre-box copy of the key schedule lies in

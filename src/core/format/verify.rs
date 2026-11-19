@@ -113,6 +113,8 @@ fn decode_tenant(dir: &str) -> Option<String> {
 struct Schema {
     dimensions: Option<u64>,
     encrypted: bool,
+    /// Sealed under a master key (`key_scheme`), not a passphrase.
+    master_key: bool,
     meaning_enabled: bool,
     raw: Value,
 }
@@ -153,6 +155,7 @@ fn check_schema(store: &Path, report: &mut Report) -> Schema {
     let mut schema = Schema {
         dimensions: None,
         encrypted: false,
+        master_key: false,
         meaning_enabled: false,
         raw: Value::Null,
     };
@@ -262,6 +265,9 @@ fn check_schema(store: &Path, report: &mut Report) -> Schema {
         .get("meaning_enabled")
         .and_then(Value::as_bool)
         .unwrap_or(false);
+    schema.master_key = schema.encrypted
+        && value.get("key_scheme").and_then(Value::as_str)
+            == Some(crate::core::schema::MASTER_KEY_SCHEME);
     report.versions.encrypted = Some(schema.encrypted);
     if let Some(name) = value.get("text_encoder").and_then(Value::as_str) {
         report.versions.text_encoder = Some(name.to_owned());
@@ -325,6 +331,9 @@ fn open_cipher(
 ) -> Option<Cipher> {
     if !schema.encrypted {
         return None;
+    }
+    if schema.master_key {
+        return open_master_cipher(store, report);
     }
     let salt = store.join("encryption.salt");
     match std::fs::metadata(&salt) {
@@ -390,6 +399,38 @@ fn open_cipher(
     #[cfg(not(feature = "security"))]
     {
         let _ = variable;
+        report.add(
+            Severity::Info,
+            "payloads-not-authenticated",
+            ARENA_DIRECTORY,
+            None,
+            "this build lacks the `security` feature, so encrypted payloads cannot be decrypted",
+        );
+        None
+    }
+}
+
+/// The cipher of a master-key store, read from `<store>/master.key`. A key kept elsewhere
+/// (`security.master_key_file`) leaves the payloads unauthenticated, as a missing passphrase does.
+fn open_master_cipher(store: &Path, report: &mut Report) -> Option<Cipher> {
+    #[cfg(feature = "security")]
+    {
+        let (severity, code) = if store.join("master.key").exists() {
+            (Severity::Error, "master-key-invalid")
+        } else {
+            (Severity::Info, "payloads-not-authenticated")
+        };
+        match Cipher::open_master(store, None, false) {
+            Ok(cipher) => Some(cipher),
+            Err(error) => {
+                report.add(severity, code, "master.key", None, format!("{error:#}"));
+                None
+            }
+        }
+    }
+    #[cfg(not(feature = "security"))]
+    {
+        let _ = store;
         report.add(
             Severity::Info,
             "payloads-not-authenticated",
@@ -1016,7 +1057,7 @@ fn check_indices(store: &Path, arena: &ArenaState, report: &mut Report) {
 }
 
 fn check_ancillary(store: &Path, schema: &Schema, report: &mut Report) {
-    const KNOWN: [&str; 20] = [
+    const KNOWN: [&str; 22] = [
         "dense-vectors",
         "dense-ids.log",
         "store.json",
@@ -1025,6 +1066,8 @@ fn check_ancillary(store: &Path, schema: &Schema, report: &mut Report) {
         "indices.json.crc32",
         "documents.text",
         "encryption.salt",
+        "master.key",
+        "key.check",
         "shard_meta.json",
         "audit.effects.bin",
         "audit.bin",

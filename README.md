@@ -52,7 +52,7 @@ server you configure; model stages are opt-in. Capabilities and limits: [What sh
 | Node, embedded engine | `npm install writerslogic-warm@0.7.0` | below |
 | JavaScript or TypeScript, HTTP client | `npm install warm-sdk@0.2.2` | [client API](bindings/js/warm-sdk/README.md) |
 | Python, HTTP client | `uv venv && uv pip install warm-sdk` | [Python quickstart](examples/quickstart/python/quickstart.py) |
-| A server for the HTTP clients | `cargo install --locked --features server --bin warm-server warm-rust` | [server docs](https://writerslogic.com/warm/docs/latest/server/) |
+| A server for the HTTP clients | `cargo install --locked --features server,security --bin warm-server warm-rust` | [server docs](https://writerslogic.com/warm/docs/latest/server/) |
 
 All options, source builds, version requirements and the HTTP-client-or-embedded choice:
 [Install](docs/get-started/install.md) and [Choose an integration](docs/get-started/choose.md).
