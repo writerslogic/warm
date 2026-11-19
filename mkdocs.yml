@@ -7,7 +7,7 @@
 
 site_name: WARM
 site_description: Hybrid search, graph indexing, and vector-symbolic memory. Runs on your machine, no service calls.
-site_url: !ENV [WARM_SITE_URL, "https://writerslogic.com/warm/docs/dev/"]
+site_url: !ENV [WARM_SITE_URL, "https://writerslogic.com/warm/docs/"]
 repo_url: https://github.com/writerslogic/warm
 repo_name: writerslogic/warm
 edit_uri: edit/main/docs/
