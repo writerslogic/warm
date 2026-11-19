@@ -54,7 +54,7 @@ test('published APIs preserve structured knowledge and document state across pro
       const { DocumentMemory } = require('./semantic.js');
       (async () => {
         const warm = new WarmMemorySystem(4096, process.argv[1], { meaningEnabled: true });
-        assert.equal(warm.securityStatus().encryptionActive, false);
+        assert.equal(warm.securityStatus().encryptionActive, true);
         await warm.memorizeTriplet('t1', 'paris', 'capital_of', 'france');
         await warm.memorizeTriplet('t2', 'john', 'father', 'mark');
         await warm.memorizeTriplet('t3', 'mark', 'father', 'bob');

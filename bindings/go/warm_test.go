@@ -147,7 +147,7 @@ func TestStatsAndSecurityStatus(t *testing.T) {
 		t.Fatalf("Stats: %+v %v", st, err)
 	}
 	sec, err := s.SecurityStatus(context.Background())
-	if err != nil || !sec.SecurityCompiled || sec.EncryptionActive {
+	if err != nil || !sec.SecurityCompiled || !sec.EncryptionActive {
 		t.Fatalf("SecurityStatus: %+v %v", sec, err)
 	}
 	for _, op := range []func(context.Context) error{s.Flush, s.Compact, s.Maintain} {

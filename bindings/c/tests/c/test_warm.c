@@ -303,7 +303,7 @@ static void test_lifecycle_and_search(void) {
   security.struct_size = sizeof security;
   CHECK(warm_store_security_status(store, &security) == WARM_OK);
   CHECK(security.security_compiled == 1);
-  CHECK(security.encryption_active == 0);
+  CHECK(security.encryption_active == 1);
 
   /* Older caller with a smaller struct: only that prefix is written. */
   struct {
