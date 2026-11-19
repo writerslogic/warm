@@ -220,6 +220,7 @@ async fn main() -> Result<()> {
             dim: cli.dim,
             max_stores: cli.max_stores,
             encrypt: cli.encrypt.then(|| cli.passphrase_env.clone()),
+            plaintext: false,
             #[cfg(feature = "local-models")]
             stages,
             #[cfg(feature = "local-models")]

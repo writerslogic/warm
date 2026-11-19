@@ -147,16 +147,45 @@ impl Default for MeaningConfig {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
+#[cfg_attr(not(test), derive(Default))]
 pub struct SecurityConfig {
     pub signing_enabled: bool,
     pub key_path: Option<String>,
+    /// Encrypt with a key derived from a passphrase (`encryption_passphrase` or
+    /// `encryption_passphrase_env`). New stores are sealed under a random master key
+    /// without setting this, whenever the `security` feature is compiled in.
     pub encryption_enabled: bool,
+    /// Explicit opt-out of the default: a new store is written unencrypted. An existing store keeps the
+    /// protection it was created with, so a plaintext store opens without this.
+    pub plaintext: bool,
+    /// Master key file of a default-encrypted store; `<store>/master.key` when unset.
+    /// Keeping it outside the store directory keeps a copy of the directory unreadable.
+    pub master_key_file: Option<String>,
     pub encryption_passphrase: Option<String>,
     /// Name of an environment variable containing the encryption passphrase.
     /// Prefer this over embedding a secret in application configuration.
     pub encryption_passphrase_env: Option<String>,
     pub audit_enabled: bool,
+}
+
+#[cfg(test)]
+impl Default for SecurityConfig {
+    fn default() -> Self {
+        Self {
+            signing_enabled: false,
+            key_path: None,
+            encryption_enabled: false,
+            // The crate's own unit tests exercise engine mechanics (checkpoint layout, file
+            // recovery) on plaintext stores; the encrypted default is covered by the
+            // integration tests, which link the library without `cfg(test)`.
+            plaintext: true,
+            master_key_file: None,
+            encryption_passphrase: None,
+            encryption_passphrase_env: None,
+            audit_enabled: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -338,6 +367,14 @@ impl Default for CognitionConfig {
 }
 
 impl WarmConfig {
+    /// The default configuration with the plaintext opt-out set: a new store is written
+    /// unencrypted. An existing store keeps the protection it was created with.
+    pub fn unencrypted() -> Self {
+        let mut config = Self::default();
+        config.security.plaintext = true;
+        config
+    }
+
     pub(crate) fn validate(&self) -> anyhow::Result<()> {
         anyhow::ensure!(
             self.text_encoder != super::encoding::TextEncoder::MultiscaleCappedUnionV1

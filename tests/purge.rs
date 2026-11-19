@@ -15,7 +15,14 @@ const DIM: u32 = 4096;
 const MARKERS: [&str; 3] = ["zyxquartzmarker", "wvutfeldsparmarker", "obsidianmarkerqq"];
 
 fn memory_at(path: &Path) -> Memory {
-    let core = Arc::new(WarmCore::new(DIM, Some(path.display().to_string()), None).unwrap());
+    let core = Arc::new(
+        WarmCore::new(
+            DIM,
+            Some(path.display().to_string()),
+            Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+        )
+        .unwrap(),
+    );
     Memory::new(core).with_clock(Arc::new(ManualClock::new(1)))
 }
 
@@ -175,7 +182,12 @@ fn purge_erases_a_generation_left_by_an_interrupted_compaction() {
 #[test]
 fn replaced_text_is_zeroed_in_the_segment_at_once() {
     let dir = tempfile::tempdir().unwrap();
-    let core = WarmCore::new(DIM, Some(dir.path().display().to_string()), None).unwrap();
+    let core = WarmCore::new(
+        DIM,
+        Some(dir.path().display().to_string()),
+        Some(writerslogic_warm::core::WarmConfig::unencrypted()),
+    )
+    .unwrap();
     let put = |id: &str, version: &str, text: &str| {
         let input = serde_json::from_value(serde_json::json!({
             "id": id, "version": version, "text": text,
@@ -206,7 +218,7 @@ fn replaced_text_is_zeroed_in_the_segment_at_once() {
 fn encrypted_store_purges_and_keeps_survivors_readable() {
     use writerslogic_warm::core::WarmConfig;
     let dir = tempfile::tempdir().unwrap();
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.security.encryption_enabled = true;
     config.security.encryption_passphrase = Some("purge-fixture".into());
     let open = |config: &WarmConfig| {
@@ -237,7 +249,7 @@ fn encrypted_store_purges_and_keeps_survivors_readable() {
 fn forget_and_purge_work_on_a_store_served_from_its_checkpoint() -> anyhow::Result<()> {
     use writerslogic_warm::core::WarmConfig;
     let dir = tempfile::tempdir().unwrap();
-    let mut config = WarmConfig::default();
+    let mut config = WarmConfig::unencrypted();
     config.document_checkpoint.min_journal_bytes = 0;
     let open = || {
         let core = WarmCore::new(

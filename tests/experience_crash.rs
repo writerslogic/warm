@@ -24,6 +24,7 @@ use std::sync::Arc;
 
 use serde_json::{json, Value};
 use writerslogic_warm::core::memory_api::*;
+use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::WarmCore;
 
 const DIM: u32 = 4096;
@@ -40,7 +41,14 @@ enum Op {
 }
 
 fn open(dir: &Path) -> Memory {
-    let core = Arc::new(WarmCore::new(DIM, Some(dir.display().to_string()), None).unwrap());
+    let core = Arc::new(
+        WarmCore::new(
+            DIM,
+            Some(dir.display().to_string()),
+            Some(WarmConfig::unencrypted()),
+        )
+        .unwrap(),
+    );
     Memory::new(core).with_clock(Arc::new(ManualClock::new(1)))
 }
 

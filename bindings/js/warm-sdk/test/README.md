@@ -5,7 +5,7 @@ Run with Node 22.15 or newer. The packed consumer uses the [synchronous module h
 From the repository root, after building the SDK and the same-commit server:
 
 ```sh
-cargo build --locked --features server --bin warm-server
+cargo build --locked --features server,security --bin warm-server
 npm --prefix bindings/js/warm-sdk run build
 WARM_SERVER_BIN="$PWD/target/debug/warm-server" npm --prefix bindings/js/warm-sdk test
 ```

@@ -17,7 +17,7 @@ from pathlib import Path
 
 from . import SCHEMA_VERSION, common, data, envs, jars, rawdata, registry, textdata
 from . import common
-from .common import T0_PLACEHOLDER, CACHE, RESULTS, ROOT, commit, dir_bytes, source_record, hardware, log, pass_summary, run_measured, write_json
+from .common import T0_PLACEHOLDER, CACHE, RESULTS, ROOT, commit, dir_bytes, encryption, source_record, hardware, log, pass_summary, run_measured, write_json
 
 WORK = Path(os.environ.get("WARM_BENCH_WORK", CACHE / "competitive" / "work"))
 WORKER_DIR = Path(__file__).resolve().parent
@@ -80,12 +80,17 @@ def _out_dir(spec):
 WARM_PROFILE = "dist"
 
 
+def _enc_suffix():
+    """Result files of an encrypted run sit beside the plaintext ones instead of replacing them."""
+    return "-encrypted" if encryption()["switch"] == "on" else ""
+
+
 def warm_binary(name, example=False):
     target = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "target"))
     path = target / WARM_PROFILE / ("examples" if example else "") / name
     # Always ask cargo: it is a no-op when the binary is current, and a checkout that moved to a newer commit
     # would otherwise be measured with the binary of the commit the target directory was first built at.
-    cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc", "--example" if example else "--bin", name]
+    cmd = ["cargo", "build", "--profile", WARM_PROFILE, "--features", "cli,mimalloc,security" if encryption()["switch"] == "on" else "cli,mimalloc", "--example" if example else "--bin", name]
     subprocess.run(cmd, check=True, cwd=ROOT)
     return path
 
@@ -199,7 +204,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
     hw = hardware()
     source = source_record(spec["name"])
     results = {"schema_version": SCHEMA_VERSION, "kind": "ann", "suite": spec["name"], "commit": source["commit"], "source": source, "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-               "hardware": hw, "dataset": {k: meta[k] for k in ("name", "metric", "n_train", "n_test", "dim") if k in meta} | {
+               "hardware": hw, "encryption": encryption(), "dataset": {k: meta[k] for k in ("name", "metric", "n_train", "n_test", "dim") if k in meta} | {
                    "subset_of": meta.get("subset_of"), "train_sha256": meta.get("train_sha256"), "test_sha256": meta.get("test_sha256")},
                "protocol": {"k": 10, "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "build_threads": threads,
                             "search_threads": 1, "queries": meta["n_test"],
@@ -325,7 +330,7 @@ def run_ann(dataset, n_train, n_test, spec, systems, out_path=None, only_builds=
     results["protocol"]["load_gate"] = {"max_foreign_pct": MAX_FOREIGN_PCT, "basis": "per serve phase: machine CPU busy time minus the benchmark child's own CPU, as a percent of machine capacity and of the pinned core; a phase over the limit is rerun", "repeats_per_config": REPEATS}
     if system_warm := results["systems"].get(registry.WARM):
         system_warm["install"] = warm_install_facts([warm_binary("public-bench")])
-    out_path = out_path or _out_dir(spec) / f"{spec['name']}-ann-{dataset}-n{meta['n_train']}-{results['hardware']['class']}.json"
+    out_path = out_path or _out_dir(spec) / f"{spec['name']}-ann-{dataset}-n{meta['n_train']}-{results['hardware']['class']}{_enc_suffix()}.json"
     results["raw_latency"] = raw.write(out_path)
     write_json(out_path, results)
     return out_path
@@ -478,7 +483,7 @@ def run_text(dataset, spec, systems, out_path=None):
     hw = hardware()
     source = source_record(spec["name"])
     results = {"schema_version": SCHEMA_VERSION, "kind": "text", "suite": spec["name"], "commit": source["commit"], "source": source, "date": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-               "hardware": hw, "dataset": meta | {"id": dataset},
+               "hardware": hw, "encryption": encryption(), "dataset": meta | {"id": dataset},
                "protocol": {"measurement_version": 2, "resampling_unit": "independent process-round summaries", "operating_point_validation": "exploratory sweep; independent frozen-setting confirmation not implied", "rounds": spec["rounds"], "build_repeats": spec["build_repeats"], "k": 100, "passes_per_round": 3,
                             "cpu_pinning": pinning_record(), "comparator_settings": _settings(systems, "text"),
                             "build_boundary": "every build ends with the data durable and searchable by a fresh process, inside the ingest clock: WARM memorize calls plus the durable close (final checkpoint); Lucene addDocument, forceMerge(1), commit and close; tantivy add, commit, merge to one segment; SQLite inserts, optimize, commit and close; DuckDB inserts, create_fts_index, CHECKPOINT and close; LanceDB table write and create_fts_index; tantivy-py add, commit and merge wait. Each build run records the child's cpu_s beside wall_s",
@@ -574,7 +579,7 @@ def run_text(dataset, spec, systems, out_path=None):
         if system in results["systems"]:
             results["systems"][system]["install"] = warm_install_facts([warm_binary("competitive_text", example=True)])
             results["systems"][system]["encode"] = registry.WARM_TEXT_ENCODE[system]
-    out_path = out_path or _out_dir(spec) / f"{spec['name']}-text-{dataset.replace(':', '-')}-{hw['class']}.json"
+    out_path = out_path or _out_dir(spec) / f"{spec['name']}-text-{dataset.replace(':', '-')}-{hw['class']}{_enc_suffix()}.json"
     results["raw_latency"] = raw.write(out_path)
     write_json(out_path, results)
     failed = [s for s, c in verification["documents_checks"].items() if c["text_mismatches"] or c["bucket_mismatches"] or c["unknown_ids"] or c["empty_text"]]

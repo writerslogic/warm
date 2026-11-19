@@ -558,6 +558,7 @@ mod tests {
                     dim: 256,
                     max_stores: 1,
                     encrypt: None,
+                    plaintext: true,
                     #[cfg(feature = "local-models")]
                     stages: None,
                     #[cfg(feature = "local-models")]

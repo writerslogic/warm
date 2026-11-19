@@ -23,7 +23,7 @@ case "$(uname -s)-$(uname -m)" in
   Darwin-x86_64) target="x86_64-apple-darwin" ;;
   Linux-x86_64) target="x86_64-unknown-linux-gnu" ;;
   Linux-aarch64 | Linux-arm64) target="aarch64-unknown-linux-gnu" ;;
-  *) echo "no prebuilt warm-server for $(uname -s) $(uname -m); build it with: cargo build --release --features server --bin warm-server" >&2; exit 1 ;;
+  *) echo "no prebuilt warm-server for $(uname -s) $(uname -m); build it with: cargo build --release --features server,security --bin warm-server" >&2; exit 1 ;;
 esac
 if [ "$target" != "${target%linux-gnu}" ] && [ -f /etc/alpine-release ]; then
   echo "no musl build of warm-server; build it with cargo on Alpine" >&2

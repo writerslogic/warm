@@ -5,7 +5,7 @@
 
 From the repository root:
 
-    cargo build --release --features server --bin warm-server
+    cargo build --release --features server,security --bin warm-server
     WARM_API_KEY=quickstart target/release/warm-server --input-dim 384 &
     WARM_API_KEY=quickstart uv run --no-project --with warm-sdk \
         python examples/quickstart/python/quickstart.py

@@ -115,7 +115,7 @@ public sealed class StoreTests : IDisposable
         Assert.True(stats.VectorCount >= 3);
         var security = store.SecurityStatus();
         Assert.True(security.SecurityCompiled);
-        Assert.False(security.EncryptionActive);
+        Assert.True(security.EncryptionActive);
         store.Flush();
         store.Compact();
         store.Maintain();

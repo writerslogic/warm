@@ -14,7 +14,7 @@ RUN apk add --no-cache build-base
 WORKDIR /src
 COPY . .
 # Only the server feature set: no model code, no research binaries.
-RUN cargo build --release --locked --features server --bin warm-server \
+RUN cargo build --release --locked --features server,security --bin warm-server \
  && strip target/release/warm-server \
  && mkdir -p /seed/data && chown -R 65532:65532 /seed
 

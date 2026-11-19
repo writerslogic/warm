@@ -80,12 +80,12 @@ jobs:
           test "$host" = "$TARGET"
           binary=target/release/warm-server
           if [[ "$TARGET" == *linux* ]]; then
-            cargo zigbuild --release --locked --target "${TARGET}.2.17" --features server,mimalloc --bin warm-server
+            cargo zigbuild --release --locked --target "${TARGET}.2.17" --features server,security,mimalloc --bin warm-server
             binary="target/${TARGET}/release/warm-server"
             newer=$(readelf -W --version-info "$binary" | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | cut -d_ -f2 | sort -Vu | awk -F. '$1 > 2 || ($1 == 2 && $2 > 17)' | head -1)
             test -z "$newer"
           else
-            cargo build --release --locked --features server,mimalloc --bin warm-server
+            cargo build --release --locked --features server,security,mimalloc --bin warm-server
           fi
           extension=""
           if [[ "$TARGET" == *windows* ]]; then extension=".exe"; fi
