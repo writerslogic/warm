@@ -93,6 +93,18 @@ jobs:
             README.md CONTRIBUTING.md '_site/dev/**/*.html'
           fail: true
 
+      # writerslogic.com serves this site at /warm/docs/. Its build verifies and unpacks this
+      # tarball (scripts/sync-warm-docs.mjs there); the site is no longer hand-copied.
+      - name: Pack the site for writerslogic.com
+        run: bash scripts/pack-docs-site.sh _site warm-docs-site.tgz
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: warm-docs-site
+          path: |
+            warm-docs-site.tgz
+            warm-docs-site.tgz.sha256
+
       - name: Build legacy-domain redirects
         run: node scripts/build-docs-redirects.mjs _site _legacy-docs
 

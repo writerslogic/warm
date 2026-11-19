@@ -28,12 +28,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Consolidate tests, remove duplicate helpers and trim session comments (#490)
 
 ### Documentation
+- Tighten docs, document and verify every adapter and example, publish workflows for the adapters, remove maintainer-only files (#502)
+- Restore the MSRV and encryption wording the site search tests expect
+- Exclude the maintainer-only L10 design note from the site build
+- Restore dropped caveats, shorten conversation memory and experience core pages, and fix the text segment magic
+- Merge erasure, server retry, privacy and evaluation content into one home each and convert lists to tables
+- Document adapter release tags and install lines now that the adapters publish
+- Add an examples index and binding READMEs, and include verified example sources in the docs
+- Make integration quickstarts runnable offline and check them in CI
+- Add integrations overview, adapter READMEs in the brief format and dedupe org-knowledge and matrix pages
+- Give each concept one home page, add decision tables and mermaid, and cut README and quickstart duplication
 - Trim change-history wording from qgraph comments
 - Remove narrating comments in cognition, agency and graph
 - Describe the editor plugins as on-device with no service calls (#492)
 - Restate benchmark claims from their committed results files (#482)
 
 ### Fixed
+- Satisfy the version check, the Claude tool test glob and two docs search queries
+- Refresh the stale uniffi lockfile
+- Build the wasm target again and refresh stale example lockfiles
+- Track dspy 3.5 in tests and examples, export WarmVector from the Mastra adapter and fix stale server flags
 - Satisfy needless_range_loop and rustfmt after the merge
 - Port MutableBase onto the bounded construction search
 - Bound the MutableIndex search result allocation
@@ -102,6 +116,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Refresh the 185H competitive results at d41fc949
 
 ### Merge
+- Dx/demos
+- Dx/adapter-publish
+- Dx/adapter-gaps
+- Dx/docs
+- Dx/docs2
+- Dx/adapters
+- Chore/public-hygiene
 - Release/0.7.0
 - Perf/vector-vibe2
 - Origin/main
@@ -143,6 +164,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record the balanced warm-retrain streaming study and Ice Lake runs
 - Record the second E2 Ice Lake run
 - Record the rescore-budget A/B and the pending consolidation measurements
+- Correct the streaming run hosts to Zen 4 and Zen 2 and note the live leaderboard CSV
+- Mark the filter operating point in the pinned-run table
 
 ### Fixed
 - Defer documentation search loading until requested
@@ -214,6 +237,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Keep compact-layout LongMemEval runs in their own summary arm
 - Add base-with-deletes search and staged consolidation cgroup fixtures
 - Re-measure the ann-benchmarks entry through the harness and add the held-out candidate search tooling
+- Add the 8 GiB streaming final-runbook run
+- Record the pinned-commit yfcc-10M filter and msturing-30M streaming harness runs
 
 ### Research
 - Validate upper seed bounds and reject speculative traversal
@@ -299,8 +324,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Record the L22 search profile, live sweep and nprobe selection
 - Record the L22 partition-tier kill tests, kernels and acceptance with their scripts and results
 - Avoid an intra-doc link to the private fastscan module
-- Correct the streaming run hosts to Zen 4 and Zen 2 and note the live leaderboard CSV
-- Mark the filter operating point in the pinned-run table
 - Correct the RSS range and the measured binary commit in the consolidation heap peak record
 - Record the consolidation heap peak measurement
 - Record the landed checkpoint hit decode in the FiQA QPS gap lever
@@ -530,8 +553,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Report every repetition of the partition step with mean, median and p90
 - Carry the reused table's base and scale in the scan-only mode
 - Time one partition-tier search step over the LUT16 block scan
-- Add the 8 GiB streaming final-runbook run
-- Record the pinned-commit yfcc-10M filter and msturing-30M streaming harness runs
 - Pin the text comparison and speed up mapped-checkpoint posting decode (#389)
 - Rerun SIFT-1M against hnswlib at a pinned commit
 - Rerun the text comparison at pinned commits against the current comparator pins
