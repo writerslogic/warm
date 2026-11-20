@@ -51,6 +51,14 @@ The ratio falls as pages repeat; it is a property of this synthetic repetition, 
 
 Limits: grounding is by role and name, so two controls with the same label are ambiguous; a guard is one control field, not a conjunction; steps with typed values are not generalised into parameters; and guards are only found for episodes ingested with `ingest_with_controls`.
 
+## Action targets and occurrence addresses
+
+An observation stored with an action records the action as given (`ActionRecord`), the previous stored step, and for each handle the action names (a drag has a subject and a destination) an address in that previous observation: its step plus the child indices from its root. Labels such as `button 'Delete'` stay display text. A content id, a structural id, a label or a bare handle cannot name an occurrence: identical sibling subtrees share the first two, same-named controls in different rows share the third, and handles are reused between observations.
+
+A target is `Resolved` only when the previous stored step is the step before and its tree has exactly one element with that handle. Otherwise it is `Unresolved` with a reason: no predecessor, a gap in the capture, handle not found, handle on two elements, or no handle context (the previous observation came from a snapshot older than version 4). A caller-supplied label has no target metadata and fabricates none. Occurrence addresses are not entity identities: nothing here says two occurrences are the same record.
+
+Each episode has a `uid` that is never reused, so an `OccurrenceRef` held by a caller does not resolve into a later episode that took the same slot or name; after a purge it resolves to nothing. Version 4 snapshots persist the action records, the latest handle map with addresses, and the uids, so the first action after a reopen resolves against the stored predecessor, and journal replay reproduces the same records. Earlier snapshots read as `Legacy` steps whose targets are unknown. A retry of a step is a duplicate only if its original action input matches, so two clicks on different same-named controls conflict. Inspect with `Experience::action_targets`, `Experience::occurrence`, or `Warm.experience_action_targets(episode, step)` in Python.
+
 ## Conditions learned for an action
 
 `experience::enablement::EnablementStore` learns when an action takes effect. Each observed transition (the controls before an action, and whether the action had an effect: no error, and the page or its properties changed) is evidence. The hypothesis class is explicit: conjunctions of at most two atoms (the target is not disabled; at least or exactly k checked controls of a role; all of a role checked; a field is filled; a control state equals a value). A hypothesis survives while it agrees with every observation.

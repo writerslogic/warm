@@ -1,0 +1,1536 @@
+{
+ "summary": {
+  "population": "LongMemEval-V2 development split, round-6 system",
+  "dev_questions": 228,
+  "failures": 97,
+  "primary": {
+   "3 missing retrieval candidates": 16,
+   "7 failure-recovery or procedural-advice evidence": 25,
+   "9 unsupported absence or false-premise handling": 25,
+   "10 reader interpretation": 22,
+   "12 mixed or unclassifiable": 9
+  },
+  "primary_or_contributing": {
+   "3 missing retrieval candidates": 22,
+   "5 temporal scope, state tracking or supersession": 22,
+   "6 incomplete multi-source evidence selection": 17,
+   "7 failure-recovery or procedural-advice evidence": 25,
+   "9 unsupported absence or false-premise handling": 25,
+   "10 reader interpretation": 26,
+   "12 mixed or unclassifiable": 24
+  },
+  "correspondence_candidates": 0,
+  "by_type": {
+   "procedure": 15,
+   "dynamic-environment": 22,
+   "static-environment": 25,
+   "dynamic-environment-abs": 12,
+   "static-environment-abs": 7,
+   "errors-gotchas": 10,
+   "procedure-abs": 6
+  },
+  "gold_phrase_in_context": {
+   "True": 26,
+   "False": 22,
+   "None": 49
+  },
+  "source": "final-arch/forensics_r6_dev.json; questions filtered against held_ids.json"
+ },
+ "failures": [
+  {
+   "id": "025db8ef",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match_ordered",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 7,
+   "contributing": [
+    10
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "0d07143c",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "0f8c85a6",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "11cc7ac2",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "123b74fb",
+   "type": "static-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "229675cd",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "233f9f09",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    5,
+    6,
+    12
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "237d2cc5",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "285db8ec",
+   "type": "errors-gotchas",
+   "domain": "enterprise",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "2fab8b79",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "329742b1",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "32d04f31",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "38726e61",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "43d9c5d0",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "48a52262",
+   "type": "errors-gotchas",
+   "domain": "enterprise",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "4c6d1eb7",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "4df5e6b4",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 7,
+   "contributing": [
+    10
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "4dffe641",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    5,
+    12
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "507a0fe8",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "50d92f55",
+   "type": "errors-gotchas",
+   "domain": "enterprise",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "571b841c",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "579557d8",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "58c34839",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "5ca112bf",
+   "type": "static-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "5f100f22",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "679111c6",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "6cb8ce37",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "6e0759a2",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "7df9e2ff",
+   "type": "procedure-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "7ea13f14",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    5,
+    12
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "823d133a",
+   "type": "static-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "83c35034",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "85fc5722",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "882965b7",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "8b09f378",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "927c65a2",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "a482c0d9",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "a667402d",
+   "type": "static-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "a7edfb7a",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "aca57021",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "ad903be2",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "adddeaa5",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "b15314c0",
+   "type": "static-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "b8cabd09",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    5,
+    12
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "bfb3bcc4",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "c0593d69",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "c35bfeed",
+   "type": "errors-gotchas",
+   "domain": "enterprise",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "c9568c9b",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 7,
+   "contributing": [
+    3
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "ca8e070b",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "ce1cdb2d",
+   "type": "dynamic-environment-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "ce9aa351",
+   "type": "errors-gotchas",
+   "domain": "enterprise",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "d0d61088",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "d63e8a7f",
+   "type": "procedure",
+   "domain": "enterprise",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "d72fb64d",
+   "type": "procedure-abs",
+   "domain": "enterprise",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "d83c4bf7",
+   "type": "dynamic-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "e9fde9fe",
+   "type": "static-environment",
+   "domain": "enterprise",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "0382ed92",
+   "type": "procedure-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "0a13e290",
+   "type": "dynamic-environment-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "0c0fdcd7",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "10003186",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "11dac74b",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "17d63ad8",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "1b43f7df",
+   "type": "procedure",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match_ordered",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 7,
+   "contributing": [
+    3
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "1e77eb4b",
+   "type": "errors-gotchas",
+   "domain": "web",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "21df0107",
+   "type": "dynamic-environment-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "2cc1b9ca",
+   "type": "errors-gotchas",
+   "domain": "web",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "4252cc1c",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "48ab5c3d",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "4d7dda89",
+   "type": "procedure",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 7,
+   "contributing": [
+    3
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "4f92aa38",
+   "type": "procedure",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 7,
+   "contributing": [
+    10
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "5387d23d",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "5d6ecdeb",
+   "type": "procedure-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "60c7ca22",
+   "type": "procedure",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 7,
+   "contributing": [
+    10
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "6f9cb5fc",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "73297783",
+   "type": "procedure",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match_ordered",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 7,
+   "contributing": [
+    3
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "7376c10d",
+   "type": "dynamic-environment-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "7c8efee5",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "81180ae9",
+   "type": "errors-gotchas",
+   "domain": "web",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "820d56e2",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "8f70bc0e",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "910135bb",
+   "type": "errors-gotchas",
+   "domain": "web",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "914ab1d4",
+   "type": "errors-gotchas",
+   "domain": "web",
+   "scorer": "llm_gotchas_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 7,
+   "contributing": [
+    12
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "91d0775e",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    5,
+    6,
+    12
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "a12b7094",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match_ordered",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "a2a71197",
+   "type": "procedure-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "a42071db",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    6
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "b828a6b2",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    5,
+    12
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "c7e367e2",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "mc_choice_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 12,
+   "contributing": [
+    6,
+    12
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "cdb47c5d",
+   "type": "dynamic-environment-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "d5b9fda4",
+   "type": "static-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "d886b018",
+   "type": "procedure",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 7,
+   "contributing": [
+    3
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "e71f7c92",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": true,
+   "primary": 10,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "ecd9dda3",
+   "type": "procedure-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "eff00409",
+   "type": "static-environment-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "f13eb38d",
+   "type": "procedure",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 7,
+   "contributing": [
+    3
+   ],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "f90f2255",
+   "type": "static-environment-abs",
+   "domain": "web",
+   "scorer": "llm_abstention_checker",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": null,
+   "primary": 9,
+   "contributing": [],
+   "basis": "feature",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  },
+  {
+   "id": "f93031d2",
+   "type": "dynamic-environment",
+   "domain": "web",
+   "scorer": "norm_phrase_set_match",
+   "r6_score": 0.0,
+   "gold_phrase_in_context": false,
+   "primary": 3,
+   "contributing": [
+    5
+   ],
+   "basis": "inspection",
+   "correspondence_candidate": false,
+   "correspondence_review": "manual",
+   "identity_oracle_constructible": false
+  }
+ ]
+}
