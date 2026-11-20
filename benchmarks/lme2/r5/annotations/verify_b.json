@@ -1,0 +1,92 @@
+[
+ {
+  "qid": "11dac74b",
+  "verdict": "sufficient",
+  "missing_or_reason": "link text visible in state 9; blue colour not in tree but not needed for the answer"
+ },
+ {
+  "qid": "19367bc7",
+  "verdict": "sufficient",
+  "missing_or_reason": "sys_user.do form shows Calendar integration = Outlook"
+ },
+ {
+  "qid": "2e67d04f",
+  "verdict": "sufficient",
+  "missing_or_reason": "creator (Cyberpunk, Edit/Delete forum), subscriber (Unsubscribe), viewer (Subscribe) all show Bans/Moderation log in Toolbox"
+ },
+ {
+  "qid": "31f146ba",
+  "verdict": "sufficient",
+  "missing_or_reason": "home fill search, click Search, results list Add to Wish List links"
+ },
+ {
+  "qid": "4d7dda89",
+  "verdict": "sufficient",
+  "missing_or_reason": "Submit link, Create submission form with URL/Image radio and Title; URL textbox label empty in tree"
+ },
+ {
+  "qid": "4df5e6b4",
+  "verdict": "sufficient",
+  "missing_or_reason": "both protocols route through Reports; restock task text itself not shown but dashboard protocol covers it"
+ },
+ {
+  "qid": "679111c6",
+  "verdict": "sufficient",
+  "missing_or_reason": "read-only notes in problem/incident/change/hardware, none in user form"
+ },
+ {
+  "qid": "73297783",
+  "verdict": "sufficient",
+  "missing_or_reason": "View All history page with Reorder, cart Proceed to Checkout, Next, Place Order all shown"
+ },
+ {
+  "qid": "85fc5722",
+  "verdict": "sufficient",
+  "missing_or_reason": "state 5 sort row shows Access Type a to z"
+ },
+ {
+  "qid": "882965b7",
+  "verdict": "sufficient",
+  "missing_or_reason": "CR field list has Contact type/Task type/Type; catalog dropdown shows Access Type/Classic Mobile Picture Type/Type; CR list is unfiltered so match derived by scan"
+ },
+ {
+  "qid": "927c65a2",
+  "verdict": "sufficient",
+  "missing_or_reason": "hardware and user forms have no Notes tab; problem/incident/change do"
+ },
+ {
+  "qid": "99fa7c96",
+  "verdict": "sufficient",
+  "missing_or_reason": "seven-action chain visible: Sales, Orders, fill search, Search, View, Cancel, OK"
+ },
+ {
+  "qid": "b5a25676",
+  "verdict": "sufficient",
+  "missing_or_reason": "three tabs Overview/Submissions/Comments (screenshot confirms gray)"
+ },
+ {
+  "qid": "b7cc4da2",
+  "verdict": "insufficient",
+  "missing_or_reason": "no state shows Eric's request or that Requested Items module lists it; only nav with both modules, ordering logic inferred"
+ },
+ {
+  "qid": "d83c4bf7",
+  "verdict": "sufficient",
+  "missing_or_reason": "blank Hardware form shows State = In use"
+ },
+ {
+  "qid": "e3a1d7f3",
+  "verdict": "sufficient",
+  "missing_or_reason": "Items Ordered columns Product Name, SKU, Price, Qty, Subtotal"
+ },
+ {
+  "qid": "f1f9de44",
+  "verdict": "sufficient",
+  "missing_or_reason": "incident Priority read-only; change Conflict status disabled with read-only note"
+ },
+ {
+  "qid": "fec652a9",
+  "verdict": "sufficient",
+  "missing_or_reason": "home -> Forums -> Create forum -> create_forum form"
+ }
+]

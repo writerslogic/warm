@@ -29,6 +29,7 @@ import memory_modules  # noqa: E402,F401
 import warm_hybrid  # noqa: E402,F401
 import warm_slice  # noqa: E402,F401
 import warm_bound  # noqa: E402,F401
+import warm_select  # noqa: E402,F401
 from data.public_data import materialize_runtime_haystack, materialize_runtime_questions, write_json  # noqa: E402
 
 R5 = {"top_states": 12, "max_context_chars": 320000, "screens_root": str(LME2 / "data" / "screenshots"), "image_hits": 6}
@@ -36,6 +37,8 @@ SYSTEMS = {
     "slice12i": ("warm_slice", R5),
     "slice12i_r5check": ("warm_bound", {**R5, "render": "r5"}),
     "slice12i_bound": ("warm_bound", {**R5, "render": "bound"}),
+    "slice12i_pagecover": ("warm_select", {**R5, "render": "r5", "select": "pagecover"}),
+    "slice12i_pagecover_bound": ("warm_select", {**R5, "render": "bound", "select": "pagecover"}),
 }
 HARNESS = [
     "--model", "Qwen/Qwen3.5-9B", "--api-key-env", "OPENAI_API_KEY",
