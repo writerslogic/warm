@@ -71,3 +71,10 @@ Fresh A against historical A measures the reader's run-to-run flip rate on ident
 - A production candidate is designed after the pilot without the annotations as input, frozen,
   and compared with fresh A on the 113 rest questions (headline split) and on all 149. It becomes a
   default only if it wins on the 113 by a net of at least 5 with p ≤ 0.05.
+
+## Correction, made before any result of this experiment was read
+
+The runs use `reader_stage_rolling.py` (the VM's `~/stage/warm_memory/reader_stage.py`, sha256
+`d72aaaee…`), which R5 itself used for 196 of its 228 dev outputs, not `reader_stage_r5.py`. Both
+send the same request through upstream `call_reader_model_async`; they differ only in scheduling
+and in recording a bad request as an empty answer.
