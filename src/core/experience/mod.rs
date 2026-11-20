@@ -31,7 +31,7 @@ use serde_json::{json, Value};
 use self::effects::{delta, EffectTable, Frames, Templates};
 pub use self::form::{Control, ControlOption};
 use self::regions::{Region, RegionStore};
-use self::target::{collect_handles, handles_bound, handles_digest, HandleMap};
+use self::target::{collect_handles, handles_bound, handles_digest, HandleMap, HandleRecord};
 pub use self::target::{
     ActionRecord, ActionTarget, ActionTargets, OccurrenceNode, OccurrenceRef, Resolution,
     TargetRole, Unresolved,
@@ -110,6 +110,10 @@ pub enum ExperienceError {
     },
     #[error("step {step} of episode {episode:?} was already ingested with different content")]
     Conflict { episode: String, step: u32 },
+    /// The step was restored without the handle addresses its targets were resolved against,
+    /// so a retry of it cannot be shown to be the same observation.
+    #[error("step {step} of episode {episode:?} was restored without its handle addresses, so a retry of it cannot be checked")]
+    Unverifiable { episode: String, step: u32 },
     #[error("experience quota of {0} units would be exceeded")]
     Quota(u64),
     #[error("lexical index: {0}")]
@@ -551,9 +555,8 @@ pub(crate) struct StepRec {
     pub controls: Box<[Control]>,
     /// The action that produced the step, as given, with the occurrences it targeted.
     pub action: ActionRecord,
-    /// Digest of the handle addresses of this observation; `None` for a step restored from a
-    /// snapshot older than version 4, whose handles were not recorded.
-    pub handle_digest: Option<(u64, u64)>,
+    /// What the step kept of the handle addresses of its observation.
+    pub handle_record: HandleRecord,
 }
 
 pub(crate) struct Episode {
@@ -905,20 +908,24 @@ impl Experience {
                 let same = s.root == root
                     && s.template == template
                     && s.action.is_input(o.action).unwrap_or(s.label == label_sym)
-                    && s.handle_digest.is_none_or(|d| d == digest)
                     && *s.controls == *controls;
+                let record = s.handle_record;
                 self.terms.release(root);
                 self.templates.release(&mut self.terms.syms, template);
                 if let Some(l) = label_sym {
                     self.terms.syms.release(l);
                 }
-                return if same {
-                    Ok(Ingested::Duplicate)
-                } else {
-                    Err(ExperienceError::Conflict {
+                return match (same, record) {
+                    (true, HandleRecord::Legacy) => Ok(Ingested::Duplicate),
+                    (true, HandleRecord::Known(d)) if d == digest => Ok(Ingested::Duplicate),
+                    (true, HandleRecord::Unrecorded) => Err(ExperienceError::Unverifiable {
                         episode: o.episode.to_string(),
                         step: o.step,
-                    })
+                    }),
+                    _ => Err(ExperienceError::Conflict {
+                        episode: o.episode.to_string(),
+                        step: o.step,
+                    }),
                 };
             }
         }
@@ -1013,7 +1020,7 @@ impl Experience {
             regions,
             controls: controls.into_boxed_slice(),
             action: action_rec,
-            handle_digest: Some(digest),
+            handle_record: HandleRecord::Known(digest),
         });
         self.dirty.insert(eid);
         Ok(Ingested::Applied)

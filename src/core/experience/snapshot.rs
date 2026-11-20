@@ -13,7 +13,10 @@ use serde::{Deserialize, Serialize};
 use super::effects::delta;
 use super::form::Control;
 use super::regions::{self, Region};
-use super::target::{handles_bound, ActionRecord, HandleEntry, HandleMap, Resolution, Spot};
+use super::target::{
+    handles_bound, handles_digest, ActionRecord, HandleEntry, HandleMap, HandleRecord, Resolution,
+    Spot,
+};
 use super::{
     doc, index_err, ControlCounts, Episode, Experience, ExperienceConfig, ExperienceError, Result,
     StepRec, FLAG_ERROR, FLAG_NO_CHANGE,
@@ -27,7 +30,9 @@ const MAGIC: &[u8; 4] = b"WEXP";
 /// controls of steps; it is written only when a step has controls, so a store without them
 /// keeps writing version 2 byte for byte, and a reader that predates version 3 refuses the
 /// file rather than dropping the controls.
-const VERSION: u8 = 4;
+const VERSION: u8 = 5;
+/// Action records and handle addresses, without the per-step handle digest.
+const VERSION_WITHOUT_DIGESTS: u8 = 4;
 const VERSION_WITH_CONTROLS: u8 = 3;
 const VERSION_WITHOUT_CONTROLS: u8 = 2;
 const OLDEST_VERSION: u8 = 1;
@@ -62,6 +67,10 @@ struct SnapStep {
     /// Digest of the handle addresses of the observation. Absent in versions before 4.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     handle_digest: Option<(u64, u64)>,
+    /// The step's targets were resolved against handle addresses that were not kept. Without
+    /// it and without a digest, the step predates handle addresses. Absent before version 5.
+    #[serde(default, skip_serializing_if = "is_false")]
+    handles_unrecorded: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -84,6 +93,10 @@ struct SnapEpisode {
 
 fn is_zero(n: &u64) -> bool {
     *n == 0
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 #[derive(Serialize, Deserialize)]
@@ -215,7 +228,11 @@ impl Experience {
                                 regions: s.regions.clone(),
                                 controls: s.controls.to_vec(),
                                 action: Some(s.action.clone()),
-                                handle_digest: s.handle_digest,
+                                handle_digest: match s.handle_record {
+                                    HandleRecord::Known(d) => Some(d),
+                                    _ => None,
+                                },
+                                handles_unrecorded: s.handle_record == HandleRecord::Unrecorded,
                             })
                             .collect(),
                     })
@@ -300,7 +317,7 @@ impl Experience {
         if crc32fast::hash(payload) != crc {
             return Err(bad("checksum mismatch"));
         }
-        let snap: Snap = ciborium::from_reader(payload).map_err(|e| bad(&e.to_string()))?;
+        let mut snap: Snap = ciborium::from_reader(payload).map_err(|e| bad(&e.to_string()))?;
         let seq = if bytes[4] >= 2 { snap.seq } else { 0 };
         if bytes[4] < 3
             && snap
@@ -316,12 +333,28 @@ impl Experience {
                 || snap.episodes.iter().flatten().any(|e| {
                     e.uid != 0
                         || !e.spots.is_empty()
-                        || e.steps
-                            .iter()
-                            .any(|s| s.action.is_some() || s.handle_digest.is_some())
+                        || e.steps.iter().any(|s| {
+                            s.action.is_some() || s.handle_digest.is_some() || s.handles_unrecorded
+                        })
                 }))
         {
             return Err(bad("action records in a snapshot older than version 4"));
+        }
+        if bytes[4] == VERSION_WITHOUT_DIGESTS {
+            // Version 4 kept no digests. A step with an action record other than a legacy one
+            // had its targets resolved against addresses that are now lost.
+            for s in snap
+                .episodes
+                .iter_mut()
+                .flatten()
+                .flat_map(|e| &mut e.steps)
+            {
+                if s.handles_unrecorded {
+                    return Err(bad("a handle record marker in a version 4 snapshot"));
+                }
+                s.handles_unrecorded = s.handle_digest.is_none()
+                    && !matches!(s.action, None | Some(ActionRecord::Legacy));
+            }
         }
         Self::rebuild(snap, cfg).map(|x| (x, seq))
     }
@@ -478,9 +511,19 @@ impl Experience {
                     && steps.last().is_none_or(|p: &StepRec| p.step < s.step)
                     && x.validate_controls(&s.controls).is_ok()
                     && valid_action(s.action.as_ref(), steps.last().map(|p: &StepRec| p.step));
-                if !ok {
+                let record = match (s.handle_digest, s.handles_unrecorded) {
+                    (Some(d), false) => Some(HandleRecord::Known(d)),
+                    (None, true) => Some(HandleRecord::Unrecorded),
+                    (None, false) => matches!(
+                        s.action,
+                        None | Some(ActionRecord::Legacy) | Some(ActionRecord::None)
+                    )
+                    .then_some(HandleRecord::Legacy),
+                    (Some(_), true) => None,
+                };
+                let (true, Some(record)) = (ok, record) else {
                     return Err(bad("invalid step"));
-                }
+                };
                 x.terms.bump(s.root);
                 x.templates.bump(s.template);
                 x.frames.bump(s.frame);
@@ -501,8 +544,23 @@ impl Experience {
                     } else {
                         ActionRecord::None
                     }),
-                    handle_digest: s.handle_digest,
+                    handle_record: record,
                 });
+            }
+            // The episode's handle map is the one of its latest step, so that step's digest is
+            // recorded even where the snapshot kept none. An empty map on a step without an
+            // action may be a step that predates handle addresses, so it stays unrecorded.
+            if let Some(last) = steps.last_mut() {
+                let native = matches!(
+                    last.action,
+                    ActionRecord::Label(_) | ActionRecord::Call { .. }
+                ) || !handles.is_empty();
+                if last.handle_record == HandleRecord::Unrecorded
+                    && native
+                    && handles.values().all(|h| h.spot != Spot::Unknown)
+                {
+                    last.handle_record = HandleRecord::Known(handles_digest(&handles));
+                }
             }
             while x.episodes.len() <= i {
                 x.episodes.push(None);
@@ -638,12 +696,36 @@ pub(super) fn downgrade_to_version_3_for_test(bytes: &[u8]) -> Vec<u8> {
         for s in &mut e.steps {
             s.action = None;
             s.handle_digest = None;
+            s.handles_unrecorded = false;
         }
     }
     let mut payload = Vec::new();
     ciborium::into_writer(&snap, &mut payload).unwrap();
     let mut out = bytes[..HEADER].to_vec();
     out[4] = VERSION_WITH_CONTROLS;
+    out[8..16].copy_from_slice(&(payload.len() as u64).to_le_bytes());
+    out[16..20].copy_from_slice(&crc32fast::hash(&payload).to_le_bytes());
+    out.extend_from_slice(&payload);
+    out
+}
+
+/// Rewrites a current snapshot in the version 4 form that kept no handle digests.
+#[cfg(test)]
+pub(super) fn strip_digests_to_version_4_for_test(bytes: &[u8]) -> Vec<u8> {
+    let mut snap: Snap = ciborium::from_reader(&bytes[HEADER..]).unwrap();
+    for s in snap
+        .episodes
+        .iter_mut()
+        .flatten()
+        .flat_map(|e| &mut e.steps)
+    {
+        s.handle_digest = None;
+        s.handles_unrecorded = false;
+    }
+    let mut payload = Vec::new();
+    ciborium::into_writer(&snap, &mut payload).unwrap();
+    let mut out = bytes[..HEADER].to_vec();
+    out[4] = VERSION_WITHOUT_DIGESTS;
     out[8..16].copy_from_slice(&(payload.len() as u64).to_le_bytes());
     out[16..20].copy_from_slice(&crc32fast::hash(&payload).to_le_bytes());
     out.extend_from_slice(&payload);

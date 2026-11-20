@@ -124,6 +124,20 @@ pub(crate) struct HandleEntry {
 
 pub(crate) type HandleMap = HashMap<String, HandleEntry>;
 
+/// What a step kept of the handle addresses of its observation, which decides whether a retry
+/// of the step can be checked against them.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum HandleRecord {
+    /// The [`handles_digest`] of the observation.
+    Known((u64, u64)),
+    /// Restored from a version 4 snapshot written before digests were stored: the targets were
+    /// resolved against handle addresses that were not kept, so a retry cannot be checked.
+    Unrecorded,
+    /// Restored from a snapshot older than version 4: no addresses were taken and the targets
+    /// are unknown, so there is nothing a retry could contradict.
+    Legacy,
+}
+
 /// A 128-bit digest of the handle addresses of one observation (two FNV-1a passes over the
 /// handles in sorted order, with the address of each). It is defined here and persisted, so it
 /// does not depend on a hasher whose output may change between releases. Content interning

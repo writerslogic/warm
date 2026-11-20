@@ -392,7 +392,7 @@ fn snapshot_round_trips_and_rejects_damage() {
         Experience::from_bytes(&bytes[..bytes.len() - 1], ExperienceConfig::default()).is_err()
     );
     let mut future = bytes.clone();
-    future[4] = 5;
+    future[4] = 6;
     assert!(Experience::from_bytes(&future, ExperienceConfig::default()).is_err());
     assert!(Experience::from_bytes(b"WEXP", ExperienceConfig::default()).is_err());
 
@@ -716,7 +716,7 @@ fn step_controls_round_trip_the_snapshot_and_purge_with_the_episode() {
         .unwrap();
     x.ingest(&obs("b", 0, &page_a, None)).unwrap();
     let bytes = x.to_bytes().unwrap();
-    assert_eq!(bytes[4], 4, "episode ids and action records need version 4");
+    assert_eq!(bytes[4], 5, "episode ids and handle records need version 5");
     let y = Experience::from_bytes(&bytes, ExperienceConfig::default()).unwrap();
     assert_eq!(y.step_controls("a", 0), Some(&controls[..]));
     assert_eq!(y.step_controls("b", 0), Some(&[][..]));
@@ -732,9 +732,9 @@ fn step_controls_round_trip_the_snapshot_and_purge_with_the_episode() {
     old[4] = 2;
     assert!(Experience::from_bytes(&old, ExperienceConfig::default()).is_err());
 
-    // Episode ids need version 4 once any episode has been stored, with or without controls.
+    // Episode ids need version 5 once any episode has been stored, with or without controls.
     x.purge_episode("a").unwrap();
-    assert_eq!(x.to_bytes().unwrap()[4], 4);
+    assert_eq!(x.to_bytes().unwrap()[4], 5);
 }
 
 #[test]
@@ -900,7 +900,7 @@ fn a_version_3_snapshot_over_the_control_caps_is_refused() {
     x.ingest_with_controls(&obs("a", 0, &t, None), vec![listbox; form::MAX_CONTROLS])
         .unwrap();
     let bytes = x.to_bytes().unwrap();
-    assert_eq!(bytes[4], 4, "episode ids and action records need version 4");
+    assert_eq!(bytes[4], 5, "episode ids and handle records need version 5");
     let same = mutate_controls(&bytes, &|_| {});
     Experience::from_bytes(&same, ExperienceConfig::default()).unwrap();
 
@@ -1435,6 +1435,66 @@ mod occurrence_targets {
             retry(&mut y, 1, &rows(["7", "9"]), Some(&a)).unwrap(),
             Ingested::Duplicate
         );
+    }
+
+    #[test]
+    fn a_version_4_snapshot_without_digests_refuses_retries_it_cannot_check() {
+        let mut x = Experience::default();
+        chain3(&mut x);
+        let v4 = super::snapshot::strip_digests_to_version_4_for_test(&x.to_bytes().unwrap());
+        assert_eq!(v4[4], 4);
+        let mut y = Experience::from_bytes(&v4, ExperienceConfig::default()).unwrap();
+        let (a1, a2) = (call("click('7')"), call("click('9')"));
+        // The older steps' handle addresses are gone: no retry of them is a duplicate, and a
+        // changed one is still refused, never accepted as the same observation.
+        for t in [rows(["7", "9"]), rows(["9", "7"])] {
+            let r = retry(&mut y, 1, &t, Some(&a1));
+            assert!(
+                matches!(r, Err(ExperienceError::Unverifiable { step: 1, .. })),
+                "{r:?}"
+            );
+        }
+        // Different content is a conflict whatever the handles.
+        assert!(matches!(
+            retry(&mut y, 1, &rows(["7", "9"]), Some(&a2)),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        // The latest step's addresses are the episode's stored handle map, so it is checked.
+        assert_eq!(
+            retry(&mut y, 2, &rows(["7", "9"]), Some(&a2)).unwrap(),
+            Ingested::Duplicate
+        );
+        assert!(matches!(
+            retry(&mut y, 2, &rows(["9", "7"]), Some(&a2)),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        // The targets resolved before the upgrade are kept, unlike a legacy step's.
+        assert_eq!(
+            y.action_targets("e", 1).unwrap().targets[0]
+                .1
+                .as_ref()
+                .unwrap()
+                .path,
+            vec![0, 0]
+        );
+        // A rewrite keeps the distinction instead of turning the step into a legacy one.
+        let v5 = y.to_bytes().unwrap();
+        assert_eq!(v5[4], 5);
+        let mut z = Experience::from_bytes(&v5, ExperienceConfig::default()).unwrap();
+        assert!(matches!(
+            retry(&mut z, 1, &rows(["7", "9"]), Some(&a1)),
+            Err(ExperienceError::Unverifiable { .. })
+        ));
+        assert_eq!(
+            retry(&mut z, 2, &rows(["7", "9"]), Some(&a2)).unwrap(),
+            Ingested::Duplicate
+        );
+        // A new step is ingested and checked as usual.
+        put(&mut z, 3, &rows(["7", "9"]), Some(&a1));
+        assert!(matches!(
+            retry(&mut z, 3, &rows(["9", "7"]), Some(&a1)),
+            Err(ExperienceError::Conflict { .. })
+        ));
     }
 
     #[test]
