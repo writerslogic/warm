@@ -1,0 +1,2350 @@
+{
+ "admission_control": {
+  "agg": {
+   "annotated_evidence_state_coverage_p": 10,
+   "annotated_evidence_state_coverage_r5": 9,
+   "mean_admitted_states": 340.0,
+   "mean_fusion_query_ms": 58.7,
+   "per_question": {
+    "0f8c85a6": {
+     "admitted_states": 349,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "0f970f01": {
+     "admitted_states": 347,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "11dac74b": {
+     "admitted_states": 325,
+     "coverage_p": false,
+     "coverage_r5": true
+    },
+    "19367bc7": {
+     "admitted_states": 321,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "1b43f7df": {
+     "admitted_states": 366,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "237d2cc5": {
+     "admitted_states": 369,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "2e67d04f": {
+     "admitted_states": 336,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "31f146ba": {
+     "admitted_states": 325,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "38726e61": {
+     "admitted_states": 316,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4c6d1eb7": {
+     "admitted_states": 367,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4d7dda89": {
+     "admitted_states": 318,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "4df5e6b4": {
+     "admitted_states": 310,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4f92aa38": {
+     "admitted_states": 352,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "5387d23d": {
+     "admitted_states": 305,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "679111c6": {
+     "admitted_states": 369,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "73297783": {
+     "admitted_states": 354,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "73b6738b": {
+     "admitted_states": 324,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "7c8efee5": {
+     "admitted_states": 326,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "85fc5722": {
+     "admitted_states": 381,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "882965b7": {
+     "admitted_states": 347,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "8b09f378": {
+     "admitted_states": 352,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "8f70bc0e": {
+     "admitted_states": 318,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "927c65a2": {
+     "admitted_states": 358,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "99fa7c96": {
+     "admitted_states": 364,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "a482c0d9": {
+     "admitted_states": 353,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "b2595523": {
+     "admitted_states": 283,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "b5a25676": {
+     "admitted_states": 332,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "c9568c9b": {
+     "admitted_states": 359,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "c9c6a06a": {
+     "admitted_states": 311,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "d83c4bf7": {
+     "admitted_states": 378,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "e3a1d7f3": {
+     "admitted_states": 318,
+     "coverage_p": false,
+     "coverage_r5": true
+    },
+    "edb69441": {
+     "admitted_states": 340,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "f13eb38d": {
+     "admitted_states": 347,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "f1f9de44": {
+     "admitted_states": 357,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "fec652a9": {
+     "admitted_states": 323,
+     "coverage_p": true,
+     "coverage_r5": true
+    }
+   },
+   "questions": 35,
+   "required_admitted_to_fused_pool": 83,
+   "required_in_p_selection": 32,
+   "required_in_r5_selection": 30,
+   "required_states": 101
+  },
+  "r5": {
+   "annotated_evidence_state_coverage_p": 9,
+   "annotated_evidence_state_coverage_r5": 9,
+   "mean_admitted_states": 183.3,
+   "mean_fusion_query_ms": 50.11,
+   "per_question": {
+    "0f8c85a6": {
+     "admitted_states": 192,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "0f970f01": {
+     "admitted_states": 221,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "11dac74b": {
+     "admitted_states": 150,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "19367bc7": {
+     "admitted_states": 181,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "1b43f7df": {
+     "admitted_states": 141,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "237d2cc5": {
+     "admitted_states": 204,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "2e67d04f": {
+     "admitted_states": 166,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "31f146ba": {
+     "admitted_states": 132,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "38726e61": {
+     "admitted_states": 167,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4c6d1eb7": {
+     "admitted_states": 188,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4d7dda89": {
+     "admitted_states": 162,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "4df5e6b4": {
+     "admitted_states": 170,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4f92aa38": {
+     "admitted_states": 129,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "5387d23d": {
+     "admitted_states": 178,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "679111c6": {
+     "admitted_states": 199,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "73297783": {
+     "admitted_states": 152,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "73b6738b": {
+     "admitted_states": 193,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "7c8efee5": {
+     "admitted_states": 201,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "85fc5722": {
+     "admitted_states": 235,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "882965b7": {
+     "admitted_states": 238,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "8b09f378": {
+     "admitted_states": 195,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "8f70bc0e": {
+     "admitted_states": 181,
+     "coverage_p": false,
+     "coverage_r5": true
+    },
+    "927c65a2": {
+     "admitted_states": 213,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "99fa7c96": {
+     "admitted_states": 120,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "a482c0d9": {
+     "admitted_states": 219,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "b2595523": {
+     "admitted_states": 158,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "b5a25676": {
+     "admitted_states": 171,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "c9568c9b": {
+     "admitted_states": 186,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "c9c6a06a": {
+     "admitted_states": 203,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "d83c4bf7": {
+     "admitted_states": 197,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "e3a1d7f3": {
+     "admitted_states": 241,
+     "coverage_p": false,
+     "coverage_r5": true
+    },
+    "edb69441": {
+     "admitted_states": 186,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "f13eb38d": {
+     "admitted_states": 152,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "f1f9de44": {
+     "admitted_states": 231,
+     "coverage_p": false,
+     "coverage_r5": true
+    },
+    "fec652a9": {
+     "admitted_states": 165,
+     "coverage_p": true,
+     "coverage_r5": true
+    }
+   },
+   "questions": 35,
+   "required_admitted_to_fused_pool": 75,
+   "required_in_p_selection": 33,
+   "required_in_r5_selection": 27,
+   "required_states": 101
+  },
+  "wide": {
+   "annotated_evidence_state_coverage_p": 10,
+   "annotated_evidence_state_coverage_r5": 9,
+   "mean_admitted_states": 427.4,
+   "mean_fusion_query_ms": 54.56,
+   "per_question": {
+    "0f8c85a6": {
+     "admitted_states": 415,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "0f970f01": {
+     "admitted_states": 517,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "11dac74b": {
+     "admitted_states": 339,
+     "coverage_p": false,
+     "coverage_r5": true
+    },
+    "19367bc7": {
+     "admitted_states": 431,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "1b43f7df": {
+     "admitted_states": 341,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "237d2cc5": {
+     "admitted_states": 496,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "2e67d04f": {
+     "admitted_states": 389,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "31f146ba": {
+     "admitted_states": 349,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "38726e61": {
+     "admitted_states": 371,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4c6d1eb7": {
+     "admitted_states": 494,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4d7dda89": {
+     "admitted_states": 376,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "4df5e6b4": {
+     "admitted_states": 364,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "4f92aa38": {
+     "admitted_states": 372,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "5387d23d": {
+     "admitted_states": 343,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "679111c6": {
+     "admitted_states": 535,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "73297783": {
+     "admitted_states": 369,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "73b6738b": {
+     "admitted_states": 383,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "7c8efee5": {
+     "admitted_states": 434,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "85fc5722": {
+     "admitted_states": 553,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "882965b7": {
+     "admitted_states": 631,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "8b09f378": {
+     "admitted_states": 487,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "8f70bc0e": {
+     "admitted_states": 378,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "927c65a2": {
+     "admitted_states": 474,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "99fa7c96": {
+     "admitted_states": 384,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "a482c0d9": {
+     "admitted_states": 567,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "b2595523": {
+     "admitted_states": 324,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "b5a25676": {
+     "admitted_states": 410,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "c9568c9b": {
+     "admitted_states": 383,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "c9c6a06a": {
+     "admitted_states": 460,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "d83c4bf7": {
+     "admitted_states": 486,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "e3a1d7f3": {
+     "admitted_states": 464,
+     "coverage_p": false,
+     "coverage_r5": true
+    },
+    "edb69441": {
+     "admitted_states": 399,
+     "coverage_p": true,
+     "coverage_r5": false
+    },
+    "f13eb38d": {
+     "admitted_states": 374,
+     "coverage_p": false,
+     "coverage_r5": false
+    },
+    "f1f9de44": {
+     "admitted_states": 487,
+     "coverage_p": true,
+     "coverage_r5": true
+    },
+    "fec652a9": {
+     "admitted_states": 380,
+     "coverage_p": true,
+     "coverage_r5": true
+    }
+   },
+   "questions": 35,
+   "required_admitted_to_fused_pool": 87,
+   "required_in_p_selection": 33,
+   "required_in_r5_selection": 30,
+   "required_states": 101
+  }
+ },
+ "trace": {
+  "0f8c85a6": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 216,
+     "dense_chunk_rank": 173,
+     "fused_rank": 163,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "1046053f/27",
+     "state_bm25_rank": 768
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 614,
+     "dense_chunk_rank": 18,
+     "fused_rank": 85,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "e72dc073/15",
+     "state_bm25_rank": 469
+    }
+   ]
+  ],
+  "0f970f01": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 62,
+     "dense_chunk_rank": 719,
+     "fused_rank": 131,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "3c588c61/20",
+     "state_bm25_rank": 329
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2,
+     "dense_chunk_rank": 311,
+     "fused_rank": 62,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "3c588c61/21",
+     "state_bm25_rank": 350
+    }
+   ]
+  ],
+  "11dac74b": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 129,
+     "dense_chunk_rank": 2,
+     "fused_rank": 8,
+     "p": "neighbour",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "2e8f6477/8",
+     "state_bm25_rank": 32
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 119,
+     "dense_chunk_rank": 65,
+     "fused_rank": 31,
+     "p": "centre",
+     "r5": "neighbour",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "2e8f6477/9",
+     "state_bm25_rank": 97
+    }
+   ]
+  ],
+  "19367bc7": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 131,
+     "dense_chunk_rank": 5,
+     "fused_rank": 34,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "132da65a/0",
+     "state_bm25_rank": 710
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 98,
+     "dense_chunk_rank": 0,
+     "fused_rank": 20,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "f92c1020/45",
+     "state_bm25_rank": 546
+    }
+   ]
+  ],
+  "1b43f7df": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 89,
+     "dense_chunk_rank": 10,
+     "fused_rank": 14,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "366f17da/6",
+     "state_bm25_rank": 223
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 96,
+     "dense_chunk_rank": 27,
+     "fused_rank": 22,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "366f17da/25",
+     "state_bm25_rank": 245
+    }
+   ]
+  ],
+  "237d2cc5": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 948,
+     "dense_chunk_rank": 46,
+     "fused_rank": 106,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "132da65a/0",
+     "state_bm25_rank": 1013
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1407,
+     "dense_chunk_rank": 0,
+     "fused_rank": 48,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "2ebe08f4/4",
+     "state_bm25_rank": 996
+    }
+   ]
+  ],
+  "2e67d04f": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 9,
+     "dense_chunk_rank": 50,
+     "fused_rank": 2,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "1ad1af4b/7",
+     "state_bm25_rank": 41
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 13,
+     "dense_chunk_rank": 198,
+     "fused_rank": 11,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "4ba5e9cb/1",
+     "state_bm25_rank": 12
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 15,
+     "dense_chunk_rank": 85,
+     "fused_rank": 0,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "2e8f6477/5",
+     "state_bm25_rank": 0
+    }
+   ]
+  ],
+  "31f146ba": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 109,
+     "dense_chunk_rank": 620,
+     "fused_rank": 109,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "028ee25f/0",
+     "state_bm25_rank": 273
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 39,
+     "dense_chunk_rank": 2524,
+     "fused_rank": 69,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "028ee25f/1",
+     "state_bm25_rank": 221
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 322,
+     "dense_chunk_rank": 83,
+     "fused_rank": 97,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "028ee25f/2",
+     "state_bm25_rank": 715
+    }
+   ]
+  ],
+  "38726e61": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 24,
+     "dense_chunk_rank": 362,
+     "fused_rank": 22,
+     "p": "page_limit",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "787ceaeb/2",
+     "state_bm25_rank": 57
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 640,
+     "dense_chunk_rank": 95,
+     "fused_rank": 115,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "787ceaeb/3",
+     "state_bm25_rank": 646
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 231,
+     "dense_chunk_rank": 8,
+     "fused_rank": 75,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "0b072635/3",
+     "state_bm25_rank": 183
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 611,
+     "dense_chunk_rank": 55,
+     "fused_rank": 104,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "013696c4/28",
+     "state_bm25_rank": 181
+    }
+   ]
+  ],
+  "4c6d1eb7": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 80,
+     "dense_chunk_rank": 0,
+     "fused_rank": 14,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "38b757f1/6",
+     "state_bm25_rank": 1435
+    }
+   ]
+  ],
+  "4d7dda89": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 172,
+     "dense_chunk_rank": 8,
+     "fused_rank": 6,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "4ba5e9cb/1",
+     "state_bm25_rank": 17
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 7,
+     "dense_chunk_rank": 7,
+     "fused_rank": 0,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "4ba5e9cb/2",
+     "state_bm25_rank": 1
+    }
+   ]
+  ],
+  "4df5e6b4": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 11,
+     "dense_chunk_rank": 19,
+     "fused_rank": 4,
+     "p": "page_limit",
+     "r5": "centre",
+     "rendered_p": false,
+     "rendered_r5": true,
+     "state": "12457787/0",
+     "state_bm25_rank": 20
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 2,
+     "dense_chunk_rank": 28,
+     "fused_rank": 3,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "12457787/3",
+     "state_bm25_rank": 23
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 3097,
+     "dense_chunk_rank": 2034,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "013696c4/0",
+     "state_bm25_rank": 284
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 204,
+     "dense_chunk_rank": 3789,
+     "fused_rank": 42,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "013696c4/3",
+     "state_bm25_rank": 29
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 2,
+     "dense_chunk_rank": 28,
+     "fused_rank": 3,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "12457787/3",
+     "state_bm25_rank": 23
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 3991,
+     "dense_chunk_rank": 15362,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "4919aae9/3",
+     "state_bm25_rank": 947
+    }
+   ]
+  ],
+  "4f92aa38": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 64,
+     "dense_chunk_rank": 180,
+     "fused_rank": 13,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "dddd8aa2/4",
+     "state_bm25_rank": 51
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 796,
+     "dense_chunk_rank": 183,
+     "fused_rank": null,
+     "p": "neighbour",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "dddd8aa2/5",
+     "state_bm25_rank": 108
+    }
+   ]
+  ],
+  "5387d23d": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 46,
+     "dense_chunk_rank": 53,
+     "fused_rank": 25,
+     "p": "centre",
+     "r5": "neighbour",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "4ba5e9cb/2",
+     "state_bm25_rank": 67
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 20,
+     "dense_chunk_rank": 113,
+     "fused_rank": 21,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "2af3e2bb/7",
+     "state_bm25_rank": 101
+    }
+   ]
+  ],
+  "679111c6": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 471,
+     "dense_chunk_rank": 63,
+     "fused_rank": 104,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "1d1cac57/0",
+     "state_bm25_rank": 949
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 436,
+     "dense_chunk_rank": 31,
+     "fused_rank": 71,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "13083bae/0",
+     "state_bm25_rank": 515
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 310,
+     "dense_chunk_rank": 5,
+     "fused_rank": 52,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "6cd3cdc4/0",
+     "state_bm25_rank": 1786
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1027,
+     "dense_chunk_rank": 1930,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "054c4ed2/0",
+     "state_bm25_rank": 1612
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1144,
+     "dense_chunk_rank": 544,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "132da65a/0",
+     "state_bm25_rank": 2320
+    }
+   ]
+  ],
+  "73297783": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 321,
+     "dense_chunk_rank": 1332,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "aacfe598/1",
+     "state_bm25_rank": 954
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 3518,
+     "dense_chunk_rank": 2427,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "aacfe598/2",
+     "state_bm25_rank": 916
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 403,
+     "dense_chunk_rank": 2405,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "aacfe598/6",
+     "state_bm25_rank": 427
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 5382,
+     "dense_chunk_rank": 5600,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "aacfe598/9",
+     "state_bm25_rank": 1681
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2250,
+     "dense_chunk_rank": 4901,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "aacfe598/10",
+     "state_bm25_rank": 1528
+    }
+   ]
+  ],
+  "73b6738b": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 148,
+     "dense_chunk_rank": 28,
+     "fused_rank": 53,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "13083bae/0",
+     "state_bm25_rank": 722
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 19,
+     "dense_chunk_rank": 35,
+     "fused_rank": 23,
+     "p": "page_limit",
+     "r5": "neighbour",
+     "rendered_p": false,
+     "rendered_r5": true,
+     "state": "96131e7b/21",
+     "state_bm25_rank": 150
+    }
+   ]
+  ],
+  "7c8efee5": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 140,
+     "dense_chunk_rank": 3921,
+     "fused_rank": 185,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "576d210a/2",
+     "state_bm25_rank": 370
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 31,
+     "dense_chunk_rank": 2314,
+     "fused_rank": 12,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "3b4ea1fd/2",
+     "state_bm25_rank": 54
+    }
+   ]
+  ],
+  "85fc5722": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 520,
+     "dense_chunk_rank": 127,
+     "fused_rank": 210,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "afc7df70/3",
+     "state_bm25_rank": 2064
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 676,
+     "dense_chunk_rank": 34,
+     "fused_rank": 101,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "afc7df70/4",
+     "state_bm25_rank": 1535
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 901,
+     "dense_chunk_rank": 10,
+     "fused_rank": 52,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "afc7df70/5",
+     "state_bm25_rank": 1436
+    }
+   ]
+  ],
+  "882965b7": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 117,
+     "dense_chunk_rank": 322,
+     "fused_rank": 137,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "1485f2f8/7",
+     "state_bm25_rank": 301
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2733,
+     "dense_chunk_rank": 346,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "857659bd/11",
+     "state_bm25_rank": 1281
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 76,
+     "dense_chunk_rank": 2,
+     "fused_rank": 0,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "1485f2f8/42",
+     "state_bm25_rank": 58
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 608,
+     "dense_chunk_rank": 1101,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "857659bd/10",
+     "state_bm25_rank": 248
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2733,
+     "dense_chunk_rank": 346,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "857659bd/11",
+     "state_bm25_rank": 1281
+    }
+   ]
+  ],
+  "8b09f378": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1213,
+     "dense_chunk_rank": 2283,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "054c4ed2/0",
+     "state_bm25_rank": 478
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 372,
+     "dense_chunk_rank": 29,
+     "fused_rank": 82,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "16eb5333/5",
+     "state_bm25_rank": 1322
+    }
+   ]
+  ],
+  "8f70bc0e": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 76,
+     "dense_chunk_rank": 54,
+     "fused_rank": 28,
+     "p": "page_limit",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "576d210a/7",
+     "state_bm25_rank": 82
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 0,
+     "dense_chunk_rank": 253,
+     "fused_rank": 2,
+     "p": "page_limit",
+     "r5": "centre",
+     "rendered_p": false,
+     "rendered_r5": true,
+     "state": "d4949793/10",
+     "state_bm25_rank": 4
+    }
+   ]
+  ],
+  "927c65a2": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 486,
+     "dense_chunk_rank": 26,
+     "fused_rank": 69,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "1d1cac57/0",
+     "state_bm25_rank": 951
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 425,
+     "dense_chunk_rank": 75,
+     "fused_rank": 111,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "13083bae/0",
+     "state_bm25_rank": 1321
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1020,
+     "dense_chunk_rank": 52,
+     "fused_rank": 91,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "6cd3cdc4/0",
+     "state_bm25_rank": 2012
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1953,
+     "dense_chunk_rank": 1346,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "054c4ed2/0",
+     "state_bm25_rank": 2058
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2282,
+     "dense_chunk_rank": 388,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "132da65a/0",
+     "state_bm25_rank": 2388
+    }
+   ]
+  ],
+  "99fa7c96": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 173,
+     "dense_chunk_rank": 474,
+     "fused_rank": 117,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "02817e5d/0",
+     "state_bm25_rank": 863
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 146,
+     "dense_chunk_rank": 3,
+     "fused_rank": 19,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "02817e5d/2",
+     "state_bm25_rank": 234
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 896,
+     "dense_chunk_rank": 0,
+     "fused_rank": 45,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "02817e5d/4",
+     "state_bm25_rank": 774
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 675,
+     "dense_chunk_rank": 852,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "02817e5d/5",
+     "state_bm25_rank": 706
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1645,
+     "dense_chunk_rank": 477,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "02817e5d/6",
+     "state_bm25_rank": 710
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2445,
+     "dense_chunk_rank": 390,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "02817e5d/7",
+     "state_bm25_rank": 926
+    }
+   ]
+  ],
+  "a482c0d9": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 445,
+     "dense_chunk_rank": 32,
+     "fused_rank": 92,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "13083bae/0",
+     "state_bm25_rank": 936
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 45,
+     "dense_chunk_rank": 5464,
+     "fused_rank": 109,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "96131e7b/21",
+     "state_bm25_rank": 228
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2193,
+     "dense_chunk_rank": 684,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "16eb5333/5",
+     "state_bm25_rank": 2106
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1162,
+     "dense_chunk_rank": 1058,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "054c4ed2/0",
+     "state_bm25_rank": 954
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 514,
+     "dense_chunk_rank": 387,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "132da65a/0",
+     "state_bm25_rank": 1482
+    }
+   ]
+  ],
+  "b2595523": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 63,
+     "dense_chunk_rank": 1,
+     "fused_rank": 2,
+     "p": "page_limit",
+     "r5": "centre",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "90d36b63/22",
+     "state_bm25_rank": 15
+    }
+   ]
+  ],
+  "b5a25676": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 117,
+     "dense_chunk_rank": 278,
+     "fused_rank": 8,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "8012d4f3/4",
+     "state_bm25_rank": 13
+    }
+   ]
+  ],
+  "c9568c9b": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2376,
+     "dense_chunk_rank": 40,
+     "fused_rank": 100,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "fc0e8ec3/18",
+     "state_bm25_rank": 239
+    }
+   ]
+  ],
+  "c9c6a06a": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 42,
+     "dense_chunk_rank": 0,
+     "fused_rank": 0,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "1a755059/5",
+     "state_bm25_rank": 20
+    }
+   ]
+  ],
+  "d83c4bf7": [
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 483,
+     "dense_chunk_rank": 3,
+     "fused_rank": 41,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "42b931a1/9",
+     "state_bm25_rank": 2405
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 611,
+     "dense_chunk_rank": 263,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "42b931a1/10",
+     "state_bm25_rank": 1755
+    }
+   ]
+  ],
+  "e3a1d7f3": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 81,
+     "dense_chunk_rank": 94,
+     "fused_rank": 6,
+     "p": "page_limit",
+     "r5": "centre",
+     "rendered_p": false,
+     "rendered_r5": true,
+     "state": "9cd66f15/3",
+     "state_bm25_rank": 23
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 107,
+     "dense_chunk_rank": 31,
+     "fused_rank": 64,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "06c70de4/7",
+     "state_bm25_rank": 132
+    }
+   ]
+  ],
+  "edb69441": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 49,
+     "dense_chunk_rank": 6,
+     "fused_rank": 24,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "06c70de4/12",
+     "state_bm25_rank": 177
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 62,
+     "dense_chunk_rank": 181,
+     "fused_rank": 33,
+     "p": "neighbour",
+     "r5": "neighbour",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "06c70de4/13",
+     "state_bm25_rank": 44
+    }
+   ]
+  ],
+  "f13eb38d": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 26,
+     "dense_chunk_rank": 2758,
+     "fused_rank": 54,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "028ee25f/1",
+     "state_bm25_rank": 201
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 395,
+     "dense_chunk_rank": 2063,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "028ee25f/2",
+     "state_bm25_rank": 896
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 1071,
+     "dense_chunk_rank": 6571,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "028ee25f/3",
+     "state_bm25_rank": 72
+    },
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": false,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 2427,
+     "dense_chunk_rank": 3713,
+     "fused_rank": null,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "028ee25f/4",
+     "state_bm25_rank": 473
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 41,
+     "dense_chunk_rank": 8710,
+     "fused_rank": 3,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "868ad4c0/5",
+     "state_bm25_rank": 24
+    }
+   ]
+  ],
+  "f1f9de44": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 9,
+     "dense_chunk_rank": 60,
+     "fused_rank": 19,
+     "p": "neighbour",
+     "r5": "neighbour",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "96131e7b/15",
+     "state_bm25_rank": 157
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": false,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 18,
+     "dense_chunk_rank": 315,
+     "fused_rank": 0,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": false,
+     "rendered_r5": true,
+     "state": "fc0e8ec3/12",
+     "state_bm25_rank": 10
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": false,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 301,
+     "dense_chunk_rank": 119,
+     "fused_rank": 156,
+     "p": "not_reached",
+     "r5": "not_selected",
+     "rendered_p": false,
+     "rendered_r5": false,
+     "state": "1d1cac57/0",
+     "state_bm25_rank": 848
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 3,
+     "dense_chunk_rank": 13,
+     "fused_rank": 7,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "6cd3cdc4/0",
+     "state_bm25_rank": 381
+    }
+   ]
+  ],
+  "fec652a9": [
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 73,
+     "dense_chunk_rank": 0,
+     "fused_rank": 2,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "1ad1af4b/0",
+     "state_bm25_rank": 42
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 123,
+     "dense_chunk_rank": 1,
+     "fused_rank": 23,
+     "p": "centre",
+     "r5": "neighbour",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "1ad1af4b/1",
+     "state_bm25_rank": 81
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 61,
+     "dense_chunk_rank": 17,
+     "fused_rank": 14,
+     "p": "centre",
+     "r5": "not_selected",
+     "rendered_p": true,
+     "rendered_r5": false,
+     "state": "1ad1af4b/2",
+     "state_bm25_rank": 70
+    }
+   ],
+   [
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": true
+     },
+     "bm25_chunk_rank": 73,
+     "dense_chunk_rank": 0,
+     "fused_rank": 2,
+     "p": "centre",
+     "r5": "centre",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "1ad1af4b/0",
+     "state_bm25_rank": 42
+    },
+    {
+     "admitted": {
+      "bm25": true,
+      "dense": true,
+      "state_bm25": false
+     },
+     "bm25_chunk_rank": 123,
+     "dense_chunk_rank": 1,
+     "fused_rank": 23,
+     "p": "centre",
+     "r5": "neighbour",
+     "rendered_p": true,
+     "rendered_r5": true,
+     "state": "1ad1af4b/1",
+     "state_bm25_rank": 81
+    }
+   ]
+  ]
+ }
+}

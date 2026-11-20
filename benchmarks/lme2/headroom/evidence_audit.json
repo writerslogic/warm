@@ -1,0 +1,28 @@
+{
+ "phrase_dev_questions": 112,
+ "oracle_feasible": 106,
+ "pairs": [
+  {
+   "control": "round 6 (wns_e: notes and support analysis by the reader model)",
+   "n": 106,
+   "oracle_correct": 60,
+   "control_correct": 61,
+   "retained": 44,
+   "recovered": 16,
+   "regressed": 17,
+   "unresolved": 29
+  },
+  {
+   "control": "arch_uep16 pack without the oracle block (the pack oracle2 extends)",
+   "n": 106,
+   "oracle_correct": 60,
+   "control_correct": 58,
+   "retained": 52,
+   "recovered": 8,
+   "regressed": 6,
+   "unresolved": 40
+  }
+ ],
+ "construction": "arch/oracle2.py: for each phrase-scored dev question, BM25 units then transitions of the compiled index whose text contains a gold phrase, up to 9000 chars, until every gold phrase is covered; questions where some phrase is in no unit or transition are dropped. The block '## ORACLE EVIDENCE' is prepended to the arch_uep16 prompt row. Reader, prompt template and sampling are those of the arch_uep16 rows; the r6 context (notes, support analysis, 6 states) is not part of it.",
+ "scoring": "upstream norm_phrase_set_match(_ordered) on response_parsed_boxed; no judge"
+}

@@ -1,0 +1,6112 @@
+{
+ "A": {
+  "annotated_evidence_state_coverage": 9,
+  "correct_by_delivery": {
+   "incomplete": 6,
+   "unknown": 1,
+   "verified": 6
+  },
+  "delivery": {
+   "incomplete": 26,
+   "unknown": 1,
+   "verified": 8
+  },
+  "per_question": {
+   "0f8c85a6": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1046053f/27",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "e72dc073/15",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "0f970f01": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3c588c61/20",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3c588c61/21",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "11dac74b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "2e8f6477/8",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "2e8f6477/9",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "19367bc7": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "f92c1020/45",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "1b43f7df": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/6",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/25",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "237d2cc5": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "2ebe08f4/4",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "2e67d04f": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/7",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/1",
+        "text": "clipped"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/5",
+        "text": "full"
+       }
+      ],
+      "status": "unknown",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "unknown"
+   },
+   "31f146ba": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/2",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "38726e61": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "787ceaeb/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "787ceaeb/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "0b072635/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/28",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4c6d1eb7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "38b757f1/6",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4d7dda89": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4df5e6b4": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "4919aae9/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4f92aa38": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "dddd8aa2/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "dddd8aa2/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "5387d23d": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "2af3e2bb/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "679111c6": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "73297783": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/6",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/9",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/10",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "73b6738b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "96131e7b/21",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "7c8efee5": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "576d210a/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3b4ea1fd/2",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "85fc5722": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "882965b7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1485f2f8/7",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1485f2f8/42",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/10",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8b09f378": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "16eb5333/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8f70bc0e": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "576d210a/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": true
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "d4949793/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "927c65a2": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "99fa7c96": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/5",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/6",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "a482c0d9": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "96131e7b/21",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "16eb5333/5",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "b2595523": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "90d36b63/22",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "b5a25676": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "8012d4f3/4",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "c9568c9b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "fc0e8ec3/18",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "c9c6a06a": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1a755059/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "d83c4bf7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "42b931a1/9",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "42b931a1/10",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "e3a1d7f3": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "9cd66f15/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "06c70de4/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "edb69441": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "06c70de4/12",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "06c70de4/13",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "f13eb38d": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/4",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "868ad4c0/5",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "f1f9de44": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "96131e7b/15",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "fc0e8ec3/12",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "fec652a9": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1ad1af4b/2",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   }
+  },
+  "questions": 35,
+  "wrong_with_verified_evidence": [
+   "11dac74b",
+   "4d7dda89"
+  ]
+ },
+ "B": {
+  "annotated_evidence_state_coverage": 34,
+  "correct_by_delivery": {
+   "unknown": 1,
+   "verified": 24
+  },
+  "delivery": {
+   "incomplete": 1,
+   "unknown": 1,
+   "verified": 33
+  },
+  "per_question": {
+   "0f8c85a6": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1046053f/27",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "e72dc073/15",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "0f970f01": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "3c588c61/20",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "3c588c61/21",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "11dac74b": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/8",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/9",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "19367bc7": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "f92c1020/45",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "1b43f7df": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "366f17da/6",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/25",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "237d2cc5": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "2ebe08f4/4",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "2e67d04f": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/7",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "31f146ba": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "38726e61": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "787ceaeb/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "787ceaeb/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "0b072635/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/28",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4c6d1eb7": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "38b757f1/6",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4d7dda89": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4df5e6b4": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "013696c4/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "013696c4/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "4919aae9/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4f92aa38": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "dddd8aa2/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "dddd8aa2/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "5387d23d": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2af3e2bb/7",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "679111c6": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1d1cac57/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "6cd3cdc4/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "73297783": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/6",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/9",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "73b6738b": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "96131e7b/21",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "7c8efee5": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "576d210a/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "3b4ea1fd/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "85fc5722": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "afc7df70/3",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "afc7df70/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "afc7df70/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "882965b7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1485f2f8/7",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1485f2f8/42",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/10",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8b09f378": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "16eb5333/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "8f70bc0e": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "576d210a/7",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "d4949793/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "927c65a2": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1d1cac57/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "6cd3cdc4/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "99fa7c96": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/5",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/6",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/7",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "a482c0d9": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "96131e7b/21",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "16eb5333/5",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "b2595523": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "90d36b63/22",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "b5a25676": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "8012d4f3/4",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "c9568c9b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "fc0e8ec3/18",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "c9c6a06a": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1a755059/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "d83c4bf7": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "42b931a1/9",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "42b931a1/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "e3a1d7f3": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "9cd66f15/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "06c70de4/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "edb69441": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "06c70de4/12",
+        "text": "clipped"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "06c70de4/13",
+        "text": "full"
+       }
+      ],
+      "status": "unknown",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "unknown"
+   },
+   "f13eb38d": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/3",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "868ad4c0/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "f1f9de44": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "96131e7b/15",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "fc0e8ec3/12",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "fec652a9": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   }
+  },
+  "questions": 35,
+  "wrong_with_verified_evidence": [
+   "2e67d04f",
+   "31f146ba",
+   "38726e61",
+   "4d7dda89",
+   "4df5e6b4",
+   "8b09f378",
+   "b5a25676",
+   "c9568c9b",
+   "f13eb38d"
+  ]
+ },
+ "C": {
+  "annotated_evidence_state_coverage": 9,
+  "correct_by_delivery": {
+   "incomplete": 4,
+   "verified": 7
+  },
+  "delivery": {
+   "incomplete": 26,
+   "unknown": 1,
+   "verified": 8
+  },
+  "per_question": {
+   "0f8c85a6": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1046053f/27",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "e72dc073/15",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "0f970f01": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3c588c61/20",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3c588c61/21",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "11dac74b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "2e8f6477/8",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "2e8f6477/9",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "19367bc7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "f92c1020/45",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "1b43f7df": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/6",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/25",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "237d2cc5": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "2ebe08f4/4",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "2e67d04f": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/7",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/1",
+        "text": "clipped"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/5",
+        "text": "full"
+       }
+      ],
+      "status": "unknown",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "unknown"
+   },
+   "31f146ba": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/2",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "38726e61": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "787ceaeb/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "787ceaeb/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "0b072635/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/28",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4c6d1eb7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "38b757f1/6",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4d7dda89": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4df5e6b4": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "4919aae9/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4f92aa38": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "dddd8aa2/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "dddd8aa2/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "5387d23d": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "2af3e2bb/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "679111c6": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "73297783": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/6",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/9",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/10",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "73b6738b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "96131e7b/21",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "7c8efee5": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "576d210a/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3b4ea1fd/2",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "85fc5722": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "882965b7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1485f2f8/7",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1485f2f8/42",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/10",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8b09f378": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "16eb5333/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8f70bc0e": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "576d210a/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": true
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "d4949793/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "927c65a2": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "99fa7c96": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/5",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/6",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "a482c0d9": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "96131e7b/21",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "16eb5333/5",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "b2595523": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "90d36b63/22",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "b5a25676": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "8012d4f3/4",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "c9568c9b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "fc0e8ec3/18",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "c9c6a06a": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1a755059/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "d83c4bf7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "42b931a1/9",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "42b931a1/10",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "e3a1d7f3": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "9cd66f15/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "06c70de4/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "edb69441": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "06c70de4/12",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "06c70de4/13",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "f13eb38d": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/4",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "868ad4c0/5",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "f1f9de44": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "96131e7b/15",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "fc0e8ec3/12",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "fec652a9": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1ad1af4b/2",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   }
+  },
+  "questions": 35,
+  "wrong_with_verified_evidence": [
+   "11dac74b"
+  ]
+ },
+ "D": {
+  "annotated_evidence_state_coverage": 34,
+  "correct_by_delivery": {
+   "unknown": 1,
+   "verified": 26
+  },
+  "delivery": {
+   "incomplete": 1,
+   "unknown": 1,
+   "verified": 33
+  },
+  "per_question": {
+   "0f8c85a6": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1046053f/27",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "e72dc073/15",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "0f970f01": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "3c588c61/20",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "3c588c61/21",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "11dac74b": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/8",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/9",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "19367bc7": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "f92c1020/45",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "1b43f7df": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "366f17da/6",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/25",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "237d2cc5": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "2ebe08f4/4",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "2e67d04f": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/7",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "31f146ba": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "38726e61": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "787ceaeb/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "787ceaeb/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "0b072635/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/28",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4c6d1eb7": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "38b757f1/6",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4d7dda89": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4df5e6b4": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "013696c4/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "013696c4/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "4919aae9/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4f92aa38": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "dddd8aa2/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "dddd8aa2/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "5387d23d": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2af3e2bb/7",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "679111c6": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1d1cac57/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "6cd3cdc4/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "73297783": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/6",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/9",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "aacfe598/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "73b6738b": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "96131e7b/21",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "7c8efee5": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "576d210a/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "3b4ea1fd/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "85fc5722": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "afc7df70/3",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "afc7df70/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "afc7df70/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "882965b7": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1485f2f8/7",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1485f2f8/42",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/10",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8b09f378": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "16eb5333/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "8f70bc0e": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "576d210a/7",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "d4949793/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "927c65a2": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1d1cac57/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "6cd3cdc4/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "99fa7c96": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/5",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/6",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "02817e5d/7",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "a482c0d9": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "96131e7b/21",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "16eb5333/5",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "054c4ed2/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "132da65a/0",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "b2595523": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "90d36b63/22",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "b5a25676": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "8012d4f3/4",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "c9568c9b": {
+    "correct": false,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "fc0e8ec3/18",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "c9c6a06a": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1a755059/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "d83c4bf7": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "42b931a1/9",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "42b931a1/10",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "e3a1d7f3": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "9cd66f15/3",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "06c70de4/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "edb69441": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "06c70de4/12",
+        "text": "clipped"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "06c70de4/13",
+        "text": "full"
+       }
+      ],
+      "status": "unknown",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "unknown"
+   },
+   "f13eb38d": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/3",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "028ee25f/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "868ad4c0/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "f1f9de44": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "96131e7b/15",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "fc0e8ec3/12",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "fec652a9": {
+    "correct": true,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   }
+  },
+  "questions": 35,
+  "wrong_with_verified_evidence": [
+   "31f146ba",
+   "38726e61",
+   "4d7dda89",
+   "679111c6",
+   "73297783",
+   "b5a25676",
+   "c9568c9b"
+  ]
+ },
+ "P": {
+  "annotated_evidence_state_coverage": 9,
+  "correct_by_delivery": {},
+  "delivery": {
+   "incomplete": 26,
+   "unknown": 2,
+   "verified": 7
+  },
+  "per_question": {
+   "0f8c85a6": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1046053f/27",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "e72dc073/15",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "0f970f01": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3c588c61/20",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "3c588c61/21",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "11dac74b": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "2e8f6477/8",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "2e8f6477/9",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "19367bc7": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "f92c1020/45",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "1b43f7df": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/6",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "366f17da/25",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "237d2cc5": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "2ebe08f4/4",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "2e67d04f": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/7",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2e8f6477/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "31f146ba": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/2",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "38726e61": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "787ceaeb/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "787ceaeb/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "0b072635/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/28",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4c6d1eb7": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": true,
+        "state": "38b757f1/6",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4d7dda89": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "4df5e6b4": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "12457787/0",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "013696c4/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "12457787/3",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "4919aae9/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "4f92aa38": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "dddd8aa2/4",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "dddd8aa2/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "5387d23d": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "4ba5e9cb/2",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "2af3e2bb/7",
+        "text": "full"
+       }
+      ],
+      "status": "unknown",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": true,
+    "status": "unknown"
+   },
+   "679111c6": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "6cd3cdc4/0",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "73297783": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/6",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/9",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "aacfe598/10",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "73b6738b": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "13083bae/0",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "96131e7b/21",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "7c8efee5": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "576d210a/2",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "3b4ea1fd/2",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "85fc5722": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "afc7df70/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "882965b7": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1485f2f8/7",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1485f2f8/42",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/10",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "857659bd/11",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8b09f378": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "16eb5333/5",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "8f70bc0e": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "576d210a/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": true
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "d4949793/10",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": true
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "927c65a2": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "6cd3cdc4/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "99fa7c96": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/4",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/5",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/6",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "02817e5d/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "a482c0d9": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "13083bae/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "96131e7b/21",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "16eb5333/5",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "054c4ed2/0",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "132da65a/0",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "b2595523": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "90d36b63/22",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "b5a25676": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "8012d4f3/4",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "c9568c9b": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "fc0e8ec3/18",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "c9c6a06a": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1a755059/5",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   },
+   "d83c4bf7": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "42b931a1/9",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "42b931a1/10",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "e3a1d7f3": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "9cd66f15/3",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "06c70de4/7",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "edb69441": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "06c70de4/12",
+        "text": "clipped"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "06c70de4/13",
+        "text": "full"
+       }
+      ],
+      "status": "unknown",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "unknown"
+   },
+   "f13eb38d": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/1",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/2",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/3",
+        "text": "absent"
+       },
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "028ee25f/4",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "868ad4c0/5",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "f1f9de44": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "96131e7b/15",
+        "text": "full"
+       },
+       {
+        "present": false,
+        "screenshot": true,
+        "state": "fc0e8ec3/12",
+        "text": "absent"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     },
+     {
+      "state_coverage": false,
+      "states": [
+       {
+        "present": false,
+        "screenshot": false,
+        "state": "1d1cac57/0",
+        "text": "absent"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "6cd3cdc4/0",
+        "text": "full"
+       }
+      ],
+      "status": "incomplete",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": false,
+    "status": "incomplete"
+   },
+   "fec652a9": {
+    "correct": null,
+    "sets": [
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/2",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     },
+     {
+      "state_coverage": true,
+      "states": [
+       {
+        "present": true,
+        "screenshot": true,
+        "state": "1ad1af4b/0",
+        "text": "full"
+       },
+       {
+        "present": true,
+        "screenshot": false,
+        "state": "1ad1af4b/1",
+        "text": "full"
+       }
+      ],
+      "status": "verified",
+      "visual_required": false
+     }
+    ],
+    "state_coverage": true,
+    "status": "verified"
+   }
+  },
+  "questions": 35,
+  "wrong_with_verified_evidence": []
+ },
+ "paired": {
+  "B_vs_A": {
+   "delivery_transitions": {
+    "incomplete->incomplete": 1,
+    "incomplete->unknown": 1,
+    "incomplete->verified": 24,
+    "unknown->verified": 1,
+    "verified->verified": 8
+   },
+   "questions": 35,
+   "state_coverage_gained": [
+    "0f8c85a6",
+    "0f970f01",
+    "19367bc7",
+    "1b43f7df",
+    "237d2cc5",
+    "31f146ba",
+    "38726e61",
+    "4c6d1eb7",
+    "4df5e6b4",
+    "4f92aa38",
+    "5387d23d",
+    "679111c6",
+    "73297783",
+    "73b6738b",
+    "7c8efee5",
+    "85fc5722",
+    "8b09f378",
+    "927c65a2",
+    "99fa7c96",
+    "a482c0d9",
+    "b2595523",
+    "c9568c9b",
+    "d83c4bf7",
+    "edb69441",
+    "f13eb38d"
+   ],
+   "state_coverage_lost": []
+  },
+  "C_vs_A": {
+   "delivery_transitions": {
+    "incomplete->incomplete": 26,
+    "unknown->unknown": 1,
+    "verified->verified": 8
+   },
+   "questions": 35,
+   "state_coverage_gained": [],
+   "state_coverage_lost": []
+  },
+  "D_vs_A": {
+   "delivery_transitions": {
+    "incomplete->incomplete": 1,
+    "incomplete->unknown": 1,
+    "incomplete->verified": 24,
+    "unknown->verified": 1,
+    "verified->verified": 8
+   },
+   "questions": 35,
+   "state_coverage_gained": [
+    "0f8c85a6",
+    "0f970f01",
+    "19367bc7",
+    "1b43f7df",
+    "237d2cc5",
+    "31f146ba",
+    "38726e61",
+    "4c6d1eb7",
+    "4df5e6b4",
+    "4f92aa38",
+    "5387d23d",
+    "679111c6",
+    "73297783",
+    "73b6738b",
+    "7c8efee5",
+    "85fc5722",
+    "8b09f378",
+    "927c65a2",
+    "99fa7c96",
+    "a482c0d9",
+    "b2595523",
+    "c9568c9b",
+    "d83c4bf7",
+    "edb69441",
+    "f13eb38d"
+   ],
+   "state_coverage_lost": []
+  },
+  "P_vs_A": {
+   "delivery_transitions": {
+    "incomplete->incomplete": 23,
+    "incomplete->unknown": 2,
+    "incomplete->verified": 1,
+    "unknown->verified": 1,
+    "verified->incomplete": 3,
+    "verified->verified": 5
+   },
+   "questions": 35,
+   "state_coverage_gained": [
+    "4f92aa38",
+    "5387d23d",
+    "edb69441"
+   ],
+   "state_coverage_lost": [
+    "8f70bc0e",
+    "e3a1d7f3",
+    "f1f9de44"
+   ]
+  }
+ }
+}

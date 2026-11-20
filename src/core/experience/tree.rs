@@ -458,22 +458,44 @@ fn args_repr(args: &[Arg]) -> String {
     }
 }
 
+const TARGETED: [&str; 11] = [
+    "click",
+    "hover",
+    "fill",
+    "select_option",
+    "dblclick",
+    "press",
+    "focus",
+    "check",
+    "uncheck",
+    "clear",
+    "upload_file",
+];
+
+/// The handles an action names, with the part each plays.
+pub(crate) fn action_targets(a: &str) -> Vec<(super::target::TargetRole, String)> {
+    use super::target::TargetRole::{Destination, Subject};
+    let (f, args) = parse_action(a);
+    if f == "drag_and_drop" {
+        return args
+            .iter()
+            .take(2)
+            .zip([Subject, Destination])
+            .map(|(a, r)| (r, a.text().to_string()))
+            .collect();
+    }
+    if TARGETED.contains(&f.as_str()) {
+        return args
+            .first()
+            .map(|a| vec![(Subject, a.text().to_string())])
+            .unwrap_or_default();
+    }
+    Vec::new()
+}
+
 /// The action's label, resolving a handle through `handles` (handle to `role 'name'`).
 pub(crate) fn action_label(a: &str, handles: &dyn Fn(&str) -> Option<String>) -> String {
     let (f, args) = parse_action(a);
-    const TARGETED: [&str; 11] = [
-        "click",
-        "hover",
-        "fill",
-        "select_option",
-        "dblclick",
-        "press",
-        "focus",
-        "check",
-        "uncheck",
-        "clear",
-        "upload_file",
-    ];
     if (TARGETED.contains(&f.as_str()) || f == "drag_and_drop") && !args.is_empty() {
         let target = handles(args[0].text()).unwrap_or_else(|| format!("bid {}", args[0].text()));
         let extra = if (f == "fill" || f == "select_option") && args.len() > 1 {

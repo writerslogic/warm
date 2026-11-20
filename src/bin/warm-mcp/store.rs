@@ -572,7 +572,8 @@ impl WarmBackend {
                 experience::ExperienceError::Limit { .. }
                 | experience::ExperienceError::Invalid(_)
                 | experience::ExperienceError::OutOfOrder { .. }
-                | experience::ExperienceError::Conflict { .. } => Fail::invalid(e.to_string()),
+                | experience::ExperienceError::Conflict { .. }
+                | experience::ExperienceError::Unverifiable { .. } => Fail::invalid(e.to_string()),
                 other => Fail::internal(other),
             })?;
         Ok(json!({

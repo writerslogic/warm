@@ -1,0 +1,951 @@
+{
+ "per_question": {
+  "00aa905a": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "025db8ef": {
+   "correct": true,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "0738c1ac": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "07ab3723": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "080b0218": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "0a4a47e6": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "0b50ca0d": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": true
+  },
+  "0c0fdcd7": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "0d07143c": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "0f8c85a6": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "0f970f01": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "10003186": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "100ff132": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "11dac74b": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": true
+  },
+  "17a03f9b": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "17d63ad8": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "19367bc7": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "19c641bd": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "1b43f7df": {
+   "correct": false,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "procedure",
+   "unknown": true
+  },
+  "1cf04706": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "1defc293": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "1e011eb5": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "229675cd": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "233f9f09": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "237d2cc5": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "238c3621": {
+   "correct": true,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "23aecb38": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "25b00876": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "26a038ce": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "2b96f402": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "2c45ecbb": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "2e67d04f": {
+   "correct": false,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "2e90de97": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "30fab98c": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "31f146ba": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "32d04f31": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "32e719c2": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "38726e61": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "3fd81278": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "40758d8b": {
+   "correct": true,
+   "eval": "mc_choice_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "4252cc1c": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "48ab5c3d": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "4c6d1eb7": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": true
+  },
+  "4ca9f7d7": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "4d7dda89": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "4df5e6b4": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "4dffe641": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "4f92aa38": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "50711c52": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "507a0fe8": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "521b124f": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "5387d23d": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "58c34839": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "5aaf0f61": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "5d6b993a": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "5db4899c": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "5f100f22": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "60c7ca22": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "60f2b293": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "616c238d": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "626e401e": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "errors-gotchas",
+   "unknown": false
+  },
+  "634973c3": {
+   "correct": true,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "63a1b94b": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "668f7b74": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "674a6972": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "679111c6": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "691cd1da": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "6a2e74de": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "6cb8ce37": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "6d975a08": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "6f9cb5fc": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "73297783": {
+   "correct": false,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "73b6738b": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "73cbefdc": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "77db204d": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "7bfbd5f1": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "7c8efee5": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "7ea13f14": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "820d56e2": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "83c35034": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "85fc5722": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "882965b7": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "8955b988": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "8b09f378": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "8c55d6bc": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "8e320e42": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "8f70bc0e": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "8f752563": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "901b7d17": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "91d0775e": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "927c65a2": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "97d5309a": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "984022b1": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "99fa7c96": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "9c074855": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "9c32bca6": {
+   "correct": true,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "9cae869c": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "a12b7094": {
+   "correct": true,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "a42071db": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "a45edf3e": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "a482c0d9": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "a7da9ab3": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "a7edfb7a": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "a92dff92": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "aca57021": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "ad903be2": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "adddeaa5": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "b2595523": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": true
+  },
+  "b54161f8": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "b5a25676": {
+   "correct": true,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "b7cc4da2": {
+   "correct": false,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "b828a6b2": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "b8cabd09": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "b8d56b89": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "bfb3bcc4": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "c0593d69": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "c36b0d68": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "c56e69ca": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "c738b934": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "c7e367e2": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "c9568c9b": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": true
+  },
+  "c9c6a06a": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "ca8e070b": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "d0d61088": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "d16a18fe": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "d3300354": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "d5b9fda4": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "d63e8a7f": {
+   "correct": false,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "d83c4bf7": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": true
+  },
+  "d886b018": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "dae9f7e9": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "dea446d0": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "deb008ed": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "e3a1d7f3": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "e71f7c92": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "e77d1287": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "e9fde9fe": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "eab07e81": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "eb3cfd03": {
+   "correct": true,
+   "eval": "mc_choice_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "edb69441": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "f0882f6e": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "f13eb38d": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "f1d8a168": {
+   "correct": false,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": true
+  },
+  "f1f9de44": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "f3496ca5": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "static-environment",
+   "unknown": false
+  },
+  "f35bac4a": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "f93031d2": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  },
+  "fec652a9": {
+   "correct": true,
+   "eval": "norm_phrase_set_match_ordered",
+   "question_type": "procedure",
+   "unknown": false
+  },
+  "ffa4e57e": {
+   "correct": true,
+   "eval": "norm_phrase_set_match",
+   "question_type": "dynamic-environment",
+   "unknown": false
+  }
+ },
+ "summary": {
+  "by_type": {
+   "dynamic-environment/mc_choice_match": [
+    9,
+    14
+   ],
+   "dynamic-environment/norm_phrase_set_match": [
+    18,
+    28
+   ],
+   "dynamic-environment/norm_phrase_set_match_ordered": [
+    2,
+    2
+   ],
+   "errors-gotchas/norm_phrase_set_match": [
+    1,
+    1
+   ],
+   "procedure/mc_choice_match": [
+    10,
+    16
+   ],
+   "procedure/norm_phrase_set_match": [
+    8,
+    15
+   ],
+   "procedure/norm_phrase_set_match_ordered": [
+    3,
+    6
+   ],
+   "static-environment/mc_choice_match": [
+    3,
+    6
+   ],
+   "static-environment/mc_choice_set_match": [
+    1,
+    1
+   ],
+   "static-environment/norm_phrase_set_match": [
+    38,
+    57
+   ],
+   "static-environment/norm_phrase_set_match_ordered": [
+    2,
+    3
+   ]
+  },
+  "cache": "/Volumes/A/.hms-lb/lme2/reader_cache_slice12i.json",
+  "correct": 95,
+  "judge_required_not_scored": 79,
+  "local_questions": 149,
+  "scored": 149
+ }
+}

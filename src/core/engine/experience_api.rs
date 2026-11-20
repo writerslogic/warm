@@ -89,6 +89,32 @@ impl WarmCore {
             .unwrap_or_else(|| vec![String::new(); states.len()])
     }
 
+    /// The action stored with a step: the original input, its predecessor step, and for each
+    /// target its part, resolution and the node it addresses. `None` when the step is not stored.
+    /// A target that could not be resolved has no occurrence, and says why in the record.
+    pub fn experience_action_targets(&self, episode: &str, step: u32) -> Option<serde_json::Value> {
+        self.with_experience(|s| {
+            let t = s.action_targets(episode, step)?;
+            let targets: Vec<serde_json::Value> = t
+                .targets
+                .iter()
+                .map(|(role, occ)| {
+                    serde_json::json!({
+                        "role": role,
+                        "occurrence": occ,
+                        "node": occ.as_ref().and_then(|o| s.occurrence(o)),
+                    })
+                })
+                .collect();
+            Some(serde_json::json!({
+                "record": t.record,
+                "predecessor": t.predecessor,
+                "targets": targets,
+            }))
+        })
+        .flatten()
+    }
+
     /// Writes the experience snapshot and empties its journal when anything changed since the
     /// last one. Runs with every document checkpoint and flush.
     pub fn experience_checkpoint(&self) -> Result<()> {

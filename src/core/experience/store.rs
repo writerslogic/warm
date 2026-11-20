@@ -329,9 +329,8 @@ impl ExperienceStore {
         o: &OwnedObservation,
         controls: Vec<Control>,
     ) -> Result<Ingested> {
-        let ingested = x.ingest_with_controls(&o.as_observation(), controls)?;
         if o.goal.is_none() && o.outcome.is_none() {
-            return Ok(ingested);
+            return x.ingest_with_controls(&o.as_observation(), controls);
         }
         let (goal, outcome) = x
             .episode_description(&o.episode)
@@ -341,6 +340,11 @@ impl ExperienceStore {
             o.goal.clone().unwrap_or_else(|| goal.clone()),
             o.outcome.clone().unwrap_or_else(|| outcome.clone()),
         );
+        // Refuse a bad description before the observation is stored: a rejected operation must
+        // leave no episode behind, or an unjournaled episode would consume a uid that a durable
+        // reference could later be confused with.
+        x.validate_description(&o.episode, &new_goal, &new_outcome)?;
+        let ingested = x.ingest_with_controls(&o.as_observation(), controls)?;
         if (&new_goal, &new_outcome) == (&goal, &outcome) {
             return Ok(ingested);
         }
@@ -449,6 +453,7 @@ impl ExperienceStore {
                     break;
                 }
             }
+            let marker = self.x.mutation_marker();
             match Self::apply(&mut self.x, &op) {
                 Ok(Ingested::Duplicate) => outcomes.push(Ingested::Duplicate),
                 Ok(Ingested::Applied) => {
@@ -479,6 +484,9 @@ impl ExperienceStore {
                     outcomes.push(Ingested::Applied);
                 }
                 Err(e) => {
+                    // An operation that failed after changing the state would leave it ahead of
+                    // the journal, with episode ids no durable record accounts for.
+                    ahead |= self.x.mutation_marker() != marker;
                     failed = Some((i, e));
                     break;
                 }
