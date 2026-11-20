@@ -128,7 +128,6 @@ def main() -> None:
                 frank = {s: i for i, s in enumerate(order)}
                 top = order[: int(mem.p["top_states"])]
                 centers = {mem._s_keys[s] for s in top}
-                memp._fused(text)
                 memp._identity_ranks_for = lambda kk, m=memp, t=text: m._identity_ranks(t, kk)
                 pchosen, why = pagecover_trace(memp, *memp._fused(text))
                 pcenters = {memp._s_keys[s] for s in pchosen}

@@ -67,7 +67,7 @@ def assess(row, ann_rec, states_src):
             src = states_src[(tid, i)]
             body = seg.get((tid, i))
             tree = (src["accessibility_tree"] or "").rstrip()
-            text = "absent" if body is None else "full" if tree and tree in body else "clipped"
+            text = "absent" if body is None else "full" if tree in body else "clipped"
             shot = src.get("screenshot")
             png = str(L / "data/screenshots" / tid / Path(str(shot)).name) if shot else None
             per.append({"state": s, "present": body is not None, "text": text, "screenshot": png in images})
@@ -132,6 +132,22 @@ def main():
             "per_question": per,
         }
         sys.stdout.write(f"{c}: n={len(per)} coverage={result[c]['annotated_evidence_state_coverage']} delivery={dict(cnt)} correct={dict(right)} wrong_verified={len(result[c]['wrong_with_verified_evidence'])}\n")
+    paired = {}
+    for base, new in (("A", "P"), ("A", "C"), ("A", "B"), ("A", "D")):
+        b, n = result[base]["per_question"], result[new]["per_question"]
+        qs = sorted(set(b) & set(n))
+        if set(b) != set(n):
+            raise SystemExit(f"{base} and {new} cover different annotated questions")
+        moves = Counter(f"{b[q]['status']}->{n[q]['status']}" for q in qs)
+        paired[f"{new}_vs_{base}"] = {
+            "questions": len(qs),
+            "state_coverage_gained": sorted(q for q in qs if n[q]["state_coverage"] and not b[q]["state_coverage"]),
+            "state_coverage_lost": sorted(q for q in qs if b[q]["state_coverage"] and not n[q]["state_coverage"]),
+            "delivery_transitions": dict(sorted(moves.items())),
+        }
+        p = paired[f"{new}_vs_{base}"]
+        sys.stdout.write(f"{new} vs {base}: coverage +{len(p['state_coverage_gained'])}/-{len(p['state_coverage_lost'])} transitions={p['delivery_transitions']}\n")
+    result["paired"] = paired
     Path(a.out).write_text(json.dumps(result, indent=1, sort_keys=True) + "\n")
 
 

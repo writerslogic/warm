@@ -25,6 +25,8 @@ CONDITIONS = {
     "D": ([UP / "rows_D.jsonl"], ["pilot_ids.json"]),
     "P": ([UP / "rows_P.jsonl"], ["rest_ids.json", "pilot_ids.json"]),
 }
+# The only registered ids allowed to have no row: the oracle has no evidence for b7cc4da2.
+NOT_BUILT = {"B": ["b7cc4da2"], "D": ["b7cc4da2"]}
 
 
 def main():
@@ -55,7 +57,6 @@ def main():
                 if q in hashes:
                     dup += 1
                 hashes[q] = hashlib.sha256(json.dumps(r["messages"], sort_keys=True).encode()).hexdigest()
-        # Rows exist for every dispatched id except where none was built (B and D: b7cc4da2).
         expected = set(hashes)
         cache = json.load(open(OUT / f"cache_{c}.json"))
         missing = sorted(expected - set(cache))
@@ -69,6 +70,8 @@ def main():
         for k in ("missing", "unexpected", "hash_mismatch", "held_out_in_cache"):
             if rec[k]:
                 bad.append(f"{c}: {k} {rec[k][:3]}")
+        if rec["not_built"] != NOT_BUILT.get(c, []):
+            bad.append(f"{c}: rows not built {rec['not_built'][:3]}")
         if dup:
             bad.append(f"{c}: {dup} duplicate rows")
     report["violations"] = bad

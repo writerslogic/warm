@@ -33,10 +33,14 @@ uv run python benchmarks/lme2/r5/evidence_locate.py --out benchmarks/lme2/r5/evi
 $PY benchmarks/lme2/r5/selection_eval.py --out <json>                    # memory-side, evaluator-only
 uv run python benchmarks/lme2/r5/score_local.py --cache <reader cache> --out <json>
 uv run python benchmarks/lme2/r5/paired.py --base A.json --new C.json [--ids ids.json]
+uv run python benchmarks/lme2/r5/validate_runs.py --out <json>          # must exit 0 before scoring
+uv run python benchmarks/lme2/r5/evidence_delivery.py --out benchmarks/lme2/r5/results/evidence_delivery_pilot.json
+$PY benchmarks/lme2/r5/retrieval_trace.py --out benchmarks/lme2/r5/results/retrieval_trace_pilot.json
 ```
 
 Reader runs: VM `lme2-reader-r5x` (us-central1-a, spot a2-ultragpu-1g from the snapshot),
-`~/r5x/run_all.sh`, caches `~/r5x/cache_{A,B,C,D}.json`, copied to `$L/r5x/`.
+`~/r5x/run_all.sh` and `~/r5x/run_cand.sh`, caches `~/r5x/cache_{A,B,C,D,P}.json`, copied to
+`$L/r5x/out/`.
 
 ## Development boundary (checked 2026-11-20)
 
