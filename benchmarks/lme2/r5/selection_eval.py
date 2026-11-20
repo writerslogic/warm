@@ -4,8 +4,9 @@
 """Memory-side comparison of state selections at R5's budgets. Evaluator-only: the annotations and
 gold phrases are read here to score what each selection delivers; the selections never see them.
 
-For every variant: on the annotated pilot cohort, whether a complete evidence set (any annotated
-alternative) reaches the reader; on all locally scored phrase questions, whether every gold phrase
+For every variant: on the annotated pilot cohort, annotated evidence-state coverage (the headers of
+every state of some annotated set are in the prompt; it does not check clipped text or screenshots,
+see evidence_delivery.py; renamed from `cohort_evidence_complete`, results/selection_eval_v1.json); on all locally scored phrase questions, whether every gold phrase
 is in the delivered text (a weak locator); delivered characters, screenshots, trajectories and
 memory query time.
 
@@ -94,7 +95,7 @@ def main() -> None:
                 rec = {"chars": len(text), "images": sum(i["type"] == "image" for i in items),
                        "trajectories": len({s.split('/')[0] for s in shown}), "query_s": round(dt, 4)}
                 if q in ann:
-                    rec["evidence_complete"] = any(e <= shown for e in ann[q])
+                    rec["evidence_state_coverage"] = any(e <= shown for e in ann[q])
                 spec = r["eval_function"]
                 if spec.startswith("norm_phrase"):
                     seps, norm = evidence_locate.spec_kwargs(spec)
@@ -105,11 +106,11 @@ def main() -> None:
                     rec["equals_stored_r5"] = items == r["memory_context"]
                 per[q] = rec
         vals = list(per.values())
-        ev = [v["evidence_complete"] for v in vals if "evidence_complete" in v]
+        ev = [v["evidence_state_coverage"] for v in vals if "evidence_state_coverage" in v]
         ph = [v["phrases_delivered"] for v in vals if "phrases_delivered" in v]
         result[name] = {
             "params": VARIANTS[name],
-            "cohort_evidence_complete": [sum(ev), len(ev)],
+            "annotated_evidence_state_coverage": [sum(ev), len(ev)],
             "phrase_delivered": [sum(ph), len(ph)],
             "mean_chars": round(sum(v["chars"] for v in vals) / len(vals)),
             "mean_images": round(sum(v["images"] for v in vals) / len(vals), 2),

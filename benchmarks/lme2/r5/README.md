@@ -38,14 +38,28 @@ uv run python benchmarks/lme2/r5/paired.py --base A.json --new C.json [--ids ids
 Reader runs: VM `lme2-reader-r5x` (us-central1-a, spot a2-ultragpu-1g from the snapshot),
 `~/r5x/run_all.sh`, caches `~/r5x/cache_{A,B,C,D}.json`, copied to `$L/r5x/`.
 
-## Status (2026-11-20, in progress)
+## Development boundary (checked 2026-11-20)
 
-- Pilot scored (`results/pilot_*.json`). Frozen candidate P recorded in `PREREG.md`.
-- Queued on the VM after A/C rest: `~/r5x/run_cand.sh` (P on rest, then pilot); `run.log` ends
-  with `CANDDONE`. Then: `validate_runs.py` (must pass), `score_local.py` per cache,
-  `paired.py --ids` on `$L/r5x/up/rest_ids.json` (decision), pilot and all-149 reported apart.
-- `paired.py` now refuses runs that do not cover every registered id.
-- `prompts.py` builds development ids only (P payload reproduced 149 of 149 after the change).
-- `evidence_delivery.py`: per-state presence, full/clipped text, own screenshot attached.
-- Pending: `retrieval_trace.py` (per-source ranks, admission, caps; aggregation control),
-  final results section.
+- Dispatched to the reader: `up/rows_{B,C,D,P}.jsonl` hold 35, 149, 35, 149 rows, none held out;
+  `pilot_ids.json`, `rest_ids.json`, `local_ids.json` hold no held-out id. Condition A was
+  dispatched from the R5 snapshot's own rows (`~/stage/rows/slice12i_*.jsonl`, all 451 questions,
+  sha256 as the stored rows) restricted by `--only`; `validate_runs.py` checks that no cache holds a
+  held-out id.
+- Generated but not dispatched: before `prompts.py` was made development-only, the full-domain
+  builds under `$L/r5x/{regen,slice12i_r5check,slice12i_bound,slice12i_pagecover,slice12i_pagecover_bound}_*`
+  also built prompts for the 223 held-out questions (as the original R5 run did). Every script that
+  reads them drops held-out ids on load; none was opened. Builds now take development ids only
+  (`prompts.build` refuses held-out ids), and the frozen P payload is reproduced 149 of 149.
+  `oracle_rows.py`, `selection_eval.py`, `evidence_locate.py`, `evidence_view.py`,
+  `evidence_delivery.py`, `retrieval_trace.py` and `score_local.py` filter by `held_ids.json`.
+
+## Independence of the 113-question decision split
+
+The session record establishes that, before P was frozen, `selection_eval.py` was run over all 149
+locally scored questions and its gold-phrase proxy totals were read, including the 113: R5 85 of
+112 phrase questions, `pagecover` 89, `pagecover_t2` 90, `mmr` 88, `expand_r2` 79, and per-variant
+gains and losses over all 112. P's configuration is the default written into `warm_select.py`
+before any variant was scored, and it was not the best variant on that proxy; the choice cited
+cohort-only numbers. No reader output on the 113 existed before the freeze. The 113 are
+therefore a reader-evaluation holdback: no reader result on them shaped P, but their proxy labels
+were seen during selection design, so they are not a design-independent validation.
