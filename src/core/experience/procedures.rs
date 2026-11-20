@@ -258,7 +258,7 @@ impl ProcedureStore {
                     let e = &r.path[pos];
                     let kind = if e.error {
                         Some(RefutationKind::ErrorShown)
-                    } else if e.no_change {
+                    } else if e.no_change && !e.state_changed {
                         Some(RefutationKind::NoChange)
                     } else if e.template.id != st.next {
                         Some(RefutationKind::WrongPage)
@@ -501,5 +501,45 @@ mod tests {
         let mut s = ProcedureStore::default();
         s.learn(&x);
         assert!(s.procedures().is_empty());
+    }
+
+    #[test]
+    fn a_property_only_change_is_not_reported_as_no_change() {
+        let mut x = Experience::default();
+        episode(&mut x, "e1", true, false);
+        episode(&mut x, "e2", true, false);
+        // Same steps as e1, but Save leaves the listed lines alone and only checks a box.
+        x.describe_episode("e3", "Save the order reason", "success")
+            .unwrap();
+        let orders = page("Orders", &["Open"]);
+        let detail = page("Detail", &["Save"]);
+        let mut checked = detail.clone();
+        checked.children[0].props = "checked".into();
+        let open = Action::Label(label("button", "Open"));
+        let save = Action::Label(label("button", "Save"));
+        for (n, t, a) in [
+            (0, &orders, None),
+            (1, &detail, Some(&open)),
+            (2, &checked, Some(&save)),
+        ] {
+            x.ingest(&Observation {
+                episode: "e3",
+                step: n,
+                tree: t,
+                url: Some("http://h/orders/12"),
+                action: a,
+            })
+            .unwrap();
+        }
+        let mut s = ProcedureStore::default();
+        s.learn(&x);
+        s.observe(&x);
+        // Save did not reach Saved, so the run still refutes the path, but not as "nothing happened".
+        let kinds: Vec<_> = s.procedures()[0]
+            .refutations
+            .iter()
+            .map(|r| r.kind)
+            .collect();
+        assert_eq!(kinds, vec![RefutationKind::WrongPage]);
     }
 }

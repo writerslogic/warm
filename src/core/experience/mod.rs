@@ -478,7 +478,10 @@ pub struct PathEntry {
     pub step: u32,
     pub action: Option<String>,
     pub template: TemplateInfo,
+    /// The listed lines did not change; properties such as `checked` may still have.
     pub no_change: bool,
+    /// The observation's content differs from the previous step's, including properties.
+    pub state_changed: bool,
     pub error: bool,
 }
 
@@ -1397,11 +1400,13 @@ impl Experience {
             path: e
                 .steps
                 .iter()
-                .map(|s| PathEntry {
+                .enumerate()
+                .map(|(i, s)| PathEntry {
                     step: s.step,
                     action: s.label.map(|l| self.terms.syms.get(l).to_string()),
                     template: self.info(s.template),
                     no_change: s.flags & FLAG_NO_CHANGE != 0,
+                    state_changed: i > 0 && e.steps[i - 1].root != s.root,
                     error: s.flags & FLAG_ERROR != 0,
                 })
                 .collect(),

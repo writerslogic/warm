@@ -916,3 +916,22 @@ fn a_version_3_snapshot_over_the_control_caps_is_refused() {
     });
     assert!(Experience::from_bytes(&more_options, ExperienceConfig::default()).is_err());
 }
+
+#[test]
+fn a_property_only_change_is_no_listed_change_but_a_state_change() {
+    let mut x = Experience::default();
+    let off = page("P", vec![btn("Agree"), btn("Save")]);
+    let mut on = off.clone();
+    on.children[0].props = "checked".into();
+    run(&mut x, "e", &[off.clone(), on, off.clone(), off]);
+    let path = x.episode("e").unwrap().path;
+    assert!(
+        path[1].no_change && path[1].state_changed,
+        "checkbox toggled"
+    );
+    assert!(path[2].no_change && path[2].state_changed, "toggled back");
+    assert!(
+        path[3].no_change && !path[3].state_changed,
+        "nothing changed"
+    );
+}
