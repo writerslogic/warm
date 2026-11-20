@@ -78,3 +78,14 @@ The runs use `reader_stage_rolling.py` (the VM's `~/stage/warm_memory/reader_sta
 `d72aaaee…`), which R5 itself used for 196 of its 228 dev outputs, not `reader_stage_r5.py`. Both
 send the same request through upstream `call_reader_model_async`; they differ only in scheduling
 and in recording a bad request as an empty answer.
+
+## Frozen candidate, recorded after the pilot and before any candidate reader call
+
+Pilot (36 cohort questions; 35 for B and D): fresh A 14, B 25, C 12, D 27. B against fresh A:
++16/-4, p = 0.012, so selection is a supported bottleneck. C against fresh A: +2/-4, so the bound
+rendering is not carried into the candidate.
+
+Candidate P: `warm_select` with `select: pagecover` (`per_trajectory` 3, `identity_weight` 1.0),
+R5 rendering, R5 budgets (`prompts.py --system slice12i_pagecover`). Chosen on the memory side
+before the reader pilot ended; the annotations are not an input. One reader pass on the 113 rest
+questions (headline split) and on the cohort, compared with fresh A.
