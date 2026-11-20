@@ -215,3 +215,14 @@ The form backend is in `formtable.py`.
   - A line nests under the nearest earlier line with less leading whitespace. Several top-level lines get a synthetic `RootWebArea` parent.
 - **Bounds:** strings are clipped to 16384 bytes, page text to 4 MiB, at most 200000 nodes, and depth stays below 128.
 - **Form tables:** `w.experience_form_tables([(trajectory_id, state_index), ...])` is called once per query with every state of the valid spans in render order, duplicates included. It must return one block per state, with the "already shown" set running across the list.
+
+## Evidence-lifecycle fixes (not yet scored)
+
+`evidence_v2.py` holds fixes found in a source review. The frozen G1 files are unchanged, so `check_frozen.py` still pins them, and nothing here has a scored run.
+
+- `Tools4`: indexes the whole page in 20,000-character windows (G1 indexes only the first 20,000 characters; 42% of the small-tier states are longer and 46% of all page text lies beyond that cap), `show_state` takes an `offset`, `find_states` reports page length, and `value_timeline` lists every logged observation of one control in state order.
+- `normalize_spans`, `merge_pass2_v2`: count unique (trajectory, state) pairs against the 20-state allowance; G1 deduplicates only exact span dictionaries.
+- `final_rule_v2`, `apply_pass2_v2`: G1's `absent` verdict never changes once set, even when pass 2 or VERIFY and CRUX find the evidence. These record the basis of an `absent` and revise it when only the controller held it.
+- `test_evidence_v2.py` checks these invariants without models or labels.
+
+Protocol notes. The official harness calls the reader once on the `memory.query` output. G1's ANSWER-CHECK reads the first reader answer and can rerun the reader outside the harness, so a G1 number that includes that step is not a reference-protocol number; a compliant run does that work inside `memory.query` and counts its latency. `run_lme2.py --trust-cache` accepts a reader output whose rebuilt context hash differs; do not use it for a headline reproduction.
