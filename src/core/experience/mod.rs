@@ -10,6 +10,7 @@
 //! of a node is counted, so purging an episode frees exactly what no other episode shares.
 
 mod effects;
+pub mod procedures;
 pub mod form;
 mod regions;
 mod snapshot;
@@ -1378,6 +1379,13 @@ impl Experience {
                 .iter()
                 .map(|(e, s)| self.step_controls(e.as_ref(), *s).unwrap_or(&[])),
         )
+    }
+
+    /// Ids of every stored episode, sorted.
+    pub fn episode_ids(&self) -> Vec<String> {
+        let mut ids: Vec<String> = self.episodes.iter().flatten().map(|e| e.key.clone()).collect();
+        ids.sort();
+        ids
     }
 
     pub fn episode(&self, id: &str) -> Option<EpisodeView> {

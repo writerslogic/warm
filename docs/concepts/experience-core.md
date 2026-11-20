@@ -39,6 +39,16 @@ An end-to-end reader test with a compact pack did not beat the baseline reader o
 
 The ratio falls as pages repeat; it is a property of this synthetic repetition, not a prediction for other data. Nothing was run past 1000 episodes.
 
+## Procedures learned from experience
+
+`experience::procedures::ProcedureStore` turns repeated successful episodes into reusable procedures and revises them when a later episode disproves them. It is a first slice: it is not wired into the memory API and has no measured benefit on any benchmark.
+
+- **Learn.** `learn` groups successful episodes by their grounded path: for each action, the page it was taken on (page template), its `role 'name'` label and the page it led to. A group with at least `min_support` episodes (default 2) becomes a procedure.
+- **Revise.** `observe` checks every stored episode against every procedure. An episode that takes a step and sees an error, no visible change or a different next page is recorded as a refutation with its episode and step. When some control state held before the step in every supporting run and in none of the refuting runs, the procedure becomes `Revised` and carries that guard. With no such state, it is `Retired` once the refutations equal the support. Nothing is deleted.
+- **Ground.** `ProcedureStore::ground` binds a step to a control of a new page by its role and name, reports `Ambiguous(n)` or `Missing` when the page does not identify one, and fails with the guard when the guard does not hold.
+
+Limits: grounding is by role and name, so two controls with the same label are ambiguous; a guard is one control field, not a conjunction; steps with typed values are not generalised into parameters; and guards are only found for episodes ingested with `ingest_with_controls`.
+
 ## Rust API
 
 ```rust
