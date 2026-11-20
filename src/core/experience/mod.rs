@@ -10,6 +10,8 @@
 //! of a node is counted, so purging an episode frees exactly what no other episode shares.
 
 mod effects;
+pub mod diff;
+pub mod enablement;
 pub mod procedures;
 pub mod form;
 mod regions;

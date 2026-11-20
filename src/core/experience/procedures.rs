@@ -114,7 +114,7 @@ fn locate(path: &[PathEntry], st: &Step) -> Option<usize> {
     })
 }
 
-fn fields(c: &Control) -> Vec<(&'static str, String)> {
+pub(super) fn fields(c: &Control) -> Vec<(&'static str, String)> {
     let mut v = Vec::new();
     let mut put = |f: &'static str, x: &Option<String>| {
         if let Some(x) = x {
@@ -157,6 +157,14 @@ impl ProcedureStore {
             cfg,
             procs: Vec::new(),
         }
+    }
+
+    /// Recompute every procedure from the episodes now stored. The library is a function of the
+    /// stored episodes, so a purged supporter or refuter leaves no trace.
+    pub fn refresh(&mut self, x: &Experience) {
+        self.procs.clear();
+        self.learn(x);
+        self.observe(x);
     }
 
     pub fn procedures(&self) -> &[Procedure] {
@@ -541,5 +549,23 @@ mod tests {
             .map(|r| r.kind)
             .collect();
         assert_eq!(kinds, vec![RefutationKind::WrongPage]);
+    }
+
+    #[test]
+    fn refresh_after_a_purge_equals_learning_the_remaining_episodes() {
+        let mut x = Experience::default();
+        episode(&mut x, "e1", true, false);
+        episode(&mut x, "e2", true, false);
+        episode(&mut x, "e3", false, true);
+        let mut s = ProcedureStore::default();
+        s.refresh(&x);
+        assert_eq!(s.procedures()[0].status, Status::Revised);
+        x.purge_episode("e3").unwrap();
+        s.refresh(&x);
+        assert_eq!(s.procedures()[0].status, Status::Active);
+        assert!(s.procedures()[0].refutations.is_empty() && s.procedures()[0].guard.is_none());
+        x.purge_episode("e2").unwrap();
+        s.refresh(&x);
+        assert!(s.procedures().is_empty(), "one supporter is no procedure");
     }
 }

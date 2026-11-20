@@ -47,7 +47,19 @@ The ratio falls as pages repeat; it is a property of this synthetic repetition, 
 - **Revise.** `observe` checks every stored episode against every procedure. An episode that takes a step and sees an error, no visible change or a different next page is recorded as a refutation with its episode and step. When some control state held before the step in every supporting run and in none of the refuting runs, the procedure becomes `Revised` and carries that guard. With no such state, it is `Retired` once the refutations equal the support. Nothing is deleted.
 - **Ground.** `ProcedureStore::ground` binds a step to a control of a new page by its role and name, reports `Ambiguous(n)` or `Missing` when the page does not identify one, and fails with the guard when the guard does not hold.
 
+`ProcedureStore::refresh` recomputes the library from the episodes now stored, so purging a supporter or a refuter leaves no stale support.
+
 Limits: grounding is by role and name, so two controls with the same label are ambiguous; a guard is one control field, not a conjunction; steps with typed values are not generalised into parameters; and guards are only found for episodes ingested with `ingest_with_controls`.
+
+## Conditions learned for an action
+
+`experience::enablement::EnablementStore` learns when an action takes effect. Each observed transition (the controls before an action, and whether the action had an effect: no error, and the page or its properties changed) is evidence. The hypothesis class is explicit: conjunctions of at most two atoms (the target is not disabled; at least or exactly k checked controls of a role; all of a role checked; a field is filled; a control state equals a value). A hypothesis survives while it agrees with every observation.
+
+`predict` returns `Effective` or `Ineffective` only when every survivor agrees, with the observations that excluded the alternatives predicting otherwise. Otherwise it returns `Unresolved` with the simplest surviving alternatives, `Unexplained` when no hypothesis of the class fits, or `NoEvidence`. The store is recomputed from the stored episodes, so `purge_episode` followed by `refresh` equals learning the remaining episodes, and withdrawing the observation that separated two hypotheses reopens the question.
+
+Limits: a role group is every control of that role on the page, not a region; atoms are positive only; the hypothesis class does not include sums over several roles or ordering. Measured benefit on any benchmark: none yet.
+
+`Experience::state_diff(episode, from, to)` is the row-aware companion to the listed lines. It reports property changes and added or removed nodes by address (role, name and ordinal), and marks a change `exact: false` when same-labelled siblings make the match positional. `PathEntry::state_changed` says a step changed content (including properties) while `no_change` says the listed lines did not.
 
 ## Rust API
 
