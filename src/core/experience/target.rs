@@ -124,6 +124,39 @@ pub(crate) struct HandleEntry {
 
 pub(crate) type HandleMap = HashMap<String, HandleEntry>;
 
+/// A 128-bit digest of the handle addresses of one observation (two FNV-1a passes over the
+/// handles in sorted order, with the address of each). It is defined here and persisted, so it
+/// does not depend on a hasher whose output may change between releases. Content interning
+/// ignores handles, so this is what makes a retry with changed handles distinguishable.
+pub(crate) fn handles_digest(m: &HandleMap) -> (u64, u64) {
+    const PRIME: u64 = 0x0000_0100_0000_01b3;
+    let (mut a, mut b) = (0xcbf2_9ce4_8422_2325u64, 0x8422_2325_cbf2_9ce4u64);
+    let mut feed = |bytes: &[u8]| {
+        for &x in bytes {
+            a = (a ^ u64::from(x)).wrapping_mul(PRIME);
+            b = (b ^ u64::from(x ^ 0x5a)).wrapping_mul(PRIME);
+        }
+    };
+    let mut keys: Vec<&String> = m.keys().collect();
+    keys.sort();
+    for k in keys {
+        feed(&(k.len() as u64).to_le_bytes());
+        feed(k.as_bytes());
+        match &m[k].spot {
+            Spot::At(p) => {
+                feed(&[0]);
+                feed(&(p.len() as u64).to_le_bytes());
+                for i in p {
+                    feed(&i.to_le_bytes());
+                }
+            }
+            Spot::Conflict => feed(&[1]),
+            Spot::Unknown => feed(&[2]),
+        }
+    }
+    (a, b)
+}
+
 pub(crate) fn handles_bound(m: &HandleMap) -> usize {
     m.iter()
         .map(|(h, e)| {

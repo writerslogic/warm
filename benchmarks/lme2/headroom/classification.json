@@ -20,6 +20,11 @@
    "12 mixed or unclassifiable": 24
   },
   "correspondence_candidates": 0,
+  "correspondence_review": "manual, question text and gold answer only; no identity counterfactual run",
+  "label_bases": {
+   "cause": "heuristic",
+   "correspondence": "manual (review.json)"
+  },
   "by_type": {
    "procedure": 15,
    "dynamic-environment": 22,
@@ -48,10 +53,12 @@
    "contributing": [
     10
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "0d07143c",
@@ -64,10 +71,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "0f8c85a6",
@@ -78,10 +87,12 @@
    "gold_phrase_in_context": true,
    "primary": 10,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "11cc7ac2",
@@ -92,10 +103,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "123b74fb",
@@ -106,10 +119,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "229675cd",
@@ -122,10 +137,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "233f9f09",
@@ -140,10 +157,12 @@
     6,
     12
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "237d2cc5",
@@ -156,10 +175,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "285db8ec",
@@ -172,10 +193,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "2fab8b79",
@@ -186,10 +209,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "329742b1",
@@ -200,10 +225,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "32d04f31",
@@ -216,10 +243,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "38726e61",
@@ -230,10 +259,12 @@
    "gold_phrase_in_context": true,
    "primary": 10,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "43d9c5d0",
@@ -244,10 +275,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "48a52262",
@@ -260,10 +293,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "4c6d1eb7",
@@ -276,10 +311,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "4df5e6b4",
@@ -292,10 +329,12 @@
    "contributing": [
     10
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "4dffe641",
@@ -309,10 +348,12 @@
     5,
     12
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "507a0fe8",
@@ -325,10 +366,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "50d92f55",
@@ -341,10 +384,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "571b841c",
@@ -355,10 +400,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "579557d8",
@@ -369,10 +416,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "58c34839",
@@ -385,10 +434,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "5ca112bf",
@@ -399,10 +450,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "5f100f22",
@@ -415,10 +468,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "679111c6",
@@ -431,10 +486,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "6cb8ce37",
@@ -447,10 +504,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "6e0759a2",
@@ -461,10 +520,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "7df9e2ff",
@@ -475,10 +536,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "7ea13f14",
@@ -492,10 +555,12 @@
     5,
     12
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "823d133a",
@@ -506,10 +571,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "83c35034",
@@ -522,10 +589,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "85fc5722",
@@ -538,10 +607,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "882965b7",
@@ -554,10 +625,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "8b09f378",
@@ -570,10 +643,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "927c65a2",
@@ -586,10 +661,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "a482c0d9",
@@ -602,10 +679,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "a667402d",
@@ -616,10 +695,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "a7edfb7a",
@@ -632,10 +713,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "aca57021",
@@ -648,10 +731,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "ad903be2",
@@ -662,10 +747,12 @@
    "gold_phrase_in_context": true,
    "primary": 10,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "adddeaa5",
@@ -678,10 +765,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "b15314c0",
@@ -692,10 +781,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "b8cabd09",
@@ -709,10 +800,12 @@
     5,
     12
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "bfb3bcc4",
@@ -725,10 +818,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "c0593d69",
@@ -741,10 +836,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "c35bfeed",
@@ -757,10 +854,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "c9568c9b",
@@ -773,10 +872,12 @@
    "contributing": [
     3
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "ca8e070b",
@@ -787,10 +888,12 @@
    "gold_phrase_in_context": true,
    "primary": 10,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "ce1cdb2d",
@@ -801,10 +904,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "ce9aa351",
@@ -817,10 +922,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "d0d61088",
@@ -833,10 +940,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "d63e8a7f",
@@ -849,10 +958,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "d72fb64d",
@@ -863,10 +974,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "d83c4bf7",
@@ -879,10 +992,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "e9fde9fe",
@@ -893,10 +1008,12 @@
    "gold_phrase_in_context": true,
    "primary": 10,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "0382ed92",
@@ -907,10 +1024,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "0a13e290",
@@ -921,10 +1040,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "0c0fdcd7",
@@ -935,10 +1056,12 @@
    "gold_phrase_in_context": false,
    "primary": 3,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "10003186",
@@ -949,10 +1072,12 @@
    "gold_phrase_in_context": false,
    "primary": 3,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "11dac74b",
@@ -965,10 +1090,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "17d63ad8",
@@ -981,10 +1108,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "1b43f7df",
@@ -997,10 +1126,12 @@
    "contributing": [
     3
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "1e77eb4b",
@@ -1013,10 +1144,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "21df0107",
@@ -1027,10 +1160,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "2cc1b9ca",
@@ -1043,10 +1178,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "4252cc1c",
@@ -1059,10 +1196,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "48ab5c3d",
@@ -1075,10 +1214,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "4d7dda89",
@@ -1091,10 +1232,12 @@
    "contributing": [
     3
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "4f92aa38",
@@ -1107,10 +1250,12 @@
    "contributing": [
     10
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "5387d23d",
@@ -1123,10 +1268,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "5d6ecdeb",
@@ -1137,10 +1284,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "60c7ca22",
@@ -1153,10 +1302,12 @@
    "contributing": [
     10
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "6f9cb5fc",
@@ -1169,10 +1320,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "73297783",
@@ -1185,10 +1338,12 @@
    "contributing": [
     3
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "7376c10d",
@@ -1199,10 +1354,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "7c8efee5",
@@ -1215,10 +1372,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "81180ae9",
@@ -1231,10 +1390,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "820d56e2",
@@ -1247,10 +1408,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "8f70bc0e",
@@ -1263,10 +1426,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "910135bb",
@@ -1279,10 +1444,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "914ab1d4",
@@ -1295,10 +1462,12 @@
    "contributing": [
     12
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for failure-recovery advice: procedural evidence, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "91d0775e",
@@ -1313,10 +1482,12 @@
     6,
     12
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "a12b7094",
@@ -1329,10 +1500,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "a2a71197",
@@ -1343,10 +1516,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "a42071db",
@@ -1359,10 +1534,12 @@
    "contributing": [
     6
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "b828a6b2",
@@ -1376,10 +1553,12 @@
     5,
     12
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "c7e367e2",
@@ -1393,10 +1572,12 @@
     6,
     12
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Compares different pages or forms: aggregation over distinct pages, with no record shared between them.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "cdb47c5d",
@@ -1407,10 +1588,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "d5b9fda4",
@@ -1421,10 +1604,12 @@
    "gold_phrase_in_context": false,
    "primary": 3,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks what one page shows or defaults to: a single observation, so no record has to be matched across observations.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "d886b018",
@@ -1437,10 +1622,12 @@
    "contributing": [
     3
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "e71f7c92",
@@ -1453,10 +1640,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "ecd9dda3",
@@ -1467,10 +1656,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "eff00409",
@@ -1481,10 +1672,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "f13eb38d",
@@ -1497,10 +1690,12 @@
    "contributing": [
     3
    ],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks for a workflow, its stages or a step count: procedural knowledge over recorded runs, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "f90f2255",
@@ -1511,10 +1706,12 @@
    "gold_phrase_in_context": null,
    "primary": 9,
    "contributing": [],
-   "basis": "feature",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Rests on a false premise about a UI element: absence and premise handling, with no record matching.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   },
   {
    "id": "f93031d2",
@@ -1527,10 +1724,12 @@
    "contributing": [
     5
    ],
-   "basis": "inspection",
+   "cause_basis": "heuristic",
    "correspondence_candidate": false,
-   "correspondence_review": "manual",
-   "identity_oracle_constructible": false
+   "correspondence_basis": "manual",
+   "correspondence_rationale": "Asks the state after an action on a control named by page and label: the control is identified exactly, not matched under ambiguity.",
+   "identity_oracle_constructible": null,
+   "counterfactual": null
   }
  ]
 }

@@ -31,7 +31,7 @@ use serde_json::{json, Value};
 use self::effects::{delta, EffectTable, Frames, Templates};
 pub use self::form::{Control, ControlOption};
 use self::regions::{Region, RegionStore};
-use self::target::{collect_handles, handles_bound, HandleMap};
+use self::target::{collect_handles, handles_bound, handles_digest, HandleMap};
 pub use self::target::{
     ActionRecord, ActionTarget, ActionTargets, OccurrenceNode, OccurrenceRef, Resolution,
     TargetRole, Unresolved,
@@ -551,6 +551,9 @@ pub(crate) struct StepRec {
     pub controls: Box<[Control]>,
     /// The action that produced the step, as given, with the occurrences it targeted.
     pub action: ActionRecord,
+    /// Digest of the handle addresses of this observation; `None` for a step restored from a
+    /// snapshot older than version 4, whose handles were not recorded.
+    pub handle_digest: Option<(u64, u64)>,
 }
 
 pub(crate) struct Episode {
@@ -760,6 +763,31 @@ impl Experience {
         Self::limit("episode id bytes", self.cfg.max_id_bytes, episode.len())?;
         Self::limit("goal bytes", self.cfg.max_goal_bytes, goal.len())?;
         Self::limit("outcome bytes", self.cfg.max_goal_bytes, outcome.len())?;
+        self.write_description(episode, goal, outcome);
+        Ok(())
+    }
+
+    /// What [`Self::describe_episode`] checks, without changing anything.
+    pub(crate) fn validate_description(
+        &self,
+        episode: &str,
+        goal: &str,
+        outcome: &str,
+    ) -> Result<()> {
+        if episode.is_empty() || episode.contains('\0') {
+            return Err(ExperienceError::Invalid("episode id"));
+        }
+        Self::limit("episode id bytes", self.cfg.max_id_bytes, episode.len())?;
+        Self::limit("goal bytes", self.cfg.max_goal_bytes, goal.len())?;
+        Self::limit("outcome bytes", self.cfg.max_goal_bytes, outcome.len())
+    }
+
+    /// Counters that change whenever an ingest or a description changes the stored state.
+    pub(crate) fn mutation_marker(&self) -> (u64, usize, usize) {
+        (self.next_uid, self.step_count, self.episode_map.len())
+    }
+
+    fn write_description(&mut self, episode: &str, goal: &str, outcome: &str) {
         let id = self
             .episode_slot(episode)
             .unwrap_or_else(|| self.new_episode(episode));
@@ -767,7 +795,6 @@ impl Experience {
         e.goal = goal.to_string();
         e.outcome = outcome.to_string();
         self.dirty.insert(id);
-        Ok(())
     }
 
     /// Ingests one observation step. Retrying a step with identical content changes nothing.
@@ -840,6 +867,8 @@ impl Experience {
             }
         }
 
+        let handle_map = collect_handles(o.tree);
+        let digest = handles_digest(&handle_map);
         let root = self.terms.intern(o.tree);
         let template = self.templates.acquire(
             &mut self.terms.syms,
@@ -876,6 +905,7 @@ impl Experience {
                 let same = s.root == root
                     && s.template == template
                     && s.action.is_input(o.action).unwrap_or(s.label == label_sym)
+                    && s.handle_digest.is_none_or(|d| d == digest)
                     && *s.controls == *controls;
                 self.terms.release(root);
                 self.templates.release(&mut self.terms.syms, template);
@@ -965,7 +995,6 @@ impl Experience {
             }
         }
 
-        let handle_map = collect_handles(o.tree);
         let (new_bound, step_bound) = (handles_bound(&handle_map), action_rec.encoded_bound());
         let e = self.episodes[eid as usize].as_mut().expect("live episode");
         let old_bound = handles_bound(&std::mem::replace(&mut e.handles, handle_map));
@@ -984,6 +1013,7 @@ impl Experience {
             regions,
             controls: controls.into_boxed_slice(),
             action: action_rec,
+            handle_digest: Some(digest),
         });
         self.dirty.insert(eid);
         Ok(Ingested::Applied)
@@ -1258,7 +1288,7 @@ impl Experience {
     fn snapshot_estimate(&self) -> u64 {
         const NODE: usize = 64;
         const SYMBOL: usize = 16;
-        const STEP: usize = 32;
+        const STEP: usize = 64;
         const STEP_REGION: usize = 12;
         const REGION: usize = 2048;
         (self.control_counts.encoded

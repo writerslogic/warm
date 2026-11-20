@@ -37,9 +37,20 @@ def load_dev(root: Path, held: set):
     return qs
 
 
-def classify(row, q):
+def review_kind(row, review):
+    t = row["type"]
+    if t.endswith("-abs"):
+        return "F"
+    if t == "errors-gotchas":
+        return "G"
+    if t == "procedure":
+        return "W"
+    return review["by_id"][row["id"]]
+
+
+def classify(row, q, review):
     t, gold_in = row["type"], row["gold_in_ctx"]
-    primary, contrib, basis = None, [], "feature"
+    primary, contrib, basis = None, [], "heuristic"
     if t.endswith("-abs"):
         primary = 9
     elif t == "errors-gotchas":
@@ -60,24 +71,24 @@ def classify(row, q):
             primary = 12
         if t == "dynamic-environment":
             contrib.append(5)
-            basis = "inspection"
         if COMPARE.search(q["question"]):
             contrib.append(6)
-            basis = "inspection"
     if gold_in is None and primary != 9:
         contrib.append(12)
     return {
         "id": row["id"], "type": t, "domain": q["domain"], "scorer": row["ef"], "r6_score": row["score"],
         "gold_phrase_in_context": gold_in, "primary": primary, "contributing": sorted(set(contrib)),
         # Phrase presence is a proxy: it does not show the evidence was complete or correctly bound.
-        "basis": basis,
-        # Manual review of the question and gold answer (all 97): none needs the same record, row or
-        # control matched across observations without an exact identifier. This field is a recorded
-        # judgement, not computed by this script.
+        # Cause labels come from rules over the question type, a regular expression over the
+        # question text and the recorded gold-phrase flag; none is a counterfactual result.
+        "cause_basis": basis,
+        # A recorded manual judgement, with its rationale in review.json; not computed here.
         "correspondence_candidate": False,
-        "correspondence_review": "manual",
-        # The dataset carries no identity or evidence annotations, so no independently grounded oracle exists.
-        "identity_oracle_constructible": False,
+        "correspondence_basis": "manual",
+        "correspondence_rationale": review["kinds"][review_kind(row, review)],
+        # No identity or evidence annotations exist in the dataset: unknown, not false.
+        "identity_oracle_constructible": None,
+        "counterfactual": None,
     }
 
 
@@ -94,7 +105,10 @@ def main():
     rows = json.load(open(root / "final-arch" / "forensics_r6_dev.json"))
     assert {r["id"] for r in rows} == set(qs), "forensics must cover exactly the development ids"
     fails = [r for r in rows if r["score"] < 1]
-    out = [classify(r, qs[r["id"]]) for r in fails]
+    review = json.load(open(Path(__file__).resolve().parent / "review.json"))
+    out = [classify(r, qs[r["id"]], review) for r in fails]
+    missing = [o["id"] for o in out if o["type"] in ("static-environment", "dynamic-environment") and o["id"] not in review["by_id"]]
+    assert not missing, missing
     prim = collections.Counter(o["primary"] for o in out)
     anyc = collections.Counter(c for o in out for c in {o["primary"], *o["contributing"]})
     summary = {
@@ -103,6 +117,8 @@ def main():
         "primary": {f"{k} {CATEGORIES[k]}": v for k, v in sorted(prim.items())},
         "primary_or_contributing": {f"{k} {CATEGORIES[k]}": v for k, v in sorted(anyc.items())},
         "correspondence_candidates": sum(o["correspondence_candidate"] for o in out),
+        "correspondence_review": "manual, question text and gold answer only; no identity counterfactual run",
+        "label_bases": {"cause": "heuristic", "correspondence": "manual (review.json)"},
         "by_type": dict(collections.Counter(o["type"] for o in out)),
         "gold_phrase_in_context": dict(collections.Counter(str(o["gold_phrase_in_context"]) for o in out)),
         "source": "final-arch/forensics_r6_dev.json; questions filtered against held_ids.json",

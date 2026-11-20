@@ -59,6 +59,9 @@ struct SnapStep {
     /// The action as given and its resolved targets. Absent in versions before 4.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     action: Option<ActionRecord>,
+    /// Digest of the handle addresses of the observation. Absent in versions before 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    handle_digest: Option<(u64, u64)>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -212,13 +215,15 @@ impl Experience {
                                 regions: s.regions.clone(),
                                 controls: s.controls.to_vec(),
                                 action: Some(s.action.clone()),
+                                handle_digest: s.handle_digest,
                             })
                             .collect(),
                     })
                 })
                 .collect(),
             seq,
-            next_uid: self.next_uid,
+            // The version below decides whether the payload may carry it.
+            next_uid: if self.next_uid > 1 { self.next_uid } else { 0 },
         };
         let mut payload = Vec::new();
         ciborium::into_writer(&snap, &mut payload).map_err(|e| bad(&e.to_string()))?;
@@ -229,12 +234,9 @@ impl Experience {
                 got: payload.len(),
             });
         }
-        let has_actions = self
-            .episodes
-            .iter()
-            .flatten()
-            .any(|e| e.steps.iter().any(|s| s.action != ActionRecord::None));
-        let version = if has_actions || self.next_uid > 1 {
+        // A store that never held an episode has nothing version 4 adds; its payload carries no
+        // uid state (`next_uid` is 0), so the version and the payload agree.
+        let version = if self.next_uid > 1 {
             VERSION
         } else if self.control_counts.controls > 0 {
             VERSION_WITH_CONTROLS
@@ -312,7 +314,11 @@ impl Experience {
         if bytes[4] < 4
             && (snap.next_uid != 0
                 || snap.episodes.iter().flatten().any(|e| {
-                    e.uid != 0 || !e.spots.is_empty() || e.steps.iter().any(|s| s.action.is_some())
+                    e.uid != 0
+                        || !e.spots.is_empty()
+                        || e.steps
+                            .iter()
+                            .any(|s| s.action.is_some() || s.handle_digest.is_some())
                 }))
         {
             return Err(bad("action records in a snapshot older than version 4"));
@@ -495,6 +501,7 @@ impl Experience {
                     } else {
                         ActionRecord::None
                     }),
+                    handle_digest: s.handle_digest,
                 });
             }
             while x.episodes.len() <= i {
@@ -630,6 +637,7 @@ pub(super) fn downgrade_to_version_3_for_test(bytes: &[u8]) -> Vec<u8> {
         e.spots.clear();
         for s in &mut e.steps {
             s.action = None;
+            s.handle_digest = None;
         }
     }
     let mut payload = Vec::new();
