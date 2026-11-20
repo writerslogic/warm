@@ -59,36 +59,56 @@ class WarmSelectMemory(WarmBoundMemory):
                 "per_trajectory": 3, "identity_weight": 1.0}
 
     def _fused(self, query):
-        """R5's fused state scores, before its top-k cut (the body of warm_slice._rank)."""
+        """R5's fused state scores, before its top-k cut (the body of warm_slice._rank).
+
+        `admission` changes only how chunk hits become state candidates (a diagnostic; the frozen
+        candidate uses the default): "r5" keeps the top 3 x pool chunks per channel and then
+        collapses them to states; "wide" keeps 10 x pool chunks; "agg" collapses every scored
+        chunk to its state first (best chunk per state) and keeps the top 3 x pool states.
+        `self.admitted` records the states each channel admitted, in rank order.
+        """
         self._finalize()
         self._sfinal()
         p = self.p
         pool, k = int(p["pool_states"]), int(p["rrf_k"])
+        adm = p.get("admission", "r5")
+        n_chunks = len(self._chunk_step)
+        chunk_n = {"r5": pool * 3, "wide": pool * 10, "agg": n_chunks}[adm]
+        state_cap = pool * 3 if adm == "agg" else None
         index = {key: sid for sid, key in enumerate(self._s_keys)}
         fused: dict[int, float] = defaultdict(float)
+        self.admitted = {}
 
-        def add_chunks(order, weight):
-            seen, r = set(), 0
+        def add_chunks(name, order, weight):
+            seen, r = [], 0
+            got = set()
             for d in order:
                 step = self._chunk_step[int(d)]
                 if step < 0:
                     continue
                 sid = index.get((self._chunk_traj[int(d)], step))
-                if sid is None or sid in seen:
+                if sid is None or sid in got:
                     continue
-                seen.add(sid)
+                got.add(sid)
+                seen.append(sid)
                 fused[sid] += weight / (k + r + 1)
                 r += 1
+                if state_cap is not None and r >= state_cap:
+                    break
+            self.admitted[name] = seen
 
         if p["dense"] and self._emb is not None:
             q = np.asarray(self._get_embedder().embed_query(query), dtype=np.float32)
             q /= max(float(np.linalg.norm(q)), 1e-12)
             sims = self._emb @ q
-            top = np.argpartition(-sims, min(pool * 3, len(sims) - 1))[: pool * 3]
-            add_chunks(top[np.argsort(-sims[top])], float(p["dense_weight"]))
+            n = min(chunk_n, len(sims))
+            top = np.argpartition(-sims, n - 1)[:n] if n < len(sims) else np.arange(len(sims))
+            add_chunks("dense", top[np.argsort(-sims[top])], float(p["dense_weight"]))
         if p["bm25"]:
-            add_chunks(self._bm25(query, pool * 3), float(p["bm25_weight"]))
-        for r, sid in enumerate(self._state_bm25(query, pool)):
+            add_chunks("bm25", self._bm25(query, chunk_n), float(p["bm25_weight"]))
+        states = list(self._state_bm25(query, pool))
+        self.admitted["state_bm25"] = [int(s) for s in states]
+        for r, sid in enumerate(states):
             fused[int(sid)] += float(p["state_bm25_weight"]) / (k + r + 1)
         return fused, k
 

@@ -37,3 +37,15 @@ uv run python benchmarks/lme2/r5/paired.py --base A.json --new C.json [--ids ids
 
 Reader runs: VM `lme2-reader-r5x` (us-central1-a, spot a2-ultragpu-1g from the snapshot),
 `~/r5x/run_all.sh`, caches `~/r5x/cache_{A,B,C,D}.json`, copied to `$L/r5x/`.
+
+## Status (2026-11-20, in progress)
+
+- Pilot scored (`results/pilot_*.json`). Frozen candidate P recorded in `PREREG.md`.
+- Queued on the VM after A/C rest: `~/r5x/run_cand.sh` (P on rest, then pilot); `run.log` ends
+  with `CANDDONE`. Then: `validate_runs.py` (must pass), `score_local.py` per cache,
+  `paired.py --ids` on `$L/r5x/up/rest_ids.json` (decision), pilot and all-149 reported apart.
+- `paired.py` now refuses runs that do not cover every registered id.
+- `prompts.py` builds development ids only (P payload reproduced 149 of 149 after the change).
+- `evidence_delivery.py`: per-state presence, full/clipped text, own screenshot attached.
+- Pending: `retrieval_trace.py` (per-source ranks, admission, caps; aggregation control),
+  final results section.

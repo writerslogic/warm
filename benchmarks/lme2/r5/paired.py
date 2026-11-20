@@ -21,7 +21,19 @@ def mcnemar(b: int, c: int) -> float:
 
 
 def compare(base: dict, new: dict, ids=None) -> dict:
-    keys = sorted(set(base) & set(new) & (set(ids) if ids is not None else set(base)))
+    """Refuses any comparison whose two runs do not both cover exactly the registered ids (or, with
+    no ids, the same ids): an incomplete run must not pass as a smaller valid one."""
+    if ids is not None:
+        want = set(ids)
+        if len(want) != len(ids):
+            raise SystemExit("duplicate ids in the manifest")
+        for name, run in (("base", base), ("new", new)):
+            missing = want - set(run)
+            if missing:
+                raise SystemExit(f"{name} run lacks {len(missing)} registered ids, e.g. {sorted(missing)[:3]}")
+    elif set(base) != set(new):
+        raise SystemExit(f"runs cover different ids: {len(set(base) ^ set(new))} differ")
+    keys = sorted(set(ids) if ids is not None else set(base))
     c = {"retained": 0, "recovered": 0, "regressed": 0, "unresolved": 0}
     for k in keys:
         b, n = base[k]["correct"], new[k]["correct"]
