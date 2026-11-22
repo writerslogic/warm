@@ -1440,6 +1440,10 @@ fn keep_tabled(
     rows: &mut [[u32; CHECKPOINT_BLOCK]],
     row: usize,
 ) -> usize {
+    // The candidates' nibbles are scattered over the table: start loading them all together.
+    for &slot in &slots[..n] {
+        table.prefetch(slot as usize);
+    }
     let mut source = [0u8; CHECKPOINT_BLOCK];
     let (mut i, mut k) = (0usize, 0usize);
     while i < n {
@@ -1494,6 +1498,9 @@ fn keep_counted(
         |rt: &Rt<'_>, table: &Option<_>| rt.cursors[0].dense().is_none() && table.is_none();
     for (rt, table) in rest.iter().zip(tables) {
         if let (Some(table), true) = (table, rt.cursors[0].dense().is_none()) {
+            for &slot in &slots[..kept] {
+                table.prefetch(slot as usize);
+            }
             let (mut i, mut k) = (0, 0);
             while i < kept {
                 let slot = slots[i];

@@ -333,6 +333,12 @@ impl Dense {
     pub(super) fn get(&self, slot: usize) -> u8 {
         (self.nibbles[slot >> 1] >> ((slot & 1) * 4)) & 15
     }
+
+    /// Starts loading the nibble of `slot`; a hint, with no effect on results.
+    #[inline(always)]
+    pub(super) fn prefetch(&self, slot: usize) {
+        prefetch(&self.nibbles, slot >> 1);
+    }
 }
 
 /// Direct frequency tables of a checkpoint's longest lists, built on first use and bounded by
