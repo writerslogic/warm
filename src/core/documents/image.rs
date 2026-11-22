@@ -821,6 +821,9 @@ pub(crate) struct ServingImage {
     docs: usize,
     dimensions: usize,
     dictionaries: [Dictionary; 2],
+    /// Per form, [`term_key`] of each dictionary block's first term: the block search compares
+    /// these in memory and reads a block's first term only when the keys tie.
+    block_keys: [Vec<u64>; 2],
     sections: [(usize, usize); SECTIONS],
     /// Versions 2 to 4: postings in the block encoding (see `postings::Postings`).
     blocked: bool,
@@ -1019,6 +1022,7 @@ impl ServingImage {
             docs,
             dimensions,
             dictionaries: [Dictionary::default(); 2],
+            block_keys: Default::default(),
             sections,
             blocked,
             impacts,
@@ -1039,7 +1043,8 @@ impl ServingImage {
         image.check_slots()?;
         let mut totals = (0usize, 0usize);
         for form in 0..2 {
-            image.dictionaries[form] = image.check_dictionary(form, &mut totals)?;
+            (image.dictionaries[form], image.block_keys[form]) =
+                image.check_dictionary(form, &mut totals)?;
         }
         ensure!(
             totals
@@ -1261,8 +1266,13 @@ impl ServingImage {
 
     /// Checks form `form`'s dictionary: blocks in order, entries well formed with terms in
     /// strictly ascending byte order, posting, skip and positions ranges inside their sections.
-    /// `totals` accumulates the skip and positions bytes the forms' entries address.
-    fn check_dictionary(&self, form: usize, totals: &mut (usize, usize)) -> Result<Dictionary> {
+    /// `totals` accumulates the skip and positions bytes the forms' entries address. Returns the
+    /// dictionary with the [`term_key`] of each block's first term.
+    fn check_dictionary(
+        &self,
+        form: usize,
+        totals: &mut (usize, usize),
+    ) -> Result<(Dictionary, Vec<u64>)> {
         let (dict_section, block_section) = if form == 0 {
             (Section::Dict0, Section::Blocks0)
         } else {
@@ -1280,6 +1290,7 @@ impl ServingImage {
         let mut reader = Reader::new(dict);
         let mut at = None::<BlockBase>;
         let mut extra = 0usize;
+        let mut keys = Vec::with_capacity(block_count);
         for i in 0..terms {
             let position = reader.position();
             if i.is_multiple_of(BLOCK) {
@@ -1309,6 +1320,9 @@ impl ServingImage {
                 std::str::from_utf8(&term).is_ok() && (i == 0 || previous < term),
                 "checkpoint terms out of order"
             );
+            if i.is_multiple_of(BLOCK) {
+                keys.push(term_key(&term));
+            }
             let entry = self.read_entry(&mut reader)?;
             ensure!(
                 entry.count > 0
@@ -1355,12 +1369,15 @@ impl ServingImage {
             totals.0 = base.skip;
             totals.1 = base.pos;
         }
-        Ok(Dictionary {
-            dict: self.sections[dict_section as usize],
-            blocks: self.sections[block_section as usize],
-            terms,
-            extra: extra + if self.extended { 24 * block_count } else { 0 },
-        })
+        Ok((
+            Dictionary {
+                dict: self.sections[dict_section as usize],
+                blocks: self.sections[block_section as usize],
+                terms,
+                extra: extra + if self.extended { 24 * block_count } else { 0 },
+            },
+            keys,
+        ))
     }
 
     fn span(&self, offsets: Section, i: usize) -> (usize, usize) {
@@ -1927,6 +1944,15 @@ impl ServingImage {
     }
 }
 
+/// The first eight bytes of `term`, zero padded, as a big-endian number. Keys order as their
+/// terms do, except that terms agreeing in those bytes may tie.
+fn term_key(term: &[u8]) -> u64 {
+    let mut key = [0u8; 8];
+    let n = term.len().min(8);
+    key[..n].copy_from_slice(&term[..n]);
+    u64::from_be_bytes(key)
+}
+
 impl ServingImage {
     /// The posting list of `term` in posting form `form`, with its skip table and positions.
     pub(super) fn list(&self, form: usize, term: &str) -> Option<ListRef<'_>> {
@@ -1942,11 +1968,18 @@ impl ServingImage {
             reader.bytes().expect("dictionary checked at open")
         };
         let target = term.as_bytes();
+        let keys = &self.block_keys[form];
+        let key = term_key(target);
         // The last block whose first term is at or below the target.
-        let (mut lo, mut hi) = (0usize, blocks.len() / self.block_stride());
+        let (mut lo, mut hi) = (0usize, keys.len());
         while hi - lo > 1 {
             let mid = lo + (hi - lo) / 2;
-            if first_term(mid) <= target {
+            let at_or_below = match keys[mid].cmp(&key) {
+                std::cmp::Ordering::Less => true,
+                std::cmp::Ordering::Greater => false,
+                std::cmp::Ordering::Equal => first_term(mid) <= target,
+            };
+            if at_or_below {
                 lo = mid;
             } else {
                 hi = mid;

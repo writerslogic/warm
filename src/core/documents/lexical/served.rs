@@ -432,6 +432,18 @@ pub(in crate::core::documents) fn execute(
             return Ok(None);
         }
     }
+    // A lone word's count is its posting count; no cursor, bound or block is read.
+    if let ([clause], 0, true) = (query.clauses.as_slice(), options.k, options.count) {
+        if !clause.phrase && clause.occur != Occur::MustNot {
+            let count = image
+                .list(form, &clause.words[form][0])
+                .map_or(0, |list| list.count as usize);
+            return Ok(Some(LexicalResults {
+                hits: Vec::new(),
+                count: Some(count),
+            }));
+        }
+    }
     let n = image.chunk_count() as f64;
     let average = (image.word_count() as f64 / n.max(1.0)).max(1.0);
     let shape = Shape { bm25, average };
@@ -1537,6 +1549,45 @@ mod tests {
                 .unwrap()
                 .unwrap_or_else(|| panic!("{text} is not served"));
             assert!(served.count.unwrap() > 0, "{text}");
+            assert!(assert_same(&image, &live, &query, &options), "{text}");
+        }
+    }
+
+    /// Terms sharing their first eight bytes across many dictionary blocks tie on the in-memory
+    /// block keys: every present term is still found with its count, every absent one is not.
+    #[test]
+    fn block_key_ties_find_every_term() {
+        let mut live = DocumentStore::default();
+        let words: Vec<String> = (0..300)
+            .map(|i| format!("sharedpr{i:03}"))
+            .chain(["sharedp", "sharedpr", "sharedprz", "aaaa", "zzzzzzzzzz"].map(String::from))
+            .collect();
+        for (i, word) in words.iter().enumerate() {
+            let repeats: Vec<&str> = std::iter::repeat_n(word.as_str(), 1 + i % 3).collect();
+            insert(
+                &mut live,
+                &format!("d{i:05}"),
+                &repeats.join(" "),
+                false,
+                true,
+            );
+        }
+        let image = image_of(&live);
+        let options = LexicalOptions {
+            k: 0,
+            count: true,
+            ..Default::default()
+        };
+        let absent = [
+            "a",
+            "sharedo",
+            "sharedpr0",
+            "sharedpr1000",
+            "sharedps",
+            "zzzzzzzzzzz",
+        ];
+        for text in words.iter().map(String::as_str).chain(absent) {
+            let query = LexicalQuery::parse(text).unwrap();
             assert!(assert_same(&image, &live, &query, &options), "{text}");
         }
     }

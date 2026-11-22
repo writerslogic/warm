@@ -420,7 +420,8 @@ pub(crate) fn served(
     // A bare disjunction the block-max executor does not take is ranked as `search_documents`
     // ranks the same words.
     let mut prepared_search = None;
-    if query.disjunction_terms().is_some() {
+    // `plain_search` prepares nothing for `k == 0`.
+    if options.k > 0 && query.disjunction_terms().is_some() {
         match plain_search(
             query,
             &LexicalOptions {
