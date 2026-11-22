@@ -444,9 +444,9 @@ impl<'a> ImpactCursor<'a> {
         }
     }
 
-    /// Calls `f(slot, frequency)` for every posting below `hi` the cursor has not passed, and
-    /// leaves it at the first posting at or after `hi`.
-    fn drain_below(&mut self, hi: u32, table: &[u16], mut f: impl FnMut(u32, u32)) {
+    /// Calls `f(slots, frequencies)` for the runs of postings below `hi` the cursor has not
+    /// passed, a block at a time, and leaves it at the first posting at or after `hi`.
+    fn drain_below(&mut self, hi: u32, table: &[u16], mut f: impl FnMut(&[u32], &[u32])) {
         loop {
             if self.ended || self.doc() >= hi {
                 return;
@@ -455,25 +455,98 @@ impl<'a> ImpactCursor<'a> {
                 self.decode();
             }
             let end = self.current.count;
-            let mut at = self.position;
+            let at = self.position;
+            let stop = at + self.slots[at..end].partition_point(|&slot| slot < hi);
             // The block's slots are known: start loading their word counts together.
             if table.len() * 2 >= PREFETCH_BYTES {
-                for &slot in self.slots[at..end].iter().take_while(|&&slot| slot < hi) {
-                    prefetch(table, slot as usize);
+                let mut line = usize::MAX;
+                for &slot in &self.slots[at..stop] {
+                    // One prefetch per 64-byte line of the word-count table.
+                    if slot as usize >> 5 != line {
+                        line = slot as usize >> 5;
+                        prefetch(table, slot as usize);
+                    }
                 }
             }
-            while at < end && self.slots[at] < hi {
-                f(self.slots[at], self.frequencies[at]);
-                at += 1;
-            }
-            self.position = at;
-            if at < end {
+            f(&self.slots[at..stop], &self.frequencies[at..stop]);
+            self.position = stop;
+            if stop < end {
                 return;
             }
             if !self.next_block() {
                 self.ended = true;
                 return;
             }
+        }
+    }
+}
+
+/// What weighing a posting needs, shared by the window loop and its helpers.
+struct Scorer<'a> {
+    bm25: Bm25,
+    average: f64,
+    simple: bool,
+    word_counts: &'a [u16],
+    slot_table: &'a [u8],
+}
+
+impl Scorer<'_> {
+    #[inline(always)]
+    fn weigh(&self, idf: f64, tf: f64, norm: f64) -> f64 {
+        if self.simple {
+            idf * tf * self.bm25.k1_plus_one / (tf + self.bm25.k1 * norm)
+        } else {
+            self.bm25.weight(idf, tf, norm)
+        }
+    }
+
+    /// Length normalization of `slot`'s chunk, cached by word count in `norms`.
+    #[inline(always)]
+    fn norm(&self, norms: &mut [f64], slot: u32) -> f64 {
+        let words = match self.word_counts[slot as usize] {
+            u16::MAX => {
+                let at = slot as usize * SLOT_BYTES;
+                u32::from_le_bytes(self.slot_table[at..at + 4].try_into().expect("four bytes"))
+            }
+            short => u32::from(short),
+        };
+        match norms.get_mut(words as usize) {
+            Some(cached) => {
+                if *cached == 0.0 {
+                    *cached = self.bm25.norm(f64::from(words), self.average);
+                }
+                *cached
+            }
+            None => self.bm25.norm(f64::from(words), self.average),
+        }
+    }
+}
+
+/// One essential term's postings of one block run, weighed into the window: the accumulator,
+/// the touched mask, the term's weight buffer and its log of touched offsets.
+#[inline(never)]
+#[allow(clippy::too_many_arguments)]
+fn accumulate_run(
+    scorer: &Scorer<'_>,
+    norms: &mut [f64],
+    idf: f64,
+    lo: u32,
+    slots: &[u32],
+    frequencies: &[u32],
+    acc: &mut [f64],
+    mask: &mut [u64],
+    wbuf: &mut [f64],
+    log: &mut Vec<u16>,
+) {
+    for (&slot, &frequency) in slots.iter().zip(frequencies) {
+        let offset = (slot - lo) as usize;
+        let norm = scorer.norm(norms, slot);
+        let weight = scorer.weigh(idf, f64::from(frequency), norm);
+        if weight > 0.0 {
+            mask[offset >> 6] |= 1u64 << (offset & 63);
+            acc[offset] += weight;
+            wbuf[offset] = weight;
+            log.push(offset as u16);
         }
     }
 }
@@ -591,32 +664,15 @@ pub(super) fn rank<S: LexicalSource>(
     if wbuf.len() < count * WINDOW as usize {
         wbuf.resize(count * WINDOW as usize, 0.0);
     }
-    let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
-    let weigh = |idf: f64, tf: f64, norm: f64| -> f64 {
-        if simple {
-            idf * tf * bm25.k1_plus_one / (tf + bm25.k1 * norm)
-        } else {
-            bm25.weight(idf, tf, norm)
-        }
+    let scorer = Scorer {
+        bm25,
+        average,
+        simple: bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT,
+        word_counts,
+        slot_table,
     };
-    let norm_for = |norms: &mut Vec<f64>, slot: u32| -> f64 {
-        let words = match word_counts[slot as usize] {
-            u16::MAX => {
-                let at = slot as usize * SLOT_BYTES;
-                u32::from_le_bytes(slot_table[at..at + 4].try_into().expect("four bytes"))
-            }
-            short => u32::from(short),
-        };
-        match norms.get_mut(words as usize) {
-            Some(cached) => {
-                if *cached == 0.0 {
-                    *cached = bm25.norm(f64::from(words), average);
-                }
-                *cached
-            }
-            None => bm25.norm(f64::from(words), average),
-        }
-    };
+    let weigh = |idf: f64, tf: f64, norm: f64| -> f64 { scorer.weigh(idf, tf, norm) };
+    let norm_for = |norms: &mut Vec<f64>, slot: u32| -> f64 { scorer.norm(norms, slot) };
     // A score `limit` chunks are sure to reach, from the weights of the rarest term's first
     // chunks alone (a chunk's score is at least any one of its weights).
     let mut pilot_floor = 0.0f64;
@@ -661,17 +717,21 @@ pub(super) fn rank<S: LexicalSource>(
             let log = &mut logs[position];
             log.clear();
             let mut taken = 0usize;
-            cursors[i].drain_below(hi, word_counts, |slot, frequency| {
-                let offset = (slot - lo) as usize;
-                let norm = norm_for(norms, slot);
-                let weight = weigh(idf, f64::from(frequency), norm);
-                if weight > 0.0 {
-                    mask[offset >> 6] |= 1u64 << (offset & 63);
-                    acc[offset] += weight;
-                    wbuf[position * WINDOW as usize + offset] = weight;
-                    log.push(offset as u16);
-                }
-                taken += 1;
+            let wslice = &mut wbuf[position * WINDOW as usize..(position + 1) * WINDOW as usize];
+            cursors[i].drain_below(hi, word_counts, |slots, frequencies| {
+                accumulate_run(
+                    &scorer,
+                    norms,
+                    idf,
+                    lo,
+                    slots,
+                    frequencies,
+                    acc,
+                    mask,
+                    wslice,
+                    log,
+                );
+                taken += slots.len();
             });
             stats.accumulated += taken;
         }
