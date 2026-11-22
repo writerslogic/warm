@@ -240,6 +240,10 @@ const WINDOW: u32 = 4096;
 const MAX_TERMS: usize = 64;
 /// Bytes of direct frequency tables one checkpoint may hold (see [`DenseTables`]).
 const DENSE_BYTES: usize = 32 << 20;
+/// A checkpoint may also hold this many tables, however many bytes they take: the budget grows
+/// with the slot count (a table is `slots / 2` bytes), so the lists a large index queries most
+/// keep their tables instead of the first few lists to be queried taking the whole budget.
+const DENSE_TABLES: usize = 128;
 /// A list is tabled when it holds at least this share (1/32) of the slots and this many postings.
 const DENSE_MIN_POSTINGS: usize = if cfg!(test) { 8 } else { 512 };
 /// Distinct word counts whose length normalization is cached.
@@ -296,7 +300,7 @@ impl Dense {
 }
 
 /// Direct frequency tables of a checkpoint's longest lists, built on first use and bounded by
-/// [`DENSE_BYTES`].
+/// [`DENSE_BYTES`] and [`DENSE_TABLES`].
 #[derive(Default)]
 pub(super) struct DenseTables {
     tables: std::sync::Mutex<Vec<(usize, std::sync::Arc<Dense>)>>,
@@ -318,7 +322,8 @@ impl DenseTables {
             return Some(found);
         }
         let size = slots.div_ceil(2);
-        if self.bytes.load(Relaxed).saturating_add(size) > DENSE_BYTES {
+        let budget = DENSE_BYTES.max(DENSE_TABLES * size);
+        if self.bytes.load(Relaxed).saturating_add(size) > budget {
             return None;
         }
         let mut nibbles = vec![0u8; size];
@@ -333,7 +338,7 @@ impl DenseTables {
         if let Some(found) = lookup(tables.as_slice()) {
             return Some(found);
         }
-        if self.bytes.fetch_add(size, Relaxed).saturating_add(size) > DENSE_BYTES {
+        if self.bytes.fetch_add(size, Relaxed).saturating_add(size) > budget {
             self.bytes.fetch_sub(size, Relaxed);
             return None;
         }
