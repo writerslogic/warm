@@ -394,13 +394,13 @@ fn exact_score(
 
 /// Answers `query` from `image`, or `None` when this executor does not serve it (the caller
 /// then builds the live store). `ranker` ranks a bare disjunction with the checkpoint's windowed
-/// ranker, for the shapes the block-max executor does not take.
+/// ranker, for the shapes the block-max executor does not take; its `None` declines the query.
 pub(in crate::core::documents) fn execute(
     image: &ServingImage,
     query: &LexicalQuery,
     options: &LexicalOptions,
     bm25: Bm25,
-    ranker: Option<&dyn Fn() -> Vec<LexicalHit>>,
+    ranker: Option<&dyn Fn() -> Result<Option<Vec<LexicalHit>>>>,
 ) -> Result<Option<LexicalResults>> {
     if options.execution == LexicalExecution::Exhaustive
         || !image.has_skips()
@@ -571,13 +571,17 @@ pub(in crate::core::documents) fn execute(
         }
         if excluded.is_empty() && all_terms && (ranker.is_some() || k == 0) {
             // Ranked by the checkpoint's windowed ranker, or only counted.
+            let hits = match ranker {
+                Some(rank) => match rank()? {
+                    Some(hits) => hits,
+                    None => return Ok(None),
+                },
+                None => Vec::new(),
+            };
             let count = options
                 .count
                 .then(|| union_count(&mut optional, image.slot_count()));
-            return Ok(Some(LexicalResults {
-                hits: ranker.map(|rank| rank()).unwrap_or_default(),
-                count,
-            }));
+            return Ok(Some(LexicalResults { hits, count }));
         }
         run.union_scan(optional, excluded)?
     } else {
@@ -1163,19 +1167,17 @@ fn pair_occurrences(first: &[u8], second: &[u8], exact: bool) -> u32 {
     };
     let mut count = 0;
     loop {
-        let Some(target) = at.checked_add(1) else {
-            break;
-        };
-        let advanced = match next.cmp(&target) {
-            Ordering::Less => seconds.next().map(|position| next = position),
-            Ordering::Greater => firsts.next().map(|position| at = position),
-            Ordering::Equal => {
-                count += 1;
-                if !exact {
-                    break;
-                }
-                firsts.next().map(|position| at = position)
+        // `next` follows `at` when it is one past it; no addition, so no overflow.
+        let advanced = if next <= at {
+            seconds.next().map(|position| next = position)
+        } else if next - at > 1 {
+            firsts.next().map(|position| at = position)
+        } else {
+            count += 1;
+            if !exact {
+                break;
             }
+            firsts.next().map(|position| at = position)
         };
         if advanced.is_none() {
             break;
