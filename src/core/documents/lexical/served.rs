@@ -954,7 +954,6 @@ impl<'a> Run<'a, '_> {
                 *value = index;
             }
             let mut live = true;
-            let mut paired = words == 2;
             for (c, other) in rest.iter_mut().enumerate() {
                 if twin[c + 1].is_some() {
                     continue;
@@ -971,10 +970,10 @@ impl<'a> Run<'a, '_> {
                 if n == 0 {
                     break;
                 }
-                if !paired {
-                    // The rarest two words must stand at their phrase distance before the
-                    // longer lists are read for a candidate at all.
-                    paired = true;
+                if c + 2 < words {
+                    // Each word kept must stand at its phrase distance from the lead word
+                    // before the longer lists are read for a candidate at all; the last one
+                    // is left to the full check.
                     let distance = rt.word[c + 1] as i64 - rt.word[0] as i64;
                     n = keep_at_distance(
                         lead,
