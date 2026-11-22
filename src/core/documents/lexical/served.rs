@@ -1114,6 +1114,9 @@ fn phrase_occurrences<'b>(
     order: &mut Vec<usize>,
     exact: bool,
 ) -> u32 {
+    if let [first, second] = words {
+        return pair_occurrences(first, second, exact);
+    }
     // Any word may lead; the one with the fewest position bytes reads the least. The others
     // are checked fewest bytes first, so a frequent word's positions are read only where the
     // rarer words already line up (each iterator only moves forward, so skipping one for a
@@ -1145,6 +1148,36 @@ fn phrase_occurrences<'b>(
         });
         count += u32::from(matched);
         if matched && !exact {
+            break;
+        }
+    }
+    count
+}
+
+/// [`phrase_occurrences`] of a phrase of two words: one merge of their positions, with no
+/// iterator set or order to build per document.
+fn pair_occurrences(first: &[u8], second: &[u8], exact: bool) -> u32 {
+    let (mut firsts, mut seconds) = (PositionIter::new(first), PositionIter::new(second));
+    let (Some(mut at), Some(mut next)) = (firsts.next(), seconds.next()) else {
+        return 0;
+    };
+    let mut count = 0;
+    loop {
+        let Some(target) = at.checked_add(1) else {
+            break;
+        };
+        let advanced = match next.cmp(&target) {
+            Ordering::Less => seconds.next().map(|position| next = position),
+            Ordering::Greater => firsts.next().map(|position| at = position),
+            Ordering::Equal => {
+                count += 1;
+                if !exact {
+                    break;
+                }
+                firsts.next().map(|position| at = position)
+            }
+        };
+        if advanced.is_none() {
             break;
         }
     }
