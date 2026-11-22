@@ -425,6 +425,8 @@ pub(super) struct PruneScratch {
     lookups: Vec<usize>,
     /// First-pass survivors of a window: offset and bound.
     cand: Vec<(u32, f64)>,
+    /// The postings of a window's one accumulated term: offset and weight, in slot order.
+    single: Vec<(u32, f64)>,
     weights: [f64; MAX_TERMS],
     /// Length normalization by word count under `norm_key`.
     norms: Vec<f64>,
@@ -447,6 +449,7 @@ impl Default for PruneScratch {
             wbuf: Vec::new(),
             lookups: Vec::new(),
             cand: Vec::new(),
+            single: Vec::new(),
             weights: [0.0; MAX_TERMS],
             norms: vec![0.0; NORM_CACHE],
             norm_key: (0, 0, 0, 0, 0),
@@ -615,6 +618,27 @@ fn accumulate_run(
     }
 }
 
+/// The postings of one block run of a window's only accumulated term, weighed: their offsets
+/// and weights, in slot order, those of weight zero left out.
+#[inline(never)]
+fn collect_run(
+    scorer: &Scorer<'_>,
+    norms: &mut [f64],
+    idf: f64,
+    lo: u32,
+    slots: &[u32],
+    frequencies: &[u32],
+    out: &mut Vec<(u32, f64)>,
+) {
+    for (&slot, &frequency) in slots.iter().zip(frequencies) {
+        let norm = scorer.norm(norms, slot);
+        let weight = scorer.weigh(idf, f64::from(frequency), norm);
+        if weight > 0.0 {
+            out.push((slot - lo, weight));
+        }
+    }
+}
+
 /// The query's top `limit` chunks as [`super::search::LexicalScratch::rank`] selects them, left
 /// in `scratch.candidates` unordered: every chunk scoring at least the `limit`-th best score,
 /// ties included. `None` when the checkpoint or the weights admit no proven bound, and the
@@ -712,6 +736,7 @@ pub(super) fn rank<S: LexicalSource>(
         wbuf,
         lookups,
         cand,
+        single,
         weights,
         norms,
         ..
@@ -819,7 +844,11 @@ pub(super) fn rank<S: LexicalSource>(
             }
             continue;
         }
-        // Accumulate the essential terms' weights over the window.
+        // Accumulate the essential terms' weights over the window. A window with one term to
+        // accumulate keeps its postings in a list instead: the accumulated weight of a chunk is
+        // then that term's weight alone.
+        let alone = count - quiet - demoted.len() == 1;
+        single.clear();
         for (position, &i) in by_bound[quiet..].iter().enumerate() {
             let idf = terms[i].idf;
             let log = &mut logs[position];
@@ -850,18 +879,22 @@ pub(super) fn rank<S: LexicalSource>(
             };
             stats.skipped_blocks +=
                 cursors[i].drain_below(hi, word_counts, pass, |slots, frequencies| {
-                    accumulate_run(
-                        &scorer,
-                        norms,
-                        idf,
-                        lo,
-                        slots,
-                        frequencies,
-                        acc,
-                        mask,
-                        wslice,
-                        log,
-                    );
+                    if alone {
+                        collect_run(&scorer, norms, idf, lo, slots, frequencies, single);
+                    } else {
+                        accumulate_run(
+                            &scorer,
+                            norms,
+                            idf,
+                            lo,
+                            slots,
+                            frequencies,
+                            acc,
+                            mask,
+                            wslice,
+                            log,
+                        );
+                    }
                     taken += slots.len();
                 });
             stats.accumulated += taken;
@@ -872,6 +905,7 @@ pub(super) fn rank<S: LexicalSource>(
         let mut sure = 0.0f64;
         if best.len() < limit {
             pilot.clear();
+            pilot.extend(single.iter().map(|&(_, weight)| weight));
             for (word, bits) in mask.iter().enumerate() {
                 let mut bits = *bits;
                 while bits != 0 {
@@ -952,6 +986,24 @@ pub(super) fn rank<S: LexicalSource>(
             rest[k] = rest[k + 1] + window_bounds[first_pass[k]];
         }
         cand.clear();
+        if alone {
+            // The accumulated weight `0.0 + weight` is the weight itself.
+            let position = by_bound[quiet..]
+                .iter()
+                .position(|i| !demoted.contains(i))
+                .expect("the accumulated term");
+            let wslice = &mut wbuf[position * WINDOW as usize..(position + 1) * WINDOW as usize];
+            let log = &mut logs[position];
+            for &(offset, weight) in single.iter() {
+                let upper = weight + untabled;
+                if floor_score > 0.0 && upper + rest[0] < drop {
+                    continue;
+                }
+                wslice[offset as usize] = weight;
+                log.push(offset as u16);
+                cand.push((offset, upper));
+            }
+        }
         for (word, word_bits) in mask.iter_mut().enumerate() {
             let mut bits = std::mem::take(word_bits);
             while bits != 0 {
