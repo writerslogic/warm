@@ -1602,7 +1602,7 @@ mod tests {
                 .rotate_left(11)
                 .wrapping_mul(40503)
         };
-        let docs: Vec<Vec<u8>> = (0..6000u32)
+        let docs: Vec<Vec<u8>> = (0..12000u32)
             .map(|i| {
                 let len = 4 + hash(i) % 50;
                 let mut words: Vec<u8> = (0..len)
