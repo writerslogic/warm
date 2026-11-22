@@ -286,6 +286,9 @@ pub(super) struct Cursor<'a> {
     weight: std::cell::Cell<f64>,
     /// A dense list's slot bitmap, empty for any other.
     dense: &'a [u8],
+    /// The list's rank table when its bounds hold for the query's BM25 shape: block weights
+    /// are then read from it instead of decoded from the frontiers.
+    ranks: Option<&'a RankTable>,
 }
 
 impl<'a> Cursor<'a> {
@@ -325,6 +328,7 @@ impl<'a> Cursor<'a> {
             weight_block: std::cell::Cell::new(usize::MAX),
             weight: std::cell::Cell::new(0.0),
             dense: &[],
+            ranks: None,
         };
         cursor.dense = cursor.find_dense();
         cursor.load(0, first_at, 0);
@@ -552,7 +556,16 @@ impl<'a> Cursor<'a> {
         weight
     }
 
+    /// Reads block weights from `table`, the list's rank table for the query's BM25 shape.
+    pub(super) fn use_ranks(&mut self, table: Option<&'a RankTable>) {
+        self.ranks = table;
+        self.weight_block.set(usize::MAX);
+    }
+
     fn block_weight_uncached(&self, bound: Bound) -> f64 {
+        if let Some(table) = self.ranks {
+            return RankTable::scale(table.blocks[self.block], bound.idf());
+        }
         let (frequency, words) = self.block_bounds();
         let loose = bound.at(frequency, words);
         let mut points = self.block_points();

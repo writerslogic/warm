@@ -468,7 +468,11 @@ pub(in crate::core::documents) fn execute(
                 _ => continue,
             }
         };
-        let rt = Rt::new(index, clause.phrase, &lists, idf, &shape);
+        let mut rt = Rt::new(index, clause.phrase, &lists, idf, &shape);
+        for cursor in &mut rt.cursors {
+            let table = image.rank_table(cursor, shape.bm25, shape.average);
+            cursor.use_ranks(table);
+        }
         match clause.occur {
             Occur::Must => required.push(rt),
             Occur::MustNot => excluded.push(rt),
@@ -1779,9 +1783,10 @@ mod tests {
         }
     }
 
-    /// Single terms over lists long enough for a rank table, which orders their runs and
-    /// bounds their blocks, and over the same lists with another BM25 shape, which the table
-    /// does not serve: the exhaustive scorer's result to the bit.
+    /// Single terms, conjunctions, a disjunction and a phrase over lists long enough for a rank
+    /// table, which orders their runs and bounds their blocks, and over the same lists with
+    /// another BM25 shape, which the table does not serve: the exhaustive scorer's result to
+    /// the bit.
     #[test]
     fn ranked_lists_keep_the_result() {
         let hash = |x: u32| {
@@ -1810,7 +1815,16 @@ mod tests {
         assert!(image
             .rank_table(&Cursor::open(list), Bm25::DEFAULT, average)
             .is_some());
-        for text in ["w0", "w1", "w2", "w7"] {
+        for text in [
+            "w0",
+            "w1",
+            "w2",
+            "w7",
+            "+w0 +w1",
+            "+w0 +w3 +w7",
+            "w0 w2",
+            "\"w0 w1\"",
+        ] {
             let query = LexicalQuery::parse(text).unwrap();
             for (k1, b) in [(1.2, 0.75), (2.0, 0.3)] {
                 for k in [1usize, 10, 100, 1000] {
