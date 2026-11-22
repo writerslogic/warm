@@ -32,7 +32,7 @@ use anyhow::{bail, ensure, Context, Result};
 
 use super::binary::{put_bytes, put_varint, Reader};
 use super::index::{DocumentStore, StoreIdentity};
-use super::lists::{Cursor, ListRef};
+use super::lists::{Cursor, ListRef, RankTable, RANKED_RUNS, RUN_BLOCKS};
 use super::packed_terms::StoredTerms;
 use super::postings::{PostingList, PostingLists, Postings, RestoredList};
 use super::search::LexicalSource;
@@ -788,11 +788,29 @@ struct BlockBase {
 }
 
 /// A dictionary entry's counts, after its term.
+#[derive(Clone, Copy)]
 struct Entry {
     count: u64,
     len: usize,
     pos_len: usize,
     skip_len: usize,
+}
+
+/// Where one list's bytes are: its postings, skip table and positions offsets in their
+/// sections, with its entry.
+#[derive(Clone, Copy)]
+struct ListSpan {
+    posting: usize,
+    skip: usize,
+    pos: usize,
+    entry: Entry,
+}
+
+/// The [`RankTable`]s of an image's lists of at least [`RANKED_RUNS`] runs, under the default
+/// BM25 shape and the image's average chunk length, by skip table offset.
+struct Ranks {
+    average: f64,
+    tables: std::collections::HashMap<usize, RankTable>,
 }
 
 /// Bytes of the LEB128 varint of `value`.
@@ -838,6 +856,11 @@ pub(crate) struct ServingImage {
     positive: bool,
     /// Leading slots laid out by the last document reorder ([`H_ORDERED`]), at most `slots`.
     ordered: usize,
+    /// The lists of at least [`RANKED_RUNS`] runs, found when the dictionaries are checked.
+    ranked: Vec<ListSpan>,
+    /// Their rank tables, built by [`Self::with_rank_tables`] at open, or else by the first
+    /// query that asks for one.
+    ranks: std::sync::OnceLock<Ranks>,
     /// Direct frequency tables of the longest lists, built by queries (see `impact`).
     dense: super::impact::DenseTables,
     /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
@@ -1023,6 +1046,8 @@ impl ServingImage {
             dimensions,
             dictionaries: [Dictionary::default(); 2],
             block_keys: Default::default(),
+            ranked: Vec::new(),
+            ranks: std::sync::OnceLock::new(),
             sections,
             blocked,
             impacts,
@@ -1042,10 +1067,12 @@ impl ServingImage {
         image.check_documents()?;
         image.check_slots()?;
         let mut totals = (0usize, 0usize);
+        let mut ranked = Vec::new();
         for form in 0..2 {
             (image.dictionaries[form], image.block_keys[form]) =
-                image.check_dictionary(form, &mut totals)?;
+                image.check_dictionary(form, &mut totals, &mut ranked)?;
         }
+        image.ranked = ranked;
         ensure!(
             totals
                 == if extended {
@@ -1272,6 +1299,7 @@ impl ServingImage {
         &self,
         form: usize,
         totals: &mut (usize, usize),
+        ranked: &mut Vec<ListSpan>,
     ) -> Result<(Dictionary, Vec<u64>)> {
         let (dict_section, block_section) = if form == 0 {
             (Section::Dict0, Section::Blocks0)
@@ -1346,6 +1374,17 @@ impl ServingImage {
                     .is_some_and(|end| end <= postings),
                 "checkpoint posting range"
             );
+            if self.extended
+                && entry.count
+                    >= (RANKED_RUNS * RUN_BLOCKS * super::postings::CHECKPOINT_BLOCK) as u64
+            {
+                ranked.push(ListSpan {
+                    posting: base.posting,
+                    skip: base.skip,
+                    pos: base.pos,
+                    entry,
+                });
+            }
             base.posting += entry.len;
             base.pos += entry.pos_len;
             if self.extended {
@@ -2070,6 +2109,62 @@ impl ServingImage {
                 .collect()
         })
     }
+
+    /// The rank table of `list`, one of this image's lists, when it has at least
+    /// [`RANKED_RUNS`] runs and is scored with the default BM25 shape at `average` words.
+    pub(super) fn rank_table(
+        &self,
+        list: &Cursor<'_>,
+        bm25: super::Bm25,
+        average: f64,
+    ) -> Option<&RankTable> {
+        if self.ranked.is_empty() || bm25 != super::Bm25::DEFAULT {
+            return None;
+        }
+        let ranks = self.ranks();
+        if ranks.average != average {
+            return None;
+        }
+        let skips = self.section(Section::Skips);
+        let offset = (list.skips().as_ptr() as usize).checked_sub(skips.as_ptr() as usize)?;
+        ranks.tables.get(&offset)
+    }
+
+    /// Builds the rank tables now, at open, so that no query pays for them.
+    pub(crate) fn with_rank_tables(self) -> Self {
+        self.ranks();
+        self
+    }
+
+    fn ranks(&self) -> &Ranks {
+        self.ranks.get_or_init(|| {
+            let average = (self.words as f64 / (self.chunks as f64).max(1.0)).max(1.0);
+            let unit = super::lexical::wand::Bound::new(1.0, average, super::Bm25::DEFAULT);
+            let (postings, skips, positions) = (
+                self.section(Section::Postings),
+                self.section(Section::Skips),
+                self.section(Section::Positions),
+            );
+            let tables = unit
+                .map(|unit| {
+                    self.ranked
+                        .iter()
+                        .map(|span| {
+                            let list = ListRef {
+                                bytes: &postings[span.posting..span.posting + span.entry.len],
+                                count: span.entry.count as u32,
+                                skips: &skips[span.skip..span.skip + span.entry.skip_len],
+                                positions: &positions[span.pos..span.pos + span.entry.pos_len],
+                            };
+                            (span.skip, RankTable::new(list, unit))
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            Ranks { average, tables }
+        })
+    }
+
     pub(super) fn dense(&self) -> &super::impact::DenseTables {
         &self.dense
     }

@@ -35,6 +35,62 @@ const SKIP_ENTRY: usize = 20;
 /// Blocks per run, the unit of a list's coarser frontier.
 pub(super) const RUN_BLOCKS: usize = 32;
 
+/// A list of at least this many runs has a [`RankTable`].
+pub(super) const RANKED_RUNS: usize = 8;
+
+/// One long list's weight bounds at idf one for one BM25 shape, each rounded up to an `f32`:
+/// per run and per block, from their frontiers, and the runs ordered by their bound, highest
+/// first (ties by run). A single term ranks its runs from this table instead of decoding every
+/// run's frontier per query.
+pub(super) struct RankTable {
+    pub(super) order: Box<[u32]>,
+    pub(super) runs: Box<[f32]>,
+    pub(super) blocks: Box<[f32]>,
+}
+
+impl RankTable {
+    /// The table of `list`, a list of two or more blocks, under `unit`, a bound at idf one.
+    pub(super) fn new(list: ListRef<'_>, unit: Bound) -> Self {
+        let mut cursor = Cursor::open(list);
+        let runs: Box<[f32]> = (0..cursor.runs)
+            .map(|run| up_f32(cursor.run_weight(run, unit)))
+            .collect();
+        let blocks = (0..cursor.blocks)
+            .map(|block| {
+                cursor.goto_block(block);
+                up_f32(cursor.block_weight_uncached(unit))
+            })
+            .collect();
+        let mut order: Vec<u32> = (0..runs.len() as u32).collect();
+        order.sort_unstable_by(|&a, &b| {
+            runs[b as usize]
+                .total_cmp(&runs[a as usize])
+                .then(a.cmp(&b))
+        });
+        Self {
+            order: order.into_boxed_slice(),
+            runs,
+            blocks,
+        }
+    }
+
+    /// A bound at idf `idf` of the weights a stored bound `unit` covers: the weight is the idf
+    /// times its value at idf one, and `16 * EPSILON` covers that product's rounding.
+    pub(super) fn scale(unit: f32, idf: f64) -> f64 {
+        super::lexical::wand::up(f64::from(unit) * idf * (1.0 + 16.0 * f64::EPSILON))
+    }
+}
+
+/// `value` rounded up to an `f32`.
+fn up_f32(value: f64) -> f32 {
+    let rounded = value as f32;
+    if f64::from(rounded) < value {
+        rounded.next_up()
+    } else {
+        rounded
+    }
+}
+
 /// A list of two or more blocks holding at least one of every this many slots through its last
 /// is dense: its skip table ends with its slot bitmap.
 pub(super) const DENSE_SPAN: u64 = 8;
@@ -428,6 +484,11 @@ impl<'a> Cursor<'a> {
     pub(super) fn run_weight(&self, run: usize, bound: Bound) -> f64 {
         self.run_points(run)
             .fold(0.0f64, |best, (f, w)| best.max(bound.at(f, w)))
+    }
+
+    /// The list's skip table, which identifies it within its checkpoint.
+    pub(super) fn skips(&self) -> &'a [u8] {
+        self.list.skips
     }
 
     /// The blocks of the list.

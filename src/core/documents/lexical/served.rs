@@ -19,7 +19,7 @@ use super::*;
 use crate::core::documents::image::ServingImage;
 use crate::core::documents::impact::{prefetch, Dense};
 use crate::core::documents::lists::{
-    dense_word, holds, Cursor, ListRef, PositionIter, NO_DOC, RUN_BLOCKS,
+    dense_word, holds, Cursor, ListRef, PositionIter, RankTable, NO_DOC, RUN_BLOCKS,
 };
 use crate::core::documents::postings::CHECKPOINT_BLOCK;
 use crate::core::documents::search::LexicalSource;
@@ -1004,40 +1004,70 @@ impl<'a> Run<'a, '_> {
     /// The top `k` of one long term's postings: its runs strongest first by their frontiers, and
     /// within a run the blocks whose own bound reaches the k-th best score, so the floor rises
     /// before the weak runs are reached and most of them are never read.
+    ///
+    /// A list with a rank table (see `lists::RankTable`) takes its run order and its run and
+    /// block bounds from the table, which decodes no frontier at all.
     fn single_top(&mut self, mut rt: Rt<'a>) -> Result<Vec<LexicalHit>> {
         let bound = rt.bound.expect("a bounded term");
         let clause = rt.clause;
         let cursor = &mut rt.cursors[0];
         let blocks = cursor.block_count();
+        let mut top = Top::new(self.image, self.k);
+        let below = |top: &Top<'_>, weight: f64| {
+            top.floor()
+                .is_some_and(|floor| sum_bound(weight, 1) < floor)
+        };
+        let image = self.image;
+        if let Some(table) = image.rank_table(cursor, self.shape.bm25, self.shape.average) {
+            let idf = bound.idf;
+            for &run in table.order.iter() {
+                let run = run as usize;
+                if below(&top, RankTable::scale(table.runs[run], idf)) {
+                    break;
+                }
+                for block in run * RUN_BLOCKS..((run + 1) * RUN_BLOCKS).min(blocks) {
+                    if below(&top, RankTable::scale(table.blocks[block], idf)) {
+                        continue;
+                    }
+                    cursor.goto_block(block);
+                    self.offer_block(cursor, clause, &mut top)?;
+                }
+            }
+            return Ok(top.finish());
+        }
         let mut runs: Vec<(f64, usize)> = (0..cursor.runs())
             .map(|run| (cursor.run_weight(run, bound), run))
             .collect();
         runs.sort_unstable_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
-        let mut top = Top::new(self.image, self.k);
         for (run_bound, run) in runs {
-            if top
-                .floor()
-                .is_some_and(|floor| sum_bound(run_bound, 1) < floor)
-            {
+            if below(&top, run_bound) {
                 break;
             }
             for block in run * RUN_BLOCKS..((run + 1) * RUN_BLOCKS).min(blocks) {
                 cursor.goto_block(block);
-                if top
-                    .floor()
-                    .is_some_and(|floor| sum_bound(cursor.block_weight(bound), 1) < floor)
-                {
+                if below(&top, cursor.block_weight(bound)) {
                     continue;
                 }
-                let (slots, frequencies) = cursor.block_postings();
-                for (&slot, &frequency) in slots.iter().zip(frequencies) {
-                    self.frequencies[clause] = frequency;
-                    let score = self.score(slot)?;
-                    top.offer(score, slot);
-                }
+                self.offer_block(cursor, clause, &mut top)?;
             }
         }
         Ok(top.finish())
+    }
+
+    /// Scores every posting of the block `cursor` is at, as clause `clause`'s, into `top`.
+    fn offer_block(
+        &mut self,
+        cursor: &mut Cursor<'a>,
+        clause: usize,
+        top: &mut Top<'a>,
+    ) -> Result<()> {
+        let (slots, frequencies) = cursor.block_postings();
+        for (&slot, &frequency) in slots.iter().zip(frequencies) {
+            self.frequencies[clause] = frequency;
+            let score = self.score(slot)?;
+            top.offer(score, slot);
+        }
+        Ok(())
     }
 
     /// Documents any of the optional clauses matches and none of the excluded ones does, in
@@ -1638,6 +1668,56 @@ mod tests {
                         ..Default::default()
                     };
                     assert!(assert_same(&image, &live, &query, &options), "{text}");
+                }
+            }
+        }
+    }
+
+    /// Single terms over lists long enough for a rank table, which orders their runs and
+    /// bounds their blocks, and over the same lists with another BM25 shape, which the table
+    /// does not serve: the exhaustive scorer's result to the bit.
+    #[test]
+    fn ranked_lists_keep_the_result() {
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(7)
+                .wrapping_mul(40503)
+        };
+        let docs: Vec<Vec<u8>> = (0..40_000u32)
+            .map(|i| {
+                let len = 2 + hash(i) % 40;
+                (0..len)
+                    .map(|j| {
+                        let h = hash(i * 97 + j);
+                        ((h >> 8) % 8).min((h >> 20) % 8) as u8
+                    })
+                    .collect()
+            })
+            .collect();
+        let live = corpus(&docs, true);
+        let image = image_of(&live).with_rank_tables();
+        // The default options are the shape the tables were built for.
+        assert!(prepare(&LexicalOptions::default()).unwrap() == Bm25::DEFAULT);
+        let list = image.list(0, "w0").unwrap();
+        assert!(list.blocks() >= crate::core::documents::lists::RANKED_RUNS * RUN_BLOCKS);
+        let average = (image.word_count() as f64 / image.chunk_count() as f64).max(1.0);
+        assert!(image
+            .rank_table(&Cursor::open(list), Bm25::DEFAULT, average)
+            .is_some());
+        for text in ["w0", "w1", "w2", "w7"] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for (k1, b) in [(1.2, 0.75), (2.0, 0.3)] {
+                for k in [1usize, 10, 100, 1000] {
+                    for count in [false, true] {
+                        let options = LexicalOptions {
+                            k,
+                            count,
+                            bm25_k1: k1,
+                            bm25_b: b,
+                            ..Default::default()
+                        };
+                        assert!(assert_same(&image, &live, &query, &options), "{text}");
+                    }
                 }
             }
         }
