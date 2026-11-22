@@ -1433,6 +1433,17 @@ impl ServingImage {
         std::str::from_utf8(&ids[start..end]).expect("ids checked at open")
     }
 
+    /// The tie order of `slot` as [`LexicalSource::slot_order`] gives it, with the id as its
+    /// bytes: they order as the string does, and comparing them skips the UTF-8 check.
+    pub(super) fn slot_key(&self, slot: usize) -> (&[u8], usize) {
+        let (_, ordinal, index) = self.slot(slot);
+        if ordinal == FREE {
+            return (&[], index as usize);
+        }
+        let (start, end) = self.span(Section::IdOffsets, ordinal as usize);
+        (&self.section(Section::Ids)[start..end], index as usize)
+    }
+
     pub(super) fn slot_total(&self) -> usize {
         self.slots
     }

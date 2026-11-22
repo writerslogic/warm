@@ -308,8 +308,8 @@ impl Ord for Worse<'_> {
             if self.slot == other.slot {
                 return Ordering::Equal;
             }
-            let mine = self.image.slot_order(self.slot as usize);
-            let theirs = self.image.slot_order(other.slot as usize);
+            let mine = self.image.slot_key(self.slot as usize);
+            let theirs = self.image.slot_key(other.slot as usize);
             mine.cmp(&theirs)
         })
     }
