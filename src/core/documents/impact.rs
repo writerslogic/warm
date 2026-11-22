@@ -42,6 +42,9 @@ struct Header {
     end_at: usize,
     /// Postings in the blocks after this one.
     left_after: usize,
+    /// The block's largest frequency and least word count.
+    max_frequency: u32,
+    min_words: u32,
 }
 
 impl Header {
@@ -54,9 +57,8 @@ impl Header {
         let (gap_bits, frequency_bits) = (bytes[at], bytes[at + 1]);
         at += 2;
         let span = get_varint(bytes, &mut at);
-        // The block's max frequency and min words, unused by the windowed ranker.
-        get_varint(bytes, &mut at);
-        get_varint(bytes, &mut at);
+        let max_frequency = get_varint(bytes, &mut at) as u32;
+        let min_words = get_varint(bytes, &mut at) as u32;
         let gap_len = (count * usize::from(gap_bits)).div_ceil(8);
         let frequency_len = (count * usize::from(frequency_bits)).div_ceil(8);
         let first = previous + delta as u32;
@@ -69,6 +71,8 @@ impl Header {
             data_at: at,
             end_at: at + gap_len + frequency_len,
             left_after: left - count,
+            max_frequency,
+            min_words,
         }
     }
 }
@@ -494,8 +498,9 @@ impl<'a> ImpactCursor<'a> {
         }
     }
 
-    /// Calls `f(slots, frequencies)` for the runs of postings below `hi` the cursor has not
-    /// passed, a block at a time, and leaves it at the first posting at or after `hi`. A block
+    /// Calls `f(slots, frequencies, max_frequency, min_words)` for the runs of postings below
+    /// `hi` the cursor has not passed, a block at a time (with its block's largest frequency
+    /// and least word count), and leaves it at the first posting at or after `hi`. A block
     /// that ends below `hi` and for whose index `pass` holds is passed over undecoded; the
     /// count of those is returned.
     fn drain_below(
@@ -503,7 +508,7 @@ impl<'a> ImpactCursor<'a> {
         hi: u32,
         table: &[u16],
         mut pass: impl FnMut(usize) -> bool,
-        mut f: impl FnMut(&[u32], &[u32]),
+        mut f: impl FnMut(&[u32], &[u32], u32, u32),
     ) -> usize {
         let mut passed = 0usize;
         loop {
@@ -535,7 +540,12 @@ impl<'a> ImpactCursor<'a> {
                     }
                 }
             }
-            f(&self.slots[at..stop], &self.frequencies[at..stop]);
+            f(
+                &self.slots[at..stop],
+                &self.frequencies[at..stop],
+                self.current.max_frequency,
+                self.current.min_words,
+            );
             self.position = stop;
             if stop < end {
                 return passed;
@@ -619,8 +629,9 @@ fn accumulate_run(
 }
 
 /// The postings of one block run of a window's only accumulated term, weighed: their offsets
-/// and weights, in slot order, those of weight zero left out.
+/// and weights, in slot order, those of weight zero or of a frequency below `least` left out.
 #[inline(never)]
+#[allow(clippy::too_many_arguments)]
 fn collect_run(
     scorer: &Scorer<'_>,
     norms: &mut [f64],
@@ -628,9 +639,13 @@ fn collect_run(
     lo: u32,
     slots: &[u32],
     frequencies: &[u32],
+    least: u32,
     out: &mut Vec<(u32, f64)>,
 ) {
     for (&slot, &frequency) in slots.iter().zip(frequencies) {
+        if frequency < least {
+            continue;
+        }
         let norm = scorer.norm(norms, slot);
         let weight = scorer.weigh(idf, f64::from(frequency), norm);
         if weight > 0.0 {
@@ -844,81 +859,6 @@ pub(super) fn rank<S: LexicalSource>(
             }
             continue;
         }
-        // Accumulate the essential terms' weights over the window. A window with one term to
-        // accumulate keeps its postings in a list instead: the accumulated weight of a chunk is
-        // then that term's weight alone.
-        let alone = count - quiet - demoted.len() == 1;
-        single.clear();
-        for (position, &i) in by_bound[quiet..].iter().enumerate() {
-            let idf = terms[i].idf;
-            let log = &mut logs[position];
-            log.clear();
-            if demoted.contains(&i) {
-                continue;
-            }
-            let mut taken = 0usize;
-            let wslice = &mut wbuf[position * WINDOW as usize..(position + 1) * WINDOW as usize];
-            // A block whose bound with every other term's window bound is below the threshold
-            // holds no chunk that can reach it: its weights are not needed.
-            let mut others = 0.0f64;
-            for (j, &weight) in window_bounds[..count].iter().enumerate() {
-                if j != i {
-                    others += weight;
-                }
-            }
-            let term = &terms[i];
-            let blocks = windows[i].as_ref();
-            let pass = |block: usize| {
-                effective > 0.0
-                    && blocks.is_some_and(|blocks| {
-                        sum_bound(
-                            others + blocks.block(block, term.bound, term.ceiling),
-                            count,
-                        ) < effective
-                    })
-            };
-            stats.skipped_blocks +=
-                cursors[i].drain_below(hi, word_counts, pass, |slots, frequencies| {
-                    if alone {
-                        collect_run(&scorer, norms, idf, lo, slots, frequencies, single);
-                    } else {
-                        accumulate_run(
-                            &scorer,
-                            norms,
-                            idf,
-                            lo,
-                            slots,
-                            frequencies,
-                            acc,
-                            mask,
-                            wslice,
-                            log,
-                        );
-                    }
-                    taken += slots.len();
-                });
-            stats.accumulated += taken;
-        }
-        // The least score `limit` chunks of this window are sure to reach, while the heap is
-        // not yet full: each chunk's accumulated weight is below its score by no more than the
-        // summation error.
-        let mut sure = 0.0f64;
-        if best.len() < limit {
-            pilot.clear();
-            pilot.extend(single.iter().map(|&(_, weight)| weight));
-            for (word, bits) in mask.iter().enumerate() {
-                let mut bits = *bits;
-                while bits != 0 {
-                    let offset = (word << 6) | bits.trailing_zeros() as usize;
-                    bits &= bits - 1;
-                    pilot.push(acc[offset]);
-                }
-            }
-            if pilot.len() >= limit {
-                let (_, nth, _) = pilot.select_nth_unstable_by(limit - 1, |a, b| b.total_cmp(a));
-                sure = *nth * (1.0 - 2.0 * count as f64 * f64::EPSILON);
-            }
-        }
         // The quiet terms: those with a table, and the sum of the ceilings of those without.
         lookups.clear();
         let mut untabled = 0.0f64;
@@ -973,6 +913,100 @@ pub(super) fn rank<S: LexicalSource>(
             untabled += window_bounds[i];
             lookups.push(i);
         }
+        let mut rest = [0.0f64; FIRST_PASS_TABLES + 1];
+        for k in (0..first_passes).rev() {
+            rest[k] = rest[k + 1] + window_bounds[first_pass[k]];
+        }
+        // With the heap full the cut is known before the window is read: a lone accumulated
+        // term's posting whose bound (at its frequency and its block's least word count) with
+        // the quiet bounds stays below `drop` is one the gather would drop, so it is not weighed.
+        let early = threshold.max(pilot_floor);
+        let early_drop = early * cut_factor * (1.0 - 8.0 * f64::EPSILON);
+        let prefilter = best.len() >= limit && early > 0.0;
+        // Accumulate the essential terms' weights over the window. A window with one term to
+        // accumulate keeps its postings in a list instead: the accumulated weight of a chunk is
+        // then that term's weight alone.
+        let alone = count - quiet - demoted.len() == 1;
+        single.clear();
+        for (position, &i) in by_bound[quiet..].iter().enumerate() {
+            let idf = terms[i].idf;
+            let log = &mut logs[position];
+            log.clear();
+            if demoted.contains(&i) {
+                continue;
+            }
+            let mut taken = 0usize;
+            let wslice = &mut wbuf[position * WINDOW as usize..(position + 1) * WINDOW as usize];
+            // A block whose bound with every other term's window bound is below the threshold
+            // holds no chunk that can reach it: its weights are not needed.
+            let mut others = 0.0f64;
+            for (j, &weight) in window_bounds[..count].iter().enumerate() {
+                if j != i {
+                    others += weight;
+                }
+            }
+            let term = &terms[i];
+            let blocks = windows[i].as_ref();
+            let lone = alone && prefilter;
+            let pass = |block: usize| {
+                effective > 0.0
+                    && blocks.is_some_and(|blocks| {
+                        sum_bound(
+                            others + blocks.block(block, term.bound, term.ceiling),
+                            count,
+                        ) < effective
+                    })
+            };
+            stats.skipped_blocks +=
+                cursors[i].drain_below(hi, word_counts, pass, |slots, frequencies, most, words| {
+                    if alone {
+                        let mut least = 1u32;
+                        if lone {
+                            while least <= most
+                                && term.bound.at(least, words) + untabled + rest[0] < early_drop
+                            {
+                                least += 1;
+                            }
+                        }
+                        collect_run(&scorer, norms, idf, lo, slots, frequencies, least, single);
+                    } else {
+                        accumulate_run(
+                            &scorer,
+                            norms,
+                            idf,
+                            lo,
+                            slots,
+                            frequencies,
+                            acc,
+                            mask,
+                            wslice,
+                            log,
+                        );
+                    }
+                    taken += slots.len();
+                });
+            stats.accumulated += taken;
+        }
+        // The least score `limit` chunks of this window are sure to reach, while the heap is
+        // not yet full: each chunk's accumulated weight is below its score by no more than the
+        // summation error.
+        let mut sure = 0.0f64;
+        if best.len() < limit {
+            pilot.clear();
+            pilot.extend(single.iter().map(|&(_, weight)| weight));
+            for (word, bits) in mask.iter().enumerate() {
+                let mut bits = *bits;
+                while bits != 0 {
+                    let offset = (word << 6) | bits.trailing_zeros() as usize;
+                    bits &= bits - 1;
+                    pilot.push(acc[offset]);
+                }
+            }
+            if pilot.len() >= limit {
+                let (_, nth, _) = pilot.select_nth_unstable_by(limit - 1, |a, b| b.total_cmp(a));
+                sure = *nth * (1.0 - 2.0 * count as f64 * f64::EPSILON);
+            }
+        }
         // First pass: a bound of every touched chunk's score from its accumulated weight, the
         // tables' frequencies and the untabled quiet terms' ceilings.
         let floor_score = threshold.max(pilot_floor).max(sure);
@@ -981,10 +1015,6 @@ pub(super) fn rank<S: LexicalSource>(
         // cannot reach `cut` whatever those tables say (a table's bound never exceeds its
         // list's ceiling); the margin covers the different summation order.
         let drop = cut * (1.0 - 8.0 * f64::EPSILON);
-        let mut rest = [0.0f64; FIRST_PASS_TABLES + 1];
-        for k in (0..first_passes).rev() {
-            rest[k] = rest[k + 1] + window_bounds[first_pass[k]];
-        }
         cand.clear();
         if alone {
             // The accumulated weight `0.0 + weight` is the weight itself.
