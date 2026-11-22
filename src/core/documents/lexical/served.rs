@@ -954,6 +954,7 @@ impl<'a> Run<'a, '_> {
                 *value = index;
             }
             let mut live = true;
+            let mut paired = words == 2;
             for (c, other) in rest.iter_mut().enumerate() {
                 if twin[c + 1].is_some() {
                     continue;
@@ -969,6 +970,25 @@ impl<'a> Run<'a, '_> {
                 live &= more;
                 if n == 0 {
                     break;
+                }
+                if !paired {
+                    // The rarest two words must stand at their phrase distance before the
+                    // longer lists are read for a candidate at all.
+                    paired = true;
+                    let distance = rt.word[c + 1] as i64 - rt.word[0] as i64;
+                    n = keep_at_distance(
+                        lead,
+                        positions[0],
+                        positions[c + 1],
+                        distance,
+                        &mut slots,
+                        n,
+                        &mut rows[..2 * c + 3],
+                        2 * c + 1,
+                    );
+                    if n == 0 {
+                        break;
+                    }
                 }
             }
             for (m, &slot) in slots[..n].iter().enumerate() {
@@ -1156,6 +1176,58 @@ fn phrase_occurrences<'b>(
         }
     }
     count
+}
+
+/// Keeps, in place, the candidates among `slots[..n]` where some position of the lead word
+/// (its index in the lead block in `rows[0]`, its positions in `lead_positions`) has a position
+/// of another word `distance` after it (that word's positions at `rows[row]..rows[row + 1]` of
+/// `other_positions`), moving every row along: a necessary condition of the phrase, so the full
+/// check later sees fewer candidates and the remaining lists fewer probes.
+#[allow(clippy::too_many_arguments)]
+fn keep_at_distance(
+    lead: &mut Cursor<'_>,
+    lead_positions: &[u8],
+    other_positions: &[u8],
+    distance: i64,
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+    rows: &mut [[u32; CHECKPOINT_BLOCK]],
+    row: usize,
+) -> usize {
+    let mut k = 0;
+    for m in 0..n {
+        let (start, end) = lead.position_range(rows[0][m] as usize);
+        let firsts = &lead_positions[start as usize..end as usize];
+        let seconds = &other_positions[rows[row][m] as usize..rows[row + 1][m] as usize];
+        if !at_distance(firsts, seconds, distance) {
+            continue;
+        }
+        slots[k] = slots[m];
+        for values in rows.iter_mut() {
+            values[k] = values[m];
+        }
+        k += 1;
+    }
+    k
+}
+
+/// Whether some position of `firsts` has one of `seconds` exactly `distance` after it.
+fn at_distance(firsts: &[u8], seconds: &[u8], distance: i64) -> bool {
+    let (mut firsts, mut seconds) = (PositionIter::new(firsts), PositionIter::new(seconds));
+    let (Some(mut at), Some(mut next)) = (firsts.next(), seconds.next()) else {
+        return false;
+    };
+    loop {
+        let gap = i64::from(next) - i64::from(at);
+        let advanced = match gap.cmp(&distance) {
+            Ordering::Equal => return true,
+            Ordering::Less => seconds.next().map(|position| next = position),
+            Ordering::Greater => firsts.next().map(|position| at = position),
+        };
+        if advanced.is_none() {
+            return false;
+        }
+    }
 }
 
 /// [`phrase_occurrences`] of a phrase of two words: one merge of their positions, with no
