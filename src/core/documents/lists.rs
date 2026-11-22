@@ -101,8 +101,35 @@ impl<'a> BlockBounds<'a> {
         }
     }
 
+    #[inline(always)]
     fn skip(&self, array: usize, block: usize) -> u32 {
-        u32_at(self.skips, array * self.blocks + block)
+        let at = 4 * (array * self.blocks + block);
+        u32::from_le_bytes(self.skips[at..at + 4].try_into().expect("four bytes"))
+    }
+
+    /// Moves `at` to the first block at or after it whose last slot reaches `lo`, galloping
+    /// then bisecting: the ranges a query asks for can jump many blocks at once.
+    fn advance(&mut self, lo: u32) {
+        if self.at >= self.blocks || self.skip(0, self.at) >= lo {
+            return;
+        }
+        // `below` is a block whose last slot is below `lo`; the answer is in `below + 1..=end`.
+        let (mut below, mut end, mut step) = (self.at, self.at + 1, 1usize);
+        while end < self.blocks && self.skip(0, end) < lo {
+            below = end;
+            step *= 2;
+            end += step;
+        }
+        let (mut first, mut last) = (below + 1, end.min(self.blocks));
+        while first < last {
+            let middle = first + (last - first) / 2;
+            if self.skip(0, middle) < lo {
+                first = middle + 1;
+            } else {
+                last = middle;
+            }
+        }
+        self.at = first;
     }
 
     /// A bound of the weight of every posting in slots `lo..hi` under `bound`, never above
@@ -111,9 +138,7 @@ impl<'a> BlockBounds<'a> {
         if self.blocks < 2 {
             return ceiling;
         }
-        while self.at < self.blocks && self.skip(0, self.at) < lo {
-            self.at += 1;
-        }
+        self.advance(lo);
         let mut best = 0.0f64;
         let mut block = self.at;
         while block < self.blocks {
