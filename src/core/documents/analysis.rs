@@ -205,6 +205,14 @@ impl Analyzer {
 
     /// Every term of `text` in one form, in text order.
     pub(crate) fn tokens(self, text: &str, stem: bool) -> Vec<String> {
+        // One ASCII word, the common query clause: its unstemmed legacy term is its lowercase.
+        if self.is_legacy() && !stem && text.bytes().all(|b| b.is_ascii_alphanumeric()) {
+            return if text.is_empty() {
+                Vec::new()
+            } else {
+                vec![text.to_ascii_lowercase()]
+            };
+        }
         let text = self.prepare(text);
         let mut lower = String::new();
         self.words(&text)
@@ -497,4 +505,29 @@ fn hindi_stem(word: &mut String) {
 #[cfg(test)]
 pub(super) fn tests_names() -> &'static [(Analyzer, &'static str)] {
     &NAMES
+}
+
+#[cfg(test)]
+mod token_tests {
+    use super::Analyzer;
+
+    /// A single ASCII word's unstemmed legacy terms are what word splitting and the term rule
+    /// give for it, as for any other text.
+    #[test]
+    fn ascii_word_terms_match_the_general_rule() {
+        for text in [
+            "", "the", "The", "THE", "x1", "42", "a", "e\u{301}", "über", "a-b", "a b", " a", "Ǆ",
+        ] {
+            let analyzer = Analyzer::Legacy;
+            let prepared = analyzer.prepare(text);
+            let mut lower = String::new();
+            let general: Vec<String> = analyzer
+                .words(&prepared)
+                .into_iter()
+                .map(|word| analyzer.term(word, false, &mut lower).into_owned())
+                .filter(|term| !term.is_empty())
+                .collect();
+            assert_eq!(analyzer.tokens(text, false), general, "{text:?}");
+        }
+    }
 }
