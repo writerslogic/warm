@@ -2129,6 +2129,16 @@ impl ServingImage {
         bm25: super::Bm25,
         average: f64,
     ) -> Option<&RankTable> {
+        self.rank_table_for(list.skips(), bm25, average)
+    }
+
+    /// [`Self::rank_table`] of the list whose skip table is `skips`.
+    pub(super) fn rank_table_for(
+        &self,
+        skips: &[u8],
+        bm25: super::Bm25,
+        average: f64,
+    ) -> Option<&RankTable> {
         if self.ranked.is_empty() || bm25 != super::Bm25::DEFAULT {
             return None;
         }
@@ -2136,9 +2146,14 @@ impl ServingImage {
         if ranks.average != average {
             return None;
         }
-        let skips = self.section(Section::Skips);
-        let offset = (list.skips().as_ptr() as usize).checked_sub(skips.as_ptr() as usize)?;
+        let section = self.section(Section::Skips);
+        let offset = (skips.as_ptr() as usize).checked_sub(section.as_ptr() as usize)?;
         ranks.tables.get(&offset)
+    }
+
+    /// The skip-table view of term `term`'s list in form `form`, for [`BlockBounds`].
+    pub(super) fn list_ref(&self, form: usize, term: &str) -> Option<ListRef<'_>> {
+        self.extended.then(|| self.list(form, term)).flatten()
     }
 
     /// Builds the rank tables now, at open, so that no query pays for them.

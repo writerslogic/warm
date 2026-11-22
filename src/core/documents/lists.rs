@@ -81,6 +81,95 @@ impl RankTable {
     }
 }
 
+/// Bounds of one list's weights over ranges of slots, from its skip table and, where it has
+/// one, its [`RankTable`]: ranges are asked for in ascending order.
+pub(super) struct BlockBounds<'a> {
+    skips: &'a [u8],
+    blocks: usize,
+    table: Option<&'a RankTable>,
+    /// The first block whose last slot may be at or after the next range's start.
+    at: usize,
+}
+
+impl<'a> BlockBounds<'a> {
+    pub(super) fn new(list: ListRef<'a>, table: Option<&'a RankTable>) -> Self {
+        Self {
+            skips: list.skips,
+            blocks: list.blocks(),
+            table,
+            at: 0,
+        }
+    }
+
+    fn skip(&self, array: usize, block: usize) -> u32 {
+        u32_at(self.skips, array * self.blocks + block)
+    }
+
+    /// A bound of the weight of every posting in slots `lo..hi` under `bound`, never above
+    /// `ceiling`; `lo` never decreases between calls.
+    pub(super) fn bound(&mut self, lo: u32, hi: u32, bound: Bound, ceiling: f64) -> f64 {
+        if self.blocks < 2 {
+            return ceiling;
+        }
+        while self.at < self.blocks && self.skip(0, self.at) < lo {
+            self.at += 1;
+        }
+        let mut best = 0.0f64;
+        let mut block = self.at;
+        while block < self.blocks {
+            let weight = match self.table {
+                Some(table) => RankTable::scale(table.blocks[block], bound.idf()),
+                None => bound.at(self.skip(3, block), self.skip(4, block)),
+            };
+            best = best.max(weight);
+            if self.skip(0, block) >= hi.saturating_sub(1) {
+                break;
+            }
+            block += 1;
+        }
+        best.min(ceiling)
+    }
+
+    /// The first block at or after `from` (at least 1) whose last slot reaches `target`, with
+    /// the offset of its header and the last slot of the block before it: `Some(None)` when no
+    /// block does, `None` when the list has no skip table to search.
+    pub(super) fn find(&self, from: usize, target: u32) -> Option<Option<(usize, usize, u32)>> {
+        if self.blocks < 2 || from == 0 {
+            return None;
+        }
+        // Gallop from `from`, then binary search the bracket.
+        let (mut lo, mut hi, mut step) = (from, from, 1usize);
+        while hi < self.blocks && self.skip(0, hi) < target {
+            lo = hi + 1;
+            hi += step;
+            step *= 2;
+        }
+        let mut hi = hi.min(self.blocks);
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            if self.skip(0, mid) < target {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        Some((lo < self.blocks).then(|| (lo, self.skip(1, lo) as usize, self.skip(0, lo - 1))))
+    }
+
+    /// A bound of the weight of every posting in block `block` under `bound`, never above
+    /// `ceiling`.
+    pub(super) fn block(&self, block: usize, bound: Bound, ceiling: f64) -> f64 {
+        if self.blocks < 2 || block >= self.blocks {
+            return ceiling;
+        }
+        let weight = match self.table {
+            Some(table) => RankTable::scale(table.blocks[block], bound.idf()),
+            None => bound.at(self.skip(3, block), self.skip(4, block)),
+        };
+        weight.min(ceiling)
+    }
+}
+
 /// `value` rounded up to an `f32`.
 fn up_f32(value: f64) -> f32 {
     let rounded = value as f32;

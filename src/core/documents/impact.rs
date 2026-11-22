@@ -20,6 +20,7 @@ use std::collections::{BTreeSet, BinaryHeap};
 
 use super::image::SLOT_BYTES;
 use super::lexical::wand::{sum_bound, Bound};
+use super::lists::BlockBounds;
 use super::postings::{get_varint, unpack_values, Postings, CHECKPOINT_BLOCK};
 use super::search::LexicalSource;
 use super::Bm25;
@@ -82,6 +83,10 @@ pub(super) struct ImpactCursor<'a> {
     ended: bool,
     /// Blocks this cursor decoded since it was opened.
     decodes: usize,
+    /// The index of the current block in the list.
+    block: usize,
+    /// The list's postings.
+    count: usize,
     list_max_frequency: u32,
     list_min_words: u32,
     slots: [u32; CHECKPOINT_BLOCK],
@@ -97,6 +102,8 @@ impl<'a> ImpactCursor<'a> {
             position: 0,
             ended: true,
             decodes: 0,
+            block: 0,
+            count: 0,
             list_max_frequency: 0,
             list_min_words: 0,
             slots: [0; CHECKPOINT_BLOCK],
@@ -115,6 +122,8 @@ impl<'a> ImpactCursor<'a> {
         self.current = Header::parse(bytes, at, list.count as usize, 0);
         self.decoded = false;
         self.position = 0;
+        self.block = 0;
+        self.count = list.count as usize;
         self.ended = false;
     }
 
@@ -187,7 +196,34 @@ impl<'a> ImpactCursor<'a> {
         );
         self.decoded = false;
         self.position = 0;
+        self.block += 1;
         true
+    }
+
+    /// Moves to the first posting at or after `target`, finding its block from the list's
+    /// skip table in `blocks` when there is one rather than reading each header between.
+    fn seek_in(&mut self, target: u32, blocks: Option<&BlockBounds<'_>>) {
+        if self.ended || self.doc() >= target {
+            return;
+        }
+        if self.current.last < target {
+            if let Some(found) = blocks.and_then(|blocks| blocks.find(self.block + 1, target)) {
+                let Some((block, at, previous)) = found else {
+                    self.ended = true;
+                    return;
+                };
+                self.current = Header::parse(
+                    self.bytes,
+                    at,
+                    self.count - block * CHECKPOINT_BLOCK,
+                    previous,
+                );
+                self.block = block;
+                self.decoded = false;
+                self.position = 0;
+            }
+        }
+        self.seek(target);
     }
 
     /// Moves to the first posting at or after `target`.
@@ -420,6 +456,11 @@ pub(super) struct PruneStats {
     pub(super) blocks_decoded: usize,
     pub(super) scored: usize,
     pub(super) windows: usize,
+    /// Windows no chunk of which could reach the threshold.
+    pub(super) skipped_windows: usize,
+    /// Essential blocks passed over undecoded: their bound with the other terms' window
+    /// bounds stays below the threshold.
+    pub(super) skipped_blocks: usize,
     pub(super) accumulated: usize,
     pub(super) survivors: usize,
     pub(super) table_lookups: usize,
@@ -445,11 +486,28 @@ impl<'a> ImpactCursor<'a> {
     }
 
     /// Calls `f(slots, frequencies)` for the runs of postings below `hi` the cursor has not
-    /// passed, a block at a time, and leaves it at the first posting at or after `hi`.
-    fn drain_below(&mut self, hi: u32, table: &[u16], mut f: impl FnMut(&[u32], &[u32])) {
+    /// passed, a block at a time, and leaves it at the first posting at or after `hi`. A block
+    /// that ends below `hi` and for whose index `pass` holds is passed over undecoded; the
+    /// count of those is returned.
+    fn drain_below(
+        &mut self,
+        hi: u32,
+        table: &[u16],
+        mut pass: impl FnMut(usize) -> bool,
+        mut f: impl FnMut(&[u32], &[u32]),
+    ) -> usize {
+        let mut passed = 0usize;
         loop {
             if self.ended || self.doc() >= hi {
-                return;
+                return passed;
+            }
+            if self.current.last < hi && pass(self.block) {
+                passed += 1;
+                if !self.next_block() {
+                    self.ended = true;
+                    return passed;
+                }
+                continue;
             }
             if !self.decoded {
                 self.decode();
@@ -471,11 +529,11 @@ impl<'a> ImpactCursor<'a> {
             f(&self.slots[at..stop], &self.frequencies[at..stop]);
             self.position = stop;
             if stop < end {
-                return;
+                return passed;
             }
             if !self.next_block() {
                 self.ended = true;
-                return;
+                return passed;
             }
         }
     }
@@ -579,6 +637,7 @@ pub(super) fn rank<S: LexicalSource>(
     scratch.terms.clear();
     scratch.stats = PruneStats::default();
     let mut lists = Vec::new();
+    let mut windows = Vec::new();
     for (form, set) in terms.iter().enumerate() {
         for word in set {
             let Some(list) = image.postings(form, word) else {
@@ -587,6 +646,10 @@ pub(super) fn rank<S: LexicalSource>(
             let idf = Bm25::idf(n, f64::from(list.count));
             let bound = Bound::new(idf, average, bm25)?;
             lists.push((list, idf, bound));
+            windows.push(image.list_ref(form, word).map(|skips| {
+                let table = image.rank_table_for(skips.skips, bm25, average);
+                BlockBounds::new(skips, table)
+            }));
         }
     }
     if limit == 0 || lists.is_empty() {
@@ -697,6 +760,8 @@ pub(super) fn rank<S: LexicalSource>(
     let mut threshold = 0.0f64;
     let mut quiet = 0usize;
     let mut scored = 0usize;
+    let mut window_bounds = [0.0f64; MAX_TERMS];
+    let mut demoted: Vec<usize> = Vec::with_capacity(count);
     loop {
         let effective = threshold.max(pilot_floor);
         while quiet < count && sum_bound(prefix[quiet + 1], count) < effective {
@@ -711,28 +776,88 @@ pub(super) fn rank<S: LexicalSource>(
         }
         let hi = lo.saturating_add(WINDOW);
         stats.windows += 1;
+        // Each term's bound in this window, from its blocks there; zero past its postings.
+        for i in 0..count {
+            let term = &terms[i];
+            window_bounds[i] = if cursors[i].doc() >= hi {
+                0.0
+            } else {
+                match windows[i].as_mut() {
+                    Some(blocks) => blocks.bound(lo, hi, term.bound, term.ceiling),
+                    None => term.ceiling,
+                }
+            };
+        }
+        // Essential terms whose window bounds, with the quiet terms', stay below the threshold
+        // are demoted for the window: looked up per candidate, not accumulated.
+        let mut below = 0.0f64;
+        for &i in &by_bound[..quiet] {
+            below += window_bounds[i];
+        }
+        demoted.clear();
+        demoted.extend(by_bound[quiet..].iter().copied());
+        demoted.sort_by(|&a, &b| window_bounds[a].total_cmp(&window_bounds[b]));
+        let mut demote = 0usize;
+        while demote < demoted.len()
+            && sum_bound(below + window_bounds[demoted[demote]], count) < effective
+        {
+            below += window_bounds[demoted[demote]];
+            demote += 1;
+        }
+        demoted.truncate(demote);
+        if demote == count - quiet {
+            // No chunk of the window can reach the threshold.
+            stats.skipped_windows += 1;
+            for &i in &by_bound[quiet..] {
+                cursors[i].seek_in(hi, windows[i].as_ref());
+            }
+            continue;
+        }
         // Accumulate the essential terms' weights over the window.
         for (position, &i) in by_bound[quiet..].iter().enumerate() {
             let idf = terms[i].idf;
             let log = &mut logs[position];
             log.clear();
+            if demoted.contains(&i) {
+                continue;
+            }
             let mut taken = 0usize;
             let wslice = &mut wbuf[position * WINDOW as usize..(position + 1) * WINDOW as usize];
-            cursors[i].drain_below(hi, word_counts, |slots, frequencies| {
-                accumulate_run(
-                    &scorer,
-                    norms,
-                    idf,
-                    lo,
-                    slots,
-                    frequencies,
-                    acc,
-                    mask,
-                    wslice,
-                    log,
-                );
-                taken += slots.len();
-            });
+            // A block whose bound with every other term's window bound is below the threshold
+            // holds no chunk that can reach it: its weights are not needed.
+            let mut others = 0.0f64;
+            for (j, &weight) in window_bounds[..count].iter().enumerate() {
+                if j != i {
+                    others += weight;
+                }
+            }
+            let term = &terms[i];
+            let blocks = windows[i].as_ref();
+            let pass = |block: usize| {
+                effective > 0.0
+                    && blocks.is_some_and(|blocks| {
+                        sum_bound(
+                            others + blocks.block(block, term.bound, term.ceiling),
+                            count,
+                        ) < effective
+                    })
+            };
+            stats.skipped_blocks +=
+                cursors[i].drain_below(hi, word_counts, pass, |slots, frequencies| {
+                    accumulate_run(
+                        &scorer,
+                        norms,
+                        idf,
+                        lo,
+                        slots,
+                        frequencies,
+                        acc,
+                        mask,
+                        wslice,
+                        log,
+                    );
+                    taken += slots.len();
+                });
             stats.accumulated += taken;
         }
         // The least score `limit` chunks of this window are sure to reach, while the heap is
@@ -800,8 +925,12 @@ pub(super) fn rank<S: LexicalSource>(
                 first_pass[first_passes] = i;
                 first_passes += 1;
             } else {
-                untabled += term.ceiling;
+                untabled += window_bounds[i];
             }
+            lookups.push(i);
+        }
+        for &i in demoted.iter() {
+            untabled += window_bounds[i];
             lookups.push(i);
         }
         // First pass: a bound of every touched chunk's score from its accumulated weight, the
@@ -814,7 +943,7 @@ pub(super) fn rank<S: LexicalSource>(
         let drop = cut * (1.0 - 8.0 * f64::EPSILON);
         let mut rest = [0.0f64; FIRST_PASS_TABLES + 1];
         for k in (0..first_passes).rev() {
-            rest[k] = rest[k + 1] + terms[first_pass[k]].ceiling;
+            rest[k] = rest[k + 1] + window_bounds[first_pass[k]];
         }
         cand.clear();
         for (word, word_bits) in mask.iter_mut().enumerate() {
@@ -838,13 +967,15 @@ pub(super) fn rank<S: LexicalSource>(
             let term = &terms[i];
             if let Some(table) = term.dense.as_ref() {
                 let ub = &term.ub[..];
+                let cap = window_bounds[i];
                 let after = rest[k + 1];
                 let mut kept = 0usize;
                 for read in 0..cand.len() {
                     let mut entry = cand[read];
                     let offset = entry.0 as usize;
                     let class = usize::from(window_classes[offset]);
-                    entry.1 += ub[usize::from(table.get(lo as usize + offset)) * CLASSES + class];
+                    entry.1 +=
+                        ub[usize::from(table.get(lo as usize + offset)) * CLASSES + class].min(cap);
                     if floor_score > 0.0 && entry.1 + after < drop {
                         continue;
                     }
@@ -877,7 +1008,7 @@ pub(super) fn rank<S: LexicalSource>(
                 let tf = match term.dense.as_ref().map(|t| t.get(slot as usize)) {
                     Some(15) | None => {
                         stats.cursor_lookups += 1;
-                        cursors[i].seek(slot);
+                        cursors[i].seek_in(slot, windows[i].as_ref());
                         if cursors[i].doc() == slot {
                             cursors[i].frequency()
                         } else {
@@ -922,6 +1053,9 @@ pub(super) fn rank<S: LexicalSource>(
             for &offset in log {
                 wbuf[position * WINDOW as usize + usize::from(offset)] = 0.0;
             }
+        }
+        for &i in demoted.iter() {
+            cursors[i].seek_in(hi, windows[i].as_ref());
         }
     }
     stats.scored = scored;
