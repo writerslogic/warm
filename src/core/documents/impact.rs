@@ -748,6 +748,14 @@ pub(super) fn rank<S: LexicalSource>(
         // tables' frequencies and the untabled quiet terms' ceilings.
         let floor_score = threshold.max(pilot_floor).max(sure);
         let cut = floor_score * cut_factor;
+        // A chunk whose bound plus the ceilings of the tables still to add is below `drop`
+        // cannot reach `cut` whatever those tables say (a table's bound never exceeds its
+        // list's ceiling); the margin covers the different summation order.
+        let drop = cut * (1.0 - 8.0 * f64::EPSILON);
+        let mut rest = [0.0f64; FIRST_PASS_TABLES + 1];
+        for k in (0..first_passes).rev() {
+            rest[k] = rest[k + 1] + terms[first_pass[k]].ceiling;
+        }
         cand.clear();
         for (word, word_bits) in mask.iter_mut().enumerate() {
             let mut bits = std::mem::take(word_bits);
@@ -755,21 +763,35 @@ pub(super) fn rank<S: LexicalSource>(
                 let offset = (word << 6) | bits.trailing_zeros() as usize;
                 bits &= bits - 1;
                 let partial = std::mem::take(&mut acc[offset]);
-                cand.push((offset as u32, partial + untabled));
+                let upper = partial + untabled;
+                if floor_score > 0.0 && upper + rest[0] < drop {
+                    continue;
+                }
+                cand.push((offset as u32, upper));
             }
         }
         // One table at a time over the window's candidates: each candidate still adds the
-        // tables' bounds in the same order, but the loop body is a tight lookup.
+        // tables' bounds in the same order, but the loop body is a tight lookup. A candidate
+        // that can no longer reach the cut leaves before the next table.
         let window_classes = &classes8[lo as usize..];
-        for &i in &first_pass[..first_passes] {
+        for (k, &i) in first_pass[..first_passes].iter().enumerate() {
             let term = &terms[i];
             if let Some(table) = term.dense.as_ref() {
                 let ub = &term.ub[..];
-                for entry in cand.iter_mut() {
+                let after = rest[k + 1];
+                let mut kept = 0usize;
+                for read in 0..cand.len() {
+                    let mut entry = cand[read];
                     let offset = entry.0 as usize;
                     let class = usize::from(window_classes[offset]);
                     entry.1 += ub[usize::from(table.get(lo as usize + offset)) * CLASSES + class];
+                    if floor_score > 0.0 && entry.1 + after < drop {
+                        continue;
+                    }
+                    cand[kept] = entry;
+                    kept += 1;
                 }
+                cand.truncate(kept);
             }
         }
         if floor_score > 0.0 {
