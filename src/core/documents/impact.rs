@@ -497,6 +497,31 @@ fn gather_candidates(
     }
 }
 
+#[derive(Default)]
+struct WindowFrequencies {
+    cells: Vec<u64>,
+    // The upper half identifies the window. The lower half holds the full posting frequency.
+    stamp: u64,
+}
+
+impl WindowFrequencies {
+    fn next_stamp(&mut self) -> u64 {
+        const STEP: u64 = 1 << u32::BITS;
+        self.stamp = self.stamp.wrapping_add(STEP);
+        if self.stamp == 0 {
+            self.cells.fill(0);
+            self.stamp = STEP;
+        }
+        self.stamp
+    }
+
+    #[inline]
+    fn get(&self, index: usize, stamp: u64) -> Option<u32> {
+        let cell = self.cells[index];
+        (cell & !u64::from(u32::MAX) == stamp).then_some(cell as u32)
+    }
+}
+
 /// Working memory of [`rank`], reused across queries.
 pub(super) struct PruneScratch {
     terms: Vec<Term>,
@@ -516,6 +541,7 @@ pub(super) struct PruneScratch {
     logs: Vec<Vec<u16>>,
     /// Per essential term and window offset: the weight of its posting there, else 0.
     wbuf: Vec<f64>,
+    window_frequencies: WindowFrequencies,
     lookups: Vec<usize>,
     /// First-pass survivors of a window.
     cand: Vec<WindowCandidate>,
@@ -541,6 +567,7 @@ impl Default for PruneScratch {
             pilot: Vec::new(),
             logs: Vec::new(),
             wbuf: Vec::new(),
+            window_frequencies: WindowFrequencies::default(),
             lookups: Vec::new(),
             cand: Vec::new(),
             single: Vec::new(),
@@ -698,8 +725,13 @@ impl Scorer<'_> {
     }
 }
 
-/// One essential term's postings of one block run, weighed into the window: the accumulator,
-/// the touched mask, the term's weight buffer and its log of touched offsets.
+enum PostingBuffer<'a> {
+    Single,
+    Weights(&'a mut [f64], &'a mut Vec<u16>),
+    Frequencies(&'a mut [u64]),
+}
+
+/// Weighs an essential term's block run into the window and retains each contribution.
 #[inline(never)]
 #[allow(clippy::too_many_arguments)]
 fn accumulate_run(
@@ -711,8 +743,7 @@ fn accumulate_run(
     frequencies: &[u32],
     acc: &mut [f64],
     mask: &mut [u64],
-    wbuf: &mut [f64],
-    log: &mut Vec<u16>,
+    mut retain: impl FnMut(usize, f64, u32),
 ) {
     scorer.prefetch_words(slots.iter().copied());
     for (&slot, &frequency) in slots.iter().zip(frequencies) {
@@ -722,8 +753,7 @@ fn accumulate_run(
         if weight > 0.0 {
             mask[offset >> 6] |= 1u64 << (offset & 63);
             acc[offset] += weight;
-            wbuf[offset] = weight;
-            log.push(offset as u16);
+            retain(offset, weight, frequency);
         }
     }
 }
@@ -870,6 +900,7 @@ pub(super) fn rank<S: LexicalSource>(
         pilot,
         logs,
         wbuf,
+        window_frequencies,
         lookups,
         cand,
         single,
@@ -888,17 +919,24 @@ pub(super) fn rank<S: LexicalSource>(
     for &i in by_bound.iter() {
         prefix.push(prefix[prefix.len() - 1] + terms[i].ceiling);
     }
-    if logs.len() < count {
-        logs.resize_with(count, Vec::new);
-    }
     let window: u32 = match count {
         _ if limit > WIDE_LIMIT => WINDOW,
         2 => PAIR_WINDOW,
         _ => WIDE_WINDOW,
     };
     let stride = window as usize;
-    if wbuf.len() < count * stride {
-        wbuf.resize(count * stride, 0.0);
+    let retain_frequencies = count >= 4 && limit <= WIDE_LIMIT;
+    if retain_frequencies {
+        if window_frequencies.cells.len() < count * stride {
+            window_frequencies.cells.resize(count * stride, 0);
+        }
+    } else {
+        if logs.len() < count {
+            logs.resize_with(count, Vec::new);
+        }
+        if wbuf.len() < count * stride {
+            wbuf.resize(count * stride, 0.0);
+        }
     }
     let scorer = Scorer {
         bm25,
@@ -1059,16 +1097,31 @@ pub(super) fn rank<S: LexicalSource>(
         // accumulate keeps its postings in a list instead: the accumulated weight of a chunk is
         // then that term's weight alone.
         let alone = count - quiet - demoted.len() == 1;
+        let stamp = if retain_frequencies && !alone {
+            window_frequencies.next_stamp()
+        } else {
+            0
+        };
         single.clear();
         for (position, &i) in by_bound[quiet..].iter().enumerate() {
             let idf = terms[i].idf;
-            let log = &mut logs[position];
-            log.clear();
+            let log = (!retain_frequencies).then(|| {
+                let log = &mut logs[position];
+                log.clear();
+                log
+            });
             if demoted.contains(&i) {
                 continue;
             }
             let mut taken = 0usize;
-            let wslice = &mut wbuf[position * stride..(position + 1) * stride];
+            let span = position * stride..(position + 1) * stride;
+            let mut buffer = if alone {
+                PostingBuffer::Single
+            } else if let Some(log) = log {
+                PostingBuffer::Weights(&mut wbuf[span], log)
+            } else {
+                PostingBuffer::Frequencies(&mut window_frequencies.cells[span])
+            };
             // A block whose bound with every other term's window bound is below the threshold
             // holds no chunk that can reach it: its weights are not needed.
             let mut others = 0.0f64;
@@ -1091,18 +1144,19 @@ pub(super) fn rank<S: LexicalSource>(
             };
             stats.skipped_blocks +=
                 cursors[i].drain_below(hi, pass, |slots, frequencies, most, words| {
-                    if alone {
-                        let mut least = 1u32;
-                        if lone {
-                            while least <= most
-                                && term.bound.at(least, words) + untabled + rest[0] < early_drop
-                            {
-                                least += 1;
+                    match &mut buffer {
+                        PostingBuffer::Single => {
+                            let mut least = 1u32;
+                            if lone {
+                                while least <= most
+                                    && term.bound.at(least, words) + untabled + rest[0] < early_drop
+                                {
+                                    least += 1;
+                                }
                             }
+                            collect_run(&scorer, norms, idf, lo, slots, frequencies, least, single);
                         }
-                        collect_run(&scorer, norms, idf, lo, slots, frequencies, least, single);
-                    } else {
-                        accumulate_run(
+                        PostingBuffer::Weights(saved, log) => accumulate_run(
                             &scorer,
                             norms,
                             idf,
@@ -1111,9 +1165,22 @@ pub(super) fn rank<S: LexicalSource>(
                             frequencies,
                             acc,
                             mask,
-                            wslice,
-                            log,
-                        );
+                            |offset, weight, _| {
+                                saved[offset] = weight;
+                                log.push(offset as u16);
+                            },
+                        ),
+                        PostingBuffer::Frequencies(saved) => accumulate_run(
+                            &scorer,
+                            norms,
+                            idf,
+                            lo,
+                            slots,
+                            frequencies,
+                            acc,
+                            mask,
+                            |offset, _, frequency| saved[offset] = stamp | u64::from(frequency),
+                        ),
                     }
                     taken += slots.len();
                 });
@@ -1259,6 +1326,14 @@ pub(super) fn rank<S: LexicalSource>(
             let norm = norm_for(norms, slot);
             if let Some(i) = single_term {
                 weights[i] = single[single_index as usize].1;
+            } else if stamp != 0 {
+                for (position, &i) in by_bound[quiet..].iter().enumerate() {
+                    if let Some(frequency) =
+                        window_frequencies.get(position * stride + offset as usize, stamp)
+                    {
+                        weights[i] = weigh(terms[i].idf, f64::from(frequency), norm);
+                    }
+                }
             } else {
                 for (position, &i) in by_bound[quiet..].iter().enumerate() {
                     let weight = wbuf[position * stride + offset as usize];
@@ -1330,9 +1405,11 @@ pub(super) fn rank<S: LexicalSource>(
                 threshold = f64::from_bits(floor);
             }
         }
-        for (position, log) in logs[..count - quiet].iter().enumerate() {
-            for &offset in log {
-                wbuf[position * stride + usize::from(offset)] = 0.0;
+        if !retain_frequencies {
+            for (position, log) in logs[..count - quiet].iter().enumerate() {
+                for &offset in log {
+                    wbuf[position * stride + usize::from(offset)] = 0.0;
+                }
             }
         }
         for &i in demoted.iter() {
@@ -1380,6 +1457,24 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn lexical_impact_window_stamp_expires_frequencies() {
+        let mut frequencies = WindowFrequencies {
+            cells: vec![0; 2],
+            ..Default::default()
+        };
+        let first = frequencies.next_stamp();
+        frequencies.cells[0] = first | u64::from(u32::MAX);
+        assert_eq!(frequencies.get(0, first), Some(u32::MAX));
+        assert_eq!(frequencies.get(1, first), None);
+        let second = frequencies.next_stamp();
+        assert_eq!(frequencies.get(0, second), None);
+        frequencies.stamp = u64::MAX & !u64::from(u32::MAX);
+        let after_wrap = frequencies.next_stamp();
+        assert_eq!(after_wrap, first);
+        assert_eq!(frequencies.get(0, after_wrap), None);
     }
 
     #[test]
