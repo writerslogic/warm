@@ -97,7 +97,7 @@ or allocating the resonator index.
 search, the memory API and vector search. Requests and results are dicts and lists with the
 camelCase fields of the Node binding. One process may write a store at a time.
 
-`Warm` ships in `warm-python` 0.7.0 and later; the earlier 0.6.8 wheel does not have it.
+`Warm` ships in `warm-python` 0.7.1 and later; the earlier 0.6.8 wheel does not have it.
 
 ```python
 from writerslogic_warm import Warm

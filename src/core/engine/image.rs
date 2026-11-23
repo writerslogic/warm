@@ -263,7 +263,8 @@ impl WarmCore {
             "checkpoint checksum mismatch"
         );
         Ok(ServingImage::new(bytes)?
-            .with_text_cache(self.config.document_checkpoint.text_cache_bytes))
+            .with_text_cache(self.config.document_checkpoint.text_cache_bytes)
+            .with_rank_tables())
     }
 
     /// The sealed checkpoint of `store` for the generation directory `generation`, when this

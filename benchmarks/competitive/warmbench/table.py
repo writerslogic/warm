@@ -460,10 +460,12 @@ def render_section(sec, cells_out):
             dropped[key] = label
             continue
         for system, c in cells.items():
+            # The All systems table prints n/c for a durable-operation contract that differs from WARM's.
+            incomparable = embedded_ops(key) and mine is not None and c.get("durability_class") != mine.get("durability_class")
             cells_out.append({"section": sec["title"], "file": rel(path), "hardware_class": hw["class"], "metric": key, "system": system,
                               "value": c["value"], "ci": c["ci"] if c["value"] is not None else None, "n": c["n"], "source": c["source"],
                               "validity": c["validity"], "validity_reason": c["validity_reason"], "uncertainty": c["uncertainty"],
-                              "interval_kind": c.get("interval_kind"), "text": fmt(c["value"], dec)})
+                              "interval_kind": c.get("interval_kind"), "text": "n/c" if incomparable else fmt(c["value"], dec)})
         if mine is None:
             continue
         adv = advantage(key, mine, other) if other else None

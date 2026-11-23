@@ -84,7 +84,7 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     memory API, which ranks with the same stemmed lexical search as the Rust and Node examples, so it
     needs no embedding model. The masked-vector step uses `toy_embed`, a small hashed bag of words
     that is only a stand-in: use a real embedding model for semantic search. The in-process
-    `writerslogic_warm.Warm` class needs `warm-python` 0.7.0 or later.
+    `writerslogic_warm.Warm` class needs `warm-python` 0.7.1 or later.
 
 === "Embedded Node"
 

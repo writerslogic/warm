@@ -24,7 +24,7 @@ The existing `warm-models==0.1.0` pin does not require another model release for
 The Python distributions have separate release tags and Trusted Publisher workflows. For a full
 engine release, push both `vX.Y.Z` and `py-vX.Y.Z` at the same commit; the native wheels build twice.
 
-The npm native binding `writerslogic-warm` follows the engine version, currently 0.7.0.
+The npm native binding `writerslogic-warm` follows the engine version, currently 0.7.1.
 The JavaScript and Python HTTP clients share SDK version 0.2.2 and the `sdk-v0.2.2` tag;
 their manifests are `bindings/js/warm-sdk/package.json` and
 `bindings/python/warm-sdk/pyproject.toml`. The engine version script does not bump the SDKs

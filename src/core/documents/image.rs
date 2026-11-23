@@ -31,8 +31,9 @@ use std::sync::Arc;
 use anyhow::{bail, ensure, Context, Result};
 
 use super::binary::{put_bytes, put_varint, Reader};
+use super::impact::WindowBounds;
 use super::index::{DocumentStore, StoreIdentity};
-use super::lists::{Cursor, ListRef};
+use super::lists::{Cursor, ListRef, RankTable, RANKED_RUNS, RUN_BLOCKS};
 use super::packed_terms::StoredTerms;
 use super::postings::{PostingList, PostingLists, Postings, RestoredList};
 use super::search::LexicalSource;
@@ -224,27 +225,6 @@ pub(crate) fn encode_v3(
     encode_as(store, generation, dimensions, 3, false)
 }
 
-/// Appends the positions of one block of postings, `(slot, ordinal)` each, to `out`; `false`
-/// when the block would start beyond what a `u32` offset from `base` holds.
-fn pack_position_block(
-    store: &DocumentStore,
-    block: &mut Vec<(usize, u32)>,
-    out: &mut Vec<u8>,
-    base: usize,
-    offsets: &mut Vec<u32>,
-) -> Result<bool> {
-    let mut sources = Vec::with_capacity(block.len());
-    for &(slot, ordinal) in block.iter() {
-        ensure!(ordinal > 0, "positional posting lacks its term ordinal");
-        let positions = store
-            .position_source(slot)
-            .context("positional posting in a chunk without positions")?;
-        sources.push(positions.bytes(ordinal as usize - 1));
-    }
-    block.clear();
-    Ok(write_position_block(&sources, out, base, offsets))
-}
-
 /// Appends one block of postings' position bytes to `out`, recording where it starts (from
 /// `base`) in `offsets`; `false` when that offset does not fit a `u32`.
 fn write_position_block(
@@ -322,28 +302,41 @@ impl<'a> PositionPacker<'a> {
 /// Appends the positions of `list`'s postings to `out`, block by block as `lists::Cursor` reads
 /// them, and records where each block starts (from the first byte this call appends) in
 /// `offsets`. `false` when an offset would not fit a `u32`.
-fn pack_positions(
-    store: &DocumentStore,
+fn pack_positions<'a>(
+    store: &'a DocumentStore,
     list: &PostingList,
     out: &mut Vec<u8>,
     offsets: &mut Vec<u32>,
+    sources: &mut Vec<&'a [u8]>,
 ) -> Result<bool> {
     let base = out.len();
     offsets.clear();
-    let mut block: Vec<(usize, u32)> = Vec::with_capacity(super::postings::CHECKPOINT_BLOCK);
+    sources.clear();
     let mut outcome: Result<bool> = Ok(true);
     list.for_each_with_ordinal(|slot, _, ordinal| {
         if !matches!(outcome, Ok(true)) {
             return;
         }
-        block.push((slot, ordinal));
-        if block.len() == super::postings::CHECKPOINT_BLOCK {
-            outcome = pack_position_block(store, &mut block, out, base, offsets);
+        if ordinal == 0 {
+            outcome = Err(anyhow::anyhow!("positional posting lacks its term ordinal"));
+            return;
+        }
+        let Some(positions) = store.position_source(slot) else {
+            outcome = Err(anyhow::anyhow!(
+                "positional posting in a chunk without positions"
+            ));
+            return;
+        };
+        sources.push(positions.bytes(ordinal as usize - 1));
+        if sources.len() == super::postings::CHECKPOINT_BLOCK {
+            outcome = Ok(write_position_block(sources, out, base, offsets));
+            sources.clear();
         }
     });
-    if matches!(outcome, Ok(true)) && !block.is_empty() {
-        outcome = pack_position_block(store, &mut block, out, base, offsets);
+    if matches!(outcome, Ok(true)) && !sources.is_empty() {
+        outcome = Ok(write_position_block(sources, out, base, offsets));
     }
+    sources.clear();
     Ok(outcome? && u32::try_from(out.len() - base).is_ok())
 }
 
@@ -489,6 +482,7 @@ fn encode_as(
     let mut positive = true;
     let mut infos: Vec<super::postings::BlockInfo> = Vec::new();
     let mut offsets: Vec<u32> = Vec::new();
+    let mut position_sources = Vec::new();
     for form in 0..2 {
         let (terms, term_offsets, lists) = store.postings[form].sorted_terms();
         let (mut dict, mut blocks) = (Vec::new(), Vec::new());
@@ -540,7 +534,15 @@ fn encode_as(
                     if u32::try_from(postings.len() - start).is_err() {
                         return Ok(None);
                     }
-                    if positional && !pack_positions(store, list, &mut positions, &mut offsets)? {
+                    if positional
+                        && !pack_positions(
+                            store,
+                            list,
+                            &mut positions,
+                            &mut offsets,
+                            &mut position_sources,
+                        )?
+                    {
                         return Ok(None);
                     }
                     let list_bytes = &postings[start..];
@@ -788,11 +790,29 @@ struct BlockBase {
 }
 
 /// A dictionary entry's counts, after its term.
+#[derive(Clone, Copy)]
 struct Entry {
     count: u64,
     len: usize,
     pos_len: usize,
     skip_len: usize,
+}
+
+/// Where one list's bytes are: its postings, skip table and positions offsets in their
+/// sections, with its entry.
+#[derive(Clone, Copy)]
+struct ListSpan {
+    posting: usize,
+    skip: usize,
+    pos: usize,
+    entry: Entry,
+}
+
+/// The [`RankTable`]s of an image's lists of at least [`RANKED_RUNS`] runs, under the default
+/// BM25 shape and the image's average chunk length, by skip table offset.
+struct Ranks {
+    average: f64,
+    tables: std::collections::HashMap<usize, RankTable>,
 }
 
 /// Bytes of the LEB128 varint of `value`.
@@ -821,6 +841,9 @@ pub(crate) struct ServingImage {
     docs: usize,
     dimensions: usize,
     dictionaries: [Dictionary; 2],
+    /// Per form, [`term_key`] of each dictionary block's first term: the block search compares
+    /// these in memory and reads a block's first term only when the keys tie.
+    block_keys: [Vec<u64>; 2],
     sections: [(usize, usize); SECTIONS],
     /// Versions 2 to 4: postings in the block encoding (see `postings::Postings`).
     blocked: bool,
@@ -835,6 +858,11 @@ pub(crate) struct ServingImage {
     positive: bool,
     /// Leading slots laid out by the last document reorder ([`H_ORDERED`]), at most `slots`.
     ordered: usize,
+    /// The lists of at least [`RANKED_RUNS`] runs, found when the dictionaries are checked.
+    ranked: Vec<ListSpan>,
+    /// Their rank tables, built by [`Self::with_rank_tables`] at open, or else by the first
+    /// query that asks for one.
+    ranks: std::sync::OnceLock<Ranks>,
     /// Direct frequency tables of the longest lists, built by queries (see `impact`).
     dense: super::impact::DenseTables,
     /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
@@ -845,6 +873,8 @@ pub(crate) struct ServingImage {
     text_blocks: bool,
     /// Blocks decoded for hits, kept up to the configured byte budget.
     decoded: DecodedBlocks,
+    /// Aligned bounds for dense union terms, sorted by skip-table offset.
+    union_windows: Box<[(usize, WindowBounds)]>,
 }
 
 /// Where a chunk's text is.
@@ -1019,6 +1049,9 @@ impl ServingImage {
             docs,
             dimensions,
             dictionaries: [Dictionary::default(); 2],
+            block_keys: Default::default(),
+            ranked: Vec::new(),
+            ranks: std::sync::OnceLock::new(),
             sections,
             blocked,
             impacts,
@@ -1031,6 +1064,7 @@ impl ServingImage {
             word_counts: std::sync::OnceLock::new(),
             text_blocks,
             decoded: DecodedBlocks::default(),
+            union_windows: Box::default(),
         };
         if text_blocks {
             image.text_stream()?;
@@ -1038,9 +1072,12 @@ impl ServingImage {
         image.check_documents()?;
         image.check_slots()?;
         let mut totals = (0usize, 0usize);
+        let mut ranked = Vec::new();
         for form in 0..2 {
-            image.dictionaries[form] = image.check_dictionary(form, &mut totals)?;
+            (image.dictionaries[form], image.block_keys[form]) =
+                image.check_dictionary(form, &mut totals, &mut ranked)?;
         }
+        image.ranked = ranked;
         ensure!(
             totals
                 == if extended {
@@ -1261,8 +1298,14 @@ impl ServingImage {
 
     /// Checks form `form`'s dictionary: blocks in order, entries well formed with terms in
     /// strictly ascending byte order, posting, skip and positions ranges inside their sections.
-    /// `totals` accumulates the skip and positions bytes the forms' entries address.
-    fn check_dictionary(&self, form: usize, totals: &mut (usize, usize)) -> Result<Dictionary> {
+    /// `totals` accumulates the skip and positions bytes the forms' entries address. Returns the
+    /// dictionary with the [`term_key`] of each block's first term.
+    fn check_dictionary(
+        &self,
+        form: usize,
+        totals: &mut (usize, usize),
+        ranked: &mut Vec<ListSpan>,
+    ) -> Result<(Dictionary, Vec<u64>)> {
         let (dict_section, block_section) = if form == 0 {
             (Section::Dict0, Section::Blocks0)
         } else {
@@ -1280,6 +1323,7 @@ impl ServingImage {
         let mut reader = Reader::new(dict);
         let mut at = None::<BlockBase>;
         let mut extra = 0usize;
+        let mut keys = Vec::with_capacity(block_count);
         for i in 0..terms {
             let position = reader.position();
             if i.is_multiple_of(BLOCK) {
@@ -1303,12 +1347,19 @@ impl ServingImage {
                 prefix <= previous.len() && (!i.is_multiple_of(BLOCK) || prefix == 0),
                 "checkpoint term prefix"
             );
-            let mut term = previous[..prefix].to_vec();
-            term.extend_from_slice(suffix);
             ensure!(
-                std::str::from_utf8(&term).is_ok() && (i == 0 || previous < term),
+                i == 0 || &previous[prefix..] < suffix,
                 "checkpoint terms out of order"
             );
+            previous.truncate(prefix);
+            previous.extend_from_slice(suffix);
+            ensure!(
+                std::str::from_utf8(&previous).is_ok(),
+                "checkpoint terms out of order"
+            );
+            if i.is_multiple_of(BLOCK) {
+                keys.push(term_key(&previous));
+            }
             let entry = self.read_entry(&mut reader)?;
             ensure!(
                 entry.count > 0
@@ -1332,6 +1383,17 @@ impl ServingImage {
                     .is_some_and(|end| end <= postings),
                 "checkpoint posting range"
             );
+            if self.extended
+                && entry.count
+                    >= (RANKED_RUNS * RUN_BLOCKS * super::postings::CHECKPOINT_BLOCK) as u64
+            {
+                ranked.push(ListSpan {
+                    posting: base.posting,
+                    skip: base.skip,
+                    pos: base.pos,
+                    entry,
+                });
+            }
             base.posting += entry.len;
             base.pos += entry.pos_len;
             if self.extended {
@@ -1345,7 +1407,6 @@ impl ServingImage {
                 );
                 base.skip += entry.skip_len;
             }
-            previous = term;
         }
         ensure!(
             reader.is_empty(),
@@ -1355,12 +1416,15 @@ impl ServingImage {
             totals.0 = base.skip;
             totals.1 = base.pos;
         }
-        Ok(Dictionary {
-            dict: self.sections[dict_section as usize],
-            blocks: self.sections[block_section as usize],
-            terms,
-            extra: extra + if self.extended { 24 * block_count } else { 0 },
-        })
+        Ok((
+            Dictionary {
+                dict: self.sections[dict_section as usize],
+                blocks: self.sections[block_section as usize],
+                terms,
+                extra: extra + if self.extended { 24 * block_count } else { 0 },
+            },
+            keys,
+        ))
     }
 
     fn span(&self, offsets: Section, i: usize) -> (usize, usize) {
@@ -1375,6 +1439,17 @@ impl ServingImage {
         let (start, end) = self.span(Section::IdOffsets, ordinal);
         let ids = self.section(Section::Ids);
         std::str::from_utf8(&ids[start..end]).expect("ids checked at open")
+    }
+
+    /// The tie order of `slot` as [`LexicalSource::slot_order`] gives it, with the id as its
+    /// bytes: they order as the string does, and comparing them skips the UTF-8 check.
+    pub(super) fn slot_key(&self, slot: usize) -> (&[u8], usize) {
+        let (_, ordinal, index) = self.slot(slot);
+        if ordinal == FREE {
+            return (&[], index as usize);
+        }
+        let (start, end) = self.span(Section::IdOffsets, ordinal as usize);
+        (&self.section(Section::Ids)[start..end], index as usize)
     }
 
     pub(super) fn slot_total(&self) -> usize {
@@ -1927,6 +2002,15 @@ impl ServingImage {
     }
 }
 
+/// The first eight bytes of `term`, zero padded, as a big-endian number. Keys order as their
+/// terms do, except that terms agreeing in those bytes may tie.
+fn term_key(term: &[u8]) -> u64 {
+    let mut key = [0u8; 8];
+    let n = term.len().min(8);
+    key[..n].copy_from_slice(&term[..n]);
+    u64::from_be_bytes(key)
+}
+
 impl ServingImage {
     /// The posting list of `term` in posting form `form`, with its skip table and positions.
     pub(super) fn list(&self, form: usize, term: &str) -> Option<ListRef<'_>> {
@@ -1942,11 +2026,18 @@ impl ServingImage {
             reader.bytes().expect("dictionary checked at open")
         };
         let target = term.as_bytes();
+        let keys = &self.block_keys[form];
+        let key = term_key(target);
         // The last block whose first term is at or below the target.
-        let (mut lo, mut hi) = (0usize, blocks.len() / self.block_stride());
+        let (mut lo, mut hi) = (0usize, keys.len());
         while hi - lo > 1 {
             let mid = lo + (hi - lo) / 2;
-            if first_term(mid) <= target {
+            let at_or_below = match keys[mid].cmp(&key) {
+                std::cmp::Ordering::Less => true,
+                std::cmp::Ordering::Greater => false,
+                std::cmp::Ordering::Equal => first_term(mid) <= target,
+            };
+            if at_or_below {
                 lo = mid;
             } else {
                 hi = mid;
@@ -1961,17 +2052,24 @@ impl ServingImage {
             self.section(Section::Skips),
             self.section(Section::Positions),
         );
-        let mut current: Vec<u8> = Vec::with_capacity(target.len() + 8);
+        let mut matched = 0;
         for _ in 0..entries {
             let prefix = reader.varint().expect("dictionary checked at open") as usize;
             let suffix = reader.bytes().expect("dictionary checked at open");
-            current.truncate(prefix);
-            current.extend_from_slice(suffix);
             let entry = self
                 .read_entry(&mut reader)
                 .expect("dictionary checked at open");
             let skip_len = entry.skip_len;
-            match current.as_slice().cmp(target) {
+            let ordering = if prefix > matched {
+                // The previous term was below the target and this prefix retains its mismatch.
+                std::cmp::Ordering::Less
+            } else {
+                let rest = &target[prefix..];
+                let common = suffix.iter().zip(rest).take_while(|(a, b)| a == b).count();
+                matched = prefix + common;
+                suffix.get(common).cmp(&rest.get(common))
+            };
+            match ordering {
                 std::cmp::Ordering::Equal => {
                     return Some(ListRef {
                         bytes: &postings[base.posting..base.posting + entry.len],
@@ -2037,8 +2135,149 @@ impl ServingImage {
                 .collect()
         })
     }
+
+    #[cfg(test)]
+    pub(super) fn has_word_counts(&self) -> bool {
+        self.word_counts.get().is_some()
+    }
+
+    /// The rank table of `list`, one of this image's lists, when it has at least
+    /// [`RANKED_RUNS`] runs and is scored with the default BM25 shape at `average` words.
+    pub(super) fn rank_table(
+        &self,
+        list: &Cursor<'_>,
+        bm25: super::Bm25,
+        average: f64,
+    ) -> Option<&RankTable> {
+        self.rank_table_for(list.skips(), bm25, average)
+    }
+
+    /// [`Self::rank_table`] of the list whose skip table is `skips`.
+    pub(super) fn rank_table_for(
+        &self,
+        skips: &[u8],
+        bm25: super::Bm25,
+        average: f64,
+    ) -> Option<&RankTable> {
+        if self.ranked.is_empty() || bm25 != super::Bm25::DEFAULT {
+            return None;
+        }
+        let ranks = self.ranks();
+        if ranks.average != average {
+            return None;
+        }
+        let section = self.section(Section::Skips);
+        let offset = (skips.as_ptr() as usize).checked_sub(section.as_ptr() as usize)?;
+        ranks.tables.get(&offset)
+    }
+
+    /// The postings and, on extended checkpoints, the skip-table view of the same list.
+    pub(super) fn postings_with_skips(
+        &self,
+        form: usize,
+        term: &str,
+    ) -> Option<(Postings<'_>, Option<ListRef<'_>>)> {
+        let list = self.list(form, term)?;
+        let postings = Postings {
+            bytes: list.bytes,
+            count: list.count,
+            blocked: self.blocked,
+            impacts: self.impacts,
+        };
+        Some((postings, self.extended.then_some(list)))
+    }
+
+    /// Builds the rank tables now, at open, so that no query pays for them.
+    pub(crate) fn with_rank_tables(mut self) -> Self {
+        self.union_windows = self.build_union_windows(self.ranks());
+        self
+    }
+
+    fn build_union_windows(&self, ranks: &Ranks) -> Box<[(usize, WindowBounds)]> {
+        let min_count = self.slots.div_ceil(16);
+        let (postings, skips, positions) = (
+            self.section(Section::Postings),
+            self.section(Section::Skips),
+            self.section(Section::Positions),
+        );
+        let mut windows: Vec<_> = self
+            .ranked
+            .iter()
+            .filter(|span| span.entry.count as usize >= min_count)
+            .filter_map(|span| {
+                let table = ranks.tables.get(&span.skip)?;
+                let list = ListRef {
+                    bytes: &postings[span.posting..span.posting + span.entry.len],
+                    count: span.entry.count as u32,
+                    skips: &skips[span.skip..span.skip + span.entry.skip_len],
+                    positions: &positions[span.pos..span.pos + span.entry.pos_len],
+                };
+                WindowBounds::new(list, table, self.slots).map(|bounds| (span.skip, bounds))
+            })
+            .collect();
+        windows.sort_unstable_by_key(|(offset, _)| *offset);
+        windows.into_boxed_slice()
+    }
+
+    pub(super) fn union_window_bounds(&self, skips: &[u8]) -> Option<&WindowBounds> {
+        let section = self.section(Section::Skips);
+        let offset = (skips.as_ptr() as usize).checked_sub(section.as_ptr() as usize)?;
+        let index = self
+            .union_windows
+            .binary_search_by_key(&offset, |(offset, _)| *offset)
+            .ok()?;
+        Some(&self.union_windows[index].1)
+    }
+
+    fn ranks(&self) -> &Ranks {
+        self.ranks.get_or_init(|| {
+            let average = (self.words as f64 / (self.chunks as f64).max(1.0)).max(1.0);
+            let unit = super::lexical::wand::Bound::new(1.0, average, super::Bm25::DEFAULT);
+            let (postings, skips, positions) = (
+                self.section(Section::Postings),
+                self.section(Section::Skips),
+                self.section(Section::Positions),
+            );
+            let tables = unit
+                .map(|unit| {
+                    self.ranked
+                        .iter()
+                        .map(|span| {
+                            let list = ListRef {
+                                bytes: &postings[span.posting..span.posting + span.entry.len],
+                                count: span.entry.count as u32,
+                                skips: &skips[span.skip..span.skip + span.entry.skip_len],
+                                positions: &positions[span.pos..span.pos + span.entry.pos_len],
+                            };
+                            (span.skip, RankTable::new(list, unit))
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            Ranks { average, tables }
+        })
+    }
+
     pub(super) fn dense(&self) -> &super::impact::DenseTables {
         &self.dense
+    }
+
+    /// The direct frequency table of `list`, one of this image's lists, when it is long enough
+    /// for one and the tables' budget allows it.
+    pub(super) fn frequency_table(
+        &self,
+        list: super::lists::ListRef<'_>,
+    ) -> Option<std::sync::Arc<super::impact::Dense>> {
+        if !super::impact::tabled(list.count as usize, self.slots) {
+            return None;
+        }
+        let postings = Postings {
+            bytes: list.bytes,
+            count: list.count,
+            blocked: self.blocked,
+            impacts: self.impacts,
+        };
+        self.dense.get(self.slots, &postings)
     }
 }
 
@@ -2066,12 +2305,8 @@ impl LexicalSource for ServingImage {
     }
 
     fn postings(&self, form: usize, term: &str) -> Option<Postings<'_>> {
-        self.list(form, term).map(|list| Postings {
-            bytes: list.bytes,
-            count: list.count,
-            blocked: self.blocked,
-            impacts: self.impacts,
-        })
+        self.postings_with_skips(form, term)
+            .map(|(postings, _)| postings)
     }
 
     fn slot_word_count(&self, slot: usize) -> u32 {
@@ -2121,6 +2356,46 @@ mod tests {
         assert!(ServingImage::new(checkpoint(&[(H_DOCS, 1 << 62)], lens)).is_err());
         assert!(ServingImage::new(checkpoint(&[(H_SLOTS, 1 << 62)], lens)).is_err());
     }
+
+    #[test]
+    fn lexical_checkpoint_rejects_invalid_front_coded_terms() {
+        let mut store = DocumentStore::default();
+        let input =
+            serde_json::from_value(serde_json::json!({"id": "doc", "text": "ö ø"})).unwrap();
+        let document = super::super::prepare_with_options(
+            input,
+            64,
+            None,
+            None,
+            crate::core::encoding::TextEncoder::default(),
+            &super::super::IngestOptions {
+                encode: super::super::EncodeMode::Lexical,
+                unstemmed: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        store.insert("doc".to_owned(), document);
+        let bytes = encode(&store, 1, 64).unwrap().unwrap();
+        let image = ServingImage::new(Backing::Owned(bytes.clone())).unwrap();
+        let (start, len) = image.sections[Section::Dict0 as usize];
+        let mut reader = Reader::new(&bytes[start..start + len]);
+        assert_eq!(reader.varint().unwrap(), 0);
+        assert_eq!(reader.bytes().unwrap(), "ö".as_bytes());
+        image.read_entry(&mut reader).unwrap();
+        assert_eq!(reader.varint().unwrap(), 1);
+        assert_eq!(reader.bytes().unwrap(), &[0xb8]);
+        let last_suffix_byte = start + reader.position() - 1;
+        for suffix in [0xb5, 0xb6, 0xff] {
+            let mut invalid = bytes.clone();
+            invalid[last_suffix_byte] = suffix;
+            let Err(error) = ServingImage::new(Backing::Owned(invalid)) else {
+                panic!("invalid dictionary suffix {suffix:#x} was accepted");
+            };
+            assert!(error.to_string().contains("checkpoint terms out of order"));
+        }
+    }
+
     fn image_with_record(record: &[u8]) -> ServingImage {
         let mut lens = [0; SECTIONS];
         lens[Section::IdOffsets as usize] = 8;
@@ -2216,6 +2491,53 @@ mod tests {
                 image_with_record(&bytes).record(0).is_ok(),
                 text.len() == end as usize
             );
+        }
+    }
+
+    #[test]
+    fn lexical_position_packing_matches_the_merge_encoder_across_block_sizes() {
+        const BLOCK: usize = super::super::postings::CHECKPOINT_BLOCK;
+        let mut store = DocumentStore::default();
+        let options = super::super::IngestOptions {
+            encode: super::super::EncodeMode::Lexical,
+            positions: true,
+            unstemmed: true,
+            ..Default::default()
+        };
+        for i in 0..=BLOCK {
+            let text = match i {
+                BLOCK => "alpha alpha",
+                i if i + 1 == BLOCK => "beta alpha",
+                _ => "alpha gamma beta beta",
+            };
+            let id = format!("d{i:03}");
+            let input =
+                serde_json::from_value(serde_json::json!({"id": id, "text": text})).unwrap();
+            let document = super::super::prepare_with_options(
+                input,
+                64,
+                None,
+                None,
+                crate::core::encoding::TextEncoder::default(),
+                &options,
+            )
+            .unwrap();
+            store.insert(id, document);
+        }
+        let (mut packed, mut offsets, mut sources) = (Vec::new(), Vec::new(), Vec::new());
+        for (term, count) in [("gamma", BLOCK - 1), ("alpha", BLOCK + 1), ("beta", BLOCK)] {
+            let list = store.postings[0].get(term).unwrap();
+            assert_eq!(list.len(), count);
+            let mut reference = PositionPacker::new();
+            list.for_each_with_ordinal(|slot, _, ordinal| {
+                let positions = store.position_source(slot).unwrap();
+                reference.push(positions.bytes(ordinal as usize - 1));
+            });
+            assert!(reference.finish());
+            let base = packed.len();
+            assert!(pack_positions(&store, list, &mut packed, &mut offsets, &mut sources).unwrap());
+            assert_eq!(&packed[base..], reference.out.as_slice());
+            assert_eq!(offsets, reference.offsets);
         }
     }
 

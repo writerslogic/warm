@@ -90,12 +90,17 @@ pub(super) fn unpack_fixed<const BITS: usize>(bytes: &[u8], count: usize, out: &
         let window: [u8; 8] = bytes[bit / 8..bit / 8 + 8].try_into().expect("eight bytes");
         *value = (u64::from_le_bytes(window) >> (bit % 8)) & mask;
     }
-    for (index, value) in out[..count].iter_mut().enumerate().skip(whole) {
-        let bit = index * BITS;
+    let tail = whole.max(decoded);
+    if tail < count {
+        let first_bit = tail * BITS;
         let mut window = [0u8; 8];
-        let tail = &bytes[bit / 8..(bit / 8 + 8).min(bytes.len())];
-        window[..tail.len()].copy_from_slice(tail);
-        *value = (u64::from_le_bytes(window) >> (bit % 8)) & mask;
+        let rest = &bytes[first_bit / 8..];
+        assert!((count - 1) * BITS / 8 <= bytes.len());
+        window[..rest.len()].copy_from_slice(rest);
+        let word = u64::from_le_bytes(window);
+        for (index, value) in out[tail..].iter_mut().enumerate() {
+            *value = (word >> (first_bit % 8 + index * BITS)) & mask;
+        }
     }
 }
 
@@ -104,9 +109,11 @@ pub(super) fn unpack_fixed<const BITS: usize>(bytes: &[u8], count: usize, out: &
 pub(super) unsafe fn unpack_neon<const BITS: usize>(bytes: &[u8], out: &mut [u64]) -> usize {
     use std::arch::aarch64::*;
     assert!((1..=25).contains(&BITS));
+    // At widths up to 14, the eighth value starts at byte 12 or earlier.
+    let second = if BITS <= 14 { 0 } else { BITS / 2 };
     let shuffle_lo = std::array::from_fn::<_, 16, _>(|i| ((i / 4) * BITS / 8 + i % 4) as u8);
     let shuffle_hi =
-        std::array::from_fn::<_, 16, _>(|i| ((i / 4 + 4) * BITS / 8 - BITS / 2 + i % 4) as u8);
+        std::array::from_fn::<_, 16, _>(|i| ((i / 4 + 4) * BITS / 8 - second + i % 4) as u8);
     let shifts_lo = std::array::from_fn::<_, 4, _>(|i| -((i * BITS % 8) as i32));
     let shifts_hi = std::array::from_fn::<_, 4, _>(|i| -(((i + 4) * BITS % 8) as i32));
     // SAFETY: tables span 16 bytes. Each iteration checks both 16-byte input
@@ -118,18 +125,24 @@ pub(super) unsafe fn unpack_neon<const BITS: usize>(bytes: &[u8], out: &mut [u64
         let shifts_hi = vld1q_s32(shifts_hi.as_ptr());
         let mask = vdupq_n_u32(((1u64 << BITS) - 1) as u32);
         let mut done = 0;
-        while done + 8 <= out.len() && done * BITS / 8 + BITS / 2 + 16 <= bytes.len() {
+        while done + 8 <= out.len() && done * BITS / 8 + second + 16 <= bytes.len() {
             let first = bytes.as_ptr().add(done * BITS / 8);
+            let lo_bytes = vld1q_u8(first);
+            let hi_bytes = if second == 0 {
+                lo_bytes
+            } else {
+                vld1q_u8(first.add(second))
+            };
             let lo = vandq_u32(
                 vshlq_u32(
-                    vreinterpretq_u32_u8(vqtbl1q_u8(vld1q_u8(first), shuffle_lo)),
+                    vreinterpretq_u32_u8(vqtbl1q_u8(lo_bytes, shuffle_lo)),
                     shifts_lo,
                 ),
                 mask,
             );
             let hi = vandq_u32(
                 vshlq_u32(
-                    vreinterpretq_u32_u8(vqtbl1q_u8(vld1q_u8(first.add(BITS / 2)), shuffle_hi)),
+                    vreinterpretq_u32_u8(vqtbl1q_u8(hi_bytes, shuffle_hi)),
                     shifts_hi,
                 ),
                 mask,
@@ -149,9 +162,11 @@ pub(super) unsafe fn unpack_neon<const BITS: usize>(bytes: &[u8], out: &mut [u64
 pub(super) unsafe fn unpack_avx2<const BITS: usize>(bytes: &[u8], out: &mut [u64]) -> usize {
     use std::arch::x86_64::*;
     assert!((1..=25).contains(&BITS));
+    // At widths up to 14, both shuffle lanes can use one input window.
+    let second = if BITS <= 14 { 0 } else { BITS / 2 };
     let shuffle = std::array::from_fn::<_, 32, _>(|i| {
         let lane = i / 4;
-        (lane * BITS / 8 - (lane / 4) * (BITS / 2) + i % 4) as u8
+        (lane * BITS / 8 - (lane / 4) * second + i % 4) as u8
     });
     let shifts = std::array::from_fn::<_, 8, _>(|i| (i * BITS % 8) as u32);
     // SAFETY: lookup arrays span 32 bytes. Each iteration checks both 16-byte
@@ -161,11 +176,15 @@ pub(super) unsafe fn unpack_avx2<const BITS: usize>(bytes: &[u8], out: &mut [u64
         let shifts = _mm256_loadu_si256(shifts.as_ptr().cast());
         let mask = _mm256_set1_epi32(((1u32 << BITS) - 1) as i32);
         let mut done = 0;
-        while done + 8 <= out.len() && done * BITS / 8 + BITS / 2 + 16 <= bytes.len() {
+        while done + 8 <= out.len() && done * BITS / 8 + second + 16 <= bytes.len() {
             let first = bytes.as_ptr().add(done * BITS / 8);
             let lo = _mm_loadu_si128(first.cast());
-            let hi = _mm_loadu_si128(first.add(BITS / 2).cast());
-            let word = _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(lo), hi);
+            let word = if second == 0 {
+                _mm256_broadcastsi128_si256(lo)
+            } else {
+                let hi = _mm_loadu_si128(first.add(second).cast());
+                _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(lo), hi)
+            };
             let values = _mm256_and_si256(
                 _mm256_srlv_epi32(_mm256_shuffle_epi8(word, shuffle), shifts),
                 mask,

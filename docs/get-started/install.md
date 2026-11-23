@@ -98,7 +98,7 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     your OS, CPU and libc. For a published engine release, keep optional dependencies enabled:
 
     ```sh
-    npm install writerslogic-warm@0.7.0
+    npm install writerslogic-warm@0.7.1
     ```
 
     Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
