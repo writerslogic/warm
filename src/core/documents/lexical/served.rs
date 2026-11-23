@@ -2495,7 +2495,10 @@ fn scatter_excluded(
         }
         #[cfg(test)]
         SCATTERED.with(|c| c.set(c.get() + 1));
-        *slot = Some(Scatter { base: first, bits: Vec::new() });
+        *slot = Some(Scatter {
+            base: first,
+            bits: Vec::new(),
+        });
         owner.get_or_insert(i);
     }
     if let (Some(i), Some(bits)) = (owner, shared) {
