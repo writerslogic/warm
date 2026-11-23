@@ -439,6 +439,26 @@ struct WindowCandidate {
     upper: f64,
 }
 
+#[inline(always)]
+fn first_pass_bound(
+    frequency: u8,
+    classes: &[u8],
+    offset: usize,
+    bounds: &[f64],
+    cap: f64,
+    skip_constant_rows: bool,
+) -> f64 {
+    match frequency {
+        // The absent and saturated rows have the same bound in every class.
+        0 if skip_constant_rows => 0.0,
+        15 if skip_constant_rows => cap,
+        _ => {
+            let class = usize::from(classes[offset]);
+            bounds[usize::from(frequency) * CLASSES + class].min(cap)
+        }
+    }
+}
+
 /// Working memory of [`rank`], reused across queries.
 pub(super) struct PruneScratch {
     terms: Vec<Term>,
@@ -765,6 +785,7 @@ pub(super) fn rank<S: LexicalSource>(
         return None;
     }
     let count = lists.len();
+    let skip_constant_rows = count > 3 && limit <= WIDE_LIMIT;
     let mut cursors: Vec<ImpactCursor<'_>> = Vec::with_capacity(count);
     for (list, idf, bound) in &lists {
         let mut cursor = ImpactCursor::new();
@@ -1144,9 +1165,14 @@ pub(super) fn rank<S: LexicalSource>(
                 for read in 0..cand.len() {
                     let mut entry = cand[read];
                     let offset = entry.offset as usize;
-                    let class = usize::from(window_classes[offset]);
-                    entry.upper +=
-                        ub[usize::from(table.get(lo as usize + offset)) * CLASSES + class].min(cap);
+                    entry.upper += first_pass_bound(
+                        table.get(lo as usize + offset),
+                        window_classes,
+                        offset,
+                        ub,
+                        cap,
+                        skip_constant_rows,
+                    );
                     if floor_score > 0.0 && entry.upper + after < drop {
                         continue;
                     }
@@ -1270,6 +1296,33 @@ pub(super) fn rank<S: LexicalSource>(
 mod tests {
     use super::*;
     use crate::core::documents::postings::CheckpointPacker;
+
+    #[test]
+    fn lexical_first_pass_constant_rows_need_no_class() {
+        let mut bounds = [0.0f64; CLASSES * 16];
+        let ceiling = 12.0;
+        bounds[15 * CLASSES..].fill(ceiling);
+        for class in 0..CLASSES {
+            bounds[CLASSES + class] = 1.0 + class as f64 / CLASSES as f64;
+            bounds[14 * CLASSES + class] = 5.0 + class as f64 / CLASSES as f64;
+        }
+        let classes = [0, 1, (CLASSES - 1) as u8];
+        for cap in [0.0, 1.5, 5.5, ceiling] {
+            for offset in 0..classes.len() {
+                for frequency in [0, 1, 14, 15] {
+                    let expected =
+                        first_pass_bound(frequency, &classes, offset, &bounds, cap, false);
+                    let classes = if frequency == 0 || frequency == 15 {
+                        &[][..]
+                    } else {
+                        &classes[..]
+                    };
+                    let actual = first_pass_bound(frequency, classes, offset, &bounds, cap, true);
+                    assert_eq!(actual.to_bits(), expected.to_bits());
+                }
+            }
+        }
+    }
 
     #[test]
     fn lexical_impact_cursor_reads_frequencies_after_seeks_and_drains() {
