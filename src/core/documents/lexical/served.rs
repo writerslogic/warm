@@ -1147,7 +1147,22 @@ impl<'a> Run<'a, '_> {
         let lead_bound = lead.bound.unwrap_or_else(|| {
             Bound::new(1.0, self.shape.average, self.shape.bm25).expect("a unit bound")
         });
+        // Excluded lists tested cheapest first: bitmap, table, scatter bitmap, decoded blocks.
+        let scattered = |rt: &Rt<'_>| self.count && rt.rarest() <= SCATTER_RATIO * lead.rarest();
+        excluded.sort_by_key(|rt| {
+            let kind = if rt.cursors[0].dense().is_some() {
+                0
+            } else if self.image.frequency_table(rt.cursors[0].list()).is_some() {
+                1
+            } else if scattered(rt) {
+                2
+            } else {
+                3
+            };
+            (kind, rt.rarest())
+        });
         let excluded_tables = frequency_tables(self.image, excluded);
+        let scatters = scatter_excluded(excluded, &excluded_tables, &mut lead.cursors[0], self.count);
         'blocks: loop {
             let floor = top.floor();
             if !self.count && floor.is_some_and(|floor| ceiling < floor) {
@@ -1188,7 +1203,7 @@ impl<'a> Run<'a, '_> {
                 if !scored {
                     // Counted only: the dense lists' bitmaps answer without decoding them.
                     let (kept, more) = keep_counted(rest, &tables, &mut slots, n);
-                    let kept = drop_excluded(excluded, &excluded_tables, &mut slots, kept, &mut []);
+                    let kept = drop_excluded(excluded, (&excluded_tables, &scatters), &mut slots, kept, &mut []);
                     count += kept;
                     if !more || !lead.cursors[0].advance_block(last.saturating_add(1)) {
                         break;
@@ -1244,7 +1259,7 @@ impl<'a> Run<'a, '_> {
                         break;
                     }
                 }
-                n = drop_excluded(excluded, &excluded_tables, &mut slots, n, &mut rows);
+                n = drop_excluded(excluded, (&excluded_tables, &scatters), &mut slots, n, &mut rows);
                 count += n;
                 if n > 0 {
                     // The candidates are known: start loading their word counts together.
@@ -1940,18 +1955,81 @@ impl<'a> Lead<'a> for Cursor<'a> {
     }
 }
 
+/// Most excluded postings per required posting for which the excluded list is decoded once into
+/// a bitmap over the required range rather than probed per candidate.
+const SCATTER_RATIO: usize = 6;
+
+/// An excluded list's slots over the required list's range, a bit each.
+struct Scatter {
+    base: u32,
+    bits: Vec<u64>,
+}
+
+impl Scatter {
+    #[inline(always)]
+    fn holds(&self, slot: u32) -> bool {
+        let at = (slot - self.base) as usize;
+        self.bits[at >> 6] >> (at & 63) & 1 != 0
+    }
+}
+
+/// For each excluded list that is neither dense nor tabled and, when `counting` (every
+/// required block is visited), small enough against the required list `lead`, its slots in the
+/// range of `lead` as a bitmap. Leaves `lead` at its first block.
+fn scatter_excluded(
+    excluded: &mut [Rt<'_>],
+    tables: &[Option<std::sync::Arc<Dense>>],
+    lead: &mut Cursor<'_>,
+    counting: bool,
+) -> Vec<Option<Scatter>> {
+    let mut out: Vec<Option<Scatter>> = excluded.iter().map(|_| None).collect();
+    if !counting {
+        return out;
+    }
+    let first = lead.block_first();
+    lead.goto_block(lead.block_count() - 1);
+    let last = lead.block_last();
+    lead.goto_block(0);
+    let required = lead.len();
+    for ((rt, table), slot) in excluded.iter_mut().zip(tables).zip(&mut out) {
+        let list = &mut rt.cursors[0];
+        if list.dense().is_some() || table.is_some() || list.len() > SCATTER_RATIO * required {
+            continue;
+        }
+        let mut bits = vec![0u64; ((last - first) as usize >> 6) + 1];
+        if list.advance_block(first) {
+            loop {
+                if list.block_first() > last {
+                    break;
+                }
+                for &doc in list.block_slots() {
+                    if (first..=last).contains(&doc) {
+                        let at = (doc - first) as usize;
+                        bits[at >> 6] |= 1 << (at & 63);
+                    }
+                }
+                if !list.advance_block(list.block_last().saturating_add(1)) {
+                    break;
+                }
+            }
+        }
+        *slot = Some(Scatter { base: first, bits });
+    }
+    out
+}
+
 /// Keeps, in place, the candidates among `slots[..n]` that no list of `excluded` holds, moving
 /// each kept candidate's entries in `rows` along; `tables` are the excluded lists' frequency
 /// tables. A dense list is read from its bitmap, a tabled one from its table, any other
 /// through its decoded blocks. Returns how many are kept.
 fn drop_excluded(
     excluded: &mut [Rt<'_>],
-    tables: &[Option<std::sync::Arc<Dense>>],
+    (tables, scatters): (&[Option<std::sync::Arc<Dense>>], &[Option<Scatter>]),
     slots: &mut [u32; CHECKPOINT_BLOCK],
     mut n: usize,
     rows: &mut [[u32; CHECKPOINT_BLOCK]],
 ) -> usize {
-    for (rt, table) in excluded.iter_mut().zip(tables) {
+    for ((rt, table), scatter) in excluded.iter_mut().zip(tables).zip(scatters) {
         if n == 0 {
             break;
         }
@@ -1960,6 +2038,10 @@ fn drop_excluded(
         if let Some(bits) = cursor.dense() {
             for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
                 *flag = !holds(bits, slot);
+            }
+        } else if let Some(scatter) = scatter {
+            for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
+                *flag = !scatter.holds(slot);
             }
         } else if let Some(table) = table {
             for &slot in &slots[..n] {
