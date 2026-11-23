@@ -1040,7 +1040,8 @@ impl<'a> Run<'a, '_> {
             reached(0);
             self.terms_top_into(&mut all, &mut top)?;
             drop(all);
-            for (j, &lacked) in order.iter().enumerate() {
+            // The narrow classes first: they raise the floor before the widest is walked.
+            for (j, &lacked) in order.iter().enumerate().rev() {
                 // The first pass left other clauses' frequencies in place.
                 self.frequencies.fill(0);
                 #[cfg(test)]
