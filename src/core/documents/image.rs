@@ -1342,14 +1342,18 @@ impl ServingImage {
                 prefix <= previous.len() && (!i.is_multiple_of(BLOCK) || prefix == 0),
                 "checkpoint term prefix"
             );
-            let mut term = previous[..prefix].to_vec();
-            term.extend_from_slice(suffix);
             ensure!(
-                std::str::from_utf8(&term).is_ok() && (i == 0 || previous < term),
+                i == 0 || &previous[prefix..] < suffix,
+                "checkpoint terms out of order"
+            );
+            previous.truncate(prefix);
+            previous.extend_from_slice(suffix);
+            ensure!(
+                std::str::from_utf8(&previous).is_ok(),
                 "checkpoint terms out of order"
             );
             if i.is_multiple_of(BLOCK) {
-                keys.push(term_key(&term));
+                keys.push(term_key(&previous));
             }
             let entry = self.read_entry(&mut reader)?;
             ensure!(
@@ -1398,7 +1402,6 @@ impl ServingImage {
                 );
                 base.skip += entry.skip_len;
             }
-            previous = term;
         }
         ensure!(
             reader.is_empty(),
@@ -2307,6 +2310,46 @@ mod tests {
         assert!(ServingImage::new(checkpoint(&[(H_DOCS, 1 << 62)], lens)).is_err());
         assert!(ServingImage::new(checkpoint(&[(H_SLOTS, 1 << 62)], lens)).is_err());
     }
+
+    #[test]
+    fn lexical_checkpoint_rejects_invalid_front_coded_terms() {
+        let mut store = DocumentStore::default();
+        let input =
+            serde_json::from_value(serde_json::json!({"id": "doc", "text": "ö ø"})).unwrap();
+        let document = super::super::prepare_with_options(
+            input,
+            64,
+            None,
+            None,
+            crate::core::encoding::TextEncoder::default(),
+            &super::super::IngestOptions {
+                encode: super::super::EncodeMode::Lexical,
+                unstemmed: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        store.insert("doc".to_owned(), document);
+        let bytes = encode(&store, 1, 64).unwrap().unwrap();
+        let image = ServingImage::new(Backing::Owned(bytes.clone())).unwrap();
+        let (start, len) = image.sections[Section::Dict0 as usize];
+        let mut reader = Reader::new(&bytes[start..start + len]);
+        assert_eq!(reader.varint().unwrap(), 0);
+        assert_eq!(reader.bytes().unwrap(), "ö".as_bytes());
+        image.read_entry(&mut reader).unwrap();
+        assert_eq!(reader.varint().unwrap(), 1);
+        assert_eq!(reader.bytes().unwrap(), &[0xb8]);
+        let last_suffix_byte = start + reader.position() - 1;
+        for suffix in [0xb5, 0xb6, 0xff] {
+            let mut invalid = bytes.clone();
+            invalid[last_suffix_byte] = suffix;
+            let Err(error) = ServingImage::new(Backing::Owned(invalid)) else {
+                panic!("invalid dictionary suffix {suffix:#x} was accepted");
+            };
+            assert!(error.to_string().contains("checkpoint terms out of order"));
+        }
+    }
+
     fn image_with_record(record: &[u8]) -> ServingImage {
         let mut lens = [0; SECTIONS];
         lens[Section::IdOffsets as usize] = 8;
