@@ -852,6 +852,14 @@ impl<'a> PositionIter<'a> {
     pub(super) fn new(bytes: &'a [u8]) -> Self {
         Self { bytes, position: 0 }
     }
+
+    #[cold]
+    fn long_gap(&mut self) -> u32 {
+        let mut at = 0;
+        let gap = get_varint(self.bytes, &mut at) as u32;
+        self.bytes = &self.bytes[at..];
+        gap
+    }
 }
 
 impl Iterator for PositionIter<'_> {
@@ -860,14 +868,15 @@ impl Iterator for PositionIter<'_> {
     #[inline]
     fn next(&mut self) -> Option<u32> {
         let (&first, rest) = self.bytes.split_first()?;
-        if first < 0x80 {
+        let gap = if first < 0x80 {
             self.bytes = rest;
-            self.position += u32::from(first);
-            return Some(self.position);
-        }
-        let mut at = 0;
-        let gap = get_varint(self.bytes, &mut at) as u32;
-        self.bytes = &self.bytes[at..];
+            u32::from(first)
+        } else if let Some((&second, tail)) = rest.split_first().filter(|(byte, _)| **byte < 0x80) {
+            self.bytes = tail;
+            u32::from(first & 0x7f) | u32::from(second) << 7
+        } else {
+            self.long_gap()
+        };
         self.position += gap;
         Some(self.position)
     }

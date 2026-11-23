@@ -1583,8 +1583,29 @@ fn union_count(optional: &mut [Rt<'_>], slots: usize) -> usize {
 mod tests {
     use super::super::tests::insert;
     use super::*;
+    use crate::core::documents::binary::put_varint;
     use crate::core::documents::image::{encode, Backing};
     use proptest::prelude::*;
+
+    #[test]
+    fn phrase_merges_keep_occurrences_across_position_gap_widths() {
+        for limit in [1u64 << 7, 1 << 14] {
+            for start in [limit - 1, limit, limit + 1] {
+                let mut first = Vec::new();
+                put_varint(&mut first, start);
+                put_varint(&mut first, 2);
+                let mut second = Vec::new();
+                put_varint(&mut second, start + 1);
+                put_varint(&mut second, 2);
+                assert_eq!(pair_occurrences(&first, &second, true), 2);
+                assert_eq!(pair_occurrences(&first, &second, false), 1);
+                assert!(at_distance(&second, &first, -1));
+                assert!(!at_distance(&first, &second, 2));
+            }
+        }
+
+        assert_eq!(pair_occurrences(&[0xff, 0x80, 0], &[0x80, 1], true), 1);
+    }
 
     fn corpus(docs: &[Vec<u8>], positions: bool) -> DocumentStore {
         let mut store = DocumentStore::default();
