@@ -1123,18 +1123,21 @@ impl<'a> Run<'a, '_> {
                 break;
             }
             let (first, last) = (cursor.block_first(), cursor.block_last());
+            let mut rest_sum = 0.0f64;
             if let Some(floor) = floor {
                 let mut sum = cursor.block_weight(lead_bound);
                 for other in &mut optional {
                     let bound = other.bound.expect("a bounded term");
                     let c = &mut other.cursors[0];
-                    sum += if !c.advance_block(first) || c.block_first() > last {
+                    let weight = if !c.advance_block(first) || c.block_first() > last {
                         0.0
                     } else if c.block_last() >= last {
                         c.block_weight(bound)
                     } else {
                         c.span_weight(last, bound, 8, true).unwrap_or(other.ceiling)
                     };
+                    sum += weight;
+                    rest_sum += weight;
                 }
                 if sum_bound(sum, clauses) < floor {
                     if !lead.cursors[0].advance_block(last.saturating_add(1)) {
@@ -1146,8 +1149,30 @@ impl<'a> Run<'a, '_> {
             let block = lead.cursors[0].block_slots();
             let mut n = block.len();
             slots[..n].copy_from_slice(block);
-            for (i, value) in index[..n].iter_mut().enumerate() {
-                *value = i as u32;
+            // A candidate whose lead frequency, at the block's least word count, cannot lift the
+            // block's weights to the k-th best score is dropped before the other lists are read.
+            let mut need = 1u32;
+            if let Some(floor) = floor {
+                let (most, least) = lead.cursors[0].block_bounds();
+                let most = most.min(NEED_PROBES);
+                while need < most
+                    && sum_bound(lead_bound.at(need, least) + rest_sum, clauses) < floor
+                {
+                    need += 1;
+                }
+            }
+            if need > 1 {
+                n = keep_frequent(
+                    lead.cursors[0].block_frequencies(),
+                    &mut slots,
+                    n,
+                    &mut index,
+                    need,
+                );
+            } else {
+                for (i, value) in index[..n].iter_mut().enumerate() {
+                    *value = i as u32;
+                }
             }
             n = drop_common(&mut dropped.cursors[0], &mut slots, &mut index, n);
             if n > 0 {
