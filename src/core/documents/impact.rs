@@ -459,6 +459,44 @@ fn first_pass_bound(
     }
 }
 
+#[inline]
+fn gather_candidates(
+    candidates: &mut Vec<WindowCandidate>,
+    single: Option<&[(u32, f64)]>,
+    mask: &mut [u64],
+    acc: &mut [f64],
+    mut admit: impl FnMut(u32, f64) -> Option<f64>,
+) {
+    candidates.clear();
+    if let Some(single) = single {
+        for (index, &(offset, weight)) in single.iter().enumerate() {
+            if let Some(upper) = admit(offset, weight) {
+                candidates.push(WindowCandidate {
+                    offset,
+                    single_index: index as u32,
+                    upper,
+                });
+            }
+        }
+    } else {
+        for (word, word_bits) in mask.iter_mut().enumerate() {
+            let mut bits = std::mem::take(word_bits);
+            while bits != 0 {
+                let offset = (word << 6) | bits.trailing_zeros() as usize;
+                bits &= bits - 1;
+                let partial = std::mem::take(&mut acc[offset]);
+                if let Some(upper) = admit(offset as u32, partial) {
+                    candidates.push(WindowCandidate {
+                        offset: offset as u32,
+                        single_index: 0,
+                        upper,
+                    });
+                }
+            }
+        }
+    }
+}
+
 /// Working memory of [`rank`], reused across queries.
 pub(super) struct PruneScratch {
     terms: Vec<Term>,
@@ -786,6 +824,7 @@ pub(super) fn rank<S: LexicalSource>(
     }
     let count = lists.len();
     let skip_constant_rows = count > 3 && limit <= WIDE_LIMIT;
+    let fuse_first_table = count >= 4 && limit <= WIDE_LIMIT;
     let mut cursors: Vec<ImpactCursor<'_>> = Vec::with_capacity(count);
     for (list, idf, bound) in &lists {
         let mut cursor = ImpactCursor::new();
@@ -1111,51 +1150,78 @@ pub(super) fn rank<S: LexicalSource>(
         // cannot reach `cut` whatever those tables say (a table's bound never exceeds its
         // list's ceiling); the margin covers the different summation order.
         let drop = cut * (1.0 - 8.0 * f64::EPSILON);
-        cand.clear();
-        let mut single_term = None;
-        if alone {
+        let single_term = alone.then(|| {
             // The accumulated weight `0.0 + weight` is the weight itself.
-            let term = by_bound[quiet..]
+            by_bound[quiet..]
                 .iter()
                 .copied()
                 .find(|i| !demoted.contains(i))
-                .expect("the accumulated term");
-            single_term = Some(term);
-            for (index, &(offset, weight)) in single.iter().enumerate() {
-                let upper = weight + untabled;
-                if floor_score > 0.0 && upper + rest[0] < drop {
-                    continue;
-                }
-                cand.push(WindowCandidate {
-                    offset,
-                    single_index: index as u32,
-                    upper,
-                });
+                .expect("the accumulated term")
+        });
+        let single_entries = single_term.map(|_| single.as_slice());
+        let window_classes = &classes8[lo as usize..];
+        let table_bound = |table: &Dense, ub: &[f64], cap: f64, offset: usize| {
+            first_pass_bound(
+                table.get(lo as usize + offset),
+                window_classes,
+                offset,
+                ub,
+                cap,
+                skip_constant_rows,
+            )
+        };
+        let gather_upper = |weight: f64| {
+            let upper = weight + untabled;
+            if floor_score > 0.0 && upper + rest[0] < drop {
+                None
+            } else {
+                Some(upper)
             }
+        };
+        let first_table = if fuse_first_table && first_passes > 0 {
+            let i = first_pass[0];
+            terms[i].dense.as_deref().map(|table| (i, table))
         } else {
-            for (word, word_bits) in mask[..stride / 64].iter_mut().enumerate() {
-                let mut bits = std::mem::take(word_bits);
-                while bits != 0 {
-                    let offset = (word << 6) | bits.trailing_zeros() as usize;
-                    bits &= bits - 1;
-                    let partial = std::mem::take(&mut acc[offset]);
-                    let upper = partial + untabled;
-                    if floor_score > 0.0 && upper + rest[0] < drop {
-                        continue;
+            None
+        };
+        let first_remaining = if let Some((i, table)) = first_table {
+            let ub = &terms[i].ub[..];
+            let cap = window_bounds[i];
+            let after = rest[1];
+            // Apply the first table before storing candidates that it would discard.
+            gather_candidates(
+                cand,
+                single_entries,
+                &mut mask[..stride / 64],
+                acc,
+                |offset, weight| {
+                    let mut upper = gather_upper(weight)?;
+                    upper += table_bound(table, ub, cap, offset as usize);
+                    if floor_score > 0.0 && upper + after < drop {
+                        return None;
                     }
-                    cand.push(WindowCandidate {
-                        offset: offset as u32,
-                        single_index: 0,
-                        upper,
-                    });
-                }
-            }
-        }
+                    Some(upper)
+                },
+            );
+            1
+        } else {
+            gather_candidates(
+                cand,
+                single_entries,
+                &mut mask[..stride / 64],
+                acc,
+                |_, weight| gather_upper(weight),
+            );
+            0
+        };
         // One table at a time over the window's candidates: each candidate still adds the
         // tables' bounds in the same order, but the loop body is a tight lookup. A candidate
         // that can no longer reach the cut leaves before the next table.
-        let window_classes = &classes8[lo as usize..];
-        for (k, &i) in first_pass[..first_passes].iter().enumerate() {
+        for (k, &i) in first_pass[..first_passes]
+            .iter()
+            .enumerate()
+            .skip(first_remaining)
+        {
             let term = &terms[i];
             if let Some(table) = term.dense.as_ref() {
                 let ub = &term.ub[..];
@@ -1164,15 +1230,7 @@ pub(super) fn rank<S: LexicalSource>(
                 let mut kept = 0usize;
                 for read in 0..cand.len() {
                     let mut entry = cand[read];
-                    let offset = entry.offset as usize;
-                    entry.upper += first_pass_bound(
-                        table.get(lo as usize + offset),
-                        window_classes,
-                        offset,
-                        ub,
-                        cap,
-                        skip_constant_rows,
-                    );
+                    entry.upper += table_bound(table, ub, cap, entry.offset as usize);
                     if floor_score > 0.0 && entry.upper + after < drop {
                         continue;
                     }
