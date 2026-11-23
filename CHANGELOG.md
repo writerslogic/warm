@@ -12,6 +12,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Encrypt new stores by default with a plaintext opt-out
 
 ### Documentation
+- Mark the in-process Warm release note as historical for the version check
 - Publish the docs site to writerslogic.com and fix stale package notes (#506)
 - Publish the docs site to writerslogic.com and fix stale package notes
 
