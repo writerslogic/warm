@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from memory_modules.memory import MemoryContextItem, register_memory
+from memory_modules.memory import register_memory
 from warm_hybrid import WarmHybridMemory, _tokens
 
 
@@ -89,9 +89,6 @@ class WarmSliceMemory(WarmHybridMemory):
         p = self.p
         pool = int(p["pool_states"])
         k = int(p["rrf_k"])
-        pos_of = {}
-        for sid, (tid, pos) in enumerate(self._s_keys):
-            pass
         index = {}
         for sid, key in enumerate(self._s_keys):
             index[key] = sid
