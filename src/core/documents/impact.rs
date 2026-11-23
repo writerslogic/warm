@@ -288,6 +288,11 @@ const PREFETCH_BYTES: usize = 1 << 20;
 
 /// Slots per accumulation window.
 const WINDOW: u32 = 4096;
+/// The window of a query that wants few chunks: fewer windows mean less per-window work, and the
+/// accumulator it touches stays sparse. Offsets stay below `u16::MAX`.
+const WIDE_WINDOW: u32 = 8192;
+/// The largest `limit` ranked in [`WIDE_WINDOW`] windows.
+const WIDE_LIMIT: usize = 10;
 /// The most terms a query ranks through windows; more fall back to the exhaustive ranking.
 const MAX_TERMS: usize = 64;
 /// Bytes of direct frequency tables one checkpoint may hold (see [`DenseTables`]).
@@ -445,7 +450,7 @@ pub(super) struct PruneScratch {
     /// Window sum of the essential weights per offset, zero between windows.
     acc: Vec<f64>,
     /// Offsets with a posting weighed in the window, a bit each.
-    mask: [u64; WINDOW as usize / 64],
+    mask: [u64; WIDE_WINDOW as usize / 64],
     pilot: Vec<f64>,
     /// Per essential term of the window: its postings' offsets and weights, in slot order.
     logs: Vec<Vec<u16>>,
@@ -471,8 +476,8 @@ impl Default for PruneScratch {
             candidates: Vec::new(),
             best: BinaryHeap::new(),
             stats: PruneStats::default(),
-            acc: vec![0.0; WINDOW as usize],
-            mask: [0; WINDOW as usize / 64],
+            acc: vec![0.0; WIDE_WINDOW as usize],
+            mask: [0; WIDE_WINDOW as usize / 64],
             pilot: Vec::new(),
             logs: Vec::new(),
             wbuf: Vec::new(),
@@ -754,7 +759,7 @@ pub(super) fn rank<S: LexicalSource>(
     if limit == 0 || lists.is_empty() {
         return Some(());
     }
-    if lists.len() > MAX_TERMS || slots >= u32::MAX as usize - WINDOW as usize {
+    if lists.len() > MAX_TERMS || slots >= u32::MAX as usize - WIDE_WINDOW as usize {
         return None;
     }
     let count = lists.len();
@@ -824,8 +829,14 @@ pub(super) fn rank<S: LexicalSource>(
     if logs.len() < count {
         logs.resize_with(count, Vec::new);
     }
-    if wbuf.len() < count * WINDOW as usize {
-        wbuf.resize(count * WINDOW as usize, 0.0);
+    let window: u32 = if limit <= WIDE_LIMIT {
+        WIDE_WINDOW
+    } else {
+        WINDOW
+    };
+    let stride = window as usize;
+    if wbuf.len() < count * stride {
+        wbuf.resize(count * stride, 0.0);
     }
     let scorer = Scorer {
         bm25,
@@ -874,7 +885,7 @@ pub(super) fn rank<S: LexicalSource>(
         if lo == NO_DOC {
             break;
         }
-        let hi = lo.saturating_add(WINDOW);
+        let hi = lo.saturating_add(window);
         stats.windows += 1;
         // Each term's bound in this window, from its blocks there; zero past its postings.
         for i in 0..count {
@@ -990,7 +1001,7 @@ pub(super) fn rank<S: LexicalSource>(
                 continue;
             }
             let mut taken = 0usize;
-            let wslice = &mut wbuf[position * WINDOW as usize..(position + 1) * WINDOW as usize];
+            let wslice = &mut wbuf[position * stride..(position + 1) * stride];
             // A block whose bound with every other term's window bound is below the threshold
             // holds no chunk that can reach it: its weights are not needed.
             let mut others = 0.0f64;
@@ -1050,7 +1061,7 @@ pub(super) fn rank<S: LexicalSource>(
             if alone {
                 pilot.extend(single.iter().map(|&(_, weight)| weight));
             } else {
-                for (word, bits) in mask.iter().enumerate() {
+                for (word, bits) in mask[..stride / 64].iter().enumerate() {
                     let mut bits = *bits;
                     while bits != 0 {
                         let offset = (word << 6) | bits.trailing_zeros() as usize;
@@ -1094,7 +1105,7 @@ pub(super) fn rank<S: LexicalSource>(
                 });
             }
         } else {
-            for (word, word_bits) in mask.iter_mut().enumerate() {
+            for (word, word_bits) in mask[..stride / 64].iter_mut().enumerate() {
                 let mut bits = std::mem::take(word_bits);
                 while bits != 0 {
                     let offset = (word << 6) | bits.trailing_zeros() as usize;
@@ -1159,7 +1170,7 @@ pub(super) fn rank<S: LexicalSource>(
                 weights[i] = single[single_index as usize].1;
             } else {
                 for (position, &i) in by_bound[quiet..].iter().enumerate() {
-                    let weight = wbuf[position * WINDOW as usize + offset as usize];
+                    let weight = wbuf[position * stride + offset as usize];
                     if weight != 0.0 {
                         weights[i] = weight;
                     }
@@ -1213,7 +1224,7 @@ pub(super) fn rank<S: LexicalSource>(
         }
         for (position, log) in logs[..count - quiet].iter().enumerate() {
             for &offset in log {
-                wbuf[position * WINDOW as usize + usize::from(offset)] = 0.0;
+                wbuf[position * stride + usize::from(offset)] = 0.0;
             }
         }
         for &i in demoted.iter() {
