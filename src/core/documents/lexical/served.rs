@@ -2013,6 +2013,8 @@ fn scatter_excluded(
                 }
             }
         }
+        #[cfg(test)]
+        SCATTERED.with(|c| c.set(c.get() + 1));
         *slot = Some(Scatter { base: first, bits });
     }
     out
@@ -2117,6 +2119,8 @@ thread_local! {
     static PATHS: std::cell::Cell<[usize; 7]> = const { std::cell::Cell::new([0; 7]) };
     /// Blocks whose candidates `terms_top` filtered by lead frequency, on this thread.
     static PREFILTERED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    /// Excluded lists `negated_top` scattered into a bitmap, on this thread.
+    static SCATTERED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 /// The most lead frequencies terms_top tests a block's candidates against.
@@ -3133,6 +3137,73 @@ mod tests {
                         ..Default::default()
                     };
                     assert!(assert_same(&image, &live, &query, &options), "{text}");
+                }
+            }
+        }
+    }
+
+    /// Excluded lists that are only decoded and within SCATTER_RATIO times the required list
+    /// are scattered into a bitmap when counting: the exhaustive scorer's result to the bit
+    /// either side of the ratio, for k of 0, 10 and 100, and the scatter ran exactly then.
+    #[test]
+    fn scattered_excluded_lists_keep_the_result() {
+        let hash = |x: u32| x.wrapping_mul(2654435761).rotate_left(9).wrapping_mul(40503);
+        let docs: Vec<Vec<u8>> = (0..9001u32)
+            .map(|i| {
+                let len = 3 + hash(i) % 40;
+                let mut words: Vec<u8> = (0..len)
+                    .map(|j| match (hash(i * 71 + j) >> 6) % 12 {
+                        0..=3 => 0,
+                        4 | 5 => 1,
+                        _ => 9,
+                    })
+                    .collect();
+                // w6: 46 postings. w12: 276 = 6 x 46, w13: 277, w14: 275, all decoded.
+                for (word, holds) in [
+                    (6u8, i % 200 == 0),
+                    (12, i % 33 == 0 || (1..=3).contains(&i)),
+                    (13, i % 33 == 0 || (1..=4).contains(&i)),
+                    (14, i % 33 == 0 || (1..=2).contains(&i)),
+                ] {
+                    if holds {
+                        words.push(word);
+                        words.push(word);
+                    }
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, false);
+        let image = image_of(&live);
+        let postings = |word: &str| image.list(0, word).unwrap().count as usize;
+        assert_eq!(postings("w6") * SCATTER_RATIO, postings("w12"));
+        assert_eq!(postings("w13"), postings("w12") + 1);
+        for word in ["w12", "w13", "w14"] {
+            let list = image.list(0, word).unwrap();
+            assert!(image.frequency_table(list).is_none(), "{word}");
+        }
+        // (query, scatters expected when counting)
+        for (text, scatters) in [
+            ("+w6 -w12", 1),
+            ("+w6 -w14", 1),
+            ("+w6 -w13", 0),
+            ("+w6 -w14 -w12", 2),
+            ("+w6 -w13 -w14", 1),
+            ("+w6 +w1 -w12", 1),
+            ("+w1 -w12 -w13 -w14", 3),
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [0usize, 10, 100] {
+                for count in [false, true] {
+                    let options = LexicalOptions {
+                        k,
+                        count,
+                        ..Default::default()
+                    };
+                    let before = SCATTERED.with(|c| c.get());
+                    assert!(assert_same(&image, &live, &query, &options), "{text}");
+                    let ran = SCATTERED.with(|c| c.get()) - before;
+                    assert_eq!(ran > 0, count && scatters > 0, "{text} k={k} count={count}");
                 }
             }
         }
