@@ -21,7 +21,7 @@ use std::collections::{BTreeSet, BinaryHeap};
 use super::image::SLOT_BYTES;
 use super::lexical::wand::{sum_bound, Bound};
 use super::lists::BlockBounds;
-use super::postings::{get_varint, unpack_values, Postings, CHECKPOINT_BLOCK};
+use super::postings::{get_varint, unpack, unpack_values, Postings, CHECKPOINT_BLOCK};
 use super::search::LexicalSource;
 use super::Bm25;
 
@@ -36,8 +36,9 @@ struct Header {
     count: usize,
     gap_bits: u8,
     frequency_bits: u8,
-    /// Offset of the packed gaps; the packed frequencies follow them.
+    /// Offsets of the packed gaps and frequencies.
     data_at: usize,
+    frequency_at: usize,
     /// Offset of the next block's header.
     end_at: usize,
     /// Postings in the blocks after this one.
@@ -69,6 +70,7 @@ impl Header {
             gap_bits,
             frequency_bits,
             data_at: at,
+            frequency_at: at + gap_len,
             end_at: at + gap_len + frequency_len,
             left_after: left - count,
             max_frequency,
@@ -83,6 +85,7 @@ pub(super) struct ImpactCursor<'a> {
     /// The block the cursor's posting is in.
     current: Header,
     decoded: bool,
+    frequencies_ready: bool,
     position: usize,
     ended: bool,
     /// Blocks this cursor decoded since it was opened.
@@ -103,6 +106,7 @@ impl<'a> ImpactCursor<'a> {
             bytes: &[],
             current: Header::default(),
             decoded: false,
+            frequencies_ready: false,
             position: 0,
             ended: true,
             decodes: 0,
@@ -143,10 +147,9 @@ impl<'a> ImpactCursor<'a> {
         }
     }
 
-    fn decode(&mut self) {
+    fn decode<const FREQUENCIES: bool>(&mut self) {
         let header = self.current;
         let (mut gaps, mut frequencies) = ([0u64; CHECKPOINT_BLOCK], [0u64; CHECKPOINT_BLOCK]);
-        let gap_len = (header.count * usize::from(header.gap_bits)).div_ceil(8);
         // The decoders read whole 8-byte windows while they stay inside the slice they are
         // given, so each gets the rest of the list and uses only its own values.
         unpack_values(
@@ -155,12 +158,14 @@ impl<'a> ImpactCursor<'a> {
             header.gap_bits,
             &mut gaps,
         );
-        unpack_values(
-            &self.bytes[header.data_at + gap_len..],
-            header.count,
-            header.frequency_bits,
-            &mut frequencies,
-        );
+        if FREQUENCIES {
+            unpack_values(
+                &self.bytes[header.frequency_at..],
+                header.count,
+                header.frequency_bits,
+                &mut frequencies,
+            );
+        }
         let mut slot = u64::from(header.first);
         let block = gaps[..header.count]
             .iter()
@@ -173,18 +178,25 @@ impl<'a> ImpactCursor<'a> {
         {
             slot += gap;
             *out_slot = slot as u32;
-            *out_frequency = frequency as u32;
+            if FREQUENCIES {
+                *out_frequency = frequency as u32;
+            }
         }
+        self.decodes += usize::from(!self.decoded);
         self.decoded = true;
-        self.decodes += 1;
+        self.frequencies_ready = FREQUENCIES;
     }
 
     /// The frequency of the current posting.
-    fn frequency(&mut self) -> u32 {
-        if !self.decoded {
-            self.decode();
+    fn frequency(&self) -> u32 {
+        if self.decoded && self.frequencies_ready {
+            return self.frequencies[self.position];
         }
-        self.frequencies[self.position]
+        unpack(
+            &self.bytes[self.current.frequency_at..],
+            self.position,
+            self.current.frequency_bits,
+        ) as u32
     }
 
     /// Moves to the next block; false at the end of the list.
@@ -247,7 +259,7 @@ impl<'a> ImpactCursor<'a> {
             return;
         }
         if !self.decoded {
-            self.decode();
+            self.decode::<false>();
         }
         let from = self.position;
         self.position =
@@ -485,8 +497,8 @@ impl<'a> ImpactCursor<'a> {
     fn drain_first(&mut self, count: usize, mut f: impl FnMut(u32, u32)) {
         let mut taken = 0usize;
         while !self.ended && taken < count {
-            if !self.decoded {
-                self.decode();
+            if !self.decoded || !self.frequencies_ready {
+                self.decode::<true>();
             }
             for at in self.position..self.current.count {
                 f(self.slots[at], self.frequencies[at]);
@@ -522,8 +534,8 @@ impl<'a> ImpactCursor<'a> {
                 }
                 continue;
             }
-            if !self.decoded {
-                self.decode();
+            if !self.decoded || !self.frequencies_ready {
+                self.decode::<true>();
             }
             let end = self.current.count;
             let at = self.position;
@@ -1188,4 +1200,51 @@ pub(super) fn rank<S: LexicalSource>(
     };
     candidates.retain(|&(score, _)| score.to_bits() >= bar);
     Some(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::documents::postings::CheckpointPacker;
+
+    #[test]
+    fn lexical_impact_cursor_reads_frequencies_after_seeks_and_drains() {
+        let count = CHECKPOINT_BLOCK + 9;
+        let entries: Vec<_> = (0..count)
+            .map(|i| (3 * i as u32 + 2, (7 * i as u32 % 509) + 1))
+            .collect();
+        let mut bytes = Vec::new();
+        let mut packer = CheckpointPacker::with_info(true, &|_| 512, false);
+        for &(slot, frequency) in &entries {
+            packer.push(slot as usize, frequency, &mut bytes);
+        }
+        packer.finish(&mut bytes);
+        let mut cursor = ImpactCursor::new();
+        cursor.open(&Postings {
+            bytes: &bytes,
+            count: count as u32,
+            blocked: true,
+            impacts: true,
+        });
+        assert_eq!((cursor.doc(), cursor.frequency()), entries[0]);
+        cursor.seek_in(entries[63].0 + 1, None);
+        assert_eq!((cursor.doc(), cursor.frequency()), entries[64]);
+        let mut drained = Vec::new();
+        cursor.drain_below(
+            entries[CHECKPOINT_BLOCK - 1].0,
+            |_| false,
+            |slots, frequencies, _, _| {
+                drained.extend(slots.iter().copied().zip(frequencies.iter().copied()));
+            },
+        );
+        assert_eq!(drained, entries[64..CHECKPOINT_BLOCK - 1]);
+        assert_eq!(
+            (cursor.doc(), cursor.frequency()),
+            entries[CHECKPOINT_BLOCK - 1]
+        );
+        cursor.seek_in(entries[count - 2].0 + 1, None);
+        assert_eq!((cursor.doc(), cursor.frequency()), entries[count - 1]);
+        cursor.seek_in(entries[count - 1].0 + 1, None);
+        assert_eq!(cursor.doc(), NO_DOC);
+    }
 }
