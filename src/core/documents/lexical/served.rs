@@ -946,6 +946,10 @@ impl<'a> Run<'a, '_> {
         let positions: Vec<&'a [u8]> = std::iter::once(lead.list_positions())
             .chain(rest.iter().map(|c| c.list_positions()))
             .collect();
+        let tables: Vec<Option<std::sync::Arc<Dense>>> = rest
+            .iter()
+            .map(|c| self.image.frequency_table(c.list()))
+            .collect();
         while !lead.is_end() {
             let last = lead.block_last();
             let mut scored = scoring;
@@ -968,9 +972,42 @@ impl<'a> Run<'a, '_> {
             for (value, index) in rows[0][..n].iter_mut().zip(0u32..) {
                 *value = index;
             }
+            // A word's bitmap or frequency table answers membership without decoding its list.
+            for (c, other) in rest.iter().enumerate() {
+                if twin[c + 1].is_some() {
+                    continue;
+                }
+                let (mut i, mut k) = (0, 0);
+                if let Some(bits) = other.dense() {
+                    while i < n {
+                        let slot = slots[i];
+                        slots[k] = slot;
+                        rows[0][k] = rows[0][i];
+                        k += usize::from(holds(bits, slot));
+                        i += 1;
+                    }
+                } else if let Some(table) = &tables[c] {
+                    for &slot in &slots[..n] {
+                        table.prefetch(slot as usize);
+                    }
+                    while i < n {
+                        let slot = slots[i];
+                        slots[k] = slot;
+                        rows[0][k] = rows[0][i];
+                        k += usize::from(table.get(slot as usize) != 0);
+                        i += 1;
+                    }
+                } else {
+                    continue;
+                }
+                n = k;
+                if n == 0 {
+                    break;
+                }
+            }
             let mut live = true;
             for (c, other) in rest.iter_mut().enumerate() {
-                if twin[c + 1].is_some() {
+                if twin[c + 1].is_some() || n == 0 {
                     continue;
                 }
                 let (kept, more) = keep_common(
