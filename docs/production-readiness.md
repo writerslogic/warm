@@ -5,7 +5,7 @@
 Rust `WarmCore` and Node `WarmMemorySystem` expose persistent vector, document, and
 structured knowledge operations. `writerslogic-warm/semantic` adds bounded ingestion, local
 ONNX embeddings, hybrid retrieval, and optional local cross-encoder reranking. The published
-Python wheel (`warm-python` 0.7.0) exposes vector indexes, phase vectors and the in-process `Warm`
+Python wheel (`warm-python` 0.7.1) exposes vector indexes, phase vectors and the in-process `Warm`
 engine (document search, `remember`, `recall`, `forget`, `explain`). The Rust MSRV is 1.89.
 
 ## Compatibility and migration

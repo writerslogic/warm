@@ -22,7 +22,7 @@ Start with where your application runs and who should own the store.
 | Package | Imports as | Runs the engine | Needs | Choose it for |
 |---|---|---|---|---|
 | `warm-sdk` 0.2.2 (npm) | `WarmClient` | No: HTTP client for `warm-server` | Node 18+, Fetch and Web Streams; no native dependencies | Portable JavaScript and TypeScript; does not start the server |
-| `writerslogic-warm` 0.7.0 (npm) | `WarmMemorySystem`; `/semantic`, `/memory`, `/vectra` | Yes, inside Node | Native module (optional platform packages) | Embedded engine in Node; install it explicitly |
+| `writerslogic-warm` 0.7.1 (npm) | `WarmMemorySystem`; `/semantic`, `/memory`, `/vectra` | Yes, inside Node | Native module (optional platform packages) | Embedded engine in Node; install it explicitly |
 | `warm-sdk` (PyPI) | `writerslogic_warm_sdk` | No: HTTP client for `warm-server` | A running server; same API key, tenant and embedding dimensions on both sides | Python or several processes sharing a store; does not start a server or download a model |
 | `warm-python` (PyPI) | `writerslogic_warm` | Yes, in-process | Native wheel | Native vector search and phase-vector algebra; `Warm` (document search, memory API) for in-process use |
 
