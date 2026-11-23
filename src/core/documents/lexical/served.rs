@@ -1064,11 +1064,19 @@ impl<'a> Run<'a, '_> {
                 if j > 0 {
                     reached(5);
                 }
-                let mut musts = self.opened(reopen, &musts);
-                musts.extend(self.opened(reopen, &order[..j]));
-                let excluded = self.opened(reopen, &[lacked]);
+                let mut required = self.opened(reopen, &musts);
+                let mut excluded = self.opened(reopen, &[lacked]);
                 let optional = self.opened(reopen, &order[j + 1..]);
-                self.conjunction_into(musts, excluded, optional, &mut top)?;
+                if j == 0 && required.len() == 1 && excluded.len() == 1 {
+                    // The widest class: its one required list a block at a time.
+                    #[cfg(test)]
+                    reached(6);
+                    let (lead, dropped) = (required.pop(), excluded.pop());
+                    self.lead_top(lead.expect("one"), dropped.expect("one"), optional, &mut top)?;
+                    continue;
+                }
+                required.extend(self.opened(reopen, &order[..j]));
+                self.conjunction_into(required, excluded, optional, &mut top)?;
             }
         } else {
             // One list: the clauses are twins, and a document with one has all.
@@ -1082,6 +1090,88 @@ impl<'a> Run<'a, '_> {
             0
         };
         Ok((top.finish(), found))
+    }
+
+    /// Offers to `top` the documents `lead` has and `dropped` lacks, scored with the `optional`
+    /// clauses that have them: `lead` a block at a time, a block whose bounds, with those of the
+    /// optional lists over it, are below the k-th best score skipped, the rest filtered through
+    /// `dropped` and probed in the optional lists.
+    #[inline(never)]
+    fn lead_top(
+        &mut self,
+        mut lead: Rt<'a>,
+        mut dropped: Rt<'a>,
+        mut optional: Vec<Rt<'a>>,
+        top: &mut Top<'a>,
+    ) -> Result<()> {
+        let clauses = 1 + optional.len();
+        let lead_bound = lead.bound.expect("a bounded term");
+        let ceiling = sum_bound(
+            lead.ceiling + optional.iter().map(|rt| rt.ceiling).sum::<f64>(),
+            clauses,
+        );
+        let mut slots = [0u32; CHECKPOINT_BLOCK];
+        let mut index = [0u32; CHECKPOINT_BLOCK];
+        let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; optional.len()];
+        loop {
+            let floor = top.floor();
+            if floor.is_some_and(|floor| ceiling < floor) {
+                break;
+            }
+            let cursor = &mut lead.cursors[0];
+            if cursor.is_end() {
+                break;
+            }
+            let (first, last) = (cursor.block_first(), cursor.block_last());
+            if let Some(floor) = floor {
+                let mut sum = cursor.block_weight(lead_bound);
+                for other in &mut optional {
+                    let bound = other.bound.expect("a bounded term");
+                    let c = &mut other.cursors[0];
+                    sum += if !c.advance_block(first) || c.block_first() > last {
+                        0.0
+                    } else if c.block_last() >= last {
+                        c.block_weight(bound)
+                    } else {
+                        c.span_weight(last, bound, 8, true).unwrap_or(other.ceiling)
+                    };
+                }
+                if sum_bound(sum, clauses) < floor {
+                    if !lead.cursors[0].advance_block(last.saturating_add(1)) {
+                        break;
+                    }
+                    continue;
+                }
+            }
+            let block = lead.cursors[0].block_slots();
+            let mut n = block.len();
+            slots[..n].copy_from_slice(block);
+            for (i, value) in index[..n].iter_mut().enumerate() {
+                *value = i as u32;
+            }
+            n = drop_common(&mut dropped.cursors[0], &mut slots, &mut index, n);
+            if n > 0 {
+                for (other, row) in optional.iter_mut().zip(rows.iter_mut()) {
+                    probe_common(&mut other.cursors[0], &slots, n, row);
+                }
+                for &slot in &slots[..n] {
+                    prefetch(self.word_counts, slot as usize);
+                }
+                let frequencies = lead.cursors[0].block_frequencies();
+                for (m, &slot) in slots[..n].iter().enumerate() {
+                    self.frequencies[lead.clause] = frequencies[index[m] as usize];
+                    for (other, row) in optional.iter().zip(&rows) {
+                        self.frequencies[other.clause] = row[m];
+                    }
+                    let score = self.score(slot)?;
+                    top.offer(score, slot);
+                }
+            }
+            if !lead.cursors[0].advance_block(last.saturating_add(1)) {
+                break;
+            }
+        }
+        Ok(())
     }
 
     /// Fresh cursors on the clauses at `clauses`.
@@ -2216,6 +2306,103 @@ fn keep_counted<'a, T: Lead<'a>>(
     (kept, live)
 }
 
+/// Removes, in place, the candidates among `slots[..n]` that `other` holds, moving each kept
+/// candidate's entry in `rows` along with it; returns how many are kept. The candidates ascend.
+#[inline(never)]
+fn drop_common(
+    other: &mut Cursor<'_>,
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    rows: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+) -> usize {
+    let (mut i, mut k) = (0usize, 0usize);
+    if let Some(bits) = other.dense() {
+        while i < n {
+            let slot = slots[i];
+            slots[k] = slot;
+            rows[k] = rows[i];
+            k += usize::from(!holds(bits, slot));
+            i += 1;
+        }
+        return k;
+    }
+    while i < n {
+        let wanted = slots[i];
+        if other.block_last() < wanted && !other.advance_block(wanted) {
+            // `other` ended: the rest are kept.
+            while i < n {
+                slots[k] = slots[i];
+                rows[k] = rows[i];
+                k += 1;
+                i += 1;
+            }
+            break;
+        }
+        let first = other.block_first();
+        if first > wanted {
+            while i < n && slots[i] < first {
+                slots[k] = slots[i];
+                rows[k] = rows[i];
+                k += 1;
+                i += 1;
+            }
+            continue;
+        }
+        let last = other.block_last();
+        let block = other.block_slots();
+        let mut j = 0usize;
+        while i < n && slots[i] <= last {
+            let slot = slots[i];
+            while block[j] < slot {
+                j += 1;
+            }
+            slots[k] = slot;
+            rows[k] = rows[i];
+            k += usize::from(block[j] != slot);
+            i += 1;
+        }
+    }
+    k
+}
+
+/// Writes to `out[i]` the frequency of `other` in `slots[i]`, zero where it lacks the slot.
+/// The candidates `slots[..n]` ascend.
+#[inline(never)]
+fn probe_common(
+    other: &mut Cursor<'_>,
+    slots: &[u32; CHECKPOINT_BLOCK],
+    n: usize,
+    out: &mut [u32; CHECKPOINT_BLOCK],
+) {
+    let mut i = 0usize;
+    while i < n {
+        let wanted = slots[i];
+        if other.block_last() < wanted && !other.advance_block(wanted) {
+            out[i..n].fill(0);
+            return;
+        }
+        let first = other.block_first();
+        if first > wanted {
+            while i < n && slots[i] < first {
+                out[i] = 0;
+                i += 1;
+            }
+            continue;
+        }
+        let last = other.block_last();
+        let (block, frequencies) = other.block_postings();
+        let mut j = 0usize;
+        while i < n && slots[i] <= last {
+            let slot = slots[i];
+            while block[j] < slot {
+                j += 1;
+            }
+            out[i] = if block[j] == slot { frequencies[j] } else { 0 };
+            i += 1;
+        }
+    }
+}
+
 /// Documents with any of the term clauses' words: the largest list's postings, plus the
 /// documents of the others that it lacks, probed through its skip table; or, when the lists
 /// are of similar size, a bitmap over all slots.
@@ -2557,7 +2744,7 @@ mod tests {
             }
         }
         let paths = PATHS.with(|c| c.get());
-        for path in [0, 5] {
+        for path in [0, 5, 6] {
             assert!(paths[path] > 0, "path {path} never ran: {paths:?}");
         }
     }
@@ -2607,7 +2794,7 @@ mod tests {
             }
         }
         let paths = PATHS.with(|c| c.get());
-        for path in [0, 5] {
+        for path in [0, 5, 6] {
             assert!(paths[path] > 0, "path {path} never ran: {paths:?}");
         }
     }
