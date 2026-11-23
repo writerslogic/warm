@@ -10,6 +10,7 @@ two-sided McNemar p-value on the discordant pairs.
 """
 import argparse, json, sys
 from math import comb
+from pathlib import Path
 
 
 def mcnemar(b: int, c: int) -> float:
@@ -50,9 +51,9 @@ def main():
     ap.add_argument("--ids")
     ap.add_argument("--name", default="")
     a = ap.parse_args()
-    base = json.load(open(a.base))["per_question"]
-    new = json.load(open(a.new))["per_question"]
-    ids = json.load(open(a.ids)) if a.ids else None
+    base = json.loads(Path(a.base).read_text())["per_question"]
+    new = json.loads(Path(a.new).read_text())["per_question"]
+    ids = json.loads(Path(a.ids).read_text()) if a.ids else None
     if isinstance(ids, dict):
         ids = ids["ids"]
     sys.stdout.write(json.dumps({"name": a.name, **compare(base, new, ids)}) + "\n")

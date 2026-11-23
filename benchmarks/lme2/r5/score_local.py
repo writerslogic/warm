@@ -18,9 +18,9 @@ JUDGE = {"llm_abstention_checker", "llm_gotchas_checker"}
 
 
 def load_dev(root: Path, held_path: Path):
-    held = set(json.load(open(held_path)))
+    held = set(json.loads(Path(held_path).read_text()))
     qs = {}
-    for line in open(root / "data" / "questions.jsonl"):
+    for line in Path(root / "data" / "questions.jsonl").read_text().splitlines():
         q = json.loads(line)
         if q["id"] not in held:
             qs[q["id"]] = q
@@ -64,7 +64,7 @@ def main():
     from evaluation.qa_eval_metrics import eval_from_spec, score_to_bool
 
     qs = load_dev(root, Path(a.held))
-    raw = json.load(open(a.cache))
+    raw = json.loads(Path(a.cache).read_text())
     cache = {k: v for k, v in raw.items() if k in qs}
     res = score_cache(cache, qs, eval_from_spec, score_to_bool)
     judge = sorted(k for k in qs if k not in set(local_ids(qs)))

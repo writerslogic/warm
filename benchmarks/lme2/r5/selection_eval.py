@@ -58,16 +58,16 @@ def main() -> None:
     from evaluation.qa_eval_metrics import DEFAULT_SEPARATORS, normalize_phrase, split_phrases
     import evidence_locate
 
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
-    local = json.load(open(HERE / "r5_historical_local.json"))["per_question"]
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
+    local = json.loads(Path(HERE / "r5_historical_local.json").read_text())["per_question"]
     ann = {}
     for f in sorted((HERE / "annotations").glob("batch_*.json")):
-        for r in json.load(open(f)):
+        for r in json.loads(Path(f).read_text()):
             if r.get("sufficient_in_observations") == "yes":
                 ann[r["qid"]] = [set(e["states"]) for e in r["evidence_sets"] if e["states"]]
     rows = {}
     for d in ("web", "enterprise"):
-        for line in open(prompts.LME2 / f"round5/runs/slice12i_{d}/prompt_rows.jsonl"):
+        for line in Path(prompts.LME2 / f"round5/runs/slice12i_{d}/prompt_rows.jsonl").read_text().splitlines():
             r = json.loads(line)
             if r["question_id"] in local and r["question_id"] not in held:
                 rows[r["question_id"]] = (d, r)

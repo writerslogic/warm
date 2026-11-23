@@ -34,10 +34,10 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--conditions", nargs="*", default=list(CONDITIONS))
     a = ap.parse_args()
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
-    local = set(json.load(open(HERE / "r5_historical_local.json"))["per_question"])
-    pilot = json.load(open(UP / "pilot_ids.json"))
-    rest = json.load(open(UP / "rest_ids.json"))
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
+    local = set(json.loads(Path(HERE / "r5_historical_local.json").read_text())["per_question"])
+    pilot = json.loads(Path(UP / "pilot_ids.json").read_text())
+    rest = json.loads(Path(UP / "rest_ids.json").read_text())
     assert len(pilot) == len(set(pilot)) == 36 and len(rest) == len(set(rest)) == 113
     assert not set(pilot) & set(rest) and set(pilot) | set(rest) == local and len(local) == 149
     assert not (set(pilot) | set(rest)) & held
@@ -46,10 +46,10 @@ def main():
         rows_paths, id_files = CONDITIONS[c]
         dispatched = set()
         for f in id_files:
-            dispatched |= set(json.load(open(UP / f)))
+            dispatched |= set(json.loads(Path(UP / f).read_text()))
         hashes, dup = {}, 0
         for p in rows_paths:
-            for line in open(p):
+            for line in Path(p).read_text().splitlines():
                 r = json.loads(line)
                 q = r["question_id"]
                 if q not in dispatched:
@@ -58,7 +58,7 @@ def main():
                     dup += 1
                 hashes[q] = hashlib.sha256(json.dumps(r["messages"], sort_keys=True).encode()).hexdigest()
         expected = set(hashes)
-        cache = json.load(open(OUT / f"cache_{c}.json"))
+        cache = json.loads(Path(OUT / f"cache_{c}.json").read_text())
         missing = sorted(expected - set(cache))
         unexpected = sorted(set(cache) - expected)
         mismatch = sorted(q for q in expected & set(cache) if cache[q]["messages_sha256"] != hashes[q])

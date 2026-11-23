@@ -48,7 +48,7 @@ class OracleMemory(WarmBoundMemory):
 def load_annotations():
     out = {}
     for f in sorted((HERE / "annotations").glob("batch_*.json")):
-        for rec in json.load(open(f)):
+        for rec in json.loads(Path(f).read_text()):
             out[rec["qid"]] = rec
     return out
 
@@ -58,12 +58,12 @@ def main() -> None:
     ap.add_argument("--condition", required=True, choices=["B", "D"])
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
-    cohort = [q for q in json.load(open(HERE / "pilot_cohort.json"))["ids"] if q not in held]
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
+    cohort = [q for q in json.loads(Path(HERE / "pilot_cohort.json").read_text())["ids"] if q not in held]
     ann = load_annotations()
     rows = {}
     for d in ("web", "enterprise"):
-        for line in open(prompts.LME2 / f"round5/runs/slice12i_{d}/prompt_rows.jsonl"):
+        for line in Path(prompts.LME2 / f"round5/runs/slice12i_{d}/prompt_rows.jsonl").read_text().splitlines():
             r = json.loads(line)
             if r["question_id"] in cohort:
                 rows[r["question_id"]] = (d, r)
@@ -86,7 +86,7 @@ def main() -> None:
         params = {**prompts.R5, "render": "r5" if a.condition == "B" else "bound", "evidence": evidence, "budgets": budgets}
         out = Path(a.out).resolve() / d
         path = prompts.build("warm_oracle", params, d, out, Path(prompts.LME2 / "embed_cache"), question_ids=ids)
-        for line in open(path):
+        for line in Path(path).read_text().splitlines():
             r = json.loads(line)
             text = "".join(i["value"] for i in r["memory_context"] if i["type"] == "text")
             shown, cur = set(), None

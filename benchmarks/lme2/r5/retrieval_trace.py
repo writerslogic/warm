@@ -84,16 +84,16 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--modes", nargs="*", default=["r5", "wide", "agg"])
     a = ap.parse_args()
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
-    cohort = [q for q in json.load(open(HERE / "pilot_cohort.json"))["ids"] if q not in held]
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
+    cohort = [q for q in json.loads(Path(HERE / "pilot_cohort.json").read_text())["ids"] if q not in held]
     ann = {}
     for f in sorted((HERE / "annotations").glob("batch_*.json")):
-        for r in json.load(open(f)):
+        for r in json.loads(Path(f).read_text()):
             if r["qid"] in cohort and r.get("sufficient_in_observations") == "yes":
                 ann[r["qid"]] = r
     rows = {}
     for d in ("web", "enterprise"):
-        for line in open(prompts.LME2 / f"round5/runs/slice12i_{d}/prompt_rows.jsonl"):
+        for line in Path(prompts.LME2 / f"round5/runs/slice12i_{d}/prompt_rows.jsonl").read_text().splitlines():
             r = json.loads(line)
             if r["question_id"] in ann:
                 rows[r["question_id"]] = (d, r)

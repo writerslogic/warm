@@ -28,11 +28,11 @@ cache_path = Path(a.cache)
 cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
 rows = []
 for p in a.rows:
-    rows += [json.loads(l) for l in open(p) if l.strip()]
-only = set(json.load(open(a.only))) if a.only else None
+    rows += [json.loads(l) for l in Path(p).read_text().splitlines() if l.strip()]
+only = set(json.loads(Path(a.only).read_text())) if a.only else None
 todo = [r for r in rows if r["question_id"] not in cache and (only is None or r["question_id"] in only)]
 if a.priority:
-    rank = {q: i for i, q in enumerate(json.load(open(a.priority)))}
+    rank = {q: i for i, q in enumerate(json.loads(Path(a.priority).read_text()))}
     todo.sort(key=lambda r: rank.get(r["question_id"], 10**6))
 todo = todo[: max(0, a.total - len(cache))]
 print(f"{len(rows)} rows, {len(todo)} to run", flush=True)

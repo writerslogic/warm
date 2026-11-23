@@ -55,12 +55,12 @@ def build(memory_type: str, params: dict, domain: str, out: Path, embed_cache: P
     import evaluation.harness as H
 
     data_root = LME2 / "data"
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
     if question_ids is None:
         # Development ids of this domain only: no held-out question reaches memory, a row or a
         # dispatch file. Each row depends only on its own question and the shared haystack, so
         # this does not change any development row.
-        question_ids = sorted(q["id"] for q in map(json.loads, open(data_root / "questions.jsonl"))
+        question_ids = sorted(q["id"] for q in map(json.loads, Path(data_root / "questions.jsonl").read_text().splitlines())
                               if q["domain"] == domain and q["id"] not in held)
     if held & set(question_ids):
         raise SystemExit("held-out ids requested")
