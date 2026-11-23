@@ -419,6 +419,14 @@ struct Term {
     ub: Vec<f64>,
 }
 
+#[derive(Clone, Copy)]
+struct WindowCandidate {
+    offset: u32,
+    /// Index of the exact weight in the flat list when only one term accumulated.
+    single_index: u32,
+    upper: f64,
+}
+
 /// Working memory of [`rank`], reused across queries.
 pub(super) struct PruneScratch {
     terms: Vec<Term>,
@@ -439,8 +447,8 @@ pub(super) struct PruneScratch {
     /// Per essential term and window offset: the weight of its posting there, else 0.
     wbuf: Vec<f64>,
     lookups: Vec<usize>,
-    /// First-pass survivors of a window: offset and bound.
-    cand: Vec<(u32, f64)>,
+    /// First-pass survivors of a window.
+    cand: Vec<WindowCandidate>,
     /// The postings of a window's one accumulated term: offset and weight, in slot order.
     single: Vec<(u32, f64)>,
     weights: [f64; MAX_TERMS],
@@ -1060,22 +1068,25 @@ pub(super) fn rank<S: LexicalSource>(
         // list's ceiling); the margin covers the different summation order.
         let drop = cut * (1.0 - 8.0 * f64::EPSILON);
         cand.clear();
+        let mut single_term = None;
         if alone {
             // The accumulated weight `0.0 + weight` is the weight itself.
-            let position = by_bound[quiet..]
+            let term = by_bound[quiet..]
                 .iter()
-                .position(|i| !demoted.contains(i))
+                .copied()
+                .find(|i| !demoted.contains(i))
                 .expect("the accumulated term");
-            let wslice = &mut wbuf[position * WINDOW as usize..(position + 1) * WINDOW as usize];
-            let log = &mut logs[position];
-            for &(offset, weight) in single.iter() {
+            single_term = Some(term);
+            for (index, &(offset, weight)) in single.iter().enumerate() {
                 let upper = weight + untabled;
                 if floor_score > 0.0 && upper + rest[0] < drop {
                     continue;
                 }
-                wslice[offset as usize] = weight;
-                log.push(offset as u16);
-                cand.push((offset, upper));
+                cand.push(WindowCandidate {
+                    offset,
+                    single_index: index as u32,
+                    upper,
+                });
             }
         } else {
             for (word, word_bits) in mask.iter_mut().enumerate() {
@@ -1088,7 +1099,11 @@ pub(super) fn rank<S: LexicalSource>(
                     if floor_score > 0.0 && upper + rest[0] < drop {
                         continue;
                     }
-                    cand.push((offset as u32, upper));
+                    cand.push(WindowCandidate {
+                        offset: offset as u32,
+                        single_index: 0,
+                        upper,
+                    });
                 }
             }
         }
@@ -1105,11 +1120,11 @@ pub(super) fn rank<S: LexicalSource>(
                 let mut kept = 0usize;
                 for read in 0..cand.len() {
                     let mut entry = cand[read];
-                    let offset = entry.0 as usize;
+                    let offset = entry.offset as usize;
                     let class = usize::from(window_classes[offset]);
-                    entry.1 +=
+                    entry.upper +=
                         ub[usize::from(table.get(lo as usize + offset)) * CLASSES + class].min(cap);
-                    if floor_score > 0.0 && entry.1 + after < drop {
+                    if floor_score > 0.0 && entry.upper + after < drop {
                         continue;
                     }
                     cand[kept] = entry;
@@ -1119,10 +1134,15 @@ pub(super) fn rank<S: LexicalSource>(
             }
         }
         if floor_score > 0.0 {
-            cand.retain(|&(_, upper)| upper >= cut);
+            cand.retain(|entry| entry.upper >= cut);
         }
         // Second pass: the candidates, scored exactly.
-        for &(offset, upper) in cand.iter() {
+        for &WindowCandidate {
+            offset,
+            single_index,
+            upper,
+        } in cand.iter()
+        {
             let floor_score = threshold.max(pilot_floor).max(sure);
             if floor_score > 0.0 && upper < floor_score * cut_factor {
                 continue;
@@ -1130,10 +1150,14 @@ pub(super) fn rank<S: LexicalSource>(
             let slot = lo + offset;
             stats.survivors += 1;
             let norm = norm_for(norms, slot);
-            for (position, &i) in by_bound[quiet..].iter().enumerate() {
-                let weight = wbuf[position * WINDOW as usize + offset as usize];
-                if weight != 0.0 {
-                    weights[i] = weight;
+            if let Some(i) = single_term {
+                weights[i] = single[single_index as usize].1;
+            } else {
+                for (position, &i) in by_bound[quiet..].iter().enumerate() {
+                    let weight = wbuf[position * WINDOW as usize + offset as usize];
+                    if weight != 0.0 {
+                        weights[i] = weight;
+                    }
                 }
             }
             for &i in lookups.iter() {
