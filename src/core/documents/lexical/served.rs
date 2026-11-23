@@ -14,6 +14,9 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
+mod lazy;
+
+use self::lazy::keep_common_lazy;
 use super::wand::{sum_bound, Bound};
 use super::*;
 use crate::core::documents::image::ServingImage;
@@ -872,12 +875,12 @@ impl<'a> Run<'a, '_> {
                     }
                     let (kept, more) = match &tables[l] {
                         Some(table) => (keep_tabled(table, &mut slots, n, &mut rows, p + 1), true),
-                        None => keep_common(
+                        None => keep_common_lazy(
                             &mut rest[l].cursors[0],
                             &mut slots,
                             n,
                             &mut rows,
-                            Record::Frequency(p + 1),
+                            p + 1,
                         ),
                     };
                     n = kept;
@@ -1377,8 +1380,6 @@ fn triple_occurrences(words: [&[u8]; 3], exact: bool) -> u32 {
 #[derive(Clone, Copy)]
 enum Record {
     Nothing,
-    /// Its frequency.
-    Frequency(usize),
     /// The start and end of its positions in the list's positions bytes, in two rows.
     Positions(usize),
 }
@@ -1396,7 +1397,7 @@ fn keep_common(
 ) -> (usize, bool) {
     let carried = match record {
         Record::Nothing => rows.len(),
-        Record::Frequency(row) | Record::Positions(row) => row,
+        Record::Positions(row) => row,
     };
     let mut matched = [0u8; CHECKPOINT_BLOCK];
     let mut source = [0u8; CHECKPOINT_BLOCK];
@@ -1415,16 +1416,7 @@ fn keep_common(
         }
         let last = other.block_last();
         let from = k;
-        // A frequency is written beside each candidate as it is matched: a separate pass over
-        // the matched indices vectorizes into 512-bit gathers under `target-cpu=native`, whose
-        // frequency license slows the queries that follow on AVX-512 parts.
-        let (block, frequencies, row) = match record {
-            Record::Frequency(row) => {
-                let (block, frequencies) = other.block_postings();
-                (block, frequencies, row)
-            }
-            _ => (other.block_slots(), &[][..], usize::MAX),
-        };
+        let block = other.block_slots();
         // The candidates this block can hold: `slots[i..end]`.
         let mut end = i + 1;
         while end < n && slots[end] <= last {
@@ -1445,9 +1437,6 @@ fn keep_common(
                 slots[k] = value;
                 matched[k] = j as u8;
                 source[k] = at as u8;
-                if let Some(&frequency) = frequencies.get(j) {
-                    rows[row][k] = frequency;
-                }
                 k += usize::from(block[j] == value);
                 at += 1;
             }
@@ -1460,9 +1449,6 @@ fn keep_common(
                 slots[k] = value;
                 matched[k] = j as u8;
                 source[k] = at as u8;
-                if let Some(&frequency) = frequencies.get(j) {
-                    rows[row][k] = frequency;
-                }
                 k += usize::from(value == posting);
                 at += usize::from(value <= posting);
                 j += usize::from(posting <= value);
@@ -1478,7 +1464,7 @@ fn keep_common(
         }
         if k > from {
             match record {
-                Record::Nothing | Record::Frequency(_) => {}
+                Record::Nothing => {}
                 Record::Positions(row) => {
                     for (m, &j) in matched.iter().enumerate().take(k).skip(from) {
                         let (start, end) = other.position_range(usize::from(j));
@@ -1798,7 +1784,7 @@ fn union_words(
                     nibbles[chunks.len()] |= u64::from_le_bytes(last);
                 }
             }
-            for (word, quad) in packed[..n].iter_mut().zip(nibbles.chunks_exact(4)) {
+            for (word, quad) in packed[..n].iter_mut().zip(nibbles.as_chunks::<4>().0) {
                 *word |= nibble_bits(quad[0])
                     | nibble_bits(quad[1]) << 16
                     | nibble_bits(quad[2]) << 32
