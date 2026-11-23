@@ -1148,7 +1148,8 @@ impl<'a> Run<'a, '_> {
             Bound::new(1.0, self.shape.average, self.shape.bm25).expect("a unit bound")
         });
         // Excluded lists tested cheapest first: bitmap, table, scatter bitmap, decoded blocks.
-        let scattered = |rt: &Rt<'_>| self.count && rt.rarest() <= SCATTER_RATIO * lead.rarest();
+        let ratio = SCATTER_RATIO;
+        let scattered = |rt: &Rt<'_>| self.count && rt.rarest() <= ratio * lead.rarest();
         excluded.sort_by_key(|rt| {
             let kind = if rt.cursors[0].dense().is_some() {
                 0
@@ -1162,7 +1163,7 @@ impl<'a> Run<'a, '_> {
             (kind, rt.rarest())
         });
         let excluded_tables = frequency_tables(self.image, excluded);
-        let scatters = scatter_excluded(excluded, &excluded_tables, &mut lead.cursors[0], self.count);
+        let scatters = scatter_excluded(excluded, &excluded_tables, &mut lead.cursors[0], self.count, ratio);
         'blocks: loop {
             let floor = top.floor();
             if !self.count && floor.is_some_and(|floor| ceiling < floor) {
@@ -1214,7 +1215,7 @@ impl<'a> Run<'a, '_> {
                 // lift the block's weights to the k-th best score is dropped before it is
                 // probed in the other lists.
                 let mut need = 1u32;
-                if let (false, Some(floor)) = (self.count, floor) {
+                if let Some(floor) = floor {
                     let most = lead.cursors[0].block_bounds().0.min(NEED_PROBES);
                     let least = lead.cursors[0].block_bounds().1;
                     while need < most
@@ -1224,7 +1225,7 @@ impl<'a> Run<'a, '_> {
                         need += 1;
                     }
                 }
-                if need > 1 {
+                if need > 1 && !self.count {
                     #[cfg(test)]
                     PREFILTERED.with(|c| c.set(c.get() + 1));
                     n = keep_frequent(
@@ -1269,6 +1270,10 @@ impl<'a> Run<'a, '_> {
                     let frequencies = lead.cursors[0].block_frequencies();
                     for (m, &slot) in slots[..n].iter().enumerate() {
                         let lead_frequency = frequencies[rows[0][m] as usize];
+                        if lead_frequency < need {
+                            // Counted, but too light to enter the top.
+                            continue;
+                        }
                         if rows[1..1 + tabled].iter().any(|row| row[m] == SATURATED) {
                             // A tabled list holds this candidate fifteen times or more: bound
                             // its weight by the list's largest frequency, and read the list only
@@ -1957,7 +1962,7 @@ impl<'a> Lead<'a> for Cursor<'a> {
 
 /// Most excluded postings per required posting for which the excluded list is decoded once into
 /// a bitmap over the required range rather than probed per candidate.
-const SCATTER_RATIO: usize = 6;
+const SCATTER_RATIO: usize = 12;
 
 /// An excluded list's slots over the required list's range, a bit each.
 struct Scatter {
@@ -1981,6 +1986,7 @@ fn scatter_excluded(
     tables: &[Option<std::sync::Arc<Dense>>],
     lead: &mut Cursor<'_>,
     counting: bool,
+    ratio: usize,
 ) -> Vec<Option<Scatter>> {
     let mut out: Vec<Option<Scatter>> = excluded.iter().map(|_| None).collect();
     if !counting {
@@ -1993,7 +1999,7 @@ fn scatter_excluded(
     let required = lead.len();
     for ((rt, table), slot) in excluded.iter_mut().zip(tables).zip(&mut out) {
         let list = &mut rt.cursors[0];
-        if list.dense().is_some() || table.is_some() || list.len() > SCATTER_RATIO * required {
+        if list.dense().is_some() || table.is_some() || list.len() > ratio * required {
             continue;
         }
         let mut bits = vec![0u64; ((last - first) as usize >> 6) + 1];
@@ -2031,41 +2037,68 @@ fn drop_excluded(
     mut n: usize,
     rows: &mut [[u32; CHECKPOINT_BLOCK]],
 ) -> usize {
+    // Lists read without decoding are tested together over the block's candidates and the
+    // survivors compacted once; the decoded ones follow, each on what is left.
+    let mut keep = [true; CHECKPOINT_BLOCK];
+    let mut direct = false;
     for ((rt, table), scatter) in excluded.iter_mut().zip(tables).zip(scatters) {
-        if n == 0 {
-            break;
-        }
-        let mut keep = [false; CHECKPOINT_BLOCK];
-        let cursor = &mut rt.cursors[0];
+        let cursor = &rt.cursors[0];
         if let Some(bits) = cursor.dense() {
             for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
-                *flag = !holds(bits, slot);
+                *flag &= !holds(bits, slot);
             }
         } else if let Some(scatter) = scatter {
             for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
-                *flag = !scatter.holds(slot);
+                *flag &= !scatter.holds(slot);
             }
         } else if let Some(table) = table {
             for &slot in &slots[..n] {
                 table.prefetch(slot as usize);
             }
             for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
-                *flag = table.get(slot as usize) == 0;
+                *flag &= table.get(slot as usize) == 0;
             }
         } else {
-            lack_each(cursor, &slots[..n], &mut keep);
+            continue;
         }
-        let mut kept = 0usize;
-        for i in 0..n {
-            slots[kept] = slots[i];
-            for row in rows.iter_mut() {
-                row[kept] = row[i];
-            }
-            kept += usize::from(keep[i]);
+        direct = true;
+    }
+    if direct {
+        n = compact(&keep, slots, n, rows);
+    }
+    for ((rt, table), scatter) in excluded.iter_mut().zip(tables).zip(scatters) {
+        if n == 0 {
+            break;
         }
-        n = kept;
+        let cursor = &mut rt.cursors[0];
+        if cursor.dense().is_some() || scatter.is_some() || table.is_some() {
+            continue;
+        }
+        let mut keep = [false; CHECKPOINT_BLOCK];
+        lack_each(cursor, &slots[..n], &mut keep);
+        n = compact(&keep, slots, n, rows);
     }
     n
+}
+
+/// Moves the candidates among `slots[..n]` whose `keep` flag is set, and their `rows` entries,
+/// to the front. Returns how many.
+#[inline(always)]
+fn compact(
+    keep: &[bool; CHECKPOINT_BLOCK],
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+    rows: &mut [[u32; CHECKPOINT_BLOCK]],
+) -> usize {
+    let mut kept = 0usize;
+    for i in 0..n {
+        slots[kept] = slots[i];
+        for row in rows.iter_mut() {
+            row[kept] = row[i];
+        }
+        kept += usize::from(keep[i]);
+    }
+    kept
 }
 
 /// Sets `keep[i]` when the ascending `slots[i]` is not in `list`, reading only the blocks the
@@ -3158,9 +3191,9 @@ mod tests {
                         _ => 9,
                     })
                     .collect();
-                // w6: 46 postings. w12: 276 = 6 x 46, w13: 277, w14: 275, all decoded.
+                // w6: 23 postings. w12: 276 = 12 x 23, w13: 277, w14: 275, all decoded.
                 for (word, holds) in [
-                    (6u8, i % 200 == 0),
+                    (6u8, i % 400 == 0),
                     (12, i % 33 == 0 || (1..=3).contains(&i)),
                     (13, i % 33 == 0 || (1..=4).contains(&i)),
                     (14, i % 33 == 0 || (1..=2).contains(&i)),
