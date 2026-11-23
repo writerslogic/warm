@@ -2464,7 +2464,8 @@ fn scatter_excluded(
 /// Keeps, in place, the candidates among `slots[..n]` that no list of `excluded` holds, moving
 /// each kept candidate's entries in `rows` along; `tables` are the excluded lists' frequency
 /// tables. A dense list is read from its bitmap, a tabled one from its table, any other
-/// through its decoded blocks. Returns how many are kept.
+/// through its decoded blocks. Returns how many are kept; with empty `rows` only that count
+/// is meaningful.
 #[inline(never)]
 fn drop_excluded(
     excluded: &mut [Rt<'_>],
@@ -2500,6 +2501,19 @@ fn drop_excluded(
         direct = true;
     }
     if direct {
+        // A caller without `rows` reads only the count: with no decoded list left to test,
+        // count the survivors in place.
+        if rows.is_empty()
+            && excluded
+                .iter()
+                .zip(tables)
+                .zip(scatters)
+                .all(|((rt, table), scatter)| {
+                    rt.cursors[0].dense().is_some() || scatter.is_some() || table.is_some()
+                })
+        {
+            return keep[..n].iter().map(|&flag| usize::from(flag)).sum();
+        }
         n = compact(&keep, slots, n, rows);
     }
     for ((rt, table), scatter) in excluded.iter_mut().zip(tables).zip(scatters) {
