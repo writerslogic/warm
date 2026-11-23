@@ -52,7 +52,7 @@ def segments(row):
 def load_annotations():
     ann = {}
     for f in sorted((HERE / "annotations").glob("batch_*.json")):
-        for r in json.load(open(f)):
+        for r in json.loads(Path(f).read_text()):
             ann[r["qid"]] = r
     return ann
 
@@ -91,8 +91,8 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--scores", default=str(L / "r5x" / "out"), help="dir with score_<C>.json")
     a = ap.parse_args()
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
-    cohort = [q for q in json.load(open(HERE / "pilot_cohort.json"))["ids"] if q not in held]
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
+    cohort = [q for q in json.loads(Path(HERE / "pilot_cohort.json").read_text())["ids"] if q not in held]
     ann = load_annotations()
     need = {(s.split("/")[0], int(s.split("/")[1])) for r in ann.values() for e in r.get("evidence_sets") or [] for s in e["states"]}
     tids = {t for t, _ in need}
@@ -108,12 +108,12 @@ def main():
     for c, paths in ROWS.items():
         rows = {}
         for p in paths:
-            for line in open(p):
+            for line in Path(p).read_text().splitlines():
                 r = json.loads(line)
                 if r["question_id"] in cohort:
                     rows[r["question_id"]] = r
         sc_path = Path(a.scores) / f"score_{c}.json"
-        scores = json.load(open(sc_path))["per_question"] if sc_path.exists() else {}
+        scores = json.loads(Path(sc_path).read_text())["per_question"] if sc_path.exists() else {}
         per = {}
         for q in cohort:
             if q not in rows or ann.get(q, {}).get("sufficient_in_observations") != "yes":

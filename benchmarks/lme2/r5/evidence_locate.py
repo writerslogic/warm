@@ -53,11 +53,11 @@ def main():
     sys.path.insert(0, str(root / "upstream"))
     from evaluation.qa_eval_metrics import DEFAULT_SEPARATORS, normalize_phrase, split_phrases
 
-    held = set(json.load(open(a.held)))
-    scores = json.load(open(a.scores))["per_question"]
+    held = set(json.loads(Path(a.held).read_text()))
+    scores = json.loads(Path(a.scores).read_text())["per_question"]
     rows = {}
     for p in a.rows:
-        for line in open(p):
+        for line in Path(p).read_text().splitlines():
             r = json.loads(line)
             if r["question_id"] not in held and r["question_id"] in scores:
                 rows[r["question_id"]] = r

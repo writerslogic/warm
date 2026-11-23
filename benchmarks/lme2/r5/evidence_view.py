@@ -33,7 +33,7 @@ def main():
     ap.add_argument("--context", type=int, default=4)
     ap.add_argument("--max", type=int, default=12)
     a = ap.parse_args()
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
     if a.show:
         tid, st = a.show.split("/")
         t = trajectories({tid})[tid]
@@ -42,8 +42,8 @@ def main():
         return
     if a.qid in held:
         sys.exit("held-out id refused")
-    row = next(json.loads(l) for p in ROWS for l in open(p) if json.loads(l)["question_id"] == a.qid)
-    loc = json.load(open(HERE / "evidence_locate.json"))["per_question"].get(a.qid, {})
+    row = next(json.loads(l) for p in ROWS for l in Path(p).read_text().splitlines() if json.loads(l)["question_id"] == a.qid)
+    loc = json.loads(Path(HERE / "evidence_locate.json").read_text())["per_question"].get(a.qid, {})
     print(f"id {a.qid}  type {row['question_type']}  eval {row['eval_function']}")
     print(f"question: {row['question_text']}")
     print(f"gold: {row['answer_gold']}")
