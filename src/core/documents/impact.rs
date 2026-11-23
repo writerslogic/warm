@@ -1022,13 +1022,16 @@ pub(super) fn rank<S: LexicalSource>(
         let mut sure = 0.0f64;
         if best.len() < limit {
             pilot.clear();
-            pilot.extend(single.iter().map(|&(_, weight)| weight));
-            for (word, bits) in mask.iter().enumerate() {
-                let mut bits = *bits;
-                while bits != 0 {
-                    let offset = (word << 6) | bits.trailing_zeros() as usize;
-                    bits &= bits - 1;
-                    pilot.push(acc[offset]);
+            if alone {
+                pilot.extend(single.iter().map(|&(_, weight)| weight));
+            } else {
+                for (word, bits) in mask.iter().enumerate() {
+                    let mut bits = *bits;
+                    while bits != 0 {
+                        let offset = (word << 6) | bits.trailing_zeros() as usize;
+                        bits &= bits - 1;
+                        pilot.push(acc[offset]);
+                    }
                 }
             }
             if pilot.len() >= limit {
@@ -1062,18 +1065,19 @@ pub(super) fn rank<S: LexicalSource>(
                 log.push(offset as u16);
                 cand.push((offset, upper));
             }
-        }
-        for (word, word_bits) in mask.iter_mut().enumerate() {
-            let mut bits = std::mem::take(word_bits);
-            while bits != 0 {
-                let offset = (word << 6) | bits.trailing_zeros() as usize;
-                bits &= bits - 1;
-                let partial = std::mem::take(&mut acc[offset]);
-                let upper = partial + untabled;
-                if floor_score > 0.0 && upper + rest[0] < drop {
-                    continue;
+        } else {
+            for (word, word_bits) in mask.iter_mut().enumerate() {
+                let mut bits = std::mem::take(word_bits);
+                while bits != 0 {
+                    let offset = (word << 6) | bits.trailing_zeros() as usize;
+                    bits &= bits - 1;
+                    let partial = std::mem::take(&mut acc[offset]);
+                    let upper = partial + untabled;
+                    if floor_score > 0.0 && upper + rest[0] < drop {
+                        continue;
+                    }
+                    cand.push((offset as u32, upper));
                 }
-                cand.push((offset as u32, upper));
             }
         }
         // One table at a time over the window's candidates: each candidate still adds the
