@@ -8,37 +8,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ## [0.7.1] - 2026-11-23
 
 ### Added
+- Learn reusable procedures from episodes and revise them on disproof (#509)
 - Encrypt new stores by default with a plaintext opt-out (#507)
 - Encrypt new stores by default with a plaintext opt-out
 
 ### Documentation
-- Mark the in-process Warm release note as historical for the version check
+- Publish the LME-V2 small-tier submission record (#515)
 - Publish the docs site to writerslogic.com and fix stale package notes (#506)
 - Publish the docs site to writerslogic.com and fix stale package notes
 
-### Fixed
-- Serve single ranked terms from the checkpoint again
-
 ### Performance
-- Drain a disjunction block whole without a search and prefetch only the word counts it weighs
-- Gallop to a disjunction window's first block instead of walking the skip table
-- Leave unweighed the postings of a lone disjunction term below its block's least useful frequency
-- Weigh a window's only accumulated term into a flat list instead of the accumulator
-- Lowercase a lone ASCII query word without splitting it
-- Prefetch a block's candidates in a frequency table before reading them
-- Read long lists' block bounds from their rank tables in served conjunctions and phrases
-- Bound each disjunction window and block by exact block maxima and seek lookups through the skip table
-- Weigh each essential block run in a standalone loop and prefetch word counts once per line
-- Drop first-pass union candidates once the remaining tables cannot lift them to the cut
-- Break served score ties on id bytes instead of checked strings
-- Hold every phrase word but the last to its distance from the lead before probing the next list
-- Keep phrase candidates whose two rarest words stand at their phrase distance before reading longer lists
-- Stem a query's words and prepare its disjunction search only when they are read
-- Match a two-word phrase by one merge of its positions
-- Rank a long single term's runs and blocks from tables built at open
-- Count lone words from the dictionary and search dictionary blocks by in-memory keys
-- Scale the frequency-table budget with the slot count
-- Read tabled lists through frequency tables in conjunctions and share repeated phrase words
+- Serve lexical unions, conjunctions and phrases faster; release 0.7.1 (#512)
 ## [0.7.0] - 2026-11-18
 
 ### Added
