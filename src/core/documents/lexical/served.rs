@@ -1443,6 +1443,16 @@ impl<'a> Run<'a, '_> {
         });
         let excluded_tables = frequency_tables(self.image, excluded);
         let scatters = scatter_excluded(excluded, &excluded_tables, &mut lead.cursors[0], self.count, ratio);
+        if lists == 1 && self.count && scoring {
+            return self.negated_ranked(
+                lead,
+                excluded,
+                (&excluded_tables, &scatters),
+                &ids[0],
+                lead_bound,
+                top,
+            );
+        }
         'blocks: loop {
             let floor = top.floor();
             if !self.count && floor.is_some_and(|floor| ceiling < floor) {
@@ -1599,6 +1609,87 @@ impl<'a> Run<'a, '_> {
             }
             if !live || !lead.cursors[0].advance_block(last.saturating_add(1)) {
                 break;
+            }
+        }
+        Ok(count)
+    }
+
+    /// [`Self::negated_top_into`] for one required list, a `k` and a count. The count passes
+    /// every block through the excluded lists without scoring. The hits come from the blocks
+    /// taken best bound first, so the k-th best score reaches its final value early and the
+    /// other blocks are skipped on their bounds.
+    #[inline(never)]
+    fn negated_ranked(
+        &mut self,
+        lead: &mut Rt<'a>,
+        excluded: &mut [Rt<'a>],
+        (tables, scatters): (&[Option<std::sync::Arc<Dense>>], &[Option<Scatter>]),
+        ids: &[usize],
+        lead_bound: Bound,
+        top: &mut Top<'a>,
+    ) -> Result<usize> {
+        let times = ids.len() as f64;
+        let clauses = ids.len();
+        let mut slots = [0u32; CHECKPOINT_BLOCK];
+        let mut count = 0usize;
+        let cursor = &mut lead.cursors[0];
+        let mut weights: Vec<(f64, u32)> = Vec::with_capacity(cursor.block_count());
+        while !cursor.is_end() {
+            weights.push((cursor.block_weight(lead_bound) * times, weights.len() as u32));
+            let last = cursor.block_last();
+            let block = cursor.block_slots();
+            let n = block.len();
+            slots[..n].copy_from_slice(block);
+            count += drop_excluded(excluded, (tables, scatters), &mut slots, n, &mut []);
+            if !cursor.advance_block(last.saturating_add(1)) {
+                break;
+            }
+        }
+        weights.sort_unstable_by(|a, b| b.0.total_cmp(&a.0));
+        let mut rows = [[0u32; CHECKPOINT_BLOCK]; 1];
+        for &(weight, block) in &weights {
+            let floor = top.floor();
+            if floor.is_some_and(|floor| sum_bound(weight, clauses) < floor) {
+                break;
+            }
+            let cursor = &mut lead.cursors[0];
+            cursor.goto_block(block as usize);
+            let mut n = cursor.block_slots().len();
+            slots[..n].copy_from_slice(cursor.block_slots());
+            let mut need = 1u32;
+            if let Some(floor) = floor {
+                let (most, least) = cursor.block_bounds();
+                let most = most.min(NEED_PROBES);
+                while need < most && sum_bound(lead_bound.at(need, least) * times, clauses) < floor {
+                    need += 1;
+                }
+            }
+            if need > 1 {
+                n = keep_frequent(cursor.block_frequencies(), &mut slots, n, &mut rows[0], need);
+            } else {
+                for (index, value) in rows[0][..n].iter_mut().enumerate() {
+                    *value = index as u32;
+                }
+            }
+            // The decoded excluded lists only move forward: restart them for each block.
+            for ((rt, table), scatter) in excluded.iter_mut().zip(tables).zip(scatters) {
+                let list = &mut rt.cursors[0];
+                if list.dense().is_none() && table.is_none() && scatter.is_none() {
+                    list.goto_block(0);
+                }
+            }
+            n = drop_excluded(excluded, (tables, scatters), &mut slots, n, &mut rows);
+            for &slot in &slots[..n] {
+                prefetch(self.word_counts, slot as usize);
+            }
+            let frequencies = cursor.block_frequencies();
+            for (m, &slot) in slots[..n].iter().enumerate() {
+                let frequency = frequencies[rows[0][m] as usize];
+                for &id in ids {
+                    self.frequencies[id] = frequency;
+                }
+                let score = self.score(slot)?;
+                top.offer(score, slot);
             }
         }
         Ok(count)
