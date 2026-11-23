@@ -22646,7 +22646,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "1,000.780"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22665,7 +22665,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "851.858"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22703,7 +22703,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "13.162"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22722,7 +22722,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "17.971"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22741,7 +22741,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "1,062.071"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22794,7 +22794,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "991.972"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22813,7 +22813,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "844.357"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22851,7 +22851,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "12.540"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22870,7 +22870,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "12.079"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",
@@ -22889,7 +22889,7 @@
   "validity_reason": "",
   "uncertainty": "unreplicated",
   "interval_kind": null,
-  "text": "975.112"
+  "text": "n/c"
  },
  {
   "section": "sift-128-euclidean (250,000 vectors, 2,000 queries)",

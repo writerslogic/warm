@@ -47,6 +47,11 @@ impl Bound {
         bound.global.is_finite().then_some(bound)
     }
 
+    /// The term's idf.
+    pub(in crate::core::documents) fn idf(self) -> f64 {
+        self.idf
+    }
+
     /// A bound of the weight of any posting with at most `frequency` occurrences in a chunk
     /// of at least `words` words.
     pub(in crate::core::documents) fn at(self, frequency: u32, words: u32) -> f64 {

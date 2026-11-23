@@ -57,7 +57,7 @@ describe("stdio", () => {
   const args = ["--data-dir", dir];
 
   it("initializes and advertises capabilities and tools", async () => {
-    const c = await stdioClient(args);
+    const c = await stdioClient(args, { WARM_ENCRYPTION: "off" });
     try {
       const info = c.getServerVersion();
       assert.equal(info.name, "writerslogic-warm");
@@ -83,7 +83,8 @@ describe("stdio", () => {
   });
 
   it("remembers, recalls, searches, gets, lists, exports and forgets", async () => {
-    const c = await stdioClient(args);
+    // A plaintext store, so the stats report no encryption at rest.
+    const c = await stdioClient(args, { WARM_ENCRYPTION: "off" });
     try {
       const a = await ok(c, "remember", {
         text: "The deployment pipeline uses blue green releases on Kubernetes.",
@@ -214,7 +215,8 @@ describe("stdio", () => {
 
   it("keeps excluded corrupt text out of listing, export, resources and review prompts", async () => {
     const dir = freshDir();
-    const c = await stdioClient(["--store", dir, "--max-page", "1"]);
+    // A plaintext store, so the test can damage the stored text in place.
+    const c = await stdioClient(["--store", dir, "--max-page", "1"], { WARM_ENCRYPTION: "off" });
     const textPath = path.join(dir, "documents.text");
     let original;
     try {
