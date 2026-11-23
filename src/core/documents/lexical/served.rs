@@ -633,7 +633,9 @@ pub(in crate::core::documents) fn execute(
         && required
             .iter()
             .all(|rt| !rt.phrase && (k == 0 || rt.bound.is_some()))
-        && excluded.iter().all(|rt| !rt.phrase && rt.cursors.len() == 1)
+        && excluded
+            .iter()
+            .all(|rt| !rt.phrase && rt.cursors.len() == 1)
     {
         merge_twins(&mut required);
         let (hits, count) = run.negated_top(&mut required, &mut excluded)?;
@@ -1317,7 +1319,10 @@ impl<'a> Run<'a, '_> {
         }
         let mut classes: Vec<(f64, usize)> = (1..(1usize << n) - 1)
             .map(|mask| {
-                let sum = (0..n).filter(|b| mask >> b & 1 == 1).map(|b| ceilings[b]).sum();
+                let sum = (0..n)
+                    .filter(|b| mask >> b & 1 == 1)
+                    .map(|b| ceilings[b])
+                    .sum();
                 (sum, mask)
             })
             .collect();
@@ -1353,7 +1358,10 @@ impl<'a> Run<'a, '_> {
 
     /// Fresh cursors on the clauses at `clauses`.
     fn opened(&self, reopen: &dyn Fn(usize) -> Option<Rt<'a>>, clauses: &[usize]) -> Vec<Rt<'a>> {
-        clauses.iter().filter_map(|&clause| reopen(clause)).collect()
+        clauses
+            .iter()
+            .filter_map(|&clause| reopen(clause))
+            .collect()
     }
 
     /// How many documents every one of the term clauses `terms` has.
@@ -1370,11 +1378,6 @@ impl<'a> Run<'a, '_> {
     /// required lists are dropped when an excluded list holds them, through its bitmap or
     /// frequency table or, failing both, its decoded blocks. Without a `k` only the count is
     /// made, and the clauses have no bounds.
-    /// The top `k` of the documents every term clause has, and with `self.count` their number:
-    /// the rarest list a block at a time, filtered through the others (see [`keep_common`]).
-    /// A block whose bound, with the bounds of the other lists at it, is below the k-th best
-    /// score is skipped before the other lists are read, or when counting, filtered but not
-    /// scored. `terms` is sorted rarest first and every clause has a bound.
     #[inline(never)]
     fn negated_top(
         &mut self,
@@ -1442,7 +1445,13 @@ impl<'a> Run<'a, '_> {
             (kind, rt.rarest())
         });
         let excluded_tables = frequency_tables(self.image, excluded);
-        let scatters = scatter_excluded(excluded, &excluded_tables, &mut lead.cursors[0], self.count, ratio);
+        let scatters = scatter_excluded(
+            excluded,
+            &excluded_tables,
+            &mut lead.cursors[0],
+            self.count,
+            ratio,
+        );
         if lists == 1 && self.count && scoring {
             return self.negated_ranked(
                 lead,
@@ -1493,7 +1502,13 @@ impl<'a> Run<'a, '_> {
                 if !scored {
                     // Counted only: the dense lists' bitmaps answer without decoding them.
                     let (kept, more) = keep_counted(rest, &tables, &mut slots, n);
-                    let kept = drop_excluded(excluded, (&excluded_tables, &scatters), &mut slots, kept, &mut []);
+                    let kept = drop_excluded(
+                        excluded,
+                        (&excluded_tables, &scatters),
+                        &mut slots,
+                        kept,
+                        &mut [],
+                    );
                     count += kept;
                     if !more || !lead.cursors[0].advance_block(last.saturating_add(1)) {
                         break;
@@ -1549,7 +1564,13 @@ impl<'a> Run<'a, '_> {
                         break;
                     }
                 }
-                n = drop_excluded(excluded, (&excluded_tables, &scatters), &mut slots, n, &mut rows);
+                n = drop_excluded(
+                    excluded,
+                    (&excluded_tables, &scatters),
+                    &mut slots,
+                    n,
+                    &mut rows,
+                );
                 count += n;
                 if n > 0 {
                     // The candidates are known: start loading their word counts together.
@@ -1635,7 +1656,10 @@ impl<'a> Run<'a, '_> {
         let cursor = &mut lead.cursors[0];
         let mut weights: Vec<(f64, u32)> = Vec::with_capacity(cursor.block_count());
         while !cursor.is_end() {
-            weights.push((cursor.block_weight(lead_bound) * times, weights.len() as u32));
+            weights.push((
+                cursor.block_weight(lead_bound) * times,
+                weights.len() as u32,
+            ));
             let last = cursor.block_last();
             let block = cursor.block_slots();
             let n = block.len();
@@ -1660,12 +1684,19 @@ impl<'a> Run<'a, '_> {
             if let Some(floor) = floor {
                 let (most, least) = cursor.block_bounds();
                 let most = most.min(NEED_PROBES);
-                while need < most && sum_bound(lead_bound.at(need, least) * times, clauses) < floor {
+                while need < most && sum_bound(lead_bound.at(need, least) * times, clauses) < floor
+                {
                     need += 1;
                 }
             }
             if need > 1 {
-                n = keep_frequent(cursor.block_frequencies(), &mut slots, n, &mut rows[0], need);
+                n = keep_frequent(
+                    cursor.block_frequencies(),
+                    &mut slots,
+                    n,
+                    &mut rows[0],
+                    need,
+                );
             } else {
                 for (index, value) in rows[0][..n].iter_mut().enumerate() {
                     *value = index as u32;
@@ -2018,7 +2049,12 @@ fn phrase_occurrences<'b>(
 /// positions read once. `others` are the other words' places, `lead`'s own being first
 /// excluded. `None` when the lead word has more positions than the set holds, which the
 /// caller then counts word by word.
-fn narrowed_occurrences(words: &[&[u8]], lead: usize, others: &[usize], exact: bool) -> Option<u32> {
+fn narrowed_occurrences(
+    words: &[&[u8]],
+    lead: usize,
+    others: &[usize],
+    exact: bool,
+) -> Option<u32> {
     let mut set = [0u32; 64];
     let mut len = 0;
     for position in PositionIter::new(words[lead]) {
@@ -2753,7 +2789,8 @@ fn union_words(
             packed[..n].copy_from_slice(&bits[start..start + n]);
         }
         for bitmap in dense {
-            let (words, _) = bitmap[(8 * start).min(bitmap.len())..(8 * (start + n)).min(bitmap.len())]
+            let (words, _) = bitmap
+                [(8 * start).min(bitmap.len())..(8 * (start + n)).min(bitmap.len())]
                 .as_chunks::<8>();
             for (word, chunk) in packed.iter_mut().zip(words) {
                 *word |= u64::from_le_bytes(*chunk);
@@ -3019,7 +3056,9 @@ mod tests {
                     positions
                 })
                 .collect();
-            let which: Vec<usize> = (0..phrase).map(|_| next(alphabet as u32) as usize).collect();
+            let which: Vec<usize> = (0..phrase)
+                .map(|_| next(alphabet as u32) as usize)
+                .collect();
             let bytes: Vec<Vec<u8>> = which.iter().map(|&w| gaps(&lists[w])).collect();
             let words: Vec<&[u8]> = bytes.iter().map(Vec::as_slice).collect();
             let (mut iters, mut order) = (Vec::new(), Vec::new());
@@ -3031,7 +3070,10 @@ mod tests {
                         .all(|(offset, &w)| lists[w].contains(&(start + offset as u32)))
                 })
                 .count() as u32;
-            assert_eq!(phrase_occurrences(&words, &mut iters, &mut order, true), direct);
+            assert_eq!(
+                phrase_occurrences(&words, &mut iters, &mut order, true),
+                direct
+            );
             assert_eq!(
                 phrase_occurrences(&words, &mut iters, &mut order, false),
                 direct.min(1)
@@ -3169,7 +3211,10 @@ mod tests {
                 let i = i % 900;
                 (0..4 + i % 9)
                     .map(|j| {
-                        let x = i.wrapping_mul(2654435761).wrapping_add(j.wrapping_mul(40503)) >> 7;
+                        let x = i
+                            .wrapping_mul(2654435761)
+                            .wrapping_add(j.wrapping_mul(40503))
+                            >> 7;
                         if x % 3 == 0 {
                             0
                         } else if x % 7 == 0 {
@@ -3227,7 +3272,10 @@ mod tests {
                     let i = i % 900;
                     let mut words: Vec<u8> = (0..4 + i % 9)
                         .map(|j| {
-                            let x = i.wrapping_mul(2654435761).wrapping_add(j.wrapping_mul(40503)) >> 7;
+                            let x = i
+                                .wrapping_mul(2654435761)
+                                .wrapping_add(j.wrapping_mul(40503))
+                                >> 7;
                             if x % 3 == 0 {
                                 0
                             } else if x % 7 == 0 {
@@ -3335,12 +3383,7 @@ mod tests {
         let image = image_of(&live).with_rank_tables();
         assert!(image.list(0, "w0").unwrap().blocks() >= 256);
         PATHS.with(|c| c.set([0; 10]));
-        for text in [
-            "+w0 w1 w9",
-            "+w0 w9",
-            "+w9 w0 w1",
-            "+w1 w2 w9 w0",
-        ] {
+        for text in ["+w0 w1 w9", "+w0 w9", "+w9 w0 w1", "+w1 w2 w9 w0"] {
             let query = LexicalQuery::parse(text).unwrap();
             for k in [1, 10, 100] {
                 for count in [false, true] {
@@ -3836,7 +3879,11 @@ mod tests {
             .collect();
         let live = corpus(&docs, false);
         let image = image_of(&live);
-        let tabled = |word: &str| image.frequency_table(image.list(0, word).unwrap()).is_some();
+        let tabled = |word: &str| {
+            image
+                .frequency_table(image.list(0, word).unwrap())
+                .is_some()
+        };
         assert!(tabled("w2") && tabled("w3") && !tabled("w5"));
         for text in [
             "w0 w1 w2",
@@ -3891,7 +3938,11 @@ mod tests {
             .collect();
         let live = corpus(&docs, false);
         let image = image_of(&live);
-        let tabled = |word: &str| image.frequency_table(image.list(0, word).unwrap()).is_some();
+        let tabled = |word: &str| {
+            image
+                .frequency_table(image.list(0, word).unwrap())
+                .is_some()
+        };
         assert!(tabled("w1") && tabled("w2") && tabled("w5") && !tabled("w6"));
         assert!(image.list(0, "w0").unwrap().blocks() > 3);
         for text in [
@@ -3929,7 +3980,11 @@ mod tests {
     /// either side of the ratio, for k of 0, 10 and 100, and the scatter ran exactly then.
     #[test]
     fn scattered_excluded_lists_keep_the_result() {
-        let hash = |x: u32| x.wrapping_mul(2654435761).rotate_left(9).wrapping_mul(40503);
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(9)
+                .wrapping_mul(40503)
+        };
         let docs: Vec<Vec<u8>> = (0..9001u32)
             .map(|i| {
                 let len = 3 + hash(i) % 40;

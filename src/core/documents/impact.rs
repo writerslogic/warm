@@ -318,7 +318,11 @@ impl WindowBounds {
     fn bound(&self, first: usize, last: usize, idf: f64, ceiling: f64) -> f64 {
         // The aligned windows `first..=last` cover the query window.
         let mut unit = 0.0f64;
-        for &bound in self.0.get(first..=last.min(self.0.len().saturating_sub(1))).unwrap_or(&[]) {
+        for &bound in self
+            .0
+            .get(first..=last.min(self.0.len().saturating_sub(1)))
+            .unwrap_or(&[])
+        {
             unit = unit.max(bound);
         }
         // Scale with the same rounding margin as RankTable::scale.
