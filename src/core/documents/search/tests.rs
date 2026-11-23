@@ -1530,16 +1530,23 @@ fn pruned_ranking_matches_exhaustive_at_block_boundaries() {
 /// Essential blocks passed over undecoded, because their bound with the other terms' window
 /// bounds is below the threshold: a dense term whose frequency rises only in a few regions,
 /// with ties at the cut, ranks to the bit as the exhaustive ranking does, and blocks are
-/// passed over.
+/// passed over. The dense list has aligned bounds built at open, and the sparse list does not.
 #[test]
 fn pruned_ranking_matches_exhaustive_when_essential_blocks_are_passed_over() {
     let mut store = DocumentStore::default();
-    for id in 0..12_000usize {
+    for id in 0..33_000usize {
         let peak = (id / 128) % 17 == 5;
-        let mut words = vec!["dense"; if peak { 8 } else { 1 + id % 2 }];
+        let mut words = vec![
+            "dense";
+            if peak {
+                8
+            } else {
+                (1 + id % 2) * usize::from(id != 0)
+            }
+        ];
         words.extend(std::iter::repeat_n(
             "sparse",
-            usize::from(id % 3 == 0) * (1 + id % 4),
+            usize::from(id % 3 == 1) * (1 + id % 4),
         ));
         while words.len() < 12 {
             words.push("pad");
@@ -1564,9 +1571,17 @@ fn pruned_ranking_matches_exhaustive_when_essential_blocks_are_passed_over() {
         .unwrap()
     };
     let (pruned, plain) = (
-        build(super::super::image::encode),
+        build(super::super::image::encode).with_rank_tables(),
         build(super::super::image::encode_v2),
     );
+    for (term, expected) in [("dense", true), ("sparse", false)] {
+        let forms = query_words_both(Analyzer::Legacy, term);
+        let (_, list) = pruned
+            .postings_with_skips(1, forms[1].first().unwrap())
+            .unwrap();
+        let list = list.unwrap();
+        assert_eq!(pruned.union_window_bounds(list.skips).is_some(), expected);
+    }
     let mut passed = 0usize;
     for k in [1u32, 10, 100] {
         let options = SearchOptions {

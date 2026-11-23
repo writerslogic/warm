@@ -31,6 +31,7 @@ use std::sync::Arc;
 use anyhow::{bail, ensure, Context, Result};
 
 use super::binary::{put_bytes, put_varint, Reader};
+use super::impact::WindowBounds;
 use super::index::{DocumentStore, StoreIdentity};
 use super::lists::{Cursor, ListRef, RankTable, RANKED_RUNS, RUN_BLOCKS};
 use super::packed_terms::StoredTerms;
@@ -872,6 +873,8 @@ pub(crate) struct ServingImage {
     text_blocks: bool,
     /// Blocks decoded for hits, kept up to the configured byte budget.
     decoded: DecodedBlocks,
+    /// Aligned bounds for dense union terms, sorted by skip-table offset.
+    union_windows: Box<[(usize, WindowBounds)]>,
 }
 
 /// Where a chunk's text is.
@@ -1061,6 +1064,7 @@ impl ServingImage {
             word_counts: std::sync::OnceLock::new(),
             text_blocks,
             decoded: DecodedBlocks::default(),
+            union_windows: Box::default(),
         };
         if text_blocks {
             image.text_stream()?;
@@ -2184,9 +2188,45 @@ impl ServingImage {
     }
 
     /// Builds the rank tables now, at open, so that no query pays for them.
-    pub(crate) fn with_rank_tables(self) -> Self {
-        self.ranks();
+    pub(crate) fn with_rank_tables(mut self) -> Self {
+        self.union_windows = self.build_union_windows(self.ranks());
         self
+    }
+
+    fn build_union_windows(&self, ranks: &Ranks) -> Box<[(usize, WindowBounds)]> {
+        let min_count = self.slots.div_ceil(16);
+        let (postings, skips, positions) = (
+            self.section(Section::Postings),
+            self.section(Section::Skips),
+            self.section(Section::Positions),
+        );
+        let mut windows: Vec<_> = self
+            .ranked
+            .iter()
+            .filter(|span| span.entry.count as usize >= min_count)
+            .filter_map(|span| {
+                let table = ranks.tables.get(&span.skip)?;
+                let list = ListRef {
+                    bytes: &postings[span.posting..span.posting + span.entry.len],
+                    count: span.entry.count as u32,
+                    skips: &skips[span.skip..span.skip + span.entry.skip_len],
+                    positions: &positions[span.pos..span.pos + span.entry.pos_len],
+                };
+                WindowBounds::new(list, table, self.slots).map(|bounds| (span.skip, bounds))
+            })
+            .collect();
+        windows.sort_unstable_by_key(|(offset, _)| *offset);
+        windows.into_boxed_slice()
+    }
+
+    pub(super) fn union_window_bounds(&self, skips: &[u8]) -> Option<&WindowBounds> {
+        let section = self.section(Section::Skips);
+        let offset = (skips.as_ptr() as usize).checked_sub(section.as_ptr() as usize)?;
+        let index = self
+            .union_windows
+            .binary_search_by_key(&offset, |(offset, _)| *offset)
+            .ok()?;
+        Some(&self.union_windows[index].1)
     }
 
     fn ranks(&self) -> &Ranks {

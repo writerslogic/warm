@@ -19,8 +19,8 @@ use std::cmp::Reverse;
 use std::collections::{BTreeSet, BinaryHeap};
 
 use super::image::SLOT_BYTES;
-use super::lexical::wand::{sum_bound, Bound};
-use super::lists::BlockBounds;
+use super::lexical::wand::{sum_bound, up, Bound};
+use super::lists::{BlockBounds, Cursor, ListRef, RankTable};
 use super::postings::{get_varint, unpack, unpack_values, Postings, CHECKPOINT_BLOCK};
 use super::search::LexicalSource;
 use super::Bm25;
@@ -295,6 +295,37 @@ const WIDE_WINDOW: u32 = 8192;
 const PAIR_WINDOW: u32 = 16384;
 /// The largest `limit` ranked in [`WIDE_WINDOW`] or [`PAIR_WINDOW`] windows.
 const WIDE_LIMIT: usize = 10;
+
+/// Maximum unit bound per aligned window, used only by the union ranker.
+pub(super) struct WindowBounds(Box<[f64]>);
+
+impl WindowBounds {
+    pub(super) fn new(list: ListRef<'_>, table: &RankTable, slots: usize) -> Option<Self> {
+        let mut cursor = Cursor::open(list);
+        let mut bounds = vec![0.0f64; slots.div_ceil(WINDOW as usize)];
+        for (block, &weight) in table.blocks.iter().enumerate() {
+            cursor.goto_block(block);
+            let first = (cursor.block_first() / WINDOW) as usize;
+            let last = (cursor.block_last() / WINDOW) as usize;
+            for bound in bounds.get_mut(first..=last)? {
+                *bound = bound.max(f64::from(weight));
+            }
+        }
+        Some(Self(bounds.into_boxed_slice()))
+    }
+
+    #[inline]
+    fn bound(&self, first: usize, last: usize, idf: f64, ceiling: f64) -> f64 {
+        // The aligned windows `first..=last` cover the query window.
+        let mut unit = 0.0f64;
+        for &bound in self.0.get(first..=last.min(self.0.len().saturating_sub(1))).unwrap_or(&[]) {
+            unit = unit.max(bound);
+        }
+        // Scale with the same rounding margin as RankTable::scale.
+        up(unit * idf * (1.0 + 16.0 * f64::EPSILON)).min(ceiling)
+    }
+}
+
 /// The most terms a query ranks through windows; more fall back to the exhaustive ranking.
 const MAX_TERMS: usize = 64;
 /// Bytes of direct frequency tables one checkpoint may hold (see [`DenseTables`]).
@@ -832,6 +863,7 @@ pub(super) fn rank<S: LexicalSource>(
     scratch.stats = PruneStats::default();
     let mut lists = Vec::new();
     let mut windows = Vec::new();
+    let mut aligned = [None; MAX_TERMS];
     for (form, set) in terms.iter().enumerate() {
         for word in set {
             let Some((list, skips)) = image.postings_with_skips(form, word) else {
@@ -840,8 +872,12 @@ pub(super) fn rank<S: LexicalSource>(
             let idf = Bm25::idf(n, f64::from(list.count));
             let bound = Bound::new(idf, average, bm25)?;
             lists.push((list, idf, bound));
+            let next_aligned = aligned.get_mut(windows.len());
             windows.push(skips.map(|skips| {
                 let table = image.rank_table_for(skips.skips, bm25, average);
+                if let (Some(entry), Some(_)) = (next_aligned, table) {
+                    *entry = image.union_window_bounds(skips.skips);
+                }
                 BlockBounds::new(skips, table)
             }));
         }
@@ -855,6 +891,9 @@ pub(super) fn rank<S: LexicalSource>(
     let count = lists.len();
     let skip_constant_rows = count > 3 && limit <= WIDE_LIMIT;
     let fuse_first_table = count >= 4 && limit <= WIDE_LIMIT;
+    if count == 1 {
+        aligned[0] = None;
+    }
     let mut cursors: Vec<ImpactCursor<'_>> = Vec::with_capacity(count);
     for (list, idf, bound) in &lists {
         let mut cursor = ImpactCursor::new();
@@ -988,12 +1027,16 @@ pub(super) fn rank<S: LexicalSource>(
             break;
         }
         let hi = lo.saturating_add(window);
+        let first = (lo / WINDOW) as usize;
+        let last = ((hi - 1) / WINDOW) as usize;
         stats.windows += 1;
         // Each term's bound in this window, from its blocks there; zero past its postings.
         for i in 0..count {
             let term = &terms[i];
             window_bounds[i] = if cursors[i].doc() >= hi {
                 0.0
+            } else if let Some(bounds) = aligned[i] {
+                bounds.bound(first, last, term.idf, term.ceiling)
             } else {
                 match windows[i].as_mut() {
                     Some(blocks) => blocks.bound(lo, hi, term.bound, term.ceiling),
