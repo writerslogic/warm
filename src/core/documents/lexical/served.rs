@@ -483,6 +483,14 @@ pub(in crate::core::documents) fn execute(
             }));
         }
     }
+    if let (0, true) = (options.k, options.count) {
+        if let Some(count) = lone_required_count(image, query, form) {
+            return Ok(Some(LexicalResults {
+                hits: Vec::new(),
+                count: Some(count),
+            }));
+        }
+    }
     let n = image.chunk_count() as f64;
     let average = (image.word_count() as f64 / n.max(1.0)).max(1.0);
     let shape = Shape { bm25, average };
@@ -2814,6 +2822,24 @@ fn probe_common(
             i += 1;
         }
     }
+}
+
+/// The count of a query with one required word and optional others only: the required
+/// word's posting count, whatever the optional clauses are.
+#[inline(never)]
+fn lone_required_count(image: &ServingImage, query: &LexicalQuery, form: usize) -> Option<usize> {
+    let mut musts = query.clauses.iter().filter(|c| c.occur == Occur::Must);
+    let (clause, None) = (musts.next()?, musts.next()) else {
+        return None;
+    };
+    if clause.phrase || query.clauses.iter().any(|c| c.occur == Occur::MustNot) {
+        return None;
+    }
+    Some(
+        image
+            .list(form, &clause.words[form][0])
+            .map_or(0, |list| list.count as usize),
+    )
 }
 
 #[cfg(test)]
