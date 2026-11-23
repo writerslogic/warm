@@ -9,7 +9,6 @@
   apply_pass2_v2  pass-2 spans replace the evidence; an `absent` that rested only on the controller becomes `partial`
 No labels are read anywhere in this module."""
 from tools3 import Tools3
-from envmodel import toks
 import envmodel as EM
 from prompts import MAX_SPAN_STATES, EXTRA_SPECS, SUBMIT_SPANS, TOOL_SPECS
 from rules import qkey
@@ -18,43 +17,43 @@ WINDOW = 20000
 
 
 class Tools4(Tools3):
-    def __init__(s, traj_ids, T, notes=None):
+    def __init__(self, traj_ids, T, notes=None):
         super().__init__(traj_ids, T, notes)
-        s.sk = []; docs = []
+        self.sk = []; docs = []
         for tid in traj_ids:
             for st in T[tid]['states']:
                 head = (st['url'] or '') + ' ' + str(st['action'] or '') + ' '
                 tree = st['accessibility_tree'] or ''
                 for a in range(0, max(len(tree), 1), WINDOW):
-                    s.sk.append((tid, int(st['state_index'])))
-                    docs.append(toks(head + tree[a:a + WINDOW]))
-        s.s_bm = EM.BM25(docs)
+                    self.sk.append((tid, int(st['state_index'])))
+                    docs.append(EM.toks(head + tree[a:a + WINDOW]))
+        self.s_bm = EM.BM25(docs)
 
-    def find_states(s, query, k=8):
+    def find_states(self, query, k=8):
         k = max(1, min(int(k or 8), 12)); out = []; seen = set()
-        for i, sc in s.s_bm.search(toks(query), k * 4):
-            tid, si = s.sk[i]
+        for i, sc in self.s_bm.search(EM.toks(query), k * 4):
+            tid, si = self.sk[i]
             if (tid, si) in seen: continue
-            seen.add((tid, si)); st = s.T[tid]['states'][si]
-            out.append(f"{tid} state {si} (of {len(s.T[tid]['states'])}) url={str(st['url'])[:80]} action={str(st['action'])[:80]} "
+            seen.add((tid, si)); st = self.T[tid]['states'][si]
+            out.append(f"{tid} state {si} (of {len(self.T[tid]['states'])}) url={str(st['url'])[:80]} action={str(st['action'])[:80]} "
                        f"chars={len(st['accessibility_tree'] or '')} score={sc:.1f}")
             if len(seen) >= k: break
         return '\n'.join(out) or 'no results'
 
-    def show_state(s, trajectory_id, state_index, maxc=2500, offset=0):
-        try: st = s.T[trajectory_id]['states'][int(state_index)]
+    def show_state(self, trajectory_id, state_index, maxc=2500, offset=0):
+        try: st = self.T[trajectory_id]['states'][int(state_index)]
         except Exception: return "unknown trajectory_id or state_index (ids as in find_states / episode listings)"
         tree = st['accessibility_tree'] or ''; o = max(0, int(offset or 0)); m = max(1, int(maxc))
         more = f"\n[page text continues: {len(tree) - o - m} more chars; call show_state with offset={o + m}]" if o + m < len(tree) else ''
         return (f"{trajectory_id} state {st['state_index']} url={st['url']} action={st['action']} "
                 f"chars {o}-{min(o + m, len(tree))} of {len(tree)}\n" + tree[o:o + m] + more)
 
-    def value_timeline(s, trajectory_id, element, k=40):
+    def value_timeline(self, trajectory_id, element, k=40):
         """Every logged observation of the controls of one trajectory whose label contains `element`, in state order.
         Not filtered by relevance: the first row is the first OBSERVATION, which is not necessarily the initial value."""
         el_q = str(element or '').strip().lower(); rows = []
         if not el_q: return "give an element label (substring)"
-        for tid, si, el, v in s.vl:
+        for tid, si, el, v in self.vl:
             if tid == trajectory_id and el_q in el.lower(): rows.append((int(si), el, v))
         if not rows: return "no logged observations for that control in this trajectory"
         rows.sort(key=lambda r: (r[1], r[0])); out = []; cur = None; last = None
@@ -63,11 +62,11 @@ class Tools4(Tools3):
             if v != last: out.append(f"  step {si}: {str(v)[:80]}"); last = v
         return '\n'.join(out[:max(1, min(int(k or 40), 80))])
 
-    def dispatch(s, name, a):
+    def dispatch(self, name, a):
         try:
-            if name == 'find_states': return s.find_states(a.get('query', ''), a.get('k', 8))[:6500]
-            if name == 'show_state': return s.show_state(a.get('trajectory_id', ''), a.get('state_index', 0), a.get('max_chars', 2500), a.get('offset', 0))[:6500]
-            if name == 'value_timeline': return s.value_timeline(a.get('trajectory_id', ''), a.get('element', ''), a.get('k', 40))[:6500]
+            if name == 'find_states': return self.find_states(a.get('query', ''), a.get('k', 8))[:6500]
+            if name == 'show_state': return self.show_state(a.get('trajectory_id', ''), a.get('state_index', 0), a.get('max_chars', 2500), a.get('offset', 0))[:6500]
+            if name == 'value_timeline': return self.value_timeline(a.get('trajectory_id', ''), a.get('element', ''), a.get('k', 40))[:6500]
         except Exception as e: return f"tool error: {e!r}"[:200]
         return super().dispatch(name, a)
 
