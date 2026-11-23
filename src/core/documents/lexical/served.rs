@@ -1034,9 +1034,9 @@ impl<'a> Run<'a, '_> {
     ///
     /// A list with a rank table (see `lists::RankTable`) takes its run order and its run and
     /// block bounds from the table, which decodes no frontier at all.
-    fn single_top(&mut self, mut rt: Rt<'a>) -> Result<Vec<LexicalHit>> {
+    fn single_top(&self, mut rt: Rt<'a>) -> Result<Vec<LexicalHit>> {
         let bound = rt.bound.expect("a bounded term");
-        let clause = rt.clause;
+        let idf = bound.idf;
         let cursor = &mut rt.cursors[0];
         let blocks = cursor.block_count();
         let mut top = Top::new(self.image, self.k);
@@ -1046,7 +1046,6 @@ impl<'a> Run<'a, '_> {
         };
         let image = self.image;
         if let Some(table) = image.rank_table(cursor, self.shape.bm25, self.shape.average) {
-            let idf = bound.idf;
             for &run in table.order.iter() {
                 let run = run as usize;
                 if below(&top, RankTable::scale(table.runs[run], idf)) {
@@ -1057,7 +1056,7 @@ impl<'a> Run<'a, '_> {
                         continue;
                     }
                     cursor.goto_block(block);
-                    self.offer_block(cursor, clause, &mut top)?;
+                    self.offer_block(cursor, idf, &mut top)?;
                 }
             }
             return Ok(top.finish());
@@ -1075,23 +1074,23 @@ impl<'a> Run<'a, '_> {
                 if below(&top, cursor.block_weight(bound)) {
                     continue;
                 }
-                self.offer_block(cursor, clause, &mut top)?;
+                self.offer_block(cursor, idf, &mut top)?;
             }
         }
         Ok(top.finish())
     }
 
-    /// Scores every posting of the block `cursor` is at, as clause `clause`'s, into `top`.
-    fn offer_block(
-        &mut self,
-        cursor: &mut Cursor<'a>,
-        clause: usize,
-        top: &mut Top<'a>,
-    ) -> Result<()> {
+    /// Scores a block for the query's only clause with matching postings.
+    fn offer_block(&self, cursor: &mut Cursor<'a>, idf: f64, top: &mut Top<'a>) -> Result<()> {
+        let Shape { bm25, average } = *self.shape;
         let (slots, frequencies) = cursor.block_postings();
         for (&slot, &frequency) in slots.iter().zip(frequencies) {
-            self.frequencies[clause] = frequency;
-            let score = self.score(slot)?;
+            let norm = bm25.norm(f64::from(self.words(slot)), average);
+            let score = 0.0 + bm25.weight(idf, f64::from(frequency), norm);
+            ensure!(
+                score.is_finite(),
+                "lexical score is nonfinite; reduce BM25 parameters"
+            );
             top.offer(score, slot);
         }
         Ok(())
@@ -1824,6 +1823,7 @@ mod tests {
             .is_some());
         for text in [
             "w0",
+            "missing w0 -absent",
             "w1",
             "w2",
             "w7",
