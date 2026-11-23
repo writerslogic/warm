@@ -506,7 +506,6 @@ impl<'a> ImpactCursor<'a> {
     fn drain_below(
         &mut self,
         hi: u32,
-        table: &[u16],
         mut pass: impl FnMut(usize) -> bool,
         mut f: impl FnMut(&[u32], &[u32], u32, u32),
     ) -> usize {
@@ -528,18 +527,12 @@ impl<'a> ImpactCursor<'a> {
             }
             let end = self.current.count;
             let at = self.position;
-            let stop = at + self.slots[at..end].partition_point(|&slot| slot < hi);
-            // The block's slots are known: start loading their word counts together.
-            if table.len() * 2 >= PREFETCH_BYTES {
-                let mut line = usize::MAX;
-                for &slot in &self.slots[at..stop] {
-                    // One prefetch per 64-byte line of the word-count table.
-                    if slot as usize >> 5 != line {
-                        line = slot as usize >> 5;
-                        prefetch(table, slot as usize);
-                    }
-                }
-            }
+            // A block that ends below `hi` is drained whole.
+            let stop = if self.current.last < hi {
+                end
+            } else {
+                at + self.slots[at..end].partition_point(|&slot| slot < hi)
+            };
             f(
                 &self.slots[at..stop],
                 &self.frequencies[at..stop],
@@ -568,6 +561,22 @@ struct Scorer<'a> {
 }
 
 impl Scorer<'_> {
+    /// Starts loading the word counts of `slots` (sorted), one prefetch per 64-byte line of the
+    /// word-count table, when the table is too large to stay in cache; a hint, with no effect on
+    /// results.
+    #[inline(always)]
+    fn prefetch_words(&self, slots: impl Iterator<Item = u32>) {
+        if self.word_counts.len() * 2 >= PREFETCH_BYTES {
+            let mut line = usize::MAX;
+            for slot in slots {
+                if slot as usize >> 5 != line {
+                    line = slot as usize >> 5;
+                    prefetch(self.word_counts, slot as usize);
+                }
+            }
+        }
+    }
+
     #[inline(always)]
     fn weigh(&self, idf: f64, tf: f64, norm: f64) -> f64 {
         if self.simple {
@@ -615,6 +624,7 @@ fn accumulate_run(
     wbuf: &mut [f64],
     log: &mut Vec<u16>,
 ) {
+    scorer.prefetch_words(slots.iter().copied());
     for (&slot, &frequency) in slots.iter().zip(frequencies) {
         let offset = (slot - lo) as usize;
         let norm = scorer.norm(norms, slot);
@@ -642,10 +652,29 @@ fn collect_run(
     least: u32,
     out: &mut Vec<(u32, f64)>,
 ) {
-    for (&slot, &frequency) in slots.iter().zip(frequencies) {
-        if frequency < least {
-            continue;
+    if least > 1 {
+        // Only the postings at `least` or more are weighed: find them, load their word counts,
+        // then weigh them.
+        let mut kept = [0u16; CHECKPOINT_BLOCK];
+        let mut n = 0usize;
+        for (at, &frequency) in frequencies.iter().enumerate() {
+            kept[n] = at as u16;
+            n += usize::from(frequency >= least);
         }
+        let kept = &kept[..n];
+        scorer.prefetch_words(kept.iter().map(|&at| slots[usize::from(at)]));
+        for &at in kept {
+            let (slot, frequency) = (slots[usize::from(at)], frequencies[usize::from(at)]);
+            let norm = scorer.norm(norms, slot);
+            let weight = scorer.weigh(idf, f64::from(frequency), norm);
+            if weight > 0.0 {
+                out.push((slot - lo, weight));
+            }
+        }
+        return;
+    }
+    scorer.prefetch_words(slots.iter().copied());
+    for (&slot, &frequency) in slots.iter().zip(frequencies) {
         let norm = scorer.norm(norms, slot);
         let weight = scorer.weigh(idf, f64::from(frequency), norm);
         if weight > 0.0 {
@@ -958,7 +987,7 @@ pub(super) fn rank<S: LexicalSource>(
                     })
             };
             stats.skipped_blocks +=
-                cursors[i].drain_below(hi, word_counts, pass, |slots, frequencies, most, words| {
+                cursors[i].drain_below(hi, pass, |slots, frequencies, most, words| {
                     if alone {
                         let mut least = 1u32;
                         if lone {
