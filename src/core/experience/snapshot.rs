@@ -26,10 +26,11 @@ use crate::core::documents::MemoryDocumentStore;
 pub const SNAPSHOT_FILE: &str = "experience.wexp";
 const MAGIC: &[u8; 4] = b"WEXP";
 /// Version 2 adds the journal sequence the snapshot covers and each episode's latest handle
-/// map. Version 1 files open with sequence 0 and empty handle maps. Version 3 adds the form
-/// controls of steps; it is written only when a step has controls, so a store without them
-/// keeps writing version 2 byte for byte, and a reader that predates version 3 refuses the
-/// file rather than dropping the controls.
+/// map; version 1 files open with sequence 0 and empty handle maps. Version 3 adds the form
+/// controls of steps, version 4 action records and handle addresses, version 5 the per-step
+/// handle digest. A store that never held an episode writes version 3 when it has controls
+/// and version 2 otherwise; any other store writes the current version. A reader that
+/// predates a version refuses the file rather than dropping what it adds.
 const VERSION: u8 = 5;
 /// Action records and handle addresses, without the per-step handle digest.
 const VERSION_WITHOUT_DIGESTS: u8 = 4;

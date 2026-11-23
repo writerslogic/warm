@@ -29,7 +29,7 @@ COMPARE = re.compile(r"\b(vs|versus|compare|comparing|among these|both forms|bet
 
 def load_dev(root: Path, held: set):
     qs = {}
-    for line in open(root / "data" / "questions.jsonl"):
+    for line in Path(root / "data" / "questions.jsonl").read_text().splitlines():
         q = json.loads(line)
         if q["id"] in held:
             continue
@@ -99,13 +99,13 @@ def main():
     ap.add_argument("--out", default=str(Path(__file__).resolve().parent / "classification.json"))
     a = ap.parse_args()
     root = Path(a.root)
-    held = set(json.load(open(a.held)))
+    held = set(json.loads(Path(a.held).read_text()))
     qs = load_dev(root, held)
     assert len(qs) == 228 and not (set(qs) & held)
-    rows = json.load(open(root / "final-arch" / "forensics_r6_dev.json"))
+    rows = json.loads(Path(root / "final-arch" / "forensics_r6_dev.json").read_text())
     assert {r["id"] for r in rows} == set(qs), "forensics must cover exactly the development ids"
     fails = [r for r in rows if r["score"] < 1]
-    review = json.load(open(Path(__file__).resolve().parent / "review.json"))
+    review = json.loads(Path(Path(__file__).resolve().parent / "review.json").read_text())
     out = [classify(r, qs[r["id"]], review) for r in fails]
     missing = [o["id"] for o in out if o["type"] in ("static-environment", "dynamic-environment") and o["id"] not in review["by_id"]]
     assert not missing, missing

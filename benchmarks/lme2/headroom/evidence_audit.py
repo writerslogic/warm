@@ -18,12 +18,12 @@ def main():
     ap.add_argument("--out", default=str(Path(__file__).resolve().parent / "evidence_audit.json"))
     a = ap.parse_args()
     root = Path(a.root)
-    held = set(json.load(open(a.held)))
+    held = set(json.loads(Path(a.held).read_text()))
     sys.path.insert(0, str(root / "upstream"))
     from evaluation.qa_eval_metrics import norm_phrase_set_match, norm_phrase_set_match_ordered
 
     qs = {}
-    for line in open(root / "data" / "questions.jsonl"):
+    for line in Path(root / "data" / "questions.jsonl").read_text().splitlines():
         q = json.loads(line)
         if q["id"] not in held:
             qs[q["id"]] = q
@@ -31,7 +31,7 @@ def main():
     phrase = {k for k, q in qs.items() if q["eval_function"].startswith("norm_phrase")}
 
     def score(path):
-        cache = json.load(open(root / path))
+        cache = json.loads(Path(root / path).read_text())
         out = {}
         for k, v in cache.items():
             if k not in phrase:
@@ -45,7 +45,7 @@ def main():
     oracle = score("final-arch/rc_oracle2.json")
     base = score("final-arch/rc_arch_uep16.json")
     r6 = {}
-    for line in open(root / "final-arch" / "r6_per_question_dev.snapshot.jsonl"):
+    for line in Path(root / "final-arch" / "r6_per_question_dev.snapshot.jsonl").read_text().splitlines():
         d = json.loads(line)
         if d["question_id"] in phrase:
             r6[d["question_id"]] = float(d["score"]) >= 1.0

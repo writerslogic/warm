@@ -20,7 +20,7 @@ STATE = re.compile(r"- Trajectory: (\w+) |^State (\d+) \(step", re.M)
 def load(paths, held):
     out = {}
     for p in paths:
-        for line in open(p):
+        for line in Path(p).read_text().splitlines():
             r = json.loads(line)
             if r["question_id"] not in held:
                 out[r["question_id"]] = r
@@ -37,7 +37,7 @@ def main():
     ap.add_argument("--a", nargs="+", required=True)
     ap.add_argument("--b", nargs="+", required=True)
     a = ap.parse_args()
-    held = set(json.load(open(HERE.parent / "held_ids.json")))
+    held = set(json.loads(Path(HERE.parent / "held_ids.json").read_text()))
     A, B = load(a.a, held), load(a.b, held)
     bad = []
     if set(A) != set(B):
