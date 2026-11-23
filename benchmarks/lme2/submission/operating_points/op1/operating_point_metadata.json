@@ -1,0 +1,47 @@
+{
+  "submission_name": "warm_g1",
+  "operating_point_name": "op1",
+  "method": "warm_g1_live",
+  "tier": "small",
+  "generated_at_utc": "2026-11-22T08:10:24.832883+00:00",
+  "runs": {
+    "web": {
+      "source_run_dir": "/Volumes/A/.hms-lb/lme2/submit/runs/op1_web",
+      "domain": "web",
+      "question_count": 240,
+      "question_type_counts": {
+        "dynamic-environment": 51,
+        "dynamic-environment-abs": 21,
+        "errors-gotchas": 15,
+        "procedure": 42,
+        "procedure-abs": 20,
+        "static-environment": 60,
+        "static-environment-abs": 31
+      },
+      "model": "Qwen/Qwen3.5-9B",
+      "evaluator_model": "gpt-5.2"
+    },
+    "enterprise": {
+      "source_run_dir": "/Volumes/A/.hms-lb/lme2/submit/runs/op1_enterprise",
+      "domain": "enterprise",
+      "question_count": 211,
+      "question_type_counts": {
+        "dynamic-environment": 35,
+        "dynamic-environment-abs": 20,
+        "errors-gotchas": 14,
+        "procedure": 32,
+        "procedure-abs": 12,
+        "static-environment": 74,
+        "static-environment-abs": 24
+      },
+      "model": "Qwen/Qwen3.5-9B",
+      "evaluator_model": "gpt-5.2"
+    }
+  },
+  "included_run_files": [
+    "aggregated_metrics.json",
+    "per_question.jsonl",
+    "run_args.json",
+    "runtime_inputs/"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "overall_full_set": 0.7893569844789357,
+  "gotchas_accuracy": 0.5172413793103449,
+  "static_accuracy": 0.8306878306878307,
+  "dynamic_accuracy": 0.7716535433070866,
+  "procedure_accuracy": 0.8113207547169812,
+  "memory_query_avg_seconds": 66.32238413492236
+}

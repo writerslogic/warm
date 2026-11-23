@@ -154,6 +154,15 @@ These are the 223 held-out questions (`held_ids.json`), with the gpt-5.2 judge r
 - Latency including the answer check: median 48.0 s, p95 137.0 s.
 - Gemini cost: $0.1893 per question.
 
+## Leaderboard submission (self-reported)
+
+`submission/` is the record of the small-tier package submitted to the LME-V2 maintainers on 2026-11-22 (`warm_g1.tar.gz`, sha256 in `submission/warm_g1.tar.gz.sha256`). It holds the package's `SYSTEM_DESCRIPTION.md`, the single-file module `warm_g1_live.py`, `submission_overview.json` and each operating point's metric files. The per-question run outputs in the package are not committed.
+
+- Three operating points, each one live run of all 451 small-tier questions (240 web, 211 enterprise): `op2` 78.0, `op1b` 78.9, `op1` 77.2 (accuracy %, judged once).
+- LAFS 60.84 against the reference frontier's 55.76 (+5.07), computed with the upstream LAFS definition (small tier, 1 to 200 s).
+- These full-set numbers include the 228 dev questions used for design selection, so they are optimistic. The held-out row above is the unbiased estimate.
+- The maintainers have not verified these figures; they are self-reported.
+
 ## What runs without hosted models
 
 The frozen run's stage outputs (controller spans, VERIFY, CRUX, OPTCHECK, pass-2 and ANSWER-CHECK results, reader answers), the controller notes and the original research scripts are not in this repository. From the public repository alone, what reproduces without hosted models is the engine form table: `tests/experience_form_state.rs` checks that it equals the reference renderer's output on 28 recorded states of the public trajectories. Everything else below needs those outputs, which a run of the hosted stages produces, and `check_frozen.py` and `smoke_test.py` need the reference files of the frozen run (`--reference-dir`), which are not published.
