@@ -2433,10 +2433,20 @@ fn scatter_excluded(
                 if list.block_first() > last {
                     break;
                 }
-                for &doc in list.block_slots() {
-                    if (first..=last).contains(&doc) {
+                if list.block_first() >= first && list.block_last() <= last {
+                    for &doc in list.block_slots() {
                         let at = (doc - first) as usize;
-                        bits[at >> 6] |= 1 << (at & 63);
+                        // SAFETY: the block's slots lie in its [block_first, block_last],
+                        // inside [first, last], and `bits` holds `((last - first) >> 6) + 1`
+                        // words, so `at >> 6` is in range.
+                        unsafe { *bits.get_unchecked_mut(at >> 6) |= 1u64 << (at & 63) };
+                    }
+                } else {
+                    for &doc in list.block_slots() {
+                        if (first..=last).contains(&doc) {
+                            let at = (doc - first) as usize;
+                            bits[at >> 6] |= 1 << (at & 63);
+                        }
                     }
                 }
                 if !list.advance_block(list.block_last().saturating_add(1)) {
