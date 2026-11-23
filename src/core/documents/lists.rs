@@ -416,13 +416,24 @@ impl<'a> Cursor<'a> {
     }
 
     fn decode(&mut self) {
-        let mut gaps = [0u64; CHECKPOINT_BLOCK];
-        let bytes = self.list.bytes;
-        unpack_values(&bytes[self.data_at..], self.count, self.gap_bits, &mut gaps);
-        let mut slot = self.first;
-        for (out, &gap) in self.slots[..self.count].iter_mut().zip(&gaps[..self.count]) {
-            slot = slot.wrapping_add(gap as u32);
-            *out = slot;
+        const RUN_GAPS: [u8; CHECKPOINT_BLOCK / 8] = {
+            let mut bytes = [u8::MAX; CHECKPOINT_BLOCK / 8];
+            bytes[0] &= !1;
+            bytes
+        };
+        let bytes = &self.list.bytes[self.data_at..];
+        if self.gap_bits == 1 && self.count == CHECKPOINT_BLOCK && bytes.starts_with(&RUN_GAPS) {
+            for (offset, slot) in self.slots.iter_mut().enumerate() {
+                *slot = self.first.wrapping_add(offset as u32);
+            }
+        } else {
+            let mut gaps = [0u64; CHECKPOINT_BLOCK];
+            unpack_values(bytes, self.count, self.gap_bits, &mut gaps);
+            let mut slot = self.first;
+            for (out, &gap) in self.slots[..self.count].iter_mut().zip(&gaps[..self.count]) {
+                slot = slot.wrapping_add(gap as u32);
+                *out = slot;
+            }
         }
         self.decoded = true;
         self.frequencies_ready = false;
@@ -907,5 +918,39 @@ pub(super) fn dense_word(bits: &[u8], index: usize) -> u64 {
     match bits.get(8 * index..8 * index + 8) {
         Some(word) => u64::from_le_bytes(word.try_into().expect("eight bytes")),
         None => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::documents::postings::CheckpointPacker;
+
+    #[test]
+    fn lexical_contiguous_slots_require_the_exact_packed_gaps() {
+        for count in [CHECKPOINT_BLOCK - 1, CHECKPOINT_BLOCK] {
+            let mut bytes = Vec::new();
+            let mut packer = CheckpointPacker::with_info(true, &|_| 5, false);
+            for slot in 7..7 + count {
+                packer.push(slot, 1, &mut bytes);
+            }
+            packer.finish(&mut bytes);
+            let list = ListRef {
+                bytes: &bytes,
+                count: count as u32,
+                skips: &[],
+                positions: &[],
+            };
+            let mut cursor = Cursor::open(list);
+            assert!(cursor.block_slots().iter().copied().eq(7..7 + count as u32));
+            let data_at = cursor.data_at;
+            let mut changed = bytes.clone();
+            changed[data_at] |= 1;
+            let mut cursor = Cursor::open(ListRef {
+                bytes: &changed,
+                ..list
+            });
+            assert!(cursor.block_slots().iter().copied().eq(8..8 + count as u32));
+        }
     }
 }
