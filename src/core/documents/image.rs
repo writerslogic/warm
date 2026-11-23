@@ -2044,17 +2044,24 @@ impl ServingImage {
             self.section(Section::Skips),
             self.section(Section::Positions),
         );
-        let mut current: Vec<u8> = Vec::with_capacity(target.len() + 8);
+        let mut matched = 0;
         for _ in 0..entries {
             let prefix = reader.varint().expect("dictionary checked at open") as usize;
             let suffix = reader.bytes().expect("dictionary checked at open");
-            current.truncate(prefix);
-            current.extend_from_slice(suffix);
             let entry = self
                 .read_entry(&mut reader)
                 .expect("dictionary checked at open");
             let skip_len = entry.skip_len;
-            match current.as_slice().cmp(target) {
+            let ordering = if prefix > matched {
+                // The previous term was below the target and this prefix retains its mismatch.
+                std::cmp::Ordering::Less
+            } else {
+                let rest = &target[prefix..];
+                let common = suffix.iter().zip(rest).take_while(|(a, b)| a == b).count();
+                matched = prefix + common;
+                suffix.get(common).cmp(&rest.get(common))
+            };
+            match ordering {
                 std::cmp::Ordering::Equal => {
                     return Some(ListRef {
                         bytes: &postings[base.posting..base.posting + entry.len],

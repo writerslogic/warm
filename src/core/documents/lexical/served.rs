@@ -1728,7 +1728,19 @@ mod tests {
         let mut live = DocumentStore::default();
         let words: Vec<String> = (0..300)
             .map(|i| format!("sharedpr{i:03}"))
-            .chain(["sharedp", "sharedpr", "sharedprz", "aaaa", "zzzzzzzzzz"].map(String::from))
+            .chain(
+                [
+                    "sharedp",
+                    "sharedpr",
+                    "sharedprz",
+                    "aaaa",
+                    "zzzzzzzzzz",
+                    "ö",
+                    "ø",
+                    "øster",
+                ]
+                .map(String::from),
+            )
             .collect();
         for (i, word) in words.iter().enumerate() {
             let repeats: Vec<&str> = std::iter::repeat_n(word.as_str(), 1 + i % 3).collect();
@@ -1748,11 +1760,14 @@ mod tests {
         };
         let absent = [
             "a",
+            "aaaaa",
             "sharedo",
             "sharedpr0",
             "sharedpr1000",
             "sharedps",
             "zzzzzzzzzzz",
+            "ó",
+            "østers",
         ];
         for text in words.iter().map(String::as_str).chain(absent) {
             let query = LexicalQuery::parse(text).unwrap();
