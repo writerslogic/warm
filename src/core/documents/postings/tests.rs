@@ -221,7 +221,7 @@ fn block_unpacking_preserves_output_after_short_and_unaligned_blocks() {
                 })
                 .collect();
             for offset in 0..32 {
-                for slack in [0, 7, 8, 15, 16] {
+                for slack in [0, 3, 4, 5, 7, 8, 15, 16] {
                     let mut bytes = vec![0xcc; offset];
                     pack(&mut bytes, values.iter().copied(), bits);
                     bytes.extend(std::iter::repeat_n(0xff, slack));
