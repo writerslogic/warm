@@ -778,6 +778,7 @@ impl<'a> Run<'a, '_> {
         // frequency table first, a lookup per candidate, then those whose blocks are decoded.
         let mut sequence: Vec<usize> = (0..lists - 1).collect();
         sequence.sort_by_key(|&l| tables[l].is_none());
+        let tabled = tables.iter().flatten().count();
         // Row 0: each candidate's index in the lead block; row `p`: its frequency in list
         // `sequence[p - 1]`.
         let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; lists];
@@ -856,7 +857,7 @@ impl<'a> Run<'a, '_> {
                     let frequencies = lead.cursors[0].block_frequencies();
                     for (m, &slot) in slots[..n].iter().enumerate() {
                         let lead_frequency = frequencies[rows[0][m] as usize];
-                        if rows[1..].iter().any(|row| row[m] == SATURATED) {
+                        if rows[1..1 + tabled].iter().any(|row| row[m] == SATURATED) {
                             // A tabled list holds this candidate fifteen times or more: bound
                             // its weight by the list's largest frequency, and read the list only
                             // when the bound reaches the k-th best score.
@@ -866,9 +867,11 @@ impl<'a> Run<'a, '_> {
                                 for (p, &l) in sequence.iter().enumerate() {
                                     let other = &rest[l];
                                     let bound = other.bound.expect("a bounded term");
-                                    let frequency = match rows[p + 1][m] {
-                                        SATURATED => other.cursors[0].list_bounds().0,
-                                        found => found,
+                                    let found = rows[p + 1][m];
+                                    let frequency = if p < tabled && found == SATURATED {
+                                        other.cursors[0].list_bounds().0
+                                    } else {
+                                        found
                                     };
                                     sum += bound.at(frequency, words) * times[l + 1];
                                 }
@@ -876,7 +879,7 @@ impl<'a> Run<'a, '_> {
                                     continue;
                                 }
                             }
-                            for (p, &l) in sequence.iter().enumerate() {
+                            for (p, &l) in sequence[..tabled].iter().enumerate() {
                                 if rows[p + 1][m] == SATURATED {
                                     let cursor = &mut rest[l].cursors[0];
                                     let at = cursor.advance_to(slot);
@@ -1460,16 +1463,12 @@ fn keep_tabled(
             carried[m] = carried[usize::from(at)];
         }
     }
-    for frequency in rows[row][..k].iter_mut() {
-        if *frequency == 15 {
-            *frequency = SATURATED;
-        }
-    }
     k
 }
 
-/// A frequency [`keep_tabled`] leaves unread: fifteen or more.
-const SATURATED: u32 = u32::MAX;
+/// The frequency nibble that [`keep_tabled`] leaves unread: fifteen or more. Frequencies
+/// from decoded lists are exact and do not use this sentinel.
+const SATURATED: u32 = 15;
 
 /// Keeps the candidates among `slots[..n]` that every list of `rest` holds: tested against the
 /// dense lists' bitmaps first, then the other lists' frequency tables (`tables`, one per list
@@ -1964,6 +1963,40 @@ mod tests {
                     assert!(assert_same(&image, &live, &query, &options), "{text}");
                 }
             }
+        }
+    }
+
+    #[test]
+    fn conjunction_reads_saturated_nibbles_and_exact_frequencies() {
+        let docs: Vec<Vec<u8>> = (0..1024)
+            .map(|i| {
+                let frequency = 14 + i % 3;
+                let mut words = vec![0; frequency];
+                if i < 4 {
+                    words.push(1);
+                }
+                if i < 16 {
+                    words.extend(std::iter::repeat_n(2, frequency));
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, false);
+        let image = image_of(&live);
+        assert!(image
+            .frequency_table(image.list(0, "w0").unwrap())
+            .is_some());
+        assert!(image
+            .frequency_table(image.list(0, "w2").unwrap())
+            .is_none());
+        let query = LexicalQuery::parse("+w0 +w1 +w2").unwrap();
+        for count in [false, true] {
+            let options = LexicalOptions {
+                k: 10,
+                count,
+                ..Default::default()
+            };
+            assert!(assert_same(&image, &live, &query, &options));
         }
     }
 
