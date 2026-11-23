@@ -78,8 +78,8 @@ struct Clause {
 struct Words {
     unstemmed: Vec<String>,
     stemmed: std::sync::OnceLock<Vec<String>>,
-    /// The clause text and analyzer the stemmed form is cut from.
-    text: String,
+    /// Original clause text for analyzers whose terms need more than stemming.
+    text: Option<String>,
     analyzer: super::Analyzer,
 }
 
@@ -88,7 +88,7 @@ impl Words {
         Self {
             unstemmed: analyzer.tokens(text, false),
             stemmed: std::sync::OnceLock::new(),
-            text: text.to_owned(),
+            text: (!analyzer.is_legacy()).then(|| text.to_owned()),
             analyzer,
         }
     }
@@ -100,9 +100,17 @@ impl std::ops::Index<usize> for Words {
     fn index(&self, form: usize) -> &Vec<String> {
         match form {
             0 => &self.unstemmed,
-            1 => self
-                .stemmed
-                .get_or_init(|| self.analyzer.tokens(&self.text, true)),
+            1 => self.stemmed.get_or_init(|| match &self.text {
+                Some(text) => self.analyzer.tokens(text, true),
+                None => {
+                    let stemmer = super::stemmer();
+                    self.unstemmed
+                        .iter()
+                        .map(|word| stemmer.stem(word).into_owned())
+                        .filter(|term| !term.is_empty())
+                        .collect()
+                }
+            }),
             _ => panic!("posting form {form} out of range"),
         }
     }
