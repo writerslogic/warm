@@ -2458,12 +2458,15 @@ fn scatter_excluded(
     let last = lead.block_last();
     lead.goto_block(0);
     let required = lead.len();
-    for ((rt, table), slot) in excluded.iter_mut().zip(tables).zip(&mut out) {
+    // One bitmap for every scattered list: the first holds it, the rest are empty markers.
+    let mut shared: Option<Vec<u64>> = None;
+    let mut owner = None;
+    for (i, ((rt, table), slot)) in excluded.iter_mut().zip(tables).zip(&mut out).enumerate() {
         let list = &mut rt.cursors[0];
         if list.dense().is_some() || table.is_some() || list.len() > ratio * required {
             continue;
         }
-        let mut bits = vec![0u64; ((last - first) as usize >> 6) + 1];
+        let bits = shared.get_or_insert_with(|| vec![0u64; ((last - first) as usize >> 6) + 1]);
         if list.advance_block(first) {
             loop {
                 if list.block_first() > last {
@@ -2492,7 +2495,11 @@ fn scatter_excluded(
         }
         #[cfg(test)]
         SCATTERED.with(|c| c.set(c.get() + 1));
-        *slot = Some(Scatter { base: first, bits });
+        *slot = Some(Scatter { base: first, bits: Vec::new() });
+        owner.get_or_insert(i);
+    }
+    if let (Some(i), Some(bits)) = (owner, shared) {
+        out[i] = Some(Scatter { base: first, bits });
     }
     out
 }
@@ -2521,8 +2528,10 @@ fn drop_excluded(
                 *flag &= !holds(bits, slot);
             }
         } else if let Some(scatter) = scatter {
-            for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
-                *flag &= !scatter.holds(slot);
+            if !scatter.bits.is_empty() {
+                for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
+                    *flag &= !scatter.holds(slot);
+                }
             }
         } else if let Some(table) = table {
             for &slot in &slots[..n] {
