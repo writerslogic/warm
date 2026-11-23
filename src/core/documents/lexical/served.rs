@@ -1144,8 +1144,10 @@ fn phrase_occurrences<'b>(
     order: &mut Vec<usize>,
     exact: bool,
 ) -> u32 {
-    if let [first, second] = words {
-        return pair_occurrences(first, second, exact);
+    match words {
+        [first, second] => return pair_occurrences(first, second, exact),
+        [first, second, third] => return triple_occurrences([first, second, third], exact),
+        _ => {}
     }
     // Any word may lead; the one with the fewest position bytes reads the least. The others
     // are checked fewest bytes first, so a frequent word's positions are read only where the
@@ -1258,6 +1260,37 @@ fn pair_occurrences(first: &[u8], second: &[u8], exact: bool) -> u32 {
             firsts.next().map(|position| at = position)
         };
         if advanced.is_none() {
+            break;
+        }
+    }
+    count
+}
+
+/// A three-word phrase needs only two forward probes after choosing the shortest lead.
+fn triple_occurrences(words: [&[u8]; 3], exact: bool) -> u32 {
+    let mut order = [0usize, 1, 2];
+    order.sort_unstable_by_key(|&word| (words[word].len(), word));
+    let [lead, first, second] = order;
+    let mut probes = [first, second].map(|word| (word as i64, -1, PositionIter::new(words[word])));
+    let mut count = 0;
+    'starts: for position in PositionIter::new(words[lead]) {
+        let Some(start) = position.checked_sub(lead as u32) else {
+            continue;
+        };
+        for (offset, at, positions) in &mut probes {
+            let target = i64::from(start) + *offset;
+            while *at < target {
+                let Some(position) = positions.next() else {
+                    break 'starts;
+                };
+                *at = i64::from(position);
+            }
+            if *at != target {
+                continue 'starts;
+            }
+        }
+        count += 1;
+        if !exact {
             break;
         }
     }
@@ -2044,6 +2077,32 @@ mod tests {
 
     proptest! {
         #![proptest_config(ProptestConfig::with_cases(24))]
+
+        #[test]
+        fn triplet_occurrences_match_anchored_positions(
+            masks in any::<[u16; 3]>(),
+            base in prop::sample::select(vec![0u32, 126, 16_382, u32::MAX - 15]),
+        ) {
+            let words = masks.map(|mask| {
+                let mut bytes = Vec::new();
+                let mut previous = 0;
+                for offset in 0..16 {
+                    if mask & (1 << offset) != 0 {
+                        let position = base + offset;
+                        crate::core::documents::binary::put_varint(
+                            &mut bytes, u64::from(position - previous),
+                        );
+                        previous = position;
+                    }
+                }
+                bytes
+            });
+            let words = words.each_ref().map(Vec::as_slice);
+            let [first, second, third] = masks;
+            let expected = (first & (second >> 1) & (third >> 2)).count_ones();
+            prop_assert_eq!(triple_occurrences(words, true), expected);
+            prop_assert_eq!(triple_occurrences(words, false), u32::from(expected != 0));
+        }
 
         #[test]
         fn served_queries_match_the_exhaustive_scorer_to_the_bit(
