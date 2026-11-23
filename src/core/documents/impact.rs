@@ -875,6 +875,8 @@ pub(super) fn rank<S: LexicalSource>(
     let mut quiet = 0usize;
     let mut scored = 0usize;
     let mut window_bounds = [0.0f64; MAX_TERMS];
+    // Whether a lookup term's window bound is part of a candidate's `upper`.
+    let mut deferred = [false; MAX_TERMS];
     let mut demoted: Vec<usize> = Vec::with_capacity(count);
     loop {
         let effective = threshold.max(pilot_floor);
@@ -972,13 +974,16 @@ pub(super) fn rank<S: LexicalSource>(
             if term.dense.is_some() && first_passes < FIRST_PASS_TABLES {
                 first_pass[first_passes] = i;
                 first_passes += 1;
+                deferred[i] = false;
             } else {
                 untabled += window_bounds[i];
+                deferred[i] = true;
             }
             lookups.push(i);
         }
         for &i in demoted.iter() {
             untabled += window_bounds[i];
+            deferred[i] = true;
             lookups.push(i);
         }
         let mut rest = [0.0f64; FIRST_PASS_TABLES + 1];
@@ -1179,6 +1184,12 @@ pub(super) fn rank<S: LexicalSource>(
                     }
                 }
             }
+            // `upper` assumes the window bound of every deferred lookup term; resolving one
+            // replaces its bound by its weight, and the chunk leaves once that stays below the
+            // cut (the margin covers the incremental sums' rounding).
+            let mut upper_now = upper;
+            let early_cut = floor_score * cut_factor * (1.0 - 64.0 * f64::EPSILON);
+            let mut gone = false;
             for &i in lookups.iter() {
                 let term = &terms[i];
                 let tf = match term.dense.as_ref().map(|t| t.get(slot as usize)) {
@@ -1199,6 +1210,17 @@ pub(super) fn rank<S: LexicalSource>(
                 if tf > 0 {
                     weights[i] = weigh(term.idf, f64::from(tf), norm);
                 }
+                if deferred[i] {
+                    upper_now += weights[i] - window_bounds[i];
+                    if floor_score > 0.0 && upper_now < early_cut {
+                        gone = true;
+                        break;
+                    }
+                }
+            }
+            if gone {
+                weights[..count].fill(0.0);
+                continue;
             }
             // The sum in query term order, from zero, as the exhaustive ranking adds
             // (a term the chunk lacks adds zero).
