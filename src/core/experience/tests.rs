@@ -392,7 +392,7 @@ fn snapshot_round_trips_and_rejects_damage() {
         Experience::from_bytes(&bytes[..bytes.len() - 1], ExperienceConfig::default()).is_err()
     );
     let mut future = bytes.clone();
-    future[4] = 4;
+    future[4] = 6;
     assert!(Experience::from_bytes(&future, ExperienceConfig::default()).is_err());
     assert!(Experience::from_bytes(b"WEXP", ExperienceConfig::default()).is_err());
 
@@ -716,7 +716,7 @@ fn step_controls_round_trip_the_snapshot_and_purge_with_the_episode() {
         .unwrap();
     x.ingest(&obs("b", 0, &page_a, None)).unwrap();
     let bytes = x.to_bytes().unwrap();
-    assert_eq!(bytes[4], 3);
+    assert_eq!(bytes[4], 5, "episode ids and handle records need version 5");
     let y = Experience::from_bytes(&bytes, ExperienceConfig::default()).unwrap();
     assert_eq!(y.step_controls("a", 0), Some(&controls[..]));
     assert_eq!(y.step_controls("b", 0), Some(&[][..]));
@@ -732,8 +732,9 @@ fn step_controls_round_trip_the_snapshot_and_purge_with_the_episode() {
     old[4] = 2;
     assert!(Experience::from_bytes(&old, ExperienceConfig::default()).is_err());
 
+    // Episode ids need version 5 once any episode has been stored, with or without controls.
     x.purge_episode("a").unwrap();
-    assert_eq!(x.to_bytes().unwrap()[4], 2);
+    assert_eq!(x.to_bytes().unwrap()[4], 5);
 }
 
 #[test]
@@ -899,7 +900,7 @@ fn a_version_3_snapshot_over_the_control_caps_is_refused() {
     x.ingest_with_controls(&obs("a", 0, &t, None), vec![listbox; form::MAX_CONTROLS])
         .unwrap();
     let bytes = x.to_bytes().unwrap();
-    assert_eq!(bytes[4], 3);
+    assert_eq!(bytes[4], 5, "episode ids and handle records need version 5");
     let same = mutate_controls(&bytes, &|_| {});
     Experience::from_bytes(&same, ExperienceConfig::default()).unwrap();
 
@@ -915,4 +916,616 @@ fn a_version_3_snapshot_over_the_control_caps_is_refused() {
         }
     });
     assert!(Experience::from_bytes(&more_options, ExperienceConfig::default()).is_err());
+}
+
+#[test]
+fn a_property_only_change_is_no_listed_change_but_a_state_change() {
+    let mut x = Experience::default();
+    let off = page("P", vec![btn("Agree"), btn("Save")]);
+    let mut on = off.clone();
+    on.children[0].props = "checked".into();
+    run(&mut x, "e", &[off.clone(), on, off.clone(), off]);
+    let path = x.episode("e").unwrap().path;
+    assert!(
+        path[1].no_change && path[1].state_changed,
+        "checkbox toggled"
+    );
+    assert!(path[2].no_change && path[2].state_changed, "toggled back");
+    assert!(
+        path[3].no_change && !path[3].state_changed,
+        "nothing changed"
+    );
+}
+
+mod occurrence_targets {
+    use super::*;
+    use crate::core::experience::{
+        ActionRecord, OccurrenceNode, OccurrenceRef, Resolution, TargetRole, Unresolved,
+    };
+
+    fn h(mut n: TreeNode, handle: &str) -> TreeNode {
+        n.handle = Some(handle.into());
+        n
+    }
+
+    /// A table of rows, each with a same-named Delete button carrying its own handle.
+    fn rows(handles: [&str; 2]) -> TreeNode {
+        let row = |who: &str, hd: &str| {
+            TreeNode::new("row", who).with_children(vec![h(TreeNode::new("button", "Delete"), hd)])
+        };
+        TreeNode::new("RootWebArea", "Tickets")
+            .with_children(vec![row("INC1", handles[0]), row("INC2", handles[1])])
+    }
+
+    fn call(c: &str) -> Action {
+        Action::Call(c.into())
+    }
+
+    fn put(x: &mut Experience, step: u32, t: &TreeNode, a: Option<&Action>) -> Ingested {
+        x.ingest(&Observation {
+            episode: "e",
+            step,
+            tree: t,
+            url: Some("http://h/t"),
+            action: a,
+        })
+        .unwrap()
+    }
+
+    fn target_of(x: &Experience, step: u32) -> (ActionRecord, Option<OccurrenceRef>) {
+        let t = x.action_targets("e", step).unwrap();
+        (t.record, t.targets.into_iter().next().and_then(|(_, r)| r))
+    }
+
+    #[test]
+    fn same_named_controls_in_different_rows_get_different_addresses() {
+        let mut x = Experience::default();
+        let t0 = rows(["7", "9"]);
+        let gone = TreeNode::new("RootWebArea", "Tickets");
+        put(&mut x, 0, &t0, None);
+        put(&mut x, 1, &gone, Some(&call("click('7')")));
+        put(&mut x, 2, &t0, None);
+        put(&mut x, 3, &gone, Some(&call("click('9')")));
+        let (r1, a) = target_of(&x, 1);
+        let (r3, b) = target_of(&x, 3);
+        let (a, b) = (a.unwrap(), b.unwrap());
+        assert_ne!(a.path, b.path);
+        assert_eq!((a.step, b.step), (0, 2));
+        assert_eq!(x.occurrence(&a).unwrap().name, "Delete");
+        assert_eq!(a.path, vec![0, 0]);
+        assert_eq!(b.path, vec![1, 0]);
+        // The display labels and successor trees are identical; the authoritative records are not.
+        let label = |s: usize| x.episode("e").unwrap().path[s].action.clone();
+        assert_eq!(label(1), label(3));
+        assert_ne!(r1, r3);
+    }
+
+    #[test]
+    fn identical_sibling_subtrees_stay_separately_addressable() {
+        let mut x = Experience::default();
+        let a = h(TreeNode::new("button", "Go"), "1");
+        let b = h(TreeNode::new("button", "Go"), "2");
+        let t = TreeNode::new("RootWebArea", "P").with_children(vec![a, b]);
+        let mut terms = TermStore::default();
+        let ids = (terms.intern(&t.children[0]), terms.intern(&t.children[1]));
+        assert_eq!(ids.0, ids.1, "the contents are one shared node");
+        put(&mut x, 0, &t, None);
+        put(&mut x, 1, &t, Some(&call("click('2')")));
+        let (_, r) = target_of(&x, 1);
+        assert_eq!(r.unwrap().path, vec![1]);
+    }
+
+    #[test]
+    fn a_reused_handle_resolves_against_its_own_observation() {
+        let mut x = Experience::default();
+        let first = rows(["7", "9"]);
+        let second = rows(["9", "7"]);
+        put(&mut x, 0, &first, None);
+        put(&mut x, 1, &second, Some(&call("click('7')")));
+        put(&mut x, 2, &first, Some(&call("click('7')")));
+        let (_, r1) = target_of(&x, 1);
+        let (_, r2) = target_of(&x, 2);
+        assert_eq!(
+            r1.unwrap().path,
+            vec![0, 0],
+            "handle 7 was row 1 when first clicked"
+        );
+        assert_eq!(
+            r2.unwrap().path,
+            vec![1, 0],
+            "and row 2 in the next observation"
+        );
+    }
+
+    #[test]
+    fn unresolvable_targets_stay_unresolved_with_their_reason() {
+        let mut x = Experience::default();
+        let first = put(&mut x, 0, &rows(["7", "9"]), Some(&call("click('7')")));
+        assert_eq!(first, Ingested::Applied);
+        let why = |x: &Experience, s| match x.action_targets("e", s).unwrap().record {
+            ActionRecord::Call { targets, .. } => targets[0].resolution.clone(),
+            r => panic!("{r:?}"),
+        };
+        assert_eq!(
+            why(&x, 0),
+            Resolution::Unresolved(Unresolved::NoPredecessor)
+        );
+        put(&mut x, 1, &rows(["7", "9"]), Some(&call("click('99')")));
+        assert_eq!(
+            why(&x, 1),
+            Resolution::Unresolved(Unresolved::HandleNotFound)
+        );
+        let dup = TreeNode::new("RootWebArea", "T").with_children(vec![
+            h(TreeNode::new("button", "A"), "5"),
+            h(TreeNode::new("button", "B"), "5"),
+        ]);
+        put(&mut x, 2, &dup, Some(&call("click('7')")));
+        put(&mut x, 3, &dup, Some(&call("click('5')")));
+        assert_eq!(
+            why(&x, 3),
+            Resolution::Unresolved(Unresolved::HandleConflict)
+        );
+        // A gap in the capture: step 5 does not follow step 3.
+        put(&mut x, 5, &dup, Some(&call("click('5')")));
+        assert_eq!(
+            why(&x, 5),
+            Resolution::Unresolved(Unresolved::Discontinuity)
+        );
+        assert!(x.action_targets("e", 5).unwrap().predecessor.is_none());
+        // A caller-supplied label has nothing to resolve and fabricates no address.
+        put(
+            &mut x,
+            6,
+            &dup,
+            Some(&Action::Label("click button 'A'".into())),
+        );
+        let t = x.action_targets("e", 6).unwrap();
+        assert_eq!(t.record, ActionRecord::Label("click button 'A'".into()));
+        assert!(t.targets.is_empty() && t.predecessor.is_none());
+    }
+
+    #[test]
+    fn different_original_targets_are_not_the_same_ingest() {
+        let mut x = Experience::default();
+        let t0 = rows(["7", "9"]);
+        let gone = TreeNode::new("RootWebArea", "Tickets");
+        put(&mut x, 0, &t0, None);
+        assert_eq!(
+            put(&mut x, 1, &gone, Some(&call("click('7')"))),
+            Ingested::Applied
+        );
+        assert_eq!(
+            put(&mut x, 1, &gone, Some(&call("click('7')"))),
+            Ingested::Duplicate
+        );
+        let err = x
+            .ingest(&Observation {
+                episode: "e",
+                step: 1,
+                tree: &gone,
+                url: Some("http://h/t"),
+                action: Some(&call("click('9')")),
+            })
+            .unwrap_err();
+        assert!(matches!(err, ExperienceError::Conflict { .. }), "{err:?}");
+    }
+
+    #[test]
+    fn drag_and_drop_keeps_each_targets_role() {
+        let mut x = Experience::default();
+        let t0 = rows(["7", "9"]);
+        put(&mut x, 0, &t0, None);
+        put(&mut x, 1, &t0, Some(&call("drag_and_drop('9', '7')")));
+        let t = x.action_targets("e", 1).unwrap();
+        let by: Vec<_> = t
+            .targets
+            .iter()
+            .map(|(r, o)| (*r, o.as_ref().unwrap().path.clone()))
+            .collect();
+        assert_eq!(
+            by,
+            vec![
+                (TargetRole::Subject, vec![1, 0]),
+                (TargetRole::Destination, vec![0, 0])
+            ]
+        );
+    }
+
+    fn chain(x: &mut Experience) {
+        let t0 = rows(["7", "9"]);
+        put(x, 0, &t0, None);
+        put(x, 1, &t0, Some(&call("click('9')")));
+    }
+
+    #[test]
+    fn the_first_action_after_a_snapshot_resolves_against_the_stored_predecessor() {
+        let mut x = Experience::default();
+        chain(&mut x);
+        let bytes = x.to_bytes().unwrap();
+        let mut y = Experience::from_bytes(&bytes, ExperienceConfig::default()).unwrap();
+        assert_eq!(
+            y.action_targets("e", 1).unwrap().record,
+            x.action_targets("e", 1).unwrap().record
+        );
+        // The handle map of step 1 survived: handle 7 is row 1 of that observation.
+        put(&mut y, 2, &rows(["7", "9"]), Some(&call("click('7')")));
+        let (_, r) = target_of(&y, 2);
+        let r = r.unwrap();
+        assert_eq!((r.step, r.path.clone()), (1, vec![0, 0]));
+        assert_eq!(y.episode("e").unwrap().uid, x.episode("e").unwrap().uid);
+    }
+
+    #[test]
+    fn a_store_reopens_from_journal_and_checkpoint_with_the_same_targets() {
+        let dir = tempfile::tempdir().unwrap();
+        let obs = |step: u32, a: Option<Action>| OwnedObservation {
+            episode: "e".into(),
+            step,
+            tree: rows(["7", "9"]),
+            url: Some("http://h/t".into()),
+            action: a,
+            goal: None,
+            outcome: None,
+        };
+        let mut s =
+            store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None).unwrap();
+        s.ingest_many(vec![obs(0, None), obs(1, Some(call("click('9')")))])
+            .unwrap();
+        let want = s.action_targets("e", 1).unwrap();
+        drop(s);
+        // Journal only.
+        let mut s =
+            store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+        assert_eq!(s.action_targets("e", 1).unwrap(), want);
+        s.checkpoint().unwrap();
+        drop(s);
+        // Snapshot, then a journaled action that depends on the checkpointed handle map.
+        let mut s =
+            store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+        assert_eq!(s.action_targets("e", 1).unwrap(), want);
+        s.ingest_many(vec![obs(2, Some(call("click('7')")))])
+            .unwrap();
+        let after = s.action_targets("e", 2).unwrap();
+        drop(s);
+        let s =
+            store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+        assert_eq!(s.action_targets("e", 2).unwrap(), after);
+        assert_eq!(after.targets[0].1.as_ref().unwrap().path, vec![0, 0]);
+        assert_eq!(after.predecessor.as_ref().unwrap().step, 1);
+    }
+
+    #[test]
+    fn a_purged_episode_is_not_aliased_by_its_replacement() {
+        let mut x = Experience::default();
+        chain(&mut x);
+        let old = target_of(&x, 1).1.unwrap();
+        let uid = x.episode("e").unwrap().uid;
+        x.purge_episode("e").unwrap();
+        assert!(x.occurrence(&old).is_none(), "nothing of the purge remains");
+        // Same names, a different tree where the same path addresses something else.
+        let other = TreeNode::new("RootWebArea", "Other").with_children(vec![
+            TreeNode::new("group", "g").with_children(vec![h(TreeNode::new("link", "L"), "7")]),
+            TreeNode::new("group", "g2").with_children(vec![TreeNode::new("link", "M")]),
+        ]);
+        put(&mut x, 0, &other, None);
+        put(&mut x, 1, &other, Some(&call("click('7')")));
+        assert_ne!(x.episode("e").unwrap().uid, uid);
+        assert!(
+            x.occurrence(&old).is_none(),
+            "the old reference does not resolve into new data"
+        );
+        let fresh = target_of(&x, 1).1.unwrap();
+        assert_eq!(x.occurrence(&fresh).unwrap().name, "L");
+        // The uid is not reused after a reopen either.
+        let y =
+            Experience::from_bytes(&x.to_bytes().unwrap(), ExperienceConfig::default()).unwrap();
+        assert!(y.episode("e").unwrap().uid > uid);
+    }
+
+    #[test]
+    fn a_snapshot_without_target_records_reads_as_unknown_not_resolved() {
+        let mut x = Experience::default();
+        chain(&mut x);
+        let legacy = super::snapshot::downgrade_to_version_3_for_test(&x.to_bytes().unwrap());
+        let mut y = Experience::from_bytes(&legacy, ExperienceConfig::default()).unwrap();
+        assert_eq!(
+            y.action_targets("e", 1).unwrap().record,
+            ActionRecord::Legacy
+        );
+        assert!(y.action_targets("e", 1).unwrap().targets.is_empty());
+        put(&mut y, 2, &rows(["7", "9"]), Some(&call("click('7')")));
+        match y.action_targets("e", 2).unwrap().record {
+            ActionRecord::Call { targets, .. } => assert_eq!(
+                targets[0].resolution,
+                Resolution::Unresolved(Unresolved::NoHandleContext)
+            ),
+            r => panic!("{r:?}"),
+        }
+        assert!(y.action_targets("e", 2).unwrap().targets[0].1.is_none());
+    }
+
+    #[test]
+    fn a_fresh_empty_experience_round_trips_and_checkpoints() {
+        let x = Experience::default();
+        let y =
+            Experience::from_bytes(&x.to_bytes().unwrap(), ExperienceConfig::default()).unwrap();
+        assert!(y.episode_ids().is_empty());
+        // The first episode of the reloaded store still gets uid 1 and nothing is reused.
+        let mut y = y;
+        put(&mut y, 0, &rows(["7", "9"]), None);
+        assert_eq!(y.episode("e").unwrap().uid, 1);
+
+        let dir = tempfile::tempdir().unwrap();
+        let mut s =
+            store::ExperienceStore::create(dir.path(), ExperienceConfig::default(), None).unwrap();
+        s.checkpoint().unwrap();
+        drop(s);
+        let s =
+            store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
+        assert!(s.episode_ids().is_empty());
+    }
+
+    fn owned(episode: &str, step: u32, t: TreeNode, a: Option<Action>) -> OwnedObservation {
+        OwnedObservation {
+            episode: episode.into(),
+            step,
+            tree: t,
+            url: Some("http://h/t".into()),
+            action: a,
+            goal: None,
+            outcome: None,
+        }
+    }
+
+    #[test]
+    fn a_rejected_description_leaves_no_episode_and_durable_references_survive_a_reopen() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = ExperienceConfig::default();
+        let mut s = store::ExperienceStore::create(dir.path(), cfg.clone(), None).unwrap();
+        let mut bad = owned("bad", 0, rows(["7", "9"]), None);
+        bad.goal = Some("g".repeat(cfg.max_goal_bytes + 1));
+        let (at, err) = s.ingest_many(vec![bad.clone()]).unwrap_err();
+        assert_eq!(at, 0, "{err:?}");
+        let mut bad_outcome = bad.clone();
+        bad_outcome.goal = None;
+        bad_outcome.outcome = Some("o".repeat(cfg.max_goal_bytes + 1));
+        assert!(s.ingest_many(vec![bad_outcome]).is_err());
+        assert!(!s.has_episode("bad"), "a rejected operation stores nothing");
+
+        // An earlier success in a batch is kept when a later operation is rejected.
+        let mut later_bad = owned("late", 0, rows(["7", "9"]), None);
+        later_bad.goal = Some("g".repeat(cfg.max_goal_bytes + 1));
+        let (at, _) = s
+            .ingest_many(vec![
+                owned("a", 0, rows(["7", "9"]), None),
+                owned("a", 1, rows(["7", "9"]), Some(call("click('9')"))),
+                later_bad,
+            ])
+            .unwrap_err();
+        assert_eq!(at, 2);
+        assert!(s.has_episode("a") && !s.has_episode("late"));
+        s.ingest_many(vec![
+            owned("b", 0, rows(["5", "6"]), None),
+            owned("b", 1, rows(["5", "6"]), Some(call("click('5')"))),
+        ])
+        .unwrap();
+
+        let held: Vec<(String, u64, OccurrenceRef, OccurrenceNode)> = ["a", "b"]
+            .iter()
+            .map(|e| {
+                let t = s.action_targets(e, 1).unwrap();
+                let r = t.targets[0].1.clone().unwrap();
+                let n = s.occurrence(&r).unwrap();
+                (e.to_string(), s.episode(e).unwrap().uid, r, n)
+            })
+            .collect();
+        assert_ne!(held[0].1, held[1].1);
+        drop(s);
+        let s = store::ExperienceStore::open(dir.path(), cfg, None).unwrap();
+        for (e, uid, r, n) in &held {
+            assert_eq!(
+                s.episode(e).unwrap().uid,
+                *uid,
+                "uid of {e} changed on reopen"
+            );
+            assert_eq!(
+                s.occurrence(r).as_ref(),
+                Some(n),
+                "reference into {e} moved"
+            );
+        }
+    }
+
+    fn chain3(x: &mut Experience) {
+        put(x, 0, &rows(["7", "9"]), None);
+        put(x, 1, &rows(["7", "9"]), Some(&call("click('7')")));
+        put(x, 2, &rows(["7", "9"]), Some(&call("click('9')")));
+    }
+
+    fn retry(x: &mut Experience, step: u32, t: &TreeNode, a: Option<&Action>) -> Result<Ingested> {
+        x.ingest(&Observation {
+            episode: "e",
+            step,
+            tree: t,
+            url: Some("http://h/t"),
+            action: a,
+        })
+    }
+
+    #[test]
+    fn a_retry_with_a_changed_handle_map_is_a_conflict_not_a_duplicate() {
+        let mut x = Experience::default();
+        chain3(&mut x);
+        let a1 = call("click('7')");
+        // Same handles: a duplicate, for the latest step and for an older one.
+        assert_eq!(
+            retry(&mut x, 1, &rows(["7", "9"]), Some(&a1)).unwrap(),
+            Ingested::Duplicate
+        );
+        assert_eq!(
+            retry(&mut x, 0, &rows(["7", "9"]), None).unwrap(),
+            Ingested::Duplicate
+        );
+        // Swapped handles: the content is the same, the addresses are not.
+        let c = retry(&mut x, 1, &rows(["9", "7"]), Some(&a1));
+        assert!(matches!(c, Err(ExperienceError::Conflict { .. })), "{c:?}");
+        let c = retry(&mut x, 0, &rows(["9", "7"]), None);
+        assert!(
+            matches!(c, Err(ExperienceError::Conflict { .. })),
+            "older step: {c:?}"
+        );
+        // A handle removed, and a handle added.
+        let mut removed = rows(["7", "9"]);
+        removed.children[1].children[0].handle = None;
+        assert!(matches!(
+            retry(&mut x, 0, &removed, None),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        let mut added = rows(["7", "9"]);
+        added.children[0].handle = Some("1".into());
+        assert!(matches!(
+            retry(&mut x, 0, &added, None),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        // Two elements with one handle.
+        assert!(matches!(
+            retry(&mut x, 0, &rows(["7", "7"]), None),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        // Nothing the rejected retries carried changed the stored targets.
+        let t = x.action_targets("e", 2).unwrap().targets[0]
+            .1
+            .clone()
+            .unwrap();
+        assert_eq!(t.path, vec![1, 0]);
+    }
+
+    #[test]
+    fn a_legacy_step_without_handle_context_keeps_its_targets_unknown() {
+        let mut x = Experience::default();
+        chain3(&mut x);
+        let legacy = super::snapshot::downgrade_to_version_3_for_test(&x.to_bytes().unwrap());
+        let mut y = Experience::from_bytes(&legacy, ExperienceConfig::default()).unwrap();
+        // The retry cannot be compared with handles that were never recorded, so it is the
+        // duplicate it was before version 4; it does not upgrade the step to a resolved target.
+        let a = call("click('7')");
+        assert_eq!(
+            retry(&mut y, 1, &rows(["9", "7"]), Some(&a)).unwrap(),
+            Ingested::Duplicate
+        );
+        assert_eq!(
+            y.action_targets("e", 1).unwrap().record,
+            ActionRecord::Legacy
+        );
+        assert!(y.action_targets("e", 1).unwrap().targets.is_empty());
+    }
+
+    #[test]
+    fn the_handle_digest_survives_a_snapshot() {
+        let mut x = Experience::default();
+        chain3(&mut x);
+        let mut y =
+            Experience::from_bytes(&x.to_bytes().unwrap(), ExperienceConfig::default()).unwrap();
+        let a = call("click('7')");
+        assert!(matches!(
+            retry(&mut y, 1, &rows(["9", "7"]), Some(&a)),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        assert_eq!(
+            retry(&mut y, 1, &rows(["7", "9"]), Some(&a)).unwrap(),
+            Ingested::Duplicate
+        );
+    }
+
+    #[test]
+    fn a_version_4_snapshot_without_digests_refuses_retries_it_cannot_check() {
+        let mut x = Experience::default();
+        chain3(&mut x);
+        let v4 = super::snapshot::strip_digests_to_version_4_for_test(&x.to_bytes().unwrap());
+        assert_eq!(v4[4], 4);
+        let mut y = Experience::from_bytes(&v4, ExperienceConfig::default()).unwrap();
+        let (a1, a2) = (call("click('7')"), call("click('9')"));
+        // The older steps' handle addresses are gone: no retry of them is a duplicate, and a
+        // changed one is still refused, never accepted as the same observation.
+        for t in [rows(["7", "9"]), rows(["9", "7"])] {
+            let r = retry(&mut y, 1, &t, Some(&a1));
+            assert!(
+                matches!(r, Err(ExperienceError::Unverifiable { step: 1, .. })),
+                "{r:?}"
+            );
+        }
+        // Different content is a conflict whatever the handles.
+        assert!(matches!(
+            retry(&mut y, 1, &rows(["7", "9"]), Some(&a2)),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        // The latest step's addresses are the episode's stored handle map, so it is checked.
+        assert_eq!(
+            retry(&mut y, 2, &rows(["7", "9"]), Some(&a2)).unwrap(),
+            Ingested::Duplicate
+        );
+        assert!(matches!(
+            retry(&mut y, 2, &rows(["9", "7"]), Some(&a2)),
+            Err(ExperienceError::Conflict { .. })
+        ));
+        // The targets resolved before the upgrade are kept, unlike a legacy step's.
+        assert_eq!(
+            y.action_targets("e", 1).unwrap().targets[0]
+                .1
+                .as_ref()
+                .unwrap()
+                .path,
+            vec![0, 0]
+        );
+        // A rewrite keeps the distinction instead of turning the step into a legacy one.
+        let v5 = y.to_bytes().unwrap();
+        assert_eq!(v5[4], 5);
+        let mut z = Experience::from_bytes(&v5, ExperienceConfig::default()).unwrap();
+        assert!(matches!(
+            retry(&mut z, 1, &rows(["7", "9"]), Some(&a1)),
+            Err(ExperienceError::Unverifiable { .. })
+        ));
+        assert_eq!(
+            retry(&mut z, 2, &rows(["7", "9"]), Some(&a2)).unwrap(),
+            Ingested::Duplicate
+        );
+        // A new step is ingested and checked as usual.
+        put(&mut z, 3, &rows(["7", "9"]), Some(&a1));
+        assert!(matches!(
+            retry(&mut z, 3, &rows(["9", "7"]), Some(&a1)),
+            Err(ExperienceError::Conflict { .. })
+        ));
+    }
+
+    #[test]
+    fn a_step_refused_over_quota_after_it_applied_consumes_no_uid() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = ExperienceConfig::default();
+        let mut s = store::ExperienceStore::create(dir.path(), cfg.clone(), None).unwrap();
+        s.ingest_many(vec![owned("a", 0, rows(["7", "9"]), None)])
+            .unwrap();
+        // A new episode adds an episode and a step: one unit of headroom is not enough, and the
+        // step is refused after it applied in memory.
+        let budget = s.quota_units() + 1;
+        let (_, err) = s
+            .ingest_many_within(vec![owned("over", 0, rows(["1", "2"]), None)], Some(budget))
+            .unwrap_err();
+        assert!(matches!(err, ExperienceError::Quota(_)), "{err:?}");
+        assert!(!s.has_episode("over"));
+        s.ingest_many(vec![
+            owned("b", 0, rows(["5", "6"]), None),
+            owned("b", 1, rows(["5", "6"]), Some(call("click('6')"))),
+        ])
+        .unwrap();
+        let uid = s.episode("b").unwrap().uid;
+        let r = s.action_targets("b", 1).unwrap().targets[0]
+            .1
+            .clone()
+            .unwrap();
+        drop(s);
+        let s = store::ExperienceStore::open(dir.path(), cfg, None).unwrap();
+        assert_eq!(s.episode("b").unwrap().uid, uid);
+        assert_eq!(s.occurrence(&r).unwrap().name, "Delete");
+        assert_eq!(r.path, vec![1, 0]);
+    }
 }

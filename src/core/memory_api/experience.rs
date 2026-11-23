@@ -43,7 +43,9 @@ pub(super) fn effect_id(id: &str) -> Option<&str> {
 
 fn experience_error(error: ExperienceError) -> anyhow::Error {
     match error {
-        ExperienceError::Conflict { .. } => MemoryError::Conflict(error.to_string()).into(),
+        ExperienceError::Conflict { .. } | ExperienceError::Unverifiable { .. } => {
+            MemoryError::Conflict(error.to_string()).into()
+        }
         ExperienceError::Limit { .. }
         | ExperienceError::Invalid(_)
         | ExperienceError::OutOfOrder { .. } => MemoryError::Invalid(error.to_string()).into(),
