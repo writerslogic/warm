@@ -1107,6 +1107,10 @@ impl<'a> Run<'a, '_> {
         // The other required lists, which filter the candidates, then the optional ones.
         let filtering = filters.len();
         let mut optional = filters.into_iter().chain(optional).collect::<Vec<_>>();
+        let tables: Vec<_> = optional
+            .iter()
+            .map(|rt| self.image.frequency_table(rt.cursors[0].list()))
+            .collect();
         let clauses = 1 + optional.len();
         let lead_bound = lead.bound.expect("a bounded term");
         let ceiling = sum_bound(
@@ -1194,7 +1198,12 @@ impl<'a> Run<'a, '_> {
                 if n == 0 {
                     break;
                 }
-                probe_common(&mut optional[f].cursors[0], &slots, n, &mut rows[f]);
+                match &tables[f] {
+                    Some(table) => {
+                        probe_tabled(table, &mut optional[f].cursors[0], &slots, n, &mut rows[f]);
+                    }
+                    None => probe_common(&mut optional[f].cursors[0], &slots, n, &mut rows[f]),
+                }
                 let mut kept = 0usize;
                 for m in 0..n {
                     slots[kept] = slots[m];
@@ -1207,8 +1216,16 @@ impl<'a> Run<'a, '_> {
                 n = kept;
             }
             if n > 0 {
-                for (other, row) in optional.iter_mut().zip(rows.iter_mut()).skip(filtering) {
-                    probe_common(&mut other.cursors[0], &slots, n, row);
+                for (o, (other, row)) in optional
+                    .iter_mut()
+                    .zip(rows.iter_mut())
+                    .enumerate()
+                    .skip(filtering)
+                {
+                    match &tables[o] {
+                        Some(table) => probe_tabled(table, &mut other.cursors[0], &slots, n, row),
+                        None => probe_common(&mut other.cursors[0], &slots, n, row),
+                    }
                 }
                 for &slot in &slots[..n] {
                     prefetch(self.word_counts, slot as usize);
@@ -2362,103 +2379,6 @@ fn keep_counted<'a, T: Lead<'a>>(
     (kept, live)
 }
 
-/// Removes, in place, the candidates among `slots[..n]` that `other` holds, moving each kept
-/// candidate's entry in `rows` along with it; returns how many are kept. The candidates ascend.
-#[inline(never)]
-fn drop_common(
-    other: &mut Cursor<'_>,
-    slots: &mut [u32; CHECKPOINT_BLOCK],
-    rows: &mut [u32; CHECKPOINT_BLOCK],
-    n: usize,
-) -> usize {
-    let (mut i, mut k) = (0usize, 0usize);
-    if let Some(bits) = other.dense() {
-        while i < n {
-            let slot = slots[i];
-            slots[k] = slot;
-            rows[k] = rows[i];
-            k += usize::from(!holds(bits, slot));
-            i += 1;
-        }
-        return k;
-    }
-    while i < n {
-        let wanted = slots[i];
-        if other.block_last() < wanted && !other.advance_block(wanted) {
-            // `other` ended: the rest are kept.
-            while i < n {
-                slots[k] = slots[i];
-                rows[k] = rows[i];
-                k += 1;
-                i += 1;
-            }
-            break;
-        }
-        let first = other.block_first();
-        if first > wanted {
-            while i < n && slots[i] < first {
-                slots[k] = slots[i];
-                rows[k] = rows[i];
-                k += 1;
-                i += 1;
-            }
-            continue;
-        }
-        let last = other.block_last();
-        let block = other.block_slots();
-        let mut j = 0usize;
-        while i < n && slots[i] <= last {
-            let slot = slots[i];
-            while block[j] < slot {
-                j += 1;
-            }
-            slots[k] = slot;
-            rows[k] = rows[i];
-            k += usize::from(block[j] != slot);
-            i += 1;
-        }
-    }
-    k
-}
-
-/// Writes to `out[i]` the frequency of `other` in `slots[i]`, zero where it lacks the slot.
-/// The candidates `slots[..n]` ascend.
-#[inline(never)]
-fn probe_common(
-    other: &mut Cursor<'_>,
-    slots: &[u32; CHECKPOINT_BLOCK],
-    n: usize,
-    out: &mut [u32; CHECKPOINT_BLOCK],
-) {
-    let mut i = 0usize;
-    while i < n {
-        let wanted = slots[i];
-        if other.block_last() < wanted && !other.advance_block(wanted) {
-            out[i..n].fill(0);
-            return;
-        }
-        let first = other.block_first();
-        if first > wanted {
-            while i < n && slots[i] < first {
-                out[i] = 0;
-                i += 1;
-            }
-            continue;
-        }
-        let last = other.block_last();
-        let (block, frequencies) = other.block_postings();
-        let mut j = 0usize;
-        while i < n && slots[i] <= last {
-            let slot = slots[i];
-            while block[j] < slot {
-                j += 1;
-            }
-            out[i] = if block[j] == slot { frequencies[j] } else { 0 };
-            i += 1;
-        }
-    }
-}
-
 /// Documents with any of the term clauses' words: the largest list's postings, plus the
 /// documents of the others that it lacks, probed through its skip table; or, when the lists
 /// are of similar size, a bitmap over all slots.
@@ -2605,6 +2525,132 @@ fn nibble_bits(word: u64) -> u64 {
         t = (t | t >> 6) & 0x000F_000F_000F_000F;
         t = (t | t >> 12) & 0x0000_00FF_0000_00FF;
         (t | t >> 24) & 0xFFFF
+    }
+}
+
+/// Removes, in place, the candidates among `slots[..n]` that `other` holds, moving each kept
+/// candidate's entry in `rows` along with it; returns how many are kept. The candidates ascend.
+#[inline(never)]
+fn drop_common(
+    other: &mut Cursor<'_>,
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    rows: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+) -> usize {
+    let (mut i, mut k) = (0usize, 0usize);
+    if let Some(bits) = other.dense() {
+        while i < n {
+            let slot = slots[i];
+            slots[k] = slot;
+            rows[k] = rows[i];
+            k += usize::from(!holds(bits, slot));
+            i += 1;
+        }
+        return k;
+    }
+    while i < n {
+        let wanted = slots[i];
+        if other.block_last() < wanted && !other.advance_block(wanted) {
+            // `other` ended: the rest are kept.
+            while i < n {
+                slots[k] = slots[i];
+                rows[k] = rows[i];
+                k += 1;
+                i += 1;
+            }
+            break;
+        }
+        let first = other.block_first();
+        if first > wanted {
+            while i < n && slots[i] < first {
+                slots[k] = slots[i];
+                rows[k] = rows[i];
+                k += 1;
+                i += 1;
+            }
+            continue;
+        }
+        let last = other.block_last();
+        let block = other.block_slots();
+        let mut j = 0usize;
+        while i < n && slots[i] <= last {
+            let slot = slots[i];
+            while block[j] < slot {
+                j += 1;
+            }
+            slots[k] = slot;
+            rows[k] = rows[i];
+            k += usize::from(block[j] != slot);
+            i += 1;
+        }
+    }
+    k
+}
+
+/// [`probe_common`] for a list with a frequency table: a nibble lookup per candidate, the exact
+/// frequency read from `other` only where the nibble is saturated.
+#[inline(never)]
+fn probe_tabled(
+    table: &Dense,
+    other: &mut Cursor<'_>,
+    slots: &[u32; CHECKPOINT_BLOCK],
+    n: usize,
+    out: &mut [u32; CHECKPOINT_BLOCK],
+) {
+    #[cfg(test)]
+    reached(3);
+    for &slot in &slots[..n] {
+        table.prefetch(slot as usize);
+    }
+    for (value, &slot) in out[..n].iter_mut().zip(&slots[..n]) {
+        let found = u32::from(table.get(slot as usize));
+        *value = if found == SATURATED {
+            #[cfg(test)]
+            reached(4);
+            let at = other.advance_to(slot);
+            debug_assert_eq!(at, slot, "a tabled slot is in its list");
+            other.frequency()
+        } else {
+            found
+        };
+    }
+}
+
+/// Writes to `out[i]` the frequency of `other` in `slots[i]`, zero where it lacks the slot.
+/// The candidates `slots[..n]` ascend.
+#[inline(never)]
+fn probe_common(
+    other: &mut Cursor<'_>,
+    slots: &[u32; CHECKPOINT_BLOCK],
+    n: usize,
+    out: &mut [u32; CHECKPOINT_BLOCK],
+) {
+    let mut i = 0usize;
+    while i < n {
+        let wanted = slots[i];
+        if other.block_last() < wanted && !other.advance_block(wanted) {
+            out[i..n].fill(0);
+            return;
+        }
+        let first = other.block_first();
+        if first > wanted {
+            while i < n && slots[i] < first {
+                out[i] = 0;
+                i += 1;
+            }
+            continue;
+        }
+        let last = other.block_last();
+        let (block, frequencies) = other.block_postings();
+        let mut j = 0usize;
+        while i < n && slots[i] <= last {
+            let slot = slots[i];
+            while block[j] < slot {
+                j += 1;
+            }
+            out[i] = if block[j] == slot { frequencies[j] } else { 0 };
+            i += 1;
+        }
     }
 }
 
@@ -2824,6 +2870,10 @@ mod tests {
                 if hash(i + 5) % 16 == 0 {
                     words.push(9);
                 }
+                if hash(i + 9) % 40 == 0 {
+                    // Saturates a frequency table's nibble.
+                    words.extend([0, 1, 2].repeat(18));
+                }
                 words
             })
             .collect();
@@ -2850,7 +2900,7 @@ mod tests {
             }
         }
         let paths = PATHS.with(|c| c.get());
-        for path in [0, 5, 6] {
+        for path in [0, 3, 4, 5, 6] {
             assert!(paths[path] > 0, "path {path} never ran: {paths:?}");
         }
     }
