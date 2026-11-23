@@ -291,7 +291,9 @@ const WINDOW: u32 = 4096;
 /// The window of a query that wants few chunks: fewer windows mean less per-window work, and the
 /// accumulator it touches stays sparse. Offsets stay below `u16::MAX`.
 const WIDE_WINDOW: u32 = 8192;
-/// The largest `limit` ranked in [`WIDE_WINDOW`] windows.
+/// The window of a two-term query of few chunks, whose postings are the sparsest per slot.
+const PAIR_WINDOW: u32 = 16384;
+/// The largest `limit` ranked in [`WIDE_WINDOW`] or [`PAIR_WINDOW`] windows.
 const WIDE_LIMIT: usize = 10;
 /// The most terms a query ranks through windows; more fall back to the exhaustive ranking.
 const MAX_TERMS: usize = 64;
@@ -450,7 +452,7 @@ pub(super) struct PruneScratch {
     /// Window sum of the essential weights per offset, zero between windows.
     acc: Vec<f64>,
     /// Offsets with a posting weighed in the window, a bit each.
-    mask: [u64; WIDE_WINDOW as usize / 64],
+    mask: [u64; PAIR_WINDOW as usize / 64],
     pilot: Vec<f64>,
     /// Per essential term of the window: its postings' offsets and weights, in slot order.
     logs: Vec<Vec<u16>>,
@@ -476,8 +478,8 @@ impl Default for PruneScratch {
             candidates: Vec::new(),
             best: BinaryHeap::new(),
             stats: PruneStats::default(),
-            acc: vec![0.0; WIDE_WINDOW as usize],
-            mask: [0; WIDE_WINDOW as usize / 64],
+            acc: vec![0.0; PAIR_WINDOW as usize],
+            mask: [0; PAIR_WINDOW as usize / 64],
             pilot: Vec::new(),
             logs: Vec::new(),
             wbuf: Vec::new(),
@@ -759,7 +761,7 @@ pub(super) fn rank<S: LexicalSource>(
     if limit == 0 || lists.is_empty() {
         return Some(());
     }
-    if lists.len() > MAX_TERMS || slots >= u32::MAX as usize - WIDE_WINDOW as usize {
+    if lists.len() > MAX_TERMS || slots >= u32::MAX as usize - PAIR_WINDOW as usize {
         return None;
     }
     let count = lists.len();
@@ -829,10 +831,11 @@ pub(super) fn rank<S: LexicalSource>(
     if logs.len() < count {
         logs.resize_with(count, Vec::new);
     }
-    let window: u32 = if limit <= WIDE_LIMIT {
-        WIDE_WINDOW
-    } else {
-        WINDOW
+    let window: u32 = match count {
+        _ if limit > WIDE_LIMIT => WINDOW,
+        2 => PAIR_WINDOW,
+        3 => WIDE_WINDOW,
+        _ => WINDOW,
     };
     let stride = window as usize;
     if wbuf.len() < count * stride {
