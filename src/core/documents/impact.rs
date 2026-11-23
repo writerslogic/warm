@@ -834,8 +834,7 @@ pub(super) fn rank<S: LexicalSource>(
     let window: u32 = match count {
         _ if limit > WIDE_LIMIT => WINDOW,
         2 => PAIR_WINDOW,
-        3 => WIDE_WINDOW,
-        _ => WINDOW,
+        _ => WIDE_WINDOW,
     };
     let stride = window as usize;
     if wbuf.len() < count * stride {
