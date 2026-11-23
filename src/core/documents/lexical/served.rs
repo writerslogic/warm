@@ -1065,18 +1065,17 @@ impl<'a> Run<'a, '_> {
                     reached(5);
                 }
                 let mut required = self.opened(reopen, &musts);
+                required.extend(self.opened(reopen, &order[..j]));
+                required.sort_by_key(Rt::rarest);
                 let mut excluded = self.opened(reopen, &[lacked]);
                 let optional = self.opened(reopen, &order[j + 1..]);
-                if j == 0 && required.len() == 1 && excluded.len() == 1 {
-                    // The widest class: its one required list a block at a time.
+                if let (false, Some(dropped)) = (required.is_empty(), excluded.pop()) {
                     #[cfg(test)]
                     reached(6);
-                    let (lead, dropped) = (required.pop(), excluded.pop());
-                    self.lead_top(lead.expect("one"), dropped.expect("one"), optional, &mut top)?;
-                    continue;
+                    let filters = required.split_off(1);
+                    let lead = required.pop().expect("a required list");
+                    self.lead_top(lead, filters, dropped, optional, &mut top)?;
                 }
-                required.extend(self.opened(reopen, &order[..j]));
-                self.conjunction_into(required, excluded, optional, &mut top)?;
             }
         } else {
             // One list: the clauses are twins, and a document with one has all.
@@ -1100,10 +1099,14 @@ impl<'a> Run<'a, '_> {
     fn lead_top(
         &mut self,
         mut lead: Rt<'a>,
+        filters: Vec<Rt<'a>>,
         mut dropped: Rt<'a>,
-        mut optional: Vec<Rt<'a>>,
+        optional: Vec<Rt<'a>>,
         top: &mut Top<'a>,
     ) -> Result<()> {
+        // The other required lists, which filter the candidates, then the optional ones.
+        let filtering = filters.len();
+        let mut optional = filters.into_iter().chain(optional).collect::<Vec<_>>();
         let clauses = 1 + optional.len();
         let lead_bound = lead.bound.expect("a bounded term");
         let ceiling = sum_bound(
@@ -1113,7 +1116,7 @@ impl<'a> Run<'a, '_> {
         let mut slots = [0u32; CHECKPOINT_BLOCK];
         let mut index = [0u32; CHECKPOINT_BLOCK];
         let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; optional.len()];
-        loop {
+        'blocks: loop {
             let floor = top.floor();
             if floor.is_some_and(|floor| ceiling < floor) {
                 break;
@@ -1126,9 +1129,21 @@ impl<'a> Run<'a, '_> {
             let mut rest_sum = 0.0f64;
             if let Some(floor) = floor {
                 let mut sum = cursor.block_weight(lead_bound);
-                for other in &mut optional {
+                for (o, other) in optional.iter_mut().enumerate() {
                     let bound = other.bound.expect("a bounded term");
                     let c = &mut other.cursors[0];
+                    if o < filtering {
+                        // A required list with nothing in the block leaves no match in it.
+                        if !c.advance_block(first) {
+                            break 'blocks;
+                        }
+                        if c.block_first() > last {
+                            if !lead.cursors[0].advance_block(last.saturating_add(1)) {
+                                break 'blocks;
+                            }
+                            continue 'blocks;
+                        }
+                    }
                     let weight = if !c.advance_block(first) || c.block_first() > last {
                         0.0
                     } else if c.block_last() >= last {
@@ -1175,8 +1190,24 @@ impl<'a> Run<'a, '_> {
                 }
             }
             n = drop_common(&mut dropped.cursors[0], &mut slots, &mut index, n);
+            for f in 0..filtering {
+                if n == 0 {
+                    break;
+                }
+                probe_common(&mut optional[f].cursors[0], &slots, n, &mut rows[f]);
+                let mut kept = 0usize;
+                for m in 0..n {
+                    slots[kept] = slots[m];
+                    index[kept] = index[m];
+                    for row in &mut rows[..=f] {
+                        row[kept] = row[m];
+                    }
+                    kept += usize::from(rows[f][m] > 0);
+                }
+                n = kept;
+            }
             if n > 0 {
-                for (other, row) in optional.iter_mut().zip(rows.iter_mut()) {
+                for (other, row) in optional.iter_mut().zip(rows.iter_mut()).skip(filtering) {
                     probe_common(&mut other.cursors[0], &slots, n, row);
                 }
                 for &slot in &slots[..n] {
