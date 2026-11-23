@@ -642,7 +642,15 @@ pub(in crate::core::documents) fn execute(
         }
         if excluded.is_empty()
             && ranker.is_some()
-            && (2..=3).contains(&optional.len())
+            && (2..=6).contains(&optional.len())
+            // Two lists of a fifth of the chunks or more leave the classes as costly as the
+            // ranker's windows: the narrow ones are not skipped and each walks a dense list.
+            && (optional.len() <= 3
+                || optional
+                    .iter()
+                    .filter(|rt| rt.rarest() * 5 >= image.chunk_count())
+                    .count()
+                    <= 1)
             && optional.iter().all(|rt| !rt.phrase && rt.bound.is_some())
             && distinct_words(query, form, &optional)
         {
@@ -3109,6 +3117,10 @@ mod tests {
                 "w3 w0 w5",
                 "w6 w7 w8",
                 "w4 w10 w11",
+                "w4 w5 w6 w7",
+                "w1 w5 w6 w7 w8",
+                "w2 w3 w4 w5 w6 w10",
+                "w0 w1 w2 w3",
                 "w12 w0",
                 "w1 w12 w2",
                 // A missing word leaves two clauses.
