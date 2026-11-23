@@ -67,8 +67,73 @@ enum Occur {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Clause {
     occur: Occur,
-    words: [Vec<String>; 2],
+    words: Words,
     phrase: bool,
+}
+
+/// A clause's tokens in both forms, `words[0]` unstemmed and `words[1]` stemmed. The stemmed
+/// form is built on first use: a store answered from one form never pays for the other. Equal
+/// unstemmed tokens stem alike, so they alone order and compare clauses.
+#[derive(Clone, Debug)]
+struct Words {
+    unstemmed: Vec<String>,
+    stemmed: std::sync::OnceLock<Vec<String>>,
+    /// Original clause text for analyzers whose terms need more than stemming.
+    text: Option<String>,
+    analyzer: super::Analyzer,
+}
+
+impl Words {
+    fn new(text: &str, analyzer: super::Analyzer) -> Self {
+        Self {
+            unstemmed: analyzer.tokens(text, false),
+            stemmed: std::sync::OnceLock::new(),
+            text: (!analyzer.is_legacy()).then(|| text.to_owned()),
+            analyzer,
+        }
+    }
+}
+
+impl std::ops::Index<usize> for Words {
+    type Output = Vec<String>;
+
+    fn index(&self, form: usize) -> &Vec<String> {
+        match form {
+            0 => &self.unstemmed,
+            1 => self.stemmed.get_or_init(|| match &self.text {
+                Some(text) => self.analyzer.tokens(text, true),
+                None => {
+                    let stemmer = super::stemmer();
+                    self.unstemmed
+                        .iter()
+                        .map(|word| stemmer.stem(word).into_owned())
+                        .filter(|term| !term.is_empty())
+                        .collect()
+                }
+            }),
+            _ => panic!("posting form {form} out of range"),
+        }
+    }
+}
+
+impl PartialEq for Words {
+    fn eq(&self, other: &Self) -> bool {
+        self.unstemmed == other.unstemmed
+    }
+}
+
+impl Eq for Words {}
+
+impl PartialOrd for Words {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Words {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.unstemmed.cmp(&other.unstemmed)
+    }
 }
 
 /// A flat Boolean query: bare optional clauses, +required clauses, -excluded clauses,
@@ -141,7 +206,7 @@ impl LexicalQuery {
                     "unsupported lexical query syntax"
                 );
             }
-            let words = [analyzer.tokens(value, false), analyzer.tokens(value, true)];
+            let words = Words::new(value, analyzer);
             ensure!(!words[0].is_empty(), "lexical clause requires a token");
             ensure!(words[0].len() <= 1024, "lexical phrase exceeds 1024 tokens");
             clauses.push(Clause {
@@ -158,6 +223,15 @@ impl LexicalQuery {
             text: text.to_owned(),
             analyzer,
         })
+    }
+
+    /// Whether the query is a bare disjunction of single words (see [`Self::disjunction_terms`]),
+    /// read from the unstemmed form alone.
+    fn is_bare_disjunction(&self) -> bool {
+        !self.clauses.is_empty()
+            && self.clauses.iter().all(|clause| {
+                clause.occur == Occur::Should && !clause.phrase && clause.words[0].len() == 1
+            })
     }
 
     fn has_positive(&self) -> bool {
@@ -413,44 +487,36 @@ pub(crate) fn served(
     if !base.intact() || !store.documents.is_empty() {
         return None;
     }
-    // One term ranked by its blocks' frontiers stays with the live store's pruned ranker.
-    if options.k > 0 && query.clauses.len() == 1 && !query.clauses[0].phrase {
-        return None;
-    }
     let bm25 = match prepare(options) {
         Ok(bm25) => bm25,
         Err(error) => return Some(Err(error)),
     };
     // A bare disjunction the block-max executor does not take is ranked as `search_documents`
-    // ranks the same words.
-    let mut prepared_search = None;
-    if query.disjunction_terms().is_some() {
-        match plain_search(
+    // ranks the same words. The search is prepared only when the executor asks for it: a
+    // query it ranks itself (one long word) never reads the stemmed form for it. `None` from
+    // the ranker sends the query to the live store, as an unprepared search would.
+    let ranked = (1..=1000).contains(&options.k)
+        && options.execution == LexicalExecution::Auto
+        && query.is_bare_disjunction();
+    let ranker = || -> Result<Option<Vec<LexicalHit>>> {
+        let prepared = plain_search(
             query,
             &LexicalOptions {
                 count: false,
                 ..options.clone()
             },
-        ) {
-            Ok(Some(prepared)) => {
-                if !super::overlay_serves(store, std::slice::from_ref(&prepared)) {
-                    return None;
-                }
-                prepared_search = Some(prepared);
-            }
-            Ok(None) => {}
-            Err(error) => return Some(Err(error)),
-        }
-    }
-    let ranker = prepared_search
-        .as_ref()
-        .map(|prepared| move || super::rank_lexical_overlaid(store, prepared).hits);
+        )?;
+        Ok(prepared.and_then(|prepared| {
+            super::overlay_serves(store, std::slice::from_ref(&prepared))
+                .then(|| super::rank_lexical_overlaid(store, &prepared).hits)
+        }))
+    };
     served::execute(
         &base.image,
         query,
         options,
         bm25,
-        ranker.as_ref().map(|f| f as &dyn Fn() -> Vec<LexicalHit>),
+        ranked.then_some(&ranker as &dyn Fn() -> Result<Option<Vec<LexicalHit>>>),
     )
     .transpose()
 }

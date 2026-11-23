@@ -1526,6 +1526,89 @@ fn pruned_ranking_matches_exhaustive_at_block_boundaries() {
         }
     }
 }
+
+/// Essential blocks passed over undecoded, because their bound with the other terms' window
+/// bounds is below the threshold: a dense term whose frequency rises only in a few regions,
+/// with ties at the cut, ranks to the bit as the exhaustive ranking does, and blocks are
+/// passed over. The dense list has aligned bounds built at open, and the sparse list does not.
+#[test]
+fn pruned_ranking_matches_exhaustive_when_essential_blocks_are_passed_over() {
+    let mut store = DocumentStore::default();
+    for id in 0..33_000usize {
+        let peak = (id / 128) % 17 == 5;
+        let mut words = vec![
+            "dense";
+            if peak {
+                8
+            } else {
+                (1 + id % 2) * usize::from(id != 0)
+            }
+        ];
+        words.extend(std::iter::repeat_n(
+            "sparse",
+            usize::from(id % 3 == 1) * (1 + id % 4),
+        ));
+        while words.len() < 12 {
+            words.push("pad");
+        }
+        let input = serde_json::from_value(json!({
+            "id": format!("p{id:05}"), "text": words.join(" "), "chunkWords": 4096, "overlapWords": 0,
+        }))
+        .unwrap();
+        let mut document =
+            super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+        for chunk in &mut document.chunks {
+            chunk.vector_state = super::super::VectorState::Lexical;
+            chunk.vector = crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+        }
+        store.insert(document.id.clone(), document);
+    }
+    type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+    let build = |encode: Encoder| {
+        ServingImage::new(super::super::Backing::Owned(
+            encode(&store, 1, 1024).unwrap().unwrap(),
+        ))
+        .unwrap()
+    };
+    let (pruned, plain) = (
+        build(super::super::image::encode).with_rank_tables(),
+        build(super::super::image::encode_v2),
+    );
+    for (term, expected) in [("dense", true), ("sparse", false)] {
+        let forms = query_words_both(Analyzer::Legacy, term);
+        let (_, list) = pruned
+            .postings_with_skips(1, forms[1].first().unwrap())
+            .unwrap();
+        let list = list.unwrap();
+        assert_eq!(pruned.union_window_bounds(list.skips).is_some(), expected);
+    }
+    let mut passed = 0usize;
+    for k in [1u32, 10, 100] {
+        let options = SearchOptions {
+            k: Some(k),
+            candidate_limit: Some(k),
+            ..Default::default()
+        };
+        for text in ["dense sparse", "sparse dense", "dense pad sparse", "dense"] {
+            let prepared = prepare_search(text, &options, None).unwrap();
+            let (fast, exact, stats) = LEXICAL_SCRATCH.with(|scratch| {
+                let mut scratch = scratch.borrow_mut();
+                let fast = scratch.rank(&pruned, &prepared, true);
+                let stats = scratch.pruned.stats;
+                (fast, scratch.rank(&plain, &prepared, true), stats)
+            });
+            let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+                ranked
+                    .iter()
+                    .map(|&(s, slot)| (s.to_bits(), slot))
+                    .collect()
+            };
+            assert_eq!(bits(&fast), bits(&exact), "k {k}, {text:?}");
+            passed += stats.skipped_blocks;
+        }
+    }
+    assert!(passed > 0, "no essential block was passed over");
+}
 /// The cost model switches to the pruned ranker exactly above the serving floor, and every
 /// store too large for a dense slot table is above it.
 #[test]
