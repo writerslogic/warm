@@ -805,7 +805,8 @@ impl<'a> Run<'a, '_> {
                     let weight = if c.block_last() >= last {
                         c.block_weight(bound)
                     } else {
-                        c.span_weight(last, bound, 8).unwrap_or(other.ceiling)
+                        c.span_weight(last, bound, 8, !self.count)
+                            .unwrap_or(other.ceiling)
                     };
                     sum += weight * t;
                 }
@@ -1839,9 +1840,29 @@ mod tests {
         let list = image.list(0, "w0").unwrap();
         assert!(list.blocks() >= crate::core::documents::lists::RANKED_RUNS * RUN_BLOCKS);
         let average = (image.word_count() as f64 / image.chunk_count() as f64).max(1.0);
-        assert!(image
-            .rank_table(&Cursor::open(list), Bm25::DEFAULT, average)
-            .is_some());
+        let mut span = Cursor::open(list);
+        let table = image
+            .rank_table(&span, Bm25::DEFAULT, average)
+            .expect("rank table");
+        span.use_ranks(Some(table));
+        let idf = 3.25;
+        let bm25 = Bm25::DEFAULT;
+        let bound = Bound::new(idf, average, bm25).expect("finite bound");
+        let mut probe = Cursor::open(list);
+        let mut greatest = 0.0f64;
+        for block in 0..8 {
+            probe.goto_block(block);
+            let last = probe.block_last();
+            let (slots, frequencies) = probe.block_postings();
+            for (&slot, &frequency) in slots.iter().zip(frequencies) {
+                let words = image.slot_word_count(slot as usize);
+                let norm = bm25.norm(f64::from(words), average);
+                greatest = greatest.max(bm25.weight(idf, f64::from(frequency), norm));
+            }
+            assert!(span.span_weight(last, bound, 8, true).unwrap() >= greatest);
+        }
+        probe.goto_block(8);
+        assert_eq!(span.span_weight(probe.block_last(), bound, 8, true), None);
         for text in [
             "w0",
             "missing w0 -absent",

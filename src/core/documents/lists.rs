@@ -648,19 +648,31 @@ impl<'a> Cursor<'a> {
     }
 
     /// A bound of the weights in the blocks from the current one through the one holding
-    /// slot `last`, from their maxima, when they are at most `most` blocks; `None` otherwise.
-    pub(super) fn span_weight(&self, last: u32, bound: Bound, most: usize) -> Option<f64> {
+    /// slot `last`, when they are at most `most` blocks; `None` otherwise.
+    pub(super) fn span_weight(
+        &self,
+        last: u32,
+        bound: Bound,
+        most: usize,
+        use_ranks: bool,
+    ) -> Option<f64> {
         if self.blocks < 2 {
             return Some(bound.at(self.list_frequency, self.list_words));
         }
+        let end = (self.block + most).min(self.blocks);
+        let ranks = self.ranks.filter(|_| use_ranks);
         let mut weight = 0.0f64;
-        for block in self.block..(self.block + most).min(self.blocks) {
-            weight = weight.max(bound.at(self.skip(3, block), self.skip(4, block)));
+        for block in self.block..end {
+            let block_weight = match ranks {
+                Some(table) => RankTable::scale(table.blocks[block], bound.idf()),
+                None => bound.at(self.skip(3, block), self.skip(4, block)),
+            };
+            weight = weight.max(block_weight);
             if self.skip(0, block) >= last {
                 return Some(weight);
             }
         }
-        (self.block + most >= self.blocks).then_some(weight)
+        (end == self.blocks).then_some(weight)
     }
 
     /// The list the cursor reads.
