@@ -852,6 +852,8 @@ impl<'a> Run<'a, '_> {
                     }
                 }
                 if need > 1 {
+                    #[cfg(test)]
+                    PREFILTERED.with(|c| c.set(c.get() + 1));
                     n = keep_frequent(
                         lead.cursors[0].block_frequencies(),
                         &mut slots,
@@ -1619,6 +1621,12 @@ fn keep_frequent(
     kept
 }
 
+#[cfg(test)]
+thread_local! {
+    /// Blocks whose candidates `terms_top` filtered by lead frequency, on this thread.
+    static PREFILTERED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 /// The most lead frequencies terms_top tests a block's candidates against.
 const NEED_PROBES: u32 = 32;
 
@@ -2147,6 +2155,68 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// Conjunctions with a floor and no count over lead lists of many blocks whose frequencies
+    /// and lengths vary, so that the floor rises early and candidates whose lead frequency
+    /// cannot reach it are dropped before the other lists are probed.
+    #[test]
+    fn conjunctions_drop_weak_lead_candidates_without_changing_the_result() {
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(15)
+                .wrapping_mul(40503)
+        };
+        let docs: Vec<Vec<u8>> = (0..16000u32)
+            .map(|i| {
+                let len = 3 + hash(i) % 120;
+                let mut words: Vec<u8> = (0..len)
+                    .map(|j| match (hash(i * 59 + j) >> 7) % 16 {
+                        0..=5 => 0,
+                        6..=8 => 1,
+                        9 | 10 => 2,
+                        11 => 3,
+                        x => (x % 5 + 4) as u8,
+                    })
+                    .collect();
+                if i % 41 == 0 {
+                    words.extend(std::iter::repeat_n(2, 6 + (i % 5) as usize));
+                }
+                if i % 97 == 0 {
+                    words.extend([1, 2, 1, 2]);
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, false);
+        let image = image_of(&live);
+        for word in ["w1", "w2"] {
+            assert!(image.list(0, word).unwrap().blocks() > 3, "{word}");
+        }
+        let before = PREFILTERED.with(|c| c.get());
+        for text in [
+            "+w2 +w0",
+            "+w2 +w1",
+            "+w2 +w1 +w0",
+            "+w3 +w2 +w0",
+            "+w2 +w2 +w0",
+            "+w2 +w0 w5",
+            "+w2 +w1 -w4",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [1usize, 3, 10, 50] {
+                let options = LexicalOptions {
+                    k,
+                    count: false,
+                    ..Default::default()
+                };
+                assert!(assert_same(&image, &live, &query, &options), "{text}");
+            }
+        }
+        assert!(
+            PREFILTERED.with(|c| c.get()) > before,
+            "the lead-frequency filter never ran"
+        );
     }
 
     #[test]
