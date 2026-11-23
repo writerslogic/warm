@@ -1,0 +1,52 @@
+[
+{"qid":"19367bc7","evidence_sets":[
+ {"states":["132da65a/0"],"visual_required":false,"rationale":"sys_user.do (User form, create-new-user task) shows a 'Calendar integration' combobox with an Outlook option."},
+ {"states":["f92c1020/45"],"visual_required":false,"rationale":"sys_user.do record page for an existing user also shows the Calendar integration field with Outlook; alternative to 132da65a."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"no","relations_needed":["page_identity","negation_or_absence"],
+ "r5_failure_attribution":"not_selected",
+ "notes":"Other trajectories matching 'Outlook' were unrelated (KB/expense text). The other four forms (change request, problem, incident, hardware) were not shown to lack the field; negation is inferred. R5 rendered none of the sys_user states."},
+{"qid":"31f146ba","evidence_sets":[
+ {"states":["028ee25f/0","028ee25f/1","028ee25f/2"],"visual_required":false,"rationale":"Home page has a search combobox (fill, enter query); state 1 shows Search button then click; state 2 is a results page whose product tiles have 'Add to Wish List' controls, so fill + click Search + click Add to Wish List = 3."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"no","relations_needed":["multi_premise","count_or_set"],
+ "r5_failure_attribution":"n/a_correct",
+ "notes":"R5 rendered later states of 028ee25f (9-12) which show Add to Wish List on results but not the home-page search start. Minimal count depends on Add to Wish List being available on the results list (a state-9 shaped list shows it); no actual wishlist-add click was observed in any trajectory, so 'three' is inferred. R5 answered correctly."},
+{"qid":"4df5e6b4","evidence_sets":[
+ {"states":["12457787/0","12457787/3","013696c4/0","013696c4/3"],"visual_required":false,"rationale":"12457787 goal is Agent Workload Balancing and state 3 KB article says to use the hashtag report via Reports; 013696c4 goal orders the least-stocked item up to a value and its KB article (state 3) says 'Go to Reports > View/Run'. Both involve the Reports application."},
+ {"states":["12457787/3","4919aae9/3"],"visual_required":false,"rationale":"Alternative restocking-like trajectory (4919aae9 ordering from a dashboard chart) shares the same Reports article text."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"partial","relations_needed":["cross_trajectory","multi_premise"],
+ "r5_failure_attribution":"n/a_correct",
+ "notes":"The 'restocking items low in quantity' workflow is identified by inference as the 013696c4 (hardware items in stock, order the least available item) family; no state literally says restock. R5 rendered workload-balancing states (12457787) and two Reports navigation trajectories but not 013696c4."},
+{"qid":"73297783","evidence_sets":[
+ {"states":["aacfe598/1","aacfe598/2","aacfe598/6","aacfe598/9","aacfe598/10"],"visual_required":false,"rationale":"My Account shows Recent Orders (only 5) with a View All link; order history list (10 per page) has a Reorder link per row; reorder lands on cart with Proceed to Checkout; shipping step has Next; payment step has Place Order. Five clicks."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"no","relations_needed":["multi_premise","count_or_set","temporal_order"],
+ "r5_failure_attribution":"not_selected",
+ "notes":"Trajectory aacfe598 reorders from an order view page (state 5) rather than the list row, a different path; the list-row Reorder (state 2) is what makes the count five. The 8th-latest order is on page 1 of the 10-per-page history list, so no pagination click is needed. Gold is an ordered phrase set including the link names. R5 rendered account/history states from other trajectories but no cart/checkout states. Whether aacfe598/1 has the literal View All link: other trajectory 3ac1289c/1 mentions it in its thought; aacfe598/1 contained it in 5 line hits."},
+{"qid":"882965b7","evidence_sets":[
+ {"states":["1485f2f8/7","857659bd/11"],"visual_required":false,"rationale":"Change request list filter field picker (1485f2f8/7) lists options containing 'type': Contact type, Task type, Type. Catalog items list (857659bd/11) after typing 'Type' in the picker shows Access Type, Classic Mobile Picture Type, Type. Union minus 'Type' gives the four."},
+ {"states":["1485f2f8/42","857659bd/10","857659bd/11"],"visual_required":false,"rationale":"Same content: 42 shows Contact type/Task type/Type on the change request list; 857659bd/10-11 show the catalog item list picker."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"partial","relations_needed":["cross_trajectory","count_or_set","multi_premise","page_identity"],
+ "r5_failure_attribution":"not_selected",
+ "notes":"R5 rendered change-request states (1485f2f8/40-43) with Contact type and Task type but no catalog item picker state (857659bd/11) so Access Type and Classic Mobile Picture Type were not available to the reader. On the change request page no state shows the picker actually filtered by typing 'Type'; matches are derived by scanning the full option list for 'type' (only those three options contain it)."},
+{"qid":"99fa7c96","evidence_sets":[
+ {"states":["02817e5d/0","02817e5d/2","02817e5d/4","02817e5d/5","02817e5d/6","02817e5d/7"],"visual_required":false,"rationale":"Trajectory 'cancel order 301': dashboard, click SALES, click Orders, fill order number, click Search, click View, click Cancel, confirm dialog OK = 7 actions (states 1-7 each led by one of them)."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"no","relations_needed":["temporal_order","count_or_set","multi_premise"],
+ "r5_failure_attribution":"not_selected",
+ "notes":"All 8 states 0-7 of 02817e5d are the complete path; the 6-state set above drops 1 and 3 (the click SALES and fill actions are recorded as the action leading to states 1 and 3). Pressing Enter instead of clicking Search would give the same count. R5 rendered none of 02817e5d (it rendered storefront catalog search states)."},
+{"qid":"b7cc4da2","evidence_sets":[
+ {"states":["4919aae9/58","4919aae9/59"],"visual_required":false,"rationale":"All menu expanded under Self-Service shows the 'Requested Items' module (58) and the 'Service Catalog' module (59, used to order an item). Order is inferred: look up the requested item first, then order via the catalog."}],
+ "sufficient_in_observations":"unknown","r5_selected_complete":"yes","relations_needed":["multi_premise","temporal_order"],
+ "r5_failure_attribution":"selected_but_relation_unclear",
+ "notes":"The haystack has no 'Eric requested' item scenario; both module names are observed under Self-Service but the logical order (Requested Items then Service Catalog) is not demonstrated by any trajectory. Eric appears only as unrelated user names. Gold is plausible but weakly grounded; consider gold_questionable."},
+{"qid":"e3a1d7f3","evidence_sets":[
+ {"states":["9cd66f15/3"],"visual_required":false,"rationale":"Storefront order view page (order_id 180) has table 'Items Ordered' with columnheaders Product Name, SKU, Price, Qty, Subtotal; Qty lies between Price and Subtotal."},
+ {"states":["06c70de4/7"],"visual_required":false,"rationale":"Admin order view Items Ordered table also has Price, Qty, Subtotal in that order (extra columns around them)."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"yes","relations_needed":["page_identity","control_value"],
+ "r5_failure_attribution":"n/a_correct",
+ "notes":"Both storefront and admin layouts give Qty. Other Qty hits (spinbutton on product pages) are unrelated."},
+{"qid":"fec652a9","evidence_sets":[
+ {"states":["1ad1af4b/0","1ad1af4b/1","1ad1af4b/2"],"visual_required":false,"rationale":"Home page has a 'Forums' link (0); clicking leads to /forums which has a 'Create forum' link (1); clicking leads to /create_forum, the creation form (2)."},
+ {"states":["1ad1af4b/0","1ad1af4b/1"],"visual_required":false,"rationale":"Minimal: the two links are visible on states 0 and 1; the form arrival is only confirmed in 2."}],
+ "sufficient_in_observations":"yes","r5_selected_complete":"yes","relations_needed":["temporal_order","page_identity"],
+ "r5_failure_attribution":"n/a_correct",
+ "notes":"R5 rendered 1ad1af4b/0 and /1 only. Link names appear as 'Forums' and 'Create forum'."}
+]

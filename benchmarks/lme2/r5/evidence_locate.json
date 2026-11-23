@@ -1,0 +1,4535 @@
+{
+ "n": 149,
+ "per_question": {
+  "00aa905a": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "025db8ef": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/1",
+      "f224a4eb/2",
+      "96131e7b/1",
+      "96131e7b/2",
+      "96131e7b/3"
+     ],
+     "observed_states": 450,
+     "observed_trajectories": 61,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "9c420e86/6",
+      "9c420e86/7",
+      "9c420e86/8",
+      "9c420e86/10",
+      "9c420e86/11"
+     ],
+     "observed_states": 170,
+     "observed_trajectories": 21,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "0738c1ac": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "01b7cff8/2",
+      "01b7cff8/3",
+      "01b7cff8/4",
+      "01b7cff8/5",
+      "01b7cff8/6"
+     ],
+     "observed_states": 11,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 0
+  },
+  "07ab3723": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "4ae82e48/12",
+      "6ea56646/35",
+      "06a17a60/3",
+      "06a17a60/15",
+      "06a17a60/18"
+     ],
+     "observed_states": 9,
+     "observed_trajectories": 7,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 20,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "080b0218": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/10",
+      "96131e7b/16",
+      "96131e7b/22",
+      "1d03b25f/0"
+     ],
+     "observed_states": 140,
+     "observed_trajectories": 25,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "0a4a47e6": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "4ae82e48/0",
+      "4ae82e48/1",
+      "4ae82e48/2",
+      "4ae82e48/3"
+     ],
+     "observed_states": 72,
+     "observed_trajectories": 12,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 16,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "0b50ca0d": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "0c0fdcd7": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "3ac1289c/0",
+      "9cd66f15/0",
+      "894816c3/0",
+      "f1b80250/0",
+      "89ea183d/0"
+     ],
+     "observed_states": 59,
+     "observed_trajectories": 37,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "0d07143c": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "c10b0c43/10",
+      "054c4ed2/2",
+      "054c4ed2/3",
+      "054c4ed2/4",
+      "054c4ed2/5"
+     ],
+     "observed_states": 115,
+     "observed_trajectories": 13,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "no",
+   "selected_states": 21,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "0f8c85a6": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "1046053f/12",
+      "1046053f/13",
+      "1046053f/14",
+      "1046053f/15",
+      "1046053f/16"
+     ],
+     "observed_states": 302,
+     "observed_trajectories": 6,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 23,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "0f970f01": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "13083bae/7",
+      "13083bae/8",
+      "13083bae/9",
+      "9c420e86/3",
+      "1046053f/69"
+     ],
+     "observed_states": 462,
+     "observed_trajectories": 31,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 15,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "10003186": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "8012d4f3/4",
+      "8012d4f3/5",
+      "8012d4f3/6"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "8012d4f3/4",
+      "8012d4f3/5",
+      "8012d4f3/6"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "100ff132": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "11dac74b": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "8012d4f3/4",
+      "2e8f6477/9",
+      "2e8f6477/10"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 2,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 16,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 0
+  },
+  "17a03f9b": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "e72dc073/43",
+      "e72dc073/44",
+      "e72dc073/45",
+      "3fafa5c3/54",
+      "3fafa5c3/55"
+     ],
+     "observed_states": 20,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 16,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 0
+  },
+  "17d63ad8": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "6ea56646/7",
+      "6ea56646/8",
+      "6ea56646/9",
+      "6ea56646/10",
+      "6ea56646/11"
+     ],
+     "observed_states": 14,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "6ea56646/7",
+      "6ea56646/8",
+      "6ea56646/9",
+      "6ea56646/10",
+      "6ea56646/11"
+     ],
+     "observed_states": 14,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 8,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "19367bc7": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/3",
+      "f224a4eb/4",
+      "f224a4eb/5",
+      "1f2793bd/1",
+      "1f2793bd/2"
+     ],
+     "observed_states": 1165,
+     "observed_trajectories": 80,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 26,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "19c641bd": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/0",
+      "dce5a79b/1",
+      "dce5a79b/2",
+      "2d00b63d/3",
+      "2d00b63d/4"
+     ],
+     "observed_states": 528,
+     "observed_trajectories": 92,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "1b43f7df": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "366f17da/6",
+      "366f17da/7",
+      "366f17da/25",
+      "366f17da/26",
+      "366f17da/27"
+     ],
+     "observed_states": 12,
+     "observed_trajectories": 1,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "366f17da/6",
+      "366f17da/7",
+      "366f17da/25",
+      "366f17da/26",
+      "366f17da/27"
+     ],
+     "observed_states": 12,
+     "observed_trajectories": 1,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "366f17da/6",
+      "366f17da/7",
+      "366f17da/25",
+      "366f17da/26",
+      "366f17da/27"
+     ],
+     "observed_states": 12,
+     "observed_trajectories": 1,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "4ae82e48/12",
+      "6ea56646/35",
+      "06a17a60/3",
+      "06a17a60/15",
+      "06a17a60/18"
+     ],
+     "observed_states": 9,
+     "observed_trajectories": 7,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 4,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 21,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "1cf04706": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "1defc293": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "1e011eb5": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "229675cd": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7",
+      "96131e7b/8",
+      "96131e7b/9"
+     ],
+     "observed_states": 126,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "233f9f09": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "237d2cc5": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/3",
+      "f224a4eb/4",
+      "f224a4eb/5",
+      "1f2793bd/1",
+      "1f2793bd/2"
+     ],
+     "observed_states": 1165,
+     "observed_trajectories": 80,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 25,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "238c3621": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/7",
+      "06c70de4/26",
+      "06c70de4/37",
+      "06c70de4/43",
+      "06c70de4/45"
+     ],
+     "observed_states": 80,
+     "observed_trajectories": 16,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "4ae82e48/2",
+      "4ae82e48/6",
+      "4ae82e48/7",
+      "4ae82e48/8",
+      "4ae82e48/9"
+     ],
+     "observed_states": 60,
+     "observed_trajectories": 11,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 17,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "23aecb38": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "25b00876": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7",
+      "96131e7b/8",
+      "96131e7b/9"
+     ],
+     "observed_states": 1770,
+     "observed_trajectories": 58,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "26a038ce": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "8a6653c8/1",
+      "2d00b63d/2",
+      "4ae82e48/0",
+      "4ae82e48/2",
+      "4ae82e48/3"
+     ],
+     "observed_states": 170,
+     "observed_trajectories": 25,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "4ae82e48/0",
+      "4ae82e48/1",
+      "4ae82e48/2",
+      "4ae82e48/3"
+     ],
+     "observed_states": 72,
+     "observed_trajectories": 12,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 19,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "2b96f402": {
+   "correct": true,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "9c420e86/3",
+      "9c420e86/20",
+      "4919aae9/2",
+      "4919aae9/7",
+      "6a84271c/27"
+     ],
+     "observed_states": 19,
+     "observed_trajectories": 11,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 29,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "2c45ecbb": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/7",
+      "06c70de4/26",
+      "06c70de4/30",
+      "06c70de4/37",
+      "06c70de4/38"
+     ],
+     "observed_states": 50,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 7,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 1
+  },
+  "2e67d04f": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "not_in_text",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [],
+     "observed_states": 0,
+     "observed_trajectories": 0,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": false,
+     "first_locations": [],
+     "observed_states": 0,
+     "observed_trajectories": 0,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": false,
+     "first_locations": [],
+     "observed_states": 0,
+     "observed_trajectories": 0,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 3,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 22,
+   "stage": "not fully observed in text",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "2e90de97": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/3",
+      "f224a4eb/4",
+      "f224a4eb/5",
+      "f224a4eb/6",
+      "f224a4eb/7"
+     ],
+     "observed_states": 2493,
+     "observed_trajectories": 84,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/6",
+      "f224a4eb/7",
+      "f224a4eb/8",
+      "f224a4eb/9",
+      "1f2793bd/1"
+     ],
+     "observed_states": 2036,
+     "observed_trajectories": 88,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 2
+  },
+  "30fab98c": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "31f146ba": {
+   "correct": true,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "4ae82e48/12",
+      "6ea56646/35",
+      "06a17a60/3",
+      "06a17a60/15",
+      "06a17a60/18"
+     ],
+     "observed_states": 9,
+     "observed_trajectories": 7,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 15,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "32d04f31": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "13083bae/7",
+      "13083bae/8",
+      "13083bae/9",
+      "0ab99e0c/3",
+      "0ab99e0c/4"
+     ],
+     "observed_states": 841,
+     "observed_trajectories": 58,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "32e719c2": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/9",
+      "96131e7b/15",
+      "96131e7b/21",
+      "9c420e86/39",
+      "1046053f/12"
+     ],
+     "observed_states": 362,
+     "observed_trajectories": 19,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 22,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "38726e61": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "787ceaeb/3",
+      "787ceaeb/4",
+      "787ceaeb/5",
+      "787ceaeb/6",
+      "787ceaeb/7"
+     ],
+     "observed_states": 14,
+     "observed_trajectories": 3,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 24,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "3fd81278": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/10",
+      "96131e7b/16",
+      "96131e7b/22",
+      "1d03b25f/0"
+     ],
+     "observed_states": 140,
+     "observed_trajectories": 25,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 22,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "40758d8b": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_set_match",
+   "observed": "unknown",
+   "question_type": "static-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "4252cc1c": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "static-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "48ab5c3d": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "static-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "4c6d1eb7": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "4b3a3363/3",
+      "4b3a3363/4",
+      "4b3a3363/5",
+      "18deaf75/17",
+      "18deaf75/18"
+     ],
+     "observed_states": 93,
+     "observed_trajectories": 7,
+     "selected": false,
+     "weak": true
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "4b3a3363/3",
+      "4b3a3363/4",
+      "4b3a3363/5",
+      "18deaf75/17",
+      "18deaf75/18"
+     ],
+     "observed_states": 93,
+     "observed_trajectories": 7,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "dynamic-environment",
+   "selected": "no",
+   "selected_states": 23,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "4ca9f7d7": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "8012d4f3/4",
+      "8012d4f3/5",
+      "8012d4f3/6",
+      "2e8f6477/6"
+     ],
+     "observed_states": 11,
+     "observed_trajectories": 5,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "06c70de4/28",
+      "dbddeaa4/12",
+      "6d5f3f24/25",
+      "cdc1b110/11"
+     ],
+     "observed_states": 31,
+     "observed_trajectories": 16,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 16,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "4d7dda89": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "8a6653c8/1",
+      "8a6653c8/2",
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "2d00b63d/2"
+     ],
+     "observed_states": 245,
+     "observed_trajectories": 30,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/2",
+      "dce5a79b/3",
+      "2325099f/2",
+      "2325099f/3",
+      "2325099f/4"
+     ],
+     "observed_states": 111,
+     "observed_trajectories": 29,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "317e3887/1",
+      "2325099f/1",
+      "576d210a/5",
+      "ff54501d/1",
+      "4ba5e9cb/2"
+     ],
+     "observed_states": 78,
+     "observed_trajectories": 25,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 3,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 22,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 3
+  },
+  "4df5e6b4": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "9c420e86/6",
+      "9c420e86/7",
+      "9c420e86/8",
+      "9c420e86/10",
+      "9c420e86/11"
+     ],
+     "observed_states": 170,
+     "observed_trajectories": 21,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 17,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "4dffe641": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "4f92aa38": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "not_in_text",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [],
+     "observed_states": 0,
+     "observed_trajectories": 0,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 18,
+   "stage": "not fully observed in text",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "50711c52": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/10",
+      "96131e7b/16",
+      "96131e7b/22",
+      "13083bae/7",
+      "13083bae/8"
+     ],
+     "observed_states": 61,
+     "observed_trajectories": 22,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "507a0fe8": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "521b124f": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/0",
+      "dce5a79b/1",
+      "06c70de4/0",
+      "06c70de4/1",
+      "317e3887/0"
+     ],
+     "observed_states": 96,
+     "observed_trajectories": 48,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "01b7cff8/1",
+      "cdc1b110/1",
+      "5110abd0/1",
+      "2a99f536/1",
+      "c605a94c/28"
+     ],
+     "observed_states": 5,
+     "observed_trajectories": 5,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 23,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "5387d23d": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "e5aec2da/23",
+      "e5aec2da/49",
+      "028ee25f/2",
+      "af969ebc/2",
+      "af969ebc/11"
+     ],
+     "observed_states": 5,
+     "observed_trajectories": 3,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "no",
+   "selected_states": 21,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "58c34839": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "5aaf0f61": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/4",
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 689,
+     "observed_trajectories": 31,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 15,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "5d6b993a": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/2",
+      "06c70de4/3",
+      "06c70de4/4",
+      "06c70de4/5",
+      "06c70de4/6"
+     ],
+     "observed_states": 455,
+     "observed_trajectories": 37,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 7,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 1
+  },
+  "5db4899c": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "2d00b63d/3",
+      "2d00b63d/4",
+      "2d00b63d/5",
+      "2d00b63d/6"
+     ],
+     "observed_states": 13,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "2d00b63d/3",
+      "2d00b63d/4",
+      "2d00b63d/5",
+      "2d00b63d/6"
+     ],
+     "observed_states": 14,
+     "observed_trajectories": 4,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 19,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "5f100f22": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/2",
+      "f224a4eb/5",
+      "96131e7b/2",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 529,
+     "observed_trajectories": 65,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 16,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "60c7ca22": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "4ae82e48/0",
+      "4ae82e48/1",
+      "4ae82e48/2",
+      "4ae82e48/3"
+     ],
+     "observed_states": 72,
+     "observed_trajectories": 12,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "60f2b293": {
+   "correct": true,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "4ae82e48/12",
+      "6ea56646/35",
+      "06a17a60/3",
+      "06a17a60/15",
+      "06a17a60/18"
+     ],
+     "observed_states": 9,
+     "observed_trajectories": 7,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 18,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "616c238d": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "626e401e": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "4ae82e48/1",
+      "1ad1af4b/1",
+      "4ba5e9cb/0"
+     ],
+     "observed_states": 14,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "4ae82e48/1",
+      "1ad1af4b/1",
+      "4ba5e9cb/0"
+     ],
+     "observed_states": 14,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "errors-gotchas",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 0
+  },
+  "634973c3": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "1046053f/27",
+      "1046053f/28",
+      "1046053f/29",
+      "1046053f/31",
+      "1046053f/36"
+     ],
+     "observed_states": 51,
+     "observed_trajectories": 5,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "1046053f/12",
+      "1046053f/13",
+      "1046053f/14",
+      "1046053f/15",
+      "1046053f/16"
+     ],
+     "observed_states": 256,
+     "observed_trajectories": 7,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "1046053f/27",
+      "1046053f/28",
+      "1046053f/29",
+      "1046053f/31",
+      "1046053f/36"
+     ],
+     "observed_states": 51,
+     "observed_trajectories": 5,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 3,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 17,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 3
+  },
+  "63a1b94b": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "668f7b74": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/6",
+      "f224a4eb/7",
+      "f224a4eb/8",
+      "f224a4eb/9",
+      "77502b3f/0"
+     ],
+     "observed_states": 2400,
+     "observed_trajectories": 79,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/1",
+      "f224a4eb/2",
+      "96131e7b/1",
+      "96131e7b/2",
+      "96131e7b/7"
+     ],
+     "observed_states": 1438,
+     "observed_trajectories": 84,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "674a6972": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "679111c6": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/9",
+      "96131e7b/15",
+      "96131e7b/21",
+      "0ab99e0c/10",
+      "2f191311/2"
+     ],
+     "observed_states": 271,
+     "observed_trajectories": 22,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/0",
+      "f224a4eb/1",
+      "f224a4eb/2",
+      "f224a4eb/3",
+      "f224a4eb/4"
+     ],
+     "observed_states": 1313,
+     "observed_trajectories": 67,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/4",
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 689,
+     "observed_trajectories": 31,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7",
+      "96131e7b/8"
+     ],
+     "observed_states": 420,
+     "observed_trajectories": 29,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 4,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 28,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 4
+  },
+  "691cd1da": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "bfd28157/6",
+      "bfd28157/7",
+      "bfd28157/8",
+      "6ea56646/5",
+      "6ea56646/6"
+     ],
+     "observed_states": 84,
+     "observed_trajectories": 9,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 14,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "6a2e74de": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "static-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "6cb8ce37": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "0ab99e0c/14",
+      "1d03b25f/1",
+      "9c420e86/34",
+      "9c420e86/35",
+      "9c420e86/45"
+     ],
+     "observed_states": 48,
+     "observed_trajectories": 16,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "no",
+   "selected_states": 14,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "6d975a08": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "4ae82e48/1",
+      "1ad1af4b/1",
+      "4ba5e9cb/0"
+     ],
+     "observed_states": 14,
+     "observed_trajectories": 11,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "2d00b63d/2",
+      "2d00b63d/3",
+      "2d00b63d/4"
+     ],
+     "observed_states": 126,
+     "observed_trajectories": 12,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "4ae82e48/1",
+      "1ad1af4b/1",
+      "1ad1af4b/2"
+     ],
+     "observed_states": 18,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 3,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 17,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "6f9cb5fc": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/0",
+      "dce5a79b/1",
+      "dce5a79b/2",
+      "dce5a79b/3",
+      "8a6653c8/0"
+     ],
+     "observed_states": 1023,
+     "observed_trajectories": 81,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 23,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "73297783": {
+   "correct": false,
+   "delivered": "partial",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "1ad1af4b/0",
+      "78f5c752/5"
+     ],
+     "observed_states": 2,
+     "observed_trajectories": 2,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/3",
+      "4ae82e48/0",
+      "4ae82e48/1",
+      "4ae82e48/2",
+      "4ae82e48/3"
+     ],
+     "observed_states": 735,
+     "observed_trajectories": 84,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "dbddeaa4/19",
+      "1e58cea9/14",
+      "aacfe598/10"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 3,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "dbddeaa4/15",
+      "dbddeaa4/16",
+      "1e58cea9/8",
+      "1e58cea9/12",
+      "aacfe598/6"
+     ],
+     "observed_states": 8,
+     "observed_trajectories": 3,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/7",
+      "06c70de4/26",
+      "06c70de4/37",
+      "06c70de4/39",
+      "06c70de4/43"
+     ],
+     "observed_states": 371,
+     "observed_trajectories": 28,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "3ac1289c/1",
+      "3ac1289c/2",
+      "3ac1289c/3",
+      "3ac1289c/4",
+      "3ac1289c/5"
+     ],
+     "observed_states": 496,
+     "observed_trajectories": 39,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 6,
+   "question_type": "procedure",
+   "selected": "partial",
+   "selected_states": 21,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 3
+  },
+  "73b6738b": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7",
+      "96131e7b/8"
+     ],
+     "observed_states": 420,
+     "observed_trajectories": 29,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "73cbefdc": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "77db204d": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "dbddeaa4/20",
+      "1e58cea9/15",
+      "1e58cea9/16",
+      "aacfe598/11",
+      "aacfe598/12"
+     ],
+     "observed_states": 5,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 25,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "7bfbd5f1": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "static-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "7c8efee5": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/0",
+      "dce5a79b/1",
+      "8a6653c8/0",
+      "8a6653c8/1",
+      "8a6653c8/2"
+     ],
+     "observed_states": 1017,
+     "observed_trajectories": 88,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 23,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "7ea13f14": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "820d56e2": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "4ae82e48/2",
+      "4ae82e48/3",
+      "4ae82e48/4",
+      "4ae82e48/5",
+      "4ae82e48/6"
+     ],
+     "observed_states": 79,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "83c35034": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/2",
+      "f224a4eb/5",
+      "96131e7b/2",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 529,
+     "observed_trajectories": 65,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "85fc5722": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "afc7df70/5",
+      "afc7df70/6",
+      "afc7df70/7",
+      "afc7df70/8",
+      "afc7df70/10"
+     ],
+     "observed_states": 23,
+     "observed_trajectories": 2,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "no",
+   "selected_states": 21,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "882965b7": {
+   "correct": false,
+   "delivered": "partial",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "afc7df70/5",
+      "afc7df70/6",
+      "afc7df70/7",
+      "afc7df70/8",
+      "afc7df70/10"
+     ],
+     "observed_states": 23,
+     "observed_trajectories": 2,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "afc7df70/7",
+      "afc7df70/13",
+      "857659bd/10",
+      "857659bd/11",
+      "857659bd/13"
+     ],
+     "observed_states": 13,
+     "observed_trajectories": 2,
+     "selected": false,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "0ab99e0c/2",
+      "0ab99e0c/8",
+      "0ab99e0c/12",
+      "1046053f/77",
+      "16143664/7"
+     ],
+     "observed_states": 35,
+     "observed_trajectories": 9,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "0ab99e0c/2",
+      "0ab99e0c/8",
+      "0ab99e0c/12",
+      "2f191311/2",
+      "2f191311/9"
+     ],
+     "observed_states": 40,
+     "observed_trajectories": 12,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 4,
+   "question_type": "dynamic-environment",
+   "selected": "partial",
+   "selected_states": 8,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "8955b988": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/13",
+      "06c70de4/14",
+      "06c70de4/17",
+      "06c70de4/18",
+      "e9a95d4f/23"
+     ],
+     "observed_states": 6,
+     "observed_trajectories": 2,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/13",
+      "06c70de4/14",
+      "06c70de4/17",
+      "06c70de4/18",
+      "e9a95d4f/23"
+     ],
+     "observed_states": 6,
+     "observed_trajectories": 2,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 10,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "8b09f378": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/0",
+      "f224a4eb/1",
+      "f224a4eb/2",
+      "f224a4eb/3",
+      "f224a4eb/4"
+     ],
+     "observed_states": 1313,
+     "observed_trajectories": 67,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 29,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "8c55d6bc": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2a99f536/2",
+      "2a99f536/3",
+      "2a99f536/4",
+      "2a99f536/5"
+     ],
+     "observed_states": 4,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 16,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "8e320e42": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "132da65a/0",
+      "132da65a/1",
+      "132da65a/2",
+      "132da65a/3",
+      "132da65a/4"
+     ],
+     "observed_states": 971,
+     "observed_trajectories": 67,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7",
+      "96131e7b/8",
+      "96131e7b/9"
+     ],
+     "observed_states": 594,
+     "observed_trajectories": 41,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 29,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "8f70bc0e": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/38",
+      "06c70de4/39",
+      "317e3887/2",
+      "317e3887/3",
+      "317e3887/4"
+     ],
+     "observed_states": 166,
+     "observed_trajectories": 25,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 27,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "8f752563": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/0",
+      "f224a4eb/1",
+      "f224a4eb/2",
+      "f224a4eb/3",
+      "f224a4eb/4"
+     ],
+     "observed_states": 1313,
+     "observed_trajectories": 67,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 28,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "901b7d17": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "1046053f/3",
+      "1046053f/5",
+      "110d48d3/3",
+      "110d48d3/29",
+      "110d48d3/30"
+     ],
+     "observed_states": 21,
+     "observed_trajectories": 8,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "91d0775e": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "927c65a2": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/0",
+      "f224a4eb/1",
+      "f224a4eb/2",
+      "f224a4eb/3",
+      "f224a4eb/4"
+     ],
+     "observed_states": 1313,
+     "observed_trajectories": 67,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/3",
+      "f224a4eb/4",
+      "f224a4eb/5",
+      "1f2793bd/1",
+      "1f2793bd/2"
+     ],
+     "observed_states": 1165,
+     "observed_trajectories": 80,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 26,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "97d5309a": {
+   "correct": true,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "2d00b63d/2",
+      "41e879fd/0",
+      "1ad1af4b/6",
+      "1e58cea9/7",
+      "2af3e2bb/3"
+     ],
+     "observed_states": 6,
+     "observed_trajectories": 6,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 16,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "984022b1": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "99fa7c96": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "6474579e/10",
+      "6474579e/11",
+      "6474579e/12"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 1,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 18,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "9c074855": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "0b072635/7",
+      "0b072635/14",
+      "4919aae9/33",
+      "4919aae9/53",
+      "4919aae9/54"
+     ],
+     "observed_states": 176,
+     "observed_trajectories": 11,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 19,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "9c32bca6": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "e72dc073/43",
+      "e72dc073/44",
+      "e72dc073/45",
+      "3fafa5c3/54",
+      "3fafa5c3/55"
+     ],
+     "observed_states": 19,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "e72dc073/43",
+      "e72dc073/44",
+      "e72dc073/45",
+      "3fafa5c3/54",
+      "3fafa5c3/55"
+     ],
+     "observed_states": 19,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 0
+  },
+  "9cae869c": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "a12b7094": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/1",
+      "3331c568/1",
+      "b1c719fb/1"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/1",
+      "3331c568/1",
+      "b1c719fb/1"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/1",
+      "3331c568/1",
+      "b1c719fb/1"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "8a6653c8/0",
+      "8a6653c8/1",
+      "8a6653c8/2",
+      "2d00b63d/1",
+      "3ac1289c/0"
+     ],
+     "observed_states": 651,
+     "observed_trajectories": 43,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "2d00b63d/8",
+      "4ae82e48/2",
+      "4ae82e48/3"
+     ],
+     "observed_states": 20,
+     "observed_trajectories": 6,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "1ad1af4b/0",
+      "868ad4c0/1",
+      "87d5dc7f/11",
+      "87d5dc7f/28",
+      "87d5dc7f/37"
+     ],
+     "observed_states": 16,
+     "observed_trajectories": 8,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/1",
+      "3331c568/1",
+      "3331c568/2",
+      "b1c719fb/1"
+     ],
+     "observed_states": 4,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 7,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "a42071db": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/0",
+      "dce5a79b/1",
+      "dce5a79b/2",
+      "dce5a79b/3",
+      "8a6653c8/0"
+     ],
+     "observed_states": 1023,
+     "observed_trajectories": 81,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "a45edf3e": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/9",
+      "96131e7b/15",
+      "96131e7b/21",
+      "9c420e86/39",
+      "1046053f/12"
+     ],
+     "observed_states": 362,
+     "observed_trajectories": 19,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 21,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "a482c0d9": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/2",
+      "f224a4eb/5",
+      "96131e7b/2",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 529,
+     "observed_trajectories": 65,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 30,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "a7da9ab3": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "8012d4f3/4",
+      "8012d4f3/5",
+      "8012d4f3/6"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "8012d4f3/4",
+      "8012d4f3/5",
+      "8012d4f3/6"
+     ],
+     "observed_states": 3,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 19,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "a7edfb7a": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7",
+      "96131e7b/8",
+      "96131e7b/9"
+     ],
+     "observed_states": 677,
+     "observed_trajectories": 44,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "a92dff92": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "4ae82e48/2",
+      "4ae82e48/3",
+      "4ae82e48/4",
+      "4ae82e48/5",
+      "4ae82e48/6"
+     ],
+     "observed_states": 79,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "aca57021": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "ad903be2": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "0b072635/7",
+      "0b072635/14",
+      "4919aae9/33",
+      "4919aae9/53",
+      "4919aae9/54"
+     ],
+     "observed_states": 192,
+     "observed_trajectories": 14,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 24,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "adddeaa5": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/4",
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 689,
+     "observed_trajectories": 31,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7",
+      "96131e7b/8"
+     ],
+     "observed_states": 420,
+     "observed_trajectories": 29,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "b2595523": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "8a6653c8/0",
+      "8a6653c8/1",
+      "8a6653c8/2",
+      "06c70de4/7",
+      "06c70de4/26"
+     ],
+     "observed_states": 249,
+     "observed_trajectories": 39,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "no",
+   "selected_states": 10,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "b54161f8": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "4919aae9/69",
+      "4919aae9/81",
+      "4919aae9/83",
+      "4919aae9/84",
+      "4919aae9/85"
+     ],
+     "observed_states": 7,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "4919aae9/69",
+      "4919aae9/81",
+      "4919aae9/83",
+      "4919aae9/84",
+      "4919aae9/85"
+     ],
+     "observed_states": 7,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 22,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "b5a25676": {
+   "correct": true,
+   "delivered": "partial",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "4ae82e48/0",
+      "4ae82e48/1",
+      "4ae82e48/2",
+      "4ae82e48/3"
+     ],
+     "observed_states": 72,
+     "observed_trajectories": 12,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": false,
+     "first_locations": [
+      "4ae82e48/12",
+      "6ea56646/35",
+      "06a17a60/3",
+      "06a17a60/15",
+      "06a17a60/18"
+     ],
+     "observed_states": 9,
+     "observed_trajectories": 7,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 2,
+   "question_type": "dynamic-environment",
+   "selected": "partial",
+   "selected_states": 19,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "b7cc4da2": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/4",
+      "9c420e86/5",
+      "9c420e86/15",
+      "2ae5ac35/1",
+      "0b072635/1"
+     ],
+     "observed_states": 142,
+     "observed_trajectories": 68,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/4",
+      "96131e7b/23",
+      "96131e7b/24",
+      "96131e7b/25",
+      "96131e7b/26"
+     ],
+     "observed_states": 381,
+     "observed_trajectories": 70,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 13,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "b828a6b2": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "b8cabd09": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "b8d56b89": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "cdc1b110/2",
+      "cdc1b110/3",
+      "cdc1b110/4",
+      "cdc1b110/5",
+      "cdc1b110/6"
+     ],
+     "observed_states": 32,
+     "observed_trajectories": 4,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 23,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "bfb3bcc4": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "c0593d69": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "9c420e86/3",
+      "9c420e86/20",
+      "4919aae9/2",
+      "4919aae9/7",
+      "6a84271c/27"
+     ],
+     "observed_states": 19,
+     "observed_trajectories": 11,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 17,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "c36b0d68": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "90d36b63/21",
+      "90d36b63/22",
+      "90d36b63/23",
+      "90d36b63/25",
+      "90d36b63/26"
+     ],
+     "observed_states": 22,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 14,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "c56e69ca": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "static-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "c738b934": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "c7e367e2": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "static-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "c9568c9b": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "not_in_text",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [],
+     "observed_states": 0,
+     "observed_trajectories": 0,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 12,
+   "stage": "not fully observed in text",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "c9c6a06a": {
+   "correct": true,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "afa62eac/3",
+      "afa62eac/18",
+      "afa62eac/19",
+      "afa62eac/22",
+      "afa62eac/23"
+     ],
+     "observed_states": 43,
+     "observed_trajectories": 2,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 23,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "ca8e070b": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/9",
+      "96131e7b/15",
+      "96131e7b/21",
+      "9c420e86/39",
+      "1046053f/12"
+     ],
+     "observed_states": 362,
+     "observed_trajectories": 19,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 24,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "d0d61088": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/4",
+      "1046053f/26",
+      "1046053f/35",
+      "42b931a1/43",
+      "42b931a1/47"
+     ],
+     "observed_states": 22,
+     "observed_trajectories": 10,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 0
+  },
+  "d16a18fe": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/13",
+      "06c70de4/14",
+      "06c70de4/17",
+      "06c70de4/18",
+      "518d6fea/0"
+     ],
+     "observed_states": 116,
+     "observed_trajectories": 18,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "4ae82e48/0",
+      "06c70de4/2",
+      "06c70de4/3",
+      "06c70de4/4",
+      "06c70de4/5"
+     ],
+     "observed_states": 1008,
+     "observed_trajectories": 73,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "2d00b63d/2",
+      "2d00b63d/3",
+      "2d00b63d/4"
+     ],
+     "observed_states": 135,
+     "observed_trajectories": 18,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/2",
+      "dce5a79b/3",
+      "2325099f/2",
+      "2325099f/3",
+      "2325099f/4"
+     ],
+     "observed_states": 111,
+     "observed_trajectories": 29,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 4,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 24,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 4
+  },
+  "d3300354": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "3331c568/2"
+     ],
+     "observed_states": 1,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 22,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "d5b9fda4": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "c605a94c/29",
+      "c605a94c/30",
+      "c605a94c/31",
+      "c605a94c/32",
+      "c605a94c/33"
+     ],
+     "observed_states": 8,
+     "observed_trajectories": 1,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 25,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "d63e8a7f": {
+   "correct": false,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "d83c4bf7": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "f224a4eb/6",
+      "f224a4eb/7",
+      "f224a4eb/8",
+      "f224a4eb/9",
+      "4c9eaae0/3"
+     ],
+     "observed_states": 505,
+     "observed_trajectories": 23,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "no",
+   "selected_states": 22,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "d886b018": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "4ae82e48/2",
+      "4ae82e48/3",
+      "4ae82e48/6",
+      "4ae82e48/7",
+      "4ae82e48/8"
+     ],
+     "observed_states": 10,
+     "observed_trajectories": 1,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 17,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "dae9f7e9": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "dea446d0": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "deb008ed": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/2",
+      "06c70de4/3",
+      "06c70de4/4",
+      "06c70de4/5",
+      "06c70de4/6"
+     ],
+     "observed_states": 482,
+     "observed_trajectories": 35,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "dbddeaa4/1",
+      "dbddeaa4/2",
+      "dbddeaa4/3",
+      "dbddeaa4/4",
+      "dbddeaa4/5"
+     ],
+     "observed_states": 72,
+     "observed_trajectories": 11,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 17,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 2
+  },
+  "e3a1d7f3": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "8a6653c8/0",
+      "8a6653c8/1",
+      "8a6653c8/2",
+      "06c70de4/7",
+      "06c70de4/26"
+     ],
+     "observed_states": 249,
+     "observed_trajectories": 39,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 22,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "e71f7c92": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/2",
+      "2d00b63d/3",
+      "2d00b63d/4",
+      "2d00b63d/5",
+      "2d00b63d/6"
+     ],
+     "observed_states": 13,
+     "observed_trajectories": 3,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "e77d1287": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "4ba5e9cb/4",
+      "4ba5e9cb/5",
+      "2e8f6477/6",
+      "2e8f6477/7",
+      "2e8f6477/8"
+     ],
+     "observed_states": 12,
+     "observed_trajectories": 4,
+     "selected": true,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 16,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "e9fde9fe": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "1046053f/18",
+      "1046053f/19",
+      "1046053f/67",
+      "1046053f/68",
+      "1046053f/69"
+     ],
+     "observed_states": 186,
+     "observed_trajectories": 8,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 18,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "eab07e81": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "dynamic-environment",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "eb3cfd03": {
+   "correct": true,
+   "delivered": "unknown",
+   "eval": "mc_choice_match",
+   "observed": "unknown",
+   "question_type": "procedure",
+   "reason": "multiple choice: no phrase to locate",
+   "selected": "unknown",
+   "stage": "unknown (multiple choice)"
+  },
+  "edb69441": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/2",
+      "2d00b63d/2",
+      "4ae82e48/8",
+      "06c70de4/2",
+      "06c70de4/3"
+     ],
+     "observed_states": 867,
+     "observed_trajectories": 75,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/13",
+      "06c70de4/14",
+      "06c70de4/17",
+      "06c70de4/18",
+      "e9a95d4f/23"
+     ],
+     "observed_states": 6,
+     "observed_trajectories": 2,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "dce5a79b/0",
+      "dce5a79b/1",
+      "06c70de4/0",
+      "06c70de4/1",
+      "06c70de4/2"
+     ],
+     "observed_states": 735,
+     "observed_trajectories": 51,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/13",
+      "06c70de4/14",
+      "06c70de4/17",
+      "06c70de4/18",
+      "e9a95d4f/23"
+     ],
+     "observed_states": 6,
+     "observed_trajectories": 2,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/0",
+      "06c70de4/1",
+      "06c70de4/2",
+      "06c70de4/3",
+      "06c70de4/4"
+     ],
+     "observed_states": 940,
+     "observed_trajectories": 58,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 5,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 17,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 1,
+   "weak_phrases": 3
+  },
+  "f0882f6e": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/0",
+      "f224a4eb/1",
+      "f224a4eb/2",
+      "f224a4eb/3",
+      "f224a4eb/4"
+     ],
+     "observed_states": 1313,
+     "observed_trajectories": 67,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 19,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "f13eb38d": {
+   "correct": false,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "1ad1af4b/0",
+      "78f5c752/5"
+     ],
+     "observed_states": 2,
+     "observed_trajectories": 2,
+     "selected": false,
+     "weak": false
+    }
+   ],
+   "phrases": 1,
+   "question_type": "procedure",
+   "selected": "no",
+   "selected_states": 19,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 0
+  },
+  "f1d8a168": {
+   "correct": false,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/9",
+      "96131e7b/15",
+      "96131e7b/21",
+      "9c420e86/39",
+      "1046053f/12"
+     ],
+     "observed_states": 362,
+     "observed_trajectories": 19,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 15,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "f1f9de44": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "f224a4eb/2",
+      "f224a4eb/5",
+      "96131e7b/2",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 529,
+     "observed_trajectories": 65,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "yes",
+   "selected_states": 13,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "f3496ca5": {
+   "correct": true,
+   "delivered": "no",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": false,
+     "first_locations": [
+      "0ab99e0c/14",
+      "1d03b25f/1",
+      "9c420e86/34",
+      "9c420e86/35",
+      "9c420e86/45"
+     ],
+     "observed_states": 48,
+     "observed_trajectories": 16,
+     "selected": false,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "static-environment",
+   "selected": "no",
+   "selected_states": 22,
+   "stage": "observed, not selected",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "f35bac4a": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "96131e7b/3",
+      "96131e7b/4",
+      "96131e7b/5",
+      "96131e7b/6",
+      "96131e7b/7"
+     ],
+     "observed_states": 1104,
+     "observed_trajectories": 51,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "f93031d2": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "06c70de4/7",
+      "06c70de4/26",
+      "06c70de4/37",
+      "06c70de4/43",
+      "06c70de4/45"
+     ],
+     "observed_states": 47,
+     "observed_trajectories": 8,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 1,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 20,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "fec652a9": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match_ordered",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "4ae82e48/1",
+      "1ad1af4b/1",
+      "1ad1af4b/2",
+      "1ad1af4b/3",
+      "1ad1af4b/4"
+     ],
+     "observed_states": 10,
+     "observed_trajectories": 4,
+     "selected": true,
+     "weak": false
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "2d00b63d/0",
+      "2d00b63d/1",
+      "2d00b63d/2",
+      "2d00b63d/3",
+      "2d00b63d/4"
+     ],
+     "observed_states": 126,
+     "observed_trajectories": 12,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 2,
+   "question_type": "procedure",
+   "selected": "yes",
+   "selected_states": 22,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 1
+  },
+  "ffa4e57e": {
+   "correct": true,
+   "delivered": "yes",
+   "eval": "norm_phrase_set_match",
+   "lost_to_clipping": false,
+   "observed": "yes",
+   "phrase_detail": [
+    {
+     "delivered": true,
+     "first_locations": [
+      "bfd28157/6",
+      "bfd28157/7",
+      "bfd28157/8",
+      "6ea56646/5",
+      "6ea56646/6"
+     ],
+     "observed_states": 84,
+     "observed_trajectories": 9,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "bfd28157/6",
+      "bfd28157/7",
+      "bfd28157/8",
+      "6ea56646/5",
+      "6ea56646/6"
+     ],
+     "observed_states": 132,
+     "observed_trajectories": 9,
+     "selected": true,
+     "weak": true
+    },
+    {
+     "delivered": true,
+     "first_locations": [
+      "317e3887/3",
+      "317e3887/4",
+      "317e3887/5",
+      "317e3887/6",
+      "317e3887/7"
+     ],
+     "observed_states": 283,
+     "observed_trajectories": 19,
+     "selected": true,
+     "weak": true
+    }
+   ],
+   "phrases": 3,
+   "question_type": "dynamic-environment",
+   "selected": "yes",
+   "selected_states": 11,
+   "stage": "delivered (phrases present)",
+   "states_over_cap": 0,
+   "weak_phrases": 3
+  }
+ },
+ "rows": [
+  "/Volumes/A/.hms-lb/lme2/round5/runs/slice12i_web/prompt_rows.jsonl",
+  "/Volumes/A/.hms-lb/lme2/round5/runs/slice12i_enterprise/prompt_rows.jsonl"
+ ],
+ "summary": {
+  "delivered (phrases present)": {
+   "correct": 64,
+   "n": 84
+  },
+  "not fully observed in text": {
+   "correct": 0,
+   "n": 3
+  },
+  "observed, not selected": {
+   "correct": 8,
+   "n": 25
+  },
+  "unknown (multiple choice)": {
+   "correct": 23,
+   "n": 37
+  }
+ }
+}

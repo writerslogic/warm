@@ -39,6 +39,36 @@ An end-to-end reader test with a compact pack did not beat the baseline reader o
 
 The ratio falls as pages repeat; it is a property of this synthetic repetition, not a prediction for other data. Nothing was run past 1000 episodes.
 
+## Procedures learned from experience
+
+`experience::procedures::ProcedureStore` turns repeated successful episodes into reusable procedures and revises them when a later episode disproves them. It is a first slice: it is not wired into the memory API and has no measured benefit on any benchmark.
+
+- **Learn.** `learn` groups successful episodes by their grounded path: for each action, the page it was taken on (page template), its `role 'name'` label and the page it led to. A group with at least `min_support` episodes (default 2) becomes a procedure.
+- **Revise.** `observe` checks every stored episode against every procedure. An episode that takes a step and sees an error, no visible change or a different next page is recorded as a refutation with its episode and step. When some control state held before the step in every supporting run and in none of the refuting runs, the procedure becomes `Revised` and carries that guard. With no such state, it is `Retired` once the refutations equal the support. Nothing is deleted.
+- **Ground.** `ProcedureStore::ground` binds a step to a control of a new page by its role and name, reports `Ambiguous(n)` or `Missing` when the page does not identify one, and fails with the guard when the guard does not hold.
+
+`ProcedureStore::refresh` recomputes the library from the episodes now stored, so purging a supporter or a refuter leaves no stale support.
+
+Limits: grounding is by role and name, so two controls with the same label are ambiguous; a guard is one control field, not a conjunction; steps with typed values are not generalised into parameters; and guards are only found for episodes ingested with `ingest_with_controls`.
+
+## Action targets and occurrence addresses
+
+An observation stored with an action records the action as given (`ActionRecord`), the previous stored step, and for each handle the action names (a drag has a subject and a destination) an address in that previous observation: its step plus the child indices from its root. Labels such as `button 'Delete'` stay display text. A content id, a structural id, a label or a bare handle cannot name an occurrence: identical sibling subtrees share the first two, same-named controls in different rows share the third, and handles are reused between observations.
+
+A target is `Resolved` only when the previous stored step is the step before and its tree has exactly one element with that handle. Otherwise it is `Unresolved` with a reason: no predecessor, a gap in the capture, handle not found, handle on two elements, or no handle context (the previous observation came from a snapshot older than version 4). A caller-supplied label has no target metadata and fabricates none. Occurrence addresses are not entity identities: nothing here says two occurrences are the same record.
+
+Each episode has a `uid` that is never reused, so an `OccurrenceRef` held by a caller does not resolve into a later episode that took the same slot or name; after a purge it resolves to nothing. Snapshots from version 4 on persist the action records, the latest handle map with addresses, and the uids, so the first action after a reopen resolves against the stored predecessor, and journal replay reproduces the same records. Earlier snapshots read as `Legacy` steps whose targets are unknown. A retry of a step is a duplicate only if its original action input matches and so do its handle addresses. Content interning ignores handles, so each step keeps a digest of its handle-to-address map. Two clicks on different same-named controls conflict. So does a retry whose handles were swapped, added, removed or duplicated. A step restored from a pre-version-4 snapshot has no digest; a retry of it is accepted as before, and its targets stay unknown rather than being upgraded. Version 4 snapshots kept resolved targets but no digests (version 5 adds them). For those steps the episode's stored handle map still gives the latest step's digest, so its retry is checked; a retry of an older one returns `Unverifiable`, because the addresses it was resolved against are gone, and the step keeps that status when the snapshot is rewritten. An operation that fails validation (for example an oversized goal) stores nothing, so a rejected step never consumes an episode uid. Inspect with `Experience::action_targets`, `Experience::occurrence`, or `Warm.experience_action_targets(episode, step)` in Python.
+
+## Conditions learned for an action
+
+`experience::enablement::EnablementStore` learns when an action takes effect. Each observed transition (the controls before an action, and whether the action had an effect: no error, and the page or its properties changed) is evidence. The hypothesis class is explicit: conjunctions of at most two atoms (the target is not disabled; at least or exactly k checked controls of a role; all of a role checked; a field is filled; a control state equals a value). A hypothesis survives while it agrees with every observation.
+
+`predict` returns `Effective` or `Ineffective` only when every survivor agrees, with the observations that excluded the alternatives predicting otherwise. Otherwise it returns `Unresolved` with the simplest surviving alternatives, `Unexplained` when no hypothesis of the class fits, or `NoEvidence`. The store is recomputed from the stored episodes, so `purge_episode` followed by `refresh` equals learning the remaining episodes, and withdrawing the observation that separated two hypotheses reopens the question.
+
+Limits: a role group is every control of that role on the page, not a region; atoms are positive only; the hypothesis class does not include sums over several roles or ordering. Measured benefit on any benchmark: none yet.
+
+`Experience::state_diff(episode, from, to)` is the row-aware companion to the listed lines. It reports property changes and added or removed nodes by address (role, name and ordinal), and marks a change `exact: false` when same-labelled siblings make the match positional. `PathEntry::state_changed` says a step changed content (including properties) while `no_change` says the listed lines did not.
+
 ## Rust API
 
 ```rust

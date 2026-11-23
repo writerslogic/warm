@@ -13,6 +13,10 @@ use serde::{Deserialize, Serialize};
 use super::effects::delta;
 use super::form::Control;
 use super::regions::{self, Region};
+use super::target::{
+    handles_bound, handles_digest, ActionRecord, HandleEntry, HandleMap, HandleRecord, Resolution,
+    Spot,
+};
 use super::{
     doc, index_err, ControlCounts, Episode, Experience, ExperienceConfig, ExperienceError, Result,
     StepRec, FLAG_ERROR, FLAG_NO_CHANGE,
@@ -22,11 +26,15 @@ use crate::core::documents::MemoryDocumentStore;
 pub const SNAPSHOT_FILE: &str = "experience.wexp";
 const MAGIC: &[u8; 4] = b"WEXP";
 /// Version 2 adds the journal sequence the snapshot covers and each episode's latest handle
-/// map. Version 1 files open with sequence 0 and empty handle maps. Version 3 adds the form
-/// controls of steps; it is written only when a step has controls, so a store without them
-/// keeps writing version 2 byte for byte, and a reader that predates version 3 refuses the
-/// file rather than dropping the controls.
-const VERSION: u8 = 3;
+/// map; version 1 files open with sequence 0 and empty handle maps. Version 3 adds the form
+/// controls of steps, version 4 action records and handle addresses, version 5 the per-step
+/// handle digest. A store that never held an episode writes version 3 when it has controls
+/// and version 2 otherwise; any other store writes the current version. A reader that
+/// predates a version refuses the file rather than dropping what it adds.
+const VERSION: u8 = 5;
+/// Action records and handle addresses, without the per-step handle digest.
+const VERSION_WITHOUT_DIGESTS: u8 = 4;
+const VERSION_WITH_CONTROLS: u8 = 3;
 const VERSION_WITHOUT_CONTROLS: u8 = 2;
 const OLDEST_VERSION: u8 = 1;
 const HEADER: usize = 4 + 1 + 3 + 8 + 4;
@@ -54,6 +62,16 @@ struct SnapStep {
     regions: Vec<(u32, u32)>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     controls: Vec<Control>,
+    /// The action as given and its resolved targets. Absent in versions before 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    action: Option<ActionRecord>,
+    /// Digest of the handle addresses of the observation. Absent in versions before 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    handle_digest: Option<(u64, u64)>,
+    /// The step's targets were resolved against handle addresses that were not kept. Without
+    /// it and without a digest, the step predates handle addresses. Absent before version 5.
+    #[serde(default, skip_serializing_if = "is_false")]
+    handles_unrecorded: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -65,6 +83,21 @@ struct SnapEpisode {
     /// Handle to element label of the latest observation, sorted by handle.
     #[serde(default)]
     handles: Vec<(String, String)>,
+    /// Address of each handle of the latest observation: child indices from its root, or `None`
+    /// when two elements carry the handle. Absent in versions before 4.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    spots: Vec<(String, Option<Vec<u32>>)>,
+    /// Absent in versions before 4; such episodes are numbered on load.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    uid: u64,
+}
+
+fn is_zero(n: &u64) -> bool {
+    *n == 0
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 #[derive(Serialize, Deserialize)]
@@ -78,6 +111,28 @@ pub(super) struct Snap {
     /// The last journal sequence number folded into this snapshot.
     #[serde(default)]
     seq: u64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    next_uid: u64,
+}
+
+/// Whether a stored action record is well formed for a step whose previous stored step is `prev`.
+fn valid_action(a: Option<&ActionRecord>, prev: Option<u32>) -> bool {
+    let Some(ActionRecord::Call {
+        predecessor,
+        targets,
+        ..
+    }) = a
+    else {
+        return true;
+    };
+    targets.len() <= 2
+        && predecessor.is_none_or(|p| Some(p) == prev)
+        && targets.iter().all(|t| match &t.resolution {
+            Resolution::Resolved { path } => {
+                predecessor.is_some() && path.len() <= super::HARD_MAX_DEPTH
+            }
+            Resolution::Unresolved(_) => true,
+        })
 }
 
 fn bad(msg: &str) -> ExperienceError {
@@ -143,11 +198,25 @@ impl Experience {
                             let mut h: Vec<(String, String)> = e
                                 .handles
                                 .iter()
-                                .map(|(k, v)| (k.clone(), v.clone()))
+                                .map(|(k, v)| (k.clone(), v.label.clone()))
                                 .collect();
                             h.sort();
                             h
                         },
+                        spots: {
+                            let mut h: Vec<(String, Option<Vec<u32>>)> = e
+                                .handles
+                                .iter()
+                                .filter_map(|(k, v)| match &v.spot {
+                                    Spot::At(p) => Some((k.clone(), Some(p.clone()))),
+                                    Spot::Conflict => Some((k.clone(), None)),
+                                    Spot::Unknown => None,
+                                })
+                                .collect();
+                            h.sort();
+                            h
+                        },
+                        uid: e.uid,
                         steps: e
                             .steps
                             .iter()
@@ -159,12 +228,20 @@ impl Experience {
                                 label: s.label,
                                 regions: s.regions.clone(),
                                 controls: s.controls.to_vec(),
+                                action: Some(s.action.clone()),
+                                handle_digest: match s.handle_record {
+                                    HandleRecord::Known(d) => Some(d),
+                                    _ => None,
+                                },
+                                handles_unrecorded: s.handle_record == HandleRecord::Unrecorded,
                             })
                             .collect(),
                     })
                 })
                 .collect(),
             seq,
+            // The version below decides whether the payload may carry it.
+            next_uid: if self.next_uid > 1 { self.next_uid } else { 0 },
         };
         let mut payload = Vec::new();
         ciborium::into_writer(&snap, &mut payload).map_err(|e| bad(&e.to_string()))?;
@@ -175,8 +252,12 @@ impl Experience {
                 got: payload.len(),
             });
         }
-        let version = if self.control_counts.controls > 0 {
+        // A store that never held an episode has nothing version 4 adds; its payload carries no
+        // uid state (`next_uid` is 0), so the version and the payload agree.
+        let version = if self.next_uid > 1 {
             VERSION
+        } else if self.control_counts.controls > 0 {
+            VERSION_WITH_CONTROLS
         } else {
             VERSION_WITHOUT_CONTROLS
         };
@@ -237,7 +318,7 @@ impl Experience {
         if crc32fast::hash(payload) != crc {
             return Err(bad("checksum mismatch"));
         }
-        let snap: Snap = ciborium::from_reader(payload).map_err(|e| bad(&e.to_string()))?;
+        let mut snap: Snap = ciborium::from_reader(payload).map_err(|e| bad(&e.to_string()))?;
         let seq = if bytes[4] >= 2 { snap.seq } else { 0 };
         if bytes[4] < 3
             && snap
@@ -247,6 +328,34 @@ impl Experience {
                 .any(|e| e.steps.iter().any(|s| !s.controls.is_empty()))
         {
             return Err(bad("step controls in a snapshot older than version 3"));
+        }
+        if bytes[4] < 4
+            && (snap.next_uid != 0
+                || snap.episodes.iter().flatten().any(|e| {
+                    e.uid != 0
+                        || !e.spots.is_empty()
+                        || e.steps.iter().any(|s| {
+                            s.action.is_some() || s.handle_digest.is_some() || s.handles_unrecorded
+                        })
+                }))
+        {
+            return Err(bad("action records in a snapshot older than version 4"));
+        }
+        if bytes[4] == VERSION_WITHOUT_DIGESTS {
+            // Version 4 kept no digests. A step with an action record other than a legacy one
+            // had its targets resolved against addresses that are now lost.
+            for s in snap
+                .episodes
+                .iter_mut()
+                .flatten()
+                .flat_map(|e| &mut e.steps)
+            {
+                if s.handles_unrecorded {
+                    return Err(bad("a handle record marker in a version 4 snapshot"));
+                }
+                s.handles_unrecorded = s.handle_digest.is_none()
+                    && !matches!(s.action, None | Some(ActionRecord::Legacy));
+            }
         }
         Self::rebuild(snap, cfg).map(|x| (x, seq))
     }
@@ -363,10 +472,35 @@ impl Experience {
                 x.observe_variant(i as u32, v);
             }
         }
+        let mut uids = std::collections::HashSet::new();
+        let mut max_uid = 0u64;
         for (i, e) in snap.episodes.iter().enumerate() {
             let Some(e) = e else { continue };
             if x.episode_map.contains_key(&e.key) || e.key.is_empty() {
                 return Err(bad("duplicate or empty episode id"));
+            }
+            let uid = if e.uid == 0 { i as u64 + 1 } else { e.uid };
+            if !uids.insert(uid) {
+                return Err(bad("duplicate episode uid"));
+            }
+            let mut handles = HandleMap::new();
+            for (h, label) in &e.handles {
+                handles.insert(
+                    h.clone(),
+                    HandleEntry {
+                        label: label.clone(),
+                        spot: Spot::Unknown,
+                    },
+                );
+            }
+            for (h, p) in &e.spots {
+                match (handles.get_mut(h), p) {
+                    (Some(en), Some(p)) if p.len() <= super::HARD_MAX_DEPTH => {
+                        en.spot = Spot::At(p.clone())
+                    }
+                    (Some(en), None) => en.spot = Spot::Conflict,
+                    _ => return Err(bad("invalid handle address")),
+                }
             }
             let mut steps = Vec::with_capacity(e.steps.len());
             for s in &e.steps {
@@ -376,10 +510,21 @@ impl Experience {
                     && s.label.is_none_or(|l| live(&snap.symbols, l))
                     && s.regions.iter().all(|r| x.regions.get(r.0).is_some())
                     && steps.last().is_none_or(|p: &StepRec| p.step < s.step)
-                    && x.validate_controls(&s.controls).is_ok();
-                if !ok {
+                    && x.validate_controls(&s.controls).is_ok()
+                    && valid_action(s.action.as_ref(), steps.last().map(|p: &StepRec| p.step));
+                let record = match (s.handle_digest, s.handles_unrecorded) {
+                    (Some(d), false) => Some(HandleRecord::Known(d)),
+                    (None, true) => Some(HandleRecord::Unrecorded),
+                    (None, false) => matches!(
+                        s.action,
+                        None | Some(ActionRecord::Legacy) | Some(ActionRecord::None)
+                    )
+                    .then_some(HandleRecord::Legacy),
+                    (Some(_), true) => None,
+                };
+                let (true, Some(record)) = (ok, record) else {
                     return Err(bad("invalid step"));
-                }
+                };
                 x.terms.bump(s.root);
                 x.templates.bump(s.template);
                 x.frames.bump(s.frame);
@@ -395,7 +540,28 @@ impl Experience {
                     flags: 0,
                     regions: s.regions.clone(),
                     controls: s.controls.clone().into_boxed_slice(),
+                    action: s.action.clone().unwrap_or(if s.label.is_some() {
+                        ActionRecord::Legacy
+                    } else {
+                        ActionRecord::None
+                    }),
+                    handle_record: record,
                 });
+            }
+            // The episode's handle map is the one of its latest step, so that step's digest is
+            // recorded even where the snapshot kept none. An empty map on a step without an
+            // action may be a step that predates handle addresses, so it stays unrecorded.
+            if let Some(last) = steps.last_mut() {
+                let native = matches!(
+                    last.action,
+                    ActionRecord::Label(_) | ActionRecord::Call { .. }
+                ) || !handles.is_empty();
+                if last.handle_record == HandleRecord::Unrecorded
+                    && native
+                    && handles.values().all(|h| h.spot != Spot::Unknown)
+                {
+                    last.handle_record = HandleRecord::Known(handles_digest(&handles));
+                }
             }
             while x.episodes.len() <= i {
                 x.episodes.push(None);
@@ -405,11 +571,26 @@ impl Experience {
                 goal: e.goal.clone(),
                 outcome: e.outcome.clone(),
                 steps,
-                handles: e.handles.iter().cloned().collect(),
+                handles,
+                uid,
             });
+            max_uid = max_uid.max(uid);
             x.episode_map.insert(e.key.clone(), i as u32);
             x.dirty.insert(i as u32);
         }
+        x.next_uid = snap.next_uid.max(max_uid + 1);
+        x.action_bytes = x
+            .episodes
+            .iter()
+            .flatten()
+            .map(|e| {
+                handles_bound(&e.handles)
+                    + e.steps
+                        .iter()
+                        .map(|s| s.action.encoded_bound())
+                        .sum::<usize>()
+            })
+            .sum();
         x.step_count = x.episodes.iter().flatten().map(|e| e.steps.len()).sum();
         x.step_region_count = x
             .episodes
@@ -502,4 +683,52 @@ impl Experience {
         self.rebuild_effect_docs()?;
         Ok(())
     }
+}
+
+/// Rewrites a version 4 snapshot as the version 3 form: no action records, no handle addresses
+/// and no episode ids.
+#[cfg(test)]
+pub(super) fn downgrade_to_version_3_for_test(bytes: &[u8]) -> Vec<u8> {
+    let mut snap: Snap = ciborium::from_reader(&bytes[HEADER..]).unwrap();
+    snap.next_uid = 0;
+    for e in snap.episodes.iter_mut().flatten() {
+        e.uid = 0;
+        e.spots.clear();
+        for s in &mut e.steps {
+            s.action = None;
+            s.handle_digest = None;
+            s.handles_unrecorded = false;
+        }
+    }
+    let mut payload = Vec::new();
+    ciborium::into_writer(&snap, &mut payload).unwrap();
+    let mut out = bytes[..HEADER].to_vec();
+    out[4] = VERSION_WITH_CONTROLS;
+    out[8..16].copy_from_slice(&(payload.len() as u64).to_le_bytes());
+    out[16..20].copy_from_slice(&crc32fast::hash(&payload).to_le_bytes());
+    out.extend_from_slice(&payload);
+    out
+}
+
+/// Rewrites a current snapshot in the version 4 form that kept no handle digests.
+#[cfg(test)]
+pub(super) fn strip_digests_to_version_4_for_test(bytes: &[u8]) -> Vec<u8> {
+    let mut snap: Snap = ciborium::from_reader(&bytes[HEADER..]).unwrap();
+    for s in snap
+        .episodes
+        .iter_mut()
+        .flatten()
+        .flat_map(|e| &mut e.steps)
+    {
+        s.handle_digest = None;
+        s.handles_unrecorded = false;
+    }
+    let mut payload = Vec::new();
+    ciborium::into_writer(&snap, &mut payload).unwrap();
+    let mut out = bytes[..HEADER].to_vec();
+    out[4] = VERSION_WITHOUT_DIGESTS;
+    out[8..16].copy_from_slice(&(payload.len() as u64).to_le_bytes());
+    out[16..20].copy_from_slice(&crc32fast::hash(&payload).to_le_bytes());
+    out.extend_from_slice(&payload);
+    out
 }

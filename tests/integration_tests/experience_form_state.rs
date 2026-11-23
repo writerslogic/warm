@@ -78,6 +78,9 @@ fn tables(m: &Memory, g: &Group) -> Vec<String> {
     m.core().experience_form_tables(&states)
 }
 
+/// Any store holding an episode writes the current format; controls no longer pick the version.
+const CURRENT_SNAPSHOT_VERSION: u8 = 5;
+
 fn snapshot_version(dir: &Path) -> u8 {
     std::fs::read(dir.join("experience.wexp")).unwrap()[4]
 }
@@ -133,7 +136,7 @@ fn form_tables_match_the_reference_renderer_through_journal_and_snapshot() {
     let m = open(dir.path());
     check(&m, "journal replay");
     m.core().flush().unwrap();
-    assert_eq!(snapshot_version(dir.path()), 3);
+    assert_eq!(snapshot_version(dir.path()), CURRENT_SNAPSHOT_VERSION);
     drop(m);
     let m = open(dir.path());
     check(&m, "snapshot reopen");
@@ -159,16 +162,16 @@ fn the_page_text_is_not_stored_only_the_controls() {
 }
 
 #[test]
-fn a_store_without_controls_keeps_writing_version_2() {
-    for (form_state, page, version) in [
-        (true, None, 2),
+fn a_store_without_controls_writes_no_form_tables() {
+    for (form_state, page, has_tables) in [
+        (true, None, false),
         (
             true,
             Some("RootWebArea 'x'\n\t[1] StaticText 'no controls'"),
-            2,
+            false,
         ),
-        (false, Some("[1] textbox 'Name'"), 2),
-        (true, Some("[1] textbox 'Name'"), 3),
+        (false, Some("[1] textbox 'Name'"), false),
+        (true, Some("[1] textbox 'Name'"), true),
     ] {
         let dir = tempfile::tempdir().unwrap();
         let mut config = WarmConfig::unencrypted();
@@ -183,11 +186,11 @@ fn a_store_without_controls_keeps_writing_version_2() {
         m.core().flush().unwrap();
         assert_eq!(
             snapshot_version(dir.path()),
-            version,
+            CURRENT_SNAPSHOT_VERSION,
             "{form_state} {page:?}"
         );
         let rows = m.core().experience_form_tables(&[("e", 0)]);
-        assert_eq!(rows[0].is_empty(), version == 2);
+        assert_eq!(!rows[0].is_empty(), has_tables, "{form_state} {page:?}");
         drop(m);
         let m = open_with(dir.path(), config);
         assert_eq!(m.core().experience_form_tables(&[("e", 0)]), rows);
@@ -213,7 +216,7 @@ fn version_2_snapshot_opens_and_takes_controls() {
     )
     .unwrap();
     m.core().flush().unwrap();
-    assert_eq!(snapshot_version(dir.path()), 3);
+    assert_eq!(snapshot_version(dir.path()), CURRENT_SNAPSHOT_VERSION);
     drop(m);
     let m = open(dir.path());
     assert_eq!(

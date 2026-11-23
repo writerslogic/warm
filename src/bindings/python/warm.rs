@@ -332,6 +332,21 @@ impl PyWarm {
         py.detach(|| core.experience_form_tables(&states))
     }
 
+    /// The action stored with an observation step and the occurrences it targeted, or `None`.
+    /// `record` is the action as given; each target has its `role`, its `occurrence` (episode
+    /// uid, step and child path in the previous observation) and the `node` there, or no
+    /// occurrence when the record says it was unresolved.
+    fn experience_action_targets<'py>(
+        &self,
+        py: Python<'py>,
+        episode: String,
+        step: u32,
+    ) -> PyResult<Option<Bound<'py, PyAny>>> {
+        let core = &self.core;
+        let v = py.detach(|| core.experience_action_targets(&episode, step));
+        v.map(|v| to_py(py, &v)).transpose()
+    }
+
     /// Stores `vector` under `id` in the vector index (the vertex graph).
     fn memorize_vector(&self, py: Python<'_>, id: String, vector: Vec<f32>) -> PyResult<()> {
         let core = &self.core;

@@ -1,0 +1,92 @@
+[
+ {
+  "qid": "0f8c85a6",
+  "verdict": "sufficient",
+  "missing_or_reason": "only non-select checkbox on the record form is Inherited"
+ },
+ {
+  "qid": "1b43f7df",
+  "verdict": "sufficient",
+  "missing_or_reason": "stepper lists four steps incl Summary"
+ },
+ {
+  "qid": "38726e61",
+  "verdict": "sufficient",
+  "missing_or_reason": "Reports list in state 3 shows Catalog with hashtag prefix; Incidents prefix itself not shown, mapping to inventory/order is inferred"
+ },
+ {
+  "qid": "4f92aa38",
+  "verdict": "sufficient",
+  "missing_or_reason": "state 5 shows goto with price=0-30 URL after sort; same pattern as asked filter"
+ },
+ {
+  "qid": "73b6738b",
+  "verdict": "sufficient",
+  "missing_or_reason": "Problem shows disabled State plus read-only Priority; Incident shows only read-only Priority; Number read-only not marked in either"
+ },
+ {
+  "qid": "8b09f378",
+  "verdict": "sufficient",
+  "missing_or_reason": "Hardware form marks 3 required fields; Change Request form marks none"
+ },
+ {
+  "qid": "a482c0d9",
+  "verdict": "sufficient",
+  "missing_or_reason": "Problem and Incident show read-only prepopulated Priority; Change, Hardware, User show no Priority"
+ },
+ {
+  "qid": "c9568c9b",
+  "verdict": "sufficient",
+  "missing_or_reason": "task text gives duration by risk level"
+ },
+ {
+  "qid": "edb69441",
+  "verdict": "sufficient",
+  "missing_or_reason": "Bulk Actions Log columns listed in state 13; state 12 has the log link"
+ },
+ {
+  "qid": "0f970f01",
+  "verdict": "sufficient",
+  "missing_or_reason": "column order Price, Class, Delivery time in list headers"
+ },
+ {
+  "qid": "237d2cc5",
+  "verdict": "sufficient",
+  "missing_or_reason": "User form shows Info Message about setting password"
+ },
+ {
+  "qid": "4c6d1eb7",
+  "verdict": "sufficient",
+  "missing_or_reason": "dialog checkboxes with checked=false: Compact rows, Active row highlighting"
+ },
+ {
+  "qid": "5387d23d",
+  "verdict": "sufficient",
+  "missing_or_reason": "screenshots show heart icon in forum bar when subscribed (Unsubscribe) and none when not subscribed"
+ },
+ {
+  "qid": "7c8efee5",
+  "verdict": "sufficient",
+  "missing_or_reason": "Products per page 200 (reached from dashboard, so default) vs Pages 20"
+ },
+ {
+  "qid": "8f70bc0e",
+  "verdict": "sufficient",
+  "missing_or_reason": "screenshot toolbar order: Delete Review, Reset, Previous; AXTree order differs so visual is needed"
+ },
+ {
+  "qid": "b2595523",
+  "verdict": "sufficient",
+  "missing_or_reason": "only Qty textbox is required in Advanced Inventory tab"
+ },
+ {
+  "qid": "c9c6a06a",
+  "verdict": "sufficient",
+  "missing_or_reason": "4 colors x 2 storages"
+ },
+ {
+  "qid": "f13eb38d",
+  "verdict": "sufficient",
+  "missing_or_reason": "states show fill, click search, select sort price, click ascending, then product page click = 5; cheapest-first inference assumed"
+ }
+]
