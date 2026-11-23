@@ -44,11 +44,10 @@ struct Rt<'a> {
 }
 
 impl<'a> Rt<'a> {
-    fn new(clause: usize, phrase: bool, lists: &[ListRef<'a>], idf: f64, shape: &Shape) -> Self {
+    fn new(clause: usize, phrase: bool, lists: &[ListRef<'a>], bound: Option<Bound>) -> Self {
         let mut order: Vec<usize> = (0..lists.len()).collect();
         order.sort_by_key(|&i| lists[i].count);
         let cursors: Vec<_> = order.iter().map(|&i| Cursor::open(lists[i])).collect();
-        let bound = Bound::new(idf, shape.average, shape.bm25);
         let ceiling = bound.map_or(f64::INFINITY, |bound| {
             let frequency = cursors.iter().map(|c| c.list_bounds().0).min().unwrap_or(0);
             let words = cursors.iter().map(|c| c.list_bounds().1).max().unwrap_or(0);
@@ -448,30 +447,39 @@ pub(in crate::core::documents) fn execute(
     let average = (image.word_count() as f64 / n.max(1.0)).max(1.0);
     let shape = Shape { bm25, average };
 
-    let mut idfs = Vec::with_capacity(query.clauses.len());
+    let k = options.k;
+    let frequencies = vec![0; if k == 0 { 0 } else { query.clauses.len() }];
+    let mut idfs = vec![0.0; frequencies.len()];
     let mut required = Vec::new();
     let mut excluded = Vec::new();
     let mut optional = Vec::new();
     for (index, clause) in query.clauses.iter().enumerate() {
-        let lists: Vec<Option<ListRef<'_>>> = clause.words[form]
+        let lists: Option<Vec<ListRef<'_>>> = clause.words[form]
             .iter()
             .map(|word| image.list(form, word))
             .collect();
-        let idf: f64 = lists
-            .iter()
-            .map(|list| Bm25::idf(n, list.map_or(0, |l| l.count as usize) as f64))
-            .sum();
-        idfs.push(idf);
-        let Some(lists) = lists.into_iter().collect::<Option<Vec<_>>>() else {
+        let Some(lists) = lists else {
             match clause.occur {
                 Occur::Must => return Ok(Some(empty)),
                 _ => continue,
             }
         };
-        let mut rt = Rt::new(index, clause.phrase, &lists, idf, &shape);
-        for cursor in &mut rt.cursors {
-            let table = image.rank_table(cursor, shape.bm25, shape.average);
-            cursor.use_ranks(table);
+        let bound = if k > 0 && clause.occur != Occur::MustNot {
+            let idf = lists
+                .iter()
+                .map(|list| Bm25::idf(n, f64::from(list.count)))
+                .sum();
+            idfs[index] = idf;
+            Bound::new(idf, shape.average, shape.bm25)
+        } else {
+            None
+        };
+        let mut rt = Rt::new(index, clause.phrase, &lists, bound);
+        if bound.is_some() {
+            for cursor in &mut rt.cursors {
+                let table = image.rank_table(cursor, shape.bm25, shape.average);
+                cursor.use_ranks(table);
+            }
         }
         match clause.occur {
             Occur::Must => required.push(rt),
@@ -483,7 +491,6 @@ pub(in crate::core::documents) fn execute(
         return Ok(Some(empty));
     }
     let all_terms = optional.iter().all(|rt| !rt.phrase);
-    let k = options.k;
     // One long bounded term is ranked by its runs' frontiers; more terms go to the windowed
     // ranker, which measured an order of magnitude faster than document-at-a-time WAND here.
     let pruned_union = required.is_empty()
@@ -504,8 +511,8 @@ pub(in crate::core::documents) fn execute(
         idfs: &idfs,
         k,
         count: options.count,
-        frequencies: vec![0; query.clauses.len()],
-        word_counts: image.word_counts(),
+        frequencies,
+        word_counts: if k > 0 { image.word_counts() } else { &[] },
     };
     let solo =
         required.len() == 1 && !required[0].phrase && excluded.is_empty() && optional.is_empty();
@@ -1750,6 +1757,28 @@ mod tests {
                 .unwrap_or_else(|| panic!("{text} is not served"));
             assert!(served.count.unwrap() > 0, "{text}");
             assert!(assert_same(&image, &live, &query, &options), "{text}");
+        }
+    }
+
+    #[test]
+    fn unranked_checkpoint_queries_leave_word_counts_unbuilt() {
+        let live = corpus(&[vec![0, 1, 0], vec![0, 2], vec![1, 2]], true);
+        let image = image_of(&live);
+        let options = LexicalOptions {
+            k: 0,
+            count: true,
+            ..Default::default()
+        };
+        for text in [
+            "w0 w1",
+            "+w0 +w1",
+            "+w0 -w2",
+            "\"w0 w1\"",
+            "\"w0 missing\" w1",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            assert!(assert_same(&image, &live, &query, &options), "{text}");
+            assert!(!image.has_word_counts(), "{text}");
         }
     }
 

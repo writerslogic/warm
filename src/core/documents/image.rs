@@ -2131,6 +2131,11 @@ impl ServingImage {
         })
     }
 
+    #[cfg(test)]
+    pub(super) fn has_word_counts(&self) -> bool {
+        self.word_counts.get().is_some()
+    }
+
     /// The rank table of `list`, one of this image's lists, when it has at least
     /// [`RANKED_RUNS`] runs and is scored with the default BM25 shape at `average` words.
     pub(super) fn rank_table(
