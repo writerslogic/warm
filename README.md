@@ -149,7 +149,7 @@ provide the evidence for evaluating WARM on your own workload.
 | JavaScript/TypeScript client (`warm-sdk` 0.2.2) | Source and release builds | Portable HTTP client; requires a separately running server |
 | Embedded Node.js (`writerslogic-warm` 0.7.1) | Source and release builds | Eight optional native platform packages; separate from the client |
 | C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
-| Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | `Warm` (in-process document search, memory API) from `warm-python` 0.7.0; 0.6.8 has none |
+| Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | `Warm` (in-process document search, memory API) from `warm-python` 0.7.0; earlier releases have none |
 | Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |
 
 Optional engine capabilities use Cargo features or runtime configuration;
