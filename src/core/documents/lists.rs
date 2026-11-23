@@ -35,6 +35,176 @@ const SKIP_ENTRY: usize = 20;
 /// Blocks per run, the unit of a list's coarser frontier.
 pub(super) const RUN_BLOCKS: usize = 32;
 
+/// A list of at least this many runs has a [`RankTable`].
+pub(super) const RANKED_RUNS: usize = 8;
+
+/// One long list's weight bounds at idf one for one BM25 shape, each rounded up to an `f32`:
+/// per run and per block, from their frontiers, and the runs ordered by their bound, highest
+/// first (ties by run). A single term ranks its runs from this table instead of decoding every
+/// run's frontier per query.
+pub(super) struct RankTable {
+    pub(super) order: Box<[u32]>,
+    pub(super) runs: Box<[f32]>,
+    pub(super) blocks: Box<[f32]>,
+}
+
+impl RankTable {
+    /// The table of `list`, a list of two or more blocks, under `unit`, a bound at idf one.
+    pub(super) fn new(list: ListRef<'_>, unit: Bound) -> Self {
+        let mut cursor = Cursor::open(list);
+        let runs: Box<[f32]> = (0..cursor.runs)
+            .map(|run| up_f32(cursor.run_weight(run, unit)))
+            .collect();
+        let blocks = (0..cursor.blocks)
+            .map(|block| {
+                cursor.goto_block(block);
+                up_f32(cursor.block_weight_uncached(unit))
+            })
+            .collect();
+        let mut order: Vec<u32> = (0..runs.len() as u32).collect();
+        order.sort_unstable_by(|&a, &b| {
+            runs[b as usize]
+                .total_cmp(&runs[a as usize])
+                .then(a.cmp(&b))
+        });
+        Self {
+            order: order.into_boxed_slice(),
+            runs,
+            blocks,
+        }
+    }
+
+    /// A bound at idf `idf` of the weights a stored bound `unit` covers: the weight is the idf
+    /// times its value at idf one, and `16 * EPSILON` covers that product's rounding.
+    pub(super) fn scale(unit: f32, idf: f64) -> f64 {
+        super::lexical::wand::up(f64::from(unit) * idf * (1.0 + 16.0 * f64::EPSILON))
+    }
+}
+
+/// Bounds of one list's weights over ranges of slots, from its skip table and, where it has
+/// one, its [`RankTable`]: ranges are asked for in ascending order.
+pub(super) struct BlockBounds<'a> {
+    skips: &'a [u8],
+    blocks: usize,
+    table: Option<&'a RankTable>,
+    /// The first block whose last slot may be at or after the next range's start.
+    at: usize,
+}
+
+impl<'a> BlockBounds<'a> {
+    pub(super) fn new(list: ListRef<'a>, table: Option<&'a RankTable>) -> Self {
+        Self {
+            skips: list.skips,
+            blocks: list.blocks(),
+            table,
+            at: 0,
+        }
+    }
+
+    #[inline(always)]
+    fn skip(&self, array: usize, block: usize) -> u32 {
+        let at = 4 * (array * self.blocks + block);
+        u32::from_le_bytes(self.skips[at..at + 4].try_into().expect("four bytes"))
+    }
+
+    /// Moves `at` to the first block at or after it whose last slot reaches `lo`, galloping
+    /// then bisecting: the ranges a query asks for can jump many blocks at once.
+    fn advance(&mut self, lo: u32) {
+        if self.at >= self.blocks || self.skip(0, self.at) >= lo {
+            return;
+        }
+        // `below` is a block whose last slot is below `lo`; the answer is in `below + 1..=end`.
+        let (mut below, mut end, mut step) = (self.at, self.at + 1, 1usize);
+        while end < self.blocks && self.skip(0, end) < lo {
+            below = end;
+            step *= 2;
+            end += step;
+        }
+        let (mut first, mut last) = (below + 1, end.min(self.blocks));
+        while first < last {
+            let middle = first + (last - first) / 2;
+            if self.skip(0, middle) < lo {
+                first = middle + 1;
+            } else {
+                last = middle;
+            }
+        }
+        self.at = first;
+    }
+
+    /// A bound of the weight of every posting in slots `lo..hi` under `bound`, never above
+    /// `ceiling`; `lo` never decreases between calls.
+    pub(super) fn bound(&mut self, lo: u32, hi: u32, bound: Bound, ceiling: f64) -> f64 {
+        if self.blocks < 2 {
+            return ceiling;
+        }
+        self.advance(lo);
+        let mut best = 0.0f64;
+        let mut block = self.at;
+        while block < self.blocks {
+            let weight = match self.table {
+                Some(table) => RankTable::scale(table.blocks[block], bound.idf()),
+                None => bound.at(self.skip(3, block), self.skip(4, block)),
+            };
+            best = best.max(weight);
+            if self.skip(0, block) >= hi.saturating_sub(1) {
+                break;
+            }
+            block += 1;
+        }
+        best.min(ceiling)
+    }
+
+    /// The first block at or after `from` (at least 1) whose last slot reaches `target`, with
+    /// the offset of its header and the last slot of the block before it: `Some(None)` when no
+    /// block does, `None` when the list has no skip table to search.
+    pub(super) fn find(&self, from: usize, target: u32) -> Option<Option<(usize, usize, u32)>> {
+        if self.blocks < 2 || from == 0 {
+            return None;
+        }
+        // Gallop from `from`, then binary search the bracket.
+        let (mut lo, mut hi, mut step) = (from, from, 1usize);
+        while hi < self.blocks && self.skip(0, hi) < target {
+            lo = hi + 1;
+            hi += step;
+            step *= 2;
+        }
+        let mut hi = hi.min(self.blocks);
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            if self.skip(0, mid) < target {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        Some((lo < self.blocks).then(|| (lo, self.skip(1, lo) as usize, self.skip(0, lo - 1))))
+    }
+
+    /// A bound of the weight of every posting in block `block` under `bound`, never above
+    /// `ceiling`.
+    pub(super) fn block(&self, block: usize, bound: Bound, ceiling: f64) -> f64 {
+        if self.blocks < 2 || block >= self.blocks {
+            return ceiling;
+        }
+        let weight = match self.table {
+            Some(table) => RankTable::scale(table.blocks[block], bound.idf()),
+            None => bound.at(self.skip(3, block), self.skip(4, block)),
+        };
+        weight.min(ceiling)
+    }
+}
+
+/// `value` rounded up to an `f32`.
+fn up_f32(value: f64) -> f32 {
+    let rounded = value as f32;
+    if f64::from(rounded) < value {
+        rounded.next_up()
+    } else {
+        rounded
+    }
+}
+
 /// A list of two or more blocks holding at least one of every this many slots through its last
 /// is dense: its skip table ends with its slot bitmap.
 pub(super) const DENSE_SPAN: u64 = 8;
@@ -141,6 +311,9 @@ pub(super) struct Cursor<'a> {
     weight: std::cell::Cell<f64>,
     /// A dense list's slot bitmap, empty for any other.
     dense: &'a [u8],
+    /// The list's rank table when its bounds hold for the query's BM25 shape: block weights
+    /// are then read from it instead of decoded from the frontiers.
+    ranks: Option<&'a RankTable>,
 }
 
 impl<'a> Cursor<'a> {
@@ -180,6 +353,7 @@ impl<'a> Cursor<'a> {
             weight_block: std::cell::Cell::new(usize::MAX),
             weight: std::cell::Cell::new(0.0),
             dense: &[],
+            ranks: None,
         };
         cursor.dense = cursor.find_dense();
         cursor.load(0, first_at, 0);
@@ -242,13 +416,24 @@ impl<'a> Cursor<'a> {
     }
 
     fn decode(&mut self) {
-        let mut gaps = [0u64; CHECKPOINT_BLOCK];
-        let bytes = self.list.bytes;
-        unpack_values(&bytes[self.data_at..], self.count, self.gap_bits, &mut gaps);
-        let mut slot = self.first;
-        for (out, &gap) in self.slots[..self.count].iter_mut().zip(&gaps[..self.count]) {
-            slot = slot.wrapping_add(gap as u32);
-            *out = slot;
+        const RUN_GAPS: [u8; CHECKPOINT_BLOCK / 8] = {
+            let mut bytes = [u8::MAX; CHECKPOINT_BLOCK / 8];
+            bytes[0] &= !1;
+            bytes
+        };
+        let bytes = &self.list.bytes[self.data_at..];
+        if self.gap_bits == 1 && self.count == CHECKPOINT_BLOCK && bytes.starts_with(&RUN_GAPS) {
+            for (offset, slot) in self.slots.iter_mut().enumerate() {
+                *slot = self.first.wrapping_add(offset as u32);
+            }
+        } else {
+            let mut gaps = [0u64; CHECKPOINT_BLOCK];
+            unpack_values(bytes, self.count, self.gap_bits, &mut gaps);
+            let mut slot = self.first;
+            for (out, &gap) in self.slots[..self.count].iter_mut().zip(&gaps[..self.count]) {
+                slot = slot.wrapping_add(gap as u32);
+                *out = slot;
+            }
         }
         self.decoded = true;
         self.frequencies_ready = false;
@@ -407,7 +592,16 @@ impl<'a> Cursor<'a> {
         weight
     }
 
+    /// Reads block weights from `table`, the list's rank table for the query's BM25 shape.
+    pub(super) fn use_ranks(&mut self, table: Option<&'a RankTable>) {
+        self.ranks = table;
+        self.weight_block.set(usize::MAX);
+    }
+
     fn block_weight_uncached(&self, bound: Bound) -> f64 {
+        if let Some(table) = self.ranks {
+            return RankTable::scale(table.blocks[self.block], bound.idf());
+        }
         let (frequency, words) = self.block_bounds();
         let loose = bound.at(frequency, words);
         let mut points = self.block_points();
@@ -428,6 +622,11 @@ impl<'a> Cursor<'a> {
     pub(super) fn run_weight(&self, run: usize, bound: Bound) -> f64 {
         self.run_points(run)
             .fold(0.0f64, |best, (f, w)| best.max(bound.at(f, w)))
+    }
+
+    /// The list's skip table, which identifies it within its checkpoint.
+    pub(super) fn skips(&self) -> &'a [u8] {
+        self.list.skips
     }
 
     /// The blocks of the list.
@@ -460,19 +659,36 @@ impl<'a> Cursor<'a> {
     }
 
     /// A bound of the weights in the blocks from the current one through the one holding
-    /// slot `last`, from their maxima, when they are at most `most` blocks; `None` otherwise.
-    pub(super) fn span_weight(&self, last: u32, bound: Bound, most: usize) -> Option<f64> {
+    /// slot `last`, when they are at most `most` blocks; `None` otherwise.
+    pub(super) fn span_weight(
+        &self,
+        last: u32,
+        bound: Bound,
+        most: usize,
+        use_ranks: bool,
+    ) -> Option<f64> {
         if self.blocks < 2 {
             return Some(bound.at(self.list_frequency, self.list_words));
         }
+        let end = (self.block + most).min(self.blocks);
+        let ranks = self.ranks.filter(|_| use_ranks);
         let mut weight = 0.0f64;
-        for block in self.block..(self.block + most).min(self.blocks) {
-            weight = weight.max(bound.at(self.skip(3, block), self.skip(4, block)));
+        for block in self.block..end {
+            let block_weight = match ranks {
+                Some(table) => RankTable::scale(table.blocks[block], bound.idf()),
+                None => bound.at(self.skip(3, block), self.skip(4, block)),
+            };
+            weight = weight.max(block_weight);
             if self.skip(0, block) >= last {
                 return Some(weight);
             }
         }
-        (self.block + most >= self.blocks).then_some(weight)
+        (end == self.blocks).then_some(weight)
+    }
+
+    /// The list the cursor reads.
+    pub(super) fn list(&self) -> ListRef<'a> {
+        self.list
     }
 
     /// The list's block bytes, whose address identifies the list.
@@ -659,6 +875,14 @@ impl<'a> PositionIter<'a> {
     pub(super) fn new(bytes: &'a [u8]) -> Self {
         Self { bytes, position: 0 }
     }
+
+    #[cold]
+    fn long_gap(&mut self) -> u32 {
+        let mut at = 0;
+        let gap = get_varint(self.bytes, &mut at) as u32;
+        self.bytes = &self.bytes[at..];
+        gap
+    }
 }
 
 impl Iterator for PositionIter<'_> {
@@ -667,14 +891,15 @@ impl Iterator for PositionIter<'_> {
     #[inline]
     fn next(&mut self) -> Option<u32> {
         let (&first, rest) = self.bytes.split_first()?;
-        if first < 0x80 {
+        let gap = if first < 0x80 {
             self.bytes = rest;
-            self.position += u32::from(first);
-            return Some(self.position);
-        }
-        let mut at = 0;
-        let gap = get_varint(self.bytes, &mut at) as u32;
-        self.bytes = &self.bytes[at..];
+            u32::from(first)
+        } else if let Some((&second, tail)) = rest.split_first().filter(|(byte, _)| **byte < 0x80) {
+            self.bytes = tail;
+            u32::from(first & 0x7f) | u32::from(second) << 7
+        } else {
+            self.long_gap()
+        };
         self.position += gap;
         Some(self.position)
     }
@@ -693,5 +918,39 @@ pub(super) fn dense_word(bits: &[u8], index: usize) -> u64 {
     match bits.get(8 * index..8 * index + 8) {
         Some(word) => u64::from_le_bytes(word.try_into().expect("eight bytes")),
         None => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::documents::postings::CheckpointPacker;
+
+    #[test]
+    fn lexical_contiguous_slots_require_the_exact_packed_gaps() {
+        for count in [CHECKPOINT_BLOCK - 1, CHECKPOINT_BLOCK] {
+            let mut bytes = Vec::new();
+            let mut packer = CheckpointPacker::with_info(true, &|_| 5, false);
+            for slot in 7..7 + count {
+                packer.push(slot, 1, &mut bytes);
+            }
+            packer.finish(&mut bytes);
+            let list = ListRef {
+                bytes: &bytes,
+                count: count as u32,
+                skips: &[],
+                positions: &[],
+            };
+            let mut cursor = Cursor::open(list);
+            assert!(cursor.block_slots().iter().copied().eq(7..7 + count as u32));
+            let data_at = cursor.data_at;
+            let mut changed = bytes.clone();
+            changed[data_at] |= 1;
+            let mut cursor = Cursor::open(ListRef {
+                bytes: &changed,
+                ..list
+            });
+            assert!(cursor.block_slots().iter().copied().eq(8..8 + count as u32));
+        }
     }
 }

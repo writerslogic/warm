@@ -353,6 +353,22 @@ fn single_optional_phrases_filter_candidates_without_changing_counts() {
 }
 
 #[test]
+fn legacy_phrase_words_stem_the_same_as_the_analyzer() {
+    for text in [
+        "RUNNERS walking FISHES",
+        "ÉTÉS ΠΑΡΙΣ İSTANBUL",
+        "123\u{2003}PONIES",
+    ] {
+        let query = LexicalQuery::parse(&format!("\"{text}\"")).unwrap();
+        assert_eq!(
+            query.clauses[0].words[1],
+            documents::Analyzer::Legacy.tokens(text, true),
+            "{text}"
+        );
+    }
+}
+
+#[test]
 fn parser_rejects_unsupported_syntax_and_limits() {
     for text in [
         "+",

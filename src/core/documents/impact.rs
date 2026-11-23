@@ -19,8 +19,9 @@ use std::cmp::Reverse;
 use std::collections::{BTreeSet, BinaryHeap};
 
 use super::image::SLOT_BYTES;
-use super::lexical::wand::{sum_bound, Bound};
-use super::postings::{get_varint, unpack_values, Postings, CHECKPOINT_BLOCK};
+use super::lexical::wand::{sum_bound, up, Bound};
+use super::lists::{BlockBounds, Cursor, ListRef, RankTable};
+use super::postings::{get_varint, unpack, unpack_values, Postings, CHECKPOINT_BLOCK};
 use super::search::LexicalSource;
 use super::Bm25;
 
@@ -35,12 +36,16 @@ struct Header {
     count: usize,
     gap_bits: u8,
     frequency_bits: u8,
-    /// Offset of the packed gaps; the packed frequencies follow them.
+    /// Offsets of the packed gaps and frequencies.
     data_at: usize,
+    frequency_at: usize,
     /// Offset of the next block's header.
     end_at: usize,
     /// Postings in the blocks after this one.
     left_after: usize,
+    /// The block's largest frequency and least word count.
+    max_frequency: u32,
+    min_words: u32,
 }
 
 impl Header {
@@ -53,9 +58,8 @@ impl Header {
         let (gap_bits, frequency_bits) = (bytes[at], bytes[at + 1]);
         at += 2;
         let span = get_varint(bytes, &mut at);
-        // The block's max frequency and min words, unused by the windowed ranker.
-        get_varint(bytes, &mut at);
-        get_varint(bytes, &mut at);
+        let max_frequency = get_varint(bytes, &mut at) as u32;
+        let min_words = get_varint(bytes, &mut at) as u32;
         let gap_len = (count * usize::from(gap_bits)).div_ceil(8);
         let frequency_len = (count * usize::from(frequency_bits)).div_ceil(8);
         let first = previous + delta as u32;
@@ -66,8 +70,11 @@ impl Header {
             gap_bits,
             frequency_bits,
             data_at: at,
+            frequency_at: at + gap_len,
             end_at: at + gap_len + frequency_len,
             left_after: left - count,
+            max_frequency,
+            min_words,
         }
     }
 }
@@ -78,10 +85,15 @@ pub(super) struct ImpactCursor<'a> {
     /// The block the cursor's posting is in.
     current: Header,
     decoded: bool,
+    frequencies_ready: bool,
     position: usize,
     ended: bool,
     /// Blocks this cursor decoded since it was opened.
     decodes: usize,
+    /// The index of the current block in the list.
+    block: usize,
+    /// The list's postings.
+    count: usize,
     list_max_frequency: u32,
     list_min_words: u32,
     slots: [u32; CHECKPOINT_BLOCK],
@@ -94,9 +106,12 @@ impl<'a> ImpactCursor<'a> {
             bytes: &[],
             current: Header::default(),
             decoded: false,
+            frequencies_ready: false,
             position: 0,
             ended: true,
             decodes: 0,
+            block: 0,
+            count: 0,
             list_max_frequency: 0,
             list_min_words: 0,
             slots: [0; CHECKPOINT_BLOCK],
@@ -115,6 +130,8 @@ impl<'a> ImpactCursor<'a> {
         self.current = Header::parse(bytes, at, list.count as usize, 0);
         self.decoded = false;
         self.position = 0;
+        self.block = 0;
+        self.count = list.count as usize;
         self.ended = false;
     }
 
@@ -130,10 +147,9 @@ impl<'a> ImpactCursor<'a> {
         }
     }
 
-    fn decode(&mut self) {
+    fn decode<const FREQUENCIES: bool>(&mut self) {
         let header = self.current;
         let (mut gaps, mut frequencies) = ([0u64; CHECKPOINT_BLOCK], [0u64; CHECKPOINT_BLOCK]);
-        let gap_len = (header.count * usize::from(header.gap_bits)).div_ceil(8);
         // The decoders read whole 8-byte windows while they stay inside the slice they are
         // given, so each gets the rest of the list and uses only its own values.
         unpack_values(
@@ -142,12 +158,14 @@ impl<'a> ImpactCursor<'a> {
             header.gap_bits,
             &mut gaps,
         );
-        unpack_values(
-            &self.bytes[header.data_at + gap_len..],
-            header.count,
-            header.frequency_bits,
-            &mut frequencies,
-        );
+        if FREQUENCIES {
+            unpack_values(
+                &self.bytes[header.frequency_at..],
+                header.count,
+                header.frequency_bits,
+                &mut frequencies,
+            );
+        }
         let mut slot = u64::from(header.first);
         let block = gaps[..header.count]
             .iter()
@@ -160,18 +178,25 @@ impl<'a> ImpactCursor<'a> {
         {
             slot += gap;
             *out_slot = slot as u32;
-            *out_frequency = frequency as u32;
+            if FREQUENCIES {
+                *out_frequency = frequency as u32;
+            }
         }
+        self.decodes += usize::from(!self.decoded);
         self.decoded = true;
-        self.decodes += 1;
+        self.frequencies_ready = FREQUENCIES;
     }
 
     /// The frequency of the current posting.
-    fn frequency(&mut self) -> u32 {
-        if !self.decoded {
-            self.decode();
+    fn frequency(&self) -> u32 {
+        if self.decoded && self.frequencies_ready {
+            return self.frequencies[self.position];
         }
-        self.frequencies[self.position]
+        unpack(
+            &self.bytes[self.current.frequency_at..],
+            self.position,
+            self.current.frequency_bits,
+        ) as u32
     }
 
     /// Moves to the next block; false at the end of the list.
@@ -187,7 +212,34 @@ impl<'a> ImpactCursor<'a> {
         );
         self.decoded = false;
         self.position = 0;
+        self.block += 1;
         true
+    }
+
+    /// Moves to the first posting at or after `target`, finding its block from the list's
+    /// skip table in `blocks` when there is one rather than reading each header between.
+    fn seek_in(&mut self, target: u32, blocks: Option<&BlockBounds<'_>>) {
+        if self.ended || self.doc() >= target {
+            return;
+        }
+        if self.current.last < target {
+            if let Some(found) = blocks.and_then(|blocks| blocks.find(self.block + 1, target)) {
+                let Some((block, at, previous)) = found else {
+                    self.ended = true;
+                    return;
+                };
+                self.current = Header::parse(
+                    self.bytes,
+                    at,
+                    self.count - block * CHECKPOINT_BLOCK,
+                    previous,
+                );
+                self.block = block;
+                self.decoded = false;
+                self.position = 0;
+            }
+        }
+        self.seek(target);
     }
 
     /// Moves to the first posting at or after `target`.
@@ -207,7 +259,7 @@ impl<'a> ImpactCursor<'a> {
             return;
         }
         if !self.decoded {
-            self.decode();
+            self.decode::<false>();
         }
         let from = self.position;
         self.position =
@@ -217,7 +269,7 @@ impl<'a> ImpactCursor<'a> {
 
 /// Asks the CPU to load the cache line holding `table[at]`; a hint, with no effect on results.
 #[inline(always)]
-fn prefetch<T>(table: &[T], at: usize) {
+pub(super) fn prefetch<T>(table: &[T], at: usize) {
     #[cfg(target_arch = "x86_64")]
     if at < table.len() {
         // SAFETY: `at` is inside `table`, and a prefetch never faults or writes.
@@ -236,10 +288,56 @@ const PREFETCH_BYTES: usize = 1 << 20;
 
 /// Slots per accumulation window.
 const WINDOW: u32 = 4096;
+/// The window of a query that wants few chunks: fewer windows mean less per-window work, and the
+/// accumulator it touches stays sparse. Offsets stay below `u16::MAX`.
+const WIDE_WINDOW: u32 = 8192;
+/// The window of a two-term query of few chunks, whose postings are the sparsest per slot.
+const PAIR_WINDOW: u32 = 16384;
+/// The largest `limit` ranked in [`WIDE_WINDOW`] or [`PAIR_WINDOW`] windows.
+const WIDE_LIMIT: usize = 10;
+
+/// Maximum unit bound per aligned window, used only by the union ranker.
+pub(super) struct WindowBounds(Box<[f64]>);
+
+impl WindowBounds {
+    pub(super) fn new(list: ListRef<'_>, table: &RankTable, slots: usize) -> Option<Self> {
+        let mut cursor = Cursor::open(list);
+        let mut bounds = vec![0.0f64; slots.div_ceil(WINDOW as usize)];
+        for (block, &weight) in table.blocks.iter().enumerate() {
+            cursor.goto_block(block);
+            let first = (cursor.block_first() / WINDOW) as usize;
+            let last = (cursor.block_last() / WINDOW) as usize;
+            for bound in bounds.get_mut(first..=last)? {
+                *bound = bound.max(f64::from(weight));
+            }
+        }
+        Some(Self(bounds.into_boxed_slice()))
+    }
+
+    #[inline]
+    fn bound(&self, first: usize, last: usize, idf: f64, ceiling: f64) -> f64 {
+        // The aligned windows `first..=last` cover the query window.
+        let mut unit = 0.0f64;
+        for &bound in self
+            .0
+            .get(first..=last.min(self.0.len().saturating_sub(1)))
+            .unwrap_or(&[])
+        {
+            unit = unit.max(bound);
+        }
+        // Scale with the same rounding margin as RankTable::scale.
+        up(unit * idf * (1.0 + 16.0 * f64::EPSILON)).min(ceiling)
+    }
+}
+
 /// The most terms a query ranks through windows; more fall back to the exhaustive ranking.
 const MAX_TERMS: usize = 64;
 /// Bytes of direct frequency tables one checkpoint may hold (see [`DenseTables`]).
 const DENSE_BYTES: usize = 32 << 20;
+/// A checkpoint may also hold this many tables, however many bytes they take: the budget grows
+/// with the slot count (a table is `slots / 2` bytes), so the lists a large index queries most
+/// keep their tables instead of the first few lists to be queried taking the whole budget.
+const DENSE_TABLES: usize = 128;
 /// A list is tabled when it holds at least this share (1/32) of the slots and this many postings.
 const DENSE_MIN_POSTINGS: usize = if cfg!(test) { 8 } else { 512 };
 /// Distinct word counts whose length normalization is cached.
@@ -272,6 +370,11 @@ fn classes() -> &'static ([u32; CLASSES], Vec<u8>) {
     })
 }
 
+/// Whether a list of `postings` over `slots` slots is long enough for a direct table.
+pub(super) fn tabled(postings: usize, slots: usize) -> bool {
+    postings >= DENSE_MIN_POSTINGS && postings * 32 >= slots
+}
+
 /// Per-slot frequencies of one long posting list, a nibble each: 0 absent, 15 fifteen or more
 /// (read the list), else the frequency. A query that must know whether a few chunks hold a
 /// frequent term reads one nibble per chunk instead of seeking the list.
@@ -283,14 +386,26 @@ pub(super) struct Dense {
 }
 
 impl Dense {
+    /// The nibble of `slot`: 0 when the list lacks it, 15 when its frequency is fifteen or more.
     #[inline]
-    fn get(&self, slot: usize) -> u8 {
+    pub(super) fn get(&self, slot: usize) -> u8 {
         (self.nibbles[slot >> 1] >> ((slot & 1) * 4)) & 15
+    }
+
+    /// The nibbles, two slots a byte, the even slot in the low half.
+    pub(super) fn nibble_bytes(&self) -> &[u8] {
+        &self.nibbles
+    }
+
+    /// Starts loading the nibble of `slot`; a hint, with no effect on results.
+    #[inline(always)]
+    pub(super) fn prefetch(&self, slot: usize) {
+        prefetch(&self.nibbles, slot >> 1);
     }
 }
 
 /// Direct frequency tables of a checkpoint's longest lists, built on first use and bounded by
-/// [`DENSE_BYTES`].
+/// [`DENSE_BYTES`] and [`DENSE_TABLES`].
 #[derive(Default)]
 pub(super) struct DenseTables {
     tables: std::sync::Mutex<Vec<(usize, std::sync::Arc<Dense>)>>,
@@ -299,7 +414,7 @@ pub(super) struct DenseTables {
 
 impl DenseTables {
     /// The table of `list`, building it when the budget allows; `None` when it does not.
-    fn get(&self, slots: usize, list: &Postings<'_>) -> Option<std::sync::Arc<Dense>> {
+    pub(super) fn get(&self, slots: usize, list: &Postings<'_>) -> Option<std::sync::Arc<Dense>> {
         use std::sync::atomic::Ordering::Relaxed;
         let key = list.bytes.as_ptr() as usize;
         let lookup = |tables: &[(usize, std::sync::Arc<Dense>)]| {
@@ -312,7 +427,8 @@ impl DenseTables {
             return Some(found);
         }
         let size = slots.div_ceil(2);
-        if self.bytes.load(Relaxed).saturating_add(size) > DENSE_BYTES {
+        let budget = DENSE_BYTES.max(DENSE_TABLES * size);
+        if self.bytes.load(Relaxed).saturating_add(size) > budget {
             return None;
         }
         let mut nibbles = vec![0u8; size];
@@ -327,7 +443,7 @@ impl DenseTables {
         if let Some(found) = lookup(tables.as_slice()) {
             return Some(found);
         }
-        if self.bytes.fetch_add(size, Relaxed).saturating_add(size) > DENSE_BYTES {
+        if self.bytes.fetch_add(size, Relaxed).saturating_add(size) > budget {
             self.bytes.fetch_sub(size, Relaxed);
             return None;
         }
@@ -350,6 +466,97 @@ struct Term {
     ub: Vec<f64>,
 }
 
+#[derive(Clone, Copy)]
+struct WindowCandidate {
+    offset: u32,
+    /// Index of the exact weight in the flat list when only one term accumulated.
+    single_index: u32,
+    upper: f64,
+}
+
+#[inline(always)]
+fn first_pass_bound(
+    frequency: u8,
+    classes: &[u8],
+    offset: usize,
+    bounds: &[f64],
+    cap: f64,
+    skip_constant_rows: bool,
+) -> f64 {
+    match frequency {
+        // The absent and saturated rows have the same bound in every class.
+        0 if skip_constant_rows => 0.0,
+        15 if skip_constant_rows => cap,
+        _ => {
+            let class = usize::from(classes[offset]);
+            bounds[usize::from(frequency) * CLASSES + class].min(cap)
+        }
+    }
+}
+
+#[inline]
+fn gather_candidates(
+    candidates: &mut Vec<WindowCandidate>,
+    single: Option<&[(u32, f64)]>,
+    mask: &mut [u64],
+    acc: &mut [f64],
+    mut admit: impl FnMut(u32, f64) -> Option<f64>,
+) {
+    candidates.clear();
+    if let Some(single) = single {
+        for (index, &(offset, weight)) in single.iter().enumerate() {
+            if let Some(upper) = admit(offset, weight) {
+                candidates.push(WindowCandidate {
+                    offset,
+                    single_index: index as u32,
+                    upper,
+                });
+            }
+        }
+    } else {
+        for (word, word_bits) in mask.iter_mut().enumerate() {
+            let mut bits = std::mem::take(word_bits);
+            while bits != 0 {
+                let offset = (word << 6) | bits.trailing_zeros() as usize;
+                bits &= bits - 1;
+                let partial = std::mem::take(&mut acc[offset]);
+                if let Some(upper) = admit(offset as u32, partial) {
+                    candidates.push(WindowCandidate {
+                        offset: offset as u32,
+                        single_index: 0,
+                        upper,
+                    });
+                }
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+struct WindowFrequencies {
+    cells: Vec<u64>,
+    // The upper half identifies the window. The lower half holds the full posting frequency.
+    stamp: u64,
+}
+
+impl WindowFrequencies {
+    fn next_stamp(&mut self) -> u64 {
+        const STEP: u64 = 1 << u32::BITS;
+        self.stamp = self.stamp.wrapping_add(STEP);
+        if self.stamp == 0 {
+            self.cells.fill(0);
+            self.stamp = STEP;
+        }
+        self.stamp
+    }
+
+    #[inline]
+    fn get(&self, index: usize, stamp: u64) -> Option<u32> {
+        let cell = self.cells[index];
+        (cell & !u64::from(u32::MAX) == stamp).then_some(cell as u32)
+    }
+}
+
 /// Working memory of [`rank`], reused across queries.
 pub(super) struct PruneScratch {
     terms: Vec<Term>,
@@ -363,15 +570,18 @@ pub(super) struct PruneScratch {
     /// Window sum of the essential weights per offset, zero between windows.
     acc: Vec<f64>,
     /// Offsets with a posting weighed in the window, a bit each.
-    mask: [u64; WINDOW as usize / 64],
+    mask: [u64; PAIR_WINDOW as usize / 64],
     pilot: Vec<f64>,
     /// Per essential term of the window: its postings' offsets and weights, in slot order.
     logs: Vec<Vec<u16>>,
     /// Per essential term and window offset: the weight of its posting there, else 0.
     wbuf: Vec<f64>,
+    window_frequencies: WindowFrequencies,
     lookups: Vec<usize>,
-    /// First-pass survivors of a window: offset and bound.
-    cand: Vec<(u32, f64)>,
+    /// First-pass survivors of a window.
+    cand: Vec<WindowCandidate>,
+    /// The postings of a window's one accumulated term: offset and weight, in slot order.
+    single: Vec<(u32, f64)>,
     weights: [f64; MAX_TERMS],
     /// Length normalization by word count under `norm_key`.
     norms: Vec<f64>,
@@ -387,13 +597,15 @@ impl Default for PruneScratch {
             candidates: Vec::new(),
             best: BinaryHeap::new(),
             stats: PruneStats::default(),
-            acc: vec![0.0; WINDOW as usize],
-            mask: [0; WINDOW as usize / 64],
+            acc: vec![0.0; PAIR_WINDOW as usize],
+            mask: [0; PAIR_WINDOW as usize / 64],
             pilot: Vec::new(),
             logs: Vec::new(),
             wbuf: Vec::new(),
+            window_frequencies: WindowFrequencies::default(),
             lookups: Vec::new(),
             cand: Vec::new(),
+            single: Vec::new(),
             weights: [0.0; MAX_TERMS],
             norms: vec![0.0; NORM_CACHE],
             norm_key: (0, 0, 0, 0, 0),
@@ -409,6 +621,11 @@ pub(super) struct PruneStats {
     pub(super) blocks_decoded: usize,
     pub(super) scored: usize,
     pub(super) windows: usize,
+    /// Windows no chunk of which could reach the threshold.
+    pub(super) skipped_windows: usize,
+    /// Essential blocks passed over undecoded: their bound with the other terms' window
+    /// bounds stays below the threshold.
+    pub(super) skipped_blocks: usize,
     pub(super) accumulated: usize,
     pub(super) survivors: usize,
     pub(super) table_lookups: usize,
@@ -420,8 +637,8 @@ impl<'a> ImpactCursor<'a> {
     fn drain_first(&mut self, count: usize, mut f: impl FnMut(u32, u32)) {
         let mut taken = 0usize;
         while !self.ended && taken < count {
-            if !self.decoded {
-                self.decode();
+            if !self.decoded || !self.frequencies_ready {
+                self.decode::<true>();
             }
             for at in self.position..self.current.count {
                 f(self.slots[at], self.frequencies[at]);
@@ -433,36 +650,190 @@ impl<'a> ImpactCursor<'a> {
         }
     }
 
-    /// Calls `f(slot, frequency)` for every posting below `hi` the cursor has not passed, and
-    /// leaves it at the first posting at or after `hi`.
-    fn drain_below(&mut self, hi: u32, table: &[u16], mut f: impl FnMut(u32, u32)) {
+    /// Calls `f(slots, frequencies, max_frequency, min_words)` for the runs of postings below
+    /// `hi` the cursor has not passed, a block at a time (with its block's largest frequency
+    /// and least word count), and leaves it at the first posting at or after `hi`. A block
+    /// that ends below `hi` and for whose index `pass` holds is passed over undecoded; the
+    /// count of those is returned.
+    fn drain_below(
+        &mut self,
+        hi: u32,
+        mut pass: impl FnMut(usize) -> bool,
+        mut f: impl FnMut(&[u32], &[u32], u32, u32),
+    ) -> usize {
+        let mut passed = 0usize;
         loop {
             if self.ended || self.doc() >= hi {
-                return;
+                return passed;
             }
-            if !self.decoded {
-                self.decode();
+            if self.current.last < hi && pass(self.block) {
+                passed += 1;
+                if !self.next_block() {
+                    self.ended = true;
+                    return passed;
+                }
+                continue;
+            }
+            if !self.decoded || !self.frequencies_ready {
+                self.decode::<true>();
             }
             let end = self.current.count;
-            let mut at = self.position;
-            // The block's slots are known: start loading their word counts together.
-            if table.len() * 2 >= PREFETCH_BYTES {
-                for &slot in self.slots[at..end].iter().take_while(|&&slot| slot < hi) {
-                    prefetch(table, slot as usize);
-                }
-            }
-            while at < end && self.slots[at] < hi {
-                f(self.slots[at], self.frequencies[at]);
-                at += 1;
-            }
-            self.position = at;
-            if at < end {
-                return;
+            let at = self.position;
+            // A block that ends below `hi` is drained whole.
+            let stop = if self.current.last < hi {
+                end
+            } else {
+                at + self.slots[at..end].partition_point(|&slot| slot < hi)
+            };
+            f(
+                &self.slots[at..stop],
+                &self.frequencies[at..stop],
+                self.current.max_frequency,
+                self.current.min_words,
+            );
+            self.position = stop;
+            if stop < end {
+                return passed;
             }
             if !self.next_block() {
                 self.ended = true;
-                return;
+                return passed;
             }
+        }
+    }
+}
+
+/// What weighing a posting needs, shared by the window loop and its helpers.
+struct Scorer<'a> {
+    bm25: Bm25,
+    average: f64,
+    simple: bool,
+    word_counts: &'a [u16],
+    slot_table: &'a [u8],
+}
+
+impl Scorer<'_> {
+    /// Starts loading the word counts of `slots` (sorted), one prefetch per 64-byte line of the
+    /// word-count table, when the table is too large to stay in cache; a hint, with no effect on
+    /// results.
+    #[inline(always)]
+    fn prefetch_words(&self, slots: impl Iterator<Item = u32>) {
+        if self.word_counts.len() * 2 >= PREFETCH_BYTES {
+            let mut line = usize::MAX;
+            for slot in slots {
+                if slot as usize >> 5 != line {
+                    line = slot as usize >> 5;
+                    prefetch(self.word_counts, slot as usize);
+                }
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn weigh(&self, idf: f64, tf: f64, norm: f64) -> f64 {
+        if self.simple {
+            idf * tf * self.bm25.k1_plus_one / (tf + self.bm25.k1 * norm)
+        } else {
+            self.bm25.weight(idf, tf, norm)
+        }
+    }
+
+    /// Length normalization of `slot`'s chunk, cached by word count in `norms`.
+    #[inline(always)]
+    fn norm(&self, norms: &mut [f64], slot: u32) -> f64 {
+        let words = match self.word_counts[slot as usize] {
+            u16::MAX => {
+                let at = slot as usize * SLOT_BYTES;
+                u32::from_le_bytes(self.slot_table[at..at + 4].try_into().expect("four bytes"))
+            }
+            short => u32::from(short),
+        };
+        match norms.get_mut(words as usize) {
+            Some(cached) => {
+                if *cached == 0.0 {
+                    *cached = self.bm25.norm(f64::from(words), self.average);
+                }
+                *cached
+            }
+            None => self.bm25.norm(f64::from(words), self.average),
+        }
+    }
+}
+
+enum PostingBuffer<'a> {
+    Single,
+    Weights(&'a mut [f64], &'a mut Vec<u16>),
+    Frequencies(&'a mut [u64]),
+}
+
+/// Weighs an essential term's block run into the window and retains each contribution.
+#[inline(never)]
+#[allow(clippy::too_many_arguments)]
+fn accumulate_run(
+    scorer: &Scorer<'_>,
+    norms: &mut [f64],
+    idf: f64,
+    lo: u32,
+    slots: &[u32],
+    frequencies: &[u32],
+    acc: &mut [f64],
+    mask: &mut [u64],
+    mut retain: impl FnMut(usize, f64, u32),
+) {
+    scorer.prefetch_words(slots.iter().copied());
+    for (&slot, &frequency) in slots.iter().zip(frequencies) {
+        let offset = (slot - lo) as usize;
+        let norm = scorer.norm(norms, slot);
+        let weight = scorer.weigh(idf, f64::from(frequency), norm);
+        if weight > 0.0 {
+            mask[offset >> 6] |= 1u64 << (offset & 63);
+            acc[offset] += weight;
+            retain(offset, weight, frequency);
+        }
+    }
+}
+
+/// The postings of one block run of a window's only accumulated term, weighed: their offsets
+/// and weights, in slot order, those of weight zero or of a frequency below `least` left out.
+#[inline(never)]
+#[allow(clippy::too_many_arguments)]
+fn collect_run(
+    scorer: &Scorer<'_>,
+    norms: &mut [f64],
+    idf: f64,
+    lo: u32,
+    slots: &[u32],
+    frequencies: &[u32],
+    least: u32,
+    out: &mut Vec<(u32, f64)>,
+) {
+    if least > 1 {
+        // Only the postings at `least` or more are weighed: find them, load their word counts,
+        // then weigh them.
+        let mut kept = [0u16; CHECKPOINT_BLOCK];
+        let mut n = 0usize;
+        for (at, &frequency) in frequencies.iter().enumerate() {
+            kept[n] = at as u16;
+            n += usize::from(frequency >= least);
+        }
+        let kept = &kept[..n];
+        scorer.prefetch_words(kept.iter().map(|&at| slots[usize::from(at)]));
+        for &at in kept {
+            let (slot, frequency) = (slots[usize::from(at)], frequencies[usize::from(at)]);
+            let norm = scorer.norm(norms, slot);
+            let weight = scorer.weigh(idf, f64::from(frequency), norm);
+            if weight > 0.0 {
+                out.push((slot - lo, weight));
+            }
+        }
+        return;
+    }
+    scorer.prefetch_words(slots.iter().copied());
+    for (&slot, &frequency) in slots.iter().zip(frequencies) {
+        let norm = scorer.norm(norms, slot);
+        let weight = scorer.weigh(idf, f64::from(frequency), norm);
+        if weight > 0.0 {
+            out.push((slot - lo, weight));
         }
     }
 }
@@ -495,23 +866,38 @@ pub(super) fn rank<S: LexicalSource>(
     scratch.terms.clear();
     scratch.stats = PruneStats::default();
     let mut lists = Vec::new();
+    let mut windows = Vec::new();
+    let mut aligned = [None; MAX_TERMS];
     for (form, set) in terms.iter().enumerate() {
         for word in set {
-            let Some(list) = image.postings(form, word) else {
+            let Some((list, skips)) = image.postings_with_skips(form, word) else {
                 continue;
             };
             let idf = Bm25::idf(n, f64::from(list.count));
             let bound = Bound::new(idf, average, bm25)?;
             lists.push((list, idf, bound));
+            let next_aligned = aligned.get_mut(windows.len());
+            windows.push(skips.map(|skips| {
+                let table = image.rank_table_for(skips.skips, bm25, average);
+                if let (Some(entry), Some(_)) = (next_aligned, table) {
+                    *entry = image.union_window_bounds(skips.skips);
+                }
+                BlockBounds::new(skips, table)
+            }));
         }
     }
     if limit == 0 || lists.is_empty() {
         return Some(());
     }
-    if lists.len() > MAX_TERMS || slots >= u32::MAX as usize - WINDOW as usize {
+    if lists.len() > MAX_TERMS || slots >= u32::MAX as usize - PAIR_WINDOW as usize {
         return None;
     }
     let count = lists.len();
+    let skip_constant_rows = count > 3 && limit <= WIDE_LIMIT;
+    let fuse_first_table = count >= 4 && limit <= WIDE_LIMIT;
+    if count == 1 {
+        aligned[0] = None;
+    }
     let mut cursors: Vec<ImpactCursor<'_>> = Vec::with_capacity(count);
     for (list, idf, bound) in &lists {
         let mut cursor = ImpactCursor::new();
@@ -521,7 +907,7 @@ pub(super) fn rank<S: LexicalSource>(
             idf: *idf,
             bound: *bound,
             ceiling: bound.at(cursor.list_max_frequency, cursor.list_min_words),
-            tabled: postings >= DENSE_MIN_POSTINGS && postings * 32 >= slots,
+            tabled: tabled(postings, slots),
             dense: None,
             dense_tried: false,
             ub: Vec::new(),
@@ -557,8 +943,10 @@ pub(super) fn rank<S: LexicalSource>(
         pilot,
         logs,
         wbuf,
+        window_frequencies,
         lookups,
         cand,
+        single,
         weights,
         norms,
         ..
@@ -574,38 +962,34 @@ pub(super) fn rank<S: LexicalSource>(
     for &i in by_bound.iter() {
         prefix.push(prefix[prefix.len() - 1] + terms[i].ceiling);
     }
-    if logs.len() < count {
-        logs.resize_with(count, Vec::new);
-    }
-    if wbuf.len() < count * WINDOW as usize {
-        wbuf.resize(count * WINDOW as usize, 0.0);
-    }
-    let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
-    let weigh = |idf: f64, tf: f64, norm: f64| -> f64 {
-        if simple {
-            idf * tf * bm25.k1_plus_one / (tf + bm25.k1 * norm)
-        } else {
-            bm25.weight(idf, tf, norm)
-        }
+    let window: u32 = match count {
+        _ if limit > WIDE_LIMIT => WINDOW,
+        2 => PAIR_WINDOW,
+        _ => WIDE_WINDOW,
     };
-    let norm_for = |norms: &mut Vec<f64>, slot: u32| -> f64 {
-        let words = match word_counts[slot as usize] {
-            u16::MAX => {
-                let at = slot as usize * SLOT_BYTES;
-                u32::from_le_bytes(slot_table[at..at + 4].try_into().expect("four bytes"))
-            }
-            short => u32::from(short),
-        };
-        match norms.get_mut(words as usize) {
-            Some(cached) => {
-                if *cached == 0.0 {
-                    *cached = bm25.norm(f64::from(words), average);
-                }
-                *cached
-            }
-            None => bm25.norm(f64::from(words), average),
+    let stride = window as usize;
+    let retain_frequencies = count >= 4 && limit <= WIDE_LIMIT;
+    if retain_frequencies {
+        if window_frequencies.cells.len() < count * stride {
+            window_frequencies.cells.resize(count * stride, 0);
         }
+    } else {
+        if logs.len() < count {
+            logs.resize_with(count, Vec::new);
+        }
+        if wbuf.len() < count * stride {
+            wbuf.resize(count * stride, 0.0);
+        }
+    }
+    let scorer = Scorer {
+        bm25,
+        average,
+        simple: bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT,
+        word_counts,
+        slot_table,
     };
+    let weigh = |idf: f64, tf: f64, norm: f64| -> f64 { scorer.weigh(idf, tf, norm) };
+    let norm_for = |norms: &mut Vec<f64>, slot: u32| -> f64 { scorer.norm(norms, slot) };
     // A score `limit` chunks are sure to reach, from the weights of the rarest term's first
     // chunks alone (a chunk's score is at least any one of its weights).
     let mut pilot_floor = 0.0f64;
@@ -630,6 +1014,10 @@ pub(super) fn rank<S: LexicalSource>(
     let mut threshold = 0.0f64;
     let mut quiet = 0usize;
     let mut scored = 0usize;
+    let mut window_bounds = [0.0f64; MAX_TERMS];
+    // Whether a lookup term's window bound is part of a candidate's `upper`.
+    let mut deferred = [false; MAX_TERMS];
+    let mut demoted: Vec<usize> = Vec::with_capacity(count);
     loop {
         let effective = threshold.max(pilot_floor);
         while quiet < count && sum_bound(prefix[quiet + 1], count) < effective {
@@ -642,46 +1030,48 @@ pub(super) fn rank<S: LexicalSource>(
         if lo == NO_DOC {
             break;
         }
-        let hi = lo.saturating_add(WINDOW);
+        let hi = lo.saturating_add(window);
+        let first = (lo / WINDOW) as usize;
+        let last = ((hi - 1) / WINDOW) as usize;
         stats.windows += 1;
-        // Accumulate the essential terms' weights over the window.
-        for (position, &i) in by_bound[quiet..].iter().enumerate() {
-            let idf = terms[i].idf;
-            let log = &mut logs[position];
-            log.clear();
-            let mut taken = 0usize;
-            cursors[i].drain_below(hi, word_counts, |slot, frequency| {
-                let offset = (slot - lo) as usize;
-                let norm = norm_for(norms, slot);
-                let weight = weigh(idf, f64::from(frequency), norm);
-                if weight > 0.0 {
-                    mask[offset >> 6] |= 1u64 << (offset & 63);
-                    acc[offset] += weight;
-                    wbuf[position * WINDOW as usize + offset] = weight;
-                    log.push(offset as u16);
+        // Each term's bound in this window, from its blocks there; zero past its postings.
+        for i in 0..count {
+            let term = &terms[i];
+            window_bounds[i] = if cursors[i].doc() >= hi {
+                0.0
+            } else if let Some(bounds) = aligned[i] {
+                bounds.bound(first, last, term.idf, term.ceiling)
+            } else {
+                match windows[i].as_mut() {
+                    Some(blocks) => blocks.bound(lo, hi, term.bound, term.ceiling),
+                    None => term.ceiling,
                 }
-                taken += 1;
-            });
-            stats.accumulated += taken;
+            };
         }
-        // The least score `limit` chunks of this window are sure to reach, while the heap is
-        // not yet full: each chunk's accumulated weight is below its score by no more than the
-        // summation error.
-        let mut sure = 0.0f64;
-        if best.len() < limit {
-            pilot.clear();
-            for (word, bits) in mask.iter().enumerate() {
-                let mut bits = *bits;
-                while bits != 0 {
-                    let offset = (word << 6) | bits.trailing_zeros() as usize;
-                    bits &= bits - 1;
-                    pilot.push(acc[offset]);
-                }
+        // Essential terms whose window bounds, with the quiet terms', stay below the threshold
+        // are demoted for the window: looked up per candidate, not accumulated.
+        let mut below = 0.0f64;
+        for &i in &by_bound[..quiet] {
+            below += window_bounds[i];
+        }
+        demoted.clear();
+        demoted.extend(by_bound[quiet..].iter().copied());
+        demoted.sort_by(|&a, &b| window_bounds[a].total_cmp(&window_bounds[b]));
+        let mut demote = 0usize;
+        while demote < demoted.len()
+            && sum_bound(below + window_bounds[demoted[demote]], count) < effective
+        {
+            below += window_bounds[demoted[demote]];
+            demote += 1;
+        }
+        demoted.truncate(demote);
+        if demote == count - quiet {
+            // No chunk of the window can reach the threshold.
+            stats.skipped_windows += 1;
+            for &i in &by_bound[quiet..] {
+                cursors[i].seek_in(hi, windows[i].as_ref());
             }
-            if pilot.len() >= limit {
-                let (_, nth, _) = pilot.select_nth_unstable_by(limit - 1, |a, b| b.total_cmp(a));
-                sure = *nth * (1.0 - 2.0 * count as f64 * f64::EPSILON);
-            }
+            continue;
         }
         // The quiet terms: those with a table, and the sum of the ceilings of those without.
         lookups.clear();
@@ -728,44 +1118,252 @@ pub(super) fn rank<S: LexicalSource>(
             if term.dense.is_some() && first_passes < FIRST_PASS_TABLES {
                 first_pass[first_passes] = i;
                 first_passes += 1;
+                deferred[i] = false;
             } else {
-                untabled += term.ceiling;
+                untabled += window_bounds[i];
+                deferred[i] = true;
             }
             lookups.push(i);
+        }
+        for &i in demoted.iter() {
+            untabled += window_bounds[i];
+            deferred[i] = true;
+            lookups.push(i);
+        }
+        let mut rest = [0.0f64; FIRST_PASS_TABLES + 1];
+        for k in (0..first_passes).rev() {
+            rest[k] = rest[k + 1] + window_bounds[first_pass[k]];
+        }
+        // With the heap full the cut is known before the window is read: a lone accumulated
+        // term's posting whose bound (at its frequency and its block's least word count) with
+        // the quiet bounds stays below `drop` is one the gather would drop, so it is not weighed.
+        let early = threshold.max(pilot_floor);
+        let early_drop = early * cut_factor * (1.0 - 8.0 * f64::EPSILON);
+        let prefilter = best.len() >= limit && early > 0.0;
+        // Accumulate the essential terms' weights over the window. A window with one term to
+        // accumulate keeps its postings in a list instead: the accumulated weight of a chunk is
+        // then that term's weight alone.
+        let alone = count - quiet - demoted.len() == 1;
+        let stamp = if retain_frequencies && !alone {
+            window_frequencies.next_stamp()
+        } else {
+            0
+        };
+        single.clear();
+        for (position, &i) in by_bound[quiet..].iter().enumerate() {
+            let idf = terms[i].idf;
+            let log = (!retain_frequencies).then(|| {
+                let log = &mut logs[position];
+                log.clear();
+                log
+            });
+            if demoted.contains(&i) {
+                continue;
+            }
+            let mut taken = 0usize;
+            let span = position * stride..(position + 1) * stride;
+            let mut buffer = if alone {
+                PostingBuffer::Single
+            } else if let Some(log) = log {
+                PostingBuffer::Weights(&mut wbuf[span], log)
+            } else {
+                PostingBuffer::Frequencies(&mut window_frequencies.cells[span])
+            };
+            // A block whose bound with every other term's window bound is below the threshold
+            // holds no chunk that can reach it: its weights are not needed.
+            let mut others = 0.0f64;
+            for (j, &weight) in window_bounds[..count].iter().enumerate() {
+                if j != i {
+                    others += weight;
+                }
+            }
+            let term = &terms[i];
+            let blocks = windows[i].as_ref();
+            let lone = alone && prefilter;
+            let pass = |block: usize| {
+                effective > 0.0
+                    && blocks.is_some_and(|blocks| {
+                        sum_bound(
+                            others + blocks.block(block, term.bound, term.ceiling),
+                            count,
+                        ) < effective
+                    })
+            };
+            stats.skipped_blocks +=
+                cursors[i].drain_below(hi, pass, |slots, frequencies, most, words| {
+                    match &mut buffer {
+                        PostingBuffer::Single => {
+                            let mut least = 1u32;
+                            if lone {
+                                while least <= most
+                                    && term.bound.at(least, words) + untabled + rest[0] < early_drop
+                                {
+                                    least += 1;
+                                }
+                            }
+                            collect_run(&scorer, norms, idf, lo, slots, frequencies, least, single);
+                        }
+                        PostingBuffer::Weights(saved, log) => accumulate_run(
+                            &scorer,
+                            norms,
+                            idf,
+                            lo,
+                            slots,
+                            frequencies,
+                            acc,
+                            mask,
+                            |offset, weight, _| {
+                                saved[offset] = weight;
+                                log.push(offset as u16);
+                            },
+                        ),
+                        PostingBuffer::Frequencies(saved) => accumulate_run(
+                            &scorer,
+                            norms,
+                            idf,
+                            lo,
+                            slots,
+                            frequencies,
+                            acc,
+                            mask,
+                            |offset, _, frequency| saved[offset] = stamp | u64::from(frequency),
+                        ),
+                    }
+                    taken += slots.len();
+                });
+            stats.accumulated += taken;
+        }
+        // The least score `limit` chunks of this window are sure to reach, while the heap is
+        // not yet full: each chunk's accumulated weight is below its score by no more than the
+        // summation error.
+        let mut sure = 0.0f64;
+        if best.len() < limit {
+            pilot.clear();
+            if alone {
+                pilot.extend(single.iter().map(|&(_, weight)| weight));
+            } else {
+                for (word, bits) in mask[..stride / 64].iter().enumerate() {
+                    let mut bits = *bits;
+                    while bits != 0 {
+                        let offset = (word << 6) | bits.trailing_zeros() as usize;
+                        bits &= bits - 1;
+                        pilot.push(acc[offset]);
+                    }
+                }
+            }
+            if pilot.len() >= limit {
+                let (_, nth, _) = pilot.select_nth_unstable_by(limit - 1, |a, b| b.total_cmp(a));
+                sure = *nth * (1.0 - 2.0 * count as f64 * f64::EPSILON);
+            }
         }
         // First pass: a bound of every touched chunk's score from its accumulated weight, the
         // tables' frequencies and the untabled quiet terms' ceilings.
         let floor_score = threshold.max(pilot_floor).max(sure);
         let cut = floor_score * cut_factor;
-        cand.clear();
-        for (word, word_bits) in mask.iter_mut().enumerate() {
-            let mut bits = std::mem::take(word_bits);
-            while bits != 0 {
-                let offset = (word << 6) | bits.trailing_zeros() as usize;
-                bits &= bits - 1;
-                let partial = std::mem::take(&mut acc[offset]);
-                cand.push((offset as u32, partial + untabled));
-            }
-        }
-        // One table at a time over the window's candidates: each candidate still adds the
-        // tables' bounds in the same order, but the loop body is a tight lookup.
+        // A chunk whose bound plus the ceilings of the tables still to add is below `drop`
+        // cannot reach `cut` whatever those tables say (a table's bound never exceeds its
+        // list's ceiling); the margin covers the different summation order.
+        let drop = cut * (1.0 - 8.0 * f64::EPSILON);
+        let single_term = alone.then(|| {
+            // The accumulated weight `0.0 + weight` is the weight itself.
+            by_bound[quiet..]
+                .iter()
+                .copied()
+                .find(|i| !demoted.contains(i))
+                .expect("the accumulated term")
+        });
+        let single_entries = single_term.map(|_| single.as_slice());
         let window_classes = &classes8[lo as usize..];
-        for &i in &first_pass[..first_passes] {
+        let table_bound = |table: &Dense, ub: &[f64], cap: f64, offset: usize| {
+            first_pass_bound(
+                table.get(lo as usize + offset),
+                window_classes,
+                offset,
+                ub,
+                cap,
+                skip_constant_rows,
+            )
+        };
+        let gather_upper = |weight: f64| {
+            let upper = weight + untabled;
+            if floor_score > 0.0 && upper + rest[0] < drop {
+                None
+            } else {
+                Some(upper)
+            }
+        };
+        let first_table = if fuse_first_table && first_passes > 0 {
+            let i = first_pass[0];
+            terms[i].dense.as_deref().map(|table| (i, table))
+        } else {
+            None
+        };
+        let first_remaining = if let Some((i, table)) = first_table {
+            let ub = &terms[i].ub[..];
+            let cap = window_bounds[i];
+            let after = rest[1];
+            // Apply the first table before storing candidates that it would discard.
+            gather_candidates(
+                cand,
+                single_entries,
+                &mut mask[..stride / 64],
+                acc,
+                |offset, weight| {
+                    let mut upper = gather_upper(weight)?;
+                    upper += table_bound(table, ub, cap, offset as usize);
+                    if floor_score > 0.0 && upper + after < drop {
+                        return None;
+                    }
+                    Some(upper)
+                },
+            );
+            1
+        } else {
+            gather_candidates(
+                cand,
+                single_entries,
+                &mut mask[..stride / 64],
+                acc,
+                |_, weight| gather_upper(weight),
+            );
+            0
+        };
+        // One table at a time over the window's candidates: each candidate still adds the
+        // tables' bounds in the same order, but the loop body is a tight lookup. A candidate
+        // that can no longer reach the cut leaves before the next table.
+        for (k, &i) in first_pass[..first_passes]
+            .iter()
+            .enumerate()
+            .skip(first_remaining)
+        {
             let term = &terms[i];
             if let Some(table) = term.dense.as_ref() {
                 let ub = &term.ub[..];
-                for entry in cand.iter_mut() {
-                    let offset = entry.0 as usize;
-                    let class = usize::from(window_classes[offset]);
-                    entry.1 += ub[usize::from(table.get(lo as usize + offset)) * CLASSES + class];
+                let cap = window_bounds[i];
+                let after = rest[k + 1];
+                let mut kept = 0usize;
+                for read in 0..cand.len() {
+                    let mut entry = cand[read];
+                    entry.upper += table_bound(table, ub, cap, entry.offset as usize);
+                    if floor_score > 0.0 && entry.upper + after < drop {
+                        continue;
+                    }
+                    cand[kept] = entry;
+                    kept += 1;
                 }
+                cand.truncate(kept);
             }
         }
         if floor_score > 0.0 {
-            cand.retain(|&(_, upper)| upper >= cut);
+            cand.retain(|entry| entry.upper >= cut);
         }
         // Second pass: the candidates, scored exactly.
-        for &(offset, upper) in cand.iter() {
+        for &WindowCandidate {
+            offset,
+            single_index,
+            upper,
+        } in cand.iter()
+        {
             let floor_score = threshold.max(pilot_floor).max(sure);
             if floor_score > 0.0 && upper < floor_score * cut_factor {
                 continue;
@@ -773,18 +1371,36 @@ pub(super) fn rank<S: LexicalSource>(
             let slot = lo + offset;
             stats.survivors += 1;
             let norm = norm_for(norms, slot);
-            for (position, &i) in by_bound[quiet..].iter().enumerate() {
-                let weight = wbuf[position * WINDOW as usize + offset as usize];
-                if weight != 0.0 {
-                    weights[i] = weight;
+            if let Some(i) = single_term {
+                weights[i] = single[single_index as usize].1;
+            } else if stamp != 0 {
+                for (position, &i) in by_bound[quiet..].iter().enumerate() {
+                    if let Some(frequency) =
+                        window_frequencies.get(position * stride + offset as usize, stamp)
+                    {
+                        weights[i] = weigh(terms[i].idf, f64::from(frequency), norm);
+                    }
+                }
+            } else {
+                for (position, &i) in by_bound[quiet..].iter().enumerate() {
+                    let weight = wbuf[position * stride + offset as usize];
+                    if weight != 0.0 {
+                        weights[i] = weight;
+                    }
                 }
             }
+            // `upper` assumes the window bound of every deferred lookup term; resolving one
+            // replaces its bound by its weight, and the chunk leaves once that stays below the
+            // cut (the margin covers the incremental sums' rounding).
+            let mut upper_now = upper;
+            let early_cut = floor_score * cut_factor * (1.0 - 64.0 * f64::EPSILON);
+            let mut gone = false;
             for &i in lookups.iter() {
                 let term = &terms[i];
                 let tf = match term.dense.as_ref().map(|t| t.get(slot as usize)) {
                     Some(15) | None => {
                         stats.cursor_lookups += 1;
-                        cursors[i].seek(slot);
+                        cursors[i].seek_in(slot, windows[i].as_ref());
                         if cursors[i].doc() == slot {
                             cursors[i].frequency()
                         } else {
@@ -799,6 +1415,17 @@ pub(super) fn rank<S: LexicalSource>(
                 if tf > 0 {
                     weights[i] = weigh(term.idf, f64::from(tf), norm);
                 }
+                if deferred[i] {
+                    upper_now += weights[i] - window_bounds[i];
+                    if floor_score > 0.0 && upper_now < early_cut {
+                        gone = true;
+                        break;
+                    }
+                }
+            }
+            if gone {
+                weights[..count].fill(0.0);
+                continue;
             }
             // The sum in query term order, from zero, as the exhaustive ranking adds
             // (a term the chunk lacks adds zero).
@@ -825,10 +1452,15 @@ pub(super) fn rank<S: LexicalSource>(
                 threshold = f64::from_bits(floor);
             }
         }
-        for (position, log) in logs[..count - quiet].iter().enumerate() {
-            for &offset in log {
-                wbuf[position * WINDOW as usize + usize::from(offset)] = 0.0;
+        if !retain_frequencies {
+            for (position, log) in logs[..count - quiet].iter().enumerate() {
+                for &offset in log {
+                    wbuf[position * stride + usize::from(offset)] = 0.0;
+                }
             }
+        }
+        for &i in demoted.iter() {
+            cursors[i].seek_in(hi, windows[i].as_ref());
         }
     }
     stats.scored = scored;
@@ -840,4 +1472,96 @@ pub(super) fn rank<S: LexicalSource>(
     };
     candidates.retain(|&(score, _)| score.to_bits() >= bar);
     Some(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::documents::postings::CheckpointPacker;
+
+    #[test]
+    fn lexical_first_pass_constant_rows_need_no_class() {
+        let mut bounds = [0.0f64; CLASSES * 16];
+        let ceiling = 12.0;
+        bounds[15 * CLASSES..].fill(ceiling);
+        for class in 0..CLASSES {
+            bounds[CLASSES + class] = 1.0 + class as f64 / CLASSES as f64;
+            bounds[14 * CLASSES + class] = 5.0 + class as f64 / CLASSES as f64;
+        }
+        let classes = [0, 1, (CLASSES - 1) as u8];
+        for cap in [0.0, 1.5, 5.5, ceiling] {
+            for offset in 0..classes.len() {
+                for frequency in [0, 1, 14, 15] {
+                    let expected =
+                        first_pass_bound(frequency, &classes, offset, &bounds, cap, false);
+                    let classes = if frequency == 0 || frequency == 15 {
+                        &[][..]
+                    } else {
+                        &classes[..]
+                    };
+                    let actual = first_pass_bound(frequency, classes, offset, &bounds, cap, true);
+                    assert_eq!(actual.to_bits(), expected.to_bits());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn lexical_impact_window_stamp_expires_frequencies() {
+        let mut frequencies = WindowFrequencies {
+            cells: vec![0; 2],
+            ..Default::default()
+        };
+        let first = frequencies.next_stamp();
+        frequencies.cells[0] = first | u64::from(u32::MAX);
+        assert_eq!(frequencies.get(0, first), Some(u32::MAX));
+        assert_eq!(frequencies.get(1, first), None);
+        let second = frequencies.next_stamp();
+        assert_eq!(frequencies.get(0, second), None);
+        frequencies.stamp = !u64::from(u32::MAX);
+        let after_wrap = frequencies.next_stamp();
+        assert_eq!(after_wrap, first);
+        assert_eq!(frequencies.get(0, after_wrap), None);
+    }
+
+    #[test]
+    fn lexical_impact_cursor_reads_frequencies_after_seeks_and_drains() {
+        let count = CHECKPOINT_BLOCK + 9;
+        let entries: Vec<_> = (0..count)
+            .map(|i| (3 * i as u32 + 2, (7 * i as u32 % 509) + 1))
+            .collect();
+        let mut bytes = Vec::new();
+        let mut packer = CheckpointPacker::with_info(true, &|_| 512, false);
+        for &(slot, frequency) in &entries {
+            packer.push(slot as usize, frequency, &mut bytes);
+        }
+        packer.finish(&mut bytes);
+        let mut cursor = ImpactCursor::new();
+        cursor.open(&Postings {
+            bytes: &bytes,
+            count: count as u32,
+            blocked: true,
+            impacts: true,
+        });
+        assert_eq!((cursor.doc(), cursor.frequency()), entries[0]);
+        cursor.seek_in(entries[63].0 + 1, None);
+        assert_eq!((cursor.doc(), cursor.frequency()), entries[64]);
+        let mut drained = Vec::new();
+        cursor.drain_below(
+            entries[CHECKPOINT_BLOCK - 1].0,
+            |_| false,
+            |slots, frequencies, _, _| {
+                drained.extend(slots.iter().copied().zip(frequencies.iter().copied()));
+            },
+        );
+        assert_eq!(drained, entries[64..CHECKPOINT_BLOCK - 1]);
+        assert_eq!(
+            (cursor.doc(), cursor.frequency()),
+            entries[CHECKPOINT_BLOCK - 1]
+        );
+        cursor.seek_in(entries[count - 2].0 + 1, None);
+        assert_eq!((cursor.doc(), cursor.frequency()), entries[count - 1]);
+        cursor.seek_in(entries[count - 1].0 + 1, None);
+        assert_eq!(cursor.doc(), NO_DOC);
+    }
 }
