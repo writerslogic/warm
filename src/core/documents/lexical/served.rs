@@ -618,6 +618,22 @@ pub(in crate::core::documents) fn execute(
             count: options.count.then_some(count),
         }));
     }
+    if !excluded.is_empty()
+        && !required.is_empty()
+        && optional.is_empty()
+        && (k > 0 || options.count)
+        && required
+            .iter()
+            .all(|rt| !rt.phrase && (k == 0 || rt.bound.is_some()))
+        && excluded.iter().all(|rt| !rt.phrase && rt.cursors.len() == 1)
+    {
+        merge_twins(&mut required);
+        let (hits, count) = run.negated_top(&mut required, &mut excluded)?;
+        return Ok(Some(LexicalResults {
+            hits,
+            count: options.count.then_some(count),
+        }));
+    }
     let (hits, count) = if required.is_empty() {
         if pruned_union {
             let count = options.count.then(|| optional[0].rarest());
@@ -1081,6 +1097,212 @@ impl<'a> Run<'a, '_> {
         } else {
             intersect_count(self.image, &mut terms)
         }
+    }
+
+    /// [`Self::terms_top`] for a query that also excludes documents: the survivors of the
+    /// required lists are dropped when an excluded list holds them, through its bitmap or
+    /// frequency table or, failing both, its decoded blocks. Without a `k` only the count is
+    /// made, and the clauses have no bounds.
+    /// The top `k` of the documents every term clause has, and with `self.count` their number:
+    /// the rarest list a block at a time, filtered through the others (see [`keep_common`]).
+    /// A block whose bound, with the bounds of the other lists at it, is below the k-th best
+    /// score is skipped before the other lists are read, or when counting, filtered but not
+    /// scored. `terms` is sorted rarest first and every clause has a bound.
+    #[inline(never)]
+    fn negated_top(
+        &mut self,
+        terms: &mut [Rt<'a>],
+        excluded: &mut [Rt<'a>],
+    ) -> Result<(Vec<LexicalHit>, usize)> {
+        let lists = terms.len();
+        let clauses = terms.iter().map(|rt| 1 + rt.twins.len()).sum();
+        // Each list's clauses, and how many times its weight enters a score.
+        let ids: Vec<Vec<usize>> = terms
+            .iter()
+            .map(|rt| {
+                std::iter::once(rt.clause)
+                    .chain(rt.twins.iter().copied())
+                    .collect()
+            })
+            .collect();
+        let times: Vec<f64> = ids.iter().map(|ids| ids.len() as f64).collect();
+        let ceiling = sum_bound(
+            terms.iter().zip(&times).map(|(rt, t)| rt.ceiling * t).sum(),
+            clauses,
+        );
+        let mut top = Top::new(self.image, self.k);
+        let mut count = 0usize;
+        let mut slots = [0u32; CHECKPOINT_BLOCK];
+        let tables = frequency_tables(self.image, &terms[1..]);
+        // The other lists in the order candidates are filtered through them: those with a
+        // frequency table first, a lookup per candidate, then those whose blocks are decoded.
+        let mut sequence: Vec<usize> = (0..lists - 1).collect();
+        sequence.sort_by_key(|&l| tables[l].is_none());
+        let tabled = tables.iter().flatten().count();
+        // Row 0: each candidate's index in the lead block; row `p`: its frequency in list
+        // `sequence[p - 1]`.
+        let mut rows = vec![[0u32; CHECKPOINT_BLOCK]; lists];
+        let (lead, rest) = terms.split_first_mut().expect("two or more lists");
+        let scoring = self.k > 0;
+        let lead_bound = lead.bound.unwrap_or_else(|| {
+            Bound::new(1.0, self.shape.average, self.shape.bm25).expect("a unit bound")
+        });
+        let excluded_tables = frequency_tables(self.image, excluded);
+        'blocks: loop {
+            let floor = top.floor();
+            if !self.count && floor.is_some_and(|floor| ceiling < floor) {
+                break;
+            }
+            let cursor = &mut lead.cursors[0];
+            if cursor.is_end() {
+                break;
+            }
+            let (first, last) = (cursor.block_first(), cursor.block_last());
+            let mut scored = scoring;
+            let mut rest_sum = 0.0f64;
+            if let Some(floor) = floor {
+                let mut sum = cursor.block_weight(lead_bound) * times[0];
+                for (other, t) in rest.iter_mut().zip(&times[1..]) {
+                    let c = &mut other.cursors[0];
+                    if !c.advance_block(first) {
+                        break 'blocks;
+                    }
+                    let bound = other.bound.expect("a bounded term");
+                    let weight = if c.block_last() >= last {
+                        c.block_weight(bound)
+                    } else {
+                        c.span_weight(last, bound, 8, !self.count)
+                            .unwrap_or(other.ceiling)
+                    };
+                    sum += weight * t;
+                    rest_sum += weight * t;
+                }
+                scored = sum_bound(sum, clauses) >= floor;
+            }
+            let mut live = true;
+            if scored || self.count {
+                let cursor = &mut lead.cursors[0];
+                let block = cursor.block_slots();
+                let mut n = block.len();
+                slots[..n].copy_from_slice(block);
+                if !scored {
+                    // Counted only: the dense lists' bitmaps answer without decoding them.
+                    let (kept, more) = keep_counted(rest, &tables, &mut slots, n);
+                    let kept = drop_excluded(excluded, &excluded_tables, &mut slots, kept, &mut []);
+                    count += kept;
+                    if !more || !lead.cursors[0].advance_block(last.saturating_add(1)) {
+                        break;
+                    }
+                    continue;
+                }
+                // A candidate whose lead frequency, at the block's least word count, cannot
+                // lift the block's weights to the k-th best score is dropped before it is
+                // probed in the other lists.
+                let mut need = 1u32;
+                if let (false, Some(floor)) = (self.count, floor) {
+                    let most = lead.cursors[0].block_bounds().0.min(NEED_PROBES);
+                    let least = lead.cursors[0].block_bounds().1;
+                    while need < most
+                        && sum_bound(lead_bound.at(need, least) * times[0] + rest_sum, clauses)
+                            < floor
+                    {
+                        need += 1;
+                    }
+                }
+                if need > 1 {
+                    #[cfg(test)]
+                    PREFILTERED.with(|c| c.set(c.get() + 1));
+                    n = keep_frequent(
+                        lead.cursors[0].block_frequencies(),
+                        &mut slots,
+                        n,
+                        &mut rows[0],
+                        need,
+                    );
+                } else {
+                    for (index, value) in rows[0][..n].iter_mut().enumerate() {
+                        *value = index as u32;
+                    }
+                }
+                for (p, &l) in sequence.iter().enumerate() {
+                    if n == 0 {
+                        break;
+                    }
+                    let (kept, more) = match &tables[l] {
+                        Some(table) => (keep_tabled(table, &mut slots, n, &mut rows, p + 1), true),
+                        None => keep_common_lazy(
+                            &mut rest[l].cursors[0],
+                            &mut slots,
+                            n,
+                            &mut rows,
+                            p + 1,
+                        ),
+                    };
+                    n = kept;
+                    live &= more;
+                    if n == 0 {
+                        break;
+                    }
+                }
+                n = drop_excluded(excluded, &excluded_tables, &mut slots, n, &mut rows);
+                count += n;
+                if n > 0 {
+                    // The candidates are known: start loading their word counts together.
+                    for &slot in &slots[..n] {
+                        prefetch(self.word_counts, slot as usize);
+                    }
+                    let frequencies = lead.cursors[0].block_frequencies();
+                    for (m, &slot) in slots[..n].iter().enumerate() {
+                        let lead_frequency = frequencies[rows[0][m] as usize];
+                        if rows[1..1 + tabled].iter().any(|row| row[m] == SATURATED) {
+                            // A tabled list holds this candidate fifteen times or more: bound
+                            // its weight by the list's largest frequency, and read the list only
+                            // when the bound reaches the k-th best score.
+                            if let Some(floor) = top.floor() {
+                                let words = self.words(slot);
+                                let mut sum = lead_bound.at(lead_frequency, words) * times[0];
+                                for (p, &l) in sequence.iter().enumerate() {
+                                    let other = &rest[l];
+                                    let bound = other.bound.expect("a bounded term");
+                                    let found = rows[p + 1][m];
+                                    let frequency = if p < tabled && found == SATURATED {
+                                        other.cursors[0].list_bounds().0
+                                    } else {
+                                        found
+                                    };
+                                    sum += bound.at(frequency, words) * times[l + 1];
+                                }
+                                if sum_bound(sum, clauses) < floor {
+                                    continue;
+                                }
+                            }
+                            for (p, &l) in sequence[..tabled].iter().enumerate() {
+                                if rows[p + 1][m] == SATURATED {
+                                    let cursor = &mut rest[l].cursors[0];
+                                    let at = cursor.advance_to(slot);
+                                    debug_assert_eq!(at, slot, "a tabled slot is in its list");
+                                    rows[p + 1][m] = cursor.frequency();
+                                }
+                            }
+                        }
+                        for &id in &ids[0] {
+                            self.frequencies[id] = lead_frequency;
+                        }
+                        for (p, &l) in sequence.iter().enumerate() {
+                            for &id in &ids[l + 1] {
+                                self.frequencies[id] = rows[p + 1][m];
+                            }
+                        }
+                        let score = self.score(slot)?;
+                        top.offer(score, slot);
+                    }
+                }
+            }
+            if !live || !lead.cursors[0].advance_block(last.saturating_add(1)) {
+                break;
+            }
+        }
+        Ok((top.finish(), count))
     }
 
     /// The documents holding the query's one phrase clause, and with `self.count` their number:
@@ -1715,6 +1937,63 @@ impl<'a> Lead<'a> for Cursor<'a> {
     }
     fn lead_mut(&mut self) -> &mut Cursor<'a> {
         self
+    }
+}
+
+/// Keeps, in place, the candidates among `slots[..n]` that no list of `excluded` holds, moving
+/// each kept candidate's entries in `rows` along; `tables` are the excluded lists' frequency
+/// tables. A dense list is read from its bitmap, a tabled one from its table, any other
+/// through its decoded blocks. Returns how many are kept.
+fn drop_excluded(
+    excluded: &mut [Rt<'_>],
+    tables: &[Option<std::sync::Arc<Dense>>],
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    mut n: usize,
+    rows: &mut [[u32; CHECKPOINT_BLOCK]],
+) -> usize {
+    for (rt, table) in excluded.iter_mut().zip(tables) {
+        if n == 0 {
+            break;
+        }
+        let mut keep = [false; CHECKPOINT_BLOCK];
+        let cursor = &mut rt.cursors[0];
+        if let Some(bits) = cursor.dense() {
+            for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
+                *flag = !holds(bits, slot);
+            }
+        } else if let Some(table) = table {
+            for &slot in &slots[..n] {
+                table.prefetch(slot as usize);
+            }
+            for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
+                *flag = table.get(slot as usize) == 0;
+            }
+        } else {
+            lack_each(cursor, &slots[..n], &mut keep);
+        }
+        let mut kept = 0usize;
+        for i in 0..n {
+            slots[kept] = slots[i];
+            for row in rows.iter_mut() {
+                row[kept] = row[i];
+            }
+            kept += usize::from(keep[i]);
+        }
+        n = kept;
+    }
+    n
+}
+
+/// Sets `keep[i]` when the ascending `slots[i]` is not in `list`, reading only the blocks the
+/// slots fall in.
+fn lack_each(list: &mut Cursor<'_>, slots: &[u32], keep: &mut [bool; CHECKPOINT_BLOCK]) {
+    for (i, &slot) in slots.iter().enumerate() {
+        if list.block_last() < slot && !list.advance_block(slot) {
+            // The list ended: it holds none of the rest.
+            keep[i..slots.len()].fill(true);
+            return;
+        }
+        keep[i] = list.block_first() > slot || list.block_slots().binary_search(&slot).is_err();
     }
 }
 
@@ -2707,6 +2986,73 @@ mod tests {
                 ..Default::default()
             };
             assert!(assert_same(&image, &live, &query, &options), "{text}");
+        }
+    }
+
+    /// Required terms with excluded ones, whose lists are dense, tabled or only decoded, over
+    /// lists of many blocks and varying frequencies: the exhaustive scorer's result to the bit,
+    /// with and without counts, for k of 0, 1, 10 and 100.
+    #[test]
+    fn excluded_terms_keep_the_result() {
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(9)
+                .wrapping_mul(40503)
+        };
+        let docs: Vec<Vec<u8>> = (0..9001u32)
+            .map(|i| {
+                let len = 3 + hash(i) % 60;
+                let mut words: Vec<u8> = (0..len)
+                    .map(|j| match (hash(i * 71 + j) >> 6) % 20 {
+                        0..=7 => 0,
+                        8..=10 => 1,
+                        11 | 12 => 2,
+                        13 => 3,
+                        14 if i % 5 == 0 => 4,
+                        _ => 9,
+                    })
+                    .collect();
+                if i % 31 == 0 || i == 9000 {
+                    words.extend([5, 5, 3]);
+                }
+                if i % 211 == 0 {
+                    words.push(6);
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, false);
+        let image = image_of(&live);
+        let tabled = |word: &str| image.frequency_table(image.list(0, word).unwrap()).is_some();
+        assert!(tabled("w1") && tabled("w2") && tabled("w5") && !tabled("w6"));
+        assert!(image.list(0, "w0").unwrap().blocks() > 3);
+        for text in [
+            "+w1 -w0",
+            "+w2 -w1",
+            "+w5 -w6",
+            "+w6 -w5",
+            "+w2 -w0 -w3",
+            "+w3 -w4 -w6",
+            "+w1 +w2 -w0",
+            "+w1 +w2 -w5 -w6",
+            "+w5 +w3 -w1",
+            "+w6 -w0 -w1 -w2",
+            "+w1 -w1",
+            "+w2 +w2 -w6",
+            "+w1 -w7",
+            "+w4 -w3 -w3",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [0usize, 1, 10, 100] {
+                for count in [false, true] {
+                    let options = LexicalOptions {
+                        k,
+                        count,
+                        ..Default::default()
+                    };
+                    assert!(assert_same(&image, &live, &query, &options), "{text}");
+                }
+            }
         }
     }
 
