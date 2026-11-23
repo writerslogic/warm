@@ -1518,7 +1518,7 @@ mod tests {
         assert_eq!(frequencies.get(1, first), None);
         let second = frequencies.next_stamp();
         assert_eq!(frequencies.get(0, second), None);
-        frequencies.stamp = u64::MAX & !u64::from(u32::MAX);
+        frequencies.stamp = !u64::from(u32::MAX);
         let after_wrap = frequencies.next_stamp();
         assert_eq!(after_wrap, first);
         assert_eq!(frequencies.get(0, after_wrap), None);
