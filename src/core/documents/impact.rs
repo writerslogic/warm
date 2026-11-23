@@ -714,13 +714,13 @@ pub(super) fn rank<S: LexicalSource>(
     let mut windows = Vec::new();
     for (form, set) in terms.iter().enumerate() {
         for word in set {
-            let Some(list) = image.postings(form, word) else {
+            let Some((list, skips)) = image.postings_with_skips(form, word) else {
                 continue;
             };
             let idf = Bm25::idf(n, f64::from(list.count));
             let bound = Bound::new(idf, average, bm25)?;
             lists.push((list, idf, bound));
-            windows.push(image.list_ref(form, word).map(|skips| {
+            windows.push(skips.map(|skips| {
                 let table = image.rank_table_for(skips.skips, bm25, average);
                 BlockBounds::new(skips, table)
             }));

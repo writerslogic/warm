@@ -2151,9 +2151,20 @@ impl ServingImage {
         ranks.tables.get(&offset)
     }
 
-    /// The skip-table view of term `term`'s list in form `form`, for [`BlockBounds`].
-    pub(super) fn list_ref(&self, form: usize, term: &str) -> Option<ListRef<'_>> {
-        self.extended.then(|| self.list(form, term)).flatten()
+    /// The postings and, on extended checkpoints, the skip-table view of the same list.
+    pub(super) fn postings_with_skips(
+        &self,
+        form: usize,
+        term: &str,
+    ) -> Option<(Postings<'_>, Option<ListRef<'_>>)> {
+        let list = self.list(form, term)?;
+        let postings = Postings {
+            bytes: list.bytes,
+            count: list.count,
+            blocked: self.blocked,
+            impacts: self.impacts,
+        };
+        Some((postings, self.extended.then_some(list)))
     }
 
     /// Builds the rank tables now, at open, so that no query pays for them.
@@ -2238,12 +2249,8 @@ impl LexicalSource for ServingImage {
     }
 
     fn postings(&self, form: usize, term: &str) -> Option<Postings<'_>> {
-        self.list(form, term).map(|list| Postings {
-            bytes: list.bytes,
-            count: list.count,
-            blocked: self.blocked,
-            impacts: self.impacts,
-        })
+        self.postings_with_skips(form, term)
+            .map(|(postings, _)| postings)
     }
 
     fn slot_word_count(&self, slot: usize) -> u32 {
