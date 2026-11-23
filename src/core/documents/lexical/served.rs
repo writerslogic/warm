@@ -802,6 +802,7 @@ impl<'a> Run<'a, '_> {
             }
             let (first, last) = (cursor.block_first(), cursor.block_last());
             let mut scored = true;
+            let mut rest_sum = 0.0f64;
             if let Some(floor) = floor {
                 let mut sum = cursor.block_weight(lead_bound) * times[0];
                 for (other, t) in rest.iter_mut().zip(&times[1..]) {
@@ -817,6 +818,7 @@ impl<'a> Run<'a, '_> {
                             .unwrap_or(other.ceiling)
                     };
                     sum += weight * t;
+                    rest_sum += weight * t;
                 }
                 scored = sum_bound(sum, clauses) >= floor;
             }
@@ -835,10 +837,37 @@ impl<'a> Run<'a, '_> {
                     }
                     continue;
                 }
-                for (index, value) in rows[0][..n].iter_mut().enumerate() {
-                    *value = index as u32;
+                // A candidate whose lead frequency, at the block's least word count, cannot
+                // lift the block's weights to the k-th best score is dropped before it is
+                // probed in the other lists.
+                let mut need = 1u32;
+                if let (false, Some(floor)) = (self.count, floor) {
+                    let most = lead.cursors[0].block_bounds().0.min(NEED_PROBES);
+                    let least = lead.cursors[0].block_bounds().1;
+                    while need < most
+                        && sum_bound(lead_bound.at(need, least) * times[0] + rest_sum, clauses)
+                            < floor
+                    {
+                        need += 1;
+                    }
+                }
+                if need > 1 {
+                    n = keep_frequent(
+                        lead.cursors[0].block_frequencies(),
+                        &mut slots,
+                        n,
+                        &mut rows[0],
+                        need,
+                    );
+                } else {
+                    for (index, value) in rows[0][..n].iter_mut().enumerate() {
+                        *value = index as u32;
+                    }
                 }
                 for (p, &l) in sequence.iter().enumerate() {
+                    if n == 0 {
+                        break;
+                    }
                     let (kept, more) = match &tables[l] {
                         Some(table) => (keep_tabled(table, &mut slots, n, &mut rows, p + 1), true),
                         None => keep_common(
@@ -1570,6 +1599,28 @@ impl<'a> Lead<'a> for Cursor<'a> {
 /// The frequency nibble that [`keep_tabled`] leaves unread: fifteen or more. Frequencies
 /// from decoded lists are exact and do not use this sentinel.
 const SATURATED: u32 = 15;
+
+/// Keeps, in place, the candidates among `slots[..n]` whose frequency in the lead block,
+/// `frequencies[index]`, is at least `need`, and writes each one's index in the block to `row`.
+#[inline(never)]
+fn keep_frequent(
+    frequencies: &[u32],
+    slots: &mut [u32; CHECKPOINT_BLOCK],
+    n: usize,
+    row: &mut [u32; CHECKPOINT_BLOCK],
+    need: u32,
+) -> usize {
+    let mut kept = 0usize;
+    for (index, &frequency) in frequencies[..n].iter().enumerate() {
+        slots[kept] = slots[index];
+        row[kept] = index as u32;
+        kept += usize::from(frequency >= need);
+    }
+    kept
+}
+
+/// The most lead frequencies terms_top tests a block's candidates against.
+const NEED_PROBES: u32 = 32;
 
 /// Keeps the candidates among `slots[..n]` that every list of `rest` holds: tested against the
 /// dense lists' bitmaps first, then the other lists' frequency tables (`tables`, one per list
