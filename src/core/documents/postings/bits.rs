@@ -90,12 +90,17 @@ pub(super) fn unpack_fixed<const BITS: usize>(bytes: &[u8], count: usize, out: &
         let window: [u8; 8] = bytes[bit / 8..bit / 8 + 8].try_into().expect("eight bytes");
         *value = (u64::from_le_bytes(window) >> (bit % 8)) & mask;
     }
-    for (index, value) in out[..count].iter_mut().enumerate().skip(whole) {
-        let bit = index * BITS;
+    let tail = whole.max(decoded);
+    if tail < count {
+        let first_bit = tail * BITS;
         let mut window = [0u8; 8];
-        let tail = &bytes[bit / 8..(bit / 8 + 8).min(bytes.len())];
-        window[..tail.len()].copy_from_slice(tail);
-        *value = (u64::from_le_bytes(window) >> (bit % 8)) & mask;
+        let rest = &bytes[first_bit / 8..];
+        assert!((count - 1) * BITS / 8 <= bytes.len());
+        window[..rest.len()].copy_from_slice(rest);
+        let word = u64::from_le_bytes(window);
+        for (index, value) in out[tail..].iter_mut().enumerate() {
+            *value = (word >> (first_bit % 8 + index * BITS)) & mask;
+        }
     }
 }
 

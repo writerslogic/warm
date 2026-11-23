@@ -180,7 +180,7 @@ fn gallop_matches_partition_point() {
 #[test]
 fn block_unpacking_matches_single_reads_at_every_width() {
     for bits in 0..=64u8 {
-        for count in [1, 7, 8, 9, 31, 32, 33, 63, 127, BLOCK_LEN] {
+        for count in [0, 1, 7, 8, 9, 31, 32, 33, 63, 64, 65, 127, BLOCK_LEN] {
             let limit = if bits == 64 {
                 u64::MAX
             } else {
@@ -189,7 +189,7 @@ fn block_unpacking_matches_single_reads_at_every_width() {
             let values: Vec<u64> = (0..count as u64)
                 .map(|i| i.wrapping_mul(0x9E37_79B9_7F4A_7C15) & limit)
                 .collect();
-            for slack in [0usize, 3, 8] {
+            for slack in [0usize, 3, 7, 8, 9] {
                 let mut bytes = Vec::new();
                 pack(&mut bytes, values.iter().copied(), bits);
                 bytes.extend(std::iter::repeat_n(0xFF, slack));
