@@ -9,11 +9,15 @@
 //! update a table of what each action changes. Equal structure is stored once; every holder
 //! of a node is counted, so purging an episode frees exactly what no other episode shares.
 
+pub mod diff;
 mod effects;
+pub mod enablement;
 pub mod form;
+pub mod procedures;
 mod regions;
 mod snapshot;
 pub mod store;
+pub mod target;
 mod terms;
 #[cfg(test)]
 mod tests;
@@ -27,8 +31,13 @@ use serde_json::{json, Value};
 use self::effects::{delta, EffectTable, Frames, Templates};
 pub use self::form::{Control, ControlOption};
 use self::regions::{Region, RegionStore};
+use self::target::{collect_handles, handles_bound, handles_digest, HandleMap, HandleRecord};
+pub use self::target::{
+    ActionRecord, ActionTarget, ActionTargets, OccurrenceNode, OccurrenceRef, Resolution,
+    TargetRole, Unresolved,
+};
 use self::terms::{Sym, TermStore};
-use self::tree::{action_label, label, title_template, trunc, url_template};
+use self::tree::{action_label, action_targets, title_template, trunc, url_template};
 pub use self::tree::{parse_indented, Action, TreeNode};
 use crate::core::documents::{DocumentInput, DocumentResult, MemoryDocumentStore, SearchOptions};
 
@@ -101,6 +110,10 @@ pub enum ExperienceError {
     },
     #[error("step {step} of episode {episode:?} was already ingested with different content")]
     Conflict { episode: String, step: u32 },
+    /// The step was restored without the handle addresses its targets were resolved against,
+    /// so a retry of it cannot be shown to be the same observation.
+    #[error("step {step} of episode {episode:?} was restored without its handle addresses, so a retry of it cannot be checked")]
+    Unverifiable { episode: String, step: u32 },
     #[error("experience quota of {0} units would be exceeded")]
     Quota(u64),
     #[error("lexical index: {0}")]
@@ -477,13 +490,20 @@ pub struct PathEntry {
     pub step: u32,
     pub action: Option<String>,
     pub template: TemplateInfo,
+    /// The listed lines did not change; properties such as `checked` may still have.
     pub no_change: bool,
+    /// The observation's content differs from the previous step's, including properties.
+    pub state_changed: bool,
     pub error: bool,
+    /// The action as given and the occurrences it targeted.
+    pub record: ActionRecord,
 }
 
 #[derive(Clone, Debug)]
 pub struct EpisodeView {
     pub episode: String,
+    /// Never reused by another episode, unlike a storage slot.
+    pub uid: u64,
     pub goal: String,
     pub outcome: String,
     pub path: Vec<PathEntry>,
@@ -533,6 +553,10 @@ pub(crate) struct StepRec {
     pub regions: Vec<(u32, u32)>,
     /// The form controls of the step, from its accessibility-tree text.
     pub controls: Box<[Control]>,
+    /// The action that produced the step, as given, with the occurrences it targeted.
+    pub action: ActionRecord,
+    /// What the step kept of the handle addresses of its observation.
+    pub handle_record: HandleRecord,
 }
 
 pub(crate) struct Episode {
@@ -540,8 +564,10 @@ pub(crate) struct Episode {
     pub goal: String,
     pub outcome: String,
     pub steps: Vec<StepRec>,
-    /// Handle to element label for the latest observation; not persisted.
-    pub handles: HashMap<String, String>,
+    /// Handle to label and address for the latest observation; persisted with the snapshot.
+    pub handles: HandleMap,
+    /// Never reused, unlike the storage slot.
+    pub uid: u64,
 }
 
 pub struct Experience {
@@ -563,6 +589,10 @@ pub struct Experience {
     step_region_count: usize,
     /// Controls stored over all steps, and the bytes of text they hold.
     control_counts: ControlCounts,
+    /// Next episode uid.
+    next_uid: u64,
+    /// An over-estimate of the bytes of the stored action records and handle maps.
+    action_bytes: usize,
 }
 
 /// Totals over the stored controls behind the snapshot version, its size estimate and the quota.
@@ -606,16 +636,6 @@ fn index_err(e: impl std::fmt::Display) -> ExperienceError {
     ExperienceError::Index(e.to_string())
 }
 
-fn collect_handles(t: &TreeNode, out: &mut HashMap<String, String>) {
-    let mut stack = vec![t];
-    while let Some(n) = stack.pop() {
-        if let Some(h) = &n.handle {
-            out.insert(h.clone(), label(&n.role, &n.name));
-        }
-        stack.extend(n.children.iter().rev());
-    }
-}
-
 impl Default for Experience {
     fn default() -> Self {
         Self::new(ExperienceConfig::default())
@@ -646,6 +666,8 @@ impl Experience {
             step_count: 0,
             step_region_count: 0,
             control_counts: ControlCounts::default(),
+            next_uid: 1,
+            action_bytes: 0,
         }
     }
 
@@ -718,8 +740,10 @@ impl Experience {
             goal: String::new(),
             outcome: String::new(),
             steps: Vec::new(),
-            handles: HashMap::new(),
+            handles: HandleMap::new(),
+            uid: self.next_uid,
         };
+        self.next_uid += 1;
         let id = match self.free_episodes.pop() {
             Some(i) => {
                 self.episodes[i as usize] = Some(e);
@@ -742,6 +766,31 @@ impl Experience {
         Self::limit("episode id bytes", self.cfg.max_id_bytes, episode.len())?;
         Self::limit("goal bytes", self.cfg.max_goal_bytes, goal.len())?;
         Self::limit("outcome bytes", self.cfg.max_goal_bytes, outcome.len())?;
+        self.write_description(episode, goal, outcome);
+        Ok(())
+    }
+
+    /// What [`Self::describe_episode`] checks, without changing anything.
+    pub(crate) fn validate_description(
+        &self,
+        episode: &str,
+        goal: &str,
+        outcome: &str,
+    ) -> Result<()> {
+        if episode.is_empty() || episode.contains('\0') {
+            return Err(ExperienceError::Invalid("episode id"));
+        }
+        Self::limit("episode id bytes", self.cfg.max_id_bytes, episode.len())?;
+        Self::limit("goal bytes", self.cfg.max_goal_bytes, goal.len())?;
+        Self::limit("outcome bytes", self.cfg.max_goal_bytes, outcome.len())
+    }
+
+    /// Counters that change whenever an ingest or a description changes the stored state.
+    pub(crate) fn mutation_marker(&self) -> (u64, usize, usize) {
+        (self.next_uid, self.step_count, self.episode_map.len())
+    }
+
+    fn write_description(&mut self, episode: &str, goal: &str, outcome: &str) {
         let id = self
             .episode_slot(episode)
             .unwrap_or_else(|| self.new_episode(episode));
@@ -749,7 +798,6 @@ impl Experience {
         e.goal = goal.to_string();
         e.outcome = outcome.to_string();
         self.dirty.insert(id);
-        Ok(())
     }
 
     /// Ingests one observation step. Retrying a step with identical content changes nothing.
@@ -822,6 +870,8 @@ impl Experience {
             }
         }
 
+        let handle_map = collect_handles(o.tree);
+        let digest = handles_digest(&handle_map);
         let root = self.terms.intern(o.tree);
         let template = self.templates.acquire(
             &mut self.terms.syms,
@@ -829,9 +879,25 @@ impl Experience {
             &title_template(&o.tree.name),
         );
         let handles = eid.map(|id| &self.ep(id).handles);
+        let prev_step = eid.and_then(|id| self.ep(id).steps.last().map(|s| s.step));
+        let contiguous = prev_step.is_some_and(|p| p.checked_add(1) == Some(o.step));
+        let action_rec = match o.action {
+            None => ActionRecord::None,
+            Some(Action::Label(l)) => ActionRecord::Label(l.clone()),
+            Some(Action::Call(c)) => ActionRecord::Call {
+                call: c.clone(),
+                predecessor: prev_step.filter(|_| contiguous),
+                targets: action_targets(c)
+                    .into_iter()
+                    .map(|(r, h)| target::resolve(r, &h, prev_step, contiguous, handles))
+                    .collect(),
+            },
+        };
         let label_text = o.action.map(|a| match a {
             Action::Label(l) => l.clone(),
-            Action::Call(c) => action_label(c, &|h| handles.and_then(|m| m.get(h).cloned())),
+            Action::Call(c) => action_label(c, &|h| {
+                handles.and_then(|m| m.get(h).map(|e| e.label.clone()))
+            }),
         });
         let label_sym = label_text.map(|t| self.terms.syms.acquire(&t));
 
@@ -841,20 +907,25 @@ impl Experience {
                 let s = &e.steps[i];
                 let same = s.root == root
                     && s.template == template
-                    && s.label == label_sym
+                    && s.action.is_input(o.action).unwrap_or(s.label == label_sym)
                     && *s.controls == *controls;
+                let record = s.handle_record;
                 self.terms.release(root);
                 self.templates.release(&mut self.terms.syms, template);
                 if let Some(l) = label_sym {
                     self.terms.syms.release(l);
                 }
-                return if same {
-                    Ok(Ingested::Duplicate)
-                } else {
-                    Err(ExperienceError::Conflict {
+                return match (same, record) {
+                    (true, HandleRecord::Legacy) => Ok(Ingested::Duplicate),
+                    (true, HandleRecord::Known(d)) if d == digest => Ok(Ingested::Duplicate),
+                    (true, HandleRecord::Unrecorded) => Err(ExperienceError::Unverifiable {
                         episode: o.episode.to_string(),
                         step: o.step,
-                    })
+                    }),
+                    _ => Err(ExperienceError::Conflict {
+                        episode: o.episode.to_string(),
+                        step: o.step,
+                    }),
                 };
             }
         }
@@ -931,10 +1002,10 @@ impl Experience {
             }
         }
 
-        let mut handle_map = HashMap::new();
-        collect_handles(o.tree, &mut handle_map);
+        let (new_bound, step_bound) = (handles_bound(&handle_map), action_rec.encoded_bound());
         let e = self.episodes[eid as usize].as_mut().expect("live episode");
-        e.handles = handle_map;
+        let old_bound = handles_bound(&std::mem::replace(&mut e.handles, handle_map));
+        self.action_bytes = self.action_bytes - old_bound + new_bound + step_bound;
         let regions: Vec<(u32, u32)> = counts.into_iter().collect();
         self.step_count += 1;
         self.step_region_count += regions.len();
@@ -948,6 +1019,8 @@ impl Experience {
             flags,
             regions,
             controls: controls.into_boxed_slice(),
+            action: action_rec,
+            handle_record: HandleRecord::Known(digest),
         });
         self.dirty.insert(eid);
         Ok(Ingested::Applied)
@@ -1222,10 +1295,11 @@ impl Experience {
     fn snapshot_estimate(&self) -> u64 {
         const NODE: usize = 64;
         const SYMBOL: usize = 16;
-        const STEP: usize = 32;
+        const STEP: usize = 64;
         const STEP_REGION: usize = 12;
         const REGION: usize = 2048;
         (self.control_counts.encoded
+            + self.action_bytes
             + self.terms.syms.live_bytes()
             + SYMBOL * self.terms.syms.live()
             + NODE * self.terms.live_nodes()
@@ -1380,21 +1454,96 @@ impl Experience {
         )
     }
 
+    /// Ids of every stored episode, sorted.
+    pub fn episode_ids(&self) -> Vec<String> {
+        let mut ids: Vec<String> = self
+            .episodes
+            .iter()
+            .flatten()
+            .map(|e| e.key.clone())
+            .collect();
+        ids.sort();
+        ids
+    }
+
+    /// The action stored with `step` of `episode`, its predecessor and the occurrences it targeted.
+    /// A reference with an empty path is the observation's root.
+    pub fn action_targets(&self, episode: &str, step: u32) -> Option<ActionTargets> {
+        let e = self.ep(self.episode_slot(episode)?);
+        let i = e.steps.binary_search_by_key(&step, |s| s.step).ok()?;
+        let record = e.steps[i].action.clone();
+        let at = |step: u32, path: Vec<u32>| OccurrenceRef {
+            episode_uid: e.uid,
+            step,
+            path,
+        };
+        let (predecessor, targets) = match &record {
+            ActionRecord::Call {
+                predecessor,
+                targets,
+                ..
+            } => (
+                predecessor.map(|p| at(p, Vec::new())),
+                targets
+                    .iter()
+                    .map(|t| {
+                        let r = match (&t.resolution, predecessor) {
+                            (Resolution::Resolved { path }, Some(p)) => Some(at(*p, path.clone())),
+                            _ => None,
+                        };
+                        (t.role, r)
+                    })
+                    .collect(),
+            ),
+            _ => (None, Vec::new()),
+        };
+        Some(ActionTargets {
+            record,
+            predecessor,
+            targets,
+        })
+    }
+
+    /// The node an occurrence reference addresses, or `None` when the episode was purged or the
+    /// path no longer addresses a node.
+    pub fn occurrence(&self, r: &OccurrenceRef) -> Option<OccurrenceNode> {
+        let e = self
+            .episodes
+            .iter()
+            .flatten()
+            .find(|e| e.uid == r.episode_uid)?;
+        let i = e.steps.binary_search_by_key(&r.step, |s| s.step).ok()?;
+        let mut id = e.steps[i].root;
+        for &k in &r.path {
+            id = *self.terms.node(id).children.get(k as usize)?;
+        }
+        let n = self.terms.node(id);
+        Some(OccurrenceNode {
+            role: self.terms.sym_str(n.role).to_string(),
+            name: self.terms.sym_str(n.name).to_string(),
+            props: self.terms.sym_str(n.props).to_string(),
+        })
+    }
+
     pub fn episode(&self, id: &str) -> Option<EpisodeView> {
         let e = self.ep(self.episode_slot(id)?);
         Some(EpisodeView {
             episode: e.key.clone(),
+            uid: e.uid,
             goal: e.goal.clone(),
             outcome: e.outcome.clone(),
             path: e
                 .steps
                 .iter()
-                .map(|s| PathEntry {
+                .enumerate()
+                .map(|(i, s)| PathEntry {
                     step: s.step,
                     action: s.label.map(|l| self.terms.syms.get(l).to_string()),
                     template: self.info(s.template),
                     no_change: s.flags & FLAG_NO_CHANGE != 0,
+                    state_changed: i > 0 && e.steps[i - 1].root != s.root,
                     error: s.flags & FLAG_ERROR != 0,
+                    record: s.action.clone(),
                 })
                 .collect(),
         })
@@ -1567,6 +1716,11 @@ impl Experience {
         let nodes_before = self.terms.live_nodes();
         let regions_before = self.regions.live();
         let e = self.episodes[eid as usize].take()?;
+        self.action_bytes -= handles_bound(&e.handles)
+            + e.steps
+                .iter()
+                .map(|s| s.action.encoded_bound())
+                .sum::<usize>();
         self.step_count -= e.steps.len();
         self.step_region_count -= e.steps.iter().map(|s| s.regions.len()).sum::<usize>();
         for s in &e.steps {
