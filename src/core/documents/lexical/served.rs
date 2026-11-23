@@ -640,6 +640,23 @@ pub(in crate::core::documents) fn execute(
             let hits = run.single_top(optional.pop().expect("one term"))?;
             return Ok(Some(LexicalResults { hits, count }));
         }
+        if excluded.is_empty()
+            && ranker.is_some()
+            && (2..=3).contains(&optional.len())
+            && optional.iter().all(|rt| !rt.phrase && rt.bound.is_some())
+            && distinct_words(query, form, &optional)
+        {
+            let order: Vec<usize> = optional.iter().map(|rt| rt.clause).collect();
+            if let Some(hits) = run.union_classes(std::mem::take(&mut optional), &reopen)? {
+                let count = options.count.then(|| {
+                    let mut fresh = run.opened(&reopen, &order);
+                    union_count(image, &mut fresh, image.slot_count())
+                });
+                return Ok(Some(LexicalResults { hits, count }));
+            }
+            optional = run.opened(&reopen, &order);
+            run.count = options.count;
+        }
         if excluded.is_empty() && all_terms && (ranker.is_some() || k == 0) {
             // Ranked by the checkpoint's windowed ranker, or only counted.
             let hits = match ranker {
@@ -664,6 +681,15 @@ pub(in crate::core::documents) fn execute(
             .count
             .then_some(if solo { solo_count } else { count }),
     }))
+}
+
+/// Whether no two of the term clauses `terms` repeat a word.
+fn distinct_words(query: &LexicalQuery, form: usize, terms: &[Rt<'_>]) -> bool {
+    terms.iter().enumerate().all(|(i, a)| {
+        terms[..i]
+            .iter()
+            .all(|b| query.clauses[a.clause].words[form] != query.clauses[b.clause].words[form])
+    })
 }
 
 struct Run<'a, 'q> {
@@ -1247,6 +1273,68 @@ impl<'a> Run<'a, '_> {
         Ok(())
     }
 
+    /// The top `k` of a union of two or three distinct term clauses, by classes of the terms a
+    /// document has: the block-wise conjunction of all of them first, which fixes a floor, then
+    /// each smaller set of terms against the others excluded, strongest ceilings first. A class
+    /// whose terms' ceilings are below the floor is skipped without opening a list. The classes
+    /// are disjoint and a score sums its clauses' weights in query order with zero for an absent
+    /// term, so the result is the exhaustive one. `None` when the conjunction does not fill `k`.
+    #[inline(never)]
+    fn union_classes(
+        &mut self,
+        mut terms: Vec<Rt<'a>>,
+        reopen: &dyn Fn(usize) -> Option<Rt<'a>>,
+    ) -> Result<Option<Vec<LexicalHit>>> {
+        // The ranking never counts.
+        self.count = false;
+        let n = terms.len();
+        let ceilings: Vec<f64> = terms.iter().map(|rt| rt.ceiling).collect();
+        let clauses: Vec<usize> = terms.iter().map(|rt| rt.clause).collect();
+        let mut top = Top::new(self.image, self.k);
+        merge_twins(&mut terms);
+        self.terms_top_into(&mut terms, &mut top)?;
+        drop(terms);
+        if top.floor().is_none() {
+            #[cfg(test)]
+            reached(8);
+            return Ok(None);
+        }
+        let mut classes: Vec<(f64, usize)> = (1..(1usize << n) - 1)
+            .map(|mask| {
+                let sum = (0..n).filter(|b| mask >> b & 1 == 1).map(|b| ceilings[b]).sum();
+                (sum, mask)
+            })
+            .collect();
+        classes.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+        for (sum, mask) in classes {
+            let present: Vec<usize> = (0..n)
+                .filter(|b| mask >> b & 1 == 1)
+                .map(|b| clauses[b])
+                .collect();
+            let absent: Vec<usize> = (0..n)
+                .filter(|b| mask >> b & 1 == 0)
+                .map(|b| clauses[b])
+                .collect();
+            if top
+                .floor()
+                .is_some_and(|floor| sum_bound(sum, present.len()) < floor)
+            {
+                #[cfg(test)]
+                reached(9);
+                continue;
+            }
+            // The previous class left its frequencies in place.
+            self.frequencies.fill(0);
+            #[cfg(test)]
+            reached(5 + present.len());
+            let mut musts = self.opened(reopen, &present);
+            let mut excluded = self.opened(reopen, &absent);
+            merge_twins(&mut musts);
+            self.negated_top_into(&mut musts, &mut excluded, &mut top)?;
+        }
+        Ok(Some(top.finish()))
+    }
+
     /// Fresh cursors on the clauses at `clauses`.
     fn opened(&self, reopen: &dyn Fn(usize) -> Option<Rt<'a>>, clauses: &[usize]) -> Vec<Rt<'a>> {
         clauses.iter().filter_map(|&clause| reopen(clause)).collect()
@@ -1277,6 +1365,19 @@ impl<'a> Run<'a, '_> {
         terms: &mut [Rt<'a>],
         excluded: &mut [Rt<'a>],
     ) -> Result<(Vec<LexicalHit>, usize)> {
+        let mut top = Top::new(self.image, self.k);
+        let count = self.negated_top_into(terms, excluded, &mut top)?;
+        Ok((top.finish(), count))
+    }
+
+    /// [`Self::negated_top`] offering to `top`, which may already hold hits; returns the count.
+    #[inline(never)]
+    fn negated_top_into(
+        &mut self,
+        terms: &mut [Rt<'a>],
+        excluded: &mut [Rt<'a>],
+        top: &mut Top<'a>,
+    ) -> Result<usize> {
         let lists = terms.len();
         let clauses = terms.iter().map(|rt| 1 + rt.twins.len()).sum();
         // Each list's clauses, and how many times its weight enters a score.
@@ -1293,7 +1394,6 @@ impl<'a> Run<'a, '_> {
             terms.iter().zip(&times).map(|(rt, t)| rt.ceiling * t).sum(),
             clauses,
         );
-        let mut top = Top::new(self.image, self.k);
         let mut count = 0usize;
         let mut slots = [0u32; CHECKPOINT_BLOCK];
         let tables = frequency_tables(self.image, &terms[1..]);
@@ -1485,7 +1585,7 @@ impl<'a> Run<'a, '_> {
                 break;
             }
         }
-        Ok((top.finish(), count))
+        Ok(count)
     }
 
     /// The documents holding the query's one phrase clause, and with `self.count` their number:
@@ -2314,7 +2414,7 @@ fn reached(path: usize) {
 
 #[cfg(test)]
 thread_local! {
-    static PATHS: std::cell::Cell<[usize; 7]> = const { std::cell::Cell::new([0; 7]) };
+    static PATHS: std::cell::Cell<[usize; 10]> = const { std::cell::Cell::new([0; 10]) };
     /// Blocks whose candidates `terms_top` filtered by lead frequency, on this thread.
     static PREFILTERED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     /// Excluded lists `negated_top` scattered into a bitmap, on this thread.
@@ -2709,6 +2809,16 @@ mod tests {
         query: &LexicalQuery,
         options: &LexicalOptions,
     ) -> bool {
+        assert_same_ranked(image, live, query, options, None)
+    }
+
+    fn assert_same_ranked(
+        image: &ServingImage,
+        live: &DocumentStore,
+        query: &LexicalQuery,
+        options: &LexicalOptions,
+        ranker: Option<&dyn Fn() -> Result<Option<Vec<LexicalHit>>>>,
+    ) -> bool {
         let reference = super::super::execute(
             live,
             query,
@@ -2719,7 +2829,7 @@ mod tests {
         )
         .unwrap();
         let bm25 = prepare(options).unwrap();
-        let Some(served) = served::execute(image, query, options, bm25, None).unwrap() else {
+        let Some(served) = served::execute(image, query, options, bm25, ranker).unwrap() else {
             return false;
         };
         assert_eq!(served.count, reference.count, "{query:?} {options:?}");
@@ -2816,7 +2926,7 @@ mod tests {
             .collect();
         let live = corpus(&docs, true);
         let image = image_of(&live);
-        PATHS.with(|c| c.set([0; 7]));
+        PATHS.with(|c| c.set([0; 10]));
         for text in [
             "+w0 w1",
             "+w1 w0",
@@ -2852,6 +2962,89 @@ mod tests {
     }
 
     #[test]
+    fn union_classes_keep_the_exhaustive_result() {
+        // Documents repeat, so scores tie; word 12 is in every document of the second corpus.
+        let build = |every: bool| -> Vec<Vec<u8>> {
+            (0..2600u32)
+                .map(|i| {
+                    let i = i % 900;
+                    let mut words: Vec<u8> = (0..4 + i % 9)
+                        .map(|j| {
+                            let x = i.wrapping_mul(2654435761).wrapping_add(j.wrapping_mul(40503)) >> 7;
+                            if x % 3 == 0 {
+                                0
+                            } else if x % 7 == 0 {
+                                1
+                            } else {
+                                ((x / 11) % 12) as u8
+                            }
+                        })
+                        .collect();
+                    if every {
+                        words.push(12);
+                    }
+                    words
+                })
+                .collect()
+        };
+        PATHS.with(|c| c.set([0; 10]));
+        // The ranker declines, so a result means the class path served the query.
+        let declined = || -> Result<Option<Vec<LexicalHit>>> { Ok(None) };
+        for every in [false, true] {
+            let live = corpus(&build(every), true);
+            let image = image_of(&live);
+            for text in [
+                "w0 w1",
+                "w1 w0",
+                "w2 w9",
+                "w0 w1 w2",
+                "w3 w0 w5",
+                "w6 w7 w8",
+                "w4 w10 w11",
+                "w12 w0",
+                "w1 w12 w2",
+                // A missing word leaves two clauses.
+                "w0 w90 w1",
+                "w90 w2 w3",
+            ] {
+                let query = LexicalQuery::parse(text).unwrap();
+                for k in [1, 10, 100, 1000, 5000] {
+                    for count in [false, true] {
+                        let options = LexicalOptions {
+                            k,
+                            count,
+                            ..Default::default()
+                        };
+                        // A conjunction that cannot fill k falls back to the declining ranker.
+                        assert_same_ranked(&image, &live, &query, &options, Some(&declined));
+                    }
+                }
+            }
+            // Twins decline the class path: the declining ranker answers or the query is served
+            // another way, and whatever is served matches the exhaustive result.
+            for text in ["w0 w0", "w2 w3 w2"] {
+                let query = LexicalQuery::parse(text).unwrap();
+                for k in [1, 10, 100] {
+                    let options = LexicalOptions {
+                        k,
+                        ..Default::default()
+                    };
+                    assert_same_ranked(&image, &live, &query, &options, Some(&declined));
+                }
+            }
+        }
+        let paths = PATHS.with(|c| c.get());
+        for (path, name) in [
+            (6, "single-term class"),
+            (7, "pair class"),
+            (8, "fallback"),
+            (9, "skipped class"),
+        ] {
+            assert!(paths[path] > 0, "{name} never ran: {paths:?}");
+        }
+    }
+
+    #[test]
     fn required_and_optional_clauses_over_ranked_and_sparse_lists_keep_the_result() {
         let hash = |x: u32| {
             x.wrapping_mul(2654435761)
@@ -2880,7 +3073,7 @@ mod tests {
         let live = corpus(&docs, true);
         let image = image_of(&live).with_rank_tables();
         assert!(image.list(0, "w0").unwrap().blocks() >= 256);
-        PATHS.with(|c| c.set([0; 7]));
+        PATHS.with(|c| c.set([0; 10]));
         for text in [
             "+w0 w1 w9",
             "+w0 w9",
