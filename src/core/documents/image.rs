@@ -224,27 +224,6 @@ pub(crate) fn encode_v3(
     encode_as(store, generation, dimensions, 3, false)
 }
 
-/// Appends the positions of one block of postings, `(slot, ordinal)` each, to `out`; `false`
-/// when the block would start beyond what a `u32` offset from `base` holds.
-fn pack_position_block(
-    store: &DocumentStore,
-    block: &mut Vec<(usize, u32)>,
-    out: &mut Vec<u8>,
-    base: usize,
-    offsets: &mut Vec<u32>,
-) -> Result<bool> {
-    let mut sources = Vec::with_capacity(block.len());
-    for &(slot, ordinal) in block.iter() {
-        ensure!(ordinal > 0, "positional posting lacks its term ordinal");
-        let positions = store
-            .position_source(slot)
-            .context("positional posting in a chunk without positions")?;
-        sources.push(positions.bytes(ordinal as usize - 1));
-    }
-    block.clear();
-    Ok(write_position_block(&sources, out, base, offsets))
-}
-
 /// Appends one block of postings' position bytes to `out`, recording where it starts (from
 /// `base`) in `offsets`; `false` when that offset does not fit a `u32`.
 fn write_position_block(
@@ -322,28 +301,41 @@ impl<'a> PositionPacker<'a> {
 /// Appends the positions of `list`'s postings to `out`, block by block as `lists::Cursor` reads
 /// them, and records where each block starts (from the first byte this call appends) in
 /// `offsets`. `false` when an offset would not fit a `u32`.
-fn pack_positions(
-    store: &DocumentStore,
+fn pack_positions<'a>(
+    store: &'a DocumentStore,
     list: &PostingList,
     out: &mut Vec<u8>,
     offsets: &mut Vec<u32>,
+    sources: &mut Vec<&'a [u8]>,
 ) -> Result<bool> {
     let base = out.len();
     offsets.clear();
-    let mut block: Vec<(usize, u32)> = Vec::with_capacity(super::postings::CHECKPOINT_BLOCK);
+    sources.clear();
     let mut outcome: Result<bool> = Ok(true);
     list.for_each_with_ordinal(|slot, _, ordinal| {
         if !matches!(outcome, Ok(true)) {
             return;
         }
-        block.push((slot, ordinal));
-        if block.len() == super::postings::CHECKPOINT_BLOCK {
-            outcome = pack_position_block(store, &mut block, out, base, offsets);
+        if ordinal == 0 {
+            outcome = Err(anyhow::anyhow!("positional posting lacks its term ordinal"));
+            return;
+        }
+        let Some(positions) = store.position_source(slot) else {
+            outcome = Err(anyhow::anyhow!(
+                "positional posting in a chunk without positions"
+            ));
+            return;
+        };
+        sources.push(positions.bytes(ordinal as usize - 1));
+        if sources.len() == super::postings::CHECKPOINT_BLOCK {
+            outcome = Ok(write_position_block(sources, out, base, offsets));
+            sources.clear();
         }
     });
-    if matches!(outcome, Ok(true)) && !block.is_empty() {
-        outcome = pack_position_block(store, &mut block, out, base, offsets);
+    if matches!(outcome, Ok(true)) && !sources.is_empty() {
+        outcome = Ok(write_position_block(sources, out, base, offsets));
     }
+    sources.clear();
     Ok(outcome? && u32::try_from(out.len() - base).is_ok())
 }
 
@@ -489,6 +481,7 @@ fn encode_as(
     let mut positive = true;
     let mut infos: Vec<super::postings::BlockInfo> = Vec::new();
     let mut offsets: Vec<u32> = Vec::new();
+    let mut position_sources = Vec::new();
     for form in 0..2 {
         let (terms, term_offsets, lists) = store.postings[form].sorted_terms();
         let (mut dict, mut blocks) = (Vec::new(), Vec::new());
@@ -540,7 +533,15 @@ fn encode_as(
                     if u32::try_from(postings.len() - start).is_err() {
                         return Ok(None);
                     }
-                    if positional && !pack_positions(store, list, &mut positions, &mut offsets)? {
+                    if positional
+                        && !pack_positions(
+                            store,
+                            list,
+                            &mut positions,
+                            &mut offsets,
+                            &mut position_sources,
+                        )?
+                    {
                         return Ok(None);
                     }
                     let list_bytes = &postings[start..];
@@ -2450,6 +2451,53 @@ mod tests {
                 image_with_record(&bytes).record(0).is_ok(),
                 text.len() == end as usize
             );
+        }
+    }
+
+    #[test]
+    fn lexical_position_packing_matches_the_merge_encoder_across_block_sizes() {
+        const BLOCK: usize = super::super::postings::CHECKPOINT_BLOCK;
+        let mut store = DocumentStore::default();
+        let options = super::super::IngestOptions {
+            encode: super::super::EncodeMode::Lexical,
+            positions: true,
+            unstemmed: true,
+            ..Default::default()
+        };
+        for i in 0..=BLOCK {
+            let text = match i {
+                BLOCK => "alpha alpha",
+                i if i + 1 == BLOCK => "beta alpha",
+                _ => "alpha gamma beta beta",
+            };
+            let id = format!("d{i:03}");
+            let input =
+                serde_json::from_value(serde_json::json!({"id": id, "text": text})).unwrap();
+            let document = super::super::prepare_with_options(
+                input,
+                64,
+                None,
+                None,
+                crate::core::encoding::TextEncoder::default(),
+                &options,
+            )
+            .unwrap();
+            store.insert(id, document);
+        }
+        let (mut packed, mut offsets, mut sources) = (Vec::new(), Vec::new(), Vec::new());
+        for (term, count) in [("gamma", BLOCK - 1), ("alpha", BLOCK + 1), ("beta", BLOCK)] {
+            let list = store.postings[0].get(term).unwrap();
+            assert_eq!(list.len(), count);
+            let mut reference = PositionPacker::new();
+            list.for_each_with_ordinal(|slot, _, ordinal| {
+                let positions = store.position_source(slot).unwrap();
+                reference.push(positions.bytes(ordinal as usize - 1));
+            });
+            assert!(reference.finish());
+            let base = packed.len();
+            assert!(pack_positions(&store, list, &mut packed, &mut offsets, &mut sources).unwrap());
+            assert_eq!(&packed[base..], reference.out.as_slice());
+            assert_eq!(offsets, reference.offsets);
         }
     }
 
