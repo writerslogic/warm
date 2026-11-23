@@ -1874,6 +1874,9 @@ fn phrase_occurrences<'b>(
     order.extend(0..words.len());
     order.sort_by_key(|&w| (words[w].len(), w));
     let lead = order.remove(0);
+    if let Some(count) = narrowed_occurrences(words, lead, order.as_slice(), exact) {
+        return count;
+    }
     iters.clear();
     iters.extend(
         words
@@ -1901,6 +1904,57 @@ fn phrase_occurrences<'b>(
         }
     }
     count
+}
+
+/// Starts the phrase `words` of three or more words occurs at, counted by narrowing the lead
+/// word's starts (its positions less its place in the phrase) word by word, each word's
+/// positions read once. `others` are the other words' places, `lead`'s own being first
+/// excluded. `None` when the lead word has more positions than the set holds, which the
+/// caller then counts word by word.
+fn narrowed_occurrences(words: &[&[u8]], lead: usize, others: &[usize], exact: bool) -> Option<u32> {
+    let mut set = [0u32; 64];
+    let mut len = 0;
+    for position in PositionIter::new(words[lead]) {
+        let Some(start) = position.checked_sub(lead as u32) else {
+            continue;
+        };
+        if len == set.len() {
+            return None;
+        }
+        set[len] = start;
+        len += 1;
+    }
+    for (index, &word) in others.iter().enumerate() {
+        let last = index + 1 == others.len();
+        let mut positions = PositionIter::new(words[word]);
+        let mut at = positions.next();
+        let mut kept = 0;
+        for i in 0..len {
+            let start = set[i];
+            let Some(target) = start.checked_add(word as u32) else {
+                break;
+            };
+            while at.is_some_and(|p| p < target) {
+                at = positions.next();
+            }
+            match at {
+                None => break,
+                Some(p) if p == target => {
+                    if last && !exact {
+                        return Some(1);
+                    }
+                    set[kept] = start;
+                    kept += 1;
+                }
+                Some(_) => {}
+            }
+        }
+        len = kept;
+        if len == 0 {
+            return Some(0);
+        }
+    }
+    Some(len as u32)
 }
 
 /// Keeps, in place, the candidates among `slots[..n]` where some position of the lead word
@@ -2780,6 +2834,60 @@ mod tests {
         }
 
         assert_eq!(pair_occurrences(&[0xff, 0x80, 0], &[0x80, 1], true), 1);
+    }
+
+    /// Gap bytes of the ascending positions.
+    fn gaps(positions: &[u32]) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        let mut previous = 0;
+        for &position in positions {
+            crate::core::documents::binary::put_varint(&mut bytes, u64::from(position - previous));
+            previous = position;
+        }
+        bytes
+    }
+
+    #[test]
+    fn phrase_occurrences_match_a_direct_count_for_repeated_and_long_phrases() {
+        let mut state = 0x2545_f491_4f6c_dd1du64;
+        let mut next = move |below: u32| {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            (state % u64::from(below)) as u32
+        };
+        for round in 0..4000 {
+            let phrase = 3 + round % 3;
+            // A small alphabet repeats words; dense positions make real occurrences common.
+            let span = [12, 40, 300][round / 3 % 3];
+            let alphabet = 1 + next(3) as usize;
+            let lists: Vec<Vec<u32>> = (0..alphabet)
+                .map(|_| {
+                    let count = 1 + next(if round % 7 == 0 { 90 } else { 14 });
+                    let mut positions: Vec<u32> = (0..count).map(|_| next(span)).collect();
+                    positions.sort_unstable();
+                    positions.dedup();
+                    positions
+                })
+                .collect();
+            let which: Vec<usize> = (0..phrase).map(|_| next(alphabet as u32) as usize).collect();
+            let bytes: Vec<Vec<u8>> = which.iter().map(|&w| gaps(&lists[w])).collect();
+            let words: Vec<&[u8]> = bytes.iter().map(Vec::as_slice).collect();
+            let (mut iters, mut order) = (Vec::new(), Vec::new());
+            let direct = (0..span)
+                .filter(|&start| {
+                    which
+                        .iter()
+                        .enumerate()
+                        .all(|(offset, &w)| lists[w].contains(&(start + offset as u32)))
+                })
+                .count() as u32;
+            assert_eq!(phrase_occurrences(&words, &mut iters, &mut order, true), direct);
+            assert_eq!(
+                phrase_occurrences(&words, &mut iters, &mut order, false),
+                direct.min(1)
+            );
+        }
     }
 
     fn corpus(docs: &[Vec<u8>], positions: bool) -> DocumentStore {
