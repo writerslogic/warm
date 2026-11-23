@@ -591,7 +591,7 @@ pub(in crate::core::documents) fn execute(
             };
             let count = options
                 .count
-                .then(|| union_count(&mut optional, image.slot_count()));
+                .then(|| union_count(image, &mut optional, image.slot_count()));
             return Ok(Some(LexicalResults { hits, count }));
         }
         run.union_scan(optional, excluded)?
@@ -1428,11 +1428,8 @@ fn keep_common(
 /// slots tested against the dense lists' bitmaps, then filtered through the other lists (see
 /// [`keep_common`]); when every list is dense, the bitmaps ANDed a word at a time. `terms` is
 /// sorted rarest first.
-fn intersect_count(image: &ServingImage, terms: &mut [Rt<'_>]) -> usize {
-    let bitmaps: Vec<&[u8]> = terms
-        .iter()
-        .filter_map(|rt| rt.cursors[0].dense())
-        .collect();
+fn intersect_count<'a, T: Lead<'a>>(image: &ServingImage, terms: &mut [T]) -> usize {
+    let bitmaps: Vec<&[u8]> = terms.iter().filter_map(|rt| rt.lead().dense()).collect();
     if bitmaps.len() == terms.len() {
         let words = bitmaps.iter().map(|bits| bits.len() / 8).min().unwrap_or(0);
         return (0..words)
@@ -1444,9 +1441,12 @@ fn intersect_count(image: &ServingImage, terms: &mut [Rt<'_>]) -> usize {
             })
             .sum();
     }
-    let tables = frequency_tables(image, &terms[1..]);
+    let tables: Vec<_> = terms[1..]
+        .iter()
+        .map(|rt| image.frequency_table(rt.lead().list()))
+        .collect();
     let (lead, rest) = terms.split_first_mut().expect("two or more lists");
-    let lead = &mut lead.cursors[0];
+    let lead = lead.lead_mut();
     let mut count = 0usize;
     let mut slots = [0u32; CHECKPOINT_BLOCK];
     loop {
@@ -1506,6 +1506,30 @@ fn keep_tabled(
     k
 }
 
+/// A clause's leading cursor, or a bare cursor: what the counting kernels read.
+trait Lead<'a> {
+    fn lead(&self) -> &Cursor<'a>;
+    fn lead_mut(&mut self) -> &mut Cursor<'a>;
+}
+
+impl<'a> Lead<'a> for Rt<'a> {
+    fn lead(&self) -> &Cursor<'a> {
+        &self.cursors[0]
+    }
+    fn lead_mut(&mut self) -> &mut Cursor<'a> {
+        &mut self.cursors[0]
+    }
+}
+
+impl<'a> Lead<'a> for Cursor<'a> {
+    fn lead(&self) -> &Cursor<'a> {
+        self
+    }
+    fn lead_mut(&mut self) -> &mut Cursor<'a> {
+        self
+    }
+}
+
 /// The frequency nibble that [`keep_tabled`] leaves unread: fifteen or more. Frequencies
 /// from decoded lists are exact and do not use this sentinel.
 const SATURATED: u32 = 15;
@@ -1514,15 +1538,15 @@ const SATURATED: u32 = 15;
 /// dense lists' bitmaps first, then the other lists' frequency tables (`tables`, one per list
 /// of `rest`), then filtered through the remaining lists (see [`keep_common`]). The
 /// second value is false when a list ended, so no later candidate can match.
-fn keep_counted(
-    rest: &mut [Rt<'_>],
+fn keep_counted<'a, T: Lead<'a>>(
+    rest: &mut [T],
     tables: &[Option<std::sync::Arc<Dense>>],
     slots: &mut [u32; CHECKPOINT_BLOCK],
     n: usize,
 ) -> (usize, bool) {
     let mut kept = n;
     for rt in rest.iter() {
-        if let Some(bits) = rt.cursors[0].dense() {
+        if let Some(bits) = rt.lead().dense() {
             let (mut i, mut k) = (0, 0);
             while i < kept {
                 let slot = slots[i];
@@ -1533,10 +1557,9 @@ fn keep_counted(
             kept = k;
         }
     }
-    let decoded =
-        |rt: &Rt<'_>, table: &Option<_>| rt.cursors[0].dense().is_none() && table.is_none();
+    let decoded = |rt: &T, table: &Option<_>| rt.lead().dense().is_none() && table.is_none();
     for (rt, table) in rest.iter().zip(tables) {
-        if let (Some(table), true) = (table, rt.cursors[0].dense().is_none()) {
+        if let (Some(table), true) = (table, rt.lead().dense().is_none()) {
             for &slot in &slots[..kept] {
                 table.prefetch(slot as usize);
             }
@@ -1559,7 +1582,7 @@ fn keep_counted(
         if kept == 0 {
             break;
         }
-        let (k, more) = keep_common(&mut other.cursors[0], slots, kept, &mut [], Record::Nothing);
+        let (k, more) = keep_common(other.lead_mut(), slots, kept, &mut [], Record::Nothing);
         kept = k;
         live &= more;
     }
@@ -1569,9 +1592,19 @@ fn keep_counted(
 /// Documents with any of the term clauses' words: the largest list's postings, plus the
 /// documents of the others that it lacks, probed through its skip table; or, when the lists
 /// are of similar size, a bitmap over all slots.
-fn union_count(optional: &mut [Rt<'_>], slots: usize) -> usize {
+fn union_count(image: &ServingImage, optional: &mut [Rt<'_>], slots: usize) -> usize {
     if optional.len() == 1 {
         return optional[0].cursors[0].len();
+    }
+    if let [a, b] = optional {
+        // |a ∪ b| = |a| + |b| - |a ∩ b|, the intersection counted from the rarer list by probes
+        // into the other: neither list is unioned posting by posting.
+        let (mut a, mut b) = (a.cursors[0].list(), b.cursors[0].list());
+        if b.count < a.count {
+            std::mem::swap(&mut a, &mut b);
+        }
+        let both = intersect_count(image, &mut [Cursor::open(a), Cursor::open(b)]);
+        return a.count as usize + b.count as usize - both;
     }
     optional.sort_by_key(|rt| std::cmp::Reverse(rt.cursors[0].len()));
     let (big, rest) = optional.split_first_mut().expect("two or more lists");
@@ -2102,6 +2135,53 @@ mod tests {
             }
         }
         assert!(multi_point > 0, "some block has a real frontier");
+    }
+
+    #[test]
+    fn union_counts_over_many_blocks_match_the_exhaustive_count() {
+        // Lists of every shape over 4000 documents: dense, periodic, sparse and clustered, each
+        // spanning many blocks, so inclusion-exclusion meets lists that end early.
+        let docs: Vec<Vec<u8>> = (0..4000u32)
+            .map(|i| {
+                let mut words = vec![9u8];
+                for (word, holds) in [
+                    (0u8, true),
+                    (1, i % 2 == 0),
+                    (2, i % 3 == 0),
+                    (3, i % 7 == 0),
+                    (4, i % 50 == 0),
+                    (5, i % 5 == 0 && i < 1000),
+                    (6, i > 3900),
+                ] {
+                    if holds {
+                        words.push(word);
+                    }
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, false);
+        let image = image_of(&live);
+        let words = [0u8, 1, 2, 3, 4, 5, 6];
+        let mut queries = Vec::new();
+        for (i, a) in words.iter().enumerate() {
+            for (j, b) in words.iter().enumerate().skip(i + 1) {
+                queries.push(format!("w{a} w{b}"));
+                for c in &words[j + 1..] {
+                    queries.push(format!("w{a} w{b} w{c}"));
+                }
+            }
+        }
+        queries.push("w1 w3 w4 w6".into());
+        for text in &queries {
+            let query = LexicalQuery::parse(text).unwrap();
+            let options = LexicalOptions {
+                k: 0,
+                count: true,
+                ..Default::default()
+            };
+            assert!(assert_same(&image, &live, &query, &options), "{text}");
+        }
     }
 
     proptest! {
