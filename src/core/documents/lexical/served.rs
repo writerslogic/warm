@@ -1981,6 +1981,7 @@ impl Scatter {
 /// For each excluded list that is neither dense nor tabled and, when `counting` (every
 /// required block is visited), small enough against the required list `lead`, its slots in the
 /// range of `lead` as a bitmap. Leaves `lead` at its first block.
+#[inline(never)]
 fn scatter_excluded(
     excluded: &mut [Rt<'_>],
     tables: &[Option<std::sync::Arc<Dense>>],
@@ -2030,6 +2031,7 @@ fn scatter_excluded(
 /// each kept candidate's entries in `rows` along; `tables` are the excluded lists' frequency
 /// tables. A dense list is read from its bitmap, a tabled one from its table, any other
 /// through its decoded blocks. Returns how many are kept.
+#[inline(never)]
 fn drop_excluded(
     excluded: &mut [Rt<'_>],
     (tables, scatters): (&[Option<std::sync::Arc<Dense>>], &[Option<Scatter>]),
@@ -2083,7 +2085,7 @@ fn drop_excluded(
 
 /// Moves the candidates among `slots[..n]` whose `keep` flag is set, and their `rows` entries,
 /// to the front. Returns how many.
-#[inline(always)]
+#[inline(never)]
 fn compact(
     keep: &[bool; CHECKPOINT_BLOCK],
     slots: &mut [u32; CHECKPOINT_BLOCK],
