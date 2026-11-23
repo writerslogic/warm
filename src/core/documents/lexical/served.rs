@@ -394,6 +394,43 @@ fn exact_score(
     Ok(score)
 }
 
+/// Opens `clause`'s cursors and bound (and its idf when `k > 0`), or `None` when a word has no
+/// list.
+#[inline(always)]
+fn open_clause<'a>(
+    image: &'a ServingImage,
+    clause: &Clause,
+    index: usize,
+    form: usize,
+    k: usize,
+    n: f64,
+    shape: &Shape,
+) -> Option<(Rt<'a>, f64)> {
+    let lists: Option<Vec<ListRef<'a>>> = clause.words[form]
+        .iter()
+        .map(|word| image.list(form, word))
+        .collect();
+    let lists = lists?;
+    let mut idf = 0.0;
+    let bound = if k > 0 && clause.occur != Occur::MustNot {
+        idf = lists
+            .iter()
+            .map(|list| Bm25::idf(n, f64::from(list.count)))
+            .sum();
+        Bound::new(idf, shape.average, shape.bm25)
+    } else {
+        None
+    };
+    let mut rt = Rt::new(index, clause.phrase, &lists, bound);
+    if bound.is_some() {
+        for cursor in &mut rt.cursors {
+            let table = image.rank_table(cursor, shape.bm25, shape.average);
+            cursor.use_ranks(table);
+        }
+    }
+    Some((rt, idf))
+}
+
 /// Answers `query` from `image`, or `None` when this executor does not serve it (the caller
 /// then builds the live store). `ranker` ranks a bare disjunction with the checkpoint's windowed
 /// ranker, for the shapes the block-max executor does not take; its `None` declines the query.
@@ -457,32 +494,14 @@ pub(in crate::core::documents) fn execute(
     let mut excluded = Vec::new();
     let mut optional = Vec::new();
     for (index, clause) in query.clauses.iter().enumerate() {
-        let lists: Option<Vec<ListRef<'_>>> = clause.words[form]
-            .iter()
-            .map(|word| image.list(form, word))
-            .collect();
-        let Some(lists) = lists else {
+        let Some((rt, idf)) = open_clause(image, clause, index, form, k, n, &shape) else {
             match clause.occur {
                 Occur::Must => return Ok(Some(empty)),
                 _ => continue,
             }
         };
-        let bound = if k > 0 && clause.occur != Occur::MustNot {
-            let idf = lists
-                .iter()
-                .map(|list| Bm25::idf(n, f64::from(list.count)))
-                .sum();
+        if k > 0 {
             idfs[index] = idf;
-            Bound::new(idf, shape.average, shape.bm25)
-        } else {
-            None
-        };
-        let mut rt = Rt::new(index, clause.phrase, &lists, bound);
-        if bound.is_some() {
-            for cursor in &mut rt.cursors {
-                let table = image.rank_table(cursor, shape.bm25, shape.average);
-                cursor.use_ranks(table);
-            }
         }
         match clause.occur {
             Occur::Must => required.push(rt),
@@ -492,6 +511,10 @@ pub(in crate::core::documents) fn execute(
     }
     if required.is_empty() && optional.is_empty() {
         return Ok(Some(empty));
+    }
+    // Optional clauses never change which documents match, so a count needs none of them.
+    if k == 0 && !required.is_empty() {
+        optional.clear();
     }
     let all_terms = optional.iter().all(|rt| !rt.phrase);
     // One long bounded term is ranked by its runs' frontiers; more terms go to the windowed
@@ -517,6 +540,24 @@ pub(in crate::core::documents) fn execute(
         frequencies,
         word_counts: if k > 0 { image.word_counts() } else { &[] },
     };
+    let reopen = |index: usize| -> Option<Rt<'_>> {
+        open_clause(image, &query.clauses[index], index, form, k, n, &shape).map(|(rt, _)| rt)
+    };
+    if k > 0
+        && excluded.is_empty()
+        && !required.is_empty()
+        && !optional.is_empty()
+        && required
+            .iter()
+            .chain(&optional)
+            .all(|rt| !rt.phrase && rt.bound.is_some())
+    {
+        let (hits, count) = run.required_optional(required, optional, options.count, &reopen)?;
+        return Ok(Some(LexicalResults {
+            hits,
+            count: options.count.then_some(count),
+        }));
+    }
     let solo =
         required.len() == 1 && !required[0].phrase && excluded.is_empty() && optional.is_empty();
     let solo_count = if solo { required[0].rarest() } else { 0 };
@@ -644,13 +685,25 @@ impl<'a> Run<'a, '_> {
     /// Documents every required clause matches, none excluded, scored with the optional ones.
     fn conjunction(
         &mut self,
+        required: Vec<Rt<'a>>,
+        excluded: Vec<Rt<'a>>,
+        optional: Vec<Rt<'a>>,
+    ) -> Result<(Vec<LexicalHit>, usize)> {
+        let mut top = Top::new(self.image, self.k);
+        let count = self.conjunction_into(required, excluded, optional, &mut top)?;
+        Ok((top.finish(), count))
+    }
+
+    /// [`Self::conjunction`] offering to `top`, which may already hold hits; returns the count.
+    fn conjunction_into(
+        &mut self,
         mut required: Vec<Rt<'a>>,
         mut excluded: Vec<Rt<'a>>,
         mut optional: Vec<Rt<'a>>,
-    ) -> Result<(Vec<LexicalHit>, usize)> {
+        top: &mut Top<'a>,
+    ) -> Result<usize> {
         required.sort_by_key(Rt::rarest);
         let scoring = self.k > 0;
-        let mut top = Top::new(self.image, self.k);
         let mut count = 0usize;
         let clauses = required.len() + optional.len();
         // The most the optional clauses can add anywhere.
@@ -755,7 +808,7 @@ impl<'a> Run<'a, '_> {
             }
             target = doc + 1;
         }
-        Ok((top.finish(), count))
+        Ok(count)
     }
 
     /// The top `k` of the documents every term clause has, and with `self.count` their number:
@@ -764,6 +817,13 @@ impl<'a> Run<'a, '_> {
     /// score is skipped before the other lists are read, or when counting, filtered but not
     /// scored. `terms` is sorted rarest first and every clause has a bound.
     fn terms_top(&mut self, terms: &mut [Rt<'a>]) -> Result<(Vec<LexicalHit>, usize)> {
+        let mut top = Top::new(self.image, self.k);
+        let count = self.terms_top_into(terms, &mut top)?;
+        Ok((top.finish(), count))
+    }
+
+    /// [`Self::terms_top`] offering to `top`, which may already hold hits; returns the count.
+    fn terms_top_into(&mut self, terms: &mut [Rt<'a>], top: &mut Top<'a>) -> Result<usize> {
         let lists = terms.len();
         let clauses = terms.iter().map(|rt| 1 + rt.twins.len()).sum();
         // Each list's clauses, and how many times its weight enters a score.
@@ -780,7 +840,6 @@ impl<'a> Run<'a, '_> {
             terms.iter().zip(&times).map(|(rt, t)| rt.ceiling * t).sum(),
             clauses,
         );
-        let mut top = Top::new(self.image, self.k);
         let mut count = 0usize;
         let mut slots = [0u32; CHECKPOINT_BLOCK];
         let tables = frequency_tables(self.image, &terms[1..]);
@@ -946,7 +1005,81 @@ impl<'a> Run<'a, '_> {
                 break;
             }
         }
-        Ok((top.finish(), count))
+        Ok(count)
+    }
+
+    /// The top `k` of the documents every required clause matches, scored with the optional
+    /// ones, and with `count` their number. The documents that also match every optional clause
+    /// go through the block-wise conjunction of all the terms. The others are split by the
+    /// first optional clause they lack, taking the optional clauses strongest first: class `j`
+    /// has the first `j` and lacks the next, so a document is in one class only. Each class is
+    /// walked with the floor found so far, and the strongest clause's class, the widest, is the
+    /// one its weight makes cheapest to prune.
+    /// `reopen` opens fresh cursors on a clause by its index.
+    #[inline(never)]
+    fn required_optional(
+        &mut self,
+        required: Vec<Rt<'a>>,
+        optional: Vec<Rt<'a>>,
+        count: bool,
+        reopen: &dyn Fn(usize) -> Option<Rt<'a>>,
+    ) -> Result<(Vec<LexicalHit>, usize)> {
+        // The ranking never counts: the count is that of the required clauses alone.
+        self.count = false;
+        let mut top = Top::new(self.image, self.k);
+        let mut strongest: Vec<(f64, usize)> =
+            optional.iter().map(|rt| (rt.ceiling, rt.clause)).collect();
+        strongest.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+        let musts: Vec<usize> = required.iter().map(|rt| rt.clause).collect();
+        let order: Vec<usize> = strongest.iter().map(|&(_, clause)| clause).collect();
+        let mut all = required;
+        all.extend(optional);
+        merge_twins(&mut all);
+        if all.len() >= 2 {
+            #[cfg(test)]
+            reached(0);
+            self.terms_top_into(&mut all, &mut top)?;
+            drop(all);
+            for (j, &lacked) in order.iter().enumerate() {
+                // The first pass left other clauses' frequencies in place.
+                self.frequencies.fill(0);
+                #[cfg(test)]
+                if j > 0 {
+                    reached(5);
+                }
+                let mut musts = self.opened(reopen, &musts);
+                musts.extend(self.opened(reopen, &order[..j]));
+                let excluded = self.opened(reopen, &[lacked]);
+                let optional = self.opened(reopen, &order[j + 1..]);
+                self.conjunction_into(musts, excluded, optional, &mut top)?;
+            }
+        } else {
+            // One list: the clauses are twins, and a document with one has all.
+            drop(all);
+            let optional = self.opened(reopen, &order);
+            self.conjunction_into(self.opened(reopen, &musts), Vec::new(), optional, &mut top)?;
+        }
+        let found = if count {
+            self.joint(self.opened(reopen, &musts))
+        } else {
+            0
+        };
+        Ok((top.finish(), found))
+    }
+
+    /// Fresh cursors on the clauses at `clauses`.
+    fn opened(&self, reopen: &dyn Fn(usize) -> Option<Rt<'a>>, clauses: &[usize]) -> Vec<Rt<'a>> {
+        clauses.iter().filter_map(|&clause| reopen(clause)).collect()
+    }
+
+    /// How many documents every one of the term clauses `terms` has.
+    fn joint(&self, mut terms: Vec<Rt<'a>>) -> usize {
+        merge_twins(&mut terms);
+        if terms.len() == 1 {
+            terms[0].rarest()
+        } else {
+            intersect_count(self.image, &mut terms)
+        }
     }
 
     /// The documents holding the query's one phrase clause, and with `self.count` their number:
@@ -1607,8 +1740,19 @@ fn keep_frequent(
     kept
 }
 
+/// Counts a branch of the required-optional path, for the tests.
+#[cfg(test)]
+fn reached(path: usize) {
+    PATHS.with(|c| {
+        let mut all = c.get();
+        all[path] += 1;
+        c.set(all);
+    });
+}
+
 #[cfg(test)]
 thread_local! {
+    static PATHS: std::cell::Cell<[usize; 7]> = const { std::cell::Cell::new([0; 7]) };
     /// Blocks whose candidates `terms_top` filtered by lead frequency, on this thread.
     static PREFILTERED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
@@ -1958,6 +2102,112 @@ mod tests {
                 .unwrap_or_else(|| panic!("{text} is not served"));
             assert!(served.count.unwrap() > 0, "{text}");
             assert!(assert_same(&image, &live, &query, &options), "{text}");
+        }
+    }
+
+    #[test]
+    fn required_and_optional_clauses_keep_the_exhaustive_result() {
+        let docs: Vec<Vec<u8>> = (0..2600u32)
+            .map(|i| {
+                let i = i % 900;
+                (0..4 + i % 9)
+                    .map(|j| {
+                        let x = i.wrapping_mul(2654435761).wrapping_add(j.wrapping_mul(40503)) >> 7;
+                        if x % 3 == 0 {
+                            0
+                        } else if x % 7 == 0 {
+                            1
+                        } else {
+                            ((x / 11) % 12) as u8
+                        }
+                    })
+                    .collect()
+            })
+            .collect();
+        let live = corpus(&docs, true);
+        let image = image_of(&live);
+        PATHS.with(|c| c.set([0; 7]));
+        for text in [
+            "+w0 w1",
+            "+w1 w0",
+            "+w0 w1 w2",
+            "+w2 w0 w1 w3",
+            "+w0 +w1 w2",
+            "+w2 +w3 w0 w1",
+            "+w5 w0 w1 w2 w3 w4 w6",
+            "+w0 w0",
+            "+w2 w3 w3",
+            "+w3 w90",
+            "+w3 w90 w1",
+            "+w90 w1",
+            "+w4 w5 -w1",
+            "+w4 w5 +w6 -w1 -w2",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [0, 1, 10, 100] {
+                for count in [false, true] {
+                    let options = LexicalOptions {
+                        k,
+                        count,
+                        ..Default::default()
+                    };
+                    assert!(assert_same(&image, &live, &query, &options), "{text}");
+                }
+            }
+        }
+        let paths = PATHS.with(|c| c.get());
+        for path in [0, 5] {
+            assert!(paths[path] > 0, "path {path} never ran: {paths:?}");
+        }
+    }
+
+    #[test]
+    fn required_and_optional_clauses_over_ranked_and_sparse_lists_keep_the_result() {
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(7)
+                .wrapping_mul(40503)
+        };
+        let docs: Vec<Vec<u8>> = (0..40_000u32)
+            .map(|i| {
+                let len = 2 + hash(i) % 40;
+                let mut words: Vec<u8> = (0..len)
+                    .map(|j| {
+                        let h = hash(i * 97 + j);
+                        ((h >> 8) % 8).min((h >> 20) % 8) as u8
+                    })
+                    .collect();
+                if hash(i + 5) % 16 == 0 {
+                    words.push(9);
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, true);
+        let image = image_of(&live).with_rank_tables();
+        assert!(image.list(0, "w0").unwrap().blocks() >= 256);
+        PATHS.with(|c| c.set([0; 7]));
+        for text in [
+            "+w0 w1 w9",
+            "+w0 w9",
+            "+w9 w0 w1",
+            "+w1 w2 w9 w0",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [1, 10, 100] {
+                for count in [false, true] {
+                    let options = LexicalOptions {
+                        k,
+                        count,
+                        ..Default::default()
+                    };
+                    assert!(assert_same(&image, &live, &query, &options), "{text}");
+                }
+            }
+        }
+        let paths = PATHS.with(|c| c.get());
+        for path in [0, 5] {
+            assert!(paths[path] > 0, "path {path} never ran: {paths:?}");
         }
     }
 
