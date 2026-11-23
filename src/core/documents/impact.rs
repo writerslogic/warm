@@ -350,6 +350,11 @@ impl Dense {
         (self.nibbles[slot >> 1] >> ((slot & 1) * 4)) & 15
     }
 
+    /// The nibbles, two slots a byte, the even slot in the low half.
+    pub(super) fn nibble_bytes(&self) -> &[u8] {
+        &self.nibbles
+    }
+
     /// Starts loading the nibble of `slot`; a hint, with no effect on results.
     #[inline(always)]
     pub(super) fn prefetch(&self, slot: usize) {

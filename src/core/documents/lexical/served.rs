@@ -1688,6 +1688,7 @@ fn keep_counted<'a, T: Lead<'a>>(
 /// Documents with any of the term clauses' words: the largest list's postings, plus the
 /// documents of the others that it lacks, probed through its skip table; or, when the lists
 /// are of similar size, a bitmap over all slots.
+#[inline(never)]
 fn union_count(image: &ServingImage, optional: &mut [Rt<'_>], slots: usize) -> usize {
     if optional.len() == 1 {
         return optional[0].cursors[0].len();
@@ -1728,24 +1729,109 @@ fn union_count(image: &ServingImage, optional: &mut [Rt<'_>], slots: usize) -> u
             }
         }
     }
-    let mut bits = vec![0u64; slots.div_ceil(64)];
+    let words = slots.div_ceil(64);
+    // Dense lists are read from their bitmaps and tabled ones from their nibbles, a block of
+    // words at a time as the count is made; only the other lists' postings are decoded.
+    let mut dense: Vec<&[u8]> = Vec::new();
+    let mut tabled: Vec<std::sync::Arc<Dense>> = Vec::new();
+    let mut bits: Vec<u64> = Vec::new();
     for rt in optional.iter_mut() {
-        if let Some(dense) = rt.cursors[0].dense() {
-            // A dense list's bitmap is ORed a word at a time; its postings are not decoded.
-            let (words, _) = dense.as_chunks::<8>();
-            for (at, word) in bits.iter_mut().zip(words) {
-                *at |= u64::from_le_bytes(*word);
+        if let Some(bitmap) = rt.cursors[0].dense() {
+            dense.push(bitmap);
+        } else if let Some(table) = image.frequency_table(rt.cursors[0].list()) {
+            tabled.push(table);
+        } else {
+            if bits.is_empty() {
+                bits = vec![0u64; words];
             }
-            continue;
+            rt.cursors[0].for_each_block(|block| {
+                for &doc in block {
+                    let doc = doc as usize;
+                    bits[doc / 64] |= 1 << (doc % 64);
+                }
+            });
         }
-        rt.cursors[0].for_each_block(|block| {
-            for &doc in block {
-                let doc = doc as usize;
-                bits[doc / 64] |= 1 << (doc % 64);
-            }
-        });
     }
-    bits.iter().map(|word| word.count_ones() as usize).sum()
+    union_words(words, &bits, &dense, &tabled)
+}
+
+/// The number of bits set in the union of `bits`, the dense lists' bitmaps and the slots the
+/// `tabled` lists hold, over `words` words of 64 slots.
+#[inline(never)]
+fn union_words(
+    words: usize,
+    bits: &[u64],
+    dense: &[&[u8]],
+    tabled: &[std::sync::Arc<Dense>],
+) -> usize {
+    const BLOCK: usize = 64;
+    let mut total = 0usize;
+    let mut start = 0usize;
+    while start < words {
+        let n = (words - start).min(BLOCK);
+        let mut packed = [0u64; BLOCK];
+        if !bits.is_empty() {
+            packed[..n].copy_from_slice(&bits[start..start + n]);
+        }
+        for bitmap in dense {
+            let (words, _) = bitmap[(8 * start).min(bitmap.len())..(8 * (start + n)).min(bitmap.len())]
+                .as_chunks::<8>();
+            for (word, chunk) in packed.iter_mut().zip(words) {
+                *word |= u64::from_le_bytes(*chunk);
+            }
+        }
+        if !tabled.is_empty() {
+            // Four words of nibbles a word of slots: the lists' nibbles ORed first, since a
+            // nibble of the OR is nonzero when any is, then one nibble a bit.
+            let mut nibbles = [0u64; 4 * BLOCK];
+            for table in tabled {
+                let bytes = table.nibble_bytes();
+                let from = (32 * start).min(bytes.len());
+                let to = (32 * (start + n)).min(bytes.len());
+                let (chunks, tail) = bytes[from..to].as_chunks::<8>();
+                for (word, chunk) in nibbles.iter_mut().zip(chunks) {
+                    *word |= u64::from_le_bytes(*chunk);
+                }
+                if !tail.is_empty() {
+                    let mut last = [0u8; 8];
+                    last[..tail.len()].copy_from_slice(tail);
+                    nibbles[chunks.len()] |= u64::from_le_bytes(last);
+                }
+            }
+            for (word, quad) in packed[..n].iter_mut().zip(nibbles.chunks_exact(4)) {
+                *word |= nibble_bits(quad[0])
+                    | nibble_bits(quad[1]) << 16
+                    | nibble_bits(quad[2]) << 32
+                    | nibble_bits(quad[3]) << 48;
+            }
+        }
+        total += packed[..n]
+            .iter()
+            .map(|word| word.count_ones() as usize)
+            .sum::<usize>();
+        start += n;
+    }
+    total
+}
+
+/// Bit `j` of the result is set when nibble `j` of `word` is nonzero.
+#[inline(always)]
+fn nibble_bits(word: u64) -> u64 {
+    let mut t = word | word >> 1;
+    t |= t >> 2;
+    t &= 0x1111_1111_1111_1111;
+    #[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
+    {
+        // SAFETY: the target has BMI2, checked at compile time.
+        unsafe { std::arch::x86_64::_pext_u64(t, 0x1111_1111_1111_1111) }
+    }
+    #[cfg(not(all(target_arch = "x86_64", target_feature = "bmi2")))]
+    {
+        t = (t | t >> 3) & 0x0303_0303_0303_0303;
+        t = (t | t >> 6) & 0x000F_000F_000F_000F;
+        t = (t | t >> 12) & 0x0000_00FF_0000_00FF;
+        (t | t >> 24) & 0xFFFF
+    }
 }
 
 #[cfg(test)]
@@ -2332,6 +2418,51 @@ mod tests {
         }
         queries.push("w1 w3 w4 w6".into());
         for text in &queries {
+            let query = LexicalQuery::parse(text).unwrap();
+            let options = LexicalOptions {
+                k: 0,
+                count: true,
+                ..Default::default()
+            };
+            assert!(assert_same(&image, &live, &query, &options), "{text}");
+        }
+    }
+
+    #[test]
+    fn union_counts_of_dense_tabled_and_decoded_lists_match_over_several_word_blocks() {
+        // 9001 slots: more than one block of 64 bitmap words and a partial last word, with
+        // dense, tabled and sparse lists in every combination.
+        let docs: Vec<Vec<u8>> = (0..9001u32)
+            .map(|i| {
+                let mut words = vec![9u8];
+                for (word, holds) in [
+                    (0u8, i % 3 != 0),
+                    (1, i % 2 == 0),
+                    (2, i % 9 == 0),
+                    (3, i % 31 == 0 || i == 9000),
+                    (4, i % 97 == 0),
+                    (5, i > 8990),
+                ] {
+                    if holds {
+                        words.push(word);
+                    }
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, false);
+        let image = image_of(&live);
+        let tabled = |word: &str| image.frequency_table(image.list(0, word).unwrap()).is_some();
+        assert!(tabled("w2") && tabled("w3") && !tabled("w5"));
+        for text in [
+            "w0 w1 w2",
+            "w2 w3 w4",
+            "w2 w3 w5",
+            "w1 w2 w3 w4 w5",
+            "w3 w4 w5",
+            "w0 w2 w3",
+            "w2 w3 w4 w5",
+        ] {
             let query = LexicalQuery::parse(text).unwrap();
             let options = LexicalOptions {
                 k: 0,
