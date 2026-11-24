@@ -1780,8 +1780,27 @@ impl<'a> Run<'a, '_> {
             let block = lead.block_slots();
             let mut n = block.len();
             slots[..n].copy_from_slice(block);
-            for (value, index) in rows[0][..n].iter_mut().zip(0u32..) {
-                *value = index;
+            // A candidate whose lead frequency, at the block's least word count, cannot lift the
+            // phrase to the k-th best score is dropped before the other lists are read: the
+            // phrase occurs in a document no more often than its lead word does.
+            let mut need = 1u32;
+            if let (true, false, Some(floor), Some(bound)) =
+                (scored, self.count, top.floor(), rt.bound)
+            {
+                let (most, least) = lead.block_bounds();
+                let most = most.min(NEED_PROBES);
+                while need < most && sum_bound(bound.at(need, least), 1) < floor {
+                    need += 1;
+                }
+            }
+            if need > 1 {
+                #[cfg(test)]
+                PREFILTERED.with(|c| c.set(c.get() + 1));
+                n = keep_frequent(lead.block_frequencies(), &mut slots, n, &mut rows[0], need);
+            } else {
+                for (value, index) in rows[0][..n].iter_mut().zip(0u32..) {
+                    *value = index;
+                }
             }
             // A word's bitmap or frequency table answers membership without decoding its list.
             for (c, other) in rest.iter().enumerate() {
@@ -3736,6 +3755,71 @@ mod tests {
                     ..Default::default()
                 };
                 assert!(assert_same(&image, &live, &query, &options), "{text}");
+            }
+        }
+        assert!(
+            PREFILTERED.with(|c| c.get()) > before,
+            "the lead-frequency filter never ran"
+        );
+    }
+
+    /// Lone phrases with a floor and no count over lead lists of many blocks, so that candidates
+    /// whose lead frequency cannot reach the floor are dropped before the other lists are read;
+    /// one phrase matches exactly ten documents, ranked at k = 9, 10 and 11.
+    #[test]
+    fn phrases_drop_weak_lead_candidates_without_changing_the_result() {
+        let hash = |x: u32| {
+            x.wrapping_mul(2654435761)
+                .rotate_left(15)
+                .wrapping_mul(40503)
+        };
+        let docs: Vec<Vec<u8>> = (0..16000u32)
+            .map(|i| {
+                let len = 3 + hash(i) % 120;
+                let mut words: Vec<u8> = (0..len)
+                    .map(|j| match (hash(i * 59 + j) >> 7) % 16 {
+                        0..=5 => 0,
+                        6..=8 => 1,
+                        9 | 10 => 2,
+                        11 => 3,
+                        x => (x % 5 + 4) as u8,
+                    })
+                    .collect();
+                if i % 41 == 0 {
+                    words.extend(std::iter::repeat_n(2, 6 + (i % 5) as usize));
+                }
+                if i % 97 == 0 {
+                    words.extend([1, 2, 1, 2, 2, 1]);
+                }
+                if i % 1601 == 0 {
+                    words.extend([9, 10]);
+                }
+                words
+            })
+            .collect();
+        let live = corpus(&docs, true);
+        let image = image_of(&live);
+        for word in ["w1", "w2"] {
+            assert!(image.list(0, word).unwrap().blocks() > 3, "{word}");
+        }
+        let before = PREFILTERED.with(|c| c.get());
+        for text in [
+            "\"w2 w1\"",
+            "\"w1 w2\"",
+            "\"w2 w2\"",
+            "\"w1 w2 w1\"",
+            "\"w3 w2 w0\"",
+            "\"w2 w0 w2 w1\"",
+            "\"w9 w10\"",
+        ] {
+            let query = LexicalQuery::parse(text).unwrap();
+            for k in [1usize, 3, 9, 10, 11, 50] {
+                let options = LexicalOptions {
+                    k,
+                    count: false,
+                    ..Default::default()
+                };
+                assert!(assert_same(&image, &live, &query, &options), "{text} k={k}");
             }
         }
         assert!(
