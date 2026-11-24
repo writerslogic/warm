@@ -255,6 +255,15 @@ impl<'a> Rt<'a> {
     }
 }
 
+/// A conjunction's block bounds at a document, which hold through slot `valid`: the required
+/// clauses' summed block bounds (`loose`, and `tight` once read) and the optional clauses' sum.
+struct BlockSums {
+    valid: u32,
+    loose: f64,
+    extra: f64,
+    tight: Option<f64>,
+}
+
 /// Sorts term clauses rarest first and folds each clause whose word repeats an earlier one's
 /// into that one's [`Rt::twins`]: a conjunction reads each list once.
 fn merge_twins(terms: &mut Vec<Rt<'_>>) {
@@ -776,6 +785,7 @@ impl<'a> Run<'a, '_> {
             required.iter().map(|rt| rt.ceiling).sum::<f64>() + optional_ceiling,
             clauses,
         );
+        let mut bounds: Option<BlockSums> = None;
         let mut target = 0u32;
         'docs: loop {
             // Nothing further can reach the k-th best score.
@@ -816,16 +826,32 @@ impl<'a> Run<'a, '_> {
             let mut pruned = false;
             if scoring && all_bounded {
                 if let Some(floor) = top.floor() {
-                    let mut sum: f64 = required.iter().map(Rt::block_bound).sum();
-                    let mut valid = required.iter().map(Rt::block_last).min().unwrap_or(doc);
-                    let mut extra = 0.0;
-                    for rt in &mut optional {
-                        let (weight, until) = rt.optional_bound(doc);
-                        extra += weight;
-                        valid = valid.min(until);
+                    // The bounds hold for every slot through `valid`: the cursors stay in the
+                    // blocks they are in, so they are kept until a document passes it.
+                    if bounds.as_ref().is_none_or(|b| doc > b.valid) {
+                        let loose: f64 = required.iter().map(Rt::block_bound).sum();
+                        let mut valid = required.iter().map(Rt::block_last).min().unwrap_or(doc);
+                        let mut extra = 0.0;
+                        for rt in &mut optional {
+                            let (weight, until) = rt.optional_bound(doc);
+                            extra += weight;
+                            valid = valid.min(until);
+                        }
+                        bounds = Some(BlockSums {
+                            valid,
+                            loose,
+                            extra,
+                            tight: None,
+                        });
                     }
+                    let b = bounds.as_mut().expect("bounds");
+                    let valid = b.valid;
+                    let extra = b.extra;
+                    let mut sum = b.loose;
                     if sum_bound(sum + extra, clauses) >= floor {
-                        sum = required.iter().map(Rt::tight_block_bound).sum();
+                        sum = *b.tight.get_or_insert_with(|| {
+                            required.iter().map(Rt::tight_block_bound).sum()
+                        });
                     }
                     sum += extra;
                     if sum_bound(sum, clauses) < floor {
