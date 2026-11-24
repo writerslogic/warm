@@ -51,6 +51,14 @@ iterable ingestion. The default document search is lexical BM25. Add an embedder
 semantic candidates and optional reranking. See [the example](../examples/local-documents.mjs)
 and the README for the complete setup.
 
+Standalone Node.js examples for the embedded `WarmMemorySystem` surface:
+
+- [Semantic text search](../examples/semantic-search.mjs) (`DocumentMemory` `ingest`, `search`)
+- [Triplet knowledge and structural queries](../examples/triplet-knowledge.mjs) (`meaningEnabled: true`, `memorizeTriplet`, `structuralQuery`, `multiHopQuery`)
+- [Ordered sequence encoding](../examples/sequence-encoding.mjs) (`memorizeSequence`, `querySequence`)
+- [Analogy reasoning](../examples/analogy-reasoning.mjs) (`findAnalogy` over memorized lexical hypervectors)
+- [External `Float32Array` embeddings](../examples/external-embeddings.mjs) (`memorizeVector`, `queryVector` with `WARM_ENCRYPTION=off`)
+
 Install `@huggingface/transformers` separately to use the local ONNX factories. Supply an
 existing model directory and explicit model/revision identity. The store schema must match
 the adapter's embedding space. Keep models alive while operations are pending and dispose
