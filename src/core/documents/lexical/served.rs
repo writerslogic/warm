@@ -14,8 +14,10 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
+mod count;
 mod lazy;
 
+use self::count::keep_probed;
 use self::lazy::keep_common_lazy;
 use super::wand::{sum_bound, Bound};
 use super::*;
@@ -978,7 +980,7 @@ impl<'a> Run<'a, '_> {
                 slots[..n].copy_from_slice(block);
                 if !scored {
                     // Counted only: the dense lists' bitmaps answer without decoding them.
-                    let (kept, more) = keep_counted(rest, &tables, &mut slots, n);
+                    let (kept, more) = keep_counted(rest, &tables, &mut slots, n, false);
                     count += kept;
                     if !more || !lead.cursors[0].advance_block(last.saturating_add(1)) {
                         break;
@@ -1527,7 +1529,7 @@ impl<'a> Run<'a, '_> {
                 slots[..n].copy_from_slice(block);
                 if !scored {
                     // Counted only: the dense lists' bitmaps answer without decoding them.
-                    let (kept, more) = keep_counted(rest, &tables, &mut slots, n);
+                    let (kept, more) = keep_counted(rest, &tables, &mut slots, n, false);
                     let kept = drop_excluded(
                         excluded,
                         (&excluded_tables, &scatters),
@@ -2325,6 +2327,13 @@ fn keep_common(
             // Many: a branch-free merge, each step advancing whichever side is behind.
             let mut j = 0usize;
             let mut at = i;
+            // The merge's speed depends on where its loop falls against the 64-byte lines the
+            // code is fetched in, which moves with every unrelated change to the binary.
+            #[cfg(target_arch = "x86_64")]
+            // SAFETY: only pads the instruction stream.
+            unsafe {
+                std::arch::asm!(".p2align 6", options(nomem, nostack, preserves_flags));
+            }
             while at < end && j < block.len() {
                 let (value, posting) = (slots[at], block[j]);
                 slots[k] = value;
@@ -2391,7 +2400,7 @@ fn intersect_count<'a, T: Lead<'a>>(image: &ServingImage, terms: &mut [T]) -> us
         }
         let n = block.len();
         slots[..n].copy_from_slice(block);
-        let (n, live) = keep_counted(rest, &tables, &mut slots, n);
+        let (n, live) = keep_counted(rest, &tables, &mut slots, n, true);
         count += n;
         if !live || !lead.advance_block(lead.block_last().saturating_add(1)) {
             return count;
@@ -2705,12 +2714,15 @@ const NEED_PROBES: u32 = 32;
 /// Keeps the candidates among `slots[..n]` that every list of `rest` holds: tested against the
 /// dense lists' bitmaps first, then the other lists' frequency tables (`tables`, one per list
 /// of `rest`), then filtered through the remaining lists (see [`keep_common`]). The
-/// second value is false when a list ended, so no later candidate can match.
+/// second value is false when a list ended, so no later candidate can match. `probed` filters
+/// through the decoded lists with [`keep_probed`], which only the conjunction count uses: the
+/// other callers keep [`keep_common`].
 fn keep_counted<'a, T: Lead<'a>>(
     rest: &mut [T],
     tables: &[Option<std::sync::Arc<Dense>>],
     slots: &mut [u32; CHECKPOINT_BLOCK],
     n: usize,
+    probed: bool,
 ) -> (usize, bool) {
     let mut kept = n;
     for rt in rest.iter() {
@@ -2750,7 +2762,11 @@ fn keep_counted<'a, T: Lead<'a>>(
         if kept == 0 {
             break;
         }
-        let (k, more) = keep_common(other.lead_mut(), slots, kept, &mut [], Record::Nothing);
+        let (k, more) = if probed {
+            keep_probed(other.lead_mut(), slots, kept)
+        } else {
+            keep_common(other.lead_mut(), slots, kept, &mut [], Record::Nothing)
+        };
         kept = k;
         live &= more;
     }
