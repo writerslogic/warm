@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
-## [0.7.1] - 2026-11-23
+## [0.7.1] - 2026-11-24
 
 ### Added
 - Learn reusable procedures from episodes and revise them on disproof (#509)
@@ -18,6 +18,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Publish the docs site to writerslogic.com and fix stale package notes
 
 ### Performance
+- Count conjunction candidates eight at a time (#520)
+- Keep a conjunction's block bounds until a document passes their blocks (#518)
+- Drop weak lone-phrase candidates before reading the other lists (#517)
 - Serve lexical unions, conjunctions and phrases faster; release 0.7.1 (#512)
 ## [0.7.0] - 2026-11-18
 
