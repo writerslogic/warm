@@ -49,7 +49,7 @@ server you configure; model stages are opt-in. Capabilities and limits: [What sh
 |---|---|---|
 | An editor or agent host (MCP) | `npx -y writerslogic-warm-mcp` (or `uvx warm-mcp`; add `--transport http` for `http://127.0.0.1:8765/mcp`) | [MCP integration](docs/integrations/mcp/README.md) |
 | Rust | `cargo add warm-rust` | below |
-| Node, embedded engine | `npm install writerslogic-warm@0.7.1` | below |
+| Node, embedded engine | `npm install writerslogic-warm@0.7.2` | below |
 | JavaScript or TypeScript, HTTP client | `npm install warm-sdk@0.2.2` | [client API](bindings/js/warm-sdk/README.md) |
 | Python, HTTP client | `uv venv && uv pip install warm-sdk` | [Python quickstart](examples/quickstart/python/quickstart.py) |
 | A server for the HTTP clients | `cargo install --locked --features server,security --bin warm-server warm-rust` | [server docs](https://writerslogic.com/warm/docs/latest/server/) |
@@ -147,7 +147,7 @@ provide the evidence for evaluating WARM on your own workload.
 | `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
 | MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |
 | JavaScript/TypeScript client (`warm-sdk` 0.2.2) | Source and release builds | Portable HTTP client; requires a separately running server |
-| Embedded Node.js (`writerslogic-warm` 0.7.1) | Source and release builds | Eight optional native platform packages; separate from the client |
+| Embedded Node.js (`writerslogic-warm` 0.7.2) | Source and release builds | Eight optional native platform packages; separate from the client |
 | C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
 | Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | `Warm` (in-process document search, memory API) from `warm-python` 0.7.0; earlier releases have none |
 | Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |
