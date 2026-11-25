@@ -127,7 +127,6 @@ mod tests {
     #[test]
     fn rfc3339_matches_known_instants() {
         assert_eq!(rfc3339(UNIX_EPOCH), "1970-01-01T00:00:00.000Z");
-        // 2024-02-29T12:34:56.789Z, a leap day.
         let t = UNIX_EPOCH + Duration::new(1_709_210_096, 789_000_000);
         assert_eq!(rfc3339(t), "2024-02-29T12:34:56.789Z");
         let t = UNIX_EPOCH + Duration::from_secs(4_102_444_799);

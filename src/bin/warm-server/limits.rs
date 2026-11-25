@@ -606,7 +606,6 @@ mod tests {
         }
         assert_eq!(limiter.check_at("a", t0).unwrap_err(), 1);
         limiter.check_at("b", t0).unwrap();
-        // 0.1 s refills one token at 10/s.
         limiter
             .check_at("a", t0 + Duration::from_millis(110))
             .unwrap();
@@ -646,12 +645,10 @@ mod tests {
             store.begin("t", "k", other).err().unwrap().code,
             "idempotency_key_reused"
         );
-        // Another tenant's identical key is independent.
         assert!(matches!(
             store.begin("u", "k", fp).unwrap(),
             Begin::Proceed(_)
         ));
-        // A failed attempt is not recorded.
         let Begin::Proceed(guard) = store.begin("t", "f", fp).unwrap() else {
             panic!()
         };
