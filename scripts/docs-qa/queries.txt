@@ -8,7 +8,6 @@ holographic | concepts,faq
 hypervector | concepts
 hopfield | concepts
 bm25 | concepts,faq,benchmarks
-recall | benchmarks,faq
 warm-server | server
 api key | server
 python client | api/,reference/api,integrations

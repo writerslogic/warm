@@ -234,7 +234,7 @@ fn tampered_key_check_is_detected() {
     assert!(open(&path, WarmConfig::default()).is_err());
 }
 
-fn passphrase_config(passphrase: &str) -> WarmConfig {
+fn keyed_config(passphrase: &str) -> WarmConfig {
     let mut config = WarmConfig::default();
     config.security.encryption_enabled = true;
     config.security.encryption_passphrase = Some(passphrase.to_owned());
@@ -249,7 +249,7 @@ fn wrong_passphrase_error_mentions_the_passphrase() {
         let core = WarmCore::new(
             1024,
             Some(path.clone()),
-            Some(passphrase_config("right one")),
+            Some(keyed_config("right one")),
         )
         .unwrap();
         let doc: DocumentInput =
@@ -260,7 +260,7 @@ fn wrong_passphrase_error_mentions_the_passphrase() {
     let error = match WarmCore::new(
         1024,
         Some(path.clone()),
-        Some(passphrase_config("wrong passphrase")),
+        Some(keyed_config("wrong passphrase")),
     ) {
         Ok(_) => panic!("opening with the wrong passphrase must fail"),
         Err(error) => error.to_string(),
@@ -269,5 +269,5 @@ fn wrong_passphrase_error_mentions_the_passphrase() {
     assert!(!error.contains("right one"), "{error}");
 
     // the right passphrase still opens it
-    WarmCore::new(1024, Some(path), Some(passphrase_config("right one"))).unwrap();
+    WarmCore::new(1024, Some(path), Some(keyed_config("right one"))).unwrap();
 }
