@@ -67,7 +67,6 @@ impl NystromProjector {
             .collect();
         indexed.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Filter: keep only eigenvalues above lambda_max * 1e-6 (relative threshold)
         let lambda_max = indexed.first().map(|&(_, v)| v).unwrap_or(1.0);
         if lambda_max <= 0.0 || lambda_max.is_nan() {
             return Err(anyhow!(
@@ -81,7 +80,6 @@ impl NystromProjector {
 
         let top = &indexed[..d_actual];
 
-        // Build transform: U_d * Λ_d^{-1/2}
         let mut transform = DMatrix::<f32>::zeros(m, d_actual);
         let min_eigenvalue = eig_floor.max(1e-10);
         for (col, &(eig_idx, eig_val)) in top.iter().enumerate() {
@@ -127,39 +125,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_projection_dimensions() {
-        let dim = 1000;
-        let d_reduced = 16;
-        let landmarks: Vec<EntangledHVec> = (0..32)
-            .map(|s| EntangledHVec::new_deterministic(dim, s))
-            .collect();
-        let proj = NystromProjector::train(landmarks, d_reduced).unwrap();
-
-        let test_vec = EntangledHVec::new_deterministic(dim, 999);
-        let projected = proj.project(&test_vec);
-        assert_eq!(projected.len(), d_reduced);
-    }
-
-    #[test]
-    fn test_self_kernel_is_one() {
-        let dim = 1000;
-        let v = EntangledHVec::new_deterministic(dim, 42);
-        let sim = v.similarity(&v);
-        assert!(
-            (sim - 1.0).abs() < 1e-6,
-            "K(x,x) should be 1.0, got {}",
-            sim
-        );
-    }
-
-    #[test]
-    fn test_projection_batch() {
+    fn projection_has_the_reduced_dimension_for_single_and_batch() {
         let dim = 1000;
         let d_reduced = 8;
         let landmarks: Vec<EntangledHVec> = (0..16)
             .map(|s| EntangledHVec::new_deterministic(dim, s))
             .collect();
         let proj = NystromProjector::train(landmarks, d_reduced).unwrap();
+
+        let single = proj.project(&EntangledHVec::new_deterministic(dim, 999));
+        assert_eq!(single.len(), d_reduced);
 
         let vecs: Vec<EntangledHVec> = (100..110)
             .map(|s| EntangledHVec::new_deterministic(dim, s))

@@ -6,8 +6,7 @@ use super::*;
 
 /// Indexes of up to this many vertices clear the visited bits with one fill per search
 /// (`n / 8` bytes, 128 KiB at the limit) instead of listing the words a search sets: the fill
-/// costs less than the per-insert bookkeeping (3 to 7% of search time on 677k-vertex 384-d
-/// graphs, VIBE2 kill test). Larger indexes keep the list, whose clearing cost is the words set.
+/// costs less than the per-insert bookkeeping. Larger indexes keep the list, whose clearing cost is the words set.
 const FILL_CLEAR_MAX: usize = 1 << 20;
 
 /// Visited marks of one search: a bit per vertex, with an 8-bit epoch for the trace records of

@@ -483,7 +483,6 @@ fn encode_cached(
     let words: Vec<&str> = text.split_whitespace().collect();
     let mut level_bundles: Vec<EntangledHVec> = Vec::with_capacity(CHAR_NGRAM_SIZES.len() + 2);
 
-    // Character n-grams at multiple scales.
     for &n in &CHAR_NGRAM_SIZES {
         let windows = match state.chars.len().checked_sub(n) {
             Some(rest) => rest + 1,
@@ -503,7 +502,6 @@ fn encode_cached(
 
     let d = dim as u32;
 
-    // Word-level encoding with positional binding.
     if !words.is_empty() {
         state.flat.clear();
         for (pos, word) in words.iter().enumerate() {
@@ -523,7 +521,6 @@ fn encode_cached(
         level_bundles.push(state.bundle_flat(words.len(), encoder));
     }
 
-    // Word bigrams for phrase structure.
     if words.len() >= 2 {
         state.flat.clear();
         for (pos, pair) in words.windows(2).enumerate() {
@@ -579,7 +576,6 @@ fn encode_reference(text: &str, dim: usize, encoder: TextEncoder) -> EntangledHV
     // This prevents any single level from dominating majority-vote thresholds.
     let mut level_bundles: Vec<EntangledHVec> = Vec::new();
 
-    // Character n-grams at multiple scales.
     for &n in &CHAR_NGRAM_SIZES {
         if chars.len() < n {
             continue;
@@ -606,7 +602,6 @@ fn encode_reference(text: &str, dim: usize, encoder: TextEncoder) -> EntangledHV
         level_bundles.push(encoder.bundle(&ngrams));
     }
 
-    // Word-level encoding with positional binding.
     if !words.is_empty() {
         let word_vecs: Vec<EntangledHVec> = words
             .iter()
@@ -619,7 +614,6 @@ fn encode_reference(text: &str, dim: usize, encoder: TextEncoder) -> EntangledHV
         level_bundles.push(encoder.bundle(&word_vecs));
     }
 
-    // Word bigrams for phrase structure.
     if words.len() >= 2 {
         let phrase_vecs: Vec<EntangledHVec> = words
             .windows(2)
@@ -789,7 +783,6 @@ mod tests {
         assert!(!encode_text_internal("x", dim).indices().is_empty());
         let v = encode_text_internal("hi", dim);
         assert!(!v.indices().is_empty());
-        // Should be similar to "his" (shared bigram "hi")
         let v2 = encode_text_internal("his", dim);
         let v3 = encode_text_internal("xyz", dim);
         assert!(
@@ -847,7 +840,6 @@ mod tests {
                         "{} dim {dim} text {text:?}",
                         encoder.name()
                     );
-                    // A second call answers from the memo tables.
                     assert_eq!(encoder.encode(text, dim).indices(), reference.indices());
                 }
             }

@@ -124,17 +124,14 @@ impl SparseInvertedIndex {
             return Vec::new();
         }
 
-        // 1. Order query dimensions by increasing document frequency (heuristic pruning)
         let mut sorted_qdims = std::mem::take(&mut accumulator.dims);
         sorted_qdims.clear();
         sorted_qdims.extend_from_slice(query_dims);
         sorted_qdims
             .sort_unstable_by_key(|&d| self.df.get(d as usize).cloned().unwrap_or(u32::MAX));
 
-        // 2. Clear and increment epoch
         accumulator.next_epoch();
 
-        // 3. Accumulate intersections
         for &dim in &sorted_qdims {
             if let Some(list) = self.postings.get(dim as usize) {
                 for &doc_id in list {
@@ -144,13 +141,9 @@ impl SparseInvertedIndex {
         }
         accumulator.dims = sorted_qdims;
 
-        // 4. Compute Jaccard and extract Top-K
-        // Jaccard = inter / (m_q + m_d - inter).
-        // With fixed sparsity m_q = m_d = self.m.
         let mut heap =
             BinaryHeap::with_capacity(k.min(accumulator.touched.len()).saturating_add(1));
 
-        // We only need to check doc_ids that were touched
         for &doc_id in &accumulator.touched {
             let inter = accumulator.get_count(doc_id) as f64;
             let denom = query_dims.len() as f64 + self.lengths[doc_id as usize] as f64 - inter;
@@ -269,7 +262,6 @@ impl Accumulator {
     pub fn increment(&mut self, doc_id: u32) {
         let idx = doc_id as usize;
         if idx >= self.seen.len() {
-            // Grow arrays if needed (though max_docs should be pre-sized)
             let new_size = (idx + 1).max(self.seen.len() * 2);
             self.seen.resize(new_size, 0);
             self.counts.resize(new_size, 0);
@@ -308,16 +300,13 @@ mod tests {
         index.finalize();
 
         let mut acc = Accumulator::new(10);
-        // Query overlaps with doc 0 (3 hits), doc 1 (1 hit), doc 2 (2 hits)
         let results = index.query(&[10, 20, 30], 5, &mut acc);
 
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].slot, 0);
-        // inter=3, m=4. J = 3 / (4 + 4 - 3) = 3/5 = 0.6
         assert!((results[0].similarity - 0.75).abs() < 1e-6);
 
         assert_eq!(results[1].slot, 2);
-        // inter=2, m=4. J = 2 / (4 + 4 - 2) = 2/6 = 0.333
         assert!((results[1].similarity - 0.4).abs() < 1e-5);
     }
 

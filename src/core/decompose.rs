@@ -86,7 +86,6 @@ impl Decomposer {
         .collect();
 
         // Irregular verbs: inflected form → lemma.
-        // Covers the ~80 most common irregular English verbs.
         let irregular_verbs: FastMap<&'static str, &'static str> = [
             ("is", "be"),
             ("are", "be"),
@@ -452,8 +451,6 @@ impl Decomposer {
             return vec![sentence.to_string()];
         }
 
-        // Pattern: "A and B verb ..." or "A, B, and C verb ..."
-        // Look for coordinating conjunctions that split subjects
         for (i, &word) in words.iter().enumerate() {
             let lower = word
                 .trim_matches(|c: char| c.is_ascii_punctuation())
@@ -462,8 +459,6 @@ impl Decomposer {
                 continue;
             }
 
-            // Check if there's a shared verb after the conjunction subject
-            // Pattern: "NP1 and NP2 verb ..." → "NP1 verb ..." + "NP2 verb ..."
             let after_conj = &words[i + 1..];
             if let Some(verb_offset) = self.find_verb_position(after_conj) {
                 if verb_offset > 0 {
@@ -484,7 +479,6 @@ impl Decomposer {
     }
 
     fn find_verb_position(&self, words: &[&str]) -> Option<usize> {
-        // First pass: prefer known irregular/auxiliary verbs (high confidence)
         for (i, &word) in words.iter().enumerate() {
             let lower = word
                 .trim_matches(|c: char| c.is_ascii_punctuation())
@@ -531,7 +525,6 @@ impl Decomposer {
                 continue;
             }
 
-            // Look for past participle after auxiliary (possibly with adverb between)
             let mut pp_idx = i + 1;
             while pp_idx < tokens.len()
                 && self
@@ -547,7 +540,6 @@ impl Decomposer {
             let pp_lower = tokens[pp_idx].to_lowercase();
             let lemma = self.lemmatize_verb(&pp_lower)?;
 
-            // Look for "by" after the participle
             let by_idx =
                 (pp_idx + 1..tokens.len()).find(|&j| tokens[j].eq_ignore_ascii_case("by"))?;
 
@@ -577,7 +569,6 @@ impl Decomposer {
             if !copulas.contains(&lower.as_str()) || i == 0 || i + 1 >= tokens.len() {
                 continue;
             }
-            // Skip if next word looks like a past participle (passive pattern)
             if i + 1 < tokens.len() {
                 let next_lower = tokens[i + 1].to_lowercase();
                 if self.lemmatize_verb(&next_lower).is_some()
@@ -613,12 +604,10 @@ impl Decomposer {
                 continue;
             };
 
-            // Skip copulas (handled separately)
             if lemma == "be" {
                 continue;
             }
 
-            // Pattern: NP verb prep NP → verb_prep
             if i + 2 < tokens.len() {
                 let next_lower = tokens[i + 1].to_lowercase();
                 if self.prepositions.contains(next_lower.as_str()) {
@@ -635,7 +624,6 @@ impl Decomposer {
                 }
             }
 
-            // Pattern: NP verb NP
             if i + 1 < tokens.len() {
                 let subject = self.extract_np(&tokens[..i]);
                 let object = self.extract_np(&tokens[i + 1..]);

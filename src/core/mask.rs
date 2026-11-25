@@ -154,7 +154,6 @@ mod tests {
         let m = mask("correct horse");
         let a = EntangledHVec::new_deterministic(DIM, 1);
         let b = EntangledHVec::new_deterministic(DIM, 2);
-        // Overlapping pair so the preserved similarity is non-trivial.
         let c = EntangledHVec::bundle(&[&a, &b]);
         let (ma, mb, mc) = (
             m.apply(&a).unwrap(),

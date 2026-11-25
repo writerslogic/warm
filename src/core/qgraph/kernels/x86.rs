@@ -306,7 +306,6 @@ pub(super) unsafe fn dot_i4_avx2(q: &[i8], p: &[i8]) -> i32 {
     // so `i + 16 <= p.len()` and `2 * i + 32 <= q.len()`.
     while i + 16 <= p.len() {
         let x = _mm_loadu_si128(p.as_ptr().add(i).cast());
-        // Sign-extend each nibble: ((n & 15) ^ 8) - 8.
         let lo = _mm_sub_epi8(_mm_xor_si128(_mm_and_si128(x, mask), eight), eight);
         let hi = _mm_sub_epi8(
             _mm_xor_si128(_mm_and_si128(_mm_srli_epi16::<4>(x), mask), eight),
@@ -362,8 +361,7 @@ pub(super) unsafe fn dot_i4_avx2_x4(q: &[i8], rows: [&[i8]; 4]) -> [i32; 4] {
 
 /// [`dot_i8_avx2`] with `vpdpbusd` on 256-bit registers (AVX512-VNNI with VL): `a` is biased
 /// by 128 into the unsigned operand, so `sum (a + 128) b = a.b + 128 sum b`, and a second
-/// `vpdpbusd` against ones yields `sum b` to subtract. Exact over the whole i8 range. The
-/// 512-bit forms are not used: they measured no faster on 128 and 256-wide rows.
+/// `vpdpbusd` against ones yields `sum b` to subtract. Exact over the whole i8 range.
 ///
 /// # Safety
 /// The CPU supports AVX512F, AVX512VL, AVX512-VNNI and AVX2; `a` and `b` have the same

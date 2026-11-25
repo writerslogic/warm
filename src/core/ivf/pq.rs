@@ -130,7 +130,6 @@ fn train_sub_codebook(data: &[Vec<u32>], range_start: u32, range_end: u32) -> Ve
         return (0..NUM_CENTROIDS).map(|_| Vec::new()).collect();
     }
 
-    // Count distinct sub-index patterns to cap k
     let mut unique: Vec<&Vec<u32>> = data.iter().collect();
     unique.sort();
     unique.dedup();
@@ -139,12 +138,10 @@ fn train_sub_codebook(data: &[Vec<u32>], range_start: u32, range_end: u32) -> Ve
         return (0..NUM_CENTROIDS).map(|_| Vec::new()).collect();
     }
 
-    // Farthest-point (maxmin) initialization
     let mut centroids: Vec<Vec<u32>> = Vec::with_capacity(k);
     centroids.push(data[0].clone());
 
     for _ in 1..k {
-        // For each point, find min distance to existing centroids
         let mut best_candidate = &data[0];
         let mut best_dist = 0u32;
         for d in data {
@@ -162,7 +159,6 @@ fn train_sub_codebook(data: &[Vec<u32>], range_start: u32, range_end: u32) -> Ve
     }
 
     for _ in 0..MAX_ITERS {
-        // Assignment
         let assignments: Vec<usize> = data
             .iter()
             .map(|d| {
@@ -176,7 +172,6 @@ fn train_sub_codebook(data: &[Vec<u32>], range_start: u32, range_end: u32) -> Ve
             })
             .collect();
 
-        // Update: majority vote on which indices to keep
         let mut changed = false;
         for (c, centroid) in centroids.iter_mut().enumerate().take(k) {
             let members: Vec<&Vec<u32>> = data
@@ -193,7 +188,6 @@ fn train_sub_codebook(data: &[Vec<u32>], range_start: u32, range_end: u32) -> Ve
             let count = members.len();
             let threshold = count / 2 + 1;
 
-            // Count frequency of each index in this cluster
             let mut all: Vec<u32> = members.iter().flat_map(|m| m.iter().copied()).collect();
             all.sort_unstable();
 
@@ -217,7 +211,6 @@ fn train_sub_codebook(data: &[Vec<u32>], range_start: u32, range_end: u32) -> Ve
                 }
             }
 
-            // Ensure indices stay within range
             new_centroid.retain(|&idx| idx >= range_start && idx < range_end);
 
             if new_centroid != *centroid {
@@ -231,7 +224,6 @@ fn train_sub_codebook(data: &[Vec<u32>], range_start: u32, range_end: u32) -> Ve
         }
     }
 
-    // Pad to NUM_CENTROIDS if we had fewer samples
     while centroids.len() < NUM_CENTROIDS {
         centroids.push(Vec::new());
     }
@@ -244,7 +236,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_encode_compression_ratio() {
+    fn codes_and_adc_table_have_the_pq_shape() {
         let dim = 10000;
         let samples: Vec<EntangledHVec> = (0..64)
             .map(|s| EntangledHVec::new_deterministic(dim, s))
@@ -252,8 +244,10 @@ mod tests {
         let pq = PQEncoder::train(&samples, dim);
 
         let v = EntangledHVec::new_deterministic(dim, 999);
-        let codes = pq.encode(&v);
-        assert_eq!(codes.len(), 16);
+        assert_eq!(pq.encode(&v).len(), 16);
+        let table = pq.build_adc_table(&v);
+        assert_eq!(table.len(), 16);
+        assert_eq!(table[0].len(), 256);
     }
 
     #[test]
@@ -269,8 +263,6 @@ mod tests {
         let table = pq.build_adc_table(v);
         let dist = PQEncoder::adc_distance(&table, &codes);
 
-        // Self-distance should be very low (quantization error only)
-        // For sparse vectors with ~39 active indices, error should be small
         let max_expected = (dim as u32) / 10;
         assert!(
             dist < max_expected,
@@ -278,19 +270,5 @@ mod tests {
             dist,
             max_expected
         );
-    }
-
-    #[test]
-    fn test_adc_table_dimensions() {
-        let dim = 10000;
-        let samples: Vec<EntangledHVec> = (0..32)
-            .map(|s| EntangledHVec::new_deterministic(dim, s))
-            .collect();
-        let pq = PQEncoder::train(&samples, dim);
-
-        let q = EntangledHVec::new_deterministic(dim, 42);
-        let table = pq.build_adc_table(&q);
-        assert_eq!(table.len(), 16);
-        assert_eq!(table[0].len(), 256);
     }
 }

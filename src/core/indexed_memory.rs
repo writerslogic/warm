@@ -457,7 +457,6 @@ mod tests {
         let mut noisy = EntangledHVec::new_deterministic(16384, 42)
             .indices()
             .to_vec();
-        // Replace 25% of the active indices (16 of 64) with seeded noise.
         for (i, item) in noisy.iter_mut().take(16).enumerate() {
             *item = (crate::core::entangled::hash_u64(7, i as u64) % 16384) as u32;
         }

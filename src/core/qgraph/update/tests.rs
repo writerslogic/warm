@@ -1235,7 +1235,6 @@ fn batch_insert_is_atomic_reachable_and_survives_reopen() {
     let rows = data(n, dim);
     let index = UpdatableVGraph::create(&path, &[], dim, &params()).unwrap();
     let ids: Vec<u32> = (0..n as u32).map(|i| i * 3).collect();
-    // A duplicate rejects the whole batch.
     let mut bad = ids[..10].to_vec();
     bad[9] = bad[0];
     assert!(matches!(

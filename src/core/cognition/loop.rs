@@ -179,7 +179,6 @@ fn cognition_thread(
 
         state.cycle_count.fetch_add(1, Ordering::SeqCst);
 
-        // Sleep in small increments so we can respond to stop quickly
         let mut remaining = config.interval;
         let tick = Duration::from_millis(100);
         while remaining > Duration::ZERO && !state.stop.load(Ordering::SeqCst) {
@@ -265,7 +264,6 @@ mod tests {
         triple_store.add("berlin", "located_in", "europe", "c7");
         triple_store.add("london", "located_in", "europe", "c8");
         triple_store.add("madrid", "located_in", "europe", "c9");
-        // tokyo missing located_in
 
         (atom_mem, triple_store)
     }
@@ -342,11 +340,8 @@ mod tests {
         let insights = cognition.state().take_insights();
         assert!(!insights.is_empty());
 
-        // After take, count should be 0 (or only new ones from ongoing cycle)
-        // Stop first to prevent race
         cognition.stop();
         let remaining = cognition.state().take_insights();
-        // This is fine - just checking take works
         let _ = remaining;
     }
 

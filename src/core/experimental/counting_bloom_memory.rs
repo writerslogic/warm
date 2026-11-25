@@ -179,8 +179,6 @@ mod tests {
 
     #[test]
     fn discriminates_at_1000_items() {
-        // Where the binary readout is already collapsing (AUC~0.87), counting is
-        // near-perfect. Assert a comfortable, theory-predicted margin.
         let dim = 16384;
         let mem = store(dim, 1000);
         let members: Vec<f64> = (0..1000)
@@ -205,8 +203,6 @@ mod tests {
 
     #[test]
     fn still_discriminates_where_binary_is_dead() {
-        // At 2000 items the binary OR-union readout is at chance (AUC~0.51);
-        // counting still separates the means by a clear margin (~4x capacity).
         let dim = 16384;
         let mem = store(dim, 2000);
         let members: Vec<f64> = (0..400)

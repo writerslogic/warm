@@ -24,7 +24,6 @@ impl IVFIndex {
         let n_landmarks = config.n_landmarks.min(n);
         let n_clusters = config.n_clusters.min(n);
 
-        // Seed from n to vary the landmark sample with data size.
         let landmark_seed = n as u64;
         let mut rng = StdRng::seed_from_u64(landmark_seed);
         let mut indices: Vec<usize> = (0..n).collect();
@@ -40,7 +39,6 @@ impl IVFIndex {
         let projector = NystromProjector::train(landmarks, config.d_reduced)?;
         let projected = projector.project_batch(vectors);
 
-        // Decorrelate clustering from landmark sampling.
         let kmeans = KMeansNystrom::train(&projected, n_clusters, landmark_seed.wrapping_add(1));
 
         let assignments: Vec<usize> = projected.iter().map(|p| kmeans.assign(p)).collect();

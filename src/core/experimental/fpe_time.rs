@@ -302,8 +302,6 @@ mod tests {
 
     #[test]
     fn window_code_tracks_the_exact_integral_at_the_harness_scale() {
-        // sigma = 7 days at dimension 1024 with a window of about 500 days, the harness regime:
-        // (end - start) * (pi / 2) / (sigma * dim) is about 0.1.
         let sigma = 7.0;
         let enc = FpeTime::new(Kernel::Laplace, sigma, 1024, 164).unwrap();
         let (start, end) = (10_000.0, 10_500.0);

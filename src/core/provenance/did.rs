@@ -51,13 +51,11 @@ fn ed25519_multikey(encoded: &str) -> Option<[u8; 32]> {
 /// that JSON base64url-encoded WITH canonical '=' padding, matching cogmem's
 /// `agent_did_jwk` so the two emit byte-identical issuer DIDs.
 pub fn did_jwk_from_ed25519(public_key: &[u8; 32]) -> String {
-    // base64url, no padding, for the JWK `x` parameter.
     let b64url_nopad = GeneralPurpose::new(
         &alphabet::URL_SAFE,
         GeneralPurposeConfig::new().with_encode_padding(false),
     );
     let x = b64url_nopad.encode(public_key);
-    // Compact JWK with sorted keys: crv, kty, x.
     let jwk_json = format!("{{\"crv\":\"Ed25519\",\"kty\":\"OKP\",\"x\":\"{x}\"}}");
     // Canonical '=' padding on the method-specific id (c2pa-rs / cogmem requirement).
     let b64url_pad = GeneralPurpose::new(&alphabet::URL_SAFE, GeneralPurposeConfig::new());
