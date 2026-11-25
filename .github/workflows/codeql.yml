@@ -47,11 +47,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-
+      # Toolchains go before init so CodeQL traces the binaries the build uses.
       # Go links the C library built from bindings/c, as in bindings.yml.
       - if: matrix.language == 'go'
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
@@ -61,6 +57,25 @@ jobs:
         uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version: "1.24"
+      # Committed uniffi-generated Kotlin and Java sources compile without the native library.
+      # Maven needs JDK 25 (as in bindings.yml); the Kotlin module's Gradle toolchain is 17.
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            25
+      # The binaryTarget needs the xcframework; the macOS slice is enough to compile the package.
+      - if: matrix.language == 'swift'
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
       - name: Build Go binding
         if: matrix.language == 'go'
         shell: bash
@@ -74,15 +89,6 @@ jobs:
           go build ./...
           go vet ./...
 
-      # Committed uniffi-generated Kotlin and Java sources compile without the native library.
-      # Maven needs JDK 25 (as in bindings.yml); the Kotlin module's Gradle toolchain is 17.
-      - if: matrix.language == 'java-kotlin'
-        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
-        with:
-          distribution: temurin
-          java-version: |
-            17
-            25
       - name: Build Java and Kotlin bindings
         if: matrix.language == 'java-kotlin'
         shell: bash
@@ -91,11 +97,6 @@ jobs:
           bindings/kotlin/scripts/bootstrap-gradle-wrapper.sh
           (cd bindings/kotlin && JAVA_HOME="$JAVA_HOME_17_X64" ./gradlew --no-daemon :jvm:compileKotlin :jvm:compileTestKotlin)
 
-      # The binaryTarget needs the xcframework; the macOS slice is enough to compile the package.
-      - if: matrix.language == 'swift'
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
-        with:
-          toolchain: stable
       - name: Build Swift binding
         if: matrix.language == 'swift'
         run: |
