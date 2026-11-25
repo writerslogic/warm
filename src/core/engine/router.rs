@@ -87,12 +87,9 @@ impl QueryPlanner {
             };
         }
 
-        // Exact inverted scoring costs about N*s^2/D counter increments. On
-        // benchmarks/results/route_sweep.json (Apple M4, N = 1e3..1e6, D = 4096 and
-        // 16384, s = D/256, random and clustered codes) it had recall@10 = 1.0 at every
-        // point. NSG and IVF were faster only on clustered codes at N >= 1e5, with
-        // recall@10 <= 0.37, so no usable crossover was reached in that range.
-        // Denser queries are unmeasured and fall through to the approximate indexes.
+        // Exact inverted scoring costs about N*s^2/D counter increments and is exact; the
+        // approximate indexes did not win at usable recall. Denser queries fall through to them
+        // (see benchmarks/results/route_sweep.json).
         if self.inverted_available
             && (s <= SPARSE_INDEX_THRESHOLD || s < self.dimensions / INVERTED_SPARSITY_DENOM)
         {
