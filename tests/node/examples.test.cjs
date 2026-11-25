@@ -25,8 +25,11 @@ const examples = [
     file: 'examples/triplet-knowledge.mjs',
     checks: [
       out => assert.ok(out.includes('Stored 5 triples (meaningEnabled=true).')),
-      out => assert.ok(out.includes('france')),
-      out => assert.ok(out.includes('europe')),
+      out => {
+        const block = out.split('Structural query (paris, capital_of, ?):')[1].split('Multi-hop')[0]
+        assert.deepEqual([...block.matchAll(/^\s+(\S+) \(confidence=/gm)].map(m => m[1]), ['france'])
+      },
+      out => assert.match(out, /Multi-hop query[^\n]*\n\s+europe \(/),
     ],
   },
   {
@@ -40,9 +43,12 @@ const examples = [
   {
     file: 'examples/analogy-reasoning.mjs',
     checks: [
-      out => assert.ok(out.includes('Memorized 6 lexical items.')),
-      out => assert.ok(out.includes('Analogy query (walking:walked :: talking:?):')),
-      out => assert.match(out, /\b(walking|walked|talking|talked|playing|played) \(similarity=/),
+      out => assert.ok(out.includes('Memorized 5 lexical items.')),
+      out => {
+        const hits = [...out.split('Analogy query (walking:walked :: talking:?):')[1].matchAll(/^\s+(\S+) \(similarity=/gm)].map(m => m[1])
+        assert.equal(hits[0], 'talked')
+        for (const term of ['walking', 'walked', 'talking']) assert.ok(!hits.includes(term), `${term} must not be a hit`)
+      },
     ],
   },
   {
