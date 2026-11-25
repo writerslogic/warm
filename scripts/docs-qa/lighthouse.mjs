@@ -16,7 +16,7 @@ const version = process.env.VERSION ?? 'dev'
 const threshold = Number(process.env.THRESHOLD ?? 95)
 // Shared CI runners are slower and noisier than a workstation: the performance floor can be set lower there.
 const floors = { performance: Number(process.env.PERF_THRESHOLD ?? threshold) }
-const paths = extra.length ? extra : ['/', '/concepts/holographic/']
+const paths = extra.length ? extra : ['/', '/concepts/']
 const categories = ['performance', 'accessibility', 'best-practices', 'seo']
 
 const { close } = await serve(root, port)

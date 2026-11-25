@@ -10,7 +10,7 @@ import { serve } from './serve.mjs'
 const [root, ...extra] = process.argv.slice(2)
 const port = Number(process.env.PORT ?? 8123)
 const version = process.env.VERSION ?? 'dev'
-const paths = extra.length ? extra : (process.env.PAGES ?? '/,/quickstart/,/concepts/holographic/,/reference/faq/,/reference/glossary/,/community/').split(',')
+const paths = extra.length ? extra : (process.env.PAGES ?? '/,/quickstart/,/concepts/,/reference/faq/,/integrations/,/server/').split(',')
 const widths = { desktop: 1440, tablet: 820, phone: 390 }
 
 const { close } = await serve(root, port)

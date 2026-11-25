@@ -20,7 +20,7 @@
         <p class="warm-lede">{{ warm.lede }}</p>
         <div class="warm-cta">
           <a class="warm-btn warm-btn--primary" href="{{ 'quickstart/' | url }}">Get started</a>
-          <a class="warm-btn" href="{{ 'get-started/install/' | url }}">Install</a>
+          <a class="warm-btn" href="{{ 'quickstart/' | url }}">Install</a>
           <a class="warm-btn" href="{{ 'api/' | url }}">API reference</a>
           <a class="warm-btn" href="{{ 'concepts/' | url }}">What &ldquo;holographic&rdquo; means</a>
           <a class="warm-btn warm-btn--ghost" href="{{ config.repo_url }}">GitHub</a>
@@ -38,11 +38,11 @@
       <h2 id="start-title">What are you building?</h2>
       <p class="warm-sub">Choose a path, run an example, then inspect the evidence it returns.</p>
       <div class="warm-grid">
-        <a class="warm-card warm-feature" href="{{ 'integrations/editors/' | url }}"><h3>Memory for an editor</h3><p>Connect an MCP host to a local store. Remember, recall and inspect memories across sessions.</p></a>
-        <a class="warm-card warm-feature" href="{{ 'get-started/choose/' | url }}"><h3>Search inside an app</h3><p>Choose Rust, Node or a Python HTTP client, with clear package and storage boundaries.</p></a>
-        <a class="warm-card warm-feature" href="{{ 'guides/evaluate-search/' | url }}"><h3>Evaluate your results</h3><p>Check known answers, inspect source passages and compare retrieval on your own questions.</p></a>
+        <a class="warm-card warm-feature" href="{{ 'integrations/' | url }}"><h3>Memory for an editor</h3><p>Connect an MCP host to a local store. Remember, recall and inspect memories across sessions.</p></a>
+        <a class="warm-card warm-feature" href="{{ 'integrations/' | url }}"><h3>Search inside an app</h3><p>Choose Rust, Node or a Python HTTP client, with clear package and storage boundaries.</p></a>
+        <a class="warm-card warm-feature" href="{{ 'benchmarks/' | url }}"><h3>Evaluate your results</h3><p>Check known answers, inspect source passages and compare retrieval on your own questions.</p></a>
       </div>
-      <p class="warm-fine">Already installing? <a href="{{ 'get-started/troubleshooting/' | url }}">Troubleshoot setup and retrieval</a>.</p>
+      <p class="warm-fine">Already installing? <a href="{{ 'reference/faq/' | url }}">Troubleshoot setup and retrieval</a>.</p>
     </section>
 
     <section class="warm-section" id="install" aria-labelledby="install-title">
@@ -95,7 +95,7 @@
 
     <section class="warm-section" id="architecture" aria-labelledby="arch-title">
       <h2 id="arch-title">One engine, two layers</h2>
-      <p class="warm-sub">Document search is a conventional hybrid retriever. The vector-symbolic layer is the associative memory. Both sit on one crash-safe store. <a href="{{ 'ARCHITECTURE/' | url }}">Module map &rarr;</a></p>
+      <p class="warm-sub">Document search is a conventional hybrid retriever. The vector-symbolic layer is the associative memory. Both sit on one crash-safe store. <a href="{{ 'concepts/' | url }}">Module map &rarr;</a></p>
       <div class="warm-diagram" tabindex="0" role="region" aria-label="Architecture diagram">{% include "partials/architecture.html" %}</div>
     </section>
 
