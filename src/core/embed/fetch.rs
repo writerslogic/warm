@@ -18,13 +18,29 @@ use super::registry::ModelSpec;
 /// Replaces the Hugging Face host, for mirrors (the path layout must match).
 pub const ENV_MIRROR: &str = "WARM_EMBED_MIRROR";
 
+/// `url` without userinfo or query, for messages: a mirror URL may carry credentials.
+fn shown(url: &str) -> String {
+    let url = url.split(['?', '#']).next().unwrap_or("");
+    let Some((scheme, rest)) = url.split_once("://") else {
+        return url.to_owned();
+    };
+    let (authority, path) = rest.split_once('/').unwrap_or((rest, ""));
+    let host = authority.rsplit_once('@').map_or(authority, |(_, host)| host);
+    if path.is_empty() {
+        format!("{scheme}://{host}")
+    } else {
+        format!("{scheme}://{host}/{path}")
+    }
+}
+
 fn download_file(url: &str, dest: &Path, want_sha: &str, max: u64) -> Result<()> {
+    let shown_url = shown(url);
     let read_limit = max
         .checked_add(1)
         .context("pinned download size overflow")?;
     let mut resp = ureq::get(url)
         .call()
-        .with_context(|| format!("download {url}"))?;
+        .with_context(|| format!("download {shown_url}"))?;
     let mut reader = resp.body_mut().with_config().limit(read_limit).reader();
     let mut file =
         std::fs::File::create(dest).with_context(|| format!("create {}", dest.display()))?;
@@ -34,12 +50,12 @@ fn download_file(url: &str, dest: &Path, want_sha: &str, max: u64) -> Result<()>
     loop {
         let n = reader
             .read(&mut buf)
-            .with_context(|| format!("read {url}"))?;
+            .with_context(|| format!("read {shown_url}"))?;
         if n == 0 {
             break;
         }
         total += n as u64;
-        ensure!(total <= max, "{url} is larger than the pinned {max} bytes");
+        ensure!(total <= max, "{shown_url} is larger than the pinned {max} bytes");
         hash.update(&buf[..n]);
         file.write_all(&buf[..n])?;
     }
@@ -47,7 +63,7 @@ fn download_file(url: &str, dest: &Path, want_sha: &str, max: u64) -> Result<()>
     let got = hex(&hash.finalize());
     ensure!(
         got.eq_ignore_ascii_case(want_sha),
-        "sha256 mismatch for {url}: expected {want_sha}, downloaded {got}; refusing to use it"
+        "sha256 mismatch for {shown_url}: expected {want_sha}, downloaded {got}; refusing to use it"
     );
     Ok(())
 }
@@ -155,6 +171,7 @@ pub fn download_pack(spec: &ModelSpec, cache: &Path) -> Result<PathBuf> {
              pack pinned by sha256, pack {sha}) into {cache}. Set {offline}=1 or pass offline=True \
              to forbid downloads.",
             id = spec.id,
+            base = shown(base),
             mb = bytes as f64 / 1e6,
             sha = spec.pack_sha256,
             cache = cache.display(),
@@ -171,6 +188,13 @@ pub fn download_pack(spec: &ModelSpec, cache: &Path) -> Result<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn shown_url_drops_credentials_and_query() {
+        assert_eq!(shown("https://u:tok@m.example/a/b?sig=x"), "https://m.example/a/b");
+        assert_eq!(shown("https://huggingface.co"), "https://huggingface.co");
+        assert_eq!(shown("http://t@h:8080"), "http://h:8080");
+    }
 
     #[test]
     fn local_http_fetch_verifies_bytes_and_single_flights_retry_after_corruption() {

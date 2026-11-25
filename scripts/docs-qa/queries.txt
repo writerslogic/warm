@@ -2,14 +2,13 @@
 # These are the questions a reader types; a line that returns nothing is a defect in the docs, not in this file.
 quickstart | quickstart
 install | quickstart,integrations
-getting started | quickstart
-encrypt a store | quickstart,security
+encrypt a store | quickstart,security,faq
 passphrase | security,faq
 holographic | concepts,faq
 hypervector | concepts
 hopfield | concepts
-bm25 | concepts,faq
-recall@k | benchmarks,faq
+bm25 | concepts,faq,benchmarks
+recall | benchmarks,faq
 warm-server | server
 api key | server
 python client | api/,reference/api,integrations
