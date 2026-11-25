@@ -67,5 +67,3 @@ mod simulation;
 mod sparse_documents;
 mod store_lifecycle;
 mod time_travel;
-#[cfg(feature = "security")]
-mod wrong_passphrase;

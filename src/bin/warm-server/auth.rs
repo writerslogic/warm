@@ -586,7 +586,6 @@ mod tests {
         assert!(p.scopes.has(Scope::Write), "admin implies write");
         assert!(p.is_global());
 
-        // Same id, wrong secret; truncated token; no header.
         let forged = format!("warm_a.{}", "0".repeat(64));
         for bad in [
             forged.as_str(),
@@ -627,7 +626,6 @@ mod tests {
         std::fs::write(&path, serde_json::to_vec(&file).unwrap()).unwrap();
         auth.reload().unwrap();
         assert!(auth.authenticate(&headers(&old.0)).is_err());
-        // A broken file leaves the previous keys in force.
         std::fs::write(&path, b"{").unwrap();
         assert!(auth.reload().is_err());
         assert_eq!(auth.store.read().keys.len(), 1);

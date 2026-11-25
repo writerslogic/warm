@@ -43,8 +43,6 @@ const DOC_IDS: usize = 5;
 const WORDS: usize = 5;
 const T0: Millis = 1_000;
 
-// Utilities
-
 struct Rng(u64);
 
 impl Rng {
@@ -307,8 +305,6 @@ impl Epoch {
     }
 }
 
-// The live side
-
 #[derive(Clone, Debug, PartialEq)]
 struct Snapshot {
     listing: Value,
@@ -517,8 +513,6 @@ impl Sim {
             retained: true,
         });
     }
-
-    // -- operations ---------------------------------------------------------------------------
 
     fn op(&mut self) {
         let roll = self.rng.below(100);

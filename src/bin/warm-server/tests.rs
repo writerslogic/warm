@@ -336,7 +336,6 @@ fn snapshot_restore_round_trips_and_keeps_the_replaced_store() {
         state.snapshot_path("t", &previous).is_ok(),
         "replaced store kept"
     );
-    // A broken staged directory fails to reopen and the live store is rolled back.
     let crate::limits::Begin::Proceed(key) =
         state.idem.begin("t", "before-failure", [0; 32]).unwrap()
     else {
