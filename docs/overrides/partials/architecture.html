@@ -1,7 +1,7 @@
 {#- Copyright 2024-2026 WritersLogic Contributors
     SPDX-License-Identifier: Apache-2.0
     The engine diagram. Surface names come from docs/_data/site.yml; the engine boxes mirror
-    docs/ARCHITECTURE.md and docs/concepts/holographic.md. -#}
+    docs/concepts.md. -#}
 {% set surfaces = config.extra.warm.runtimes | selectattr("status", "equalto", "available") | list %}
 <svg class="ad" viewBox="0 0 960 470" role="img" aria-labelledby="ad-title ad-desc">
   <title id="ad-title">WARM architecture</title>

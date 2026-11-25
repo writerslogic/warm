@@ -97,3 +97,18 @@ The file-format promise: a store written by any 1.x opens read-write in every la
 migration, and released 0.x stores (v0.6.1 is in `tests/golden/`) open in the current code. The
 engine never converts a store silently; `warm-format upgrade` writes a new store and leaves the
 old one untouched. An older reader that meets a version it does not know refuses to open it.
+
+## Verify a release
+
+Every release asset carries a GitHub build attestation and a line in `SHA256SUMS`.
+
+```sh
+gh attestation verify <downloaded wheel or .tgz> --repo writerslogic/warm
+npm audit signatures        # in a project that depends on the npm package
+sha256sum -c SHA256SUMS     # next to the downloaded release assets
+```
+
+`reproducible.yml` builds `warm-eval`, `warm-server`, the napi library, the Python wheel and the
+crate on two runners from different checkout paths and fails unless the hashes match. The wheel
+may differ only in the SBOM maturin embeds, which records the absolute checkout path. The
+cross-compiled npm bindings and wheels are attested but not compared.

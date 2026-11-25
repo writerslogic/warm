@@ -32,5 +32,5 @@ jobs:
         run: |
           set -euo pipefail
           if git diff --exit-code -- CHANGELOG.md; then exit 0; fi
-          echo "::warning::CHANGELOG.md is stale; follow docs/RELEASING.md with git-cliff 2.14.2 and commit it as chore: Update changelog"
+          echo "::warning::CHANGELOG.md is stale; regenerate it with git-cliff 2.14.2 and commit it as chore: Update changelog"
           [ "$REF_TYPE" != "tag" ]

@@ -125,5 +125,22 @@ GPG or SSH signature.
 
 ## Release process
 
-Maintainers cut releases; see [docs/RELEASING.md](docs/RELEASING.md). Contributors do not
-tag, publish packages, or edit version numbers.
+Maintainers cut releases from signed tags; contributors do not tag, publish packages, or edit
+version numbers. To check a published artefact, see
+[Verify a release](docs/security.md#verify-a-release).
+
+## Governance
+
+WARM is maintained by WritersLogic, Inc. with one maintainer (`@dcondrey`, in
+`.github/CODEOWNERS`), who merges to `main`, cuts releases, approves the publishing environments
+and triages security reports. Anyone may open issues and pull requests under the DCO. A
+contributor with several merged, non-trivial pull requests can ask in an issue for write access.
+
+Changes land only through pull requests. Branch protection requires signed commits, resolved
+conversations, a code-owner review and an up-to-date branch. Design questions are settled in the
+issue before code is written, and the reason is recorded there. A change to a public API, a stored
+format or a security property needs a test. Conduct is governed by the
+[Code of Conduct](CODE_OF_CONDUCT.md); vulnerabilities by [SECURITY.md](SECURITY.md).
+
+No second maintainer is designated yet. WritersLogic, Inc. owns the repository, and its
+organisation owners can grant access if the maintainer becomes unavailable.

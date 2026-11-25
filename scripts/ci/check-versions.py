@@ -30,7 +30,7 @@ PLATFORMS = {
 }
 
 
-DOC_SKIP_DIRS = ("docs/research/", "docs/migrations/", "docs/integrations/frameworks/")
+DOC_SKIP_DIRS = ()
 DOC_VERSION = re.compile(r"(?<![\w@/.-])(%s)(?:`)?(?:@|==|\s+)v?(\d+\.\d+\.\d+)(?![\w.-])")
 
 

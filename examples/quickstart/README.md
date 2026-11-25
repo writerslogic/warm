@@ -26,4 +26,4 @@ Build the server once with `cargo build --release --features server,security --b
 
 The Rust and Node programs scan every file of an encrypted store and assert that none holds the
 passage text, `documents.text` included (see
-[privacy limits](../../docs/concepts/privacy-limits.md)).
+[security](../../docs/security.md)).
