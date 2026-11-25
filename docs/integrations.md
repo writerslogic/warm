@@ -36,6 +36,8 @@ Python 3.11+ (tested on 3.12), `warm-sdk` >= 0.1.3.
 ## JavaScript and TypeScript
 
 Native engine in process; Node 20 or newer, `writerslogic-warm` >= 0.6.5.
+Standalone examples of the embedded `WarmMemorySystem` surface (search, triplets, sequences,
+analogies, external embeddings) are listed in [examples/README.md](https://github.com/writerslogic/warm/blob/main/examples/README.md).
 
 | Adapter | Host and tested version | Package | Status |
 |---|---|---|---|

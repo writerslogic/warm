@@ -15,6 +15,11 @@ Every example runs on this machine with no API key, no network and no model down
 | [`temporal-memory.cjs`](temporal-memory.cjs) | Node | Remember, replace, forget, verify across separate processes | `node examples/temporal-memory.cjs remember ./demo` (then `replace`, `forget`, `verify`) | built addon |
 | [`local-documents.mjs`](local-documents.mjs) | Node | Document memory with optional local embedder and reranker | `node examples/local-documents.mjs ./demo` | built addon; model dirs optional (`WARM_EMBEDDING_DIR`, `WARM_RERANKER_DIR`) |
 | [`node-observability.mjs`](node-observability.mjs) | Node | `explainQuery`, `indexStatus`, `storageHealth` | `cd examples && node node-observability.mjs` | built addon |
+| [`semantic-search.mjs`](semantic-search.mjs) | Node | Ingest documents with `DocumentMemory` and search by BM25 relevance | `node examples/semantic-search.mjs` | built addon |
+| [`triplet-knowledge.mjs`](triplet-knowledge.mjs) | Node | Store relational triples (`meaningEnabled: true`) and run `structuralQuery` and `multiHopQuery` | `node examples/triplet-knowledge.mjs` | built addon |
+| [`sequence-encoding.mjs`](sequence-encoding.mjs) | Node | Encode ordered sequences and query with `querySequence` | `node examples/sequence-encoding.mjs` | built addon |
+| [`analogy-reasoning.mjs`](analogy-reasoning.mjs) | Node | Solve `A:B :: C:?` analogies over memorized lexical hypervectors with `findAnalogy` | `node examples/analogy-reasoning.mjs` | built addon |
+| [`external-embeddings.mjs`](external-embeddings.mjs) | Node | Ingest and query `Float32Array` vectors via `memorizeVector` and `queryVector` (`WARM_ENCRYPTION=off`) | `node examples/external-embeddings.mjs` | built addon |
 | [`organizational_knowledge.rs`](../docs/integrations.md) | Rust | Namespaced import, search and dry-run forget of org documents | `cargo run --release --example organizational_knowledge -- import ./store eng doc.json` | Rust |
 | [`zero_trust_demo.rs`](zero_trust_demo.rs) | Rust | Client-side vector masking: ranking without seeing plaintext coordinates | `cargo run --release --features security --example zero_trust_demo` | Rust |
 | [`verify_cogmem_sample.rs`](verify_cogmem_sample.rs) | Rust | Verify the cogmem C2PA sample's signed statements in [`fixtures/`](fixtures) | `cargo run --release --features provenance --example verify_cogmem_sample` | Rust |
