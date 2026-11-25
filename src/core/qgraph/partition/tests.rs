@@ -840,3 +840,80 @@ fn partition_prefix_acceptance() {
         std::fs::write(p, rep + "\n").unwrap();
     }
 }
+
+#[test]
+fn nearest_all_matches_brute_force_around_the_tiling_threshold() {
+    let dim = 8;
+    let mut rng = SplitMix(41);
+    for k in [63usize, 64, 65, 300] {
+        // Centres on a coarse lattice and rows within a small jitter of one, so no row is near a tie.
+        let centres: Vec<f32> = (0..k * dim).map(|i| ((i * 7919) % 97) as f32).collect();
+        let owners: Vec<usize> = (0..2000)
+            .map(|_| (rng.next() % k as u64) as usize)
+            .collect();
+        let rows: Vec<f32> = owners
+            .iter()
+            .flat_map(|&c| {
+                let jitter: Vec<f32> = (0..dim)
+                    .map(|_| ((rng.next() >> 40) as f32 / (1u64 << 24) as f32 - 0.5) * 0.01)
+                    .collect();
+                centres[c * dim..(c + 1) * dim]
+                    .iter()
+                    .zip(jitter)
+                    .map(|(v, j)| v + j)
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        let c2: Vec<f32> = centres.chunks(dim).map(|c| dot(c, c)).collect();
+        let brute: Vec<u32> = rows
+            .chunks(dim)
+            .map(|row| {
+                let mut best = (f32::INFINITY, 0u32);
+                for (j, c) in centres.chunks(dim).enumerate() {
+                    let d: f32 = row.iter().zip(c).map(|(a, b)| (a - b) * (a - b)).sum();
+                    if d < best.0 {
+                        best = (d, j as u32);
+                    }
+                }
+                best.1
+            })
+            .collect();
+        assert_eq!(nearest_all(&rows, dim, &centres, &c2), brute, "k = {k}");
+    }
+}
+
+#[test]
+fn every_argmin_kernel_matches_the_single_pass_scan_on_ties() {
+    use super::argmin::Argmin;
+    #[cfg(target_arch = "x86_64")]
+    let kernels = {
+        let mut kernels = vec![Argmin::Scalar];
+        if is_x86_feature_detected!("avx2") {
+            kernels.push(Argmin::Avx2);
+        }
+        if is_x86_feature_detected!("avx512f") {
+            kernels.push(Argmin::Avx512);
+        }
+        kernels
+    };
+    #[cfg(not(target_arch = "x86_64"))]
+    let kernels = vec![Argmin::Scalar];
+    let dim = 4;
+    let mut rng = SplitMix(7);
+    // Small integer coordinates: every product and sum is exact, and repeated centres force ties,
+    // which every path must give to the lowest id.
+    let mut small = || (rng.next() % 3) as f32;
+    for k in [63usize, 64, 65, 300] {
+        let centres: Vec<f32> = (0..k * dim).map(|_| small()).collect();
+        let rows: Vec<f32> = (0..3000 * dim).map(|_| small()).collect();
+        let c2: Vec<f32> = centres.chunks(dim).map(|c| dot(c, c)).collect();
+        let reference = nearest_few(&rows, dim, &centres, &c2);
+        assert_eq!(nearest_all(&rows, dim, &centres, &c2), reference, "k = {k}");
+        for &kernel in &kernels {
+            for (brows, tile) in [(1024, 256), (7, 16), (64, 1)] {
+                let got = nearest_all_with(&rows, dim, &centres, &c2, kernel, brows, tile);
+                assert_eq!(got, reference, "k = {k}, {kernel:?}, {brows}x{tile}");
+            }
+        }
+    }
+}
