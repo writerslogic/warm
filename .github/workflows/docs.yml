@@ -172,7 +172,7 @@ jobs:
 
       - name: Screenshots at desktop, tablet and phone, light and dark
         if: ${{ always() }}
-        run: node scripts/docs-qa/shots.mjs _site docs-qa-output/screenshots / /quickstart/ /concepts/holographic/ /api/
+        run: node scripts/docs-qa/shots.mjs _site docs-qa-output/screenshots / /quickstart/ /concepts/ /api/
         env:
           VERSION: dev
 

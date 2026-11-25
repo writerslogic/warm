@@ -104,16 +104,9 @@ extra_javascript:
   - javascripts/warm.js
   - javascripts/demo.js
 
-# Pages that are session logs or experiment protocols. They stay in the repository; links to them
-# from the site resolve to the file on GitHub (scripts/docs_hooks.py). _data and overrides are
-# build inputs, not pages.
+# _data and overrides are build inputs, not pages.
 exclude_docs: |
-  migrations/
-  PREREGISTRATION-*.md
-  research/
-  L10-STAGE1.md
   requirements.txt
-  versions.json
   _data/
   overrides/
 
