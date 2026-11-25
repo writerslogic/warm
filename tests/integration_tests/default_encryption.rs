@@ -246,12 +246,8 @@ fn wrong_passphrase_error_mentions_the_passphrase() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().to_string_lossy().to_string();
     {
-        let core = WarmCore::new(
-            1024,
-            Some(path.clone()),
-            Some(keyed_config("right one")),
-        )
-        .unwrap();
+        let core =
+            WarmCore::new(1024, Some(path.clone()), Some(keyed_config("right one"))).unwrap();
         let doc: DocumentInput =
             serde_json::from_value(json!({ "id": "d1", "text": "alpha beta" })).unwrap();
         core.memorize_document(doc).unwrap();
