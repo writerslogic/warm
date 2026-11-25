@@ -132,7 +132,7 @@ Local invalid inputs throw `TypeError` or `RangeError`. `WarmError` carries `cod
 Applications that need a local native store can install the separate `writerslogic-warm` package explicitly. It has its own engine version and platform binaries. It is not a dependency or optional dependency of this HTTP client. For a published engine release, keep npm's optional dependencies enabled:
 
 ```sh
-npm install writerslogic-warm@0.7.1
+npm install writerslogic-warm@0.7.2
 ```
 
 Check the [available native package versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).

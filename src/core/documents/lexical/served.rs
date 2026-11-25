@@ -1331,6 +1331,10 @@ impl<'a> Run<'a, '_> {
         mut terms: Vec<Rt<'a>>,
         reopen: &dyn Fn(usize) -> Option<Rt<'a>>,
     ) -> Result<Option<Vec<LexicalHit>>> {
+        // Decided here rather than in `execute`, whose inlined body the extra branch reshapes.
+        if self.k == 10 && !self.count && terms.len() >= 4 {
+            return self.union_classes_cover(terms, reopen);
+        }
         // The ranking never counts.
         self.count = false;
         let n = terms.len();
@@ -1683,6 +1687,8 @@ impl<'a> Run<'a, '_> {
         let mut count = 0usize;
         let cursor = &mut lead.cursors[0];
         let mut weights: Vec<(f64, u32)> = Vec::with_capacity(cursor.block_count());
+        // Per lead block, the bit of each of its slots that no excluded list holds.
+        let mut masks: Vec<u128> = Vec::with_capacity(cursor.block_count());
         while !cursor.is_end() {
             weights.push((
                 cursor.block_weight(lead_bound) * times,
@@ -1692,7 +1698,9 @@ impl<'a> Run<'a, '_> {
             let block = cursor.block_slots();
             let n = block.len();
             slots[..n].copy_from_slice(block);
-            count += drop_excluded(excluded, (tables, scatters), &mut slots, n, &mut []);
+            let mask = survivor_mask(excluded, (tables, scatters), &slots, n);
+            count += mask.count_ones() as usize;
+            masks.push(mask);
             if !cursor.advance_block(last.saturating_add(1)) {
                 break;
             }
@@ -1730,14 +1738,15 @@ impl<'a> Run<'a, '_> {
                     *value = index as u32;
                 }
             }
-            // The decoded excluded lists only move forward: restart them for each block.
-            for ((rt, table), scatter) in excluded.iter_mut().zip(tables).zip(scatters) {
-                let list = &mut rt.cursors[0];
-                if list.dense().is_none() && table.is_none() && scatter.is_none() {
-                    list.goto_block(0);
-                }
+            let mask = masks[block as usize];
+            let mut kept = 0usize;
+            for m in 0..n {
+                let index = rows[0][m];
+                slots[kept] = slots[m];
+                rows[0][kept] = index;
+                kept += ((mask >> index) & 1) as usize;
             }
-            n = drop_excluded(excluded, (tables, scatters), &mut slots, n, &mut rows);
+            n = kept;
             for &slot in &slots[..n] {
                 prefetch(self.word_counts, slot as usize);
             }
@@ -2633,6 +2642,80 @@ fn drop_excluded(
     n
 }
 
+/// The survivors of `drop_excluded` over `slots[..n]` as a bit set indexed by position: bit `i`
+/// is set when no excluded list holds `slots[i]`.
+#[inline(never)]
+fn survivor_mask(
+    excluded: &mut [Rt<'_>],
+    (tables, scatters): (&[Option<std::sync::Arc<Dense>>], &[Option<Scatter>]),
+    slots: &[u32; CHECKPOINT_BLOCK],
+    n: usize,
+) -> u128 {
+    let mut keep = [true; CHECKPOINT_BLOCK];
+    let mut decoded = false;
+    for ((rt, table), scatter) in excluded.iter().zip(tables).zip(scatters) {
+        let cursor = &rt.cursors[0];
+        if let Some(bits) = cursor.dense() {
+            for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
+                *flag &= !holds(bits, slot);
+            }
+        } else if let Some(scatter) = scatter {
+            if !scatter.bits.is_empty() {
+                for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
+                    *flag &= !scatter.holds(slot);
+                }
+            }
+        } else if let Some(table) = table {
+            for &slot in &slots[..n] {
+                table.prefetch(slot as usize);
+            }
+            for (flag, &slot) in keep.iter_mut().zip(&slots[..n]) {
+                *flag &= table.get(slot as usize) == 0;
+            }
+        } else {
+            decoded = true;
+        }
+    }
+    if decoded {
+        let mut live = [0u32; CHECKPOINT_BLOCK];
+        let mut at = [0u32; CHECKPOINT_BLOCK];
+        let mut m = 0usize;
+        for i in 0..n {
+            live[m] = slots[i];
+            at[m] = i as u32;
+            m += usize::from(keep[i]);
+        }
+        for ((rt, table), scatter) in excluded.iter_mut().zip(tables).zip(scatters) {
+            if m == 0 {
+                break;
+            }
+            let cursor = &mut rt.cursors[0];
+            if cursor.dense().is_some() || scatter.is_some() || table.is_some() {
+                continue;
+            }
+            let mut lacks = [false; CHECKPOINT_BLOCK];
+            lack_each(cursor, &live[..m], &mut lacks);
+            let mut kept = 0usize;
+            for j in 0..m {
+                live[kept] = live[j];
+                at[kept] = at[j];
+                kept += usize::from(lacks[j]);
+            }
+            m = kept;
+        }
+        let mut mask = 0u128;
+        for &i in &at[..m] {
+            mask |= 1u128 << i;
+        }
+        return mask;
+    }
+    let mut mask = 0u128;
+    for (i, &flag) in keep[..n].iter().enumerate() {
+        mask |= u128::from(flag) << i;
+    }
+    mask
+}
+
 /// Moves the candidates among `slots[..n]` whose `keep` flag is set, and their `rows` entries,
 /// to the front. Returns how many.
 #[inline(never)]
@@ -2701,7 +2784,8 @@ fn reached(path: usize) {
 
 #[cfg(test)]
 thread_local! {
-    static PATHS: std::cell::Cell<[usize; 10]> = const { std::cell::Cell::new([0; 10]) };
+    static CLASS_COVERS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static PATHS: std::cell::Cell<[usize; 11]> = const { std::cell::Cell::new([0; 11]) };
     /// Blocks whose candidates `terms_top` filtered by lead frequency, on this thread.
     static PREFILTERED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     /// Excluded lists `negated_top` scattered into a bitmap, on this thread.
@@ -3301,7 +3385,7 @@ mod tests {
             .collect();
         let live = corpus(&docs, true);
         let image = image_of(&live);
-        PATHS.with(|c| c.set([0; 10]));
+        PATHS.with(|c| c.set([0; 11]));
         for text in [
             "+w0 w1",
             "+w1 w0",
@@ -3365,7 +3449,7 @@ mod tests {
                 })
                 .collect()
         };
-        PATHS.with(|c| c.set([0; 10]));
+        PATHS.with(|c| c.set([0; 11]));
         // The ranker declines, so a result means the class path served the query.
         let declined = || -> Result<Option<Vec<LexicalHit>>> { Ok(None) };
         for every in [false, true] {
@@ -3427,6 +3511,51 @@ mod tests {
     }
 
     #[test]
+    fn class_cover_only_ranks_top_ten_long_unions_and_keeps_ties() {
+        let declined = || -> Result<Option<Vec<LexicalHit>>> { Ok(None) };
+        for words in 3u8..=7 {
+            let mut docs = vec![vec![90u8]; 3000];
+            let mut full: Vec<u8> = (0..words).collect();
+            full.extend(std::iter::repeat_n(90, 160));
+            docs.extend(std::iter::repeat_n(full, 22));
+            for mask in 1..(1usize << words) - 1 {
+                let mut doc = Vec::new();
+                for word in 0..words {
+                    if mask & (1 << word) != 0 {
+                        let frequency = 1 + (mask + usize::from(word) * 11) % 20;
+                        doc.extend(std::iter::repeat_n(word, frequency));
+                    }
+                }
+                docs.extend(std::iter::repeat_n(doc, 3));
+            }
+            let live = corpus(&docs, true);
+            let image = image_of(&live);
+            let text = (0..words)
+                .map(|word| format!("w{word}"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let query = LexicalQuery::parse(&text).unwrap();
+            for (k, count) in [(0, true), (9, false), (10, false), (10, true), (11, false)] {
+                let options = LexicalOptions {
+                    k,
+                    count,
+                    ..Default::default()
+                };
+                CLASS_COVERS.with(|calls| calls.set(0));
+                let ranker =
+                    (k > 0).then_some(&declined as &dyn Fn() -> Result<Option<Vec<LexicalHit>>>);
+                let ranked = assert_same_ranked(&image, &live, &query, &options, ranker);
+                assert_eq!(ranked, words <= 6 || k == 0, "{text} {options:?}");
+                assert_eq!(
+                    CLASS_COVERS.with(|calls| calls.get()),
+                    usize::from(k == 10 && !count && (4..=6).contains(&words)),
+                    "{text} {options:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn required_and_optional_clauses_over_ranked_and_sparse_lists_keep_the_result() {
         let hash = |x: u32| {
             x.wrapping_mul(2654435761)
@@ -3455,7 +3584,7 @@ mod tests {
         let live = corpus(&docs, true);
         let image = image_of(&live).with_rank_tables();
         assert!(image.list(0, "w0").unwrap().blocks() >= 256);
-        PATHS.with(|c| c.set([0; 10]));
+        PATHS.with(|c| c.set([0; 11]));
         for text in ["+w0 w1 w9", "+w0 w9", "+w9 w0 w1", "+w1 w2 w9 w0"] {
             let query = LexicalQuery::parse(text).unwrap();
             for k in [1, 10, 100] {
@@ -4243,3 +4372,5 @@ mod tests {
         }
     }
 }
+
+mod class_cover;
