@@ -47,4 +47,4 @@ Python 3.10+, `anthropic` >= 1.16, `mcp` 2.3 to <3, a `warm-mcp` server. Tested 
 
 ## Reference
 
-Commands, safety rules and semantic recall: [Anthropic memory tool on WARM](https://github.com/writerslogic/warm/blob/main/docs/integrations/mcp/memory-tool.md). TypeScript sibling: [`../typescript`](../typescript/README.md).
+Commands, safety rules and semantic recall: [Anthropic memory tool on WARM](https://github.com/writerslogic/warm/blob/main/docs/integrations.md). TypeScript sibling: [`../typescript`](../typescript/README.md).

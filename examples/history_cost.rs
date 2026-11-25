@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! Cost of a historical view against a current-state query on a seeded corpus
-//! (docs/memory-api/TIME-TRAVEL.md). Each repetition runs, in rotated order, a live
+//! (docs/reference/api.md). Each repetition runs, in rotated order, a live
 //! `search_documents`, a search on one prebuilt view, and, at the latest and the middle
 //! positions, a view opened with the default settings (no reuse budget, so it is built from
 //! the journal) and a view opened with the reuse budget opted in while the same position is

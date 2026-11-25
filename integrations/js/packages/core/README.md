@@ -43,4 +43,4 @@ More (BM25, fusion, chunking, `rerank`): see the reference.
 
 ## Reference
 
-[JS core](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/js-core.md)
+[JS core](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)

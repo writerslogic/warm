@@ -39,7 +39,7 @@
 //!   after [`REBUILD_AFTER_MUTATIONS`] mutations, so the stale window is bounded by the
 //!   maintenance interval.
 //! - third implementation slot: [`VectorIndexKind::Scan`] is reserved for the graph-free
-//!   scan under research in `benchmarks/research/scan`; nothing implements it here.
+//!   scan; nothing implements it here.
 //!
 //! Scores: exact-mode selection uses [`super::Embedding::cosine`], the canonical `f64`
 //! accumulation. Graph membership remains approximate. Ties break on `(document id, chunk)`

@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! Journal frame payloads (docs/file-format/MUTATIONS.md). A store writes the format its
+//! Journal frame payloads (docs/file-format/index.md). A store writes the format its
 //! `store.json` schema names and reads both:
 //!
 //! - `HMS-TXN-2\0` then the mutations as one JSON array (schema 2);

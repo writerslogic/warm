@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! The durable experience store: one [`Experience`] with a write-ahead journal and a snapshot
-//! in a store directory (docs/file-format/EXPERIENCE.md).
+//! in a store directory (docs/file-format/index.md).
 //!
 //! Every accepted change (an observation step, an episode description, an episode purge) is one
 //! journal record, synced before the call that made it returns. A checkpoint writes the snapshot

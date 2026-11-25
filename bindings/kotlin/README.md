@@ -13,4 +13,4 @@ scripts/bootstrap-gradle-wrapper.sh && scripts/build-jvm-native.sh
 | Needs | JDK 17, Rust 1.89+; Android adds SDK 35, NDK r27, `cargo-ndk` |
 | Release | source only |
 
-Modules, Android build and usage: [docs/runtimes/kotlin](../../docs/runtimes/kotlin/README.md).
+Modules, Android build and usage: [language bindings](../../docs/integrations.md#language-bindings).

@@ -1,12 +1,11 @@
-# Grid pre-registered 2026-10-23 before any run at this revision (rationale: docs/benchmarks/VIBE.md,
-# "Pre-registered OOD grid"). Arguments are positional in YAML order:
+# Grid pre-registered 2026-10-23 before any run at this revision.
+# Arguments are positional in YAML order:
 # WARM(metric, degree, build_ef, code_bits, query_aware) and set_query_arguments(ef, rerank).
 # `ood: true` makes VIBE call fit_ood with the dataset's official learn split where the HDF5 file
 # has one (the build samples 32768 learn rows, numpy seed 24301; see module.py); sets without a
 # learn split call fit and build the plain graph from the same grid.
 # VIBE limits: 6 build combinations and 56 query combinations per metric, each below
-# the 20 / 60 guidance. The learn_mid and learn_tail groups are learn-heavy builds (projected_degree and learn_queries,
-# see docs/benchmarks/VIBE.md "Held-out search"); the base group is the previously submitted builds, so the
+# the 20 / 60 guidance. The learn_mid and learn_tail groups are learn-heavy builds (projected_degree and learn_queries); the base group is the previously submitted builds, so the
 # per-recall best over both groups can only match or exceed them. Query arguments: ef x rerank where a rerank
 # above ef behaves as rerank = ef, and ef below 100 (k) behaves as 100, so neither is listed.
 float:

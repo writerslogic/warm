@@ -13,7 +13,7 @@ const MAX_SEARCH_RESULTS: usize = 1000;
 const MAX_SUBQUERIES: usize = 4;
 
 /// Fusion parameters of the document API's model stages. Defaults are the tuned LongMemEval
-/// turn-level configuration (`benchmarks/public/longmemeval_config.json`): fact-expanded keys,
+/// turn-level configuration: fact-expanded keys,
 /// original and rewritten query merged with equal weight, lexical 0.5 / semantic 1.0 inside each
 /// list, re-rank of the fused top 20 added with weight 8, RRF constant 60.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

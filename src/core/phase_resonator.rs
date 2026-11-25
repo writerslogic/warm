@@ -15,7 +15,7 @@
 //! Unlike a greedy hard-index alternation resonator on the self-inverse
 //! sparse-binary substrate (which only holds for tiny codebooks), this runs the
 //! real resonator on a non-self-inverse phase substrate. §20 of
-//! `docs/PREREGISTRATION-binding-readout.md` shows it factors 3-way products across
+//! the binding-readout preregistration shows it factors 3-way products across
 //! the capacity knee (search spaces to ~110k at D=1024) at the SAME accuracy as a
 //! float FHRR resonator in those experiments, down to 4-bit phase. Factorization
 //! is a floating-point query; the stored phase substrate stays integer and

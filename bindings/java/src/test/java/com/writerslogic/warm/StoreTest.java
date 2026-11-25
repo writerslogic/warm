@@ -191,7 +191,7 @@ class StoreTest {
         try (Stream<Path> files = Files.walk(dir)) {
             for (Path f : (Iterable<Path>) files.filter(Files::isRegularFile)::iterator) {
                 if (f.getFileName().toString().equals("documents.text")) {
-                    continue; // engine gap, see docs/runtimes/c
+                    continue; // engine gap, see bindings/c/README.md
                 }
                 assertFalse(new String(Files.readAllBytes(f), StandardCharsets.ISO_8859_1).contains("swordfish"),
                         "plaintext in " + f);

@@ -48,4 +48,4 @@ Runnable with a mock LLM, filters and KV store: `examples/quickstart.mjs`.
 
 ## Reference
 
-[LlamaIndex.TS](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/llamaindex-ts.md)
+[LlamaIndex.TS](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)

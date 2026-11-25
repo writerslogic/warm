@@ -5,7 +5,7 @@
 #
 # Set the key before starting (the server refuses to start without credentials):
 #   export WARM_API_KEY="$(openssl rand -hex 32)"
-# Per-tenant keys instead: mount a key file and set WARM_KEYS_FILE (see docs/server/auth.md).
+# Per-tenant keys instead: mount a key file and set WARM_KEYS_FILE (see docs/server/index.md).
 
 name: warm
 

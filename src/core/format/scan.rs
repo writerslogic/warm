@@ -23,7 +23,7 @@ pub struct FrameRef {
     pub raw_len: u32,
     /// Stored payload length; equal to `raw_len` when the payload is not compressed.
     pub comp_len: u32,
-    /// Writer sequence number (header word at +12). Advisory: see `docs/file-format/JOURNAL.md`.
+    /// Writer sequence number (header word at +12). Advisory: see `docs/file-format/index.md`.
     pub seq: u32,
     /// CRC32 of the decompressed payload.
     pub crc: u32,
@@ -282,7 +282,7 @@ pub fn classify_payload(payload: &[u8]) -> PayloadKind<'_> {
     PayloadKind::Unrecognized
 }
 
-/// Mutation variants the journal may carry (`docs/file-format/MUTATIONS.md`).
+/// Mutation variants the journal may carry (`docs/file-format/index.md`).
 pub const MUTATION_VARIANTS: [&str; 19] = [
     "AuditPending",
     "AuditAcknowledged",

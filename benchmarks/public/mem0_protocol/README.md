@@ -7,7 +7,7 @@ backend:
 
 ```
 memory-benchmarks run.py --backend oss --mem0-host http://127.0.0.1:<shim>
-        |  POST /memories, POST /search (Mem0 OSS REST, benchmarks/common/mem0_client.py)
+        |  POST /memories, POST /search (Mem0 OSS REST, common/mem0_client.py in memory-benchmarks)
    shim.py  ->  warm-server POST /api/v1/memory/{remember,recall}   (one tenant per harness user_id)
         |  OpenAI calls: OPENAI_BASE_URL -> openai_proxy.py -> api.openai.com (logs params, usage, spend cap)
 ```
@@ -24,8 +24,6 @@ memory-benchmarks run.py --backend oss --mem0-host http://127.0.0.1:<shim>
 | `manifest_template.json` | Fields every run manifest carries |
 | `clear_failed.py` | Clears empty cutoffs only for an entirely failed model-call attempt |
 | `test_shim.py` | Unit tests for tenant mapping, fact splitting and `created_at` parsing |
-
-Results table: [`docs/benchmarks/MEM0-PROTOCOL.md`](../../../docs/benchmarks/MEM0-PROTOCOL.md).
 
 ## License
 

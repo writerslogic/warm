@@ -61,10 +61,10 @@ Extras bring their own dependency trees; audit the environment you deploy. See t
 
 Adapter notes:
 
-- Retired in 0.2.0, with no deprecation period: `embedchain`, `phidata`, legacy `semantic_kernel` and the `all` extra. The [current Semantic Kernel adapter](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/semantic-kernel.md) has a different API and still needs a dependency security review. The old `langchain-holographic` distribution is retired: import `WarmVectorStore` from `writerslogic_warm_sdk.langchain` and update its configuration to point at `warm-server`.
+- Retired in 0.2.0, with no deprecation period: `embedchain`, `phidata`, legacy `semantic_kernel` and the `all` extra. The [current Semantic Kernel adapter](https://github.com/writerslogic/warm/blob/main/docs/integrations.md) has a different API and still needs a dependency security review. The old `langchain-holographic` distribution is retired: import `WarmVectorStore` from `writerslogic_warm_sdk.langchain` and update its configuration to point at `warm-server`.
 - LangChain: preserves supplied IDs through `add_texts`, `add_documents`, `from_texts` and search results; supply stable IDs for writes you may retry. Metadata and ID counts must match the texts, and the embedder must return one vector per text, before any upload. Scored retrieval, MMR and deletion APIs are not implemented.
 - Haystack: writes with `OVERWRITE` (`NONE` or an omitted policy also overwrites); `FAIL` and `SKIP` raise `NotImplementedError`, as does document enumeration or filtering. `FilterRetriever` is unsupported. Do not treat unsupported operations as empty successes.
-- DSPy: `WarmRM` bypasses caching on supplied `dspy.Embedder` calls. Configure memory-only caching before other cache or LM use: `dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)`. [Tested profile and limits](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/dspy.md#cache-safety).
+- DSPy: `WarmRM` bypasses caching on supplied `dspy.Embedder` calls. Configure memory-only caching before other cache or LM use: `dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)`. [Tested profile and limits](https://github.com/writerslogic/warm/blob/main/docs/integrations.md#cache-safety).
 - CrewAI: the tool closes its per-call HTTP client. Its Chroma dependency remains subject to the security notes.
 - SmolAgents: `top_k` accepts omission or `None` as the default of three. Use the tool as a context manager or call `tool.close()`:
 

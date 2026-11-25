@@ -15,4 +15,4 @@ Add `CARGO_TARGET_DIR` (or use `bindings/c/target`) so `WARM_LIBRARY_PATH` point
 | Native library lookup | `WARM_LIBRARY_PATH`, next to the assembly, `runtimes/<rid>/native/`, OS path |
 | Release | source only; not on NuGet |
 
-Usage and packaging: [docs/runtimes/dotnet](../../docs/runtimes/dotnet/README.md).
+Usage and packaging: [language bindings](../../docs/integrations.md#language-bindings).

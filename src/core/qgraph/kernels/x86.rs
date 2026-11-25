@@ -131,7 +131,7 @@ fn tail_popcnt(code: &[u64], planes: &[u64], words: usize, k: usize) -> u32 {
 /// [`super::raw_one`] with AVX-512 VPOPCNTDQ: per 64 bytes (then 32 with AVX512VL) of
 /// code, `vpopcntq` of the code AND each plane, weighted in u64 lanes by Horner doubling;
 /// the last `words % 4` words take POPCNT. Not wired into dispatch: no AVX-512 host has
-/// timed it (see `docs/performance/platforms.md`).
+/// timed it.
 ///
 /// # Safety
 /// The CPU supports `avx512f`, `avx512vl`, `avx512vpopcntdq` and `popcnt`.

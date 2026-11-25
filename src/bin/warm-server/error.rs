@@ -4,7 +4,7 @@
 //! Error model: RFC 9457 `application/problem+json`.
 //!
 //! The v1 body also carries the legacy `error: {code, message}` member the published SDK reads.
-//! It is deprecated but stays for the whole of `/api/v1`; see docs/server/versioning.md.
+//! It is deprecated but stays for the whole of `/api/v1`; see docs/server/index.md.
 
 use axum::http::{header, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};

@@ -1,6 +1,6 @@
 # Editor and agent configs for WARM
 
-Ready-made configs that start `warm-mcp` (`npx -y writerslogic-warm-mcp`) in each host. Per-host details, remote form and verification status: [docs/integrations/editors/README.md](../../docs/integrations/editors/README.md).
+Ready-made configs that start `warm-mcp` (`npx -y writerslogic-warm-mcp`) in each host. Per-host details, remote form and verification status: [docs/integrations.md](../../docs/integrations.md).
 
 | Editor | Config in this repo | Copy to | Launches | Install |
 |---|---|---|---|---|

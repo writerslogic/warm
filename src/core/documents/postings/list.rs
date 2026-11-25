@@ -4,7 +4,7 @@
 use super::*;
 
 /// Postings per block. Blocks are derived memory state, rebuilt from the journal and never
-/// persisted (see `docs/file-format/LEXICAL.md`), so the length is a build-time parameter that
+/// persisted (see `docs/file-format/index.md`), so the length is a build-time parameter that
 /// no stored byte records: `WARM_POSTINGS_BLOCK_LEN` selects it for sweeps.
 pub(in super::super) const BLOCK_LEN: usize = block_len(option_env!("WARM_POSTINGS_BLOCK_LEN"));
 /// The fewest postings a block other than the last keeps after in-place removals.

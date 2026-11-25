@@ -12,7 +12,7 @@
 //! query time, exactly like [`super::entangled::EntangledHVec`].
 //!
 //! This is the deterministic substrate for the phase resonator
-//! ([`super::phase_resonator`]); §20 of `docs/PREREGISTRATION-binding-readout.md`
+//! ([`super::phase_resonator`]); §20 of the binding-readout preregistration
 //! shows it matches float FHRR factorization capacity down to 4-bit phase (N=16),
 //! and §15-18 characterise its continuous associative-memory behaviour. Unlike the
 //! sparse-binary core, phase binding is NOT self-inverse, so it does not leak

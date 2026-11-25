@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! Stage 1 of the in-place mutable base (see `docs/L10-STAGE1.md`): one graph over
+//! Stage 1 of the in-place mutable base: one graph over
 //! capacity-sized slot arrays, mutated in place. Inserts take the lowest free slots and link
 //! them with the build's insertion pass; deletes tombstone a slot that keeps routing; a repair
 //! scan splices dead slots out of the lists that name them and only then releases the slots.

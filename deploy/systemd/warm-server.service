@@ -12,7 +12,7 @@
 
 [Unit]
 Description=WARM HTTP server
-Documentation=https://github.com/writerslogic/warm/blob/main/docs/SERVER.md
+Documentation=https://github.com/writerslogic/warm/blob/main/docs/server/index.md
 After=network-online.target
 Wants=network-online.target
 

@@ -26,7 +26,7 @@ export declare class WarmMemorySystem {
   constructor(dimensions: number, storagePath?: string | undefined | null, config?: WarmConfigJs | undefined | null)
   /**
    * Replaces the memory API's configuration (policies and defaults; see
-   * docs/memory-api). Pass nothing to restore the defaults.
+   * docs/reference/api.md). Pass nothing to restore the defaults.
    */
   configureMemory(config?: any | undefined | null): void
   /**

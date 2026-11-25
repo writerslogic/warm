@@ -63,7 +63,7 @@ The contract is [`server/openapi.json`](openapi.json). Every operation lists the
 | `POST /api/v1/query/vector` | read | 200 `{"matches":[{"id","score"}]}` best first; body is the query as raw little-endian `f32` |
 | `POST /api/v1/search` | read | 200 `{"hits":[{"id","score"}]}` best first (BM25; model stages when configured) |
 | `POST /api/v1/index/maintain` | write | 200 `{"documentIndexTrained": bool}` |
-| `POST /api/v1/memory/{remember,recall,explain,forget,get,history,applyForgetting,consolidate}` | write / read | the memory API, `docs/memory-api` |
+| `POST /api/v1/memory/{remember,recall,explain,forget,get,history,applyForgetting,consolidate}` | write / read | the memory API, `docs/reference/api.md` |
 | `GET /api/v1/compaction`, `POST /api/v1/compaction` | read / admin | status, run now |
 | `POST /api/v1/snapshots`, `GET /api/v1/snapshots`, `DELETE /api/v1/snapshots/{id}` | admin | server-side snapshots |
 | `GET /api/v1/snapshots/{id}/archive`, `POST /api/v1/snapshots/{id}/restore`, `PUT /api/v1/restore` | admin | tar download, restore from a snapshot or an uploaded archive |
@@ -183,7 +183,7 @@ Built with `--features server,local-models`, the server can run the model stages
 
 A query may then be `{"query": str, "today"?: str, "top_k"?, "filter"?, "query_vector"?}`: hybrid BM25 + cosine per query form, weighted RRF across forms, then the re-rank, with the tuned LongMemEval parameters. `score` is then the fused rank score, not a cosine. Vector-only queries keep the cosine path.
 
-**What runs where.** Every stage runs in the server process: candle on the CPU, on the GPU through Metal on macOS, or through CUDA in builds made with `RUSTFLAGS="--cfg warm_cuda"`. Weights are read from the given local directories, which must record the given revision (a `REVISION` file or the metadata `hf download --revision <sha> --local-dir <dir>` writes); the server never downloads a model and makes no network calls, so no document or query text leaves the machine. Fact extraction adds one LLM generation per document and query rewriting one per text query; see `docs/PUBLIC-BENCHMARKS.md` for measured on-device costs.
+**What runs where.** Every stage runs in the server process: candle on the CPU, on the GPU through Metal on macOS, or through CUDA in builds made with `RUSTFLAGS="--cfg warm_cuda"`. Weights are read from the given local directories, which must record the given revision (a `REVISION` file or the metadata `hf download --revision <sha> --local-dir <dir>` writes); the server never downloads a model and makes no network calls, so no document or query text leaves the machine. Fact extraction adds one LLM generation per document and query rewriting one per text query.
 
 ## Storage
 

@@ -8,7 +8,7 @@
 #
 # This shows that no byte of the deleted text is left in the filesystem's blocks, journal
 # included. It does not show anything about flash translation layers, copy-on-write
-# snapshots or backups; see docs/memory-api/ERASURE.md.
+# snapshots or backups; see docs/reference/api.md.
 set -euo pipefail
 
 work="${RUNNER_TEMP:-$(mktemp -d)}/raw-image-erase"

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! Python surface of the experimental streaming partition tier
-//! (`core::qgraph::partition::PartitionTier`, `docs/research/STREAMING-L22.md`): `PartitionIndex`.
+//! (`core::qgraph::partition::PartitionTier`): `PartitionIndex`.
 //! In memory only. Exact brute force until the first search with `train_at` live rows, which
 //! trains the centres and the PQ codebook once; the centres stay fixed after that.
 

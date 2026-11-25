@@ -1,8 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Prompts and output parsing of the tuned LongMemEval pipeline
-//! (`benchmarks/public/longmemeval_pipeline.py`). The text and the parsing rules are part of the
+//! Prompts and output parsing of the tuned LongMemEval pipeline. The text and the parsing rules are part of the
 //! tuned result and must stay byte-identical to the Python reference. The separately selected
 //! conversation embedding instruction includes both source roles.
 

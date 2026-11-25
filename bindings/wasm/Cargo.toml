@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = []
 # AES-256-GCM inside the module. Production encryption uses WebCrypto; this exists so the
-# choice stays measurable (see docs/runtimes/wasm/ENCRYPTION.md).
+# choice stays measurable (see bindings/wasm/npm/README.md).
 inwasm-aes = ["dep:aes-gcm"]
 
 [dependencies]

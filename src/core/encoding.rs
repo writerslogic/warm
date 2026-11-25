@@ -7,7 +7,7 @@
 //! 2-5 (one hypervector per character, permuted by its offset in the window and bound by
 //! symmetric difference), word tokens permuted by position, and word bigrams, each level
 //! bundled by majority vote, the levels combined by cross-level support. That function is the
-//! contract (`docs/file-format/ENCODERS.md`: same text and dimension, same indices forever) and
+//! contract (`docs/file-format/index.md`: same text and dimension, same indices forever) and
 //! stays reachable for the equivalence test in `tests/ingest_encode.rs`.
 //!
 //! `TextEncoder::encode` computes the same function through per-thread memo tables and

@@ -1,6 +1,6 @@
 # Quickstart examples
 
-Ingest, search, compare with SQLite FTS5, encrypt, remember changing facts. The code behind the [five-minute quickstart](../../docs/quickstart/index.md): one corpus and one query set drive every language, CI runs each on every pull request, and the docs page includes these files rather than copying them.
+Ingest, search, compare with SQLite FTS5, encrypt, remember changing facts. The code behind the [five-minute quickstart](../../docs/quickstart.md): one corpus and one query set drive every language, CI runs each on every pull request, and the docs page includes these files rather than copying them.
 
 | File | Run from the repository root |
 |------|------------------------------|

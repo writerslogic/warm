@@ -10,10 +10,9 @@ Each must equal, at the precision it is written with, a number in the committed 
 row or paragraph links to (a result file, or every file under a linked directory). Numbers with
 no unit, years and versions are not figures.
 
-README.md, EVALUATION.md and ANN-BENCHMARKS.md are held to this fully. The older research pages
-in docs/benchmarks quote many derived ratios; the ones that were unsupported when this check was
-added are listed in doc-figures-baseline.txt. A new unsupported figure fails, and so does a
-baseline entry that has become supported or disappeared, so the list can only shrink.
+README.md is held to this fully. Any docs/benchmarks page may
+list figures that were unsupported when this check was added in doc-figures-baseline.txt. A new
+unsupported figure fails, and so does a baseline entry that has become supported or disappeared.
 
 usage: check-doc-figures.py [--root DIR] [--write-baseline]
 """
@@ -36,7 +35,7 @@ UNIT_BEFORE = re.compile(
 # "3.4k QPS" written in thousands: the number is scaled before it is looked up.
 KILO = re.compile(r"(?<![\w.@])(" + NUM + r")\s?[kK]\s?(?:QPS|qps)\b")
 GENERATED_DOCS = {"COMPARISON.md"}
-STRICT = {"README.md", "docs/benchmarks/EVALUATION.md", "docs/benchmarks/ANN-BENCHMARKS.md"}
+STRICT = {"README.md"}
 BASELINE = "scripts/ci/doc-figures-baseline.txt"
 CORPUS_SUFFIXES = {".json", ".jsonl", ".txt", ".csv", ".md", ".log"}
 LINK = re.compile(r"\]\(([^)#\s]+)(?:#[^)]*)?\)")

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! Node surface of background compaction: the same job, options, stages and outcomes as
-//! `WarmCore::start_compaction` (`docs/file-format/COMPACTION.md`).
+//! `WarmCore::start_compaction` (`docs/file-format/index.md`).
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;

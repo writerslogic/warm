@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! Crash-consistency claims of `docs/file-format/CRASH-CONSISTENCY.md`, tested on committed
+//! Crash-consistency claims of `docs/file-format/index.md`, tested on committed
 //! golden stores.
 
 use crate::format_common;

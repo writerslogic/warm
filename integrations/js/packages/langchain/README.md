@@ -46,4 +46,4 @@ Runnable with chat history and no API key: `examples/quickstart.mjs`.
 
 ## Reference
 
-[LangChain.js](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/langchainjs.md)
+[LangChain.js](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)

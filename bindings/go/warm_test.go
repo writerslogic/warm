@@ -190,7 +190,7 @@ func TestEncryption(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The vector/transaction log must hold no plaintext. (documents.text is an engine gap
-	// tracked in docs/runtimes/c; it is excluded here and asserted by the C test.)
+	// tracked in bindings/c/README.md; it is excluded here and asserted by the C test.)
 	entries := walk(t, dir)
 	for _, f := range entries {
 		if filepath.Base(f) == "documents.text" {

@@ -12,7 +12,7 @@ Enumeration uses the service's metadata cursor. Residual filters select document
 ranking; vector scores merge across bounded id groups. Fused text queries require their
 eligible set to fit one group because independently normalized scores cannot be merged.
 
-Limits inherited from `warm-server` (docs/SERVER.md):
+Limits inherited from `warm-server` (docs/server/index.md):
 
 - `get` fetches text through an exact id-filtered vector query.
 - One `list` returns at most `max_fetch` records and reports whether more matched.

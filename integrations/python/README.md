@@ -43,21 +43,21 @@ Every adapter accepts the same WARM settings as keyword arguments or `config=War
 
 | Extra | Host (tested version) | Page |
 |---|---|---|
-| `langchain` | langchain-core 1.6.12 | [LangChain](../../docs/integrations/frameworks/langchain.md) |
-| `langgraph` | langgraph 1.2.16 | [LangGraph](../../docs/integrations/frameworks/langgraph.md) |
-| `llamaindex` | llama-index-core 0.14.25 | [LlamaIndex](../../docs/integrations/frameworks/llamaindex.md) |
-| `haystack` | haystack-ai 3.4.0 | [Haystack](../../docs/integrations/frameworks/haystack.md) |
-| `dspy` | dspy 3.4.1, 3.5.0 | [DSPy](../../docs/integrations/frameworks/dspy.md) |
-| `openai-agents` | openai-agents 0.24.0 | [OpenAI Agents](../../docs/integrations/frameworks/openai-agents.md) |
-| `pydantic-ai` | pydantic-ai-slim 2.58.0 | [Pydantic AI](../../docs/integrations/frameworks/pydantic-ai.md) |
-| `smolagents` | smolagents 1.26.0 | [smolagents](../../docs/integrations/frameworks/smolagents.md) |
-| `litellm` | litellm 1.103.10 | [LiteLLM](../../docs/integrations/frameworks/litellm.md) |
-| `crewai` | crewai 1.15.28 | [CrewAI](../../docs/integrations/frameworks/crewai.md) |
-| `autogen` | autogen 0.7.5 | [AutoGen](../../docs/integrations/frameworks/autogen.md) |
-| `ag2` | ag2 1.1.2 | [AutoGen and AG2](../../docs/integrations/frameworks/autogen.md) |
-| `semantic-kernel` | semantic-kernel 1.45.0 | [Semantic Kernel](../../docs/integrations/frameworks/semantic-kernel.md) |
-| `mem0` | mem0ai 2.2.1 | [mem0](../../docs/integrations/frameworks/mem0.md) |
-| `letta` | letta-client 1.12.1 | [Letta](../../docs/integrations/frameworks/letta.md) |
+| `langchain` | langchain-core 1.6.12 | [LangChain](../../docs/integrations.md) |
+| `langgraph` | langgraph 1.2.16 | [LangGraph](../../docs/integrations.md) |
+| `llamaindex` | llama-index-core 0.14.25 | [LlamaIndex](../../docs/integrations.md) |
+| `haystack` | haystack-ai 3.4.0 | [Haystack](../../docs/integrations.md) |
+| `dspy` | dspy 3.4.1, 3.5.0 | [DSPy](../../docs/integrations.md) |
+| `openai-agents` | openai-agents 0.24.0 | [OpenAI Agents](../../docs/integrations.md) |
+| `pydantic-ai` | pydantic-ai-slim 2.58.0 | [Pydantic AI](../../docs/integrations.md) |
+| `smolagents` | smolagents 1.26.0 | [smolagents](../../docs/integrations.md) |
+| `litellm` | litellm 1.103.10 | [LiteLLM](../../docs/integrations.md) |
+| `crewai` | crewai 1.15.28 | [CrewAI](../../docs/integrations.md) |
+| `autogen` | autogen 0.7.5 | [AutoGen](../../docs/integrations.md) |
+| `ag2` | ag2 1.1.2 | [AutoGen and AG2](../../docs/integrations.md) |
+| `semantic-kernel` | semantic-kernel 1.45.0 | [Semantic Kernel](../../docs/integrations.md) |
+| `mem0` | mem0ai 2.2.1 | [mem0](../../docs/integrations.md) |
+| `letta` | letta-client 1.12.1 | [Letta](../../docs/integrations.md) |
 
 ## Compatibility
 
@@ -65,4 +65,4 @@ Python 3.11+ (tested 3.12), `warm-sdk` >= 0.1.3, `warm-server` of the same WARM 
 
 ## Reference
 
-[Integrations overview](../../docs/integrations/index.md), [verification matrix and shared limits](../../docs/integrations/frameworks/MATRIX.md).
+[Integrations overview](../../docs/integrations.md), [verification matrix and shared limits](../../docs/integrations.md).

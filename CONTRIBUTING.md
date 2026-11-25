@@ -78,7 +78,7 @@ Also:
   `uv run --no-project --python 3.12 --with-requirements docs/requirements.txt mkdocs serve`
   (generated API pages also need `npm ci --prefix scripts/docs-api`). CI builds the versioned site
   and checks internal links and fragments; a weekly job checks external links. Each concept has
-  one home page: link to it instead of restating it. More: [docs pipeline](docs/community/docs-pipeline.md).
+  one home page: link to it instead of restating it.
 - **New files** start with the licence header: `// Copyright 2024-2026 WritersLogic Contributors`
   and `// SPDX-License-Identifier: Apache-2.0` (`#` comments for Python, YAML, TOML and shell).
 
@@ -114,9 +114,7 @@ GPG or SSH signature.
   `cargo test --locked --lib --features node-api,server export`; the CI lint job
   runs `scripts/check-generated.sh` to compare a fresh temporary export with the
   committed artifacts, including added or removed files.
-  Historical benchmark inputs are listed in
-  [the evidence archive guide](benchmarks/evidence/README.md), with their original revisions
-  and checksums. Restore them locally instead of adding copied build trees or raw caches.
+  Do not add copied build trees or raw caches.
   Keep exploratory experiment logs, raw model outputs, local build products and research
   planning records outside the public repository. Promote reusable harnesses with their tests
   when they support maintained functionality. A published performance claim must include

@@ -11,7 +11,7 @@ from .common import RESULTS
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="warm-bench", description="Reproducible WARM comparison benchmark (see docs/benchmarks/README.md).")
+    p = argparse.ArgumentParser(prog="warm-bench", description="Reproducible WARM comparison benchmark (see docs/benchmarks/index.md).")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("lock", help="re-resolve the pinned comparator lock files (needs network)")
     ins = sub.add_parser("install", help="create the pinned comparator environments")

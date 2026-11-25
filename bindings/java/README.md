@@ -15,4 +15,4 @@ The runnable usage is [`StoreTest.java`](src/test/java/com/writerslogic/warm/Sto
 | Run flag | `--enable-native-access=ALL-UNNAMED` |
 | Release | source only; not on Maven Central |
 
-Usage and library resolution: [docs/runtimes/java](../../docs/runtimes/java/README.md).
+Usage and library resolution: [language bindings](../../docs/integrations.md#language-bindings).

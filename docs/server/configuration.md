@@ -22,7 +22,7 @@ Secrets never appear as flags: `WARM_API_KEY` is read from the environment only.
 | Flag | Environment | Default | Meaning |
 |---|---|---|---|
 | `--data-dir` | `WARM_DATA_DIR` | `./hms-data` | Root for stores (`tenants/`), snapshots (`snapshots/`) and restore staging (`staging/`). |
-| `--memory-config` | `WARM_MEMORY_CONFIG` | unset | JSON file with the memory API configuration (policies and defaults) applied to every tenant; see `docs/memory-api`. Validated at startup. |
+| `--memory-config` | `WARM_MEMORY_CONFIG` | unset | JSON file with the memory API configuration (policies and defaults) applied to every tenant; see `docs/reference/api.md`. Validated at startup. |
 | `--dim` | `WARM_DIM` | `4096` | Hypervector dimensions per store (>= 256). Fixed once a store exists. |
 | `--input-dim` | `WARM_INPUT_DIM` | `384` | Required length of every client embedding. |
 | `--embedding-model` | `WARM_EMBEDDING_MODEL` | `client-supplied` | Embedding model name recorded in each store. |
@@ -35,7 +35,7 @@ Secrets never appear as flags: `WARM_API_KEY` is read from the environment only.
 | Flag | Environment | Default | Meaning |
 |---|---|---|---|
 | `--no-auth` | `WARM_NO_AUTH` | off | Serve without authentication: every caller has every scope. Refused unless the listener is loopback or a unix socket, and refused when credentials are also configured. |
-| `--keys-file` | `WARM_KEYS_FILE` | unset | JSON file of hashed per-tenant keys; see `docs/server/auth.md`. Reloaded on SIGHUP and by `POST /api/v1/admin/keys/reload`. |
+| `--keys-file` | `WARM_KEYS_FILE` | unset | JSON file of hashed per-tenant keys; see `docs/server/index.md`. Reloaded on SIGHUP and by `POST /api/v1/admin/keys/reload`. |
 | | `WARM_API_KEY` (environment only, no flag) | unset | One key valid for every tenant with every scope. Empty is an error. |
 | `--metrics-public` | `WARM_METRICS_PUBLIC` | off | Serve `/metrics` without credentials. Otherwise it needs the admin scope. `/healthz`, `/readyz` and `/openapi.json` are always public. |
 | `--cors-origins` | `WARM_CORS_ORIGINS` | empty | Comma-separated origins allowed by CORS, or `*`. Empty sends no CORS headers. |
@@ -103,4 +103,4 @@ Log lines carry identifiers, counts and timings only: method, route template, st
 ## Subcommands
 
 - `warm-server openapi` prints the OpenAPI 3.1 document for this build (the committed `docs/server/openapi.json` is its output).
-- `warm-server keygen --id ID --tenants a,b|* --scopes read,write [--expires-in-days N] [--keys-file PATH]` creates a key; see `docs/server/auth.md`.
+- `warm-server keygen --id ID --tenants a,b|* --scopes read,write [--expires-in-days N] [--keys-file PATH]` creates a key; see `docs/server/index.md`.

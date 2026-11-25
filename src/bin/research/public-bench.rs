@@ -1,9 +1,8 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Public-benchmark driver. Reads data written by benchmarks/public/prepare.py and
-//! writes machine-readable results; benchmarks/public/evaluate.py scores them and runs
-//! the comparison libraries on the same data.
+//! Public-benchmark driver. Reads prepared ANN and text data and
+//! writes machine-readable results.
 //!
 //! `ann`:  ann-benchmarks sets (dense vectors + shipped ground truth). Measures the engine's
 //!         `memorize_vectors` / `query_vector` path (vertex graph): recall@10, search latency
@@ -19,7 +18,7 @@
 //! `longmemeval`: LongMemEval_S with precomputed embeddings. Every question gets a fresh store
 //!         holding only its own haystack; writes full ranked runs per granularity (turn,
 //!         session) for the document API (lexical, dense, hybrid).
-//! `lme-scores`: per-question scoring for benchmarks/public/longmemeval_pipeline.py. One fresh
+//! `lme-scores`: per-question scoring for the LongMemEval pipeline. One fresh
 //!         store per question holds that question's keys; each query variant runs one hybrid
 //!         search over the whole store, and the engine's BM25 and exact-cosine scores of every key
 //!         are written out for fusion.
@@ -1537,7 +1536,7 @@ fn lme_scores(
             let config = WarmConfig {
                 embedding_space: Some(EmbeddingSpace {
                     model: "external".into(),
-                    revision: "see benchmarks/public/longmemeval_modal.py".into(),
+                    revision: "see core::models::PINNED".into(),
                     dimensions: emb_dim,
                     normalization: "l2".into(),
                     metric: "cosine".into(),
