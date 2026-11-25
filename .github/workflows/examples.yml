@@ -74,6 +74,16 @@ jobs:
         run: node examples/quickstart/node/quickstart.mjs | tee "$RUNNER_TEMP/node.out"
       - name: Result table matches the one in the docs
         run: awk '/^query /,/^top-1 correct/' "$RUNNER_TEMP/node.out" | diff - examples/quickstart/expected-search.txt
+      - name: Run standalone Node examples
+        run: |
+          for example in \
+            examples/semantic-search.mjs \
+            examples/triplet-knowledge.mjs \
+            examples/sequence-encoding.mjs \
+            examples/analogy-reasoning.mjs \
+            examples/external-embeddings.mjs; do
+            node "$example"
+          done
       - name: README Node snippet runs
         run: python3 scripts/check-readme-snippets.py js
 
