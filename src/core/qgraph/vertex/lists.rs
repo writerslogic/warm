@@ -11,6 +11,7 @@
 
 use rayon::prelude::*;
 
+use super::super::centroid::centroid_sums;
 use super::super::invalid;
 use super::super::kernels::{dot, SplitMix};
 use crate::core::error::WarmError;
@@ -322,17 +323,7 @@ fn kmeans(rows: &[f32], dim: usize, k: usize, iters: usize, seed: u64) -> (Vec<f
         if it == iters {
             break;
         }
-        let mut sums = vec![0f64; k * dim];
-        let mut counts = vec![0usize; k];
-        for (row, &c) in rows.chunks_exact(dim).zip(&owner) {
-            counts[c as usize] += 1;
-            for (s, &x) in sums[c as usize * dim..(c as usize + 1) * dim]
-                .iter_mut()
-                .zip(row)
-            {
-                *s += f64::from(x);
-            }
-        }
+        let (sums, counts) = centroid_sums(rows, dim, &owner, k);
         for c in 0..k {
             let centre = &mut centres[c * dim..(c + 1) * dim];
             if counts[c] == 0 {
