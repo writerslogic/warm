@@ -442,18 +442,14 @@ mod tests {
     }
 
     #[test]
-    fn test_hopfield_cleanup_exact() {
+    fn test_hopfield_cleanup_exact_and_noisy() {
         let mem = hundred_atoms();
         let query = EntangledHVec::new_deterministic(16384, 42);
         let result = hopfield_cleanup(&query, &mem, 24.0, 64, 3);
         assert!(result.found);
         assert_eq!(result.id, "atom_42");
         assert!(result.confidence > 0.9);
-    }
 
-    #[test]
-    fn test_hopfield_cleanup_noisy() {
-        let mem = hundred_atoms();
         let mut noisy = EntangledHVec::new_deterministic(16384, 42)
             .indices()
             .to_vec();

@@ -737,17 +737,6 @@ mod tests {
     }
 
     #[test]
-    fn test_bundle_dp_produces_valid_output() {
-        let dim = 16384;
-        let base = EntangledHVec::new_deterministic(dim, 100);
-        let vecs = vec![base.clone(); 5];
-        let bundled = EntangledHVec::bundle_dp(&vecs, 1.0);
-        assert_eq!(bundled.dim, dim);
-        assert!(!bundled.indices.is_empty());
-        assert!(bundled.indices.windows(2).all(|w| w[0] < w[1]));
-    }
-
-    #[test]
     #[should_panic(expected = "epsilon is outside the supported numeric range")]
     fn dp_rejects_finite_scales_whose_inverse_cdf_can_overflow() {
         let vectors = [EntangledHVec::from_indices(vec![1], 256)];
@@ -755,12 +744,15 @@ mod tests {
     }
 
     #[test]
-    fn test_bundle_dp_high_epsilon_matches_deterministic() {
+    fn test_bundle_dp_high_epsilon_is_valid_and_matches_deterministic() {
         let dim = 16384;
         let base = EntangledHVec::new_deterministic(dim, 100);
         let vecs = vec![base.clone(); 7];
         let det = EntangledHVec::bundle(&vecs);
         let dp = EntangledHVec::bundle_dp(&vecs, 1000.0);
+        assert_eq!(dp.dim, dim);
+        assert!(!dp.indices.is_empty());
+        assert!(dp.indices.windows(2).all(|w| w[0] < w[1]));
         let sim = det.similarity(&dp);
         assert!(
             sim > 0.8,
@@ -813,7 +805,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bind_ordered_non_commutative() {
+    fn test_bind_ordered_is_non_commutative_and_invertible() {
         let a = EntangledHVec::new_deterministic(16384, 1);
         let b = EntangledHVec::new_deterministic(16384, 2);
         let ab = a.bind_ordered(&b);
@@ -822,14 +814,7 @@ mod tests {
             ab.indices, ba.indices,
             "bind_ordered must be non-commutative"
         );
-    }
-
-    #[test]
-    fn test_bind_ordered_invertible() {
-        let a = EntangledHVec::new_deterministic(16384, 1);
-        let b = EntangledHVec::new_deterministic(16384, 2);
-        let c = a.bind_ordered(&b);
-        let recovered = c.unbind_ordered_left(&b);
+        let recovered = ab.unbind_ordered_left(&b);
         assert_eq!(
             recovered.indices, a.indices,
             "unbind_ordered_left should recover A"

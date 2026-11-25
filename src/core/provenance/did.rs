@@ -212,12 +212,8 @@ mod tests {
     }
 
     #[test]
-    fn reject_bad_prefix() {
-        assert!(ed25519_from_did_key("did:web:example.com").is_err());
-    }
-
-    #[test]
     fn did_key_accepts_only_a_32_byte_ed25519_multicodec_key() {
+        assert!(ed25519_from_did_key("did:web:example.com").is_err());
         for (prefix, len, valid) in [
             (ED25519_MULTICODEC, 31, false),
             (ED25519_MULTICODEC, 32, true),
