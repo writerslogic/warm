@@ -234,6 +234,7 @@ impl SlotSet {
     }
 }
 
+mod argmin;
 mod kmeans;
 mod scan;
 mod tables;

@@ -474,43 +474,72 @@ struct WindowCandidate {
     upper: f64,
 }
 
+/// Adds one first-pass table's bound to every candidate and moves the survivors to the front,
+/// returning their number. A candidate leaves when `test` is set and `upper + after < drop`;
+/// `BRANCHLESS` writes every entry and counts only the survivors.
 #[inline(always)]
-fn first_pass_bound(
-    frequency: u8,
+#[allow(clippy::too_many_arguments)]
+fn table_pass<const BRANCHLESS: bool>(
+    cand: &mut [WindowCandidate],
+    table: &Dense,
     classes: &[u8],
-    offset: usize,
+    lo: usize,
     bounds: &[f64],
     cap: f64,
-    skip_constant_rows: bool,
-) -> f64 {
-    match frequency {
-        // The absent and saturated rows have the same bound in every class.
-        0 if skip_constant_rows => 0.0,
-        15 if skip_constant_rows => cap,
-        _ => {
-            let class = usize::from(classes[offset]);
-            bounds[usize::from(frequency) * CLASSES + class].min(cap)
+    after: f64,
+    test: bool,
+    drop: f64,
+) -> usize {
+    let mut kept = 0usize;
+    for read in 0..cand.len() {
+        let mut entry = cand[read];
+        let offset = entry.offset as usize;
+        // The absent and saturated rows hold the same bound in every class, so no frequency
+        // needs a branch of its own.
+        let row = usize::from(table.get(lo + offset)) * CLASSES + usize::from(classes[offset]);
+        entry.upper += bounds[row].min(cap);
+        let keep = !(test && entry.upper + after < drop);
+        if BRANCHLESS {
+            cand[kept] = entry;
+            kept += usize::from(keep);
+        } else if keep {
+            cand[kept] = entry;
+            kept += 1;
         }
     }
+    kept
 }
 
+/// Stores the touched chunks `admit` keeps, in offset order. `admit` returns the chunk's upper
+/// bound and whether to keep it; every chunk's entry is written and only the kept ones counted,
+/// so the data-dependent keep/drop outcome costs no branch. Without `BRANCHLESS` only the kept
+/// entries are written, which suits the few-term queries whose outcome is predictable.
 #[inline]
-fn gather_candidates(
+fn gather_candidates<const BRANCHLESS: bool>(
     candidates: &mut Vec<WindowCandidate>,
     single: Option<&[(u32, f64)]>,
     mask: &mut [u64],
     acc: &mut [f64],
-    mut admit: impl FnMut(u32, f64) -> Option<f64>,
+    mut admit: impl FnMut(u32, f64) -> (f64, bool),
 ) {
     candidates.clear();
+    let touched = match single {
+        Some(single) => single.len(),
+        None => mask.iter().map(|word| word.count_ones() as usize).sum(),
+    };
+    candidates.reserve(touched);
+    let spare = candidates.spare_capacity_mut();
+    let mut kept = 0usize;
     if let Some(single) = single {
         for (index, &(offset, weight)) in single.iter().enumerate() {
-            if let Some(upper) = admit(offset, weight) {
-                candidates.push(WindowCandidate {
-                    offset,
-                    single_index: index as u32,
-                    upper,
-                });
+            let (upper, keep) = admit(offset, weight);
+            spare[kept].write(WindowCandidate {
+                offset,
+                single_index: index as u32,
+                upper,
+            });
+            if BRANCHLESS || keep {
+                kept += usize::from(keep);
             }
         }
     } else {
@@ -520,16 +549,21 @@ fn gather_candidates(
                 let offset = (word << 6) | bits.trailing_zeros() as usize;
                 bits &= bits - 1;
                 let partial = std::mem::take(&mut acc[offset]);
-                if let Some(upper) = admit(offset as u32, partial) {
-                    candidates.push(WindowCandidate {
-                        offset: offset as u32,
-                        single_index: 0,
-                        upper,
-                    });
+                let (upper, keep) = admit(offset as u32, partial);
+                spare[kept].write(WindowCandidate {
+                    offset: offset as u32,
+                    single_index: 0,
+                    upper,
+                });
+                if BRANCHLESS || keep {
+                    kept += usize::from(keep);
                 }
             }
         }
     }
+    // SAFETY: `kept` is at most the number of chunks visited, which is `touched` and within the
+    // reserved capacity, and each of the first `kept` entries was written above.
+    unsafe { candidates.set_len(kept) };
 }
 
 #[derive(Default)]
@@ -893,8 +927,8 @@ pub(super) fn rank<S: LexicalSource>(
         return None;
     }
     let count = lists.len();
-    let skip_constant_rows = count > 3 && limit <= WIDE_LIMIT;
-    let fuse_first_table = count >= 4 && limit <= WIDE_LIMIT;
+    // The ranked-union shape whose keep/drop outcomes are data dependent and mispredicted.
+    let branchless = count >= 4 && limit <= WIDE_LIMIT;
     if count == 1 {
         aligned[0] = None;
     }
@@ -1274,83 +1308,56 @@ pub(super) fn rank<S: LexicalSource>(
         });
         let single_entries = single_term.map(|_| single.as_slice());
         let window_classes = &classes8[lo as usize..];
-        let table_bound = |table: &Dense, ub: &[f64], cap: f64, offset: usize| {
-            first_pass_bound(
-                table.get(lo as usize + offset),
-                window_classes,
-                offset,
-                ub,
-                cap,
-                skip_constant_rows,
-            )
-        };
         let gather_upper = |weight: f64| {
             let upper = weight + untabled;
-            if floor_score > 0.0 && upper + rest[0] < drop {
-                None
-            } else {
-                Some(upper)
-            }
+            (upper, !(floor_score > 0.0 && upper + rest[0] < drop))
         };
-        let first_table = if fuse_first_table && first_passes > 0 {
-            let i = first_pass[0];
-            terms[i].dense.as_deref().map(|table| (i, table))
+        let gather = if branchless {
+            gather_candidates::<true>
         } else {
-            None
+            gather_candidates::<false>
         };
-        let first_remaining = if let Some((i, table)) = first_table {
-            let ub = &terms[i].ub[..];
-            let cap = window_bounds[i];
-            let after = rest[1];
-            // Apply the first table before storing candidates that it would discard.
-            gather_candidates(
-                cand,
-                single_entries,
-                &mut mask[..stride / 64],
-                acc,
-                |offset, weight| {
-                    let mut upper = gather_upper(weight)?;
-                    upper += table_bound(table, ub, cap, offset as usize);
-                    if floor_score > 0.0 && upper + after < drop {
-                        return None;
-                    }
-                    Some(upper)
-                },
-            );
-            1
-        } else {
-            gather_candidates(
-                cand,
-                single_entries,
-                &mut mask[..stride / 64],
-                acc,
-                |_, weight| gather_upper(weight),
-            );
-            0
-        };
+        gather(
+            cand,
+            single_entries,
+            &mut mask[..stride / 64],
+            acc,
+            |_, weight| gather_upper(weight),
+        );
         // One table at a time over the window's candidates: each candidate still adds the
         // tables' bounds in the same order, but the loop body is a tight lookup. A candidate
         // that can no longer reach the cut leaves before the next table.
-        for (k, &i) in first_pass[..first_passes]
-            .iter()
-            .enumerate()
-            .skip(first_remaining)
-        {
+        for (k, &i) in first_pass[..first_passes].iter().enumerate() {
             let term = &terms[i];
             if let Some(table) = term.dense.as_ref() {
                 let ub = &term.ub[..];
                 let cap = window_bounds[i];
                 let after = rest[k + 1];
-                let mut kept = 0usize;
-                for read in 0..cand.len() {
-                    let mut entry = cand[read];
-                    entry.upper += table_bound(table, ub, cap, entry.offset as usize);
-                    if floor_score > 0.0 && entry.upper + after < drop {
-                        continue;
-                    }
-                    cand[kept] = entry;
-                    kept += 1;
-                }
+                let kept = if branchless {
+                    table_pass::<true>(
+                        cand,
+                        table,
+                        window_classes,
+                        lo as usize,
+                        ub,
+                        cap,
+                        after,
+                        floor_score > 0.0,
+                        drop,
+                    )
+                } else {
+                    table_pass::<false>(
+                        cand,
+                        table,
+                        window_classes,
+                        lo as usize,
+                        ub,
+                        cap,
+                        after,
+                        floor_score > 0.0,
+                        drop,
+                    )
+                };
                 cand.truncate(kept);
             }
         }
@@ -1480,27 +1487,77 @@ mod tests {
     use crate::core::documents::postings::CheckpointPacker;
 
     #[test]
-    fn lexical_first_pass_constant_rows_need_no_class() {
-        let mut bounds = [0.0f64; CLASSES * 16];
+    fn lexical_table_pass_branchless_keeps_what_branching_keeps_on_constant_rows() {
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        let mut next = move || {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            state
+        };
         let ceiling = 12.0;
-        bounds[15 * CLASSES..].fill(ceiling);
-        for class in 0..CLASSES {
-            bounds[CLASSES + class] = 1.0 + class as f64 / CLASSES as f64;
-            bounds[14 * CLASSES + class] = 5.0 + class as f64 / CLASSES as f64;
+        let mut bounds = [0.0f64; CLASSES * 16];
+        for frequency in 1..15 {
+            for class in 0..CLASSES {
+                bounds[frequency * CLASSES + class] =
+                    frequency as f64 * 0.7 + class as f64 / CLASSES as f64;
+            }
         }
-        let classes = [0, 1, (CLASSES - 1) as u8];
-        for cap in [0.0, 1.5, 5.5, ceiling] {
-            for offset in 0..classes.len() {
-                for frequency in [0, 1, 14, 15] {
-                    let expected =
-                        first_pass_bound(frequency, &classes, offset, &bounds, cap, false);
-                    let classes = if frequency == 0 || frequency == 15 {
-                        &[][..]
-                    } else {
-                        &classes[..]
-                    };
-                    let actual = first_pass_bound(frequency, classes, offset, &bounds, cap, true);
-                    assert_eq!(actual.to_bits(), expected.to_bits());
+        bounds[15 * CLASSES..].fill(ceiling);
+        let slots = 512;
+        // A third of the slots absent (0) and a third saturated (15): the constant rows.
+        let nibble = |r: u64| match r % 3 {
+            0 => 0u8,
+            1 => 15,
+            _ => (1 + r % 14) as u8,
+        };
+        let nibbles: Vec<u8> = (0..slots / 2)
+            .map(|_| nibble(next()) | (nibble(next()) << 4))
+            .collect();
+        let table = Dense {
+            nibbles,
+            bounds: std::sync::OnceLock::new(),
+        };
+        let classes: Vec<u8> = (0..slots)
+            .map(|_| (next() % CLASSES as u64) as u8)
+            .collect();
+        let offsets: Vec<u32> = (0..slots as u32).filter(|_| next() % 4 != 0).collect();
+        let start: Vec<WindowCandidate> = offsets
+            .into_iter()
+            .map(|offset| WindowCandidate {
+                offset,
+                single_index: 0,
+                upper: (next() % 1000) as f64 / 100.0,
+            })
+            .collect();
+        for cap in [0.0, 1.5, 5.5, ceiling, 20.0] {
+            for (test, drop) in [(false, 0.0), (true, 9.0), (true, 14.0), (true, 40.0)] {
+                let (mut fast, mut slow) = (start.clone(), start.clone());
+                let kept = table_pass::<true>(
+                    &mut fast, &table, &classes, 0, &bounds, cap, 1.0, test, drop,
+                );
+                let expected = table_pass::<false>(
+                    &mut slow, &table, &classes, 0, &bounds, cap, 1.0, test, drop,
+                );
+                assert_eq!(kept, expected, "cap {cap} drop {drop}");
+                let survivors: Vec<_> = start
+                    .iter()
+                    .map(|c| {
+                        let f = usize::from(table.get(c.offset as usize));
+                        let add = match f {
+                            0 => 0.0,
+                            15 => ceiling.min(cap),
+                            _ => bounds[f * CLASSES + usize::from(classes[c.offset as usize])]
+                                .min(cap),
+                        };
+                        (c.offset, c.upper + add)
+                    })
+                    .filter(|&(_, upper)| !(test && upper + 1.0 < drop))
+                    .collect();
+                assert_eq!(kept, survivors.len());
+                for ((f, s), (offset, upper)) in fast.iter().zip(&slow).zip(&survivors).take(kept) {
+                    assert_eq!((f.offset, f.upper.to_bits()), (s.offset, s.upper.to_bits()));
+                    assert_eq!((f.offset, f.upper.to_bits()), (*offset, upper.to_bits()));
                 }
             }
         }
