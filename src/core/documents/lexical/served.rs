@@ -3542,8 +3542,8 @@ mod tests {
                     ..Default::default()
                 };
                 CLASS_COVERS.with(|calls| calls.set(0));
-                let ranker = (k > 0)
-                    .then_some(&declined as &dyn Fn() -> Result<Option<Vec<LexicalHit>>>);
+                let ranker =
+                    (k > 0).then_some(&declined as &dyn Fn() -> Result<Option<Vec<LexicalHit>>>);
                 let ranked = assert_same_ranked(&image, &live, &query, &options, ranker);
                 assert_eq!(ranked, words <= 6 || k == 0, "{text} {options:?}");
                 assert_eq!(
