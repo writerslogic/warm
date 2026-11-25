@@ -67,10 +67,14 @@ jobs:
             17
             25
       # The binaryTarget needs the xcframework; the macOS slice is enough to compile the package.
+      # It is built before init so CodeQL traces only the Swift compile.
       - if: matrix.language == 'swift'
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
           toolchain: stable
+      - name: Build Swift native library
+        if: matrix.language == 'swift'
+        run: SLICES=macos bindings/swift/scripts/build-xcframework.sh
       - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
         with:
           languages: ${{ matrix.language }}
@@ -99,9 +103,7 @@ jobs:
 
       - name: Build Swift binding
         if: matrix.language == 'swift'
-        run: |
-          SLICES=macos bindings/swift/scripts/build-xcframework.sh
-          swift build --package-path bindings/swift --build-tests
+        run: swift build --package-path bindings/swift --build-tests
 
       - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
         with:
