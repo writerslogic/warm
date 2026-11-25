@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [0.7.2] - 2026-11-25
+
+### Performance
+- Speed up long-union top-10, negated and multi-table rank paths; release 0.7.2 (#523)
+- Tile k-means assignment and sum centroids in parallel (#522)
 ## [0.7.1] - 2026-11-24
 
 ### Added
