@@ -1,2 +1,0 @@
-   Compiling holographic-memory v0.6.1 (/Volumes/A/.hms-holography-substrate-20261024)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.16s

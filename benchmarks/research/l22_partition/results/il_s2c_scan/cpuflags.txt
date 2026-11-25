@@ -1,1 +1,0 @@
-avx512_vnni avx512bw avx512vbmi 

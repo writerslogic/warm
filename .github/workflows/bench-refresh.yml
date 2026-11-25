@@ -1,16 +1,10 @@
 # Copyright 2024-2026 WritersLogic Contributors
 # SPDX-License-Identifier: Apache-2.0
-# CI validates the harness and table; vector qualification is an optional manual run.
+# CI validates the comparison harness and generated table.
 name: bench-refresh
 
 on:
   workflow_dispatch:
-    inputs:
-      vector_qualification:
-        description: Run the pinned vector comparison on a standard public-repository runner
-        type: boolean
-        required: false
-        default: false
   push:
     branches: [main]
     paths:
@@ -43,70 +37,3 @@ jobs:
       - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       - name: Generator tests (every table cell traces to a committed results file)
         run: uv run --no-project --python 3.13 --with pytest --with numpy==2.5.4 pytest -q benchmarks/competitive/tests
-
-  vector-qualification:
-    if: github.event_name == 'workflow_dispatch' && inputs.vector_qualification && github.event.repository.private == false
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    permissions:
-      contents: read
-    env:
-      EVIDENCE: docs/research/technical-audit-20261029/vector-contention-20261101/tracked-linux-1024
-      CARGO_BUILD_JOBS: "2"
-      RAYON_NUM_THREADS: "1"
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      # The pinned study's plan, build records and logs are retired from the tree; restore their
-      # recorded bytes before the harness hashes them.
-      - name: Restore the retired study inputs
-        run: python3 scripts/restore-retired-inputs.py --path docs/research/technical-audit-20261029/vector-contention-20261101
-      - name: Record runner and source before setup
-        run: |
-          mkdir -p "$EVIDENCE"
-          {
-            git rev-parse HEAD
-            uname -a
-            lscpu
-          } > "$EVIDENCE/runner-setup.log" 2>&1
-      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
-        with:
-          toolchain: "1.99.0"
-      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
-        with:
-          enable-cache: false
-      # The offline builds compile the two revisions pinned in plan.json, so fetch each revision's
-      # own locked dependencies rather than the checkout's, which change with every manifest edit.
-      - name: Fetch the locked dependencies of both pinned revisions
-        shell: bash
-        run: |
-          for variant in baseline current; do
-            revision="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "$EVIDENCE/plan.json" "$variant")"
-            tree="$RUNNER_TEMP/fetch-$variant"
-            mkdir -p "$tree"
-            git archive "$revision" | tar -x -C "$tree"
-            cargo +1.99.0 fetch --locked --manifest-path "$tree/Cargo.toml"
-          done 2>&1 | tee "$EVIDENCE/cargo-fetch.log"
-      - name: Build pinned baseline offline
-        run: uv run --no-project python "$EVIDENCE/probe.py" build baseline
-      - name: Build pinned candidate offline
-        run: uv run --no-project python "$EVIDENCE/probe.py" build current
-      - name: Verify pinned build and source evidence
-        run: uv run --no-project python "$EVIDENCE/probe.py" verify
-      - name: Run the fixed 900-second qualification
-        run: >-
-          uv run --no-project python "$EVIDENCE/probe.py" run
-          --quiet-grant 'Dedicated standard public ubuntu-24.04 job; prerequisite fetch/build steps finished; no concurrent WARM work'
-      - name: Summarize qualification evidence
-        if: always()
-        run: uv run --no-project python "$EVIDENCE/summarize.py"
-      - name: Retain bounded qualification evidence in logs including failures
-        if: always()
-        run: |
-          if command -v uv >/dev/null 2>&1; then
-            uv run --no-project python "$EVIDENCE/probe.py" emit-evidence
-          else
-            python3 "$EVIDENCE/probe.py" emit-evidence
-          fi
