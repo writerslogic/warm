@@ -9,7 +9,7 @@ terms. WARM runs no encoder here: you encode documents and queries yourself and 
 Nothing changes for a store that never receives one; no sparse file is written and lexical search is
 byte for byte what it was.
 
-The Python `Warm` class used here needs `warm-python` 0.7.1 or later.
+The Python `Warm` class used here needs `warm-python` 0.7.2 or later.
 
 ```python
 --8<-- "examples/quickstart/python/sparse.py:sparse"

@@ -40,8 +40,8 @@ configuration controls storage, authentication, policies and available model sta
 
 ## Optional embedded Node.js engine
 
-`writerslogic-warm` 0.7.1 embeds the Rust engine. For a published release, install explicitly
-with `npm install writerslogic-warm@0.7.1`, keeping npm's optional dependencies enabled.
+`writerslogic-warm` 0.7.2 embeds the Rust engine. For a published release, install explicitly
+with `npm install writerslogic-warm@0.7.2`, keeping npm's optional dependencies enabled.
 Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions),
 or build from this checkout with Rust installed using `npm ci --omit=optional && npm run build`.
 CommonJS and ESM both export `WarmMemorySystem`. Native operations return promises when
