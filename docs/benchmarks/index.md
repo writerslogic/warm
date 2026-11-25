@@ -42,9 +42,6 @@ Retain the raw result with its hardware class, then regenerate the table and sub
 | Text build cost: build peak memory behind SQLite FTS5 and on-disk size behind Lucene on the standard suite | [COMPARISON.md](COMPARISON.md) |
 | LoCoMo J score on 7 held-out conversations 71.97, below a single full-context pass at 72.73 | [`locomo_mem0_harness_v1/`](https://github.com/writerslogic/warm/tree/main/benchmarks/results/locomo_mem0_harness_v1) |
 
-Experiments that failed a pre-set gate are kept in
-[`benchmarks/results/negative_results_20261114`](https://github.com/writerslogic/warm/tree/main/benchmarks/results/negative_results_20261114).
-
 ## Limits of the claims
 
 - Capacity and scaling numbers are sweeps over a tested range, not guarantees. Nothing is claimed
