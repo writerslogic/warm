@@ -39,7 +39,7 @@ def doc_files() -> list[pathlib.Path]:
     files += sorted(
         path for path in (ROOT / "docs").rglob("*.md")
         if not str(path.relative_to(ROOT)).startswith(DOC_SKIP_DIRS)
-        and path.name not in ("COMPARISON.md", "GAPS.md")
+        and path.name != "COMPARISON.md"
     )
     # Package READMEs are registry long descriptions, so a stale install line there is published.
     return files + sorted(

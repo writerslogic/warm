@@ -20,11 +20,6 @@ DOCS = ROOT / "docs/benchmarks"
 COMPARISON = DOCS / "COMPARISON.md"
 CELLS = DOCS / "comparison.cells.json"
 BLOCK = ROOT / "benchmarks/competitive/README-block.md"
-GAPS_MD = DOCS / "GAPS.md"
-# The gap ledger is a long generated table; keep it out of the docs search index so it
-# does not crowd prose pages out of the top results (scripts/docs-qa/queries.txt).
-GAPS_FRONT_MATTER = "---\nsearch:\n  exclude: true\n---\n\n"
-GAPS_JSON = ROOT / "benchmarks/competitive/GAPS.json"
 README = ROOT / "README.md"
 START, END = "<!-- BENCH:START -->", "<!-- BENCH:END -->"
 
@@ -812,19 +807,6 @@ def gaps_from(summary):
     return gaps
 
 
-def gaps_markdown(gaps):
-    lines = ["# Gaps: where WARM loses or ties", "",
-             "Generated with the table from the committed results; a gap stays here until a measured change closes it. " +
-             "Factor is WARM advantage (below 1 = WARM worse). Hypotheses are unmeasured unless a file is cited. " +
-             f"`{BEHIND}` rows are measured disadvantages without a verdict (too few observations for the verdict rule, or an unverified side); "
-             "they are listed so the verdict rule never hides a loss.", "",
-             "| Status | Dataset | Hardware class | Metric | Comparator | WARM | Comparator value | Factor [interval] | Hypothesis | Code path |", "|---|---|---|---|---|---|---|---|---|---|"]
-    for g in gaps:
-        f = "n/m" if g["advantage_factor"] is None else f"{g['advantage_factor']:.2f}x" + (f" [{g['advantage_ci'][0]:.2f}, {g['advantage_ci'][1]:.2f}] ({g['interval_kind']})" if g["advantage_ci"] else " (no interval)")
-        lines.append(f"| {g['status']} | {g['dataset']} | `{g['hardware_class']}` | {g['label']} | {g['comparator']} | {g['warm']:.4g} {g['unit']} | {g['comparator_value']:.4g} | {f} | {g['hypothesis']} | {g['code_path']} |")
-    return "\n".join(lines) + "\n"
-
-
 def readme_block(summary):
     lines = [START, "", "_Generated from `benchmarks/results/competitive/` by `warm-bench table`; method and caveats in [docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md). " +
              f"W = WARM ahead (95% bootstrap interval of the factor excludes parity, at least {analyze.MIN_BOOTSTRAP_ROUNDS} rounds a side), T = tie, L = a comparator is ahead, "
@@ -878,9 +860,9 @@ def update_readme(block, path=README):
 
 
 def main(check=False):
-    markdown, cells, block, gaps = build()
+    markdown, cells, block, _ = build()
     index = json.dumps(cells, indent=1, allow_nan=False) + "\n"
-    targets = {COMPARISON: markdown + "\n", CELLS: index, BLOCK: block, GAPS_MD: GAPS_FRONT_MATTER + gaps_markdown(gaps), GAPS_JSON: json.dumps(gaps, indent=1, allow_nan=False) + "\n"}
+    targets = {COMPARISON: markdown + "\n", CELLS: index, BLOCK: block}
     if check:
         stale = [rel(p) for p, text in targets.items() if not p.exists() or p.read_text() != text]
         if stale:

@@ -5,10 +5,10 @@
 use writerslogic_warm::core::{phase_hvec, phase_resonator};
 
 #[allow(dead_code)]
-#[path = "../benchmarks/results/holography_resonator_v1/baseline.rs"]
+#[path = "fixtures/phase_resonator_baseline.rs"]
 mod baseline;
 #[allow(dead_code)]
-#[path = "../benchmarks/research/phase_resonator/cases.rs"]
+#[path = "fixtures/phase_resonator_cases.rs"]
 mod cases;
 
 use cases::{assert_equal, baseline_config, check, config, Scenario};

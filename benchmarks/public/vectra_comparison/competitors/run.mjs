@@ -13,7 +13,7 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const worker = path.join(here, 'worker.mjs')
 const inputFile = await retiredInput(path.resolve(here, '../../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/inputs.json'))
 const stopFile = await retiredInput(path.resolve(here, '../../../../docs/research/technical-audit-20261029/vectra-comparison-20261102/user-stop-receipt.json'))
-const stopped = '/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen'
+const stopped = process.env.VECTRA_FROZEN_DIR ?? path.join(here, '.cache/frozen')
 const require = createRequire(import.meta.url)
 export const arms = Object.freeze(['hnswlib', 'usearch'].flatMap(engine => [128, 256, 512, 2048].map(ef => Object.freeze({ engine, ef }))))
 

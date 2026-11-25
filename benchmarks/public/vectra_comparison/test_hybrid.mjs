@@ -6,6 +6,8 @@ import { mkdtemp, readFile, writeFile, rm, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawn } from 'node:child_process'
+
+const TOKENIZER = process.env.TOKENIZER_PATH ?? 'tokenizer.json'
 import { runWorker } from './hybrid-worker.mjs'
 import { compareHybridPair, hybridTimingSchedule, runHybridJob } from './hybrid-run.mjs'
 import { hybridPreparationGate, hybridSummary, pythonRuntime } from './vector.mjs'
@@ -80,7 +82,7 @@ test('context packing uses the actual concatenation and 4095/4096/4097 token bou
 }))
 
 test('pinned Qwen tokenizer handles synthetic Unicode and long input without truncation', async () => {
-  const count = await createTokenCounter(uvPath, '/Volumes/A/hms-models/Qwen3-Embedding-0.6B/tokenizer.json',
+  const count = await createTokenCounter(uvPath, TOKENIZER,
     'def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a')
   try {
     const texts = ['α café 🧬\n\ncellular treatment', '  spaces\tand\nnewlines', 'a'.repeat(4097), 'title\npassage.\n\ntitle two\npassage two.']
@@ -91,14 +93,14 @@ test('pinned Qwen tokenizer handles synthetic Unicode and long input without tru
     assert(count.peakRssBytes > 0)
     assert(count.receipt.executable && count.receipt.tokenizersRoot)
   } finally { await count.close() }
-  await assert.rejects(createTokenCounter(uvPath, '/Volumes/A/hms-models/Qwen3-Embedding-0.6B/tokenizer.json',
+  await assert.rejects(createTokenCounter(uvPath, TOKENIZER,
     'def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a',
     { executable: '/wrong-python', tokenizersRoot: '/wrong-package', python: 'wrong' }))
 })
 
 test('frozen Python runtime identity matches the actual offline tokenizer child', async () => {
-  const uv = process.env.UV_PATH ?? '/Users/davidcondrey/.local/bin/uv'
-  const tokenizer = '/Volumes/A/hms-models/Qwen3-Embedding-0.6B/tokenizer.json'
+  const uv = process.env.UV_PATH ?? 'uv'
+  const tokenizer = TOKENIZER
   const runtime = await pythonRuntime(uv, tokenizer)
   assert(runtime.artifacts.length > 0)
   const count = await createTokenCounter(uv, tokenizer, 'def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a', runtime)
