@@ -129,7 +129,6 @@ impl Planner {
             };
 
             if filtered.is_empty() {
-                // No causal chain found; check if target is a known entity.
                 if triple_store.has(Some(&subgoal.target), None, None) {
                     grounded.insert(subgoal.target.clone());
                 }
@@ -175,7 +174,6 @@ impl Planner {
             .keys()
             .all(|target| expanded.contains_key(target) || grounded.contains(target));
 
-        // Sort actions by depth descending so leaf actions come first (execution order).
         actions.sort_by_key(|b| std::cmp::Reverse(b.depth));
 
         let total_cost: f64 = actions.iter().map(|a| a.cost).sum();
@@ -246,7 +244,6 @@ mod tests {
     #[test]
     fn test_cycle_prevention() {
         let store = TripleStore::new();
-        // Circular: a causes b, b causes a
         store.add("a", "causes", "b", "c1");
         store.add("b", "causes", "a", "c2");
 
@@ -260,7 +257,6 @@ mod tests {
         store.add("heat", "produces", "steam", "c1");
         store.add("steam", "enables", "power", "c2");
 
-        // Empty causal_relations means follow all
         let plan = Planner::backward_chain(&store, "power", &[], 5);
         assert_eq!(plan.actions.len(), 2);
     }
@@ -268,14 +264,12 @@ mod tests {
     #[test]
     fn test_cost_estimation() {
         let store = TripleStore::new();
-        // Two triples supporting the same target -> lower cost per action.
         store.add("x", "causes", "goal", "c1");
         store.add("y", "causes", "goal", "c2");
 
         let plan = Planner::backward_chain(&store, "goal", &["causes"], 5);
         assert_eq!(plan.actions.len(), 2);
 
-        // evidence_count = 2, so cost = 1.0 / (1 + 2) = 1/3
         let expected_cost = 1.0 / 3.0;
         for action in &plan.actions {
             assert!(
@@ -285,7 +279,6 @@ mod tests {
             );
         }
 
-        // total_cost should be 2 * (1/3)
         let expected_total = 2.0 * expected_cost;
         assert!(
             (plan.total_cost - expected_total).abs() < 1e-9,
@@ -293,7 +286,6 @@ mod tests {
             plan.total_cost
         );
 
-        // Single evidence -> higher cost.
         let store2 = TripleStore::new();
         store2.add("z", "causes", "goal2", "c3");
         let plan2 = Planner::backward_chain(&store2, "goal2", &["causes"], 5);
@@ -309,31 +301,21 @@ mod tests {
     #[test]
     fn test_best_first_ordering() {
         let store = TripleStore::new();
-        // Path 1: high evidence (low cost) chain
-        //   step1a -> mid (3 triples support mid->goal, so cost = 1/4 each)
         store.add("step1a", "causes", "mid", "c1");
         store.add("alt1", "causes", "goal", "c2");
         store.add("alt2", "causes", "goal", "c3");
         store.add("mid", "causes", "goal", "c4");
 
-        // Path 2: low evidence (high cost) chain
-        //   step1b -> side (1 triple supports side->goal, cost = 1/2)
         store.add("step1b", "causes", "side", "c5");
         store.add("side", "causes", "goal", "c6");
 
         let plan = Planner::backward_chain(&store, "goal", &["causes"], 5);
 
-        // The depth-0 actions (direct to goal) should have lower cost than
-        // depth-1 actions further from the goal, due to 4 supporting triples
-        // for goal (cost = 1/5 each) vs fewer for subgoals.
         let depth0: Vec<_> = plan.actions.iter().filter(|a| a.depth == 0).collect();
         let depth1: Vec<_> = plan.actions.iter().filter(|a| a.depth == 1).collect();
 
-        // Depth-0 actions exist and come after depth-1 in execution order.
         assert!(!depth0.is_empty(), "should have depth-0 actions");
 
-        // All depth-0 actions should have cost = 1/(1+4) = 0.2
-        // (4 triples target "goal": alt1, alt2, mid, side)
         let expected_d0_cost = 1.0 / 5.0;
         for a in &depth0 {
             assert!(
@@ -343,7 +325,6 @@ mod tests {
             );
         }
 
-        // Depth-1 actions target "mid" (1 triple) or "side" (1 triple): cost = 1/2
         assert!(!depth1.is_empty(), "should have depth-1 actions");
         for a in &depth1 {
             assert!(
@@ -353,7 +334,6 @@ mod tests {
             );
         }
 
-        // Verify total_cost is consistent.
         let sum: f64 = plan.actions.iter().map(|a| a.cost).sum();
         assert!(
             (plan.total_cost - sum).abs() < 1e-9,

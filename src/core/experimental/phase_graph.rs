@@ -296,9 +296,7 @@ mod tests {
         g.relate("paris", "capital_of", "france");
         g.relate("berlin", "capital_of", "germany");
         g.relate("madrid", "capital_of", "spain");
-        // forward: (paris, capital_of, ?) -> france
         assert_eq!(g.retrieve_object("paris", "capital_of"), Some("france"));
-        // inverse (subject recovery from the same field): (?, capital_of, germany) -> berlin
         assert_eq!(g.retrieve_subject("capital_of", "germany"), Some("berlin"));
     }
 
@@ -388,11 +386,9 @@ mod tests {
     #[test]
     fn multi_hop_path_reasoning() {
         let mut g = PhaseGraph::new(1024, 256);
-        // alice --friend--> bob --employer--> acme --located_in--> paris
         g.relate("alice", "friend", "bob");
         g.relate("bob", "employer", "acme");
         g.relate("acme", "located_in", "paris");
-        // add distractors so ranking is non-trivial
         for i in 0..200 {
             g.relate(&format!("x{i}"), "friend", &format!("y{i}"));
         }
@@ -401,7 +397,6 @@ mod tests {
                 .as_deref(),
             Some("paris")
         );
-        // single hop still works
         assert_eq!(
             g.retrieve_path("alice", &["friend"]).as_deref(),
             Some("bob")

@@ -120,7 +120,6 @@ pub fn hopfield_query_iterative<S: AsRef<str>, V: Borrow<EntangledHVec>>(
 
         let weights = entmax(&scores, config.alpha);
 
-        // Reconstruct query as weighted bundle of attended patterns
         current_query = weighted_reconstruct(patterns, &weights, query.dim);
         if current_query.indices.is_empty() {
             break;
@@ -173,7 +172,6 @@ fn sparsemax(scores: &[f64]) -> Vec<f64> {
 
     for (j, &idx) in sorted_indices.iter().enumerate() {
         cumsum += scores[idx];
-        // 1-indexed: j+1
         if 1.0 + (j + 1) as f64 * scores[idx] > cumsum {
             support_size = j + 1;
         } else {
@@ -182,7 +180,6 @@ fn sparsemax(scores: &[f64]) -> Vec<f64> {
     }
 
     if support_size == 0 {
-        // All scores identical or degenerate — uniform
         let uniform = 1.0 / n as f64;
         return vec![uniform; n];
     }

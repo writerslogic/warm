@@ -39,8 +39,7 @@ pub(super) fn select_probes(
     idx
 }
 
-/// Per-(query, list) table build cost in scanned-code equivalents (measured on wl-03: ~2.7 us
-/// per table against ~4.9e8 codes/s per thread).
+/// Per-(query, list) table build cost in scanned-code equivalents.
 pub(super) const TABLE_CODES: u64 = 1300;
 
 /// Assigns queries to `threads` workers by estimated scan work (one table plus the codes of each

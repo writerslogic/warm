@@ -1173,7 +1173,6 @@ mod occurrence_targets {
             .unwrap();
         let want = s.action_targets("e", 1).unwrap();
         drop(s);
-        // Journal only.
         let mut s =
             store::ExperienceStore::open(dir.path(), ExperienceConfig::default(), None).unwrap();
         assert_eq!(s.action_targets("e", 1).unwrap(), want);
@@ -1489,7 +1488,6 @@ mod occurrence_targets {
             retry(&mut z, 2, &rows(["7", "9"]), Some(&a2)).unwrap(),
             Ingested::Duplicate
         );
-        // A new step is ingested and checked as usual.
         put(&mut z, 3, &rows(["7", "9"]), Some(&a1));
         assert!(matches!(
             retry(&mut z, 3, &rows(["9", "7"]), Some(&a1)),

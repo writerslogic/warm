@@ -116,7 +116,6 @@ pub(super) fn train_label(
             let cnt = i64::from(counts[c]);
             for j in 0..dim {
                 let s = sums[c * dim + j];
-                // Round half away from zero.
                 let m = if s >= 0 {
                     (2 * s + cnt) / (2 * cnt)
                 } else {

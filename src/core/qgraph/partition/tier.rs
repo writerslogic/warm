@@ -503,7 +503,6 @@ impl PartitionTier {
         };
         let reorder = self.params.reorder.max(k);
         let t0 = std::time::Instant::now();
-        // Centre distances |q - c|^2 and the probed lists per query.
         let mut qc = vec![0f32; nq * l];
         qc.par_chunks_mut(ROWS * l)
             .zip(queries.par_chunks(ROWS * dim))
@@ -555,7 +554,6 @@ impl PartitionTier {
             })
             .collect();
         drop(qc);
-        // Per-query table term -2 <q_b, v>.
         let qtab: Vec<f32> = queries
             .par_chunks(dim)
             .flat_map_iter(|q| {

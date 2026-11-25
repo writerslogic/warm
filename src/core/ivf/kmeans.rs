@@ -77,7 +77,6 @@ impl KMeansNystrom {
                     }
                     self.centroids[c] = new_centroid;
                 } else {
-                    // Re-seed empty cluster from the point farthest from its centroid
                     let farthest = data
                         .iter()
                         .map(|p| {
@@ -183,21 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cluster_assignment() {
-        let centroids = vec![
-            DVector::from_vec(vec![0.0f32, 0.0]),
-            DVector::from_vec(vec![10.0, 10.0]),
-        ];
-        let km = KMeansNystrom { centroids, k: 2 };
-
-        let p1 = DVector::from_vec(vec![0.1f32, 0.1]);
-        let p2 = DVector::from_vec(vec![9.9, 9.9]);
-        assert_eq!(km.assign(&p1), 0);
-        assert_eq!(km.assign(&p2), 1);
-    }
-
-    #[test]
-    fn test_top_clusters() {
+    fn assignment_and_top_clusters_pick_the_nearest_centroids() {
         let centroids = vec![
             DVector::from_vec(vec![0.0f32, 0.0]),
             DVector::from_vec(vec![5.0, 5.0]),
@@ -205,8 +190,9 @@ mod tests {
         ];
         let km = KMeansNystrom { centroids, k: 3 };
 
-        let p = DVector::from_vec(vec![4.0f32, 4.0]);
-        let top = km.top_clusters(&p, 2);
+        assert_eq!(km.assign(&DVector::from_vec(vec![0.1f32, 0.1])), 0);
+        assert_eq!(km.assign(&DVector::from_vec(vec![9.9f32, 9.9])), 2);
+        let top = km.top_clusters(&DVector::from_vec(vec![4.0f32, 4.0]), 2);
         assert_eq!(top.len(), 2);
         assert_eq!(top[0], 1);
     }

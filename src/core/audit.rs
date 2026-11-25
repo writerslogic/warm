@@ -239,22 +239,6 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn test_audit_record_and_read() {
-        let dir = tempdir().unwrap();
-        let log = AuditLog::new(dir.path()).unwrap();
-
-        log.record(AuditOp::Memorize, "doc_1", None).unwrap();
-        log.record(AuditOp::Delete, "doc_2", None).unwrap();
-        log.record(AuditOp::Compact, "", None).unwrap();
-
-        let entries = log.entries_since(0).unwrap();
-        assert_eq!(entries.len(), 3);
-        assert_eq!(entries[0].op, AuditOp::Memorize);
-        assert_eq!(entries[1].op, AuditOp::Delete);
-        assert_eq!(entries[2].op, AuditOp::Compact);
-    }
-
-    #[test]
     fn test_audit_since_filter() {
         let dir = tempdir().unwrap();
         let log = AuditLog::new(dir.path()).unwrap();
@@ -348,13 +332,17 @@ mod tests {
         {
             let log = AuditLog::new(dir.path()).unwrap();
             log.record(AuditOp::Memorize, "persist_test", None).unwrap();
+            log.record(AuditOp::Delete, "doc_2", None).unwrap();
+            log.record(AuditOp::Compact, "", None).unwrap();
         }
 
         let log = AuditLog::new(dir.path()).unwrap();
         let entries = log.entries_since(0).unwrap();
-        assert_eq!(entries.len(), 1);
+        assert_eq!(entries.len(), 3);
         assert_eq!(entries[0].op, AuditOp::Memorize);
         assert_eq!(entries[0].id_hash, hash_id("persist_test"));
+        assert_eq!(entries[1].op, AuditOp::Delete);
+        assert_eq!(entries[2].op, AuditOp::Compact);
     }
 
     #[test]

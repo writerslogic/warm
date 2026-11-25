@@ -155,16 +155,8 @@ mod tests {
     }
 
     #[test]
-    fn test_scan_below_threshold() {
-        let store = make_store();
-        let patterns = PatternScanner::scan_relation_patterns(&store, 10);
-        assert!(patterns.is_empty());
-    }
-
-    #[test]
     fn test_co_occurrences() {
         let store = make_store();
-        // paris and berlin both have capital_of and located_in
         let co = PatternScanner::find_co_occurrences(&store, 2);
         assert!(!co.is_empty());
         let pair = co.iter().find(|c| {
@@ -176,9 +168,10 @@ mod tests {
     }
 
     #[test]
-    fn test_co_occurrences_empty() {
-        let store = TripleStore::new();
-        let co = PatternScanner::find_co_occurrences(&store, 1);
-        assert!(co.is_empty());
+    fn nothing_is_reported_below_the_threshold_or_for_an_empty_store() {
+        let store = make_store();
+        assert!(PatternScanner::scan_relation_patterns(&store, 10).is_empty());
+        let empty = TripleStore::new();
+        assert!(PatternScanner::find_co_occurrences(&empty, 1).is_empty());
     }
 }

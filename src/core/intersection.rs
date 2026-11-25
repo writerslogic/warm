@@ -17,7 +17,6 @@ pub fn sparse_intersection_count(a: &[u32], b: &[u32]) -> usize {
         return 0;
     }
 
-    // Ensure a is the smaller slice for the skew check.
     let (small, large) = if a.len() <= b.len() { (a, b) } else { (b, a) };
     // Skewed sizes gallop before any block kernel: a block kernel walks the
     // large side linearly.
@@ -63,15 +62,11 @@ fn galloping_intersection_count(small: &[u32], large: &[u32]) -> usize {
     let mut count = 0;
     let mut lo = 0; // cursor into large; advances monotonically
     for &val in small {
-        // Skip elements in large that are less than val using exponential search.
-        // First, find a bound by doubling the step.
         let mut step = 1;
         while lo + step < large.len() && large[lo + step] < val {
             step *= 2;
         }
-        // Binary search within [lo, min(lo+step, len))
         let hi = (lo + step).min(large.len());
-        // Find first position >= val
         lo = binary_search_left(&large[lo..hi], val) + lo;
         if lo < large.len() && large[lo] == val {
             count += 1;

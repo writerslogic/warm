@@ -95,7 +95,6 @@ mod tests {
         let mut idf = IdfWeights::new(10, 2.0);
         idf.weights = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 100.0, 1.0];
         idf.clip();
-        // median is 1.0, cap = 2.0 * 1.0 = 2.0
         assert!(idf.weight(8) <= 2.0);
         assert!((idf.weight(0) - 1.0).abs() < 0.001);
     }
@@ -110,7 +109,6 @@ mod tests {
         let mut idf = IdfWeights::new(20, 3.0);
         idf.recompute(&postings, 3);
 
-        // dim 0: df=3, dim 1: df=2, dim 2: df=1
         assert!(idf.weight(0) < idf.weight(1));
         assert!(idf.weight(1) < idf.weight(2));
     }

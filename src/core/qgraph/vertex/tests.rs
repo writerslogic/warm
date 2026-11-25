@@ -1154,7 +1154,6 @@ fn euclidean_index_finds_euclidean_neighbours() {
             x.iter_mut().for_each(|v| *v *= s);
         }
     };
-    // Queries are held-out rows of the same clusters.
     let mut data = clustered(n + 100, d, 7);
     spread(&mut data, 0);
     let queries = data.split_off(n * d);
@@ -1382,7 +1381,6 @@ fn block_estimates_track_exact_inner_products() {
     let d = 64;
     let data = clustered(3000, d, 5);
     let graph = Graph::build(&data, d, &BuildParams::default()).expect("build");
-    // The index works on unit rows; so must the exact products.
     let unit = &graph.vectors;
     for (bits, bar) in [(4u8, 0.998), (2, 0.98), (1, 0.90)] {
         let g = VGraph::from_graph(&graph, false)

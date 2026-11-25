@@ -354,7 +354,6 @@ mod tests {
         for i in 0..n_each {
             data.extend_from_slice(&[1.0, 0.01 * i as f32]);
         }
-        // The sink is the smaller cluster, so the largest component is unambiguous.
         for i in 0..n_each * 3 / 4 {
             data.extend_from_slice(&[0.01 * i as f32, 1.0]);
         }
@@ -371,7 +370,6 @@ mod tests {
             ..BuildParams::default()
         };
         let mut graph = Graph::build(&data, dim, &params).unwrap();
-        // Cut every edge leaving the second cluster so it becomes a sink.
         for v in 40..70 {
             let kept: Vec<u32> = graph
                 .adj
