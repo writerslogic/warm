@@ -1,0 +1,110 @@
+# Copyright 2024-2026 WritersLogic Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+# Advanced CodeQL setup. Default setup cannot analyze Rust together with Swift and Java/Kotlin,
+# so repository code scanning default setup must be set to not-configured for this to upload.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { language: actions, os: ubuntu-latest, build-mode: none }
+          - { language: c-cpp, os: ubuntu-latest, build-mode: none }
+          - { language: csharp, os: ubuntu-latest, build-mode: none }
+          - { language: go, os: ubuntu-latest, build-mode: manual }
+          - { language: java-kotlin, os: ubuntu-latest, build-mode: manual }
+          - { language: javascript-typescript, os: ubuntu-latest, build-mode: none }
+          - { language: python, os: ubuntu-latest, build-mode: none }
+          - { language: rust, os: ubuntu-latest, build-mode: none }
+          - { language: swift, os: macos-latest, build-mode: manual }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Toolchains go before init so CodeQL traces the binaries the build uses.
+      # Go links the C library built from bindings/c, as in bindings.yml.
+      - if: matrix.language == 'go'
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - if: matrix.language == 'go'
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: "1.24"
+      # Committed uniffi-generated Kotlin and Java sources compile without the native library.
+      # Maven needs JDK 25 (as in bindings.yml); the Kotlin module's Gradle toolchain is 17.
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            25
+      # The binaryTarget needs the xcframework; the macOS slice is enough to compile the package.
+      # It is built before init so CodeQL traces only the Swift compile.
+      - if: matrix.language == 'swift'
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+      - name: Build Swift native library
+        if: matrix.language == 'swift'
+        run: SLICES=macos bindings/swift/scripts/build-xcframework.sh
+      - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Build Go binding
+        if: matrix.language == 'go'
+        shell: bash
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/target-bindings
+        working-directory: bindings/go
+        run: |
+          cargo build --release --manifest-path ../c/Cargo.toml
+          mkdir -p "lib/$(go env GOOS)_$(go env GOARCH)"
+          cp "$CARGO_TARGET_DIR/release/libwriterslogic_warm_c.a" "lib/$(go env GOOS)_$(go env GOARCH)/"
+          go build ./...
+          go vet ./...
+
+      - name: Build Java and Kotlin bindings
+        if: matrix.language == 'java-kotlin'
+        shell: bash
+        run: |
+          (cd bindings/java && mvn -B -DskipTests test-compile)
+          bindings/kotlin/scripts/bootstrap-gradle-wrapper.sh
+          (cd bindings/kotlin && JAVA_HOME="$JAVA_HOME_17_X64" ./gradlew --no-daemon :jvm:compileKotlin :jvm:compileTestKotlin)
+
+      - name: Build Swift binding
+        if: matrix.language == 'swift'
+        run: swift build --package-path bindings/swift --build-tests
+
+      - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          category: /language:${{ matrix.language }}
