@@ -25,7 +25,9 @@ fn shown(url: &str) -> String {
         return url.to_owned();
     };
     let (authority, path) = rest.split_once('/').unwrap_or((rest, ""));
-    let host = authority.rsplit_once('@').map_or(authority, |(_, host)| host);
+    let host = authority
+        .rsplit_once('@')
+        .map_or(authority, |(_, host)| host);
     if path.is_empty() {
         format!("{scheme}://{host}")
     } else {
@@ -55,7 +57,10 @@ fn download_file(url: &str, dest: &Path, want_sha: &str, max: u64) -> Result<()>
             break;
         }
         total += n as u64;
-        ensure!(total <= max, "{shown_url} is larger than the pinned {max} bytes");
+        ensure!(
+            total <= max,
+            "{shown_url} is larger than the pinned {max} bytes"
+        );
         hash.update(&buf[..n]);
         file.write_all(&buf[..n])?;
     }
@@ -191,7 +196,10 @@ mod tests {
 
     #[test]
     fn shown_url_drops_credentials_and_query() {
-        assert_eq!(shown("https://u:tok@m.example/a/b?sig=x"), "https://m.example/a/b");
+        assert_eq!(
+            shown("https://u:tok@m.example/a/b?sig=x"),
+            "https://m.example/a/b"
+        );
         assert_eq!(shown("https://huggingface.co"), "https://huggingface.co");
         assert_eq!(shown("http://t@h:8080"), "http://h:8080");
     }
