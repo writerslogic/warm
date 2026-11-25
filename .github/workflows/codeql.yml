@@ -75,11 +75,14 @@ jobs:
           go vet ./...
 
       # Committed uniffi-generated Kotlin and Java sources compile without the native library.
+      # Maven needs JDK 25 (as in bindings.yml); the Kotlin module's Gradle toolchain is 17.
       - if: matrix.language == 'java-kotlin'
         uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: |
+            17
+            25
       - name: Build Java and Kotlin bindings
         if: matrix.language == 'java-kotlin'
         shell: bash
