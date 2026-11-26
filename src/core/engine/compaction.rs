@@ -180,22 +180,17 @@ enum DocumentMutation<'a> {
 }
 
 impl WarmCore {
-    /// Compacts. Purges that are waiting for a scrub (`defer_purge`) make this a scrubbing
-    /// compaction, so the next compaction of a store with deferred deletes erases them.
+    /// Compacts. Purges waiting for a scrub (`defer_purge`) make this a scrubbing compaction.
     ///
-    /// This is the compaction a caller asks for by name. Writers (ingests, deletes and every
-    /// other mutation) wait for most of it: its snapshot, which includes any reorder and the
-    /// writing of a streamed checkpoint, and its publication; searches keep running. With
-    /// `document_checkpoint.reorder` (the default) a store that writes a checkpoint first has
-    /// its slots put in document order (see [`Self::reorder_documents`]) when it was never
-    /// reordered, as after a bulk ingest, or at least a quarter of its slots were written since
-    /// the last reorder. That compaction takes 3 to 5 times as long: 325 s against 64.5 s
-    /// without the reorder at 5M documents, 71.5 s against 17.7 s at 1M
-    /// (`docs/file-format/index.md`, "Document order"). A store with compressed text or
-    /// encryption renumbers its slots in memory, and searches also wait while it does.
-    /// `document_checkpoint.reorder = false` turns the reorder off, and
-    /// [`Self::compact_without_reorder`] skips it for one call. [`Self::last_reorder`] reports
-    /// what the call did.
+    /// Writers wait for the snapshot (including any reorder and streamed checkpoint) and the
+    /// publication; searches keep running. With `document_checkpoint.reorder` (the default), a
+    /// store writing a checkpoint first puts its slots in document order (see
+    /// [`Self::reorder_documents`]) when it was never reordered or a quarter of its slots were
+    /// written since, which takes several times as long (`docs/file-format/index.md`,
+    /// "Document order"). A store with compressed text or encryption renumbers its slots in
+    /// memory, and searches also wait while it does. `document_checkpoint.reorder = false` turns
+    /// the reorder off, [`Self::compact_without_reorder`] skips it for one call, and
+    /// [`Self::last_reorder`] reports what the call did.
     pub fn compact(&self) -> Result<()> {
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();

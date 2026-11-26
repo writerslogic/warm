@@ -223,6 +223,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn query_bounds_k_and_dimension() -> anyhow::Result<()> {
+        let warm = WarmCore::new(1024, None, None)?;
+        let probe = EntangledHVec::new_deterministic(1024, 0);
+        for i in 0..3 {
+            warm.memorize(format!("v{i}"), EntangledHVec::new_deterministic(1024, i))?;
+        }
+        assert!(warm.query(&probe, 0)?.is_empty());
+        let wrong_dim = EntangledHVec::new_deterministic(512, 0);
+        assert!(warm.query(&wrong_dim, 3)?.is_empty());
+        for k in [1u32, 2, 3, 4, u32::MAX] {
+            let hits = warm.query(&probe, k)?;
+            assert_eq!(hits.len(), (k as usize).min(3), "k = {k}");
+            assert_eq!(hits[0].id, "v0", "k = {k}");
+        }
+        Ok(())
+    }
+
+    #[test]
     fn diagnostics_report_route_lifecycle_and_storage() -> anyhow::Result<()> {
         let directory = tempfile::tempdir()?;
         let warm = WarmCore::new(

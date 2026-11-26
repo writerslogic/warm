@@ -657,9 +657,7 @@ impl BaseRowsWriter {
             return Err(UpdateError::Capacity);
         }
         let temp = self.writer.into_inner().map_err(|e| e.into_error())?;
-        temp.as_file().sync_all()?;
-        sync_mapped_file(temp.as_file())?;
-        temp.persist(self.path).map_err(|e| e.error)?;
+        crate::core::qgraph::persist_synced(temp, &self.path)?;
         Ok(())
     }
 }
