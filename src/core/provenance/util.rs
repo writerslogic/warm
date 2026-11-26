@@ -65,3 +65,11 @@ pub(super) fn hex_decode(hex: &str) -> Result<[u8; 32]> {
     }
     Ok(out)
 }
+
+#[cfg(test)]
+pub(super) fn unhex(s: &str) -> Vec<u8> {
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+        .collect()
+}

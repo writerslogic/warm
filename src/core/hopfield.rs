@@ -141,16 +141,8 @@ fn entmax(scores: &[f64], alpha: f64) -> Vec<f64> {
     }
 }
 
-/// Sparsemax transformation (α=2 entmax).
-///
-/// Projects scores onto the probability simplex with maximum sparsity.
-/// Margin m = 1/(α-1) = 1 for α=2.
-///
-/// Algorithm (Martins & Astudillo, 2016):
-/// 1. Sort scores descending
-/// 2. Find support size k = max{j : 1 + j·z_(j) > Σ_{i≤j} z_(i)}
-/// 3. Threshold τ = (Σ_{i≤k} z_(i) - 1) / k
-/// 4. p_i = max(z_i - τ, 0)
+/// Sparsemax (α=2 entmax, Martins & Astudillo 2016): the Euclidean projection of the scores
+/// onto the probability simplex, `p_i = max(z_i - τ, 0)`.
 fn sparsemax(scores: &[f64]) -> Vec<f64> {
     let n = scores.len();
     if n == 0 {

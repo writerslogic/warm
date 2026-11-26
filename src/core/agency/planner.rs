@@ -78,20 +78,12 @@ impl PartialOrd for Subgoal {
 pub struct Planner;
 
 impl Planner {
-    /// Plan how to achieve a goal state by backward-chaining.
+    /// Backward-chains from `goal`: triples with `object == goal` make their subject a
+    /// subgoal, expanded lowest-cost first up to `max_depth`.
     ///
-    /// Looks for triples where `object == goal` and treats the subject as a
-    /// subgoal. Uses best-first search, expanding the lowest-cost subgoal
-    /// first. Recurses up to `max_depth`.
-    ///
-    /// A plan is "complete" if every leaf subgoal either already exists as a
-    /// subject in the triple store or has no further causal chain.
-    ///
-    /// If the chain cannot reach known facts within `max_depth`, the best
-    /// partial plan found so far is returned with `complete == false`.
-    ///
-    /// `causal_relations`: only follow triples with these relation types
-    /// (e.g., "causes", "enables", "produces"). If empty, follows all relations.
+    /// The plan is complete when every leaf subgoal is already a known subject or has no
+    /// further chain; otherwise the best partial plan is returned with `complete == false`.
+    /// `causal_relations` restricts followed relations; empty follows all.
     pub fn backward_chain(
         triple_store: &TripleStore,
         goal: &str,

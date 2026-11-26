@@ -283,14 +283,6 @@ pub struct SparseStore {
     inner: RwLock<Option<Inner>>,
 }
 
-fn sync_dir(dir: &Path) -> Result<()> {
-    #[cfg(unix)]
-    File::open(dir)?.sync_all()?;
-    #[cfg(not(unix))]
-    let _ = dir;
-    Ok(())
-}
-
 impl SparseStore {
     /// Opens the store in `dir`; nothing is created when the file is absent.
     pub fn open(dir: &Path) -> Result<Self> {
@@ -550,7 +542,7 @@ impl SparseStore {
         drop(file);
         std::fs::rename(&tmp, &self.path).context("create sparse vector file")?;
         if let Some(dir) = self.path.parent() {
-            sync_dir(dir)?;
+            crate::core::durable_file::sync_directory(dir)?;
         }
         Ok(Inner {
             rows: Vec::new(),
@@ -669,7 +661,7 @@ impl Inner {
         drop(file);
         std::fs::rename(&tmp, path)?;
         if let Some(dir) = path.parent() {
-            sync_dir(dir)?;
+            crate::core::durable_file::sync_directory(dir)?;
         }
         self.rows = rows;
         self.slots = slots;

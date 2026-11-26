@@ -155,31 +155,20 @@ mod tests {
     }
 
     #[test]
-    fn greedy_search_finds_self() {
+    fn greedy_search_finds_self_sorts_desc_and_honors_k() {
         let index = build_test_index(50, 1000);
         let results = greedy_search(&index, &index.vectors[0], 1, 32);
-        assert!(!results.is_empty());
         assert_eq!(results[0].id, "vec_0");
-    }
 
-    #[test]
-    fn greedy_search_ordering() {
-        let index = build_test_index(50, 1000);
         let query = EntangledHVec::new_deterministic(1000, 999);
-        let results = greedy_search(&index, &query, 10, 32);
-        for w in results.windows(2) {
-            assert!(
-                w[0].similarity >= w[1].similarity,
-                "Results should be sorted desc"
-            );
+        for k in [1, 5, 10] {
+            let results = greedy_search(&index, &query, k, 32);
+            assert_eq!(results.len(), k);
+            assert!(results
+                .windows(2)
+                .all(|w| w[0].similarity >= w[1].similarity));
         }
-    }
-
-    #[test]
-    fn greedy_search_returns_k_results() {
-        let index = build_test_index(50, 1000);
-        let query = EntangledHVec::new_deterministic(1000, 999);
-        let results = greedy_search(&index, &query, 5, 32);
-        assert_eq!(results.len(), 5, "Should return exactly k results");
+        assert!(greedy_search(&index, &query, 0, 32).is_empty());
+        assert!(greedy_search(&index, &query, 1000, 32).len() <= 50);
     }
 }
