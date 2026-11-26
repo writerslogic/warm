@@ -23,14 +23,10 @@ include = [
     "/tests/**",
     "/examples/**",
     "/benches/**",
-    "/docs/file-format/**",
-    "/docs/reference/**",
     "/docs/server/**",
     "/benchmarks/embedding/embed_store_bench.rs",
     "/benchmarks/public/vector_glove_development.rs",
     "/benchmarks/public/vector_glove_diagnosis.rs",
-    "/benchmarks/research/phase_resonator/cases.rs",
-    "/benchmarks/results/holography_resonator_v1/baseline.rs",
 ]
 
 [lib]
@@ -158,10 +154,6 @@ name = "competitive_hybrid"
 required-features = ["local-embed-download"]
 
 [[example]]
-name = "supersession_probe"
-required-features = ["local-embed"]
-
-[[example]]
 name = "verify_cogmem_sample"
 required-features = ["provenance"]
 
@@ -225,7 +217,7 @@ local-embed = ["dep:tokenizers", "sha2", "dep:libm"]
 # First-use download of the pinned upstream model files into the cache (adds ureq).
 local-embed-download = ["local-embed", "ureq"]
 # Experimental query-private similarity scoring (LWE, SimplePIR-style). Hides
-# the query from the server only; see docs/PRIVATE-SEARCH.md for the limits.
+# the query from the server only; see docs/security.md for the limits.
 private-search = ["zeroize", "rand/chacha"]
 # HTTP service for the warm-sdk Python client (`warm-server` binary).
 server = ["dep:parking_lot", "tokio", "tokio/rt-multi-thread", "tokio/macros", "tokio/net", "tokio/time", "tokio/sync", "tokio/io-util", "tokio/fs", "tokio/signal", "cli", "dep:schemars", "axum", "subtle", "sha2", "dep:hyper", "dep:hyper-util", "dep:tower-service", "dep:rustls", "dep:tokio-rustls", "dep:tar", "dep:http-body-util", "dep:bytes", "dep:futures-util"]
@@ -235,10 +227,6 @@ mcp = ["dep:parking_lot", "dep:rmcp", "dep:tokio-util", "tokio", "tokio/rt-multi
 
 [[example]]
 name = "experience_ingest_bench"
-
-[[example]]
-name = "sealed_keyprobe"
-required-features = ["keychain"]
 
 [[bin]]
 name = "warm-embed"
@@ -288,11 +276,6 @@ path = "src/bin/research/warm-scaling.rs"
 required-features = ["experimental"]
 
 [[bin]]
-name = "block-recovery-test"
-path = "src/bin/research/block-recovery-test.rs"
-required-features = ["experimental"]
-
-[[bin]]
 name = "public-bench"
 path = "src/bin/research/public-bench.rs"
 required-features = ["cli", "mimalloc"]
@@ -301,21 +284,6 @@ required-features = ["cli", "mimalloc"]
 name = "conversation-eval"
 path = "src/bin/research/conversation-eval.rs"
 required-features = ["conversation-memory", "cli"]
-
-[[bin]]
-name = "route-sweep"
-path = "src/bin/research/route-sweep.rs"
-
-[[bin]]
-name = "bundle-subset-sweep"
-path = "src/bin/research/bundle-subset-sweep.rs"
-required-features = ["experimental"]
-
-
-[[bin]]
-name = "algebraic-codebook-bench"
-path = "src/bin/research/algebraic-codebook-bench.rs"
-required-features = ["experimental", "cli"]
 
 [[bin]]
 name = "private-query-bench"
@@ -374,29 +342,9 @@ name = "encoder-eval"
 path = "src/bin/research/encoder-eval.rs"
 
 [[bin]]
-name = "operand-retriever"
-path = "src/bin/research/operand-retriever.rs"
-required-features = ["experimental"]
-
-[[bin]]
 name = "forget-experiment"
 path = "src/bin/research/forget-experiment.rs"
 required-features = ["experimental"]
-
-[[bin]]
-name = "ann-failure-map"
-path = "src/bin/research/ann-failure-map.rs"
-required-features = ["experimental", "cli"]
-
-[[bin]]
-name = "vibe-rotation"
-path = "src/bin/research/vibe-rotation.rs"
-required-features = ["experimental", "cli"]
-
-[[bin]]
-name = "qag-diagnose"
-path = "src/bin/research/qag-diagnose.rs"
-required-features = ["experimental", "cli"]
 
 [[bin]]
 name = "qgraph-repair-bench"
@@ -404,15 +352,7 @@ path = "src/bin/research/qgraph-repair-bench.rs"
 required-features = ["cli"]
 
 [[example]]
-name = "kmer_encoder"
-required-features = ["experimental"]
-
-[[example]]
 name = "sparse_composition"
-required-features = ["experimental"]
-
-[[example]]
-name = "qgraph_build_profile"
 required-features = ["experimental"]
 
 [[example]]
@@ -478,39 +418,6 @@ name = "query_alloc"
 harness = false
 
 [[bin]]
-name = "amp-decode"
-path = "src/bin/research/amp-decode.rs"
-
-[[bin]]
-name = "base-residual"
-path = "src/bin/research/base-residual.rs"
-
-[[bin]]
-name = "bilinear-readout"
-path = "src/bin/research/bilinear-readout.rs"
-
-[[bin]]
-name = "binding-baselines"
-path = "src/bin/research/binding-baselines.rs"
-
-[[bin]]
-name = "binding-discriminator"
-path = "src/bin/research/binding-discriminator.rs"
-
-[[bin]]
-name = "bloom-wall"
-path = "src/bin/research/bloom-wall.rs"
-required-features = ["experimental"]
-
-[[bin]]
-name = "capacity-campaign"
-path = "src/bin/research/capacity-campaign.rs"
-
-[[bin]]
-name = "fixed-point-holographic"
-path = "src/bin/research/fixed-point-holographic.rs"
-
-[[bin]]
 name = "warm-research-bench"
 path = "src/bin/research/warm-research-bench.rs"
 
@@ -519,47 +426,7 @@ name = "warm-stress"
 path = "src/bin/research/warm-stress.rs"
 
 [[bin]]
-name = "kernel-capacity-sweep"
-path = "src/bin/research/kernel-capacity-sweep.rs"
-
-[[bin]]
-name = "kernel-load-curve"
-path = "src/bin/research/kernel-load-curve.rs"
-
-[[bin]]
-name = "noisy-retrieval"
-path = "src/bin/research/noisy-retrieval.rs"
-
-[[bin]]
-name = "pinv-memory"
-path = "src/bin/research/pinv-memory.rs"
-
-[[bin]]
-name = "resonator-bundle"
-path = "src/bin/research/resonator-bundle.rs"
-
-[[bin]]
-name = "resonator-cleanup"
-path = "src/bin/research/resonator-cleanup.rs"
-
-[[bin]]
-name = "resonator-factorize"
-path = "src/bin/research/resonator-factorize.rs"
-
-[[bin]]
-name = "resonator-sweep"
-path = "src/bin/research/resonator-sweep.rs"
-
-[[bin]]
-name = "ridge-memory"
-path = "src/bin/research/ridge-memory.rs"
-
-[[bin]]
 name = "kmer-eval"
 path = "src/bin/research/kmer-eval.rs"
 required-features = ["experimental"]
 
-[[bin]]
-name = "fpe-timestamps-eval"
-path = "src/bin/research/fpe-timestamps-eval.rs"
-required-features = ["experimental", "cli"]

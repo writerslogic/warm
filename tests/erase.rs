@@ -7,7 +7,7 @@
 //! the deleted text. A logical forget (`purge: false`) leaves the deleted frames in the
 //! journal; the first test pins exactly which files those are.
 //!
-//! This scans files, not the device: see `tests/raw_image.rs` and `docs/memory-api/ERASURE.md`
+//! This scans files, not the device: see `tests/raw_image.rs` and `docs/reference/api.md`
 //! for what that does and does not cover.
 
 mod erase_common;

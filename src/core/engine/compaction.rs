@@ -191,7 +191,7 @@ impl WarmCore {
     /// reordered, as after a bulk ingest, or at least a quarter of its slots were written since
     /// the last reorder. That compaction takes 3 to 5 times as long: 325 s against 64.5 s
     /// without the reorder at 5M documents, 71.5 s against 17.7 s at 1M
-    /// (`docs/file-format/CHECKPOINT.md`, "Document order"). A store with compressed text or
+    /// (`docs/file-format/index.md`, "Document order"). A store with compressed text or
     /// encryption renumbers its slots in memory, and searches also wait while it does.
     /// `document_checkpoint.reorder = false` turns the reorder off, and
     /// [`Self::compact_without_reorder`] skips it for one call. [`Self::last_reorder`] reports
@@ -221,7 +221,7 @@ impl WarmCore {
     }
 
     /// Compacts with the document slots in bisection order whether or not a reorder is due or
-    /// within `document_checkpoint.reorder_memory_budget` (see `docs/file-format/CHECKPOINT.md`,
+    /// within `document_checkpoint.reorder_memory_budget` (see `docs/file-format/index.md`,
     /// "Document order"). Writers wait for it as for [`Self::compact`]. Returns whether the
     /// written checkpoint is reordered: a store that takes no checkpoint, has purges waiting
     /// (the scrubbing compaction runs instead) or holds fewer than 1024 documents is compacted

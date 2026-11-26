@@ -100,7 +100,7 @@ client.close()
 # --8<-- [start:encrypt]
 # 3. Protect (vector path). warm-server has no encryption at rest, so the client masks vectors with a key the
 # server never sees. This is obfuscation, not encryption: the server still learns every pairwise
-# similarity and stores text and metadata in plaintext (docs/SERVER.md).
+# similarity and stores text and metadata in plaintext (docs/server/index.md).
 docs = [
     {"id": d["id"], "vector": toy_embed(d["text"]), "text": d["text"], "metadata": {"title": d["title"]}}
     for d in corpus

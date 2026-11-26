@@ -31,7 +31,7 @@ SINGLE_THREAD = {name: "1" for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS
 SUITES = {
     # smoke: plumbing check only; its results are never committed.
     "smoke": {"ann": [("glove-100-angular", 5_000, 100)], "text": ["beir:nfcorpus"], "rounds": 1, "build_repeats": 1, "threads": 2, "timeout_s": 900},
-    # light: hosted-runner subset; ratios only (see docs/benchmarks/README.md).
+    # light: hosted-runner subset; ratios only (see docs/benchmarks/index.md).
     "light": {"ann": [("glove-100-angular", 100_000, 1_000)], "text": ["beir:scifact", "beir:nfcorpus", "memory"],
               "rounds": 3, "build_repeats": 2, "threads": 4, "timeout_s": 1500},
     # standard: local workstation; full public sizes for the text sets, 250k glove and 250k SIFT.

@@ -11,7 +11,7 @@
   ./benchmarks/competitive/warm-bench run --suite standard   # local workstation
   ./benchmarks/competitive/warm-bench table                  # regenerate docs/benchmarks/COMPARISON.md
 
-See docs/benchmarks/README.md.
+See docs/benchmarks/index.md.
 """
 
 import sys

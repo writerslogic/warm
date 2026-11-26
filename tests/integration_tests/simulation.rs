@@ -43,8 +43,6 @@ const DOC_IDS: usize = 5;
 const WORDS: usize = 5;
 const T0: Millis = 1_000;
 
-// Utilities
-
 struct Rng(u64);
 
 impl Rng {
@@ -174,7 +172,7 @@ impl Model {
         all
     }
 
-    /// The memory API's status rule (docs/memory-api/README.md#concepts), written out.
+    /// The memory API's status rule (docs/reference/api.md#concepts), written out.
     fn status(&self, id: &str, now: Millis, known: Option<Millis>) -> Option<FactStatus> {
         let fact = &self.facts[id];
         if known.is_some_and(|k| fact.ingest > k) {
@@ -237,7 +235,7 @@ impl Model {
     }
 }
 
-// Wall-clock resolution model (docs/memory-api/TIME-TRAVEL.md#as-of-a-wall-clock-time)
+// Wall-clock resolution model (docs/reference/api.md#as-of-a-wall-clock-time)
 
 #[derive(Clone, Debug)]
 struct Anchor {
@@ -306,8 +304,6 @@ impl Epoch {
         }
     }
 }
-
-// The live side
 
 #[derive(Clone, Debug, PartialEq)]
 struct Snapshot {
@@ -517,8 +513,6 @@ impl Sim {
             retained: true,
         });
     }
-
-    // -- operations ---------------------------------------------------------------------------
 
     fn op(&mut self) {
         let roll = self.rng.below(100);

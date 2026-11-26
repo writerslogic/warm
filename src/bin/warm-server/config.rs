@@ -36,7 +36,7 @@ fn default_work_slots() -> usize {
 #[command(
     name = "warm-server",
     version,
-    about = "HTTP service for the warm-sdk client. See docs/SERVER.md and docs/server/.",
+    about = "HTTP service for the warm-sdk client. See docs/server/index.md.",
     long_about = "HTTP service for the warm-sdk client.\n\nAuthentication is required unless --no-auth is given (loopback only). Credentials: WARM_API_KEY (one all-tenant key, environment only) and/or --keys-file (per-tenant hashed keys with scopes; create entries with `warm-server keygen`)."
 )]
 pub struct Cli {
@@ -100,7 +100,7 @@ pub struct Config {
     #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_TLS_KEY", "HMS_TLS_KEY"), requires = "tls_cert")]
     pub tls_key: Option<PathBuf>,
     /// JSON file with the memory API configuration (policies and defaults) applied to every
-    /// tenant; see docs/memory-api. Absent: the conservative defaults.
+    /// tenant; see docs/reference/api.md. Absent: the conservative defaults.
     #[arg(long, env = writerslogic_warm::compatibility::env_name("WARM_MEMORY_CONFIG", "HMS_MEMORY_CONFIG"))]
     pub memory_config: Option<PathBuf>,
     /// Directory holding one store per tenant.

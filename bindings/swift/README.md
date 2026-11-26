@@ -13,4 +13,4 @@ cd bindings/swift && swift test
 | Needs | macOS, Xcode 15+ (full Xcode for iOS slices), Rust 1.89+ |
 | Release | source only; build the XCFramework locally |
 
-Usage, errors and encryption: [docs/runtimes/swift](../../docs/runtimes/swift/README.md).
+Usage, errors and encryption: [language bindings](../../docs/integrations.md#language-bindings).

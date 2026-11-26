@@ -40,4 +40,4 @@ With a model, add `memoryMiddleware(store, { k: 3 })` through `wrapLanguageModel
 
 ## Reference
 
-[Vercel AI SDK](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/vercel-ai.md)
+[Vercel AI SDK](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)

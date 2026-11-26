@@ -167,7 +167,6 @@ mod tests {
         atom_mem.get_or_insert("germany");
         atom_mem.get_or_insert("japan");
 
-        // All three are capitals
         triple_store.add("paris", "capital_of", "france", "c1");
         triple_store.add("berlin", "capital_of", "germany", "c2");
         triple_store.add("tokyo", "capital_of", "japan", "c3");
@@ -175,7 +174,6 @@ mod tests {
         let abstractions = AbstractionEngine::discover(&triple_store, &atom_mem, 3);
         assert!(!abstractions.is_empty());
 
-        // Should have a subject-side concept for capital_of (cities)
         let cities = abstractions
             .iter()
             .find(|a| a.relation == "capital_of" && a.role == AbstractionRole::Subject);

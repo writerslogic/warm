@@ -7,7 +7,7 @@
 //! The server holds sparse binary codes in the clear and scores a client's
 //! query code against every row without seeing the query. Only the query is
 //! hidden, and only from an honest-but-curious server under the LWE
-//! assumption. The stored data is NOT encrypted. Read `docs/PRIVATE-SEARCH.md`
+//! assumption. The stored data is NOT encrypted. Read `docs/security.md`
 //! for the threat model, the parameter sources and the limits before using
 //! this module for anything.
 //!

@@ -6,7 +6,6 @@
 mkdocstrings reads the stub statically, so the Python reference for the compiled module needs no
 wheel and matches whichever source tree is being documented (a release tag included). Anything
 the generator does not understand raises, so the build fails instead of documenting a guess.
-scripts/test_docs_pyo3_stub.py compares the stub with the compiled module when it is installed.
 """
 
 import re

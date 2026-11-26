@@ -4,7 +4,7 @@
 # Reproducible-build check: two independent runners build the same commit from different
 # checkout paths with the same pinned inputs (Cargo.lock, rustc, maturin, SOURCE_DATE_EPOCH)
 # and the artefact hashes must be identical. Exceptions and their reasons are listed in
-# docs/RELEASING.md ("Reproducible builds"); this job fails on any difference outside them.
+# docs/security.md ("Verify a release"); this job fails on any difference outside them.
 # Release builds elsewhere use no build cache, so what is compared is what is shipped.
 name: Reproducible build
 

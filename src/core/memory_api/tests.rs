@@ -693,7 +693,6 @@ mod hybrid {
             assert!(message.contains(expected), "{message}");
         }
         assert!(memory.get("x").unwrap().is_none());
-        // No embedding space at all.
         let plain_dir = tempfile::tempdir().unwrap();
         let plain = store(plain_dir.path(), None);
         let message = invalid(

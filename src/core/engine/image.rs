@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! Journal checkpoints (`documents.ckpt`, `docs/file-format/CHECKPOINT.md`). A compaction of a
+//! Journal checkpoints (`documents.ckpt`, `docs/file-format/index.md`). A compaction of a
 //! documents-only store writes the document store as one file inside the new journal
 //! generation instead of document frames, so the generation is the checkpoint plus the frames
 //! appended after it. An engine opening a generation with a checkpoint and no frames maps it

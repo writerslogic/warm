@@ -4,7 +4,7 @@
   "description": "Local-first document search in WebAssembly: BM25 passages, metadata filters, optional dense embeddings, encrypted persistence. Runs in browsers, Node, Deno and Bun with no service calls.",
   "license": "Apache-2.0",
   "author": "WritersLogic Contributors",
-  "homepage": "https://github.com/writerslogic/warm/tree/main/docs/runtimes/wasm",
+  "homepage": "https://github.com/writerslogic/warm/tree/main/bindings/wasm/npm",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/writerslogic/warm.git",

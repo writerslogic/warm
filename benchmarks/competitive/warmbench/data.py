@@ -1,6 +1,6 @@
 # Copyright 2024-2026 WritersLogic Contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Dataset preparation. Sources come from benchmarks/public/prepare.py (cached under CACHE);
+"""Dataset preparation. Sources are the public downloads (cached under CACHE);
 subsets are cut deterministically and their exact cosine truth recomputed, so every system and
 WARM read byte-identical files."""
 

@@ -2,73 +2,48 @@
 
 # WARM
 
-**Local memory for AI agents and applications.**
-
-WARM (WritersLogic Adaptive Retention & Memory) gives agents persistent memory, full-text and
-vector search, and source provenance in one embeddable Rust engine. Use it inside your application,
-through HTTP, or from an MCP client, with storage on infrastructure you control.
+**Local memory and search for AI agents and applications.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/writerslogic/warm/ci.yml?branch=main&label=CI)](https://github.com/writerslogic/warm/actions/workflows/ci.yml)
-![MSRV 1.89](https://img.shields.io/badge/MSRV-1.89-informational.svg)
+[![crates.io](https://img.shields.io/crates/v/warm-rust)](https://crates.io/crates/warm-rust)
+[![npm](https://img.shields.io/npm/v/warm-sdk?label=npm)](https://www.npmjs.com/package/warm-sdk)
+[![PyPI](https://img.shields.io/pypi/v/warm-sdk)](https://pypi.org/project/warm-sdk/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](#license)
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/writerslogic/warm)](https://securityscorecards.dev/viewer/?uri=github.com/writerslogic/warm)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13977/badge)](https://www.bestpractices.dev/projects/13977)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](#license)
-[![WARM MCP server: quality and maintenance score on Glama](https://glama.ai/mcp/servers/writerslogic/warm/badges/score.svg)](https://glama.ai/mcp/servers/writerslogic/warm)
-
 
 [Website](https://writerslogic.com/warm) ·
 [Docs](https://writerslogic.com/warm/docs/) ·
-[Get started](#get-started) ·
-[Standards and provenance](docs/reference/standards.md) ·
-[Evaluation](#evaluation) ·
-[Capabilities](#what-ships-today) ·
-[Limits](#limits) ·
+[Quickstart](docs/quickstart.md) ·
 [Contribute](CONTRIBUTING.md)
 
 <br clear="left">
 
-## What it is
+WARM (WritersLogic Adaptive Retention & Memory) is a Rust engine that stores text, vectors and facts
+in a directory on your machine and finds them again. It provides stemmed BM25 and exact-cosine hybrid
+document search, a graph vector index, a memory API (`remember`, `recall`, `forget`, `explain`) and a
+vector-symbolic fact store. Use it inside your application, over HTTP, or from an MCP client. The
+library makes no network calls and sends no telemetry. Document search is conventional hybrid
+retrieval; the holographic part is the vector-symbolic layer ([concepts](docs/concepts.md)).
 
-WARM is a Rust library that stores text, vectors and facts in a
-directory on your machine and finds them again. It ships with optional Node.js, C, WASM and UniFFI
-bindings, an HTTP server with portable JavaScript and Python clients, and an MCP server.
-The embedded engine makes no service calls or telemetry requests: the `offline` job in [ci.yml](.github/workflows/ci.yml) runs the default-feature test suite in a network namespace without external interfaces and checks that the default dependency tree has no HTTP, TLS or socket client. HTTP clients connect to the
-server you configure; model stages are opt-in. Capabilities and limits: [What ships today](#what-ships-today).
+## Install
 
-## Who it's for
+| You are using | Install |
+|---|---|
+| Rust | `cargo add warm-rust` (add `--features security` for encrypted stores) |
+| Node, embedded engine | `npm install writerslogic-warm` |
+| JavaScript or TypeScript, HTTP client | `npm install warm-sdk` |
+| Python, HTTP client | `uv pip install warm-sdk` |
+| HTTP server for the clients | `cargo install --locked --features server,security --bin warm-server warm-rust` |
+| MCP client or editor | `npx -y writerslogic-warm-mcp` or `uvx warm-mcp` |
 
-| You are building | What you get |
-|------------------|--------------|
-| An agent or assistant that needs memory | A memory API with forgetting that removes facts from the store, and an MCP server for editors and agent hosts |
-| A local-first or offline app | Embedded search and storage in one directory, with no server process and optional encryption |
-| A service that needs vector or text search | `warm-server` over HTTP with tenants and scoped keys, or the library in-process |
+Rust 1.89 or newer builds the crate; `local-models` and `--all-features` need 1.94. Nothing is
+enabled by default (`default = []`); the features are listed in the
+[API overview](docs/reference/api.md#cargo-features).
 
-## Get started
+## Quickstart
 
-| You are using | Install | Next |
-|---|---|---|
-| An editor or agent host (MCP) | `npx -y writerslogic-warm-mcp` (or `uvx warm-mcp`; add `--transport http` for `http://127.0.0.1:8765/mcp`) | [MCP integration](docs/integrations/mcp/README.md) |
-| Rust | `cargo add warm-rust` | below |
-| Node, embedded engine | `npm install writerslogic-warm@0.7.2` | below |
-| JavaScript or TypeScript, HTTP client | `npm install warm-sdk@0.2.2` | [client API](bindings/js/warm-sdk/README.md) |
-| Python, HTTP client | `uv venv && uv pip install warm-sdk` | [Python quickstart](examples/quickstart/python/quickstart.py) |
-| A server for the HTTP clients | `cargo install --locked --features server,security --bin warm-server warm-rust` | [server docs](https://writerslogic.com/warm/docs/latest/server/) |
-
-All options, source builds, version requirements and the HTTP-client-or-embedded choice:
-[Install](docs/get-started/install.md) and [Choose an integration](docs/get-started/choose.md).
-WARM runs locally or on your own infrastructure. This repository contains no hosted service.
-WritersLogic sells WARM Sync, a separate encrypted multi-device sync service with its own client
-package; the engine here does not contact it.
-
-To try the offline memory demo from source:
-
-```sh
-git clone https://github.com/writerslogic/warm
-cd warm
-cargo run --release --example demo-offline-agent
-```
-
-**Rust.** The crate is `warm-rust`; the library is imported as `writerslogic_warm`. MSRV is Rust 1.89; `local-models` and `--all-features` need 1.94 or newer.
+Rust. The crate is `warm-rust`; the library is imported as `writerslogic_warm`.
 
 ```rust quickstart-check
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
@@ -93,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-**Node.js** (`writerslogic-warm`; the portable client is a separate package with a different API; `listDocuments` supports scoped pruning, see the [integration guide](docs/integrations/organizational-knowledge.md)):
+Node.js, embedded engine:
 
 ```js quickstart-check
 const { WarmMemorySystem } = require('writerslogic-warm')
@@ -113,74 +88,76 @@ async function main() {
 main().catch(error => { console.error(error); process.exit(1) })
 ```
 
-The [five-minute quickstart](https://writerslogic.com/warm/docs/latest/quickstart/) adds a SQLite
-FTS5 comparison and encryption in Rust, Python and Node; CI runs that code on every pull request.
+Python, against a running `warm-server` (`WARM_API_KEY=change-me warm-server --input-dim 384`):
 
-<a id="headline-results"></a>
-<a id="where-its-behind"></a>
+```python
+from writerslogic_warm_sdk import WarmClient
 
-## Evaluation
+client = WarmClient(url="http://127.0.0.1:8080", api_key="change-me", tenant_id="demo")
+client.memory.remember_many([{"id": "backups", "text": "Restore deleted documents from verified backups."}])
+print(client.memory.recall("restore backups", k=3))
+```
 
-[Recorded results and limitations](docs/benchmarks/EVALUATION.md) cover memory quality, text
-retrieval and vector search. Each result retains its workload, hardware, model, source revision
-and known losses. The [full comparison and reproduction protocol](docs/benchmarks/README.md)
-provide the evidence for evaluating WARM on your own workload.
+The [quickstart](docs/quickstart.md) covers the JavaScript client, MCP and facts that change over
+time. Runnable versions with a SQLite FTS5 comparison are in
+[`examples/quickstart`](examples/quickstart).
 
-## What ships today
+## Benchmarks
 
-| Capability | Status | Documented limit |
-|------------|--------|------------------|
-| Hybrid document search (BM25 + exact cosine, filters, byte offsets) | Ships | Exact scan of eligible chunks; benchmark your corpus before assuming capacity ([guide](docs/production-readiness.md)) |
-| Boolean lexical search (`+required`, `-excluded`, quoted phrases) | Ships | Flat queries only, no nesting; an empty or only-excluded query matches nothing ([design](docs/benchmarks/lexical/DESIGN.md)) |
-| Atomic replace/delete, crash-safe journal, verified compaction, process lock | Ships | One writer per store; compaction is not secure erasure |
-| Vector index (`qgraph` vertex graph, memory-mapped) | Ships | Builds slower than hnswlib at M=16 and M=32 on SIFT-1M on a Core Ultra 9 185H laptop (same session); faster on a GCP Ice Lake VM, where the WARM build is a separate-session rerun ([results](docs/benchmarks/EVALUATION.md)); behind ScaNN and faiss-ivfpqfs on single-core ann-benchmarks at recall 0.95 for WARM revision `19f4371`: SIFT 2,819 against 3,787 QPS ([`ann_benchmarks_harness_wl02_v1.json`](benchmarks/results/ann_benchmarks_harness_wl02_v1.json)); that revision is superseded and the competitors have not been rerun against the current one |
-| Updatable vector index (durable delta for inserts and deletes) | Ships | Single writer; format in [VECTOR-UPDATES.md](docs/file-format/VECTOR-UPDATES.md) |
-| Query-aware graph routing (trained on sample queries) | Ships (opt-in) | Needs representative training queries; tested on VIBE llama and yi ([report](benchmarks/results/query_aware_graph_v1/README.md)) |
-| Memory API: remember, recall, forget, explain | Ships | Forgetting removes a fact from the store; it does not cover what a model inferred ([docs](docs/memory-api/README.md)) |
-| Conversation memory (`conversation-memory`) | Ships | Bounded context with exact source provenance; native recall not yet benchmarked on LongMemEval end to end (the LongMemEval result in [EVALUATION.md](docs/benchmarks/EVALUATION.md) is a research pipeline with external Qwen3 models, not this API) |
-| Meaning memory: sparse hypervectors with bind, bundle and permute, triples, multi-hop, Hopfield cleanup | Ships (runtime opt-in) | Tested on a set of 2,000 synthetic plus 120 real facts ([`research_bench_16384_256.json`](benchmarks/results/research_bench_16384_256.json)) |
-| Union-bundle membership (`experimental`) | Research | At D = 16,384: positive gap to N = 500 (4% false positives), tested to 2,500 ([`benchmark_scaling_results.json`](benchmarks/results/benchmark_scaling_results.json)) |
-| Vector API (`memorize_vector`, `query_vector`) | Ships | Backed by the updatable vertex graph; glove-100 recall@10 0.859 at 2,092 QPS on one thread of an Apple M4 under load, on or below the hnswlib and FAISS HNSW curves in the same file, with a 478 s build ([`public_glove-100-angular.json`](benchmarks/results/public_glove-100-angular.json), `hms` row). Vectors written before the graph existed stay on the sparse path until re-memorized; not built for encrypted stores |
-| Encrypted stores (`security`) | Ships | AES-256-GCM, Argon2id; covers the log, index caches and the text segment. Metadata, file names and sizes are not encrypted |
-| Signed audit log, credential-gated access, COSE_Sign1 over Ed25519, `did:key`/`did:jwk` identities, SCITT-style signed statements (`provenance`) | Ships | Host must authenticate DIDs; PoSME, RATS, `did:web` not implemented. Tests: `core::provenance::cose::tests::sign_verify_roundtrip`, `core::provenance::did::tests::did_key_roundtrip`, `tests/scitt_receipt_interop.rs`. Manifests use C2PA-style labels and are not C2PA Content Credentials ([standards](docs/reference/standards.md)) |
-| On-device models (`local-models`: Qwen3 embed/rerank/LLM) | Ships | Local weights only; never downloads |
-| `warm-server` HTTP API, multi-tenant (`server`) | Ships | Single node; TLS, per-tenant scoped keys ([guide](docs/SERVER.md)) |
-| MCP server (`mcp`: `warm-mcp`, stdio and HTTP) | Ships | Encryption needs `security`; semantic recall needs `local-models` |
-| JavaScript/TypeScript client (`warm-sdk` 0.2.2) | Source and release builds | Portable HTTP client; requires a separately running server |
-| Embedded Node.js (`writerslogic-warm` 0.7.2) | Source and release builds | Eight optional native platform packages; separate from the client |
-| C, Go, .NET, Java, Kotlin, Swift and WebAssembly bindings | Source available | Require local builds; the language packages and native bundles are not yet published ([runtime guides](docs/runtimes)) |
-| Python | HTTP client (`warm-sdk`); native vector indexes and phase vectors (`warm-python`) | `Warm` (in-process document search, memory API) from `warm-python` 0.7.0; earlier releases have none |
-| Query-private search (`private-search`) | Experimental | For searching an index someone else holds; hides the query vector from the scorer only ([notes](docs/PRIVATE-SEARCH.md)) |
+Results are generated by `./benchmarks/competitive/warm-bench table` from the committed files in
+[`benchmarks/results/competitive/`](benchmarks/results/competitive) into
+[docs/benchmarks/COMPARISON.md](docs/benchmarks/COMPARISON.md), with every cell indexed to its
+source file in [comparison.cells.json](docs/benchmarks/comparison.cells.json). Rows are never
+compared across hardware classes, and a win or loss needs a bootstrap interval that excludes
+parity. Two single-machine examples from that table (SIFT-1M, 8-core Ice Lake x86_64 VM, recall@10 at
+least 0.95): WARM 14,645 QPS against hnswlib 7,427, and p99 96 microseconds against 194. The same
+table records where WARM is behind, for example index size on GloVe-100 and text build memory against
+SQLite FTS5. See [benchmarks](docs/benchmarks/index.md) for the protocol and the losses.
 
-Optional engine capabilities use Cargo features or runtime configuration;
-[Cargo features](docs/reference/features.md) lists the build choices.
+## Bindings and integrations
 
-The [compatibility policy](docs/STABILITY.md) defines API stability, deprecation windows and
-storage-format migration rules.
+| Surface | Package or path |
+|---|---|
+| Rust | `warm-rust` |
+| Embedded Node | `writerslogic-warm` |
+| JavaScript and TypeScript client | `warm-sdk` (npm), `bindings/js/warm-sdk` |
+| Python client | `warm-sdk` (PyPI), `bindings/python/warm-sdk` |
+| Python native | `warm-python` |
+| MCP server | `writerslogic-warm-mcp` (npm), `warm-mcp` (PyPI), `integrations/mcp` |
+| Python frameworks | LangChain, LangGraph, LlamaIndex, Haystack, DSPy, OpenAI Agents, Pydantic AI, smolagents, LiteLLM, CrewAI, AutoGen, Semantic Kernel, mem0, Letta (`integrations/python`) |
+| JavaScript frameworks | LangChain.js, LlamaIndex.TS, Mastra, OpenAI Agents JS, Vercel AI SDK (`integrations/js`) |
+| C, Go, Java, .NET, Swift, Kotlin, WebAssembly | `bindings/` (source builds) |
+| Importers | `warm-import` for Chroma, Qdrant, Pinecone, pgvector, FAISS and others |
 
-## Architecture
+Details and tested versions: [integrations](docs/integrations.md).
 
-Diagram and module map: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## Documentation
+
+[Quickstart](docs/quickstart.md) ·
+[Concepts](docs/concepts.md) ·
+[API overview](docs/reference/api.md) ·
+[Integrations](docs/integrations.md) ·
+[Server](docs/server/index.md) ·
+[File format](docs/file-format/index.md) ·
+[Benchmarks](docs/benchmarks/index.md) ·
+[Security and stability](docs/security.md) ·
+[FAQ](docs/reference/faq.md) ·
+[Changelog](CHANGELOG.md)
 
 ## Limits
 
-| Limit | Detail |
-|---|---|
-| Not anonymous | Sketches and term counts are not encryption; `storeText: false` keeps term counts, IDs and embeddings and is not a privacy control. Client-side vector masking is obfuscation. [Privacy limits](docs/concepts/privacy-limits.md), [PRIVACY.md](docs/PRIVACY.md) |
-| Document search is conventional | It does not use the hypervectors; the holographic parts are the algebra and the meaning memory. [Concepts](docs/concepts/holographic.md) |
-| One writer per store | A second writing process fails at open with a lock error. A store is a directory; `WarmCore::new(.., None, ..)` uses the current directory |
-| Capacity numbers are points | Stated only over the tested range. [Capacity](https://writerslogic.com/warm/docs/latest/concepts/capacity/) |
-| Benchmarks are single machines | Conditions are in each results file; the single-core ann-benchmarks run and the VIBE high-recall points are losses ([Where it's behind](docs/benchmarks/EVALUATION.md#where-its-behind)) |
+- One writer per store; a second writing process fails at open with a lock error.
+- Sketches and term counts are not encryption, and `storeText: false` is not a privacy control
+  ([security](docs/security.md)).
+- Capacity numbers are sweeps over a tested range, not guarantees.
+- Benchmarks are single machines; conditions are in each results file.
 
-Report vulnerabilities privately via [SECURITY.md](SECURITY.md).
+Report vulnerabilities privately through [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-[CONTRIBUTING.md](CONTRIBUTING.md): setup, the checks CI runs, DCO sign-off (`git commit -s`, no
-CLA). Start with a [good first issue](https://github.com/writerslogic/warm/labels/good%20first%20issue)
-or [Discussions](https://github.com/writerslogic/warm/discussions). See the
-[Code of Conduct](CODE_OF_CONDUCT.md). Benchmark changes regenerate the results file they touch;
-the README cites files, not remembered figures.
+[CONTRIBUTING.md](CONTRIBUTING.md) covers setup, the checks CI runs and DCO sign-off
+(`git commit -s`, no CLA). See the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

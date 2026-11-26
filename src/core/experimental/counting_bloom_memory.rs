@@ -16,8 +16,7 @@
 //! readout holds AUC>0.95 to ~4000 and degrades gracefully (0.84 at 8000). A ~4x
 //! usable-capacity gain at matched dimension and fixed k = 64. A Bloom filter with
 //! tuned k at the same dimension matches it up to 4000 items, and at equal bits a
-//! plain Bloom filter is far ahead (erratum in `docs/PREREGISTRATION-binding-
-//! readout.md` §19). See also `src/bin/bloom-wall.rs`.
+//! plain Bloom filter is far ahead (erratum to the binding-readout preregistration, §19). See also `src/bin/bloom-wall.rs`.
 //!
 //! Cost: one `u32` per index rather than one bit -- this trades a Bloom filter's
 //! bit-compactness for capacity. It remains a deterministic integer fold of its
@@ -179,8 +178,6 @@ mod tests {
 
     #[test]
     fn discriminates_at_1000_items() {
-        // Where the binary readout is already collapsing (AUC~0.87), counting is
-        // near-perfect. Assert a comfortable, theory-predicted margin.
         let dim = 16384;
         let mem = store(dim, 1000);
         let members: Vec<f64> = (0..1000)
@@ -205,8 +202,6 @@ mod tests {
 
     #[test]
     fn still_discriminates_where_binary_is_dead() {
-        // At 2000 items the binary OR-union readout is at chance (AUC~0.51);
-        // counting still separates the means by a clear margin (~4x capacity).
         let dim = 16384;
         let mem = store(dim, 2000);
         let members: Vec<f64> = (0..400)

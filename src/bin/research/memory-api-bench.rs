@@ -290,7 +290,7 @@ fn main() -> Result<()> {
     }
     let report = json!({
         "synthetic": true,
-        "description": "memory API recall against document search on the same synthetic fact store; see docs/memory-api",
+        "description": "memory API recall against document search on the same synthetic fact store; see docs/reference/api.md",
         "words_per_text": WORDS, "vocabulary": VOCABULARY,
         "queries": args.queries, "passes": args.passes, "dimensions": args.dimensions,
         "host": {"os": std::env::consts::OS, "arch": std::env::consts::ARCH,

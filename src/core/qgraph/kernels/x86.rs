@@ -131,7 +131,7 @@ fn tail_popcnt(code: &[u64], planes: &[u64], words: usize, k: usize) -> u32 {
 /// [`super::raw_one`] with AVX-512 VPOPCNTDQ: per 64 bytes (then 32 with AVX512VL) of
 /// code, `vpopcntq` of the code AND each plane, weighted in u64 lanes by Horner doubling;
 /// the last `words % 4` words take POPCNT. Not wired into dispatch: no AVX-512 host has
-/// timed it (see `docs/performance/platforms.md`).
+/// timed it.
 ///
 /// # Safety
 /// The CPU supports `avx512f`, `avx512vl`, `avx512vpopcntdq` and `popcnt`.
@@ -306,7 +306,6 @@ pub(super) unsafe fn dot_i4_avx2(q: &[i8], p: &[i8]) -> i32 {
     // so `i + 16 <= p.len()` and `2 * i + 32 <= q.len()`.
     while i + 16 <= p.len() {
         let x = _mm_loadu_si128(p.as_ptr().add(i).cast());
-        // Sign-extend each nibble: ((n & 15) ^ 8) - 8.
         let lo = _mm_sub_epi8(_mm_xor_si128(_mm_and_si128(x, mask), eight), eight);
         let hi = _mm_sub_epi8(
             _mm_xor_si128(_mm_and_si128(_mm_srli_epi16::<4>(x), mask), eight),
@@ -362,8 +361,7 @@ pub(super) unsafe fn dot_i4_avx2_x4(q: &[i8], rows: [&[i8]; 4]) -> [i32; 4] {
 
 /// [`dot_i8_avx2`] with `vpdpbusd` on 256-bit registers (AVX512-VNNI with VL): `a` is biased
 /// by 128 into the unsigned operand, so `sum (a + 128) b = a.b + 128 sum b`, and a second
-/// `vpdpbusd` against ones yields `sum b` to subtract. Exact over the whole i8 range. The
-/// 512-bit forms are not used: they measured no faster on 128 and 256-wide rows.
+/// `vpdpbusd` against ones yields `sum b` to subtract. Exact over the whole i8 range.
 ///
 /// # Safety
 /// The CPU supports AVX512F, AVX512VL, AVX512-VNNI and AVX2; `a` and `b` have the same

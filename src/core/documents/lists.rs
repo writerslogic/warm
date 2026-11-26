@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Readers of checkpoint version 4 posting lists: the version 3 block bytes
 //! (`postings::Postings`) plus, per list, a skip table and a positions stream
-//! (`docs/file-format/CHECKPOINT.md`).
+//! (`docs/file-format/index.md`).
 //!
 //! A list of `count` postings has `ceil(count / 128)` blocks. With two or more blocks its skip
 //! table holds five little-endian `u32` arrays of that length, one after the other: each

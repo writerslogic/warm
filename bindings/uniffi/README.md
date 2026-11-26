@@ -4,8 +4,8 @@
 workspace and is not published; nothing here is meant to be used directly. To get to a first
 query, start from the binding for your platform:
 
-- Swift (iOS, macOS, Mac Catalyst, visionOS): [docs/runtimes/swift](../../docs/runtimes/swift/README.md), package in `bindings/swift`.
-- Kotlin (JVM and Android): [docs/runtimes/kotlin](../../docs/runtimes/kotlin/README.md), Gradle build in `bindings/kotlin`.
+- Swift (iOS, macOS, Mac Catalyst, visionOS): [swift binding](../swift/README.md), package in `bindings/swift`.
+- Kotlin (JVM and Android): [kotlin binding](../kotlin/README.md), Gradle build in `bindings/kotlin`.
 
 Both build this crate for their targets. To work on the crate itself:
 

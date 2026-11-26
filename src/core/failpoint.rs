@@ -14,7 +14,7 @@
 //!
 //! A child process arms itself from `WARM_FAILPOINT=<kind>[:sticky]@<n>`;
 //! `WARM_FAILPOINT_TRACE=<path>` appends each hit's name to a file. A test in the same process
-//! uses [`arm`], [`disarm`] and [`hits`].
+//! uses `arm`, `disarm` and `hits`.
 
 use std::io;
 

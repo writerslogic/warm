@@ -1300,7 +1300,6 @@ mod tests {
         assert!(status.graph && status.rows == 300 && status.mutations == 0);
         assert!(index.covers(&core));
         assert_eq!(top(&index, 7, dim)[0], "d7");
-        // Rows after the snapshot are searchable and survive a clean close.
         ingest(&index, &core, 300, 310, dim);
         assert_eq!(top(&index, 305, dim)[0], "d305");
         index.close().unwrap();
@@ -1327,8 +1326,6 @@ mod tests {
         reopened.close().unwrap();
         drop(reopened);
 
-        // Truncate the graph file: open ignores the snapshot, answers from the log, and the
-        // next maintenance writes a fresh one.
         let graph = std::fs::read_dir(&vdir)
             .unwrap()
             .flatten()

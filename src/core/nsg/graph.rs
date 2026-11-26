@@ -29,7 +29,6 @@ pub(super) fn build_knn_graph(
         return vec![vec![]; n];
     }
 
-    // 1. Initialize with K random neighbors per node (sample without replacement)
     use rand::SeedableRng;
     let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
     let mut graph: Vec<Vec<u32>> = (0..n)
@@ -45,7 +44,6 @@ pub(super) fn build_knn_graph(
         })
         .collect();
 
-    // 2. Parallel iterative refinement (NN-Descent)
     for _ in 0..NN_DESCENT_ITERATIONS {
         let changes = AtomicUsize::new(0);
 
@@ -143,7 +141,6 @@ pub(super) fn select_navigating_node(vectors: &[EntangledHVec]) -> u32 {
         return 0;
     }
 
-    // Sample for approximate centroid when dataset is large (avoids O(n*k) bundle)
     const SAMPLE_CAP: usize = 1024;
     let centroid = if vectors.len() <= SAMPLE_CAP {
         EntangledHVec::bundle(vectors)
@@ -194,7 +191,6 @@ pub(super) fn insert_online(index: &mut NSGIndex, id: &str, vector: &EntangledHV
         if n < index.neighbors.len() {
             index.neighbors[n].push(new_idx);
             if index.neighbors[n].len() > max_degree {
-                // RNG diversity pruning (same rule as forward edges)
                 let v_n = &index.vectors[n];
                 let mut scored: Vec<(u32, u32)> = index.neighbors[n]
                     .iter()

@@ -110,11 +110,7 @@
     "*.node",
     "README.md",
     "LICENSE",
-    "docs/production-readiness.md",
-    "docs/PRIVACY.md",
-    "docs/INTEGRATION.md",
-    "docs/evaluation.md",
-    "docs/memory-api/README.md",
-    "docs/integrations/vectra-migration.md"
+    "docs/concepts.md",
+    "docs/quickstart.md"
   ]
 }

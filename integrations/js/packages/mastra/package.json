@@ -11,7 +11,7 @@
   ],
   "license": "Apache-2.0",
   "author": "WritersLogic, Inc. <david@writerslogic.com>",
-  "homepage": "https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/mastra.md",
+  "homepage": "https://github.com/writerslogic/warm/blob/main/docs/integrations.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/writerslogic/warm.git",

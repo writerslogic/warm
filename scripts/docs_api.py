@@ -152,7 +152,7 @@ def node_pages() -> list[str]:
                  "# Embedded Node and TypeScript API", "",
                  "Generated from the package's `.d.ts` files, one page per exported symbol. "
                  + "The optional embedded engine is separate from the portable `warm-sdk` HTTP client. "
-                 + "See [installation](../../get-started/install.md) for both packages and their publication status.", ""]
+                 + "See [the quickstart](../../quickstart.md) for both packages and their publication status.", ""]
         for module, listing in modules.items():
             lines += [f"## `{label.get(module, 'writerslogic-warm/' + module)}`", ""]
             for line in listing.splitlines():
@@ -224,7 +224,7 @@ def overview(pages: list[str]) -> None:
              + "rustdoc for Rust, typedoc for Node and TypeScript, mkdocstrings for Python, the server's OpenAPI document for HTTP and the "
              + "shipped header for C. Nothing here is written by hand, so a signature in the docs is a signature in the code.", "",
              "The Node reference covers the optional embedded engine. For the portable `warm-sdk` HTTP client, "
-             + "see [installation](../get-started/install.md) and the [memory examples](../memory-api/README.md#quick-start).", "",
+             + "see [the quickstart](../quickstart.md) and the [API reference](../reference/api.md).", "",
              "| Surface | What it covers |", "| --- | --- |"]
     for page, (name, text) in rows.items():
         if page in pages:

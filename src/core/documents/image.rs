@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! The document checkpoint (`documents.ckpt`, see `docs/file-format/CHECKPOINT.md`): the whole
+//! The document checkpoint (`documents.ckpt`, see `docs/file-format/index.md`): the whole
 //! document store of a journal generation as the bytes a query reads. A generation holding one
 //! opens by checking and mapping it instead of replaying document frames, ranks unfiltered
 //! lexical queries straight from the mapping with the live store's code ([`LexicalSource`]),

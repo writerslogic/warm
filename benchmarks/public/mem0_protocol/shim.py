@@ -7,7 +7,7 @@
 """Mem0 OSS REST surface over warm-server's memory API.
 
 mem0ai/memory-benchmarks talks to a self-hosted Mem0 server through three calls
-(benchmarks/common/mem0_client.py, ``--backend oss``):
+(common/mem0_client.py in memory-benchmarks, ``--backend oss``):
 
     POST   /memories            {"messages": [{"role", "content"}], "user_id", "timestamp"?}
     POST   /search              {"query", "user_id", "limit"}
@@ -45,7 +45,7 @@ from typing import Any
 from aiohttp import ClientError, ClientSession, ClientTimeout, web
 
 TENANT_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
-# Engine single-fact limits (docs/memory-api: 64 KiB and 4096 words); keep headroom.
+# Engine single-fact limits (docs/reference/api.md: 64 KiB and 4096 words); keep headroom.
 MAX_FACT_BYTES = 60 * 1024
 MAX_FACT_WORDS = 4000
 ALLOWED_CONFIG_KEYS = {"recall", "max_k", "max_context_tokens", "embedding", "order_same_time"}

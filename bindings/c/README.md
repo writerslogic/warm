@@ -18,4 +18,4 @@ bindings/c/tests/c/run.sh        # builds, compiles quickstart.c and the test pr
 | Symbols | `hms1_*`, unversioned `warm_*` aliases |
 | Build needs | Rust 1.89+, a C11 compiler |
 
-Contract, surface and packaging: [docs/runtimes/c](../../docs/runtimes/c/README.md).
+Contract, surface and packaging: [language bindings](../../docs/integrations.md#language-bindings).

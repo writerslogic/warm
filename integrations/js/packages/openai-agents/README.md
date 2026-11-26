@@ -44,4 +44,4 @@ No API key: `examples/quickstart.mjs` uses a scripted model.
 
 ## Reference
 
-[OpenAI Agents SDK, JS](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/openai-agents-js.md)
+[OpenAI Agents SDK, JS](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)

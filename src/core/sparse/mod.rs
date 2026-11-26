@@ -144,7 +144,6 @@ impl ImpactIndex {
             }
         }
         let scale = if max_w > 0.0 { max_w / 255.0 } else { 1.0 };
-        // Postings per term, in document order (documents are visited in id order).
         let mut lists: Vec<Vec<(u32, u8)>> = vec![Vec::new(); vocab as usize];
         let mut postings = 0u64;
         for (doc, d) in docs.iter().enumerate() {
@@ -250,7 +249,6 @@ impl ImpactIndex {
             if lo == hi {
                 continue;
             }
-            // Last block whose first id is at most `doc`.
             let b = lo + self.blocks[lo..hi].partition_point(|h| h.first <= doc);
             if b == lo {
                 continue;
@@ -465,7 +463,6 @@ impl Cursor {
                 self.load(index, b);
             }
         }
-        // Within the loaded block.
         let start = if self.pos == usize::MAX { 0 } else { self.pos };
         let at = start + self.docs[start..].partition_point(|&d| d < target);
         if at < self.docs.len() {

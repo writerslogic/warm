@@ -304,7 +304,6 @@ mod tests {
         comp_mem.insert("c_stale".to_string(), v2);
 
         triple_store.add("a", "r", "b", "c_live");
-        // c_stale has no triple
 
         let forgotten = MemoryGovernor::forget_stale_composites(&comp_mem, &triple_store);
         assert_eq!(forgotten, 1);
@@ -321,8 +320,6 @@ mod tests {
         triple_store.add("used_atom", "r", "x", "c1");
 
         let forgotten = MemoryGovernor::forget_unreferenced_atoms(&atom_mem, &triple_store);
-        // orphan_atom is not referenced, but "r" and "x" also aren't atoms
-        // Only orphan_atom should be forgotten
         assert!(forgotten >= 1);
     }
 

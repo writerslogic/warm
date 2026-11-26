@@ -560,10 +560,8 @@ mod tests {
             let mut g = ConnectionGraph::open(4096, no_plasticity(), &path).unwrap();
             g.store("paris", "capital_of", "france").unwrap();
             g.store("berlin", "capital_of", "germany").unwrap();
-            // BufWriter flushes on drop.
         }
 
-        // Reopen: the durable event log must reconstruct the exact prior state.
         let g = ConnectionGraph::open(4096, no_plasticity(), &path).unwrap();
         assert!(
             g.verify(),
@@ -586,7 +584,6 @@ mod tests {
         g.query("a", "r", "b").unwrap();
         assert!(g.verify(), "replay of own log must reproduce state exactly");
 
-        // Tamper: drop the first event -> digest must change.
         let mut tampered = g.events().to_vec();
         tampered.remove(0);
         let (_, chain) = ConnectionGraph::replay(4096, GraphConfig::default(), &tampered);
@@ -618,7 +615,6 @@ mod tests {
             stat.store(&s, "knows", &o).unwrap();
             plas.store(&s, "knows", &o).unwrap();
         }
-        // Warm up the plastic field by querying the hot relation.
         for _ in 0..80 {
             plas.query(hot.0, hot.1, hot.2).unwrap();
         }
@@ -698,7 +694,6 @@ mod tests {
             "the absent relation must stay absent after being queried"
         );
 
-        // A present relation, by contrast, IS reinforced on query (emits events).
         g.query("paris", "capital_of", "france").unwrap();
         assert!(
             g.events().len() > events_before,

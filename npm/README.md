@@ -57,7 +57,7 @@ main().catch(error => { console.error(error); process.exitCode = 1 })
 Search uses local BM25 by default. You can supply embeddings for hybrid search; the optional
 `@huggingface/transformers` integration loads a model from a local directory. CommonJS, ESM, and
 TypeScript declarations are included. See the
-[Node integration guide](https://github.com/writerslogic/warm/blob/main/docs/INTEGRATION.md)
+[Node integration guide](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)
 and [API documentation](https://writerslogic.com/warm/docs/latest/).
 
 ## MCP clients
@@ -73,4 +73,4 @@ This `writerslogic-warm` package embeds the engine in a Node.js application. It 
 the MCP command.
 
 Apache-2.0 · [Source](https://github.com/writerslogic/warm) ·
-[Privacy](https://github.com/writerslogic/warm/blob/main/docs/PRIVACY.md)
+[Privacy](https://github.com/writerslogic/warm/blob/main/docs/security.md)

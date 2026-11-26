@@ -94,7 +94,6 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
         200,
     );
     assert_eq!(listed["snapshots"][0]["id"], id.as_str());
-    // Other tenants do not see it.
     assert_eq!(
         ok(
             a.req("GET", "/api/v1/snapshots")
@@ -188,7 +187,6 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
         200,
     );
     assert_eq!(count_with(&a, "root", "t"), 3);
-    // Writes after a restore work (the engine reopened cleanly).
     ok(
         a.req("POST", "/api/v1/documents")
             .bearer("root")
@@ -239,7 +237,6 @@ fn snapshot_restore_and_off_box_backup_round_trip() {
     assert_eq!(hit["matches"][0]["id"], "a");
     assert!((hit["matches"][0]["score"].as_f64().unwrap() - 1.0).abs() < 1e-6);
 
-    // Delete.
     ok(
         a.req("DELETE", &format!("/api/v1/snapshots/{id}"))
             .bearer("root")

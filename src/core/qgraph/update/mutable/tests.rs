@@ -273,7 +273,6 @@ fn freed_slots_are_reused_lowest_first_after_the_scan() {
     let mut want: Vec<u32> = victims.iter().map(|&id| slot_of(&m, id)).collect();
     want.sort_unstable();
     m.delete_ids(&victims);
-    // Dead slots are not reusable before a scan.
     assert_eq!(m.index.stats().free, 64 - 20);
     assert_eq!(m.index.stats().dead, 4);
     let stats = m.index.repair_scan();
@@ -310,7 +309,6 @@ impl Model {
 fn capacity_boundaries_leave_state_unchanged_on_refusal() {
     let mut m = Model::new(Metric::Euclidean, 16, 64, 11, None);
     m.insert_ids(&(0..64).collect::<Vec<_>>());
-    // Full: one more is refused.
     let raw = m.row();
     assert!(matches!(
         m.index.insert_batch(&[1000], &raw),

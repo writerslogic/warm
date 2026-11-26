@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 //! Durable single-writer vector updates; binary contracts are in
-//! `docs/file-format/VECTOR-UPDATES.md`.
+//! `docs/file-format/index.md`.
 
 use std::cell::RefCell;
 use std::collections::HashSet;

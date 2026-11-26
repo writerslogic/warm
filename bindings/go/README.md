@@ -13,4 +13,4 @@ cd bindings/go && go test ./...          # runs Example() in example_test.go, wh
 | Needs | Go 1.24+, Rust 1.89+, a C compiler |
 | Release | source only; no tagged module yet |
 
-Use from your own module, API and context semantics: [docs/runtimes/go](../../docs/runtimes/go/README.md).
+Use from your own module, API and context semantics: [language bindings](../../docs/integrations.md#language-bindings).

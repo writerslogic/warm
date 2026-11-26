@@ -45,4 +45,4 @@ Node 18+, `@anthropic-ai/sdk` >= 0.135.0 (tested 0.135.0), `@modelcontextprotoco
 
 ## Reference
 
-Commands, safety rules and semantic recall: [Anthropic memory tool on WARM](https://github.com/writerslogic/warm/blob/main/docs/integrations/mcp/memory-tool.md). Python sibling: [`../python`](../python/README.md).
+Commands, safety rules and semantic recall: [Anthropic memory tool on WARM](https://github.com/writerslogic/warm/blob/main/docs/integrations.md). Python sibling: [`../python`](../python/README.md).

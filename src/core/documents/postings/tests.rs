@@ -176,9 +176,10 @@ fn gallop_matches_partition_point() {
 }
 
 /// The constant-width and general unpackers agree with single-value reads at every
-/// width, count and trailing slack.
+/// width, count and trailing slack, and at unaligned offsets.
 #[test]
 fn block_unpacking_matches_single_reads_at_every_width() {
+    unpacks_at_unaligned_offsets();
     for bits in 0..=64u8 {
         for count in [0, 1, 7, 8, 9, 31, 32, 33, 63, 64, 65, 127, BLOCK_LEN] {
             let limit = if bits == 64 {
@@ -208,8 +209,8 @@ fn block_unpacking_matches_single_reads_at_every_width() {
     }
 }
 
-#[test]
-fn block_unpacking_preserves_output_after_short_and_unaligned_blocks() {
+/// Unpacking from any byte offset and trailing slack writes exactly `count` values.
+fn unpacks_at_unaligned_offsets() {
     for bits in 1..=32u8 {
         let mask = (1u64 << bits) - 1;
         for count in [31, 32, 33, 127, 128] {
@@ -300,6 +301,7 @@ fn decode_both(list: &PostingList, blocked: bool) -> Vec<Posting> {
 /// postings, wide gaps and frequencies at every position in the eight-byte window.
 #[test]
 fn checkpoint_fast_decoding_matches_checked_decoding() {
+    decodes_at_every_varint_length_and_window_offset();
     for pattern in 0u32..256 {
         let mut postings = Vec::new();
         let mut slot = 0usize;
@@ -321,8 +323,8 @@ fn checkpoint_fast_decoding_matches_checked_decoding() {
     }
 }
 
-#[test]
-fn checkpoint_decoding_matches_at_every_varint_length_and_window_offset() {
+/// Fast and checked decoding agree at every varint length and window offset.
+fn decodes_at_every_varint_length_and_window_offset() {
     // Word varints change length at gaps 64 and 8,192; frequency varints at 128 and 16,384.
     let gaps = [1usize, 63, 64, 65, 8_191, 8_192, 8_193, 1 << 20];
     let frequencies = [1u32, 2, 127, 128, 129, 16_383, 16_384, 16_385, u32::MAX];

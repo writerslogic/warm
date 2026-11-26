@@ -11,7 +11,7 @@ pub enum VectorIndexKind {
     Exact,
     /// The vertex graph (`qgraph::VGraph`) with exact re-scoring of the fetched rows.
     Graph,
-    /// Reserved for the graph-free scan under research in `benchmarks/research/scan`.
+    /// Reserved for the graph-free scan.
     Scan,
 }
 

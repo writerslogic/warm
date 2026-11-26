@@ -11,7 +11,7 @@ import { serve } from './serve.mjs'
 const [root, out, ...extra] = process.argv.slice(2)
 const port = Number(process.env.PORT ?? 8123)
 const version = process.env.VERSION ?? 'dev'
-const paths = extra.length ? extra : ['/', '/quickstart/', '/concepts/holographic/']
+const paths = extra.length ? extra : ['/', '/quickstart/', '/concepts/']
 const widths = { desktop: 1440, tablet: 820, phone: 390 }
 const full = process.env.FULL !== '0'
 const clip = process.env.CLIP ? process.env.CLIP.split(',').map(Number) : null

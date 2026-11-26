@@ -1,8 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Python surface of the stage 1 in-place mutable base (`core::qgraph::MutableBase`,
-//! `docs/L10-STAGE1.md`): `MutableIndex`. In memory only, no log and no checkpoint, and
+//! Python surface of the stage 1 in-place mutable base (`core::qgraph::MutableBase`): `MutableIndex`. In memory only, no log and no checkpoint, and
 //! independent of `UpdatableIndex`.
 
 use numpy::{

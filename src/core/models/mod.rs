@@ -25,7 +25,7 @@ pub use prompts::QueryPlan;
 pub use rerank::Reranker;
 pub use stages::{ModelStages, StageParams};
 
-/// Revisions the LongMemEval pipeline was tuned with (`benchmarks/public/longmemeval_modal.py`).
+/// Revisions the LongMemEval pipeline was tuned with.
 pub const PINNED: &[(&str, &str)] = &[
     (
         "Qwen/Qwen3-Embedding-0.6B",

@@ -139,7 +139,6 @@ mod tests {
 
         let composite = reg.compose_triple(&s, &r, &o);
 
-        // Unbind object given subject + relation
         let recovered_o = reg
             .unbind(&composite, &[("subject", &s), ("relation", &r)], "object")
             .unwrap();
@@ -148,7 +147,6 @@ mod tests {
             "Object should be recovered exactly"
         );
 
-        // Unbind subject given relation + object
         let recovered_s = reg
             .unbind(&composite, &[("relation", &r), ("object", &o)], "subject")
             .unwrap();
@@ -157,7 +155,6 @@ mod tests {
             "Subject should be recovered exactly"
         );
 
-        // Unbind relation given subject + object
         let recovered_r = reg
             .unbind(&composite, &[("subject", &s), ("object", &o)], "relation")
             .unwrap();
@@ -186,15 +183,11 @@ mod tests {
     }
 
     #[test]
-    fn re_registering_a_role_requires_its_existing_shift() {
+    fn invalid_role_use_is_rejected() {
         let mut reg = RoleRegistry::new(16384);
         assert!(reg.register("subject", 0).is_ok());
         assert!(reg.register("subject", 5).is_err());
-    }
 
-    #[test]
-    fn test_unknown_role_error() {
-        let reg = RoleRegistry::new(16384);
         let v = make_vec(16384, 1);
         assert!(reg.compose(&[("nonexistent", &v)]).is_err());
     }

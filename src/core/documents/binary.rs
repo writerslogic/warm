@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! Binary form of stored documents in `HMS-TXN-3` journal frames (docs/file-format/MUTATIONS.md).
+//! Binary form of stored documents in `HMS-TXN-3` journal frames (docs/file-format/index.md).
 //!
 //! A frame carries one sorted, front-coded term dictionary; each chunk stores its terms as
 //! ascending dictionary ids (delta-coded), then their frequencies, so a term's bytes are written

@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Historical views over the journal (docs/memory-api/TIME-TRAVEL.md): the state at every
+//! Historical views over the journal (docs/reference/api.md): the state at every
 //! earlier position equals a store that only ever received the writes before it, purged text
 //! is never returned, and positions outside the retained history fail closed.
 

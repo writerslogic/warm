@@ -15,7 +15,7 @@
 //! Unlike a greedy hard-index alternation resonator on the self-inverse
 //! sparse-binary substrate (which only holds for tiny codebooks), this runs the
 //! real resonator on a non-self-inverse phase substrate. §20 of
-//! `docs/PREREGISTRATION-binding-readout.md` shows it factors 3-way products across
+//! the binding-readout preregistration shows it factors 3-way products across
 //! the capacity knee (search spaces to ~110k at D=1024) at the SAME accuracy as a
 //! float FHRR resonator in those experiments, down to 4-bit phase. Factorization
 //! is a floating-point query; the stored phase substrate stays integer and
@@ -358,14 +358,12 @@ fn resonate(index: &PhaseResonator, comp: &Cx, config: &ResonatorConfig) -> Vec<
     while iters < config.max_iter {
         iters += 1;
         for f in 0..k {
-            // unbind = composite ⊙ Π_{j≠f} conj(est[j])
             ub.re.copy_from_slice(&comp.re);
             ub.im.copy_from_slice(&comp.im);
             for (j, e) in est.iter().enumerate() {
                 if j != f {
                     for d in 0..ub.re.len() {
                         let (r, i) = (ub.re[d], ub.im[d]);
-                        // multiply by conj(e) = (e.re, -e.im)
                         ub.re[d] = r * e.re[d] + i * e.im[d];
                         ub.im[d] = i * e.re[d] - r * e.im[d];
                     }
@@ -624,7 +622,6 @@ mod tests {
 
     #[test]
     fn empty_codebooks_yield_no_factors() {
-        // Zero factors: both entry points return an empty result, no panic.
         let cfg = ResonatorConfig::default();
         let composite = PhaseHVec::new_random(64, 256, 1);
         assert!(phase_resonator_factorize(&composite, &[], &cfg).is_empty());
@@ -636,14 +633,12 @@ mod tests {
 
     #[test]
     fn single_factor_and_single_entry_boundaries() {
-        // One factor axis with one entry: the only candidate must be recovered.
         let cbs = codebooks(1, 1, 256, 512, 0x11);
         let composite = compose(&cbs, &[0]);
         let res = PhaseResonator::new(&cbs).factorize(&composite);
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].codebook_entry, 0);
 
-        // One factor axis, several entries: a pure cleanup problem, must be exact.
         let cbs = codebooks(1, 8, 256, 512, 0x22);
         let composite = compose(&cbs, &[5]);
         let res = phase_resonator_factorize(&composite, &cbs, &ResonatorConfig::default());
@@ -683,9 +678,6 @@ mod tests {
 
     #[test]
     fn factors_above_greedy_capacity() {
-        // F=16 -> search space 4096 at D=1024, far past what the toy greedy sparse
-        // resonator (tested only at F<=10, 2 factors) reaches. The real resonator
-        // recovers all three factors on the large majority of trials (§20: ~98%).
         let dim = 1024;
         let n = 256;
         let f = 16;
@@ -711,7 +703,6 @@ mod tests {
 
     #[test]
     fn quantized_4bit_still_factors() {
-        // Deterministic resonator down to 4-bit phase (N=16), the §20 headline.
         let cbs = codebooks(3, 12, 16, 1024, 0x4B17);
         let cfg = ResonatorConfig {
             max_iter: 40,

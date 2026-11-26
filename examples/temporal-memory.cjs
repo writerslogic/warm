@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Run remember, replace, forget, then verify in separate processes with the same directory.
-// See docs/memory-api/README.md for the complete commands.
+// See docs/reference/api.md for the complete commands.
 const assert = require('node:assert/strict')
 const { WarmMemorySystem } = require('../index.js')
 const { Memory } = require('../memory.js')

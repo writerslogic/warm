@@ -143,7 +143,6 @@ impl DistributionalRefiner {
 
             total_context_depth += contributing_relations;
 
-            // Build blended vector via slot allocation.
             // Reserve (1 - alpha) fraction of slots for original indices,
             // and alpha fraction for the highest-frequency context indices.
             // This guarantees context indices actually appear in the result.
@@ -213,7 +212,6 @@ mod tests {
         atom_mem.get_or_insert("japan");
         atom_mem.get_or_insert("europe");
 
-        // paris and berlin share two relations; tokyo shares one
         triple_store.add("paris", "capital_of", "france", "c1");
         triple_store.add("berlin", "capital_of", "germany", "c2");
         triple_store.add("tokyo", "capital_of", "japan", "c3");
@@ -249,15 +247,18 @@ mod tests {
     }
 
     #[test]
-    fn test_refine_skips_low_context_atoms() {
+    fn refine_is_a_no_op_for_low_context_atoms_and_an_empty_store() {
         let dim = 16384;
         let atom_mem = AtomMemory::new(dim, 3.0);
         let triple_store = TripleStore::new();
+        let report =
+            DistributionalRefiner::refine(&atom_mem, &triple_store, &RefinerConfig::default());
+        assert_eq!(report.atoms_refined, 0);
+        assert_eq!(report.atoms_skipped, 0);
 
         atom_mem.get_or_insert("lonely");
         atom_mem.get_or_insert("x");
         triple_store.add("lonely", "r", "x", "c1");
-
         let config = RefinerConfig {
             min_context_relations: 2,
             ..Default::default()
@@ -265,17 +266,6 @@ mod tests {
         let report = DistributionalRefiner::refine(&atom_mem, &triple_store, &config);
         assert_eq!(report.atoms_refined, 0);
         assert!(report.atoms_skipped > 0);
-    }
-
-    #[test]
-    fn test_refine_empty_store() {
-        let dim = 16384;
-        let atom_mem = AtomMemory::new(dim, 3.0);
-        let triple_store = TripleStore::new();
-        let config = RefinerConfig::default();
-        let report = DistributionalRefiner::refine(&atom_mem, &triple_store, &config);
-        assert_eq!(report.atoms_refined, 0);
-        assert_eq!(report.atoms_skipped, 0);
     }
 
     #[test]
@@ -292,7 +282,6 @@ mod tests {
         }
         atom_mem.get_or_insert("continent");
 
-        // All share two relations
         for (city, country) in [("a", "x"), ("b", "y"), ("c", "z"), ("d", "w"), ("e", "v")] {
             triple_store.add(city, "capital_of", country, &format!("c_{}", city));
             triple_store.add(city, "in", "continent", &format!("l_{}", city));

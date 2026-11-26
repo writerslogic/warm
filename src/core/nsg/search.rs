@@ -25,7 +25,6 @@ pub(crate) fn greedy_search_internal(
     }
     let mut visited = vec![false; n];
 
-    // Min-heap frontier: expand closest-first (Reverse makes BinaryHeap act as min-heap).
     let mut frontier: BinaryHeap<Reverse<(u32, u32)>> =
         BinaryHeap::with_capacity(ef_search.saturating_mul(2).min(n));
     // Max-heap result set: keeps the ef_search best (closest) candidates.
@@ -64,7 +63,6 @@ pub(crate) fn greedy_search_internal(
 
             let dist = query.hamming(&index.vectors[ni]);
 
-            // Only add to frontier/results if it could improve the result set.
             let dominated =
                 results.len() >= ef_search && results.peek().is_some_and(|&(w, _)| dist >= w);
             if dominated {
@@ -74,14 +72,12 @@ pub(crate) fn greedy_search_internal(
             frontier.push(Reverse((dist, neighbor)));
             results.push((dist, neighbor));
 
-            // Evict the worst if over capacity.
             if results.len() > ef_search {
                 results.pop();
             }
         }
     }
 
-    // Drain into a sorted vec (ascending by distance).
     let mut candidates: Vec<(u32, u32)> = results.into_vec();
     candidates.sort_unstable();
     candidates

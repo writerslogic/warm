@@ -17,7 +17,7 @@ keywords = ["anthropic", "claude", "memory-tool", "mcp", "agent-memory", "local-
 dependencies = ["anthropic>=1.16", "mcp>=2.3,<3"]
 
 [project.urls]
-Homepage = "https://github.com/writerslogic/warm/tree/main/docs/integrations/claude-memory-tool"
+Homepage = "https://github.com/writerslogic/warm/tree/main/docs/integrations.md"
 Repository = "https://github.com/writerslogic/warm"
 Issues = "https://github.com/writerslogic/warm/issues"
 

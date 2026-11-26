@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Read-only historical views over the journal (docs/memory-api/TIME-TRAVEL.md).
+//! Read-only historical views over the journal (docs/reference/api.md).
 //!
 //! A view replays the live generation's frames from offset 0 into a private in-memory
 //! document map and vector map, then indexes the documents live at the position in one bulk

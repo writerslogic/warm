@@ -329,7 +329,6 @@ impl SparseImpactIndex {
         }
         let n_dims = csr.n_dims;
 
-        // Forward index (rows keep their order; zeros dropped).
         let mut fwd_offsets = Vec::with_capacity(n_docs + 1);
         fwd_offsets.push(0u64);
         let nnz = csr.data.iter().filter(|&&v| v > 0.0).count();
@@ -588,7 +587,6 @@ impl SparseImpactIndex {
             self.assign_to_centroids(term, list, n_blocks, params.seed, scratch)
         };
 
-        // Group by block, documents ascending within a block.
         let mut order: Vec<u32> = (0..keep as u32).collect();
         order.sort_unstable_by_key(|&i| (assign[i as usize], list[i as usize].0));
         let mut groups: Vec<(f32, &[u32])> = Vec::with_capacity(n_blocks);
@@ -637,13 +635,11 @@ impl SparseImpactIndex {
         scratch: &mut BuildScratch,
     ) -> Vec<u32> {
         let mut state = seed ^ (term as u64).wrapping_mul(0x2545_f491_4f6c_dd1d);
-        // Partial Fisher-Yates over positions.
         let mut pos: Vec<u32> = (0..list.len() as u32).collect();
         for i in 0..n_blocks {
             let j = i + (splitmix(&mut state) % (list.len() - i) as u64) as usize;
             pos.swap(i, j);
         }
-        // Inverted map of the centroids: coordinate -> (centroid, value).
         let mut entries: Vec<(u16, u32, f32)> = Vec::new();
         for (c, &p) in pos[..n_blocks].iter().enumerate() {
             entries.extend(

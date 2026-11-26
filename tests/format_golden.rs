@@ -5,7 +5,7 @@
 //! the current code. See `tests/golden/README.md`.
 //!
 //! A change that breaks reading any golden store fails here. The only way to land it is the
-//! way `docs/STABILITY.md` describes: bump the version constant, keep reading (or migrate) the
+//! way `docs/file-format/index.md` describes: bump the version constant, keep reading (or migrate) the
 //! old format, and commit a new golden store for the new one.
 
 mod format_common;
@@ -1196,7 +1196,7 @@ fn canonical_corpus_regenerates_the_current_goldens() -> Result<()> {
             "{}: the journal the current code writes for the canonical corpus differs from the \
              committed golden. If the change is intended it is a format change: bump the \
              version, keep reading the old golden, and commit a new golden (see \
-             docs/STABILITY.md).",
+             docs/file-format/index.md).",
             spec.name
         );
     }

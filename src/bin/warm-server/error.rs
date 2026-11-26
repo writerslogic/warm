@@ -4,7 +4,7 @@
 //! Error model: RFC 9457 `application/problem+json`.
 //!
 //! The v1 body also carries the legacy `error: {code, message}` member the published SDK reads.
-//! It is deprecated but stays for the whole of `/api/v1`; see docs/server/versioning.md.
+//! It is deprecated but stays for the whole of `/api/v1`; see docs/server/index.md.
 
 use axum::http::{header, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
@@ -225,10 +225,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn changed_document_reads_are_retryable_without_private_context() {
-        let error = anyhow::Error::new(writerslogic_warm::DocumentReadChanged)
-            .context("private read context");
-        let error = ApiError::from_core(error);
+    fn core_errors_map_to_problems_without_private_context() {
+        let error = ApiError::from_core(
+            anyhow::Error::new(writerslogic_warm::DocumentReadChanged)
+                .context("private read context"),
+        );
         let problem = error.problem();
         assert_eq!(problem["status"], 503);
         assert_eq!(problem["code"], "concurrent_mutation");
@@ -237,10 +238,7 @@ mod tests {
             writerslogic_warm::DocumentReadChanged.to_string()
         );
         assert_eq!(error.retry_after, Some(1));
-    }
 
-    #[test]
-    fn query_exhaustion_is_a_resource_problem_without_private_context() {
         for resource in ["work", "bytes", "frontier"] {
             let error = anyhow::Error::new(QueryLimitExceeded { resource, limit: 7 })
                 .context("private context");
@@ -275,10 +273,7 @@ mod tests {
             ApiError::from_core(committed.into()).code,
             "mutation_committed"
         );
-    }
 
-    #[test]
-    fn uncertain_mutation_is_distinct_and_hides_internal_details() {
         let error = writerslogic_warm::IndeterminateMutationError {
             effect: "journal rollback",
             source: anyhow::anyhow!("private storage path"),

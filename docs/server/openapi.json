@@ -2167,7 +2167,7 @@
     }
   },
   "info": {
-    "description": "One engine store per tenant. The /api/v1 contract is stable: see docs/server/versioning.md. Errors are RFC 9457 problem details.",
+    "description": "One engine store per tenant. The /api/v1 contract is stable: see docs/server/index.md. Errors are RFC 9457 problem details.",
     "license": {
       "identifier": "Apache-2.0",
       "name": "Apache-2.0"
@@ -2960,7 +2960,7 @@
             ]
           }
         ],
-        "summary": "Apply the configured forgetting policy. See docs/memory-api.",
+        "summary": "Apply the configured forgetting policy. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]
@@ -3110,7 +3110,7 @@
             ]
           }
         ],
-        "summary": "Run the configured consolidation policy. See docs/memory-api.",
+        "summary": "Run the configured consolidation policy. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]
@@ -3179,7 +3179,7 @@
             ]
           }
         ],
-        "summary": "Recall with the evidence behind each result and its supersession chain. See docs/memory-api.",
+        "summary": "Recall with the evidence behind each result and its supersession chain. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]
@@ -3248,7 +3248,7 @@
             ]
           }
         ],
-        "summary": "Forget facts by id, source or scope. See docs/memory-api.",
+        "summary": "Forget facts by id, source or scope. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]
@@ -3317,7 +3317,7 @@
             ]
           }
         ],
-        "summary": "Fetch one fact by id. See docs/memory-api.",
+        "summary": "Fetch one fact by id. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]
@@ -3386,7 +3386,7 @@
             ]
           }
         ],
-        "summary": "A fact's version and supersession history. See docs/memory-api.",
+        "summary": "A fact's version and supersession history. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]
@@ -3455,7 +3455,7 @@
             ]
           }
         ],
-        "summary": "Retrieve facts for a query, honoring validity time and supersession. See docs/memory-api.",
+        "summary": "Retrieve facts for a query, honoring validity time and supersession. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]
@@ -3524,7 +3524,7 @@
             ]
           }
         ],
-        "summary": "Store one fact or an array of facts with validity time, source and supersession. See docs/memory-api.",
+        "summary": "Store one fact or an array of facts with validity time, source and supersession. See docs/reference/api.md.",
         "tags": [
           "memory"
         ]

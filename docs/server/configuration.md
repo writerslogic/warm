@@ -22,7 +22,7 @@ Secrets never appear as flags: `WARM_API_KEY` is read from the environment only.
 | Flag | Environment | Default | Meaning |
 |---|---|---|---|
 | `--data-dir` | `WARM_DATA_DIR` | `./hms-data` | Root for stores (`tenants/`), snapshots (`snapshots/`) and restore staging (`staging/`). |
-| `--memory-config` | `WARM_MEMORY_CONFIG` | unset | JSON file with the memory API configuration (policies and defaults) applied to every tenant; see `docs/memory-api`. Validated at startup. |
+| `--memory-config` | `WARM_MEMORY_CONFIG` | unset | JSON file with the memory API configuration (policies and defaults) applied to every tenant; see `docs/reference/api.md`. Validated at startup. |
 | `--dim` | `WARM_DIM` | `4096` | Hypervector dimensions per store (>= 256). Fixed once a store exists. |
 | `--input-dim` | `WARM_INPUT_DIM` | `384` | Required length of every client embedding. |
 | `--embedding-model` | `WARM_EMBEDDING_MODEL` | `client-supplied` | Embedding model name recorded in each store. |
@@ -35,7 +35,7 @@ Secrets never appear as flags: `WARM_API_KEY` is read from the environment only.
 | Flag | Environment | Default | Meaning |
 |---|---|---|---|
 | `--no-auth` | `WARM_NO_AUTH` | off | Serve without authentication: every caller has every scope. Refused unless the listener is loopback or a unix socket, and refused when credentials are also configured. |
-| `--keys-file` | `WARM_KEYS_FILE` | unset | JSON file of hashed per-tenant keys; see `docs/server/auth.md`. Reloaded on SIGHUP and by `POST /api/v1/admin/keys/reload`. |
+| `--keys-file` | `WARM_KEYS_FILE` | unset | JSON file of hashed per-tenant keys; see `docs/server/index.md`. Reloaded on SIGHUP and by `POST /api/v1/admin/keys/reload`. |
 | | `WARM_API_KEY` (environment only, no flag) | unset | One key valid for every tenant with every scope. Empty is an error. |
 | `--metrics-public` | `WARM_METRICS_PUBLIC` | off | Serve `/metrics` without credentials. Otherwise it needs the admin scope. `/healthz`, `/readyz` and `/openapi.json` are always public. |
 | `--cors-origins` | `WARM_CORS_ORIGINS` | empty | Comma-separated origins allowed by CORS, or `*`. Empty sends no CORS headers. |
@@ -64,7 +64,7 @@ With neither `WARM_API_KEY` nor `--keys-file`, the server only starts if `--no-a
 | `--graph-profile` | `WARM_GRAPH_PROFILE` | `max-recall` | Build profile of the vector graph: `max-recall`, `high`, `balanced` or `fast`. |
 | `--rate-limit-rps` | `WARM_RATE_LIMIT_RPS` | `0` | Per-tenant sustained requests per second (token bucket); 429 `rate_limited` with `Retry-After`. 0 disables. |
 | `--rate-limit-burst` | `WARM_RATE_LIMIT_BURST` | `0` | Per-tenant burst. 0 means one second of the sustained rate. |
-| `--max-documents-per-tenant` | `WARM_MAX_DOCUMENTS_PER_TENANT` | `0` | Per-tenant document ingest and memory `remember` quota ([scope and retry limits](../SERVER.md#limits-and-backpressure)); exceeding it gets 429 `quota_exceeded`. Replacing an existing id never counts. 0 disables. |
+| `--max-documents-per-tenant` | `WARM_MAX_DOCUMENTS_PER_TENANT` | `0` | Per-tenant document ingest and memory `remember` quota ([scope and retry limits](index.md#limits-and-backpressure)); exceeding it gets 429 `quota_exceeded`. Replacing an existing id never counts. 0 disables. |
 | `--idempotency-ttl-seconds` | `WARM_IDEMPOTENCY_TTL_SECONDS` | `600` | Retry-receipt retention window. Restart conservatively starts a fresh window at least as long as the recorded TTL. |
 | `--idempotency-capacity` | `WARM_IDEMPOTENCY_CAPACITY` | `10000` | Maximum retained keys. Full capacity rejects new keys with 503; unexpired keys are never evicted. |
 | `--idempotency-max-bytes` | `WARM_IDEMPOTENCY_MAX_BYTES` | `67108864` | Maximum retained response-buffer allocation bytes. Responses that do not fit retain a key requiring reconciliation instead of allowing duplicate execution. |
@@ -103,4 +103,4 @@ Log lines carry identifiers, counts and timings only: method, route template, st
 ## Subcommands
 
 - `warm-server openapi` prints the OpenAPI 3.1 document for this build (the committed `docs/server/openapi.json` is its output).
-- `warm-server keygen --id ID --tenants a,b|* --scopes read,write [--expires-in-days N] [--keys-file PATH]` creates a key; see `docs/server/auth.md`.
+- `warm-server keygen --id ID --tenants a,b|* --scopes read,write [--expires-in-days N] [--keys-file PATH]` creates a key; see `docs/server/index.md`.

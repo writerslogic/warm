@@ -338,10 +338,8 @@ fn query_code_reconstructs_bit_sums() {
     assert!((approx - exact).abs() <= qc.delta / 2.0 * pop + 1e-4);
 }
 
-/// Kill test for the 1-bit screen (experiment E2): per neighbour,
-/// the screen must cost < 25% of the 8-bit SDOT estimate on a nytimes-sized working set
-/// (300k rows, 256 dims: 256-byte code rows, 40-byte screen rows) with the search loop's
-/// access pattern (64 random fresh neighbours per expansion, prefetched, then estimated).
+/// Microbenchmark of the 1-bit screen against the 8-bit SDOT estimate on a 300k-row, 256-dim
+/// working set with the search loop's access pattern (64 random fresh neighbours per expansion).
 /// `cargo test --release raw_screen_microbenchmark -- --ignored --nocapture`; writes JSON
 /// to `$WARM_SCREEN_BENCH_OUT` when set.
 #[test]
@@ -414,8 +412,7 @@ fn raw_screen_microbenchmark() {
         raw_estimates(&g, &qc.planes, WORDS, &mut o);
         o.iter().map(|&r| i64::from(r)).sum()
     };
-    // Loop models: screen every fresh neighbour, then estimate the survivors (about 24%
-    // on nytimes, held-out: 76% skipped). `late` prefetches a survivor's code when it
+    // Loop models: screen every fresh neighbour, then estimate the survivors. `late` prefetches a survivor's code when it
     // survives (the committed loop); `early` prefetches every code with the screen rows.
     let mut sample: Vec<u32> = ids[..4096]
         .iter()
@@ -646,7 +643,6 @@ fn screen_popcount_microbench() {
         let hot = &table[..DEG * words];
         let row = |v: u32| &table[v as usize * words..][..words];
         let block = |b: u32| &table[b as usize * DEG * words..][..DEG * words];
-        // ns per row: [shape][variant][round]
         let mut ns = vec![vec![Vec::with_capacity(rounds); variants.len()]; 3];
         let mut sums = vec![[0u64; 3]; variants.len()];
         let mut out = vec![0u32; DEG];

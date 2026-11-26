@@ -191,7 +191,6 @@ impl RelationStore {
         let mut visited = FastMap::<String, u32>::default();
         visited.insert(start_id.to_string(), 0);
 
-        // BFS queue: (node_id, current_path, depth)
         let mut queue: VecDeque<(String, Vec<PathHop>, u32)> = VecDeque::new();
         queue.push_back((start_id.to_string(), Vec::new(), 0));
 
@@ -332,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn test_add_and_query_outgoing() {
+    fn add_query_and_remove_outgoing() {
         let store = RelationStore::new();
         store.add(&rel("paris", "capital_of", "france"));
         store.add(&rel("berlin", "capital_of", "germany"));
@@ -346,16 +345,12 @@ mod tests {
 
         let none = store.outgoing("tokyo", None, 0.0);
         assert!(none.is_empty());
-    }
 
-    #[test]
-    fn test_remove_relation() {
-        let store = RelationStore::new();
-        store.add(&rel("a", "knows", "b"));
+        assert_eq!(store.count(), 2);
+        assert!(store.remove("paris", "capital_of", "france"));
         assert_eq!(store.count(), 1);
-        assert!(store.remove("a", "knows", "b"));
-        assert_eq!(store.count(), 0);
-        assert!(!store.remove("a", "knows", "b"));
+        assert!(!store.remove("paris", "capital_of", "france"));
+        assert!(store.outgoing("paris", None, 0.0).is_empty());
     }
 
     #[test]
@@ -385,7 +380,6 @@ mod tests {
         store.add(&rel("france", "is_in", "europe"));
 
         let paths = store.traverse("paris", Some("is_in"), 3, 0.0, &dummy_sim);
-        // Should find both direct (paris->france) and transitive (paris->europe)
         let targets: Vec<&str> = paths
             .iter()
             .flat_map(|p| p.hops.iter().map(|h| h.node_id.as_str()))
@@ -393,7 +387,6 @@ mod tests {
         assert!(targets.contains(&"france"));
         assert!(targets.contains(&"europe"));
 
-        // Transitive inference should produce a 1-hop inferred path to europe
         let inferred_single_hop = paths
             .iter()
             .find(|p| p.hops.len() == 1 && p.hops[0].node_id == "europe");
@@ -429,16 +422,13 @@ mod tests {
             ..rel("a", "employs", "c")
         });
 
-        // At time 1200: only b
         let at_1200 = store.outgoing("a", None, 1200.0);
         assert_eq!(at_1200.len(), 1);
         assert_eq!(at_1200[0].target_id, "b");
 
-        // At time 1700: both
         let at_1700 = store.outgoing("a", None, 1700.0);
         assert_eq!(at_1700.len(), 2);
 
-        // At time 2500: only c (b expired)
         let at_2500 = store.outgoing("a", None, 2500.0);
         assert_eq!(at_2500.len(), 1);
         assert_eq!(at_2500[0].target_id, "c");

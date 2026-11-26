@@ -263,7 +263,6 @@ mod tests {
         let single = TripleStore::new();
         single.add("a", "r", "b", "c1");
         single.add("b", "r", "c", "c2");
-        // All in one component, no pair to compare
         assert!(AnalogyDetector::detect(&single, 1).is_empty());
     }
 
@@ -281,11 +280,9 @@ mod tests {
     #[test]
     fn test_ranked_matching_quality() {
         let store = TripleStore::new();
-        // Domain A: structured knowledge graph
         store.add("cat", "is_a", "animal", "c1");
         store.add("cat", "has_part", "tail", "c2");
         store.add("animal", "lives_in", "habitat", "c3");
-        // Domain B: parallel structure with different entities
         store.add("dog", "is_a", "creature", "c4");
         store.add("dog", "has_part", "paw", "c5");
         store.add("creature", "lives_in", "den", "c6");
@@ -300,13 +297,11 @@ mod tests {
             best.mapping_quality > 0.0,
             "mapping_quality should be positive for structurally isomorphic domains"
         );
-        // With perfect structural isomorphism, mapping_quality should be 1.0
         assert!(
             best.mapping_quality >= 0.5,
             "mapping_quality should be high for isomorphic domains, got {}",
             best.mapping_quality
         );
-        // Verify the mapping covers entities from both domains
         assert!(
             best.mapping.len() >= 2,
             "should map at least 2 entity pairs"

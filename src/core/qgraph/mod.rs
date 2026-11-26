@@ -94,13 +94,10 @@ const LAYER_RATIO: usize = 16;
 const MIN_LAYER: usize = 64;
 /// Smallest dimension at which construction screens exact distances with [`BuildCodes`]: a
 /// skipped distance then saves a row of at least 512 bytes, which pays for the extra code
-/// access (the build measured 1.8x faster at 256 dimensions, and not faster at 100).
+/// access.
 const BUILD_CODES_MIN_DIM: usize = 128;
-/// Largest candidate list of the first construction pass. That pass only has to make the
-/// graph navigable for the second, whose search and prune set the final lists. At degree 64
-/// and `build_ef` 500 the cap cut the first pass's construction estimates 2.2x on SIFT-1M and
-/// 2.7x on glove-100, and searches needed within 1.1% of the estimates per query for recall
-/// 0.90 and 0.95 and 1.4-1.7% more for 0.99 (benchmarks/results/qgraph_build_schedule_wl02_v1.json).
+/// Largest candidate list of the first construction pass, which only has to make the graph
+/// navigable for the second pass (see `benchmarks/results/qgraph_build_schedule_wl02_v1.json`).
 const FIRST_PASS_EF: usize = 200;
 
 /// Candidate expansions of the standard profile's construction search. The search stops

@@ -82,13 +82,10 @@ fn ladder() -> Vec<f32> {
 fn select_probes_rules_respect_bounds_and_cutoffs() {
     let d2 = ladder();
     let sel = |rule, nmin, nmax| select_probes(&d2, &[0.0; 4], rule, nmin, nmax);
-    // Ratio: d_i^2 <= d_1^2 (1+eps) keeps 1 and 1.44 at eps 0.5.
     assert_eq!(sel(ProbeRule::Ratio { eps: 0.5 }, 1, 4), [1, 3]);
     assert_eq!(sel(ProbeRule::Ratio { eps: 0.0 }, 1, 4), [1]);
-    // Floor and cap.
     assert_eq!(sel(ProbeRule::Ratio { eps: 0.0 }, 3, 4), [1, 3, 2]);
     assert_eq!(sel(ProbeRule::Ratio { eps: 9.0 }, 1, 2), [1, 3]);
-    // Monotone in eps.
     let mut prev = 0;
     for e in 0..40 {
         let n = sel(
@@ -184,7 +181,6 @@ fn full_probe_matches_exact_through_deletes_and_reinserts() {
     let mut t = PartitionTier::new(dim, params(20)).unwrap();
     let ids: Vec<u32> = (0..n as u32).map(|i| i * 7 + 3).collect();
     t.insert(&ids[..500], &x[..500 * dim]).unwrap();
-    // Below train_at: exact brute force.
     let got = t.search(&q, k).unwrap();
     assert!(!t.is_trained());
     let rows: Vec<(u32, &[f32])> = (0..500)
@@ -485,7 +481,6 @@ fn quad_layout_equals_lut16_layout() {
             let (pa, pb) = (a.last_search_profile(), b.last_search_profile());
             assert_eq!((pa.blocks, pa.admitted), (pb.blocks, pb.admitted), "m {m}");
         };
-        // The first search trains both tiers.
         same(&mut a, &mut b);
         check_lists(&a);
         check_lists(&b);

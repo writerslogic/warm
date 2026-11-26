@@ -5,7 +5,7 @@
 usage: compare-hashes.py FIRST SECOND [--allow NAME ...]
 
 Exit 1 if any artefact differs, is missing from one side, or the sets differ. --allow names (shell patterns)
-artefacts whose difference is documented as expected (docs/RELEASING.md); they are reported
+artefacts whose difference is documented as expected (docs/security.md); they are reported
 but do not fail the comparison. A documented exception that has started to match is also
 reported so the exception list can shrink.
 """

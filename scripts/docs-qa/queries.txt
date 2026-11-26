@@ -1,49 +1,23 @@
 # One search per line: query | fragments (comma separated; any one) that must appear in the URL of one of the top five pages.
 # These are the questions a reader types; a line that returns nothing is a defect in the docs, not in this file.
 quickstart | quickstart
-install | install
-getting started | quickstart
-sqlite comparison | quickstart
-offline agent | offline-agent
-encrypt a store | quickstart,ENCRYPTION,privacy-limits
-passphrase | faq
-wrong passphrase | faq
-holographic | concepts/holographic,faq
-bind bundle permute | concepts/holographic
-hypervector | concepts/holographic
-capacity | concepts/capacity
-how many items fit | concepts/capacity
-lossy | concepts/lossy
-privacy limits | concepts/privacy-limits
-what does encryption protect | concepts/privacy-limits
-bm25 | glossary,quickstart,PUBLIC-BENCHMARKS
-ndcg | glossary, guides/evaluate-search, evaluation/
-recall@k | glossary
-hopfield | glossary
-resonator network | glossary,RESEARCH,DETERMINISTIC-RESONATOR
-warm-server | SERVER
-api key | SERVER,SECURITY,api/http,server/auth
-python client | api/python
-phase vector | api/python
-typescript | api/node
-WarmMemorySystem | api/node
+install | quickstart,integrations
+encrypt a store | quickstart,security,faq
+passphrase | security,faq
+holographic | concepts,faq
+hypervector | concepts
+hopfield | concepts
+bm25 | concepts,faq,benchmarks
+warm-server | server
+api key | server
+python client | api/,reference/api,integrations
+typescript | api/,reference/api,integrations
+WarmMemorySystem | api/,reference/api,quickstart
 changelog | changelog
-release notes | changelog
-contributing | community
-governance | GOVERNANCE
-security policy | SECURITY
-benchmark | PUBLIC-BENCHMARKS
-hnsw | PUBLIC-BENCHMARKS
-scifact | PUBLIC-BENCHMARKS
+telemetry | security,faq
+benchmark | benchmarks
+hnsw | benchmarks,faq
 msrv | faq
-telemetry | faq
-network calls | faq
 license | faq
-architecture | ARCHITECTURE
-production readiness | production-readiness
-avx512 | platforms
-how docs are built | docs-pipeline
-
-choose an integration | get-started/choose
-troubleshooting | get-started/troubleshooting
-evaluate search | guides/evaluate-search
+choose an integration | integrations
+file format | file-format

@@ -32,7 +32,6 @@ impl TextProcessor {
     /// CJK/Thai/Myanmar detection is a first-byte heuristic. Syllable
     /// count is approximated by counting vowel groups.
     pub fn analyze(text: &str) -> TextMetrics {
-        // Multi-threaded processing with UTF-8 safety: split only at char boundaries
         let mut chunk_starts = Vec::with_capacity(text.len().div_ceil(TEXT_CHUNK_SIZE) + 1);
         let mut pos = 0;
         while pos < text.len() {
@@ -124,7 +123,6 @@ impl TextProcessor {
                         }
                         i += 1;
                     } else {
-                        // Heuristic: non-ASCII, non-punctuation characters are word parts.
                         let char_len = if b & 0b11100000 == 0b11000000 {
                             2
                         } else if b & 0b11110000 == 0b11100000 {
@@ -135,14 +133,12 @@ impl TextProcessor {
                             1
                         };
 
-                        // Non-spacing characters are often their own words
                         if is_non_spacing_byte(b) {
                             if in_word {
                                 words += 1;
                             }
                             words += 1;
                             in_word = false;
-                            // Approximating 1 syllable per non-spacing char
                             syllables += 1;
                         } else {
                             in_word = true;
@@ -228,7 +224,6 @@ mod tests {
 
     #[test]
     fn test_non_spacing_scripts() {
-        // CJK
         let metrics = TextProcessor::analyze("你好世界");
         assert_eq!(metrics.word_count, 4);
         assert_eq!(metrics.syllable_count, 4);
@@ -264,29 +259,24 @@ mod tests {
     }
 
     #[test]
-    fn readability_simple_text() {
-        let metrics = TextProcessor::analyze("The cat sat on the mat.");
-        let score = TextProcessor::calculate_readability(&metrics);
+    fn readability_orders_simple_above_complex_text() {
+        let simple = TextProcessor::analyze("The cat sat on the mat.");
+        let simple = TextProcessor::calculate_readability(&simple);
         assert!(
-            score > 80.0,
-            "Simple text should score > 80, got {:.1}",
-            score
+            simple > 80.0,
+            "Simple text should score > 80, got {simple:.1}"
         );
-    }
 
-    #[test]
-    fn readability_complex_text() {
-        let metrics = TextProcessor::analyze(
+        let complex = TextProcessor::analyze(
             "The implementation of sophisticated algorithmic methodologies \
              necessitates comprehensive understanding of computational complexity. \
              Furthermore, the juxtaposition of theoretical abstractions with \
              practical considerations illuminates fundamental architectural decisions.",
         );
-        let score = TextProcessor::calculate_readability(&metrics);
+        let complex = TextProcessor::calculate_readability(&complex);
         assert!(
-            score < 40.0,
-            "Complex text should score < 40, got {:.1}",
-            score
+            complex < 40.0,
+            "Complex text should score < 40, got {complex:.1}"
         );
     }
 

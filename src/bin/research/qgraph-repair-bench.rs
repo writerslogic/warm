@@ -15,7 +15,7 @@ use writerslogic_warm::core::qgraph::{
 
 #[derive(Parser)]
 struct Args {
-    /// Prepared ANN directory (train.f32, test.f32 from benchmarks/public/prepare.py).
+    /// Prepared ANN directory (train.f32, test.f32).
     #[arg(long)]
     data: PathBuf,
     #[arg(long)]
