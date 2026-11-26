@@ -104,7 +104,7 @@ impl<'a> Run<'a, '_> {
             let mut musts = self.opened(reopen, &present);
             let mut excluded = self.opened(reopen, &absent);
             merge_twins(&mut musts);
-            self.negated_top_into(&mut musts, &mut excluded, &mut top)?;
+            self.negated_top_into(&mut musts, &mut excluded, &mut top, true)?;
         }
         Ok(Some(top.finish()))
     }
