@@ -4770,7 +4770,7 @@ dependencies = [
 
 [[package]]
 name = "warm-rust"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "aes-gcm",
  "anyhow",
