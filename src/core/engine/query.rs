@@ -227,6 +227,7 @@ mod tests {
         let directory = tempfile::tempdir()?;
         let warm = WarmCore::new(1024, Some(directory.path().display().to_string()), None)?;
         let probe = EntangledHVec::new_deterministic(1024, 0);
+        assert!(warm.query(&probe, 3)?.is_empty());
         for i in 0..3 {
             warm.memorize(format!("v{i}"), EntangledHVec::new_deterministic(1024, i))?;
         }
