@@ -1077,7 +1077,7 @@ fn load_base(dir: &Path, m: &Manifest, dim: usize) -> Result<(Base, Vec<Arc<str>
     }
     ensure!(at == body.len(), "ids file has trailing bytes");
     let graph_path = dir.join(format!("graph-{}.vertex", m.epoch));
-    let graph = match VGraph::open(&graph_path, Residency::Prefaulted) {
+    let graph = match VGraph::open_serving(&graph_path, Residency::Prefaulted) {
         Ok(graph) if graph.len() == n && graph.dim() == dim => Some(graph),
         Ok(_) => {
             crate::log_event!(Warn, "vector_index_graph_unreadable", "path" => graph_path.display().to_string(), "detail" => "does not match the manifest");

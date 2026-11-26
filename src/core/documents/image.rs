@@ -1438,18 +1438,21 @@ impl ServingImage {
     pub(super) fn id(&self, ordinal: usize) -> &str {
         let (start, end) = self.span(Section::IdOffsets, ordinal);
         let ids = self.section(Section::Ids);
-        std::str::from_utf8(&ids[start..end]).expect("ids checked at open")
+        // SAFETY: `check_documents` verified at open that the whole id section is UTF-8 and
+        // that every document's span lies on character boundaries; a checkpoint is immutable.
+        unsafe { std::str::from_utf8_unchecked(&ids[start..end]) }
     }
 
-    /// The tie order of `slot` as [`LexicalSource::slot_order`] gives it, with the id as its
-    /// bytes: they order as the string does, and comparing them skips the UTF-8 check.
-    pub(super) fn slot_key(&self, slot: usize) -> (&[u8], usize) {
+    /// The tie order of `slot` as one integer. Ids ascend with ordinals (checked at open), so
+    /// `(ordinal + 1, chunk)` orders as [`LexicalSource::slot_order`] does, a free slot first.
+    pub(super) fn slot_tie_key(&self, slot: usize) -> u64 {
         let (_, ordinal, index) = self.slot(slot);
-        if ordinal == FREE {
-            return (&[], index as usize);
-        }
-        let (start, end) = self.span(Section::IdOffsets, ordinal as usize);
-        (&self.section(Section::Ids)[start..end], index as usize)
+        let owner = if ordinal == FREE {
+            0
+        } else {
+            u64::from(ordinal) + 1
+        };
+        owner << 32 | u64::from(index)
     }
 
     pub(super) fn slot_total(&self) -> usize {
@@ -2319,6 +2322,10 @@ impl LexicalSource for ServingImage {
             return ("", index as usize);
         }
         (self.id(ordinal as usize), index as usize)
+    }
+
+    fn slot_tie_key(&self, slot: usize) -> Option<u64> {
+        Some(ServingImage::slot_tie_key(self, slot))
     }
 }
 

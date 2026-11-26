@@ -321,8 +321,8 @@ impl Ord for Worse<'_> {
             if self.slot == other.slot {
                 return Ordering::Equal;
             }
-            let mine = self.image.slot_key(self.slot as usize);
-            let theirs = self.image.slot_key(other.slot as usize);
+            let mine = self.image.slot_tie_key(self.slot as usize);
+            let theirs = self.image.slot_tie_key(other.slot as usize);
             mine.cmp(&theirs)
         })
     }
@@ -366,17 +366,23 @@ impl<'a> Top<'a> {
     }
 
     fn finish(self) -> Vec<LexicalHit> {
-        // Ascending in `Worse` is best first.
         let image = self.image;
-        self.heap
-            .into_sorted_vec()
+        let mut keyed: Vec<(f64, u64, u32)> = self
+            .heap
+            .into_vec()
             .into_iter()
-            .map(|hit| {
-                let (id, chunk) = image.slot_order(hit.slot as usize);
+            .map(|hit| (hit.score, image.slot_tie_key(hit.slot as usize), hit.slot))
+            .collect();
+        // Best first: score descending, then the tie order.
+        keyed.sort_unstable_by(|a, b| b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
+        keyed
+            .into_iter()
+            .map(|(score, _, slot)| {
+                let (id, chunk) = image.slot_order(slot as usize);
                 LexicalHit {
                     document_id: id.to_owned(),
                     chunk_index: chunk,
-                    score: hit.score,
+                    score,
                 }
             })
             .collect()
@@ -731,6 +737,11 @@ struct Run<'a, 'q> {
     /// Per slot its word count, `u16::MAX` where the slot table holds it.
     word_counts: &'a [u16],
 }
+
+/// From this `k` a union of two or three terms goes through its classes even when the
+/// conjunction leaves the heap short: the classes after it fill it, and the ranker's windows
+/// over the same lists cost more.
+const DEEP_CLASSES_K: usize = 100;
 
 impl<'a> Run<'a, '_> {
     /// The word count of the chunk in `slot`.
@@ -1343,7 +1354,7 @@ impl<'a> Run<'a, '_> {
         merge_twins(&mut terms);
         self.terms_top_into(&mut terms, &mut top)?;
         drop(terms);
-        if top.floor().is_none() {
+        if top.floor().is_none() && !(self.k >= DEEP_CLASSES_K && n <= 3) {
             #[cfg(test)]
             reached(8);
             return Ok(None);
@@ -3252,6 +3263,24 @@ mod tests {
     fn image_of(store: &DocumentStore) -> ServingImage {
         let bytes = encode(store, 7, 64).unwrap().expect("checkpointable");
         ServingImage::new(Backing::Owned(bytes)).unwrap()
+    }
+
+    #[test]
+    fn tie_keys_order_slots_as_their_ids_and_chunks_do() {
+        let mut store = DocumentStore::default();
+        for id in ["m", "d", "z", "a1", "a", "d0", "ab"] {
+            insert(&mut store, id, "w1 w2", true, true);
+        }
+        let image = image_of(&store);
+        for a in 0..image.slot_total() {
+            for b in 0..image.slot_total() {
+                assert_eq!(
+                    image.slot_tie_key(a).cmp(&image.slot_tie_key(b)),
+                    image.slot_order(a).cmp(&image.slot_order(b)),
+                    "slots {a} {b}"
+                );
+            }
+        }
     }
 
     /// Whether the executor served the query.

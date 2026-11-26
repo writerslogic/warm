@@ -446,6 +446,14 @@ impl VGraph {
         crate::core::durable_file::sync_directory(parent).map_err(std::io::Error::other)
     }
 
+    /// Opens an index for serving queries: [`Residency::Heap`] when huge-page advice is on and
+    /// the file fits in a quarter of available memory (a file mapping gets no transparent huge
+    /// pages), otherwise `fallback`.
+    pub fn open_serving(path: &Path, fallback: Residency) -> std::io::Result<Self> {
+        let heap = std::fs::metadata(path).is_ok_and(|m| super::heap_copy_fits(m.len()));
+        Self::open(path, if heap { Residency::Heap } else { fallback })
+    }
+
     /// Opens an index written by [`VGraph::save`] with its arrays where `residency` puts them.
     /// The search reads the arrays in place, so its results are those of the saved index.
     ///
