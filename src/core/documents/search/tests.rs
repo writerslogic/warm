@@ -1440,6 +1440,11 @@ fn pruned_ranking_matches_exhaustive_ranking_to_the_bit() {
         }
     }
     assert!(queries_run > 1000 && scored_total > 0);
+    // The ranker also ranked deep unions strongest windows first.
+    assert!(
+        crate::core::documents::impact::SEEDED.load(std::sync::atomic::Ordering::Relaxed) > 0,
+        "no union was seeded"
+    );
     assert!(
         decoded < listed,
         "pruning decoded {decoded} of {listed} blocks"

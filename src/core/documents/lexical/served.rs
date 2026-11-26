@@ -1393,7 +1393,7 @@ impl<'a> Run<'a, '_> {
             let mut musts = self.opened(reopen, &present);
             let mut excluded = self.opened(reopen, &absent);
             merge_twins(&mut musts);
-            self.negated_top_into(&mut musts, &mut excluded, &mut top)?;
+            self.negated_top_into(&mut musts, &mut excluded, &mut top, true)?;
         }
         Ok(Some(top.finish()))
     }
@@ -1427,7 +1427,7 @@ impl<'a> Run<'a, '_> {
         excluded: &mut [Rt<'a>],
     ) -> Result<(Vec<LexicalHit>, usize)> {
         let mut top = Top::new(self.image, self.k);
-        let count = self.negated_top_into(terms, excluded, &mut top)?;
+        let count = self.negated_top_into(terms, excluded, &mut top, false)?;
         Ok((top.finish(), count))
     }
 
@@ -1438,6 +1438,7 @@ impl<'a> Run<'a, '_> {
         terms: &mut [Rt<'a>],
         excluded: &mut [Rt<'a>],
         top: &mut Top<'a>,
+        classes: bool,
     ) -> Result<usize> {
         let lists = terms.len();
         let clauses = terms.iter().map(|rt| 1 + rt.twins.len()).sum();
@@ -1494,6 +1495,26 @@ impl<'a> Run<'a, '_> {
             self.count,
             ratio,
         );
+        // A class of a union reads the strongest blocks of its one list first. A plain negated
+        // query keeps slot order: the game's negated TOP_1000 mean was 11% slower best-first.
+        if classes
+            && lists == 1
+            && !self.count
+            && scoring
+            && ids[0].len() == 1
+            // Run frontiers exist for lists of two blocks or more.
+            && lead.cursors[0].block_count() >= 2
+        {
+            self.negated_best_first(
+                lead,
+                excluded,
+                (&excluded_tables, &scatters),
+                ids[0][0],
+                lead_bound,
+                top,
+            )?;
+            return Ok(0);
+        }
         if lists == 1 && self.count && scoring {
             return self.negated_ranked(
                 lead,
@@ -3530,6 +3551,7 @@ mod tests {
             (7, "pair class"),
             (8, "fallback"),
             (9, "skipped class"),
+            (10, "best-first class"),
         ] {
             assert!(paths[path] > 0, "{name} never ran: {paths:?}");
         }
@@ -4398,4 +4420,5 @@ mod tests {
     }
 }
 
+mod best_first;
 mod class_cover;

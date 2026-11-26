@@ -155,6 +155,42 @@ impl<'a> BlockBounds<'a> {
         best.min(ceiling)
     }
 
+    /// Restarts the forward-only range queries from the first block.
+    pub(super) fn rewind(&mut self) {
+        self.at = 0;
+    }
+
+    /// Adds to `totals[slot / window]` the bound of the heaviest block ending in that window,
+    /// under `bound` and never above `ceiling`. A guide for choosing windows, not a proof.
+    pub(super) fn add_window_bounds(
+        &self,
+        window: u32,
+        bound: Bound,
+        ceiling: f64,
+        totals: &mut [f64],
+    ) {
+        // A list of one block keeps no skip table.
+        if self.blocks < 2 {
+            return;
+        }
+        let mut current = usize::MAX;
+        let mut best = 0.0f64;
+        for block in 0..self.blocks {
+            let at = (self.skip(0, block) / window) as usize;
+            if at != current {
+                if let Some(total) = totals.get_mut(current) {
+                    *total += best;
+                }
+                current = at;
+                best = 0.0;
+            }
+            best = best.max(self.block(block, bound, ceiling));
+        }
+        if let Some(total) = totals.get_mut(current) {
+            *total += best;
+        }
+    }
+
     /// The first block at or after `from` (at least 1) whose last slot reaches `target`, with
     /// the offset of its header and the last slot of the block before it: `Some(None)` when no
     /// block does, `None` when the list has no skip table to search.
