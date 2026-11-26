@@ -1,6 +1,7 @@
 import json,sys,statistics as st
 path=sys.argv[1]; cmds=sys.argv[2].split(','); engines=sys.argv[3].split(',')
-R=json.load(open(path))['results']
+with open(path) as fh:
+    R = json.load(fh)['results']
 cats=['ALL','union','union:num_tokens_2','union:num_tokens_3','union:num_tokens_>3','intersection','intersection_union','phrase','negated','term']
 for c in cmds:
     if c not in R: continue
