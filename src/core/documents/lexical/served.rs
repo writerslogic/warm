@@ -738,6 +738,11 @@ struct Run<'a, 'q> {
     word_counts: &'a [u16],
 }
 
+/// From this `k` a union of two or three terms goes through its classes even when the
+/// conjunction leaves the heap short: the classes after it fill it, and the ranker's windows
+/// over the same lists cost more.
+const DEEP_CLASSES_K: usize = 100;
+
 impl<'a> Run<'a, '_> {
     /// The word count of the chunk in `slot`.
     fn words(&self, slot: u32) -> u32 {
@@ -1349,7 +1354,7 @@ impl<'a> Run<'a, '_> {
         merge_twins(&mut terms);
         self.terms_top_into(&mut terms, &mut top)?;
         drop(terms);
-        if top.floor().is_none() {
+        if top.floor().is_none() && !(self.k >= DEEP_CLASSES_K && n <= 3) {
             #[cfg(test)]
             reached(8);
             return Ok(None);
