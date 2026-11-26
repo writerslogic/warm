@@ -1,0 +1,85 @@
+{
+ "args": {
+  "data": "data/llama-128-ip.hdf5",
+  "out": "res/ab2/new-llama-b3.json",
+  "degree": "32",
+  "build_ef": "500",
+  "projected_degree": "32",
+  "learn": "32768",
+  "training_neighbors": "100",
+  "query_lists": "0",
+  "list_neighbors": "100",
+  "rows": "0",
+  "cache": "cache",
+  "k": "100",
+  "repeats": "3",
+  "points": "100:100,125:200,200:200,300:200,400:200,500:400"
+ },
+ "build_seconds": 0.09108001499953389,
+ "memory_bytes": {
+  "VmHWM": 6481469440,
+  "VmRSS": 4594352128
+ },
+ "rows": [
+  {
+   "ef": 100,
+   "rerank": 100,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.90577,
+   "qps": 6915.170367267284,
+   "qps_min": 6891.092600566406,
+   "qps_max": 6959.0932874718965
+  },
+  {
+   "ef": 125,
+   "rerank": 200,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.95232,
+   "qps": 5890.369318019358,
+   "qps_min": 5884.900653126459,
+   "qps_max": 5923.930710960135
+  },
+  {
+   "ef": 200,
+   "rerank": 200,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.97699,
+   "qps": 4039.321045392496,
+   "qps_min": 4011.997171426666,
+   "qps_max": 4065.815039423509
+  },
+  {
+   "ef": 300,
+   "rerank": 200,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.98712,
+   "qps": 2976.3796623219696,
+   "qps_min": 2973.9701684805655,
+   "qps_max": 2987.0201488774746
+  },
+  {
+   "ef": 400,
+   "rerank": 200,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.99146,
+   "qps": 2362.318139858055,
+   "qps_min": 2356.8433104379264,
+   "qps_max": 2371.065303972219
+  },
+  {
+   "ef": 500,
+   "rerank": 400,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.99369,
+   "qps": 1923.2526972757805,
+   "qps_min": 1898.2791909333812,
+   "qps_max": 1933.2847819773783
+  }
+ ]
+}

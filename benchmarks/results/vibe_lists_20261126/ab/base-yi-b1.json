@@ -1,0 +1,65 @@
+{
+ "args": {
+  "data": "data/yi-128-ip.hdf5",
+  "out": "res/ab/base-yi-b1.json",
+  "degree": "32",
+  "build_ef": "500",
+  "projected_degree": "32",
+  "learn": "32768",
+  "training_neighbors": "100",
+  "query_lists": "0",
+  "list_neighbors": "100",
+  "rows": "0",
+  "cache": "cache",
+  "k": "100",
+  "repeats": "3",
+  "points": "125:200,250:200,500:400,1000:400"
+ },
+ "build_seconds": 0.06809894799971516,
+ "memory_bytes": {
+  "VmHWM": 4752740352,
+  "VmRSS": 3378507776
+ },
+ "rows": [
+  {
+   "ef": 125,
+   "rerank": 200,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.91249,
+   "qps": 6996.9635067665195,
+   "qps_min": 6906.448855866612,
+   "qps_max": 7002.6964722745215
+  },
+  {
+   "ef": 250,
+   "rerank": 200,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.9587,
+   "qps": 4094.9822450457978,
+   "qps_min": 4073.6774095491005,
+   "qps_max": 4107.431851654551
+  },
+  {
+   "ef": 500,
+   "rerank": 400,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.98104,
+   "qps": 2256.9398451491456,
+   "qps_min": 2239.9616482717593,
+   "qps_max": 2258.5978643414646
+  },
+  {
+   "ef": 1000,
+   "rerank": 400,
+   "probes": 0,
+   "probe_only": false,
+   "recall": 0.99193,
+   "qps": 1224.9394266846818,
+   "qps_min": 1224.901102710442,
+   "qps_max": 1235.401869180114
+  }
+ ]
+}
