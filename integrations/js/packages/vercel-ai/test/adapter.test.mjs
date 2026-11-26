@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 import { generateText, isStepCount, streamText, wrapLanguageModel } from 'ai'
 import { MockEmbeddingModelV4, MockLanguageModelV4, MockRerankingModelV4 } from 'ai/test'
-import { WarmStore } from 'warm-core'
+import { WarmStore } from '@writerslogic/warm-core'
 import { aiSdkEmbedder, aiSdkReranker, memoryMiddleware, memoryTools } from '../dist/index.js'
 
 const store = (opts = {}) => new WarmStore({ path: mkdtempSync(join(tmpdir(), 'warm-vai-')), dimensions: 1024, ...opts })

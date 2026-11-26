@@ -35,18 +35,18 @@ Python 3.11+ (tested on 3.12), `warm-sdk` >= 0.1.3.
 
 ## JavaScript and TypeScript
 
-Native engine in process; Node 20 or newer, `warm-memory` >= 0.6.5.
+Native engine in process; Node 20 or newer, `warm-memory` >= 0.7.4.
 Standalone examples of the embedded `WarmMemorySystem` surface (search, triplets, sequences,
 analogies, external embeddings) are listed in [examples/README.md](https://github.com/writerslogic/warm/blob/main/examples/README.md).
 
 | Adapter | Host and tested version | Package | Status |
 |---|---|---|---|
-| Core | none | `warm-core` | tested |
-| LangChain.js | @langchain/core 1.2.19 | `warm-langchain` | tested |
-| LlamaIndex.TS | llamaindex 0.12.1 | `warm-llamaindex` | tested |
-| Mastra | @mastra/core 1.78.0 | `warm-mastra` | tested |
-| OpenAI Agents JS | @openai/agents 0.20.0 | `warm-openai-agents` | tested |
-| Vercel AI SDK | ai 7.0.146 | `warm-vercel-ai` | tested |
+| Core | none | `@writerslogic/warm-core` | tested |
+| LangChain.js | @langchain/core 1.2.19 | `@writerslogic/warm-langchain` | tested |
+| LlamaIndex.TS | llamaindex 0.12.1 | `@writerslogic/warm-llamaindex` | tested |
+| Mastra | @mastra/core 1.78.0 | `@writerslogic/warm-mastra` | tested |
+| OpenAI Agents JS | @openai/agents 0.20.0 | `@writerslogic/warm-openai-agents` | tested |
+| Vercel AI SDK | ai 7.0.146 | `@writerslogic/warm-vercel-ai` | tested |
 
 ## MCP, editors and Claude
 
@@ -55,7 +55,7 @@ All of these speak to `warm-mcp`.
 | Adapter | Host | Install | Status |
 |---|---|---|---|
 | warm-mcp launcher | any MCP client | `npx -y warm-mcp` or `uvx warm-mcp` | tested |
-| Claude memory tool | Anthropic `memory_20250818` (Python, TypeScript) | `pip install warm-claude-tool` or `npm install warm-claude-tool` | tested |
+| Claude memory tool | Anthropic `memory_20250818` (Python, TypeScript) | `pip install warm-claude-tool` or `npm install @writerslogic/warm-claude-tool` | tested |
 | Claude Code | plugin | `claude plugin install` from the repo marketplace | plugin validated, headless session run |
 | Codex CLI | 0.163.0 | `codex mcp add` | CLI verified, no model session |
 | Gemini CLI | 0.64.0 | `gemini mcp add` or extension | CLI verified, no model session |

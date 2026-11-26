@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 import { createRequire } from 'node:module'
-import type { DocumentInput, DocumentResult, WarmConfigJs, WarmMemorySystem, ListedDocument, SearchOptions } from 'writerslogic-warm'
+import type { DocumentInput, DocumentResult, WarmConfigJs, WarmMemorySystem, ListedDocument, SearchOptions } from 'warm-memory'
 import { HashingEmbedder, type Embedder, type Reranker } from './embedders.js'
 import { WarmError } from './errors.js'
 import { matches, parseFilter, splitFilter, type FilterLike, type Metadata } from './filters.js'
@@ -120,11 +120,11 @@ function validateSpace(space: Embedder['space'], config?: WarmConfigJs): void {
   }
 }
 
-function loadNative(): typeof import('writerslogic-warm') {
+function loadNative(): typeof import('warm-memory') {
   try {
-    return createRequire(import.meta.url)('writerslogic-warm')
+    return createRequire(import.meta.url)('warm-memory')
   } catch (cause) {
-    throw new WarmError('Install the writerslogic-warm native package to create a store from a path', 'backend', { cause })
+    throw new WarmError('Install the warm-memory native package to create a store from a path', 'backend', { cause })
   }
 }
 
@@ -242,7 +242,7 @@ export class WarmStore {
       if (cause instanceof WarmError) throw cause
       const message = cause instanceof Error ? cause.message : String(cause)
       const code = message.startsWith('[resource_limit] ') ? 'resource_limit' : 'backend'
-      throw new WarmError(`writerslogic-warm: ${message}`, code, { cause })
+      throw new WarmError(`warm-memory: ${message}`, code, { cause })
     }
   }
 

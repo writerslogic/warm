@@ -1,5 +1,5 @@
 {
-  "name": "warm-llamaindex",
+  "name": "@writerslogic/warm-llamaindex",
   "version": "0.1.0",
   "description": "LlamaIndex.TS vector store and key-value store (doc store, index store) backed by WARM",
   "keywords": [
@@ -53,7 +53,7 @@
     "test": "tsup && node --test test/*.test.mjs"
   },
   "dependencies": {
-    "warm-core": "^0.1.0"
+    "@writerslogic/warm-core": "^0.1.0"
   },
   "peerDependencies": {
     "@llamaindex/core": ">=0.6.22 <0.7.0"

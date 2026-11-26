@@ -6,7 +6,7 @@ import type { EmbeddingsInterface } from '@langchain/core/embeddings'
 import { VectorStore, type MaxMarginalRelevanceSearchOptions } from '@langchain/core/vectorstores'
 import { maximalMarginalRelevance } from '@langchain/core/utils/math'
 import type { Callbacks } from '@langchain/core/callbacks/manager'
-import { WarmStore, type Embedder, type FilterLike, type Hit, type WarmStoreOptions } from 'warm-core'
+import { WarmStore, type Embedder, type FilterLike, type Hit, type WarmStoreOptions } from '@writerslogic/warm-core'
 
 /**
  * Filter accepted by every search method: a MongoDB-style object (`{ lang: 'en', year: { $gte: 2020 } }`)

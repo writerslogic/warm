@@ -1,5 +1,5 @@
 {
-  "name": "warm-mastra",
+  "name": "@writerslogic/warm-mastra",
   "version": "0.1.0",
   "description": "Mastra vector store backed by WARM",
   "keywords": [
@@ -52,7 +52,7 @@
     "test": "tsup && node --test test/*.test.mjs"
   },
   "dependencies": {
-    "warm-core": "^0.1.0"
+    "@writerslogic/warm-core": "^0.1.0"
   },
   "peerDependencies": {
     "@mastra/core": ">=1.78.0 <2"

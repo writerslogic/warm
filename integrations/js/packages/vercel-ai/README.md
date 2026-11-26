@@ -1,20 +1,20 @@
-# warm-vercel-ai
+# @writerslogic/warm-vercel-ai
 
 Memory tools and recall middleware for the Vercel AI SDK on the WARM native engine, in process. Works with any model provider.
 
 ## Install
 
 ```sh
-npm install warm-vercel-ai ai zod
+npm install @writerslogic/warm-vercel-ai ai zod
 ```
 
-The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
+The native engine `warm-memory` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 
 ```js
-import { WarmStore } from 'warm-core'
-import { memoryTools } from 'warm-vercel-ai'
+import { WarmStore } from '@writerslogic/warm-core'
+import { memoryTools } from '@writerslogic/warm-vercel-ai'
 
 const store = new WarmStore({ path: './memory' })
 const { remember, recall } = memoryTools(store) // pass as `tools` to generateText or ToolLoopAgent
@@ -36,7 +36,7 @@ With a model, add `memoryMiddleware(store, { k: 3 })` through `wrapLanguageModel
 
 ## Compatibility
 
-`ai` >=7.0.0 <8 (language model spec v4; tested 7.0.146), `zod` ^3.25.76 or ^4, `writerslogic-warm` >=0.6.5, Node 20+ (tested 26.8). 5 tests.
+`ai` >=7.0.0 <8 (language model spec v4; tested 7.0.146), `zod` ^3.25.76 or ^4, `warm-memory` >=0.7.4, Node 20+ (tested 26.8). 5 tests.
 
 ## Reference
 

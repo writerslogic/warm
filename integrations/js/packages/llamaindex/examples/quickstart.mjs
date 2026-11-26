@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { Document, Settings, VectorStoreIndex, storageContextFromDefaults } from 'llamaindex'
 import { BaseEmbedding } from '@llamaindex/core/embeddings'
 import { MockLLM } from '@llamaindex/core/llms/mock'
-import { HashingEmbedder, WarmKVStore, WarmStore, WarmVectorStore } from 'warm-llamaindex'
+import { HashingEmbedder, WarmKVStore, WarmStore, WarmVectorStore } from '@writerslogic/warm-llamaindex'
 
 // Any LlamaIndex embedding works (OpenAIEmbedding, HuggingFaceEmbedding, OllamaEmbedding...).
 // This one is the dependency-free hashing embedder (lexical, not semantic).
@@ -22,7 +22,7 @@ const embedModel = new HashEmbedding()
 Settings.embedModel = embedModel
 Settings.llm = new MockLLM({ responseMessage: 'Rust uses ownership and borrowing.' }) // replace with a real LLM
 
-const dir = mkdtempSync(join(tmpdir(), 'warm-llamaindex-example-'))
+const dir = mkdtempSync(join(tmpdir(), '@writerslogic/warm-llamaindex-example-'))
 const vectorStore = await WarmVectorStore.create({
   path: join(dir, 'vectors'),
   dimensions: 4096,

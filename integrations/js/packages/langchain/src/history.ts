@@ -7,7 +7,7 @@ import {
   type BaseMessage,
   type StoredMessage,
 } from '@langchain/core/messages'
-import type { WarmStore } from 'warm-core'
+import type { WarmStore } from '@writerslogic/warm-core'
 import { OrderedLog, packPayload, unpackPayload } from './log.js'
 
 export interface WarmChatMessageHistoryInput {

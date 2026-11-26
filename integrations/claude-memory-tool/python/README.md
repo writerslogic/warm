@@ -5,7 +5,7 @@ Backs Anthropic's client-side memory tool (`memory_20250818`) with WARM: Claude'
 ## Install
 
 ```sh
-pip install warm-claude-tool   # plus a warm-mcp binary: npx -y writerslogic-warm-mcp, or uvx warm-mcp
+pip install warm-claude-tool   # plus a warm-mcp binary: npx -y warm-mcp, or uvx warm-mcp
 ```
 
 ## Quickstart

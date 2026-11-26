@@ -7,7 +7,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Agent, run, setTracingDisabled } from '@openai/agents'
-import { WarmSession, WarmStore, createMemoryTools } from 'warm-openai-agents'
+import { WarmSession, WarmStore, createMemoryTools } from '@writerslogic/warm-openai-agents'
 
 setTracingDisabled(true)
 const store = new WarmStore({ path: mkdtempSync(join(tmpdir(), 'warm-agents-example-')), dimensions: 4096, titleWeight: 1 })

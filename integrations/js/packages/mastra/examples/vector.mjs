@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { WarmVector } from '../dist/index.js'
 
-const vector = new WarmVector({ id: 'warm', dimension: 4, path: mkdtempSync(join(tmpdir(), 'warm-mastra-ex-')) })
+const vector = new WarmVector({ id: 'warm', dimension: 4, path: mkdtempSync(join(tmpdir(), '@writerslogic/warm-mastra-ex-')) })
 await vector.createIndex({ indexName: 'notes', dimension: 4 })
 await vector.upsert({
   indexName: 'notes',

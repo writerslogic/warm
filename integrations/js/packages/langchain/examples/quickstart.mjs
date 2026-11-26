@@ -8,14 +8,14 @@ import { join } from 'node:path'
 import { Document } from '@langchain/core/documents'
 import { FakeListChatModel } from '@langchain/core/utils/testing'
 import { RunnableWithMessageHistory } from '@langchain/core/runnables'
-import { HashingEmbedder, WarmChatMessageHistory, WarmStore, WarmVectorStore } from 'warm-langchain'
+import { HashingEmbedder, WarmChatMessageHistory, WarmStore, WarmVectorStore } from '@writerslogic/warm-langchain'
 
 // Any LangChain Embeddings works. This one is the dependency-free hashing embedder (lexical, not semantic);
 // swap in OpenAIEmbeddings, OllamaEmbeddings, HuggingFaceTransformersEmbeddings, ...
 const hashing = new HashingEmbedder(384)
 const embeddings = { embedDocuments: (t) => hashing.encodeDocuments(t), embedQuery: (t) => hashing.encodeQuery(t) }
 
-const path = mkdtempSync(join(tmpdir(), 'warm-langchain-example-'))
+const path = mkdtempSync(join(tmpdir(), '@writerslogic/warm-langchain-example-'))
 const vectorStore = await WarmVectorStore.create(embeddings, {
   path,
   dimensions: 4096,
@@ -40,7 +40,7 @@ const retriever = vectorStore.asRetriever({ k: 2, filter: { topic: 'code' } })
 console.log('retriever :', (await retriever.invoke('compile time rules')).map((d) => d.id))
 
 // Chat memory: RunnableWithMessageHistory with a store-backed history per session.
-const historyStore = new WarmStore({ path: mkdtempSync(join(tmpdir(), 'warm-langchain-history-')), dimensions: 1024 })
+const historyStore = new WarmStore({ path: mkdtempSync(join(tmpdir(), '@writerslogic/warm-langchain-history-')), dimensions: 1024 })
 const chain = new RunnableWithMessageHistory({
   runnable: new FakeListChatModel({ responses: ['Nice to meet you, Ada.', 'You told me your name is Ada.'] }),
   getMessageHistory: (sessionId) => new WarmChatMessageHistory({ store: historyStore, sessionId }),

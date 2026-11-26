@@ -15,7 +15,7 @@ const DIM = 8
 const unit = (i) => Array.from({ length: DIM }, (_, j) => (i === j ? 1 : 0))
 const mix = (i, j, w = 0.3) => unit(i).map((v, k) => v + (k === j ? w : 0))
 
-const make = (opts = {}) => new WarmVector({ id: 'warm', dimension: DIM, path: mkdtempSync(join(tmpdir(), 'warm-mastra-')), hypervectorDimensions: 1024, ...opts })
+const make = (opts = {}) => new WarmVector({ id: 'warm', dimension: DIM, path: mkdtempSync(join(tmpdir(), '@writerslogic/warm-mastra-')), hypervectorDimensions: 1024, ...opts })
 
 async function seeded() {
   const v = make()
