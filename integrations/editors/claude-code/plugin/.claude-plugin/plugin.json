@@ -7,7 +7,7 @@
     "name": "WritersLogic, Inc.",
     "email": "david@writerslogic.com"
   },
-  "homepage": "https://github.com/writerslogic/warm/tree/main/docs/integrations/editors",
+  "homepage": "https://github.com/writerslogic/warm/tree/main/docs/integrations.md",
   "repository": "https://github.com/writerslogic/warm",
   "license": "Apache-2.0",
   "keywords": ["memory", "mcp", "local-first", "recall"],

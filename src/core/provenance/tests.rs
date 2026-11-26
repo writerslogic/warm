@@ -32,7 +32,6 @@ fn full_fact_provenance_flow() {
         .verify_fact_provenance(&record, &mgr.self_trust())
         .unwrap();
     assert!(verification.valid);
-    // cose_signature, vc_proof, vc_semantics, revocation_status, record_binding, trust_anchor
     assert_eq!(verification.details.len(), 6);
 
     assert!(mgr.get_record("fact-001").is_some());
@@ -158,8 +157,6 @@ fn standalone_verify_without_manager() {
     let trust = trust::TrustStore::trusting_did(&issuer).unwrap();
     let result = verify_record(&record, &trust).unwrap();
     assert!(result.valid);
-    // cose_signature, vc_proof, vc_semantics, revocation_status (unchecked: no list trusted),
-    // record_binding, trust_anchor
     assert_eq!(result.details.len(), 6);
 }
 
@@ -590,7 +587,6 @@ fn untrusted_key_rejected() {
         .create_fact_provenance("fact-trust", b"authentic content", None)
         .unwrap();
 
-    // Signed by the manager and trusting the manager: authentic.
     let ok = mgr
         .verify_fact_provenance(&record, &mgr.self_trust())
         .unwrap();
@@ -608,7 +604,6 @@ fn untrusted_key_rejected() {
         .iter()
         .any(|d| d.check == "trust_anchor" && !d.passed));
 
-    // Self-consistency, by contrast, still passes: the record is intact.
     let self_consistent = mgr
         .verify_fact_provenance_self_consistency(&record)
         .unwrap();

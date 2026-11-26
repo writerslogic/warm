@@ -112,7 +112,6 @@ fn fixture(n: usize, dim: usize, labels: u32, seed: u64) -> Fixture {
         }
         let tags = 1 + next() % 5;
         for _ in 0..tags {
-            // Zipf-like: small label ids are common.
             let r = (next() % 10_000) as f64 / 10_000.0;
             ids.push(((r * r * r) * f64::from(labels)) as u32);
         }
@@ -223,7 +222,6 @@ fn exact_setting_equals_filtered_brute_force() {
     let deleted = vec![false; 4_000];
     let mut out = Vec::new();
     for (q, ls) in queries(&f, 300, labels, 2) {
-        // brute_max 0 forces the inverted file for every label that has one.
         let ivf_exact = FilterSearchParams {
             brute_max: 0,
             ..FilterSearchParams::exact()

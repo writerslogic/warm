@@ -5,7 +5,7 @@
 Run: uv run --with pyyaml python integrations/editors/validate.py
 
 This checks shape only (keys, types, required fields). Hosts that can be installed on the
-machine are additionally exercised by their own CLI; see docs/integrations/editors/README.md.
+machine are additionally exercised by their own CLI; see docs/integrations.md.
 """
 
 from __future__ import annotations

@@ -22,7 +22,7 @@ fullnameOverride: ""
 auth:
   existingSecret: ""
   apiKey: ""
-  # Set true when the existing Secret carries a `keys.json` (per-tenant keys, docs/server/auth.md).
+  # Set true when the existing Secret carries a `keys.json` (per-tenant keys, docs/server/index.md).
   keysFile: false
   # Unauthenticated mode needs a loopback or unix-socket listener, which a Service cannot reach.
   # It is not offered by this chart.

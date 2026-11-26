@@ -12,4 +12,4 @@ cargo run --release --example demo-offline-agent
 | Needs | Rust 1.89+, default features |
 | Output | [`expected-output.txt`](expected-output.txt) |
 
-Walkthrough and adaptation notes: [docs/quickstart/offline-agent](../../docs/quickstart/offline-agent.md).
+Walkthrough and adaptation notes: [docs/quickstart.md](../../docs/quickstart.md).

@@ -138,8 +138,6 @@ mod tests {
         store.add("a", "r1", "x", "c1");
         store.add("a", "r2", "x", "c2");
         store.add("b", "r1", "y", "c3");
-        // b is missing r2, but only 1 peer has it (100% of 1 peer)
-        // With min_shared=1, a is a peer of b
         let gaps = GapDetector::detect(&store, 1, 1.0);
         let b_gap = gaps
             .iter()

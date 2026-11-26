@@ -45,4 +45,4 @@ Node 20+ (tested 20.20 and 26.8), WARM native binding of the same checkout. Inte
 
 ## Reference
 
-Mapping, behavior, limits and Rust interoperability: [Organizational knowledge](../../docs/integrations/organizational-knowledge.md#javascript-adapter-reference).
+Mapping, behavior, limits and Rust interoperability: [Organizational knowledge](../../docs/integrations.md#javascript-adapter-reference).

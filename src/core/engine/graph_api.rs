@@ -64,8 +64,7 @@ impl WarmCore {
     }
 
     /// Dimension and phase-quantization of the experimental phasor memory. A
-    /// modest dim keeps the (dim * n_phases) histogram small; retrieval works
-    /// well past this substrate's load in the validation experiments.
+    /// modest dim keeps the (dim * n_phases) histogram small.
     #[cfg(feature = "experimental")]
     pub(super) fn phase_graph_lazy(
         &self,

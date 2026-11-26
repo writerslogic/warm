@@ -1,6 +1,6 @@
 # Quickstart examples
 
-Ingest, search, compare with SQLite FTS5, encrypt, remember changing facts. The code behind the [five-minute quickstart](../../docs/quickstart/index.md): one corpus and one query set drive every language, CI runs each on every pull request, and the docs page includes these files rather than copying them.
+Ingest, search, compare with SQLite FTS5, encrypt, remember changing facts. The code behind the [five-minute quickstart](../../docs/quickstart.md): one corpus and one query set drive every language, CI runs each on every pull request, and the docs page includes these files rather than copying them.
 
 | File | Run from the repository root |
 |------|------------------------------|
@@ -26,4 +26,4 @@ Build the server once with `cargo build --release --features server,security --b
 
 The Rust and Node programs scan every file of an encrypted store and assert that none holds the
 passage text, `documents.text` included (see
-[privacy limits](../../docs/concepts/privacy-limits.md)).
+[security](../../docs/security.md)).

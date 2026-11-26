@@ -5,7 +5,7 @@
 //! TREC run file (an external system's output) with the same metric code; tunes and reports
 //! a min-max blend of the sparse scores with exact dense (MiniLM) scores.
 //!
-//! Inputs are written by `benchmarks/public/learned_sparse_encode.py`.
+//! Inputs are written by the learned-sparse encoder.
 
 use std::collections::{BTreeMap, HashMap};
 use std::fs::File;

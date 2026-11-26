@@ -236,9 +236,9 @@ mod tests {
     }
 
     #[test]
-    fn test_reject() {
+    fn invalid_transitions_are_refused() {
         let sm = SelfModifier::new();
-        let id = sm.propose(
+        let rejected = sm.propose(
             ProposalKind::AdjustThreshold {
                 parameter: "fanout_limit".to_string(),
                 current_value: 40.0,
@@ -246,16 +246,11 @@ mod tests {
             },
             "High fan-out queries are slow".to_string(),
         );
+        assert!(sm.reject(rejected));
+        assert_eq!(sm.get(rejected).unwrap().status, ProposalStatus::Rejected);
+        assert!(!sm.approve(rejected));
 
-        assert!(sm.reject(id));
-        assert_eq!(sm.get(id).unwrap().status, ProposalStatus::Rejected);
-        assert!(!sm.approve(id)); // can't approve a rejected proposal
-    }
-
-    #[test]
-    fn test_cannot_apply_without_approval() {
-        let sm = SelfModifier::new();
-        let id = sm.propose(
+        let pending = sm.propose(
             ProposalKind::RemoveTriple {
                 subject: "wrong".to_string(),
                 relation: "is".to_string(),
@@ -263,7 +258,6 @@ mod tests {
             },
             "Incorrect triple".to_string(),
         );
-
-        assert!(!sm.mark_applied(id)); // still pending, not approved
+        assert!(!sm.mark_applied(pending));
     }
 }

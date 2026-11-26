@@ -206,7 +206,7 @@ def tenant(sample_id, side):
 
 def turn_text(turn, captions):
     """The turn as ingested; with `captions`, the image tag mem0ai/memory-benchmarks@4b61c5d appends
-    (benchmarks/locomo/run.py session_to_chunks). The paper-era harness ingests the text alone."""
+    (session_to_chunks in its run.py). The paper-era harness ingests the text alone."""
     text = turn['text']
     if captions:
         blip, query = turn.get('blip_caption', ''), turn.get('query', '')

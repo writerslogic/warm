@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! The memory API (`POST /api/v1/memory/{remember,recall,explain,forget,get,history,
-//! applyForgetting,consolidate}`; docs/memory-api) behind the server's auth, limits, tenant
+//! applyForgetting,consolidate}`; docs/reference/api.md) behind the server's auth, limits, tenant
 //! lifecycle and idempotency.
 
 use std::sync::Arc;

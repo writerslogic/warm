@@ -20,13 +20,12 @@ Every example runs on this machine with no API key, no network and no model down
 | [`sequence-encoding.mjs`](sequence-encoding.mjs) | Node | Encode ordered sequences and query with `querySequence` | `node examples/sequence-encoding.mjs` | built addon |
 | [`analogy-reasoning.mjs`](analogy-reasoning.mjs) | Node | Solve `A:B :: C:?` analogies over memorized lexical hypervectors with `findAnalogy` | `node examples/analogy-reasoning.mjs` | built addon |
 | [`external-embeddings.mjs`](external-embeddings.mjs) | Node | Ingest and query `Float32Array` vectors via `memorizeVector` and `queryVector` (`WARM_ENCRYPTION=off`) | `node examples/external-embeddings.mjs` | built addon |
-| [`organizational_knowledge.rs`](../docs/integrations/organizational-knowledge.md) | Rust | Namespaced import, search and dry-run forget of org documents | `cargo run --release --example organizational_knowledge -- import ./store eng doc.json` | Rust |
+| [`organizational_knowledge.rs`](../docs/integrations.md) | Rust | Namespaced import, search and dry-run forget of org documents | `cargo run --release --example organizational_knowledge -- import ./store eng doc.json` | Rust |
 | [`zero_trust_demo.rs`](zero_trust_demo.rs) | Rust | Client-side vector masking: ranking without seeing plaintext coordinates | `cargo run --release --features security --example zero_trust_demo` | Rust |
 | [`verify_cogmem_sample.rs`](verify_cogmem_sample.rs) | Rust | Verify the cogmem C2PA sample's signed statements in [`fixtures/`](fixtures) | `cargo run --release --features provenance --example verify_cogmem_sample` | Rust |
 | [`emit_w3c_credential.rs`](emit_w3c_credential.rs) | Rust | Emit a W3C credential, a revoked one and a status list for interop checks | `cargo run --release --features provenance --example emit_w3c_credential` | Rust |
 | [`kmer_encoder.rs`](kmer_encoder.rs) | Rust | Encode DNA reads as sparse hypervectors and score containment | `cargo run --release --features experimental --example kmer_encoder` | Rust |
 | [`vector_memory.py`](vector_memory.py) | Python | Index size by residual-bit setting of `VectorIndex` | `python examples/vector_memory.py` | `warm-python` wheel (`maturin develop --release`; on macOS 27 add `CARGO_PROFILE_RELEASE_STRIP=none`), numpy |
-| [`python_phase.py`](python_phase.py) | Python | Phase vectors: bind, unbind, resonator factorization | `python examples/python_phase.py` | `warm-python` wheel |
 
 Language bindings have their own quickstarts: [`c`](../bindings/c/README.md), [`go`](../bindings/go/README.md), [`dotnet`](../bindings/dotnet/README.md), [`java`](../bindings/java/README.md), [`swift`](../bindings/swift/README.md), [`kotlin`](../bindings/kotlin/README.md), [`wasm`](../bindings/wasm/npm/README.md), [`js`](../bindings/js/warm-sdk/README.md), [`python`](../bindings/python/warm-sdk/README.md).
 

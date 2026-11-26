@@ -8,7 +8,7 @@
 | `systemd/warm-server.service` | Sandboxed unit with `ExecReload` |
 | `bench/server_bench.py` | Load, scaling and soak harness (`uv run`); `baseline_sqlite_fastapi.py` is its SQLite baseline |
 
-Operations guide: [`docs/server/operations.md`](../docs/server/operations.md). Configuration: [`docs/server/configuration.md`](../docs/server/configuration.md).
+Operations guide: [`docs/server/index.md`](../docs/server/index.md). Configuration: [`docs/server/configuration.md`](../docs/server/configuration.md).
 
 ```sh
 # Container

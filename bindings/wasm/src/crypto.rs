@@ -3,7 +3,7 @@
 
 //! Key derivation (and, behind `inwasm-aes`, the AEAD) for encrypted snapshots. WebCrypto
 //! has no Argon2, so the memory-hard KDF lives here; AES-GCM itself is done by WebCrypto
-//! unless measurement says otherwise (docs/runtimes/wasm/ENCRYPTION.md).
+//! unless measurement says otherwise (bindings/wasm/npm/README.md).
 
 use wasm_bindgen::prelude::*;
 

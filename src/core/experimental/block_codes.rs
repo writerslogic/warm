@@ -446,16 +446,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_block_code_self_similarity() {
-        let cfg = BlockCodeConfig::new(256, 64);
-        let v = BlockCodeVec::new_deterministic(&cfg, 42);
-        assert!((v.similarity(&v) - 1.0).abs() < f64::EPSILON);
-    }
-
-    #[test]
-    fn test_block_code_random_similarity() {
+    fn test_block_code_self_and_random_similarity() {
         let cfg = BlockCodeConfig::new(256, 64);
         let a = BlockCodeVec::new_deterministic(&cfg, 1);
+        assert!((a.similarity(&a) - 1.0).abs() < f64::EPSILON);
         let b = BlockCodeVec::new_deterministic(&cfg, 2);
         let sim = a.similarity(&b);
         assert!(

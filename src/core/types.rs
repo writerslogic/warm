@@ -128,9 +128,7 @@ impl PartialOrd for RetrievalResult {
 
 impl Ord for RetrievalResult {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        // BinaryHeap is a MAX-heap. We want it to act like a MIN-heap for Top-K
-        // (keeping the K LARGEST similarities, with the SMALLEST of those at the top).
-        // So we want A < B (in similarity) to mean A is "Greater" in Ord.
+        // Reversed so a `BinaryHeap` keeps the K largest similarities with the smallest on top.
         debug_assert!(
             !self.similarity.is_nan(),
             "NaN similarity for id={}",
@@ -145,9 +143,7 @@ impl Ord for RetrievalResult {
             .similarity
             .partial_cmp(&self.similarity)
             .unwrap_or(std::cmp::Ordering::Equal)
-            // If similarities are equal, we want a stable order.
-            // If A.id < B.id, let's say A is "smaller" (top of heap) so it gets popped.
-            // Actually for stability in the final result, we want consistent tie-breaking.
+            // Equal similarities break ties by id for a stable result order.
             .then_with(|| self.id.cmp(&other.id))
     }
 }

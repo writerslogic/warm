@@ -40,7 +40,7 @@ pub const STORAGE_FORMAT_OLDEST: u32 = 2;
 /// Schema 2 stores write
 /// [`TRANSACTION_MAGIC`] frames, schema 3 stores [`BINARY_TRANSACTION_MAGIC`] frames; a store
 /// keeps the schema it was created with. Schema 4 stores also write binary frames and may hold
-/// a document checkpoint in place of the frames before it (`docs/file-format/CHECKPOINT.md`).
+/// a document checkpoint in place of the frames before it (`docs/file-format/index.md`).
 /// Schema 5 adds namespace-scoped meaning maintenance, retaining binary frame encoding.
 pub const STORE_SCHEMA_VERSION: u32 = 7;
 /// Ordinary stores retain the previous reader requirement unless vector records are requested.
@@ -128,7 +128,7 @@ pub enum Severity {
 #[serde(rename_all = "camelCase")]
 pub struct Finding {
     pub severity: Severity,
-    /// Stable identifier, listed in `docs/file-format/VERIFY.md`.
+    /// Stable identifier, listed in `docs/file-format/index.md`.
     pub code: &'static str,
     /// Path relative to the store directory.
     pub file: String,

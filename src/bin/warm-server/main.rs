@@ -4,7 +4,7 @@
 //! HTTP service for the `warm-sdk` Python client and any HTTP client.
 //!
 //! The API contract is in `docs/server/openapi.json` (also served at `/openapi.json`); operation
-//! and configuration docs are in `docs/SERVER.md` and `docs/server/`.
+//! and configuration docs are in `docs/server/`.
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]

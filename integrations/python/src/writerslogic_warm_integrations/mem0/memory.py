@@ -5,7 +5,7 @@
 
     from writerslogic_warm_integrations.mem0 import Memory   # was: from mem0 import Memory
 
-Differences from mem0 are listed in docs/integrations/frameworks/mem0.md.
+Differences from mem0 are listed in docs/integrations.md.
 """
 
 from __future__ import annotations

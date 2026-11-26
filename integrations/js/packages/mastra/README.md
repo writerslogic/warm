@@ -44,4 +44,4 @@ Cosine metric only; sparse vectors are rejected.
 
 ## Reference
 
-[Mastra](https://github.com/writerslogic/warm/blob/main/docs/integrations/frameworks/mastra.md)
+[Mastra](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)

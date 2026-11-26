@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! Security-matrix probe (benchmarks/public/security_matrix.py drives it): seeds and opens
+//! Security-matrix probe (the security matrix drives it): seeds and opens
 //! stores with and without encryption at rest, verifies signed audit entries, scans its own
 //! memory for key material on Linux, and times the constant-time comparison the server uses.
 use std::hint::black_box;

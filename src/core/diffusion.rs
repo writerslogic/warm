@@ -61,7 +61,6 @@ impl<'a> DiffusionFactorizer<'a> {
             return Vec::new();
         }
 
-        // Sparse gradient: codebook indices attract, unsupported x indices repel
         let mut score_map: FastMap<u32, f64> = FastMap::default();
         score_map.reserve(x.indices.len() * 2);
 
@@ -73,7 +72,6 @@ impl<'a> DiffusionFactorizer<'a> {
             }
         }
 
-        // Repulsive term: indices in x with no codebook support get pushed out
         for &idx in &x.indices {
             score_map.entry(idx).or_insert(-1.0);
         }
@@ -251,7 +249,6 @@ mod tests {
         let factorizer = DiffusionFactorizer::new(&codebook, DiffusionConfig::default());
         let scores = factorizer.score_function_sparse(&query, 0.3);
 
-        // Scores for indices in entry should be positive
         let mut entry_hits = 0;
         let mut entry_total = 0;
         for &(idx, score) in &scores {

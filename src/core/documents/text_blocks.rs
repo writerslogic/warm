@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-//! Compressed chunk text of a document checkpoint (`docs/file-format/CHECKPOINT.md`).
+//! Compressed chunk text of a document checkpoint (`docs/file-format/index.md`).
 //!
 //! The text of every chunk is laid end to end in document order and cut into blocks of about
 //! [`BLOCK_TARGET`] bytes at chunk boundaries (a chunk is never split; a chunk larger than the

@@ -144,7 +144,7 @@ public sealed class StoreTests : IDisposable
             store.Ingest(new Document("secret", "the launch code is swordfish unicorn"));
         }
         foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories)
-            .Where(file => Path.GetFileName(file) != "documents.text")) // engine gap, see docs/runtimes/c
+            .Where(file => Path.GetFileName(file) != "documents.text")) // engine gap, see bindings/c/README.md
         {
             Assert.False(FileContains(f, "swordfish"u8.ToArray()), "plaintext in " + f);
         }

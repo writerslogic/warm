@@ -121,8 +121,7 @@ def test_cited_files_are_committed_and_table_is_current():
 @pytest.mark.skipif(not HAVE_RESULTS, reason="no committed competitive results yet")
 def test_published_tables_regenerate_byte_for_byte(tmp_path):
     paths = subprocess.check_output(["git", "-C", str(ROOT), "ls-files", "--", "README.md", "docs/benchmarks",
-                                     "benchmarks/results/competitive", "benchmarks/competitive/README-block.md",
-                                     "benchmarks/competitive/GAPS.json"], text=True).splitlines()
+                                     "benchmarks/results/competitive", "benchmarks/competitive/README-block.md"], text=True).splitlines()
     expected = {path: (ROOT / path).read_bytes() for path in paths}
     for path, content in expected.items():
         target = tmp_path / path

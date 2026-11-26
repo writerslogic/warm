@@ -137,7 +137,6 @@ mod tests {
         triple_store.add("berlin", "capital_of", "germany", "c3");
         triple_store.add("berlin", "located_in", "europe", "c4");
         triple_store.add("tokyo", "capital_of", "japan", "c5");
-        // Tokyo is missing located_in
 
         let gaps = GapDetector::detect(&triple_store, 1, 0.5);
         let tokyo_gaps: Vec<_> = gaps
@@ -149,8 +148,6 @@ mod tests {
         assert!(!tokyo_gaps.is_empty(), "Tokyo should be missing located_in");
         let hypotheses =
             HypothesisEngine::propose(&tokyo_gaps, &triple_store, &atom_mem, 24.0, 0.0);
-        // Peers (paris, berlin) both have located_in -> europe
-        // Bundle of [europe, europe] = europe, cleanup should find europe
         assert!(!hypotheses.is_empty(), "the gap should yield a hypothesis");
         assert_eq!(hypotheses[0].entity, "tokyo");
         assert_eq!(hypotheses[0].relation, "located_in");
@@ -159,20 +156,12 @@ mod tests {
     }
 
     #[test]
-    fn test_propose_empty_gaps() {
+    fn no_hypothesis_for_empty_gaps_or_above_the_confidence_floor() {
         let dim = 16384;
         let atom_mem = AtomMemory::new(dim, 3.0);
         let triple_store = TripleStore::new();
-        let hypotheses = HypothesisEngine::propose(&[], &triple_store, &atom_mem, 24.0, 0.0);
-        assert!(hypotheses.is_empty());
-    }
-
-    #[test]
-    fn test_propose_min_confidence_filter() {
-        let dim = 16384;
-        let atom_mem = AtomMemory::new(dim, 3.0);
-        let triple_store = TripleStore::new();
-        // With impossibly high confidence threshold, nothing passes
+        let none = HypothesisEngine::propose(&[], &triple_store, &atom_mem, 24.0, 0.0);
+        assert!(none.is_empty());
         let gaps = vec![KnowledgeGap {
             entity: "x".to_string(),
             missing_relation: "r".to_string(),

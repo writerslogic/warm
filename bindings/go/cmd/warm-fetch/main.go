@@ -48,7 +48,7 @@ func rid(goos, goarch string) (string, error) {
 	case "windows/amd64":
 		return "win-x64-gnu", nil
 	}
-	return "", fmt.Errorf("no prebuilt library for %s/%s; build from source (see docs/runtimes/go)", goos, goarch)
+	return "", fmt.Errorf("no prebuilt library for %s/%s; build from source (see bindings/go/README.md)", goos, goarch)
 }
 
 func fetch(base, name string) ([]byte, error) {

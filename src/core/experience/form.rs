@@ -28,7 +28,7 @@
 //!   C0 and C1 controls, the format and separator characters other than U+0020, private use and
 //!   the noncharacters; other unassigned code points are shown as they are.
 //!
-//! The reference renderer of the LongMemEval-V2 adapter (`benchmarks/lme2/formstate.py`) uses
+//! The reference renderer of the LongMemEval-V2 adapter uses
 //! Python's `\w`, which differs from [`char::is_alphanumeric`] on combining marks that are Unicode Alphabetic but not letters, and the
 //! Unicode database of its Python build. Agreement with it is tested, not proven: the parity
 //! test (`tests/experience_form_state.rs`) checks 28 real states, and the adapter's engine

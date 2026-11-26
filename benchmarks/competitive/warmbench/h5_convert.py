@@ -1,7 +1,6 @@
 # Copyright 2024-2026 WritersLogic Contributors
 # SPDX-License-Identifier: Apache-2.0
-"""ann-benchmarks HDF5 -> the flat layout public-bench reads (same output as
-benchmarks/public/prepare.py, without its sentence-transformers dependency).
+"""ann-benchmarks HDF5 -> the flat layout public-bench reads (no sentence-transformers dependency).
 
 Usage (inside an environment with h5py and numpy): h5_convert.py <in.hdf5> <out dir> <name> <url>
 """

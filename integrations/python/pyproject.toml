@@ -23,12 +23,12 @@ classifiers = [
 dependencies = ["warm-sdk>=0.1.3", "httpx>=0.27"]
 
 [project.urls]
-Homepage = "https://github.com/writerslogic/warm/blob/main/docs/integrations/index.md"
+Homepage = "https://github.com/writerslogic/warm/blob/main/docs/integrations.md"
 Repository = "https://github.com/writerslogic/warm"
 Issues = "https://github.com/writerslogic/warm/issues"
 
 # Framework dependency trees conflict: install exactly one framework extra per environment.
-# Lower bounds are the versions the adapters were tested against (docs/integrations/frameworks/MATRIX.md).
+# Lower bounds are the versions the adapters were tested against (docs/integrations.md).
 [project.optional-dependencies]
 langchain = ["langchain-core>=1.6.12", "numpy"]
 langgraph = ["langgraph>=1.2.16", "langgraph-checkpoint>=4.3.0"]

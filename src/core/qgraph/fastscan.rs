@@ -1195,7 +1195,6 @@ mod tests {
         let unit = |r: &mut SplitMix| (r.next_u64() >> 40) as f32 / (1u64 << 24) as f32;
         let qtab: Vec<f32> = (0..nq * e).map(|_| unit(&mut rng)).collect();
         let ltab: Vec<f32> = (0..lists * e).map(|_| unit(&mut rng)).collect();
-        // Each list is probed by each query with probability nprobe / lists.
         let probes: Vec<Vec<u32>> = (0..lists)
             .map(|l| {
                 let mut r = SplitMix(1000 + l as u64);
@@ -1207,8 +1206,6 @@ mod tests {
         let pairs: usize = probes.iter().map(Vec::len).sum();
         let scanned = pairs as f64 * list_len as f64;
 
-        // mode 0: full step; mode 1: scan + admission with the LUT build skipped (one table
-        // per list reused); mode 2: LUT build only.
         let run = |mode: u8| -> (f64, u64) {
             // Threads own disjoint query sets (q % threads) and walk every list in order, so
             // each query has one candidate buffer and no merge; the list's codes are shared
@@ -1299,8 +1296,6 @@ mod tests {
             let check: u64 = states.iter().sum();
             (t.elapsed().as_secs_f64(), check)
         };
-        // Modes interleave per repetition so a sustained run (WARM_L22_REPS) shows each mode's
-        // trajectory over the whole run; the min is reported, plus mean/median/p90.
         let reps = knob("REPS", 3).max(1);
         let mut times: [Vec<f64>; 3] = [Vec::new(), Vec::new(), Vec::new()];
         let mut checks = [0u64; 3];

@@ -166,10 +166,8 @@ enum SlotPositions {
 }
 
 pub(super) const DENSE_SLOT_LIMIT: usize = 1 << 19;
-/// Below this many slots the exhaustive hot-list ranking beats the windowed pruned ranker
-/// (measured on scifact, nfcorpus and the memory set, where exhaustive is 1.7 to 2.4 times
-/// faster; the pruned ranker wins from FiQA's 57k documents up). Above `DENSE_SLOT_LIMIT` the
-/// pruned ranker is the only one that avoids hydrating the store.
+/// Below this many slots the exhaustive hot-list ranking beats the windowed pruned ranker.
+/// Above `DENSE_SLOT_LIMIT` the pruned ranker is the only one that avoids hydrating the store.
 const PRUNE_SLOT_FLOOR_SERVING: usize = 1 << 15;
 const PRUNE_SLOT_FLOOR: usize = if cfg!(test) {
     0

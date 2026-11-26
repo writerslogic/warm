@@ -36,7 +36,7 @@ struct Args {
     /// longmemeval_s_cleaned.json
     #[arg(long)]
     data: PathBuf,
-    /// benchmarks/public/longmemeval_split.json
+    /// Frozen LongMemEval dev/heldout split JSON
     #[arg(long)]
     split: PathBuf,
     #[arg(long)]

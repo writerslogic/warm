@@ -59,7 +59,7 @@ impl VectorCandidateConfig {
     }
 }
 
-/// Journal checkpoints (`documents.ckpt`, see `docs/file-format/CHECKPOINT.md`): a compaction
+/// Journal checkpoints (`documents.ckpt`, see `docs/file-format/index.md`): a compaction
 /// that writes the document store as one mapped file in place of the journal frames before it,
 /// so a store opens by mapping it and serves unfiltered lexical queries from the mapping.
 #[derive(Clone, Debug)]
@@ -69,7 +69,7 @@ pub struct DocumentCheckpointConfig {
     /// Journal bytes after the last checkpoint at or above which `flush` or closing the engine
     /// writes a new one: below it, replaying the frames is about as fast.
     pub min_journal_bytes: usize,
-    /// Store chunk text in the checkpoint compressed (see `docs/file-format/CHECKPOINT.md`), and
+    /// Store chunk text in the checkpoint compressed (see `docs/file-format/index.md`), and
     /// cut the text cache file at close: the checkpoint is much smaller and a served hit decodes
     /// its block unless `text_cache_bytes` holds it. Off by default.
     pub compress_text: bool,
@@ -79,7 +79,7 @@ pub struct DocumentCheckpointConfig {
     /// here, first come first kept, until the budget is used. `0` decodes on every hit.
     pub text_cache_bytes: usize,
     /// Estimated resident bytes of the live lexical index at which ingest folds it into the
-    /// store's checkpoint and drops it from memory (see `docs/file-format/CHECKPOINT.md`,
+    /// store's checkpoint and drops it from memory (see `docs/file-format/index.md`,
     /// "Streaming folds"). The estimate counts postings and per-chunk records, so the process
     /// holds roughly this much more than its base footprint, not exactly this much. 0 never
     /// folds: the index then grows with the corpus until the engine closes. Folding applies
@@ -97,7 +97,7 @@ pub struct DocumentCheckpointConfig {
     /// unchanged. Only that explicit call reorders: folds, `flush`, closing, background jobs,
     /// warm-server's scheduled pass and snapshots never do. The compaction that reorders holds
     /// writers 3 to 5 times as long as one that does not (see `WarmCore::compact`). On by
-    /// default; see `docs/file-format/CHECKPOINT.md`, "Document order".
+    /// default; see `docs/file-format/index.md`, "Document order".
     pub reorder: bool,
     /// Most bytes the reorder of [`crate::core::WarmCore::compact`] may hold beyond a plain
     /// compaction, by the estimate it computes before it builds anything (its forward index is

@@ -71,7 +71,7 @@ DURABILITY = {
 }
 
 DURABILITY_CLASS = {
-    WARM_SERVER: "per-request-flush",  # https://github.com/writerslogic/warm/blob/main/docs/file-format/CRASH-CONSISTENCY.md
+    WARM_SERVER: "per-request-flush",  # https://github.com/writerslogic/warm/blob/main/docs/file-format/index.md
     "qdrant-server": "periodic",  # https://qdrant.tech/documentation/operations/configuration/#configuration-file-example
     "weaviate": "undocumented",  # https://docs.weaviate.io/weaviate/concepts/storage#write-ahead-log
     "opensearch-knn": "per-request-flush",  # https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/index-settings/

@@ -131,13 +131,13 @@ async function reopenAndNavigate(state) {
   await page.keyboard.press('Escape')
   await page.waitForFunction(() => !document.querySelector('#__search').checked, null, { timeout })
   await page.evaluate(() => { window.__warmSearchInitDocument = document })
-  const conceptsPath = `${prefix}/${version}/concepts/holographic/`
-  await page.locator('a.warm-btn[href$="concepts/holographic/"]').click()
+  const conceptsPath = `${prefix}/${version}/concepts/`
+  await page.locator('a.warm-btn[href$="concepts/"]').click()
   await page.waitForFunction(path => location.pathname === path && !document.querySelector('.warm-home') && document.querySelector('article.md-content__inner h1'), conceptsPath, { timeout })
   assert.equal(await page.evaluate(() => window.__warmSearchInitDocument === document), true, 'Instant navigation replaced the document')
   await page.keyboard.press('s')
   await page.waitForFunction(() => document.activeElement?.matches('input.md-search__input'), null, { timeout })
-  await query(page, 'holographic', '/concepts/holographic/')
+  await query(page, 'holographic', '/concepts/')
   state.assertRequests(1)
 }
 
@@ -166,7 +166,7 @@ try {
     state.hold()
     await Promise.all([
       state.page.waitForRequest(indexRequest, { timeout }),
-      state.page.goto(`${home}concepts/holographic/?h=holographic`, { waitUntil: 'domcontentloaded' }),
+      state.page.goto(`${home}concepts/?h=holographic`, { waitUntil: 'domcontentloaded' }),
     ])
     await releaseIndex(state)
     await highlighted(state)
@@ -174,7 +174,7 @@ try {
   await scenario('instant navigation to highlight before search', {}, async state => {
     await cold(state)
     await state.page.evaluate(() => { window.__warmSearchInitDocument = document })
-    const link = state.page.locator('a.warm-btn[href*="concepts/holographic/"]')
+    const link = state.page.locator('a.warm-btn[href*="concepts/"]')
     await link.evaluate(anchor => { anchor.search = '?h=holographic' })
     state.hold()
     await Promise.all([

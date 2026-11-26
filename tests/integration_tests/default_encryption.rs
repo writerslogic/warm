@@ -1,7 +1,8 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 //! A new store is sealed under a master key without any configuration; plaintext is an
-//! explicit opt-out; a plaintext store from an earlier release keeps opening as plaintext.
+//! explicit opt-out; a plaintext store from an earlier release keeps opening as plaintext. Reopening
+//! with the wrong passphrase names the passphrase.
 
 use serde_json::json;
 use std::path::Path;
@@ -231,4 +232,38 @@ fn tampered_key_check_is_detected() {
     bytes[last] ^= 0x01;
     std::fs::write(&check, bytes).unwrap();
     assert!(open(&path, WarmConfig::default()).is_err());
+}
+
+fn keyed_config(passphrase: &str) -> WarmConfig {
+    let mut config = WarmConfig::default();
+    config.security.encryption_enabled = true;
+    config.security.encryption_passphrase = Some(passphrase.to_owned());
+    config
+}
+
+#[test]
+fn wrong_passphrase_error_mentions_the_passphrase() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().to_string_lossy().to_string();
+    {
+        let core =
+            WarmCore::new(1024, Some(path.clone()), Some(keyed_config("right one"))).unwrap();
+        let doc: DocumentInput =
+            serde_json::from_value(json!({ "id": "d1", "text": "alpha beta" })).unwrap();
+        core.memorize_document(doc).unwrap();
+    }
+
+    let error = match WarmCore::new(
+        1024,
+        Some(path.clone()),
+        Some(keyed_config("wrong passphrase")),
+    ) {
+        Ok(_) => panic!("opening with the wrong passphrase must fail"),
+        Err(error) => error.to_string(),
+    };
+    assert!(error.contains("passphrase"), "{error}");
+    assert!(!error.contains("right one"), "{error}");
+
+    // the right passphrase still opens it
+    WarmCore::new(1024, Some(path), Some(keyed_config("right one"))).unwrap();
 }

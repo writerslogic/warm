@@ -8,7 +8,7 @@ Modes, each a fresh process so peak RSS, open time and cold start are honest:
   ops    time 100 replacements and 100 deletions on the persisted index
 
 Data layout: <data>/{train.f32,test.f32,neighbors.i32,meta.json}, rows L2-normalised here
-(angular metric), exactly as benchmarks/public/evaluate.py does for the other systems.
+(angular metric), the same for every system.
 """
 
 import argparse

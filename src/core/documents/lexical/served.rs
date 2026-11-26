@@ -536,8 +536,7 @@ pub(in crate::core::documents) fn execute(
         optional.clear();
     }
     let all_terms = optional.iter().all(|rt| !rt.phrase);
-    // One long bounded term is ranked by its runs' frontiers; more terms go to the windowed
-    // ranker, which measured an order of magnitude faster than document-at-a-time WAND here.
+    // One long bounded term is ranked by its runs' frontiers; more terms go to the windowed ranker.
     let pruned_union = required.is_empty()
         && k > 0
         && all_terms

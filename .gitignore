@@ -40,16 +40,9 @@ vectors_data.bin/
 __pycache__/
 .venv/
 
-# uv script lockfiles written beside the benchmark scripts
-benchmarks/public/*.py.lock
-
 # A build driver that joins an absolute path under the cwd recreates this tree at the repo root
 /Volumes/
 
-# Evidence kept off git: benchmarks/evidence/MANIFEST.json lists the release archives and
-# scripts/fetch_evidence.py restores them to these paths.
-/benchmarks/results/superiority_v2/
-/benchmarks/results/superiority_v3/
 /benchmarks/results/native_harness_v1/
 /benchmarks/results/native_harness_gce_v1/
 /benchmarks/results/ann_extended_diagnostic_v1/
@@ -57,9 +50,6 @@ benchmarks/public/*.py.lock
 /benchmarks/results/algebraic_codebook_synthetic.json
 /benchmarks/results/longmemeval_dev_answers_v2.json
 /benchmarks/results/longmemeval_dev_answers_v2b.json
-
-# Exploratory mission evidence is retained privately.
-/benchmarks/results/mission/
 
 # Golden stores are committed test data.
 !tests/golden/**/vectors_data.bin/
@@ -77,43 +67,7 @@ benchmarks/public/*.py.lock
 !tests/fixtures/**/*.hmsemb
 bindings/embed-models/**/packs/
 .warm-local/
-benchmarks/results/research/ann/*.graph
 
-# Historical benchmark inputs are restored locally from benchmarks/evidence/retired-inputs.json.
-# Restored docs/research session evidence (only these three retired directories).
-/docs/research/technical-audit-20261029/**/*.gz
-/docs/research/technical-audit-20261029/**/*.json
-/docs/research/technical-audit-20261029/**/*.jsonl
-/docs/research/technical-audit-20261029/**/*.log
-/docs/research/technical-audit-20261029/**/*.patch
-/docs/research/technical-audit-20261029/**/*.bundle
-/docs/research/technical-audit-20261029/**/*.sh
-/docs/research/technical-audit-20261029/**/*.txt
-/docs/research/technical-audit-20261029/**/*.sha256
-/docs/research/technical-audit-20261029/**/*.tsv
-/docs/research/technical-audit-20261029/**/SHA256SUMS
-/docs/research/milestones-20261102/**/*.gz
-/docs/research/milestones-20261102/**/*.json
-/docs/research/milestones-20261102/**/*.jsonl
-/docs/research/milestones-20261102/**/*.log
-/docs/research/milestones-20261102/**/*.patch
-/docs/research/milestones-20261102/**/*.bundle
-/docs/research/milestones-20261102/**/*.sh
-/docs/research/milestones-20261102/**/*.txt
-/docs/research/milestones-20261102/**/*.sha256
-/docs/research/milestones-20261102/**/*.tsv
-/docs/research/milestones-20261102/**/SHA256SUMS
-/docs/research/technical-audit-20261030/**/*.gz
-/docs/research/technical-audit-20261030/**/*.json
-/docs/research/technical-audit-20261030/**/*.jsonl
-/docs/research/technical-audit-20261030/**/*.log
-/docs/research/technical-audit-20261030/**/*.patch
-/docs/research/technical-audit-20261030/**/*.bundle
-/docs/research/technical-audit-20261030/**/*.sh
-/docs/research/technical-audit-20261030/**/*.txt
-/docs/research/technical-audit-20261030/**/*.sha256
-/docs/research/technical-audit-20261030/**/*.tsv
-/docs/research/technical-audit-20261030/**/SHA256SUMS
 /benchmarks/results/metal_sdpa_draft_2026-10-09/isolated/
 /benchmarks/results/metal_sdpa_draft_2026-10-09/dependencies/
 /benchmarks/results/query_aware_graph_v1/sources/

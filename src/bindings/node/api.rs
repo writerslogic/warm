@@ -175,7 +175,7 @@ impl WarmMemorySystem {
     }
 
     /// Replaces the memory API's configuration (policies and defaults; see
-    /// docs/memory-api). Pass nothing to restore the defaults.
+    /// docs/reference/api.md). Pass nothing to restore the defaults.
     #[napi]
     pub fn configure_memory(&self, config: Option<serde_json::Value>) -> Result<()> {
         let config: crate::core::memory_api::MemoryConfig = match config {

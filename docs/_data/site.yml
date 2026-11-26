@@ -75,22 +75,22 @@ runtimes:
 features:
   - title: Hybrid search
     body: Stemmed BM25 fused with exact cosine over embeddings you supply. Hits carry the passage and its byte range.
-    link: quickstart/index.md
+    link: quickstart.md
   - title: Vector-symbolic memory
     body: Sparse binary hypervectors with bind, bundle and permute, a triple store with multi-hop queries, Hopfield cleanup and a resonator network.
-    link: concepts/holographic.md
+    link: concepts.md
   - title: Crash-safe storage
     body: Atomic batches, a mmap segmented log with generations, and replay. A store is a directory.
-    link: production-readiness.md
+    link: file-format/index.md
   - title: Hardening you opt into
     body: AES-256-GCM stores, signed audit logs, credential-gated agents and COSE/SCITT provenance behind Cargo features.
-    link: PRIVACY.md
+    link: security.md
   - title: Local by construction
     body: The engine makes no network calls and sends no telemetry. The optional HTTP server is yours to run.
-    link: concepts/privacy-limits.md
+    link: security.md
   - title: Measured, including losses
     body: Every number on this site traces to a committed results file, and the benchmark pages say where another system wins.
-    link: PUBLIC-BENCHMARKS.md
+    link: benchmarks/index.md
 
 # The headline result. `file` is relative to the repository root; each metric is a dotted path.
 headline:
@@ -109,7 +109,7 @@ headline:
     - label: BM25 as published in BEIR
       value: 0.665
       source: https://arxiv.org/abs/2104.08663
-  link: PUBLIC-BENCHMARKS.md
+  link: benchmarks/index.md
 
 # Vector-search chart: queries per second at each recall target, single thread, one query at a
 # time. Systems that do not reach a target are listed as such, never dropped.
@@ -122,7 +122,7 @@ chart:
   # left out of the "fastest WARM configuration" sentence.
   annotations:
     "WARM VGraph (4-bit codes, rerank)": opt-in encoding that ran at lower machine load than the other rows; the benchmark page treats it as unconfirmed.
-  link: PUBLIC-BENCHMARKS.md
+  link: benchmarks/index.md
 
 comparison_fallback:
   - benchmarks/results/public_scifact.json

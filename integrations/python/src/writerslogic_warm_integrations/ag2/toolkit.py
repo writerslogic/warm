@@ -26,7 +26,7 @@ class WarmMemoryToolkit(Toolkit):
 
     This is a tool-level adapter, not an `ag2.knowledge.KnowledgeStore`: that protocol is a
     path-addressed file store with atomic `append` and unbounded byte-range reads, which a
-    64 KiB-per-document vector service cannot honor. See docs/integrations/frameworks/autogen.md.
+    64 KiB-per-document vector service cannot honor. See docs/integrations.md.
     """
 
     def __init__(

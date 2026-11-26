@@ -371,7 +371,6 @@ impl Rows<'_> {
         let (mut n_fresh, mut n_exact) = (0u64, 0u64);
         visited.reset(graph.len());
         visited.insert(start);
-        // The thread's buffers, taken for this call and returned at its end.
         let mut pool = std::mem::take(&mut visited.pool);
         let mut fresh = std::mem::take(&mut visited.fresh);
         let mut dists = std::mem::take(&mut visited.dists);
@@ -622,7 +621,6 @@ impl Rows<'_> {
                 best as u32
             })
             .collect();
-        // Nearest-neighbour tour of the cell centres.
         let mut tour = Vec::with_capacity(cells);
         let mut left: Vec<u32> = (1..cells as u32).collect();
         let mut at = 0u32;

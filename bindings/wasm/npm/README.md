@@ -58,6 +58,6 @@ WebCrypto. PBKDF2-HMAC-SHA256 (600000 iterations) is the default; `"argon2id"` r
 inside the module. The key is derived once per open; every save uses a fresh random nonce. Header
 parameters are authenticated, and a forged header cannot request unbounded key stretching.
 
-See the [documentation](https://github.com/writerslogic/warm/tree/main/docs/runtimes/wasm).
+See the [documentation](https://github.com/writerslogic/warm/tree/main/bindings/wasm/npm).
 
 Apache-2.0.

@@ -14,8 +14,8 @@
 //!
 //! This models a killed process, in which the kernel keeps every write. It does not model
 //! power loss, where unsynced writes and unsynced renames may be lost: that is
-//! `benchmarks/public/durability_matrix.py` (Linux, write-barrier shim) and the platform
-//! sync calls documented in `docs/file-format/CRASH-CONSISTENCY.md`.
+//! the durability matrix (Linux, write-barrier shim) and the platform
+//! sync calls documented in `docs/file-format/index.md`.
 //!
 //! `WARM_CRASH_STRIDE=n` samples every n-th point; `WARM_CRASH_OFFSET=m` shifts the start.
 #![cfg(feature = "failpoints")]

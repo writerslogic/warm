@@ -114,7 +114,6 @@ fn lanes4(a: &[f32], b: [&[f32]; 4]) -> [[f32; 16]; 4] {
     // 16-float array at offset 4 i < 16.
     unsafe {
         let z = vdupq_n_f32(0.0);
-        // Sixteen named accumulators (row, lane group) so that they stay in registers.
         let (mut s00, mut s01, mut s02, mut s03) = (z, z, z, z);
         let (mut s10, mut s11, mut s12, mut s13) = (z, z, z, z);
         let (mut s20, mut s21, mut s22, mut s23) = (z, z, z, z);

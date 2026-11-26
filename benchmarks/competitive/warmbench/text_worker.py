@@ -3,8 +3,8 @@
 """Lexical comparators run inside their pinned environment. Same phases and output shape as
 examples/competitive_text.rs (build, serve, ops) over the {documents, queries} input JSON.
 
-Queries are reduced to the lowercase alphanumeric word set (as the existing SQLite control in
-benchmarks/public/document_competition.py does) and combined with OR; each system then applies
+Queries are reduced to the lowercase alphanumeric word set (as the SQLite control in
+examples/document_competition.rs does) and combined with OR; each system then applies
 its own documented analyzer (stemmer, stop words) and default BM25 parameters.
 """
 

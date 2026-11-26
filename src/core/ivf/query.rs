@@ -76,7 +76,6 @@ impl IVFIndex {
         let active_count = (self.dim / 256).max(1) as f64;
         let max_pq_dist = 2.0 * active_count;
 
-        // into_sorted_vec() returns ascending distance = best (highest similarity) first
         heap.into_sorted_vec()
             .into_iter()
             .map(|e| {

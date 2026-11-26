@@ -16,8 +16,7 @@ pub(super) const NN_ROWS: usize = 1024;
 /// Centres per tile of the assignment product.
 pub(super) const NN_TILE: usize = 256;
 
-/// Below this many centres the tiled scan's per-tile reduce costs more than it saves (k = 16 was
-/// 12% slower at d = 128), so the centres are scanned in one pass.
+/// Below this many centres the tiled scan's per-tile reduce costs more than it saves, so the centres are scanned in one pass.
 const TILED_MIN_CENTRES: usize = 64;
 
 /// Nearest centre index for every row (`rows` row-major, `dim` wide), parallel over blocks.

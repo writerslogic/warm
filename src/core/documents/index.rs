@@ -653,7 +653,7 @@ impl DocumentStore {
 
     /// Estimated resident bytes of what this store holds: per chunk a record and its slot
     /// entries, per distinct term of a chunk its share of the postings and the chunk's term
-    /// table. Measured against the process's resident memory in `docs/file-format/CHECKPOINT.md`.
+    /// table. Measured against the process's resident memory in `docs/file-format/index.md`.
     pub(crate) fn resident_estimate(&self) -> usize {
         self.resident_estimate
     }

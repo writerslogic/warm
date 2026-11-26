@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! Compaction on a worker thread with progress, cancellation and budgets
-//! (`docs/file-format/COMPACTION.md`). The work is `compact_impl`, shared with `compact()`.
+//! (`docs/file-format/index.md`). The work is `compact_impl`, shared with `compact()`.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Condvar, Mutex, PoisonError};
@@ -417,7 +417,7 @@ impl Drop for CompactionHandle {
 type Hook = Box<dyn FnOnce() + Send>;
 
 impl WarmCore {
-    /// Starts a compaction on a worker thread (`docs/file-format/COMPACTION.md`). Foreground
+    /// Starts a compaction on a worker thread (`docs/file-format/index.md`). Foreground
     /// reads and writes continue while it runs; writes wait only while it snapshots and
     /// publishes.
     pub fn start_compaction(

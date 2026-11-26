@@ -13,4 +13,4 @@ node examples/wasm/serve.mjs [port]                               # prints the l
 | Needs | `wasm32-unknown-unknown` target, a `wasm-bindgen` CLI matching the lockfile, Node 20+, a modern browser |
 | Secure context | localhost qualifies; OPFS, IndexedDB and service workers need it |
 
-Package API and storage adapters: [bindings/wasm/npm](../../bindings/wasm/npm/README.md). Runtime notes: [docs/runtimes/wasm](../../docs/runtimes/wasm/README.md).
+Package API and storage adapters: [bindings/wasm/npm](../../bindings/wasm/npm/README.md).

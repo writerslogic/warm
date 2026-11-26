@@ -1,7 +1,7 @@
 /* Copyright 2024-2026 WritersLogic Contributors */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-/* Open a store, ingest two documents, search, free. docs/runtimes/c/README.md shows this file;
+/* Open a store, ingest two documents, search, free. bindings/c/README.md shows this file;
    bindings/c/tests/c/run.sh compiles and runs it. Usage: quickstart STORE_DIR */
 
 #include <stdio.h>

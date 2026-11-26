@@ -37,7 +37,7 @@ class VersionTests(unittest.TestCase):
             "CITATION.cff",
             "README.md",
             "CONTRIBUTING.md",
-            "docs/INTEGRATION.md",
+            "bindings/js/warm-sdk/README.md",
             "bindings/python/README.md",
         ):
             destination = self.tree / relative
@@ -84,7 +84,7 @@ class VersionTests(unittest.TestCase):
     def test_stale_documented_versions_are_rejected(self) -> None:
         for relative, old, new in (
             ("CITATION.cff", "version: 0.", "version: 9."),
-            ("docs/INTEGRATION.md", "writerslogic-warm@0.", "writerslogic-warm@9."),
+            ("bindings/js/warm-sdk/README.md", "writerslogic-warm@0.", "writerslogic-warm@9."),
             ("bindings/python/README.md", "uv add warm-python\n", "uv add warm-python==9.9.9\n"),
         ):
             with self.subTest(file=relative):

@@ -414,7 +414,6 @@ impl PersistentArena {
                 }
                 return fail(offset, max_version);
             }
-            // Sanity: reject impossibly large or zero-progress frames
             if comp_len > mmap.len() || raw_len > MAX_RAW_FRAME_SIZE || comp_len == 0 {
                 return fail(offset, max_version);
             }
@@ -687,7 +686,6 @@ impl PersistentArena {
         self.write_offset
             .store(offset + total_frame_len, Ordering::Release);
 
-        // Growth and rotation made the guarded mapping hold the whole frame.
         debug_assert!(offset + total_frame_len <= self.segment_size);
         let frame = &mut active.map[offset..offset + total_frame_len];
         frame[0..4].copy_from_slice(&crc.to_le_bytes());
@@ -1663,7 +1661,6 @@ mod tests {
         let dir = tempdir()?;
         let path = dir.path().to_path_buf();
 
-        // 1. Create and write some data
         {
             let arena = PersistentArena::new(&path)?;
             let offset1 = arena.write_slice(b"hello world")?;
@@ -1671,14 +1668,12 @@ mod tests {
             assert_eq!(offset1, 0);
         }
 
-        // 2. Re-open and verify data + no new segments
         {
             let arena = PersistentArena::new(&path)?;
             let (data1, version1) = arena.read_frame(0)?;
             assert_eq!(data1, b"hello world");
             assert_eq!(version1, 0);
 
-            // Check that we only have seg_0.bin
             let mut count = 0;
             for entry in std::fs::read_dir(&path)? {
                 let entry = entry?;
@@ -1688,7 +1683,6 @@ mod tests {
             }
             assert_eq!(count, 1);
 
-            // 3. Write more and verify version continuity
             let offset3 = arena.write_slice(b"baz")?;
             let (data3, version3) = arena.read_frame(offset3)?;
             assert_eq!(data3, b"baz");

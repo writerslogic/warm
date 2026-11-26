@@ -52,4 +52,4 @@ Python 3.9+; downloads the `warm-mcp` binary release tagged with the launcher ve
 
 ## Reference
 
-[MCP guide](https://writerslogic.com/warm/docs/latest/integrations/mcp/) (also `docs/integrations/mcp/README.md` in the repository).
+[MCP guide](https://writerslogic.com/warm/docs/latest/integrations/mcp/) (also `docs/integrations.md` in the repository).

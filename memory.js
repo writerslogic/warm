@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 'use strict'
 
-/** Agent memory over a WarmMemorySystem: remember, recall, forget, explain. See docs/memory-api. */
+/** Agent memory over a WarmMemorySystem: remember, recall, forget, explain. See docs/reference/api.md. */
 
 class MemoryError extends Error {
   constructor(message, code, cause) {

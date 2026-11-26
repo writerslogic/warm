@@ -114,7 +114,6 @@ mod tests {
         shard.insert(2, &[5, 10, 20]);
         shard.insert(3, &[0, 20]);
 
-        // Query dims [0, 5, 10]: vec 1 has overlap 3, vec 2 has overlap 2, vec 3 has overlap 1
         let weights = vec![1.0; 3];
         let result = shard.weighted_overlap(&[0, 5, 10], &weights, &tombstones);
         assert_eq!(result[0].0, 1);
@@ -126,16 +125,12 @@ mod tests {
     }
 
     #[test]
-    fn test_posting_dedup() {
+    fn duplicate_inserts_collapse_and_remove_clears_lists() {
         let mut shard = PostingShard::new(100);
         shard.insert(1, &[5]);
-        shard.insert(1, &[5]); // duplicate
+        shard.insert(1, &[5]);
         assert_eq!(shard.get_list(5).len(), 1);
-    }
 
-    #[test]
-    fn test_posting_remove() {
-        let mut shard = PostingShard::new(100);
         shard.insert(1, &[5, 10]);
         shard.remove(1, &[5, 10]);
         assert!(shard.get_list(5).is_empty());

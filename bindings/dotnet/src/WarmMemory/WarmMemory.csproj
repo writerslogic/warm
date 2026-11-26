@@ -32,7 +32,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="WarmMemory.Tests" />
     <None Include="README.md" Pack="true" PackagePath="/" />
-    <!-- Populate natives/<rid>/<library> (see docs/runtimes/dotnet) before `dotnet pack`. -->
+    <!-- Populate natives/<rid>/<library> (see bindings/dotnet/README.md) before `dotnet pack`. -->
     <None Include="natives/**/*" Pack="true" PackagePath="runtimes/%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('natives')" />
   </ItemGroup>
 

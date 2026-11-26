@@ -12,7 +12,7 @@
 //! query time, exactly like [`super::entangled::EntangledHVec`].
 //!
 //! This is the deterministic substrate for the phase resonator
-//! ([`super::phase_resonator`]); §20 of `docs/PREREGISTRATION-binding-readout.md`
+//! ([`super::phase_resonator`]); §20 of the binding-readout preregistration
 //! shows it matches float FHRR factorization capacity down to 4-bit phase (N=16),
 //! and §15-18 characterise its continuous associative-memory behaviour. Unlike the
 //! sparse-binary core, phase binding is NOT self-inverse, so it does not leak
@@ -344,31 +344,21 @@ mod tests {
     }
 
     #[test]
-    fn bundle_empty_is_zero_dim() {
+    fn degenerate_bundles_and_similarities() {
         let empty: Vec<PhaseHVec> = Vec::new();
         let b = PhaseHVec::bundle(&empty);
         assert_eq!(b.dim(), 0);
         assert!(b.phases().is_empty());
-    }
 
-    #[test]
-    fn bundle_single_element_is_identity() {
         let a = PhaseHVec::new_random(512, 256, 42);
-        let b = PhaseHVec::bundle(std::slice::from_ref(&a));
-        assert_eq!(
-            b.phases(),
-            a.phases(),
-            "bundling one vector must return its own phases"
-        );
-    }
+        let single = PhaseHVec::bundle(std::slice::from_ref(&a));
+        assert_eq!(single.phases(), a.phases());
 
-    #[test]
-    fn zero_dim_similarity_is_one() {
         // Empty vectors are vacuously identical (guarded in `similarity`).
-        let a = PhaseHVec::from_phases(Vec::new(), 2);
-        let b = PhaseHVec::from_phases(Vec::new(), 2);
-        assert_eq!(a.dim(), 0);
-        assert!((a.similarity(&b) - 1.0).abs() < 1e-12);
+        let z1 = PhaseHVec::from_phases(Vec::new(), 2);
+        let z2 = PhaseHVec::from_phases(Vec::new(), 2);
+        assert_eq!(z1.dim(), 0);
+        assert!((z1.similarity(&z2) - 1.0).abs() < 1e-12);
     }
 
     #[test]

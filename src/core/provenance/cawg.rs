@@ -57,7 +57,6 @@ pub fn create_identity_assertion_ica(
     let issuer_did = did::did_jwk_from_ed25519(&agent_key.verifying_key().to_bytes());
     let now = iso8601_now();
 
-    // signer_payload: CBOR map with raw bytestring hashes (carried in the assertion).
     let sp_cbor_refs: Vec<Value> = referenced
         .iter()
         .map(|(url, alg, hash)| {
@@ -79,7 +78,6 @@ pub fn create_identity_assertion_ica(
         ),
     ]);
 
-    // c2paAsset: the SignerPayload in JSON form with STANDARD base64 hashes.
     let json_refs: Vec<serde_json::Value> = referenced
         .iter()
         .map(|(url, alg, hash)| {
@@ -95,7 +93,6 @@ pub fn create_identity_assertion_ica(
         "sig_type": CAWG_ICA_SIG_TYPE,
     });
 
-    // W3C VC v2 IdentityClaimsAggregationCredential.
     let vc = serde_json::json!({
         "@context": [VC_CONTEXT, ICA_CONTEXT],
         "type": ["VerifiableCredential", ICA_CREDENTIAL_TYPE],
@@ -118,7 +115,6 @@ pub fn create_identity_assertion_ica(
     // application/vc}, empty external_aad.
     let cose = sign_cose_vc(agent_key, &vc_bytes)?;
 
-    // Embedded IdentityAssertion: {signer_payload, signature, pad1}.
     let assertion = Value::Map(vec![
         (Value::Text("signer_payload".into()), signer_payload),
         (Value::Text("signature".into()), Value::Bytes(cose)),
