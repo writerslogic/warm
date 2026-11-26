@@ -1,6 +1,8 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::core::documents::xorshift64;
+
 #[test]
 fn bounded_filtered_scan_preserves_missing_embeddings_and_minimum_scores() {
     let mut store = DocumentStore::default();
@@ -904,13 +906,6 @@ fn lexical_capture_holds_only_ranked_candidates_and_shares_embeddings() {
     }
 }
 
-fn xorshift(state: &mut u64) -> u64 {
-    *state ^= *state << 13;
-    *state ^= *state >> 7;
-    *state ^= *state << 17;
-    *state
-}
-
 /// A document of 1 to 12 words from a small vocabulary (so that scores tie), chunked 1 to
 /// 4 words apiece; a third keep unstemmed terms and a quarter carry a zero-frequency term.
 fn random_document(id: usize, state: &mut u64) -> StoredDocument {
@@ -918,14 +913,14 @@ fn random_document(id: usize, state: &mut u64) -> StoredDocument {
         "alpha", "beta", "gamma", "delta", "running", "runs", "ran", "shared", "Shared",
     ];
     let template = id.is_multiple_of(5);
-    let mut seed = if template { 7 } else { xorshift(state) };
-    let count = 1 + (xorshift(&mut seed) % 12) as usize;
+    let mut seed = if template { 7 } else { xorshift64(state) };
+    let count = 1 + (xorshift64(&mut seed) % 12) as usize;
     let text: Vec<&str> = (0..count)
-        .map(|_| WORDS[(xorshift(&mut seed) % WORDS.len() as u64) as usize])
+        .map(|_| WORDS[(xorshift64(&mut seed) % WORDS.len() as u64) as usize])
         .collect();
     let input = serde_json::from_value(json!({
         "id": format!("d{id:04}"), "text": text.join(" "),
-        "chunkWords": 1 + xorshift(state) % 4, "overlapWords": 0,
+        "chunkWords": 1 + xorshift64(state) % 4, "overlapWords": 0,
     }))
     .unwrap();
     let mut document = super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
@@ -1324,10 +1319,10 @@ fn decoded_hot_lists_rank_prose_as_the_exhaustive_capture() {
 fn heavy_tailed_store(documents: usize, vocabulary: u64, state: &mut u64) -> DocumentStore {
     let mut store = DocumentStore::default();
     for id in 0..documents {
-        let length = 3 + xorshift(state) % 58;
+        let length = 3 + xorshift64(state) % 58;
         let text: Vec<String> = (0..length)
             .map(|_| {
-                let u = (xorshift(state) % 1_000_000) as f64 / 1_000_000.0;
+                let u = (xorshift64(state) % 1_000_000) as f64 / 1_000_000.0;
                 format!("w{}", ((vocabulary as f64).powf(u) as u64).min(vocabulary))
             })
             .collect();
@@ -1406,10 +1401,10 @@ fn pruned_ranking_matches_exhaustive_ranking_to_the_bit() {
                 .collect(),
             1 => (0..300)
                 .map(|_| {
-                    let terms = 1 + xorshift(&mut state) % 30;
+                    let terms = 1 + xorshift64(&mut state) % 30;
                     (0..terms)
                         .map(|_| {
-                            let u = (xorshift(&mut state) % 1_000_000) as f64 / 1_000_000.0;
+                            let u = (xorshift64(&mut state) % 1_000_000) as f64 / 1_000_000.0;
                             format!("w{}", (400f64.powf(u) as u64).min(400))
                         })
                         .collect::<Vec<_>>()

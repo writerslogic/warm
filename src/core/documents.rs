@@ -80,10 +80,17 @@ pub use vector_index::{
     SNAPSHOT_MIN_ROWS,
 };
 
-/// [`capture_search`] over the checkpoint under `store` and the store's own documents, for
-/// queries [`overlay_serves`] accepts.
 #[cfg(test)]
 pub(crate) use image::encode_v1 as encode_checkpoint_v1;
+
+/// Marsaglia xorshift64 step for deterministic test data.
+#[cfg(test)]
+pub(crate) fn xorshift64(state: &mut u64) -> u64 {
+    *state ^= *state << 13;
+    *state ^= *state >> 7;
+    *state ^= *state << 17;
+    *state
+}
 
 mod chunking;
 #[cfg(test)]

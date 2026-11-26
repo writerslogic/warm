@@ -1,17 +1,12 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use super::Embedding;
+use super::{xorshift64, Embedding};
 
 #[test]
 fn cosine4_equals_cosine_bit_for_bit() {
     let mut state = 0x9E37_79B9_7F4A_7C15u64;
-    let mut next = || {
-        state ^= state << 13;
-        state ^= state >> 7;
-        state ^= state << 17;
-        (state >> 40) as f32 / 8_388_608.0 - 1.0
-    };
+    let mut next = || (xorshift64(&mut state) >> 40) as f32 / 8_388_608.0 - 1.0;
     for dim in [1usize, 3, 384] {
         let rows: Vec<Embedding> = (0..4)
             .map(|_| Embedding::from_f32((0..dim).map(|_| next()).collect()))
