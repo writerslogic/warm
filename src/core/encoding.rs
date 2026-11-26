@@ -147,29 +147,10 @@ impl std::str::FromStr for TextEncoder {
     }
 }
 
-/// Multi-scale text encoding combining character n-grams, word tokens, and
-/// word bigrams into a single sparse hypervector.
-///
-/// Architecture (based on Rahimi et al. 2016, Joshi et al. 2020):
-///
-/// 1. **Character n-grams** at scales 2-5 capture morphological similarity.
-///    "cat" and "cats" share most bigrams/trigrams; different n-gram sizes
-///    provide redundancy and cover different morphological features.
-///
-/// 2. **Word tokens** with positional binding capture lexical identity.
-///    Each word is hashed as a unit and bound with its sentence position,
-///    so word order is partially preserved.
-///
-/// 3. **Word bigrams** capture local phrase structure.
-///    Adjacent word pairs bound together represent collocations.
-///
-/// Each level uses a unique seed space (LEVEL_CHAR, LEVEL_WORD, LEVEL_PHRASE)
-/// to prevent cross-level hash collisions. Levels are bundled with
-/// empirically-tuned weights favoring word identity (highest signal-to-noise
-/// ratio for retrieval tasks).
-///
-/// Breaking change: vectors produced by this encoder are incompatible with
-/// the previous character-trigram-only encoder. Re-encode stored data.
+/// Multi-scale text encoding: character n-grams (scales 2-5, morphology), position-bound
+/// word tokens (lexical identity, partial order) and word bigrams (collocations), bundled
+/// with weights favoring word identity. Each level has its own seed space (`LEVEL_*`).
+/// Vectors are incompatible with the earlier character-trigram-only encoder.
 const CHAR_NGRAM_SIZES: [usize; 4] = [2, 3, 4, 5];
 
 /// The largest character n-gram scale; the memo key holds this many characters.

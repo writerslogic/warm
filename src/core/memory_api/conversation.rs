@@ -247,10 +247,7 @@ fn label(value: &str) -> bool {
 }
 
 fn sha256(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
+    crate::core::hash::hex(&Sha256::digest(bytes))
 }
 
 fn record_id(kind: &str, parts: &impl Serialize) -> Result<String> {

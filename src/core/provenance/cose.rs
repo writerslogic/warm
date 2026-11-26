@@ -211,6 +211,7 @@ pub fn sign_fact_claim(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::provenance::util::unhex;
 
     fn test_keypair() -> SigningKey {
         SigningKey::from_bytes(&rand::random())
@@ -378,13 +379,6 @@ mod tests {
         } else {
             panic!("expected CBOR map");
         }
-    }
-
-    fn unhex(s: &str) -> Vec<u8> {
-        (0..s.len())
-            .step_by(2)
-            .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
-            .collect()
     }
 
     #[test]

@@ -203,12 +203,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn did_key_roundtrip() {
+    fn identifiers_and_documents_round_trip_the_public_key() {
         let pk = [0xABu8; 32];
         let did = did_key_from_ed25519(&pk);
         assert!(did.starts_with("did:key:z"));
-        let recovered = ed25519_from_did_key(&did).unwrap();
-        assert_eq!(recovered, pk);
+        assert_eq!(ed25519_from_did_key(&did).unwrap(), pk);
+
+        let did = did_jwk_from_ed25519(&pk);
+        assert!(did.starts_with("did:jwk:"));
+        assert_eq!(ed25519_from_did_jwk(&did).unwrap(), pk);
+
+        let did = did_web_from_domain("example.com", None);
+        let doc = create_did_document(&did, &pk);
+        assert_eq!(ed25519_from_did_document(&doc).unwrap(), pk);
+        assert_eq!(doc["id"], "did:web:example.com");
     }
 
     #[test]
@@ -242,15 +250,6 @@ mod tests {
             let alias = format!("did:key:{}", multibase::encode(base, &bytes));
             assert!(ed25519_from_did_key(&alias).is_err(), "{alias}");
         }
-    }
-
-    #[test]
-    fn did_jwk_from_ed25519_roundtrips() {
-        let pk = [0x42u8; 32];
-        let did = did_jwk_from_ed25519(&pk);
-        assert!(did.starts_with("did:jwk:"));
-        let recovered = ed25519_from_did_jwk(&did).unwrap();
-        assert_eq!(recovered, pk);
     }
 
     #[test]
@@ -304,15 +303,5 @@ mod tests {
         ] {
             assert!(did_web_to_url(did).is_err(), "{did}");
         }
-    }
-
-    #[test]
-    fn did_document_roundtrip() {
-        let pk = [0xCDu8; 32];
-        let did = did_web_from_domain("example.com", None);
-        let doc = create_did_document(&did, &pk);
-        let recovered = ed25519_from_did_document(&doc).unwrap();
-        assert_eq!(recovered, pk);
-        assert_eq!(doc["id"], "did:web:example.com");
     }
 }

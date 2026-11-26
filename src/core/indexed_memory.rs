@@ -397,24 +397,16 @@ mod tests {
     }
 
     #[test]
-    fn test_indexed_memory_insert_get() {
+    fn insert_get_and_delete_round_trip() {
         let mem = IndexedMemory::new(16384, 3.0);
         let v = EntangledHVec::new_deterministic(16384, 42);
-        let idx = mem.insert("test".to_string(), v.clone());
-        assert_eq!(idx, 0);
-        let retrieved = mem.get("test").unwrap();
-        assert!((retrieved.similarity(&v) - 1.0).abs() < 0.0001);
-    }
-
-    #[test]
-    fn test_indexed_memory_delete() {
-        let mem = IndexedMemory::new(16384, 3.0);
-        let v = EntangledHVec::new_deterministic(16384, 42);
-        mem.insert("test".to_string(), v);
+        assert_eq!(mem.insert("test".to_string(), v.clone()), 0);
         assert_eq!(mem.count(), 1);
+        assert!((mem.get("test").unwrap().similarity(&v) - 1.0).abs() < 0.0001);
         assert!(mem.delete("test"));
         assert_eq!(mem.count(), 0);
         assert!(mem.get("test").is_none());
+        assert!(!mem.delete("test"));
     }
 
     #[test]
