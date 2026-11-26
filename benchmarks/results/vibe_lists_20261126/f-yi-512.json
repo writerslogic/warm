@@ -1,0 +1,125 @@
+{
+ "args": {
+  "data": "data/yi-128-ip.hdf5",
+  "out": "res/f-yi-512.json",
+  "degree": "32",
+  "build_ef": "500",
+  "projected_degree": "32",
+  "learn": "32768",
+  "training_neighbors": "100",
+  "query_lists": "512",
+  "list_neighbors": "100",
+  "rows": "0",
+  "cache": "cache",
+  "k": "100",
+  "repeats": "3",
+  "points": "300:150:2:1,300:150:3:1,300:150:4:1,300:300:8:1,300:300:16:1,300:300:24:1,150:150:4:0,200:150:4:0,300:150:4:0,200:150:8:0"
+ },
+ "build_seconds": 0.11996084100064763,
+ "memory_bytes": {
+  "VmHWM": 4752723968,
+  "VmRSS": 3497431040
+ },
+ "rows": [
+  {
+   "ef": 300,
+   "rerank": 150,
+   "probes": 2,
+   "probe_only": true,
+   "recall": 0.91797,
+   "qps": 8718.384337622123,
+   "qps_min": 8710.135462917748,
+   "qps_max": 8755.362374960052
+  },
+  {
+   "ef": 300,
+   "rerank": 150,
+   "probes": 3,
+   "probe_only": true,
+   "recall": 0.94194,
+   "qps": 6547.698863303076,
+   "qps_min": 6508.331881886246,
+   "qps_max": 6568.38600869428
+  },
+  {
+   "ef": 300,
+   "rerank": 150,
+   "probes": 4,
+   "probe_only": true,
+   "recall": 0.95366,
+   "qps": 5350.768877938227,
+   "qps_min": 5324.749241190804,
+   "qps_max": 5355.0714103398905
+  },
+  {
+   "ef": 300,
+   "rerank": 300,
+   "probes": 8,
+   "probe_only": true,
+   "recall": 0.97191,
+   "qps": 3143.4755417365877,
+   "qps_min": 3131.534788934296,
+   "qps_max": 3159.535001127904
+  },
+  {
+   "ef": 300,
+   "rerank": 300,
+   "probes": 16,
+   "probe_only": true,
+   "recall": 0.98239,
+   "qps": 1945.2743930632573,
+   "qps_min": 1928.0558715265593,
+   "qps_max": 1947.9926329438395
+  },
+  {
+   "ef": 300,
+   "rerank": 300,
+   "probes": 24,
+   "probe_only": true,
+   "recall": 0.98634,
+   "qps": 1378.4664267675942,
+   "qps_min": 1364.295235138128,
+   "qps_max": 1388.8014773384007
+  },
+  {
+   "ef": 150,
+   "rerank": 150,
+   "probes": 4,
+   "probe_only": false,
+   "recall": 0.98825,
+   "qps": 3490.0256184579084,
+   "qps_min": 3465.2502710263375,
+   "qps_max": 3492.9827408849815
+  },
+  {
+   "ef": 200,
+   "rerank": 150,
+   "probes": 4,
+   "probe_only": false,
+   "recall": 0.99036,
+   "qps": 3082.247911517344,
+   "qps_min": 3072.4086120622032,
+   "qps_max": 3146.8450145772113
+  },
+  {
+   "ef": 300,
+   "rerank": 150,
+   "probes": 4,
+   "probe_only": false,
+   "recall": 0.9927,
+   "qps": 2656.4025397671335,
+   "qps_min": 2627.91315374585,
+   "qps_max": 2658.953644836437
+  },
+  {
+   "ef": 200,
+   "rerank": 150,
+   "probes": 8,
+   "probe_only": false,
+   "recall": 0.99357,
+   "qps": 2337.0355325933356,
+   "qps_min": 2334.3948052175874,
+   "qps_max": 2344.2891443789786
+  }
+ ]
+}

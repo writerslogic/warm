@@ -854,6 +854,7 @@ impl SearchScratch {
     /// (sorted), without the candidate pool or the graph (`fresh` clears the visited marks
     /// first; otherwise the rows already marked are skipped). Returns the rows estimated, or `None`
     /// when fewer than `k` distinct rows were found (the caller then searches the graph).
+    #[inline(never)]
     fn scan_packed(
         &mut self,
         g: &VGraph,
@@ -928,6 +929,7 @@ impl SearchScratch {
 
     /// Re-scores the best `take` of `self.keys` (sorted, nearest first) with the residual
     /// codes and writes the `k` nearest original ids to `out`; `evals` is the work so far.
+    #[inline(never)]
     #[allow(clippy::too_many_arguments)]
     fn rerank_keys<const PROFILE: bool>(
         &mut self,
