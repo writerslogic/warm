@@ -331,14 +331,22 @@ fn auth_is_enforced_when_key_is_set() {
 }
 
 #[test]
-fn oversized_body_is_rejected() {
+fn body_limit_is_inclusive_and_oversize_is_rejected() {
     let s = Server::start(&["--max-body-bytes", "4096"], None);
-    let big = vec![b' '; 6000];
-    let (st, e) = s.request("POST", "/api/v1/documents/batch", &[], &big);
-    assert_eq!(
-        (st, e["error"]["code"].as_str()),
-        (413, Some("payload_too_large"))
-    );
+    for (size, over) in [(4095, false), (4096, false), (4097, true), (6000, true)] {
+        let mut body = br#"{"documents":[]}"#.to_vec();
+        body.resize(size, b' ');
+        let (st, e) = s.request("POST", "/api/v1/documents/batch", &[], &body);
+        if over {
+            assert_eq!(
+                (st, e["error"]["code"].as_str()),
+                (413, Some("payload_too_large")),
+                "size {size}"
+            );
+        } else {
+            assert_ne!(st, 413, "size {size}");
+        }
+    }
 }
 
 #[test]
