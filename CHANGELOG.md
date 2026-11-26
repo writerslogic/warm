@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [0.7.3] - 2026-11-26
+
+### Documentation
+- Add five standalone Node.js application examples (#519)
 ## [0.7.2] - 2026-11-25
 
 ### Performance
@@ -18,7 +22,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Encrypt new stores by default with a plaintext opt-out
 
 ### Documentation
-- Publish the LME-V2 small-tier submission record (#515)
 - Publish the docs site to writerslogic.com and fix stale package notes (#506)
 - Publish the docs site to writerslogic.com and fix stale package notes
 
@@ -33,8 +36,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Accept BM25 k1 and b on the server text search
 - Add Windows DPAPI and Linux Secret Service key providers
 - Add the sealed block container with per-segment keys and crypto-erase
-- Expose MutableBase to Python as MutableIndex
 - Add the stage 1 in-place mutable base
+- Expose MutableBase to Python as MutableIndex
 - Parse form state from accessibility-tree text at experience ingest (#494)
 - Run hybrid recall in the memory API (#475)
 - Route tree observations through the default memory path (#472)
@@ -53,9 +56,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Tighten docs, document and verify every adapter and example, publish workflows for the adapters, remove maintainer-only files (#502)
 - Restore the MSRV and encryption wording the site search tests expect
 - Exclude the maintainer-only L10 design note from the site build
-- Restore dropped caveats, shorten conversation memory and experience core pages, and fix the text segment magic
-- Merge erasure, server retry, privacy and evaluation content into one home each and convert lists to tables
-- Document adapter release tags and install lines now that the adapters publish
 - Add an examples index and binding READMEs, and include verified example sources in the docs
 - Make integration quickstarts runnable offline and check them in CI
 - Add integrations overview, adapter READMEs in the brief format and dedupe org-knowledge and matrix pages
@@ -79,7 +79,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Finish interrupted purges at open, purge by default with durable tickets, and grow segments on Windows (#453)
 - Read block-addressed rows on Windows with positional reads
 - Commit the byte-row golden logs and leave the f32 golden README unchanged
-- Build the sparse sweep example against the current index parameters
 - Satisfy the Rust 1.100 range-loop lint in the operand retriever
 - Iterate the centroid norms directly in the list ranking tail
 - Satisfy the Rust 1.100 range-loop lint in the operand retriever
@@ -91,9 +90,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Size the private-query hint index buffer up front
 - Leave single-term ranked queries to the live store's frontier-pruned ranker
 - Install postings runs into their lists in parallel
+- Share equal document metadata within an ingest batch
 - Add set_reorder to the partition index binding
 - Search Euclidean training neighbours exactly on all threads
-- Share equal document metadata within an ingest batch
 - Reorder document slots by graph bisection in the explicit compaction (#495)
 - Clear visited marks with one fill on graphs up to 2^20 vertices
 - Keep 512-bit gathers out of the block-wise conjunction loops (#488)
@@ -124,7 +123,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Cut peak build memory and the duplicate vertex file, and add block-addressed base rows
 
 ### Bench
-- Index session-opening assistant turns as their own LongMemEval unit
 - Add GCP Ice Lake text and sift-250k results for embedded vector stores
 - Record machine, commit and date in the hybrid results and report (#493)
 - Pin faiss-cpu 1.16.0 and usearch 2.26.6 for the rerun (#491)
@@ -134,19 +132,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Fold the three-machine text results, paired quality bootstrap, fact-store kill tests and LoCoMo context shapes (#464)
 - Time every text engine on matched contracts, fix search_lexical, and fold the first-use, membership, sparse-docs and LoCoMo work (#454)
 - Time hnswlib natively in C++ and report its Python call overhead (#444)
-- Refresh the 185H competitive results at d41fc949 (#443)
-- Refresh the 185H competitive results at d41fc949
+- Refresh the 185H competitive results at 5ed00fdc (#443)
+- Refresh the 185H competitive results at 5ed00fdc
 
 ### Merge
 - Dx/demos
 - Dx/adapter-publish
-- Dx/adapter-gaps
 - Dx/docs
-- Dx/docs2
+- Dx/adapter-gaps
 - Dx/adapters
-- Chore/public-hygiene
-- Release/0.7.0
 - Perf/vector-vibe2
+- Release/0.7.0
 - Origin/main
 - Cleanup/itests
 - Cleanup/qgraph
@@ -175,66 +171,53 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Lead JavaScript installation with registry packages
 - Focus the public repository on product usage
 - Integrate historical Big ANN evidence with qualified comparisons
-- Record the requested benchmark stopping point
 - Record frozen Azure streaming and filter confirmations
 - Record low-level ablations and immutable sharing tradeoffs
-- Record the Ice Lake filter-track tuning with held-out selection and ablation
 - Add the second control run and the official-protocol logs to the Ice Lake filter results
+- Record the Ice Lake filter-track tuning with held-out selection and ablation
 - Record the llama test-set confirmation of the held-out selection
 - Record the generation-2 screens and the routed-placement full run; keep only the retrain phase log
-- Record the local-rebalance full runs L5a and L5b and the gen-2 conclusion
-- Record the balanced warm-retrain streaming study and Ice Lake runs
-- Record the second E2 Ice Lake run
 - Record the rescore-budget A/B and the pending consolidation measurements
 - Correct the streaming run hosts to Zen 4 and Zen 2 and note the live leaderboard CSV
-- Mark the filter operating point in the pinned-run table
 
 ### Fixed
 - Defer documentation search loading until requested
 - Render documentation styles and version notice before paint
 - Harden release dependencies and benchmark tooling
-- Widen quantized dot products before integer overflow
 - Bound Python result allocations and stabilize extreme cosine queries
 - Check specialized Python result allocations before search
 - Reject duplicate IDs in persisted graph mappings
 - Reject overflowing strides in empty Python result arrays
+- Widen quantized dot products before integer overflow
 - Close files with context managers and drop unused imports in the VIBE scripts
-- Close files with context managers and drop unused imports in the L22 scripts
-- Remove an unused import and variable and return explicitly in the L22 scripts
 - Upgrade rmcp to 3.9 for RUSTSEC-2026-0462 (#420)
 - Upgrade rmcp to 3.9 for RUSTSEC-2026-0462
-- Close files with context managers in the LongMemEval context-assembly scripts
-- Drop an unused import and tighten the blind-rankings test assertions
-- Use assertLessEqual in the compact-context fill test
 - Skip already-published npm versions so a partial release can be re-run (#418)
 - Skip already-published npm versions so a partial release can be re-run
-- Model background-compaction tail schedules in the simulation (#419)
-- Model background-compaction tail schedules in the simulation
 - Close the export file in summ.py and drop an unused import in ga.py
 - Close files with context managers in the ann-benchmarks campaign scripts
 
 ### Performance
-- Validate shared snapshot bindings without rereading vectors
 - Share query loads and bound rerank prefetch
 - Speed up the filtered index and retune it for the yfcc-10M filter track (#417)
-- Block the multi-label filter and skip the tombstone probe when nothing is deleted
 - Cache the intersection of repeated label sets in a sorted filtered batch
-- Size-banded inverted-file target for the filtered index
-- Add result-preserving filter tuning (tag-grouped batch order, prefetch distance, zmm VNNI)
 - Make the result-preserving filter execution choices the default
+- Size-banded inverted-file target for the filtered index
+- Block the multi-label filter and skip the tombstone probe when nothing is deleted
+- Add result-preserving filter tuning (tag-grouped batch order, prefetch distance, zmm VNNI)
 - Keep ef 175 and add ef 320 to the WARM VIBE grid (56 points) and record the llama test re-measures
 - Restore ef 500/800 in the WARM VIBE grid (52 points) and record the llama test re-measure
 - Balanced warm retrain for streaming L22 (study and Ice Lake results) (#413)
+- Fix the python binding for route_cands and satisfy clippy
+- Route row placement through super-centres (route_cands, route_lists) for inserts and retrains
 - Add route_inserts and the knob override for coarse placement
 - Drop an unused binding in place
 - Expose the local rebalance knobs to the knob override
-- Route row placement through super-centres (route_cands, route_lists) for inserts and retrains
-- Fix the python binding for route_cands and satisfy clippy
 - Add a local rebalance that splits only the oversized lists
+- Rebalance near-empty centres between k-means iterations and log retrains
 - Route warm-retrain placement through the nearest new centres and log retrain phases
 - Default the python partition index to the balanced-retrain streaming configuration
 - Add retrain, per-live-size nprobe and selective spill knobs to the partition tier
-- Rebalance near-empty centres between k-means iterations and log retrains
 - Honour rerank on a base with deletes; bench: compact LongMemEval context (#391)
 - Rescore only the rerank best live candidates on a base with deletes
 
@@ -243,37 +226,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Add the learn-heavy VIBE builds and a rerank-dense grid, with held-out search tooling and results
 - LongMemEval dev context-assembly screen (partial, no 500 confirmation) (#407)
 - Add the LongMemEval dev context-assembly screen (summaries, facts, date references)
-- Record the LongMemEval_S k30+preopen reader passes
 - LongMemEval_S 500-question held-out run (#394)
-- Re-pin the LongMemEval 500 frozen config to the single-turn export
 - Record the LongMemEval_S 500-question held-out run
-- Create the LongMemEval 500 state directory before writing the spend ledger
-- Export each LongMemEval turn once, at its first position
-- Freeze the LongMemEval 500-question protocol at the implementation commit
-- Re-pin the LongMemEval 500 frozen config to the out-of-memory fix
-- Add a sealed LongMemEval 500-question run with a label-blind rankings export
-- Derive the per-item rate without the container start time in the LongMemEval Modal waves
-- Retry LongMemEval embed and rerank batches at half size on CUDA out-of-memory
-- Re-pin the LongMemEval 500 frozen config and raise the Modal GPU cap to 30 USD
-- Measure compact LongMemEval context and user-turn fill under a fixed reader-token budget
 - Keep compact-layout LongMemEval runs in their own summary arm
 - Add base-with-deletes search and staged consolidation cgroup fixtures
 - Re-measure the ann-benchmarks entry through the harness and add the held-out candidate search tooling
 - Add the 8 GiB streaming final-runbook run
 - Record the pinned-commit yfcc-10M filter and msturing-30M streaming harness runs
-
-### Research
-- Validate upper seed bounds and reject speculative traversal
-- Validate certificate arithmetic and audit benchmark instruments
-- Bound navigation headroom and verify audit provenance
-- Record mission baselines and rejected frontier mechanisms
 ## [0.6.6] - 2026-11-09
 
 ### Added
 - Add adaptive per-query probe rules to the partition tier
 - Expose the partition tier to Python and record the L22 full-stream run (#398)
-- Validate the query width in PartitionIndex and record the L22 test B run
 - Expose the experimental partition tier to Python as PartitionIndex
+- Validate the query width in PartitionIndex and record the L22 test B run
 - Report the partition scan split and take acceptance nprobes from the environment
 - Add the experimental partition tier (IVF, SOAR spill, LUT16 residual codes) (#396)
 - Record per-phase timings of the last partition search
@@ -326,106 +292,39 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 
 ### Documentation
 - Bring the README and project docs up to date for 0.6.6 (#416)
-- List every Cargo feature and remove rename artifacts
 - Correct package names, release steps and API names
-- Update benchmark method notes and streaming status
 - Fix README sources, install notes and anchors for 0.6.6
-- Record the low-level systems candidates, proxy results and miss audit
-- Record the Ice Lake full-run confirmation, the graph runs and the read-ahead patch
 - Record the Ice Lake np650 streaming run (recall 0.9942 in 2,722 s) (#411)
 - Record the Ice Lake np650 streaming run (recall 0.9942 in 2,722 s)
 - Record the Ice Lake streaming runs (recall 0.9848 in 2,666 s) (#404)
 - Record the Ice Lake streaming runs (recall 0.9848 in 2,666 s)
 - Record that the streaming entry takes 5,618 s on Ice Lake, over the hour
-- Mark the VIBE 4-bit risk table as superseded for the submission grid
 - Record the board-config streaming run (#399)
-- Document the experimental PartitionIndex Python class
-- Record the fork CI outcome in the PR 357 body copy
 - Record the board-config streaming run (recall 0.9726, 2,550 s) in the README and benchmark docs
 - Record the L22 partition-tier research, search profile and nprobe selection (#397)
-- Record the L22 search profile, live sweep and nprobe selection
-- Record the L22 partition-tier kill tests, kernels and acceptance with their scripts and results
 - Avoid an intra-doc link to the private fastscan module
 - Correct the RSS range and the measured binary commit in the consolidation heap peak record
 - Record the consolidation heap peak measurement
 - Record the landed checkpoint hit decode in the FiQA QPS gap lever
 - Record the removed per-hit document rebuild in the QPS lever
-- Name nDCG in its glossary entry so site search finds it
 - Record the measured checkpoint serving costs in the QPS lever
 - State the pinned text wins and the FiQA QPS loss with profiled levers
 - Label each README benchmark row with the machine it was measured on
 - Drop intra-doc links to private analyzer items
 - Record MIRACL ru, es, fr and de results for the store analyzers
 - Record MIRACL results for the store analyzers
-- Note that kept history views also hold their index
 - Correct the counting-Bloom capacity claim with an equal-bits comparison
-- Update the time-travel cost section for bulk indexing and reuse
-- Disclose the label caveats and the interval in the cue-tag result
 - Record MIRACL multilingual BM25 results for the tokenizer variants
-- Record the cue-tag supersession kill test on STALE (KILL)
-- Pre-register the cue-tag supersession kill test
-- Record the supersession probe result on STALE (NO-GO)
-- Record the executed scope of the supersession probe before the run
-- Pre-register the supersession probe protocol on STALE
-- Correct the short as_of list count
-- Register the as_of overfetch protocol before running it
-- Cite edge repair and entry point prior art
-- Record measured time-travel view cost
 - Record edge repair results on GloVe and SIFT and park it
-- Correct the as_of filter cost range in the FPE write-up
-- Record the FPE timestamp kill test result and decision
-- Add k-mer encoder evaluation write-up
-- Add k-mer encoder evaluation result and user guide
 - Record the screen popcount kill test and its x86 results
-- Fix the FPE timestamp protocol and decision rule before the run
-- Define time-travel semantics over the journal
-- Design bounded background compaction
-- Record 2026-11-02 milestone qualification evidence
 - Point historical AGPL release at the v0.6.1 tag
 - Fix broken server documentation link (#384)
-- Investigate dynamic switching combinations
-- Record repaired comparison resource failures
-- Preregister a possible repaired comparison
-- Record offline library compile check
 - Qualify default graph recall
-- Preserve user-requested study stop
-- Bind completed 100k graph result
-- Preserve 100k graph quality failure
-- Preserve initial graph quality failure
-- Record comparison preparation admission
-- Record verified comparison input freeze
-- Clarify comparison execution admission
-- Preserve WARM progress at the requested stopping point
-- Preserve merged SDK and prefix retrieval qualification
-- Ground memory selection and Vectra evaluation in prior evidence
-- Clarify comparison persistence and reader boundaries
-- Plan bounded Vectra quality and scale comparisons
-- Ground memory selection evaluation in prior work
-- Specify schema 7 vector records
-- Keep prefix retrieval experimental after fresh quality checks
-- Record the completed recovery followup merge
-- Track temporal workflow and fresh Matryoshka qualification
-- Explain full-vector reranking and candidate limits
-- Record completed recovery and query qualification
 - Clarify the remaining graph delta scan
-- Store hosted vector evidence as its exact compressed export
-- Record proposed quality-preserving memory reduction experiment
-- Record hosted qualification and queued migration preparation
 - Align readiness and configuration with durable retries
-- Preserve canonical cleanup regression evidence
-- Record recovery gates and unresolved performance qualification
-- Record query memory allocation evidence and timing limits
-- Clarify serial validation evidence
-- Record verified retrieval gains and audit validation limits
-- Preserve audit benchmark validation and measurement limits
-- Record repository cleanup and quality findings
-- Record completed WARM migration and release verification
-- Record verified MCP publication and legacy retirement
 - Remove the former name explanation from README
 - Install the verified WARM registry releases
 - Record WARM publication and bound external link checks
-- Record verified audit repairs and validation evidence
-- Record managed analysis deferral
 - Record ToIP collaboration introduction
 
 ### Fixed
@@ -433,13 +332,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Bump oauthlib to 4.0.1 in the chroma benchmark requirements (#400)
 - Bump oauthlib to 4.0.1 in the chroma benchmark requirements
 - Decode checkpoint hits at capture so nothing reads the mapping after its locks
-- Install a pinned Temurin 21 in the Modal bench image for Lucene 10
 - Drop the chunk flags check now that every bit is assigned
 - Normalize lexical text to NFC and fold Turkish dotted and dotless I
 - Regenerate Node declarations for background compaction
 - Label Lucene in published tables with the version the result recorded
 - Report the finished stage and compare vector counts in compaction tests
-- Look up renamed evidence sessions in the cached embeddings
 - Distinguish unset mem0 arguments and correct integration test boundaries
 - Account warmbench server memory across detached descendants
 - Skip tenants already holding unknown receipts when invalidating durable limits
@@ -452,9 +349,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Honor ingest spans in model pipelines
 - Bound stale graph delta capture
 - Improve vector recall and harden storage boundaries
-- Bind comparison provenance to host and runtime
-- Qualify combined comparison accounting
-- Gate comparison results on complete timed quality
 - Integrate bincode removal with native vector records
 - Remove bincode while preserving durable event compatibility
 - Reject nonportable Vectra metadata filenames
@@ -520,11 +414,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ### Performance
 - Test the low-level system defaults of the L22 streaming path (#409)
 - Add an opt-in transparent-huge-page allocator for the Python extension and a runbook replay driver
-- Expose the partition centres and per-id lists for the miss audit
-- Gate the wheel allocator behind a cfg and load mimalloc with dynamic TLS
+- Drop the killed allocator and placement arms, keep the miss-audit diagnostics
 - Add opt-in list-order slot placement for the partition tier and held-out miss audit in the replay driver
 - Read WARM_PLACE for the partition index placement switch
-- Drop the killed allocator and placement arms, keep the miss-audit diagnostics
+- Expose the partition centres and per-id lists for the miss audit
+- Gate the wheel allocator behind a cfg and load mimalloc with dynamic TLS
 - Cut the L22 scan overhead around the quad kernel and batch the reorder (#406)
 - Cut the L22 scan overhead around the quad kernel and batch the reorder
 - Fuse admission into the LUT16 scan and add AVX-512 and VNNI quad paths (#403)
@@ -536,8 +430,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Build the upper layers before the adjacency during consolidation (#393)
 - Build the upper layers before the adjacency and free the slot maps early
 - Decode checkpoint hits without a chunk vector and fuse the streaming rescoring pass (#392)
-- Prefetch and fuse the base rescoring pass on the tombstone path
 - Decode a checkpoint hit's record without a chunk vector and share repeated metadata
+- Prefetch and fuse the base rescoring pass on the tombstone path
 - Read checkpoint hit fields only for final results instead of rebuilding a document per hit
 - Decode two-byte checkpoint postings without leaving the loaded word
 - Make history view reuse opt-in
@@ -566,9 +460,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Preload the documentation landing image
 - Reuse filtered eligibility and bounded dense mutation deltas (#337)
 
-### Security
-- Pin AML runtime artifacts and document model dependency reachability
-
 ### Bench
 - VIBE OOD check, and the streaming entry's Ice Lake timing (#401)
 - Record that the VIBE submission grid reaches 0.95 and 0.99 on OOD sets
@@ -595,42 +486,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Publish the MCP Python launcher as warm-mcp
 
 ### Research
-- Commit the regression check evidence and the pre-filter check
-- Record the as_of overfetch test and its no-go
 - Add per-query dump and filter-after-top-k arms to the memory API LME harness
-- Add mutation, source and temporal trace studies
-- Add filtered dense and certified association studies
-- Add vector topology information and navigation studies
-- Land the frozen Matryoshka prefix study
-- Add navigation trace mode to vector topology diagnostics
 - Preserve fresh native Matryoshka evidence and source history
-- Record fresh native Matryoshka quality limits
-- Bind native retrieval to fresh SciFact vectors
-- Tighten preflight accounting before measurements
-- Freeze native Matryoshka retrieval harness
-- Freeze fresh native Matryoshka generation
-- Record the frozen Matryoshka prefix results
-- Freeze the Matryoshka prefix retrieval study
 
 ### Style
 - Satisfy clippy 1.99 in the partition tier
 - Format the record walker
 - Format the checkpoint block codec and its tests
-- Close files with pathlib in the remaining probe scripts and drop an unused import
-- Close files with pathlib reads and writes in the cue-tag and probe scripts
 - Satisfy clippy 1.99 and rustfmt in the merged FPE timestamps evaluation
-- Close the result file in the equal-bits script
 - Format the multilingual analyzer tests
 - Format the merged history and engine modules
-- Satisfy clippy in the supersession probe example
-- Name the revision tuple in the time-travel test
 - Format edge repair sources
 - Format the FPE timestamp module
 - Format the storage import in admin
 ## [0.6.4] - 2026-10-28
-
-### Added
-- Add optional AML provenance and evidence research tools
 
 ### Changed
 - Organize bindings and research source modules
@@ -638,8 +507,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ### Documentation
 - Align landing page with retrieval architecture
 - Add Glama score badge (#316)
-- Explain crate recovery environment policy (#322)
-- Explain npm registry propagation gate
+- Prepare npm listing and runtime release (#318)
+- Note npm and runtime release
+- Prepare npm listing and runtime release
 
 ### Fixed
 - Bootstrap Python docs from the current source layout
@@ -651,12 +521,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Reduce crate archive for crates.io (#321)
 - Verify every npm platform before install (#320)
 - Verify every npm platform before install
-## [0.6.3] - 2026-10-26
+## [0.6.3] - 2026-10-25
 
 ### Added
-- Add reproducible AML GCE installer
-- Add persistent AML host launcher
-- Add AML Cycle 2 adapter and query repair
 - Make MCP server scorable by Glama (#313)
 - Add a blocked learned-sparse inner-product index (big-ann sparse track) (#294)
 - Scale query-aware projection to millions of learn queries (#295)
@@ -676,7 +543,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Euclidean and inner-product metrics in the Python VectorIndex (#186)
 - Clustered private ranking of dense codes at n = 1280 (#177)
 - Server-mode comparators and an hms-server row in the harness (#157)
-- Raise HolographicError with the server's error code and message (#145)
 - Add NGT, ScaNN, PyNNDescent, Voyager and DiskANN to the ANN harness (#156)
 - Euclidean metric for the vertex index and SIFT in the harness (#150)
 - Expose the vector index to Python and add ann-benchmarks and VIBE wrappers (#149)
@@ -684,7 +550,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Stable C ABI with Go, Java and .NET bindings (#109)
 - Index-routed server vector queries, deferred ingest modes, memoized encoder, and round-2 research kill tests (#139)
 - Local embeddings (pure-Rust engine, pinned model packs, LocalEmbedV1) (#132)
-- Evidence manifest, fetch script and worktree audit record (#117)
 - Format verifier, golden stores for every format, drift gate, crash-window fixes (#126)
 - WebAssembly build of the document store (@holographic-memory/wasm) (#129)
 - Production hms-server (scoped auth, observability, TLS, snapshots, deploy artifacts) (#127)
@@ -696,7 +561,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Integrate the parallel sessions' document store, compaction and server work (#81)
 - Document store with compact postings and file-backed text, staged compaction, multi-tenant server and the evidence client
 - Learned-sparse impact index served by HMS, measured against Anserini
-- One series per patience value in the ANN comparison tables
 - Stemmed BM25 and min-max score blend in the document API
 - Patience stop rule, opt-in 1-bit screen and error-returning builds for the vertex graph index
 - Competitor ANN harness for SymphonyQG, RaBitQ, NGT and Lucene HNSW
@@ -704,7 +568,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Add integer vector stores and per-vertex codes to qgraph
 - Batch Qwen3 decoding and padded encoder batches on Metal and CUDA
 - Add per-vertex 8-bit code graph index with residual re-rank
-- Add held-out tuning mode to public-bench ann-qgraph
 - Add on-device Qwen3 model stages behind local-models
 - Add quantized graph ANN index and its public benchmark mode
 - Add hms-server HTTP service for the Python SDK
@@ -721,15 +584,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Drop rejected intersection kernel candidates
 
 ### Documentation
-- Prepare npm listing and runtime release (#318)
-- Surface holographic operations in search
-- Note npm and runtime release
-- Prepare npm listing and runtime release
-- Document Glama release and score verification
 - Polish MCP package pages and link website (#311)
 - Make source quickstart accurate
 - Refresh branding and improve integration and search guides (#308)
-- Drop host names and local install notes, fix the open-test citation (#221)
 - Replace private paths and hosts, route large result JSON to LFS (#217)
 - Rewrite README with sourced benchmark badges and current architecture (#215)
 - Serve the documentation at docs.holographic-memory.com (#189)
@@ -737,45 +594,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Build the rustdoc with warnings denied in CI (#148)
 - Remove internal scoreboards, session records and process notes (#140)
 - Remove session logs, handoffs and planning files (#137)
-- Embeddings default-build check and handoff update (#135)
 - Render OpenAPI boolean property schemas (#131)
 - Passage text is encrypted at rest; document the text segment layout (#115)
 - Redesigned site with landing page, generated API reference, search and browser checks (#125)
-- Persisted file format specification and stability policy (#119)
 - Versioned site, quickstarts, offline agent demo, README, contributor guides (#105)
-- Ideas tree for October 2026 with its 10-minute proxies
 - Preliminary nytimes VGraph comparison on the M4 and the next-session specs
-- Record the green CI and the clippy toolchain for the gate
-- Record that main is pushed and in sync
-- Record that all work is on main and what was superseded
-- Record the merged qgraph state and what is unverified
-- Record the integration state
 - Standardize README header (#71)
-- Update continuation state
-- Record the index and model-stage outcomes
-- Record the holographic prototype outcome
-- Record continuation state for the next session
-- Plan the holographic fact memory and its tests
-- Plan local model stages inside HMS
-- Define the single-run protocol for LongMemEval_M
-- Set the speed and accuracy targets and record the compute limits
-- Plan the LongMemEval_M run with larger models
-- Record the encoder test and the agent-memory benchmark plan
 - Attribute semantic search to the document API
 - Update changelog [skip ci]
-- Record the outcomes of the algorithm work
-- Give the SDK README the project header, badges and a quick start
 - Use absolute logo URLs so the README renders on package registries
 - Update changelog [skip ci]
 
 ### Fixed
 - Keep Python source archive within PyPI limit (#314)
-- Wait for MCP package indexes before registry publish (#312)
 - Rename Python packages and polish PyPI pages (#310)
-- Persist ANN benchmark indexes before serving
 - Update benchmark harnesses for current Clippy
 - Complete graph search results after component exhaustion (#301)
-- Refuse web-page and rebound-host requests on an unauthenticated server (#285)
 - Check checkpoint table sizes, stage model packs and semantic indexes privately, keep oversized fact turns out of range (#281)
 - Reject damaged delta offsets, save vertex indexes under unique temp names and assert re-rank row lengths (#280)
 - Domain-separate Sigstore signing and close KERI, CAWG, revocation and DID verification gaps (#279)
@@ -784,7 +618,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Normalize extreme angular rows, bound graph-cache reads and stage Python deletes all or none (#275)
 - Persist revocations before applying them and add a strict status-list mode (#273)
 - Keep documents and format scans consistent after failed rebuilds and malformed frames (#272)
-- Keep tenant generations unique across reopen and harden tenant lifecycle (#265)
 - Leave the journal unchanged when a commit sync or segment rotation fails (#263)
 - Apply a journaled batch in full when one mutation fails (#264)
 - Domain-separate batch provenance Merkle trees and version the signed root (#243)
@@ -800,7 +633,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Measure one durable ANN mutation per operation (#180)
 - Make a purged store match one that never held the document (#179)
 - Durability-fair server verdicts and harness adapter checks (#175)
-- Match server durability on macOS and build ScaNN with the dataset's metric (#171)
 - Score docs search on the answer to the full query (#170)
 - Judge recall status from the index of the revision searched (#168)
 - Modal shard runner, text harness defects and the x86 text results (#152)
@@ -812,16 +644,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Purge physically erases deleted text (#124)
 - Encrypt the document text segment at rest (#111)
 - Windows compaction rename, changelog drift, dependabot npm 404 (#112)
-- Check tenant directories against the canonical tenants root
 - Fail open on arena corruption, checksum the manifests, zeroize the AES key schedule
-- Scrub 256 KiB of stack below the key derivation and locate surviving key copies in the scan test
 - Gate scrub_stack and the AES cipher impl behind the security feature
+- Scrub 256 KiB of stack below the key derivation and locate surviving key copies in the scan test
 - Satisfy clippy 1.99 lints in the qgraph kernels and graph cache
 - Keep greedy decoding at batch 1 unless a batch is set
-- Reserve Modal wave cost before launch so preemption cannot bypass the cap
-- Run HMS model stages on L4 on Modal
-- Decode benchmark data with as_chunks for the current clippy
-- Serve SDK queries by exact cosine through the document API
 - Resolve leftover merge markers in .bestpractices.json
 - Return query results best-first on exact-scan, multi-shard and federated paths
 
@@ -879,10 +706,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Rank unfiltered lexical queries in a per-thread slot table (#154)
 - Round-3 ingest, memory and ANN work with research results (#143)
 - Quantized construction search for the graph build; cache header records it
-- Keep the default neighbour loop free of the delta decoder and the cap counter
 - Quantized construction search and owned-input build for the proximity graph
-- Neighbour cap for the per-row search, lint fixes, x86 paired rows
+- Keep the default neighbour loop free of the delta decoder and the cap counter
 - Byte visited marks for the unfused block path; close the neighbour-block mechanism
+- Neighbour cap for the per-row search, lint fixes, x86 paired rows
 - Neighbour-block fast-scan codes with evidence fusion and a certified exit for the vertex graph
 - Unbiasing scale for block codes, sorted candidate pool, delta-coded adjacency
 - NEON per-row 1-bit screen kernel with its microbenchmark kill test (screen stays off)
@@ -894,31 +721,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Scan both planes of 2-bit qgraph edge codes in one NEON pass
 - Speed up qgraph construction without changing the built index
 - Add FastScan edge kernel, batched pool merge and 2-bit qgraph edge codes
-- Gallop before AVX2 on skewed sizes; add intersection kernel bench
 - Speed up from_dense with branchless term compaction and add encoder-eval
+- Gallop before AVX2 on skewed sizes; add intersection kernel bench
 - Route sparse queries to the exact inverted index
 
 ### Bench
 - Sync the VIBE fork and current engine pins (#307)
-- Record ordered payload rank prototype evidence (#306)
-- Record frozen bounded-consolidation tradeoffs (#303)
-- Record rejected consolidation scratch reuse (#302)
 - Verify PGO gains with an uncontended paired repeat (#300)
 - Record the rejected low-rank OOD experiment (#299)
 - Add Gorder window locality diagnostics (#298)
-- Record quantized delta heldout recall rejection (#297)
 - Record the neighbour-major block kill test against the per-row path (#292)
-- Build the VIBE image for x86-64-v3 and pre-register the OOD grid (#287)
 - Attribute the streaming runs to the measured commit (#231)
 - Add an HMS backend for Mem0's memory-benchmarks harness (#262)
-- Measure memory API write costs and record host-layer findings (#245)
-- VIBE wrapper with 8-bit codes, query-aware OOD builds and huge pages (#255)
 - Add a LoCoMo captions variant measured against the matched protocol (#261)
 - Profile vector-index build allocations and vertex-order locality (#247)
 - Count heap allocations per write-side phase of the document store (#246)
 - Add LoCoMo retrieval round 2 diagnosis and gated packing levers (#239)
 - Add LoCoMo results (#236)
-- Add a batch mode for the LongMemEval reader and judge (#233)
 - Run llama-128-ip and yi-128-ip on Modal with mlann-rf and roargraph arms (#230)
 - Add a crash-safe Modal runner for the VIBE float datasets (#224)
 - VIBE adapter for euclidean and ip datasets (#194)
@@ -926,34 +745,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Run the Bemula forgetting benchmark against the memory API (#199)
 - LoCoMo adapter and partial results (#196)
 - Score LongMemEval dev under the official reader and judge protocol (#195)
-- Pin the ann-benchmarks image and run euclidean datasets (#187)
 - Add Oct 21 2026 Core Ultra 9 competitive results (SIFT-1M, BEIR text) (#158)
 - Reproducible comparison harness and self-updating table (#122)
-- Per-session quota on the tuned LongMemEval turn ranking fails on cached dev scores
-- Add grid-matched vertex search pairs and correct the alignment claim
-- Record paired held-out timing of the vertex search encodings
-- Narrow the FAISS comparison and vendor the clean edge baselines
-- Record paired held-out timing of the per-vertex code index
-- Add paired-timing sync to ann-qgraph
-- Record held-out recall and memory of the per-vertex code index
-- Record timed held-out glove run of i8 vertex-code qgraph
-- Correct reference eval counts in memory-first results
-- Record held-out recall screening of qgraph memory layouts
-- Record the s-dev-hms cost overrun and stop
-- Record held-out qgraph tuning on nytimes
-- Measure HMS fact extraction against the Python stage on S dev
-- Add seeds and an equal-bytes index control to the holographic prototype
 - Record quantized graph results against HNSW
-- Prototype the holographic fact memory and measure it on LongMemEval_S dev
-- Make the Modal cost cap cumulative across relaunches
-- Key LongMemEval fact extraction by content and re-tune on dev
-- Record the LongMemEval dev results and the Modal dry run
-- Tune the LongMemEval pipeline on dev and record the ablation
-- Add the LongMemEval multi-key pipeline, Modal job and dev sweep
 - Freeze the LongMemEval 100 dev / 400 held-out split
 - Add LongMemEval_S retrieval baseline (dense, lexical, hybrid)
 - Add public BEIR and ann-benchmarks comparisons
-- Report encoder candidate recall after exact rerank
 
 ### Deps
 - Rand 0.10, rand_chacha 0.10, getrandom 0.4 for bindings/wasm (#120)
@@ -962,65 +759,38 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Targets for every untrusted-input parser (#116)
 
 ### Merge
-- Include AML GCE installer on main
-- Include persistent AML host launcher on main
-- Include AML Cycle 2 adapter on main
 - Integrate vector search improvements
 
 ### Research
-- Harnesses, result files and notes from the parallel sessions
 - X86 confirmation of the kernel fix and the build lever on Modal (#80)
 - X86 confirmation of the kernel fix and the build lever on Modal
 - Superiority session, October 16 to 17 (#76)
-- Record the V37 compact-postings serving row and the session handoff
 - Accept V40 serving row, record the V38 transport and 2C relevance measurements
 - Security and privacy matrix harness and first matrix
-- Durability matrix harness and first matrix against SQLite and Lucene
-- Checkpoint native harness validation draft
-- Record native benchmark gate checkpoint
-- Establish checked LongMemEval dev answer results
-- Checkpoint final local reader batch and faster validation
-- Preserve dev reader progress and speed pilot audits
-- Checkpoint local reader evidence and judge progress
-- Checkpoint judge instability and local evidence
-- Checkpoint dev answer scores and repeat study
 - Freeze dev reader protocol and checkpoint quota blocker
-
-### Style
-- Address code quality findings in the integrated harness scripts
-- Use as_chunks for the fixed four-byte float and id decoding in the ANN bins
-- Read cpuinfo once and drop an unused import
-- Address code quality findings in the benchmark scripts
-- Close files with pathlib and unpack the tamper case explicitly
-- Rustfmt
 ## [0.6.1] - 2026-10-05
 
 ### Added
 - Introduce IdentityRegistry enforcing W3C DIDs, Verifiable Credentials, and POSME Receipts for queries
-- Add AsyncHolographicClient, batch uploading, and metadata filtering
-- Add Pydantic AI and SmolAgents tool wrappers
 - Add Phidata integration and fix broken Rust examples
-- Add Semantic Kernel and DSPy integrations to Holographic SDK
-- Add LlamaIndex SDK adapter and CI pipeline
 - Pivot to Zero-Trust Edge Architecture (FHE-Lite, AGPL-3.0, SIMD)
-- Python bindings + PyPI packaging for holographic-vsa (maturin/pyo3)
 - PhaseResonator reusable-index API + clean re-export + doctest (§20 capability)
-- PhaseHVec core type + real Frady/Kent resonator on quantized-phase substrate
+- Python bindings + PyPI packaging for holographic-vsa (maturin/pyo3)
 - Counting membership store with Poisson z-score readout (4x Bloom capacity)
+- PhaseHVec core type + real Frady/Kent resonator on quantized-phase substrate
 - Real SHA-256 commitment for verifiable phasor mutation (lane 3)
 - Multi-hop reasoning over the phasor memory (retrieve_path)
 - PhaseGraph -- phasor relational memory with relation algebra + retrieval
-- Presence-gate the observer effect (no confabulation-on-query)
 - Persist ConnectionGraph via its event log; survives restart
 - ConnectionGraph -- plastic event-sourced relation store, wired into engine
 - Trust-anchored provenance verification and sharded ANN persistence
 - Runnable cross-verification of the cogmem C2PA sample
 - Add provenance system with COSE, VCs, C2PA, JUMBF, Sigstore, KERI, CAWG
-- Multi-scale encoding, morphological decomposer, fault-tolerant federation
-- Add research-grade benchmarks, scaling analysis, and visualizations
-- Add sparse Clifford algebra multivector type (CliffordVec)
 - Add Hopfield-Fenchel-Young energy-based associative retrieval
 - Define HolographicAlgebra trait boundary for future geometric algebra
+- Add sparse Clifford algebra multivector type (CliffordVec)
+- Multi-scale encoding, morphological decomposer, fault-tolerant federation
+- Add research-grade benchmarks, scaling analysis, and visualizations
 - Improve SOTA for analogy, planner, and concept synthesis
 - Add cost/total_cost fields to planner N-API types
 - Evidence-weighted multi-hop confidence, ranked results
@@ -1045,11 +815,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Initial release of Holographic Memory System (HMS)
 
 ### Changed
-- Centralize SDK HTTP client and add CrewAI + Embedchain platforms
-- Consolidate LangChain, LlamaIndex, and Haystack adapters into unified holographic-sdk
 - Extract shared wire codec (write/read_lp_str, write/read_deltas)
-- Remove dead self-inverse resonator; move ResonatorConfig to phase_resonator
 - Extract meaning_ctx() helper shared by structural_query and multi_hop
+- Remove dead self-inverse resonator; move ResonatorConfig to phase_resonator
 - Gate experimental VSA modules behind experimental feature
 - Migrate HMS agent identity from did.cose to CAWG ICA
 - Deduplicate RNG pruning, unify patterns, add doc comments
@@ -1059,7 +827,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 ### Documentation
 - Update changelog [skip ci]
 - State the AGPL-3.0-or-later license in the security policy
-- Record algorithm findings and private-search threat models
 - Update changelog [skip ci]
 - Rewrite README to highlight Zero-Trust Enterprise Security and Python SDK
 - State the testing policy explicitly in CONTRIBUTING.md (#66)
@@ -1076,14 +843,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
-- Overnight closeout — queue exhausted, 337 tests green, flag pre-existing §21 bin lint
-- Retract 'info-theoretically impossible' framing; 0.1D Plate is a readout artifact, closing gap to ceiling is open (§22)
-- Block codes also floor (§24); capacity gap is retrieval-vs-information, open not impossible
-- DETERMINISTIC-RESONATOR.md — §20 validation write-up from in-loop 24-seed run
-- Reproducibility header for resonator-factorize (fixed seeds, correct repro command)
-- Correct resonator-factorize repro command — bin is std-only, no experimental feature
-- Wire deterministic-resonator capability into RESEARCH.md (discoverability + correct citation)
-- §29 confirmed on unseen seeds — 4-bit matches float, 8-16x footprint win; log floor-exploration findings
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
@@ -1092,17 +851,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
-- Record why presence gate uses an absolute margin, not SNR
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
-- Pre-register non-self-inverse binding + nonlinear readout experiment
 - Update changelog [skip ci]
 - Update changelog [skip ci]
-- Replace logo with continuous-rotation animation
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Restructure README with collapsible sections
@@ -1127,7 +883,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Resolve clippy::chunks_exact_to_as_chunks lint regression on main (#61)
 - Resolve workflow code scanning alerts (#53)
 - Give relations a distinct magic byte (0xFA), accept legacy 0xFE on read
-- Clippy needless_range_loop in resonator-bundle (§21 bin) — enumerate rewrite, outcome-neutral
 - Close remaining provenance trust-anchor gaps (cawg, vc-only records)
 - Use sort_by_key to satisfy clippy 1.96 unnecessary_sort_by
 - Repair --all-features build (port SCITT to ureq 3 API, drop dead CliffordVec bench, gate provenance example)
@@ -1139,7 +894,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Cargo fmt
 - Use sort_by_key for clippy on newer Rust
 - Cargo fmt formatting
-- Benchmark crate rename, cargo fmt
 - Resolve all clippy warnings for CI
 - Quality pass on G1-G4 code
 - Use absolute URL for logo on npmjs, add project.yaml for orchestrator
@@ -1157,28 +911,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 - Harden signing-key file perms, zeroize copies, bound JUMBF recursion
 
 ### Assets
-- Simplify logo — strip floating decorative specks, keep the connected graph mark
-- Replace logo with self-contrasting node-graph mark (animated gif + static svg), drop garbled-text variants
 - Static transparent logo from first frame, text removed
+- Replace logo with self-contrasting node-graph mark (animated gif + static svg), drop garbled-text variants
 
 ### Deps
 - Land 10 Dependabot major bumps with API fixes (#26)
 
 ### Example
 - Story_memory -- HMS reasoning memory serving a writer (scrivener-mcp)
-
-### Research
-- Fractional-power encoding gives the phasor memory continuous 'near'
-- Phase memory retrieves under load where sparse collapses
-- Rotation binding gives relation algebra the current substrate lacks
-- Path-plasticity -- holographic generalization a cache can't do
-- Living-connection-graph slice -- plasticity beats saturation, verifiably
-- #2 density-matched control rules out the confound
-- #2 involution control disconfirms the self-inverse framing
-- #2 hardening RETRACTS the sparse-wins claim (AUC artifact)
-- #2 step-1 binding discriminator harness + result
-- #2 strong baselines HRR + MAP vs sparse permutation
-
-### Style
-- Apply rustfmt to experiment binaries
 
