@@ -379,18 +379,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn text_limit_is_inclusive() {
-        let limits = test_limits();
-        assert!(remember(&"a".repeat(100)).validate(&limits).is_ok());
-        let err = remember(&"a".repeat(101)).validate(&limits).unwrap_err();
-        assert_eq!(err.code, "too_large");
-        assert_eq!(
-            remember("   ").validate(&limits).unwrap_err().code,
-            "invalid_argument"
-        );
-    }
-
     fn code(result: Res<()>) -> Option<&'static str> {
         result.err().map(|e| e.code)
     }
@@ -420,6 +408,13 @@ mod tests {
             ..remember("x")
         };
         for (name, request, expected) in [
+            ("text at limit", remember(&"a".repeat(100)), None),
+            (
+                "text over limit",
+                remember(&"a".repeat(101)),
+                Some("too_large"),
+            ),
+            ("blank text", remember("   "), Some("invalid_argument")),
             ("id at limit", with_id(&"i".repeat(MAX_ID_BYTES)), None),
             (
                 "id over limit",

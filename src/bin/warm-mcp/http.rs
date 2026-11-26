@@ -309,7 +309,7 @@ pub async fn serve(cli: &config::Cli, handler: server::WarmMcp) -> Result<()> {
         app,
         cli.http.clone(),
         cancel.clone(),
-        crate::shutdown_signal(),
+        crate::shutdown::shutdown_signal(),
     )
     .await;
     cancel.cancel();
