@@ -5,7 +5,8 @@
 usage: check-versions.py [--tag v0.7.0 | --tag py-v0.7.0]
 
 Cargo.toml is the source of truth (maturin reads the wheel version from it). package.json,
-package-lock.json, every optionalDependency and OpenAPI info.version must agree with it,
+package-lock.json and OpenAPI info.version must agree with it, the npm package bundles its
+native bindings (no platform packages),
 and a release tag must name it.
 """
 import argparse
@@ -17,7 +18,8 @@ import sys
 import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-NATIVE_NAME = "writerslogic-warm"
+NATIVE_NAME = "warm-memory"
+BINARY_NAME = "writerslogic-warm"
 PLATFORMS = {
     "aarch64-apple-darwin": "darwin-arm64",
     "x86_64-apple-darwin": "darwin-x64",
@@ -63,9 +65,8 @@ def doc_versions(cargo: str) -> list[str]:
     current = {
         "warm-rust": cargo,
         "warm-python": cargo,
-        "writerslogic-warm": cargo,
+        "warm-memory": cargo,
         "warm-sdk": sdk_js,
-        "writerslogic-warm-mcp": mcp_npm,
         "warm-mcp": mcp_py,
         "warm-models": models,
     }
@@ -114,17 +115,15 @@ def main() -> int:
     napi = package.get("napi", {})
     if not isinstance(napi, dict):
         napi = {}
-    if napi.get("binaryName") != NATIVE_NAME:
-        problems.append(f"native napi.binaryName must be {NATIVE_NAME}")
+    if napi.get("binaryName") != BINARY_NAME:
+        problems.append(f"native napi.binaryName must be {BINARY_NAME}")
     targets = napi.get("targets", [])
     if not isinstance(targets, list) or not targets or any(
         not isinstance(target, str) or target not in PLATFORMS for target in targets
     ) or len(set(targets)) != len(targets):
         problems.append("native napi.targets must contain unique supported platform targets")
-    else:
-        expected = {f"{NATIVE_NAME}-{PLATFORMS[target]}" for target in targets}
-        if set(package.get("optionalDependencies", {})) != expected:
-            problems.append("native optionalDependencies disagree with the package family and napi.targets")
+    if package.get("optionalDependencies"):
+        problems.append("native package.json must bundle its bindings, not declare platform optionalDependencies")
     if package["version"] != cargo:
         problems.append(f"package.json is {package['version']}, Cargo.toml is {cargo}")
     locked_packages = lock.get("packages", {})
@@ -134,19 +133,10 @@ def main() -> int:
             problems.append(f"{label} must be named {NATIVE_NAME}")
         if entry.get("version") != cargo:
             problems.append(f"{label} is {entry.get('version')}, Cargo.toml is {cargo}")
-    if locked_root.get("optionalDependencies", {}) != package.get("optionalDependencies", {}):
-        problems.append("package-lock.json root optionalDependencies disagree with package.json")
+    if locked_root.get("optionalDependencies"):
+        problems.append("package-lock.json root declares platform optionalDependencies")
     if openapi["info"]["version"] != cargo:
         problems.append(f"docs/server/openapi.json is {openapi['info']['version']}, Cargo.toml is {cargo}")
-    for name, version in package.get("optionalDependencies", {}).items():
-        if version != cargo:
-            problems.append(f"optionalDependency {name} is {version}, Cargo.toml is {cargo}")
-        locked_version = locked_packages.get(f"node_modules/{name}", {}).get("version")
-        if locked_version != cargo:
-            problems.append(f"package-lock.json {name} is {locked_version}, Cargo.toml is {cargo}")
-        locked_name = locked_packages.get(f"node_modules/{name}", {}).get("name", name)
-        if locked_name != name:
-            problems.append(f"package-lock.json {name} names a different native package")
     if args.tag:
         tag_version = args.tag.removeprefix("refs/tags/").removeprefix("py-").removeprefix("v")
         if tag_version != cargo:

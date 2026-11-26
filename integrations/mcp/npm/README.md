@@ -13,8 +13,8 @@ Persistent local memory for AI agents through the Model Context Protocol. The se
 None: the launcher runs on demand. Node.js 18+ is required.
 
 ```sh
-npx -y writerslogic-warm-mcp                      # stdio, for clients that start a local command
-npx -y writerslogic-warm-mcp --transport http     # shared server at http://127.0.0.1:8765/mcp
+npx -y warm-mcp                                   # stdio, for clients that start a local command
+npx -y warm-mcp --transport http                  # shared server at http://127.0.0.1:8765/mcp
 ```
 
 ## Quickstart
@@ -26,7 +26,7 @@ Add the server to a client's `mcpServers` (Claude Desktop, Cursor, Windsurf and 
   "mcpServers": {
     "writerslogic-warm": {
       "command": "npx",
-      "args": ["-y", "writerslogic-warm-mcp"]
+      "args": ["-y", "warm-mcp"]
     }
   }
 }

@@ -9,7 +9,7 @@ No package to install: run from a WARM checkout with the Node native binding bui
 ## Quickstart
 
 ```js
-const { WarmMemorySystem } = require('writerslogic-warm')
+const { WarmMemorySystem } = require('warm-memory')
 const { OrganizationalKnowledge, readCuratedFiles } = require('./integrations/organizational-knowledge/index.cjs')
 
 async function main() {

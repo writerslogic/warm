@@ -31,12 +31,12 @@ retrieval; the holographic part is the vector-symbolic layer ([concepts](docs/co
 | You are using | Install |
 |---|---|
 | Rust | `cargo add warm-rust` (add `--features security` for encrypted stores) |
-| Node, embedded engine | `npm install writerslogic-warm` |
+| Node, embedded engine | `npm install warm-memory` |
 | JavaScript or TypeScript, HTTP client | `npm install warm-sdk` |
 | Python, embedded engine | `uv pip install warm-python` |
 | Python, HTTP client | `uv pip install warm-sdk` |
 | HTTP server for the clients | `cargo install --locked --features server,security --bin warm-server warm-rust` |
-| MCP client or editor | `npx -y writerslogic-warm-mcp` or `uvx warm-mcp` |
+| MCP client or editor | `npx -y warm-mcp` or `uvx warm-mcp` |
 
 Rust 1.89 or newer builds the crate; `local-models` and `--all-features` need 1.94. Nothing is
 enabled by default (`default = []`); the features are listed in the
@@ -72,8 +72,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 Node.js, embedded engine:
 
 ```js quickstart-check
-const { WarmMemorySystem } = require('writerslogic-warm')
-const { DocumentMemory } = require('writerslogic-warm/semantic')
+const { WarmMemorySystem } = require('warm-memory')
+const { DocumentMemory } = require('warm-memory/semantic')
 
 async function main() {
   const dir = require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'warm-readme-'))
@@ -120,11 +120,11 @@ SQLite FTS5. See [benchmarks](docs/benchmarks/index.md) for the protocol and the
 | Surface | Package or path |
 |---|---|
 | Rust | `warm-rust` |
-| Embedded Node | `writerslogic-warm` |
+| Embedded Node | `warm-memory` |
 | JavaScript and TypeScript client | `warm-sdk` (npm), `bindings/js/warm-sdk` |
 | Python client | `warm-sdk` (PyPI), `bindings/python/warm-sdk` |
 | Python native | `warm-python` |
-| MCP server | `writerslogic-warm-mcp` (npm), `warm-mcp` (PyPI), `integrations/mcp` |
+| MCP server | `warm-mcp` (npm and PyPI), `integrations/mcp` |
 | Python frameworks | LangChain, LangGraph, LlamaIndex, Haystack, DSPy, OpenAI Agents, Pydantic AI, smolagents, LiteLLM, CrewAI, AutoGen, Semantic Kernel, mem0, Letta (`integrations/python`) |
 | JavaScript frameworks | LangChain.js, LlamaIndex.TS, Mastra, OpenAI Agents JS, Vercel AI SDK (`integrations/js`) |
 | C, Go, Java, .NET, Swift, Kotlin, WebAssembly | `bindings/` (source builds) |

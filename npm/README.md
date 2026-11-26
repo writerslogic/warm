@@ -1,43 +1,37 @@
 <img src="https://raw.githubusercontent.com/writerslogic/warm/main/assets/logo/warm-logo.png" alt="WARM logo" width="96" align="left">
 
-# writerslogic-warm: embedded WARM for Node.js
+# warm-memory: embedded WARM for Node.js
 
-Local document search and agent memory backed by the WARM Rust engine. The package
-selects a native binding for your operating system and architecture. It does not start a server or
-make service calls for ordinary document search.
-
-The primary JavaScript client is the separate portable `warm-sdk` HTTP package. Choose this
-`writerslogic-warm` package when the engine should run inside Node. For a published engine
-release, install it explicitly:
+Local document search and agent memory backed by the WARM Rust engine, running inside your Node
+process. It does not start a server or make service calls for ordinary document search.
 
 ```sh
-npm install writerslogic-warm@0.7.0
+npm install warm-memory
 ```
 
-Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
+One package carries prebuilt native bindings for macOS (arm64, x64), Linux (arm64, x64; glibc and
+musl) and Windows (arm64, x64); the loader picks the one for the running machine, so nothing is
+downloaded or compiled at install time. Check the
+[available npm versions](https://www.npmjs.com/package/warm-memory?activeTab=versions).
 To build from the repository root with Rust installed:
 
 ```sh
-npm ci --omit=optional
+npm ci
 npm run build
 ```
 
-The native binding is distributed through an optional platform package, so keep npm's optional
-dependencies enabled. The release targets are macOS (arm64, x64), Linux (arm64, x64; glibc and musl),
-and Windows (arm64, x64).
-
 ## Package names
 
-Existing embedded consumers keep `writerslogic-warm`, `/semantic`, `/memory` and `/vectra`
-imports, store directories, and embedding/security configuration. The portable `warm-sdk`
-exports `WarmClient` and uses a separately running HTTP server; adopting it requires an
-explicit API migration. The separately versioned MCP launcher remains `writerslogic-warm-mcp`.
+`warm-memory` replaces `writerslogic-warm` (0.7.2 and earlier) with the same `/semantic`, `/memory`
+and `/vectra` entry points, store directories, and embedding/security configuration; change the
+package name in `require`/`import` and `package.json`. The portable HTTP client is the separate
+`warm-sdk` package, which talks to a running `warm-server`. The MCP launcher is `warm-mcp`.
 
 ## Search documents
 
 ```js
-const { WarmMemorySystem } = require('writerslogic-warm')
-const { DocumentMemory } = require('writerslogic-warm/semantic')
+const { WarmMemorySystem } = require('warm-memory')
+const { DocumentMemory } = require('warm-memory/semantic')
 
 async function main() {
   const memory = new DocumentMemory(new WarmMemorySystem(4096, './memory-store'))
@@ -62,14 +56,14 @@ and [API documentation](https://writerslogic.com/warm/docs/latest/).
 
 ## MCP clients
 
-[`writerslogic-warm-mcp`](https://www.npmjs.com/package/writerslogic-warm-mcp) is a separate
+[`warm-mcp`](https://www.npmjs.com/package/warm-mcp) is a separate
 launcher for the MCP server. Install or run that package if you need a server for an MCP client:
 
 ```sh
-npx -y writerslogic-warm-mcp
+npx -y warm-mcp
 ```
 
-This `writerslogic-warm` package embeds the engine in a Node.js application. It does not expose
+This `warm-memory` package embeds the engine in a Node.js application. It does not expose
 the MCP command.
 
 Apache-2.0 · [Source](https://github.com/writerslogic/warm) ·

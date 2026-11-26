@@ -2,7 +2,7 @@
   "context_servers": {
     "writerslogic-warm": {
       "command": "npx",
-      "args": ["-y", "writerslogic-warm-mcp"],
+      "args": ["-y", "warm-mcp"],
       "env": {}
     }
   }

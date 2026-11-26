@@ -1,6 +1,6 @@
 {
-  "name": "writerslogic-warm-mcp",
-  "version": "0.1.9",
+  "name": "warm-mcp",
+  "version": "0.1.10",
   "mcpName": "io.github.writerslogic/warm-mcp",
   "description": "MCP server for WARM: on-device persistent memory for AI agents with no service calls (stdio and streamable HTTP).",
   "license": "Apache-2.0",
@@ -13,7 +13,7 @@
   "homepage": "https://writerslogic.com/warm/",
   "keywords": ["mcp", "model-context-protocol", "memory", "agent-memory", "vector-search", "local-first"],
   "bin": {
-    "writerslogic-warm-mcp": "bin/cli.js"
+    "warm-mcp": "bin/cli.js"
   },
   "files": ["bin/cli.js", "checksums.json", "README.md", "LICENSE"],
   "engines": {

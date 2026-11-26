@@ -1,5 +1,5 @@
-import type { DocumentInput, DocumentResult, WarmMemorySystem, SearchOptions } from 'writerslogic-warm'
-import type { Embedder, Reranker } from 'writerslogic-warm/semantic'
+import type { DocumentInput, DocumentResult, WarmMemorySystem, SearchOptions } from 'warm-memory'
+import type { Embedder, Reranker } from 'warm-memory/semantic'
 
 /** A flat curated document as written by the ToIP EGWG prototype's `src.curate`. */
 export interface CuratedDocument {

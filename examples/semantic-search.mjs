@@ -4,8 +4,8 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { WarmMemorySystem } from 'writerslogic-warm'
-import { DocumentMemory } from 'writerslogic-warm/semantic'
+import { WarmMemorySystem } from 'warm-memory'
+import { DocumentMemory } from 'warm-memory/semantic'
 
 const dir = mkdtempSync(join(tmpdir(), 'warm-semantic-search-'))
 

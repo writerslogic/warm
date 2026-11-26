@@ -3,7 +3,7 @@
     "writerslogic-warm": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "writerslogic-warm-mcp"],
+      "args": ["-y", "warm-mcp"],
       "env": {
         "WARM_MCP_NAMESPACE_STRATEGY": "project",
         "WARM_MCP_PROJECT": "${workspaceFolder}"

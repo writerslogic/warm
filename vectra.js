@@ -188,7 +188,7 @@ function configuration(options) {
 function nativeSystem(directory, profile, native) {
   const { WarmMemorySystem } = require('./index.js')
   for (const method of ['mutateVectorRecords', 'getVectorRecord', 'listVectorRecords', 'queryVectorRecords']) {
-    if (typeof WarmMemorySystem.prototype[method] !== 'function') throw new Error('native vector-record API unavailable; build the updated writerslogic-warm')
+    if (typeof WarmMemorySystem.prototype[method] !== 'function') throw new Error('native vector-record API unavailable; build the updated warm-memory')
   }
   const space = profile.embeddingSpace
   return new WarmMemorySystem(profile.dimensions, directory, {

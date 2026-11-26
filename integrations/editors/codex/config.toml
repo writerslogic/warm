@@ -3,5 +3,5 @@
 # Merge into ~/.codex/config.toml (or a trusted project's .codex/config.toml).
 [mcp_servers.writerslogic-warm]
 command = "npx"
-args = ["-y", "writerslogic-warm-mcp"]
+args = ["-y", "warm-mcp"]
 startup_timeout_sec = 60

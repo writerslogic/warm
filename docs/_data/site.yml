@@ -70,7 +70,7 @@ runtimes:
     snippets:
       - examples/quickstart/node/quickstart.mjs:ingest
       - examples/quickstart/node/quickstart.mjs:hit
-    note: Optional writerslogic-warm 0.7.0 engine. Source builds require Rust; native npm releases select one of eight platform binaries.
+    note: Optional warm-memory engine. Source builds require Rust; the npm package ships prebuilt binaries for eight platforms.
 
 features:
   - title: Hybrid search

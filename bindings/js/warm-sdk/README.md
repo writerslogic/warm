@@ -129,12 +129,12 @@ Local invalid inputs throw `TypeError` or `RangeError`. `WarmError` carries `cod
 
 ## Optional embedded engine
 
-Applications that need a local native store can install the separate `writerslogic-warm` package explicitly. It has its own engine version and platform binaries. It is not a dependency or optional dependency of this HTTP client. For a published engine release, keep npm's optional dependencies enabled:
+Applications that need a local native store can install the separate `warm-memory` package explicitly. It has its own engine version and bundles prebuilt binaries for eight platforms. It is not a dependency or optional dependency of this HTTP client:
 
 ```sh
-npm install writerslogic-warm@0.7.4
+npm install warm-memory@0.7.4
 ```
 
-Check the [available native package versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).
+Check the [available native package versions](https://www.npmjs.com/package/warm-memory?activeTab=versions).
 
-See the [embedded engine package](https://www.npmjs.com/package/writerslogic-warm) for its distinct API and supported platforms.
+See the [embedded engine package](https://www.npmjs.com/package/warm-memory) for its distinct API and supported platforms.

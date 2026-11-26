@@ -87,7 +87,7 @@ unsafe behavior in a patch release and says so in the changelog.
 | Rust crate `warm-rust` | crate version | the `experimental` feature, `doc(hidden)` and `pub(crate)` items |
 | Python `warm-python`, `warm-sdk` | PyPI version | underscore names; the phase substrate is experimental |
 | JavaScript client `warm-sdk` | `sdk-vX.Y.Z` | undocumented properties |
-| Embedded Node `writerslogic-warm` | engine version | undocumented properties |
+| Embedded Node `warm-memory` | engine version | undocumented properties |
 | HTTP `warm-server` | `/api/v1` | new optional fields and endpoints may appear |
 | C ABI | `hms1_*` symbol prefix per ABI major | Rust layouts and internal symbols |
 | Go, Java, .NET | binding version over the C ABI | package availability |

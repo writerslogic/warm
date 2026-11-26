@@ -66,7 +66,7 @@ def main(argv: list[str]) -> int:
     module = importlib.util.module_from_spec(checker)
     checker.loader.exec_module(module)
     engine = re.compile(
-        r"(?<![\w@/.-])(warm-rust|warm-python|writerslogic-warm)(`?(?:@|==|\s+)v?)"
+        r"(?<![\w@/.-])(warm-rust|warm-python|warm-memory)(`?(?:@|==|\s+)v?)"
         + re.escape(previous.group(1)) + r"(?![\w.-])"
     )
     for path in module.doc_files():

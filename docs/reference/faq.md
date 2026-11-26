@@ -23,7 +23,7 @@ paraphrases. The [quickstart](../quickstart.md) runs both ways.
 ## Why does the SDK need a server?
 
 `warm-sdk` is an HTTP client; the server owns the engine and one store per tenant. To run the
-engine in-process, use `writerslogic-warm` (Node) or `warm-python` (`writerslogic_warm.Warm`:
+engine in-process, use `warm-memory` (Node) or `warm-python` (`writerslogic_warm.Warm`:
 document search, the memory API and vector search, one writer per store). See
 [integrations](../integrations.md) and the [server page](../server/index.md).
 

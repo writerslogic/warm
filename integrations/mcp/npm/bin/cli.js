@@ -26,7 +26,7 @@ const MAX_BYTES = 256 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 
 function fail(message) {
-  process.stderr.write(`writerslogic-warm-mcp: ${message}\n`);
+  process.stderr.write(`warm-mcp: ${message}\n`);
   process.exit(1);
 }
 
@@ -75,7 +75,7 @@ function download(url, destination, redirects = 0) {
       return;
     }
     client
-      .get(url, { headers: { "user-agent": `writerslogic-warm-mcp/${pkg.version}` } }, (res) => {
+      .get(url, { headers: { "user-agent": `warm-mcp/${pkg.version}` } }, (res) => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           res.resume();
           if (redirects >= MAX_REDIRECTS) return reject(new Error("too many redirects"));
@@ -125,7 +125,7 @@ async function ensureBinary() {
   const url = `${base.replace(/\/$/, "")}/warm-mcp-${triple}${exe}`;
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   const partial = path.join(dir, `.download-${process.pid}`);
-  process.stderr.write(`writerslogic-warm-mcp: downloading ${url}\n`);
+  process.stderr.write(`warm-mcp: downloading ${url}\n`);
   try {
     await download(url, partial);
     const actual = sha256File(partial);
