@@ -21,4 +21,4 @@ Fastest row meeting each recall (same host, same protocol):
 | yi | 0.95 | 4064 | 6029 | P3 ef300 rr150 probe-only, 2048 lists |
 | yi | 0.99 | 1225 | 3218 | P4 ef150 rr150 graph-seeded, 2048 lists |
 
-Graph-only rows of this branch against `origin/main`: llama within +2.0% to +0.2% at every point, yi +0.5% to -0.8% up to ef 500, and -5% to -6% at ef 1000 rr 400 (1143 to 1187 against 1209 to 1252 QPS, consistent in all 6 blocks; the 0.99 row above no longer uses it). SIFT-1M within run-to-run noise (-2.1% to +2.2% per point across two blocks).
+Graph-only rows of this branch against `origin/main`: llama +0.2% to +1.9% per point in `ab/` and within -1.5% to +1.3% in `ab2/`, yi +0.5% to -0.8% up to ef 500, and -5% to -6% at ef 1000 rr 400 (1143 to 1187 against 1209 to 1252 QPS, consistent in all 6 blocks; the 0.99 row above no longer uses it). SIFT-1M -2.5% to +1.9% per point across two blocks (about -1.5% at ef 96 and 128 in both blocks), inside the 3% tolerance.
