@@ -59,7 +59,7 @@ const model = {
 }
 
 test('semantic recall retrieves an old message through WarmVector', async () => {
-  const dir = mkdtempSync(join(tmpdir(), '@writerslogic/warm-mastra-agent-'))
+  const dir = mkdtempSync(join(tmpdir(), 'warm-mastra-agent-'))
   const vector = new WarmVector({ id: 'warm-vector', dimension: DIM, path: join(dir, 'warm'), hypervectorDimensions: 1024 })
   const memory = new Memory({
     storage: new LibSQLStore({ id: 'store', url: `file:${join(dir, 'mastra.db')}` }),

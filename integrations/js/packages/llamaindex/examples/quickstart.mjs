@@ -22,7 +22,7 @@ const embedModel = new HashEmbedding()
 Settings.embedModel = embedModel
 Settings.llm = new MockLLM({ responseMessage: 'Rust uses ownership and borrowing.' }) // replace with a real LLM
 
-const dir = mkdtempSync(join(tmpdir(), '@writerslogic/warm-llamaindex-example-'))
+const dir = mkdtempSync(join(tmpdir(), 'warm-llamaindex-example-'))
 const vectorStore = await WarmVectorStore.create({
   path: join(dir, 'vectors'),
   dimensions: 4096,
