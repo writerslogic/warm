@@ -367,6 +367,13 @@ mod tests {
         assert_eq!(ids(&list_records(&store, Some(&resume), 10)), ["c", "d"]);
         assert!(list_records(&store, Some("e"), 10).is_empty());
         assert_eq!(list_records(&store, Some("c"), 1)[0].id, "c");
+        for (limit, expected) in [(0, 0), (3, 3), (4, 4), (5, 4)] {
+            assert_eq!(
+                list_records(&store, None, limit).len(),
+                expected,
+                "limit {limit}"
+            );
+        }
     }
 
     #[test]

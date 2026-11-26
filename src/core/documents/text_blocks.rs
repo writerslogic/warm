@@ -383,6 +383,25 @@ mod tests {
     }
 
     #[test]
+    fn chunk_sizes_around_the_block_target_read_back() {
+        for size in [1, 2, BLOCK_TARGET + 1, 3 * BLOCK_TARGET] {
+            let texts = vec![
+                "a".repeat(size),
+                "b".repeat(10),
+                "c".repeat(BLOCK_TARGET),
+                "é".repeat(size),
+            ];
+            let (places, encoded) = build(&texts);
+            let blocks = TextBlocks::new(&encoded.dict, &encoded.table, &encoded.blocks).unwrap();
+            let mut cache = BlockCache::default();
+            for (text, &(block, from)) in texts.iter().zip(&places) {
+                let read = blocks.read(block, from, text.len(), &mut cache).unwrap();
+                assert_eq!(read, *text, "size {size}");
+            }
+        }
+    }
+
+    #[test]
     fn a_chunk_larger_than_a_block_is_one_block_and_never_split() {
         let texts = vec![
             "a".repeat(3 * BLOCK_TARGET),

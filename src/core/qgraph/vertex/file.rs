@@ -442,9 +442,7 @@ impl VGraph {
             }
             w.flush()?;
         }
-        temp.as_file().sync_all()?;
-        crate::core::durable_file::sync_mapped_file(temp.as_file())?;
-        temp.persist(path).map_err(|e| e.error)?;
+        crate::core::qgraph::persist_synced(temp, path)?;
         crate::core::durable_file::sync_directory(parent).map_err(std::io::Error::other)
     }
 
@@ -1092,9 +1090,7 @@ fn save_graph(
     }
     w.flush()?;
     drop(w);
-    temp.as_file().sync_all()?;
-    crate::core::durable_file::sync_mapped_file(temp.as_file())?;
-    temp.persist(path).map_err(|e| e.error)?;
+    crate::core::qgraph::persist_synced(temp, path)?;
     crate::core::durable_file::sync_directory(parent).map_err(std::io::Error::other)
 }
 

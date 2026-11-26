@@ -700,30 +700,24 @@ async fn failed_body_request(path: &str, method: &str, prefix: &'static [u8], co
 }
 
 #[tokio::test]
-async fn body_failure_buffered_write_does_not_commit_or_reserve_a_retry_key() {
-    failed_body_request(
-        "/api/v1/documents",
-        "POST",
-        br#"{"id":"partial","vector":[1,0]}"#,
-        0,
-    )
-    .await;
-}
-
-#[tokio::test]
-async fn body_failure_stream_preserves_prior_committed_batches() {
-    failed_body_request(
-        "/api/v1/documents/stream",
-        "POST",
-        b"{\"id\":\"partial\",\"vector\":[1,0]}\n",
-        1,
-    )
-    .await;
-}
-
-#[tokio::test]
-async fn body_failure_restore_cleans_up_the_incomplete_archive() {
-    failed_body_request("/api/v1/restore", "PUT", &[0; 1024], 0).await;
+async fn body_failure_leaves_no_commit_retry_key_or_archive() {
+    for (path, method, prefix, committed) in [
+        (
+            "/api/v1/documents",
+            "POST",
+            &br#"{"id":"partial","vector":[1,0]}"#[..],
+            0,
+        ),
+        (
+            "/api/v1/documents/stream",
+            "POST",
+            &b"{\"id\":\"partial\",\"vector\":[1,0]}\n"[..],
+            1,
+        ),
+        ("/api/v1/restore", "PUT", &[0; 1024][..], 0),
+    ] {
+        failed_body_request(path, method, prefix, committed).await;
+    }
 }
 
 #[tokio::test]

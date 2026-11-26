@@ -29,6 +29,8 @@ mod request;
 mod restore;
 mod routes;
 mod serve;
+#[path = "../shared/shutdown.rs"]
+mod shutdown;
 mod tenants;
 mod types;
 mod vindex;
@@ -72,42 +74,6 @@ fn load_stages(
     };
     let any = stages.embedder.is_some() || stages.reranker.is_some() || stages.generator.is_some();
     Ok(any.then(|| Arc::new(stages)))
-}
-
-async fn shutdown_signal() {
-    #[cfg(unix)]
-    {
-        use tokio::signal::unix::{signal, SignalKind};
-        match signal(SignalKind::terminate()) {
-            Ok(mut term) => {
-                tokio::select! {
-                    _ = tokio::signal::ctrl_c() => {}
-                    _ = term.recv() => {}
-                }
-            }
-            Err(_) => {
-                let _ = tokio::signal::ctrl_c().await;
-            }
-        }
-    }
-    #[cfg(windows)]
-    {
-        match tokio::signal::windows::ctrl_break() {
-            Ok(mut signal) => {
-                tokio::select! {
-                    _ = tokio::signal::ctrl_c() => {}
-                    _ = signal.recv() => {}
-                }
-            }
-            Err(_) => {
-                let _ = tokio::signal::ctrl_c().await;
-            }
-        }
-    }
-    #[cfg(not(any(unix, windows)))]
-    {
-        let _ = tokio::signal::ctrl_c().await;
-    }
 }
 
 /// SIGHUP re-reads the key file and the TLS certificate.
@@ -227,7 +193,7 @@ async fn serve_main(config: Config) -> Result<()> {
     let app = routes::router(state.clone());
     let shutdown_state = state.clone();
     let served = serve::serve(state.clone(), bound, tls, app, async move {
-        shutdown_signal().await;
+        shutdown::shutdown_signal().await;
         shutdown_state.ready.store(false, Ordering::Release);
         log_event!(Info, "shutdown_signal", "delay_seconds" => shutdown_state.cfg.shutdown_delay_seconds);
         tokio::time::sleep(Duration::from_secs(shutdown_state.cfg.shutdown_delay_seconds)).await;

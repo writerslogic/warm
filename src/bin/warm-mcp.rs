@@ -25,6 +25,8 @@ mod oauth;
 mod server;
 #[path = "warm-mcp/session.rs"]
 mod session;
+#[path = "shared/shutdown.rs"]
+mod shutdown;
 #[path = "warm-mcp/stdio.rs"]
 mod stdio_server;
 #[path = "warm-mcp/store.rs"]
@@ -174,24 +176,6 @@ async fn bearer(State(token): State<Arc<String>>, req: Request, next: Next) -> R
     }
 }
 
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        let _ = tokio::signal::ctrl_c().await;
-    };
-    #[cfg(unix)]
-    let term = async {
-        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
-            Ok(mut s) => {
-                s.recv().await;
-            }
-            Err(_) => std::future::pending::<()>().await,
-        }
-    };
-    #[cfg(not(unix))]
-    let term = std::future::pending::<()>();
-    tokio::select! { _ = ctrl_c => {}, _ = term => {} }
-}
-
 async fn serve_http(cli: &Cli, handler: server::WarmMcp) -> Result<()> {
     http_server::serve(cli, handler).await
 }
@@ -258,7 +242,7 @@ async fn main() -> Result<()> {
                 .context("stdio session failed to start")?;
             tokio::select! {
                 r = running.waiting() => r.map(|_| ()).map_err(anyhow::Error::from),
-                () = shutdown_signal() => Ok(()),
+                () = shutdown::shutdown_signal() => Ok(()),
             }
         }
         Transport::Http => serve_http(&cli, handler).await,

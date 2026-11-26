@@ -225,15 +225,20 @@ fn parse_digest(hash: &str) -> Result<[u8; 32]> {
         .map_err(|_| anyhow!("hash must be 64 hex digits"))
 }
 
-/// Decode pairs of hex digits; `None` for any pair that is not two hex digits. A trailing odd
-/// digit is ignored.
+/// Decode an even-length string of hex digits; `None` for anything else.
 pub fn unhex(text: &str) -> Option<Vec<u8>> {
-    text.as_bytes()
-        .as_chunks::<2>()
-        .0
+    let (pairs, rest) = text.as_bytes().as_chunks::<2>();
+    if !rest.is_empty() {
+        return None;
+    }
+    pairs
         .iter()
-        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).ok()?, 16).ok())
+        .map(|&[hi, lo]| Some((hex_digit(hi)? << 4) | hex_digit(lo)?))
         .collect()
+}
+
+fn hex_digit(byte: u8) -> Option<u8> {
+    (byte as char).to_digit(16).map(|d| d as u8)
 }
 
 pub(crate) fn hex(bytes: &[u8]) -> String {
@@ -498,6 +503,15 @@ fn append_entry(path: &Path, entry: KeyEntry) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unhex_accepts_only_canonical_even_length_hex() {
+        assert_eq!(unhex("00aFff"), Some(vec![0x00, 0xaf, 0xff]));
+        assert_eq!(unhex(""), Some(vec![]));
+        for bad in ["abc", "+f", "-1", "0g", " 0", "é0"] {
+            assert_eq!(unhex(bad), None, "{bad}");
+        }
+    }
     use axum::http::header;
 
     #[test]

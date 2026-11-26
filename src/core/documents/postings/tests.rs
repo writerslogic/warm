@@ -2,16 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::*;
+use crate::core::documents::xorshift64;
 
 #[test]
 fn parallel_install_matches_serial_install_list_for_list() {
     let mut state = 0x9E37_79B9_7F4A_7C15u64;
-    let mut next = move || {
-        state ^= state << 13;
-        state ^= state >> 7;
-        state ^= state << 17;
-        state
-    };
+    let mut next = move || xorshift64(&mut state);
     let names: Vec<String> = (0..4000).map(|i| format!("term{i:05}")).collect();
     let word_counts: Vec<u32> = (0..4000).map(|i| 1 + (i % 37) as u32).collect();
     let (mut serial, mut parallel) = (PostingLists::default(), PostingLists::default());
@@ -336,9 +332,7 @@ fn decodes_at_every_varint_length_and_window_offset() {
             let mut slot = 0usize;
             let postings: Vec<Posting> = (0..length)
                 .map(|i| {
-                    state ^= state << 13;
-                    state ^= state >> 7;
-                    state ^= state << 17;
+                    xorshift64(&mut state);
                     // Mostly short postings, so runs of them straddle each window offset.
                     let short = !state.is_multiple_of(4);
                     let gap = if short {
@@ -468,12 +462,7 @@ fn posting_lists_round_trip_against_a_map_model() {
     let mut lists = PostingLists::default();
     let mut model: BTreeMap<String, BTreeMap<usize, u32>> = BTreeMap::new();
     let mut seed = 0x9E37_79B9_7F4A_7C15u64;
-    let mut next = || {
-        seed ^= seed << 13;
-        seed ^= seed >> 7;
-        seed ^= seed << 17;
-        seed
-    };
+    let mut next = || xorshift64(&mut seed);
     let slots = [
         0usize,
         1,
@@ -543,12 +532,7 @@ fn posting_lists_round_trip_against_a_map_model() {
 #[test]
 fn bulk_runs_match_single_inserts() {
     let mut seed = 0x2545_F491_4F6C_DD1Du64;
-    let mut next = move || {
-        seed ^= seed << 13;
-        seed ^= seed >> 7;
-        seed ^= seed << 17;
-        seed
-    };
+    let mut next = move || xorshift64(&mut seed);
     let term_names: Vec<String> = (0..6000).map(|i| format!("term{i:05}")).collect();
     let mut bulk = PostingLists::default();
     let mut single = PostingLists::default();
