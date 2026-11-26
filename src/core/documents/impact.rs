@@ -872,6 +872,93 @@ fn collect_run(
     }
 }
 
+/// Windows ranked first.
+const SEED_WINDOWS: usize = if cfg!(test) { 1 } else { 4 };
+/// Fewest terms of a union whose ranking starts from its strongest windows.
+const SEED_TERMS: usize = 4;
+/// Fewest windows of a collection worth seeding.
+const SEED_MIN_WINDOWS: usize = if cfg!(test) { 2 } else { 64 };
+/// Calls of [`seed_ranges`] that returned more than one range.
+#[cfg(test)]
+pub(super) static SEEDED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// The slot ranges a union is ranked in, in order. A union whose threshold would climb slowly
+/// through the slot space first ranks the few windows its terms' bounds put highest: the heap
+/// fills with strong chunks before the rest is read, so the other windows demote or skip more
+/// terms. The ranges are disjoint and cover every slot, so each chunk is scored once and the
+/// result does not depend on their order.
+fn seed_ranges(
+    terms: &[Term],
+    aligned: &[Option<&WindowBounds>],
+    windows: &[Option<BlockBounds<'_>>],
+    slots: usize,
+    limit: usize,
+) -> Option<Vec<(u32, u32)>> {
+    let total = slots.div_ceil(WINDOW as usize);
+    if terms.len() < SEED_TERMS
+        || limit <= WIDE_LIMIT
+        || total < SEED_MIN_WINDOWS
+        || total <= SEED_WINDOWS
+    {
+        return None;
+    }
+    let mut sums = vec![0.0f64; total];
+    for (i, term) in terms.iter().enumerate() {
+        if let Some(bounds) = aligned[i] {
+            for (window, sum) in sums.iter_mut().enumerate() {
+                *sum += bounds.bound(window, window, term.idf, term.ceiling);
+            }
+        } else if let Some(blocks) = windows[i].as_ref() {
+            blocks.add_window_bounds(WINDOW, term.bound, term.ceiling, &mut sums);
+        }
+    }
+    let mut order: Vec<usize> = (0..total).collect();
+    order.select_nth_unstable_by(SEED_WINDOWS, |&a, &b| sums[b].total_cmp(&sums[a]));
+    order.truncate(SEED_WINDOWS);
+    order.sort_unstable();
+    let mut strong: Vec<(u32, u32)> = Vec::new();
+    for window in order {
+        let start = window as u32 * WINDOW;
+        match strong.last_mut() {
+            Some(last) if last.1 == start => last.1 = start + WINDOW,
+            _ => strong.push((start, start + WINDOW)),
+        }
+    }
+    let mut ranges = strong.clone();
+    let mut from = 0u32;
+    for &(start, end) in &strong {
+        if start > from {
+            ranges.push((from, start));
+        }
+        from = end;
+    }
+    ranges.push((from, u32::MAX));
+    #[cfg(test)]
+    SEEDED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    Some(ranges)
+}
+
+/// Opens every cursor afresh at the first posting at or after `from`, adding the blocks the
+/// old ones decoded to `decodes`.
+fn restart<'a>(
+    cursors: &mut [ImpactCursor<'a>],
+    lists: &[(Postings<'a>, f64, Bound)],
+    windows: &mut [Option<BlockBounds<'_>>],
+    from: u32,
+    decodes: &mut usize,
+) {
+    for ((cursor, (list, ..)), blocks) in cursors.iter_mut().zip(lists).zip(windows) {
+        *decodes += cursor.decodes;
+        let mut fresh = ImpactCursor::new();
+        fresh.open(list);
+        fresh.seek_in(from, blocks.as_ref());
+        *cursor = fresh;
+        if let Some(blocks) = blocks.as_mut() {
+            blocks.rewind();
+        }
+    }
+}
+
 /// The query's top `limit` chunks as [`super::search::LexicalScratch::rank`] selects them, left
 /// in `scratch.candidates` unordered: every chunk scoring at least the `limit`-th best score,
 /// ties included. `None` when the checkpoint or the weights admit no proven bound, and the
@@ -1052,6 +1139,26 @@ pub(super) fn rank<S: LexicalSource>(
     // Whether a lookup term's window bound is part of a candidate's `upper`.
     let mut deferred = [false; MAX_TERMS];
     let mut demoted: Vec<usize> = Vec::with_capacity(count);
+    let seeded = seed_ranges(
+        &terms[..count],
+        &aligned[..count],
+        windows.as_slice(),
+        slots,
+        limit,
+    );
+    let ranges: &[(u32, u32)] = seeded.as_deref().unwrap_or(&[(0, u32::MAX)]);
+    let mut next_range = 0usize;
+    let mut range_end = ranges[0].1;
+    let mut decodes = 0usize;
+    if ranges[0].0 > 0 {
+        restart(
+            &mut cursors,
+            &lists,
+            &mut windows,
+            ranges[0].0,
+            &mut decodes,
+        );
+    }
     loop {
         let effective = threshold.max(pilot_floor);
         while quiet < count && sum_bound(prefix[quiet + 1], count) < effective {
@@ -1061,10 +1168,16 @@ pub(super) fn rank<S: LexicalSource>(
         for &i in &by_bound[quiet..] {
             lo = lo.min(cursors[i].doc());
         }
-        if lo == NO_DOC {
-            break;
+        if lo == NO_DOC || lo >= range_end {
+            next_range += 1;
+            let Some(&(start, end)) = ranges.get(next_range) else {
+                break;
+            };
+            range_end = end;
+            restart(&mut cursors, &lists, &mut windows, start, &mut decodes);
+            continue;
         }
-        let hi = lo.saturating_add(window);
+        let hi = lo.saturating_add(window).min(range_end);
         let first = (lo / WINDOW) as usize;
         let last = ((hi - 1) / WINDOW) as usize;
         stats.windows += 1;
@@ -1471,7 +1584,7 @@ pub(super) fn rank<S: LexicalSource>(
         }
     }
     stats.scored = scored;
-    stats.blocks_decoded = cursors.iter().map(|c| c.decodes).sum();
+    stats.blocks_decoded = decodes + cursors.iter().map(|c| c.decodes).sum::<usize>();
     let bar = if best.len() < limit {
         0
     } else {
