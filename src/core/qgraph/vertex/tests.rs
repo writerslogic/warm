@@ -1742,3 +1742,59 @@ fn query_lists_find_neighbours_without_changing_plain_search_and_survive_reopeni
     std::fs::write(&path, &damaged).unwrap();
     assert!(VGraph::open(&path, Residency::Heap).is_err());
 }
+
+#[test]
+fn packed_list_scan_matches_the_gathered_scan() {
+    let d = 16;
+    let data = clustered(3000, d, 51);
+    let drawn = clustered(660, d, 52);
+    let (training, queries) = drawn.split_at(600 * d);
+    let per_query = 20;
+    let neighbours: Vec<u32> = training
+        .chunks_exact(d)
+        .flat_map(|q| brute_force(&data, d, q, per_query))
+        .collect();
+    let graph = Graph::build(&data, d, &BuildParams::default()).unwrap();
+    let mut packed = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+    let mut gathered = VGraph::from_graph_with(&graph, 8, 8, true, true, 3, false).unwrap();
+    for g in [&mut packed, &mut gathered] {
+        let lists = QueryLists::build(
+            training,
+            d,
+            true,
+            &neighbours,
+            per_query,
+            per_query,
+            24,
+            3000,
+        )
+        .unwrap();
+        g.set_query_lists(lists).unwrap();
+    }
+    assert!(packed.query_lists().unwrap().is_packed());
+    gathered.lists.as_mut().unwrap().unpack();
+    // Every list is probed and every listed row kept, so both scans rank the same set; the
+    // gathered path may add the graph's entry vertex, which only matters if it is a neighbour.
+    for (probes, ef) in [(24, 3000), (3, 40), (1, 16)] {
+        let params = VSearchParams {
+            ef,
+            rerank: ef,
+            probes,
+            probe_only: true,
+            ..VSearchParams::default()
+        };
+        let (mut a, mut b) = (Vec::new(), Vec::new());
+        let (mut same, mut total) = (0, 0);
+        for q in queries.chunks_exact(d) {
+            packed.searcher().search(q, 10, params, &mut a).unwrap();
+            gathered.searcher().search(q, 10, params, &mut b).unwrap();
+            assert_eq!(a.len(), 10);
+            same += a.iter().filter(|x| b.contains(x)).count();
+            total += 10;
+        }
+        assert!(
+            same * 100 >= total * 98,
+            "probes {probes}: packed and gathered scans agree on {same} of {total}"
+        );
+    }
+}

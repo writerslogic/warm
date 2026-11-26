@@ -760,7 +760,7 @@ impl VGraph {
         }
         let layers = decode_layers(&layer_words, layer_count, upper_ids.len())?;
         let mean: Vec<f32> = view!(12, f32).to_vec();
-        Ok(Self {
+        let mut graph = Self {
             n,
             dim,
             metric,
@@ -805,7 +805,9 @@ impl VGraph {
             block_rot,
             block_kappa,
             lists,
-        })
+        };
+        graph.pack_lists();
+        Ok(graph)
     }
 }
 

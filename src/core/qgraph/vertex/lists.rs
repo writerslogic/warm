@@ -35,7 +35,20 @@ pub struct QueryLists {
     offsets: Vec<u64>,
     /// Vertex ids: base row ids until the lists are attached to an index, then its internal ids.
     ids: Vec<u32>,
+    /// The listed rows' codes and scales, copied in list order (see [`QueryLists::pack`]).
+    packed: Option<Packed>,
 }
+
+/// Row codes and scales of every listed id, in `ids` order, so that a list is scanned as one
+/// contiguous run instead of a gather over the index's rows.
+struct Packed {
+    cbytes: usize,
+    codes: Vec<i8>,
+    scales: Vec<f32>,
+}
+
+/// Upper bound on the bytes a packed copy may take; larger lists are scanned by gather.
+const PACK_MAX_BYTES: usize = 1 << 31;
 
 impl QueryLists {
     /// Lists from `queries` (row-major, `dim` wide, in the coordinates the index is queried in)
@@ -102,6 +115,7 @@ impl QueryLists {
             c2,
             offsets,
             ids,
+            packed: None,
         })
     }
 
@@ -126,6 +140,7 @@ impl QueryLists {
         if let Some(&bad) = self.ids.iter().find(|&&v| v as usize >= map.len()) {
             return Err(invalid(format!("query list id {bad} is outside the index")));
         }
+        self.packed = None;
         for v in &mut self.ids {
             *v = map[*v as usize];
         }
@@ -227,7 +242,66 @@ impl QueryLists {
             c2,
             offsets,
             ids,
+            packed: None,
         })
+    }
+
+    /// Copies the code and scale of every listed id (`row(id)` of the index the ids belong to,
+    /// `cbytes` code bytes each) into list order. Skipped, leaving gather scans, when the copy
+    /// would exceed [`PACK_MAX_BYTES`] or cannot be allocated.
+    pub(super) fn pack<'a>(&mut self, cbytes: usize, row: impl Fn(u32) -> (&'a [i8], f32)) {
+        self.packed = None;
+        let rows = self.ids.len();
+        if cbytes == 0
+            || rows
+                .checked_mul(cbytes + 4)
+                .is_none_or(|b| b > PACK_MAX_BYTES)
+        {
+            return;
+        }
+        let mut codes: Vec<i8> = Vec::new();
+        let mut scales: Vec<f32> = Vec::new();
+        if codes.try_reserve_exact(rows * cbytes).is_err()
+            || scales.try_reserve_exact(rows).is_err()
+        {
+            return;
+        }
+        for &v in &self.ids {
+            let (code, scale) = row(v);
+            debug_assert_eq!(code.len(), cbytes);
+            codes.extend_from_slice(code);
+            scales.push(scale);
+        }
+        self.packed = Some(Packed {
+            cbytes,
+            codes,
+            scales,
+        });
+    }
+
+    /// List `c` as `(ids, codes, scales)`, when the lists are packed.
+    pub(super) fn packed_list(&self, c: u32) -> Option<(&[u32], &[i8], &[f32])> {
+        let p = self.packed.as_ref()?;
+        let (a, b) = (
+            self.offsets[c as usize] as usize,
+            self.offsets[c as usize + 1] as usize,
+        );
+        Some((
+            &self.ids[a..b],
+            &p.codes[a * p.cbytes..b * p.cbytes],
+            &p.scales[a..b],
+        ))
+    }
+
+    /// Drops the packed copy, so scans gather rows from the index.
+    #[cfg(test)]
+    pub(super) fn unpack(&mut self) {
+        self.packed = None;
+    }
+
+    /// True when [`QueryLists::packed_list`] answers.
+    pub(super) fn is_packed(&self) -> bool {
+        self.packed.is_some()
     }
 
     /// The ids of list `c`.

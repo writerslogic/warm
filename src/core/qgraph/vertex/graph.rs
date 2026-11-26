@@ -799,7 +799,20 @@ impl VGraph {
         }
         lists.remap(&map)?;
         self.lists = Some(lists);
+        self.pack_lists();
         Ok(())
+    }
+
+    /// Copies the attached lists' codes into list order when the plain 8-bit row-code scan
+    /// can use them (angular or inner-product order); other indexes scan by gather.
+    pub(super) fn pack_lists(&mut self) {
+        let Some(mut lists) = self.lists.take() else {
+            return;
+        };
+        if self.bits == 8 && self.metric != VMetric::Euclidean {
+            lists.pack(self.cbytes, |v| (self.code(v), self.scales[v as usize]));
+        }
+        self.lists = Some(lists);
     }
 
     /// The attached candidate lists, if any.
