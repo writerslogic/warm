@@ -1489,12 +1489,7 @@ mod tests {
     #[test]
     fn lexical_table_pass_branchless_keeps_what_branching_keeps_on_constant_rows() {
         let mut state = 0x9e37_79b9_7f4a_7c15u64;
-        let mut next = move || {
-            state ^= state << 13;
-            state ^= state >> 7;
-            state ^= state << 17;
-            state
-        };
+        let mut next = move || crate::core::documents::xorshift64(&mut state);
         let ceiling = 12.0;
         let mut bounds = [0.0f64; CLASSES * 16];
         for frequency in 1..15 {

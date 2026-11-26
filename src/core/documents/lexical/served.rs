@@ -3193,10 +3193,7 @@ mod tests {
     fn phrase_occurrences_match_a_direct_count_for_repeated_and_long_phrases() {
         let mut state = 0x2545_f491_4f6c_dd1du64;
         let mut next = move |below: u32| {
-            state ^= state << 13;
-            state ^= state >> 7;
-            state ^= state << 17;
-            (state % u64::from(below)) as u32
+            (crate::core::documents::xorshift64(&mut state) % u64::from(below)) as u32
         };
         for round in 0..4000 {
             let phrase = 3 + round % 3;

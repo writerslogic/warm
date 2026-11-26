@@ -4,17 +4,12 @@
 use super::*;
 
 /// A chunk's dense embedding as stored: the l2-normalised values rounded to `f32`, in one
-/// shared allocation that the store and every vector snapshot covering the chunk hold
-/// together, so a snapshot adds no copy of the matrix (4 bytes per value in memory, against
-/// the 8 of the `f64` form plus a 4-byte snapshot copy before this type).
+/// shared allocation held by the store and by every vector snapshot covering the chunk.
 ///
-/// Scoring: every path (the generic search, the dense index, the vector snapshot's exact
-/// re-score) calls [`Embedding::cosine`], which widens each stored value to `f64` and
-/// accumulates in `f64`, so one chunk has one semantic score however it was reached. The
-/// score is the exact cosine of the stored (`f32`) vector; it differs from the cosine of the
-/// client's `f64` vector by at most the rounding of the stored values, `2^-24` relative per
-/// coordinate (about `6e-8` worst case over an l2-normalised pair, `2e-9` typical at 384
-/// dimensions).
+/// Every scoring path calls [`Embedding::cosine`], which widens each stored value to `f64`
+/// and accumulates in `f64`, so one chunk has one semantic score however it was reached. It
+/// differs from the cosine of the client's `f64` vector by at most the `f32` rounding of the
+/// stored values (`2^-24` relative per coordinate).
 ///
 /// Serialized form: a JSON array of the `f32` values (shortest round-trip decimals, about
 /// half the bytes of the `f64` form). A record written before this type held an array of

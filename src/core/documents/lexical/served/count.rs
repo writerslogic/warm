@@ -132,12 +132,7 @@ mod tests {
     #[test]
     fn merge_hits_agree_with_a_direct_membership_test() {
         let mut state = 0x9e37_79b9_7f4a_7c15u64;
-        let mut next = move || {
-            state ^= state << 13;
-            state ^= state >> 7;
-            state ^= state << 17;
-            state
-        };
+        let mut next = move || crate::core::documents::xorshift64(&mut state);
         let shapes = [
             (8, 8, 8),
             (8, 8, 16),
