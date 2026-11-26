@@ -119,6 +119,31 @@ pub(super) fn advise_huge_pages(ptr: *const u8, len: usize) {
     let _ = (ptr, len);
 }
 
+/// True when huge-page advice is on and `bytes` is at most a quarter of the memory the kernel
+/// reports available (`MemAvailable`), so an owned copy of an index file cannot crowd out the
+/// rest of the machine. Always false off Linux, where the advice does nothing.
+pub(super) fn heap_copy_fits(bytes: u64) -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        if !huge_pages() {
+            return false;
+        }
+        let Ok(text) = std::fs::read_to_string("/proc/meminfo") else {
+            return false;
+        };
+        let kib = text
+            .lines()
+            .find_map(|l| l.strip_prefix("MemAvailable:"))
+            .and_then(|r| r.split_whitespace().next()?.parse::<u64>().ok());
+        kib.is_some_and(|k| bytes <= k.saturating_mul(1024) / 4)
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = bytes;
+        false
+    }
+}
+
 /// [`advise_huge_pages`] over the capacity of a freshly allocated, still untouched vector when
 /// [`huge_pages`] is on.
 pub(super) fn huge_capacity<T>(ptr: *const T, capacity: usize) {

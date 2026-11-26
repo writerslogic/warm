@@ -217,7 +217,7 @@ impl Base {
         let graph = if rows.ids.is_empty() {
             None
         } else {
-            let graph = VGraph::open(&m.vertex_path(dir), Residency::Mapped)?;
+            let graph = VGraph::open_serving(&m.vertex_path(dir), Residency::Mapped)?;
             if graph.len() != rows.ids.len()
                 || graph.dim() != m.dim
                 || graph.metric() != m.build.metric.into()
