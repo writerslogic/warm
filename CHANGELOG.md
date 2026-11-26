@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [0.7.4] - 2026-11-26
+
+### Documentation
+- List the native Python package, restore cited durability results and repin the toolchain action (#530)
+
+### Performance
+- Speed up deep-k text ranking and serve vector indexes from huge pages (#531)
 ## [0.7.3] - 2026-11-26
 
 ### Documentation

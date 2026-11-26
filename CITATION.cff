@@ -9,7 +9,7 @@ authors:
     given-names: David
     email: david@writerslogic.com
     affiliation: WritersLogic, Inc.
-version: 0.7.3
+version: 0.7.4
 license: Apache-2.0
 repository-code: https://github.com/writerslogic/warm
 url: https://writerslogic.com/warm
