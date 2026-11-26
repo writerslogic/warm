@@ -312,6 +312,34 @@ impl SearchScratch {
         if let Some(started) = started {
             profile.query_encoding_ns = started.elapsed().as_nanos() as u64;
         }
+        if params.probes > 0
+            && params.probe_only
+            && params.reservoir == 0
+            && !TWO_HOP
+            && !g.has_blocks()
+            && g.lists.as_ref().is_some_and(QueryLists::is_packed)
+        {
+            if let Some(scanned) = self.scan_packed(g, query, k, ef, params.probes, true) {
+                let take = params.rerank.max(k).min(g.n);
+                let rerank_started = PROFILE.then(Instant::now);
+                if PROFILE {
+                    profile.beam_retained = self.keys.len();
+                    profile.traversal_evaluations = scanned;
+                }
+                return self.rerank_keys::<PROFILE>(
+                    g,
+                    k,
+                    take,
+                    params,
+                    sq,
+                    scanned,
+                    out,
+                    profile,
+                    rerank_started,
+                    started,
+                );
+            }
+        }
         let qc = &self.qc[..];
         let blocks = g.has_blocks();
         if blocks {
@@ -372,26 +400,36 @@ impl SearchScratch {
                     "query lists require row-code search, not neighbour blocks".into(),
                 ));
             }
-            lists.probe(
-                query,
-                params.probes,
-                &mut self.probe_query,
-                &mut self.probed,
-            );
-            for &(_, c) in &self.probed {
-                let ids = lists.list(c);
-                for (i, &v) in ids.iter().enumerate() {
-                    if let Some(&u) = ids.get(i + 8) {
-                        prefetch_bytes(g.code(u));
-                        g.prefetch_scale(u);
+            if lists.is_packed() && params.reservoir == 0 {
+                // The scan marks every row it met; the best `ef` of them seed the pool.
+                if let Some(scanned) = self.scan_packed(g, query, 0, ef, params.probes, false) {
+                    evals += scanned;
+                    for &seed in &self.keys {
+                        self.pool.insert(seed);
                     }
-                    if !self.visited.insert(v) {
-                        continue;
+                }
+            } else {
+                lists.probe(
+                    query,
+                    params.probes,
+                    &mut self.probe_query,
+                    &mut self.probed,
+                );
+                for &(_, c) in &self.probed {
+                    let ids = lists.list(c);
+                    for (i, &v) in ids.iter().enumerate() {
+                        if let Some(&u) = ids.get(i + 8) {
+                            prefetch_bytes(g.code(u));
+                            g.prefetch_scale(u);
+                        }
+                        if !self.visited.insert(v) {
+                            continue;
+                        }
+                        let candidate = key(g.est(qc, self.qsum, v, w), v);
+                        self.reservoir.offer(candidate);
+                        self.pool.insert(candidate);
+                        evals += 1;
                     }
-                    let candidate = key(g.est(qc, self.qsum, v, w), v);
-                    self.reservoir.offer(candidate);
-                    self.pool.insert(candidate);
-                    evals += 1;
                 }
             }
         }
@@ -797,6 +835,114 @@ impl SearchScratch {
         } else {
             self.keys.extend_from_slice(&self.pool.keys);
         }
+        self.rerank_keys::<PROFILE>(
+            g,
+            k,
+            take,
+            params,
+            sq,
+            evals,
+            out,
+            profile,
+            rerank_started,
+            started,
+        )
+    }
+
+    /// Probe-only search over packed query lists: estimates every row of the `probes` nearest
+    /// lists from their contiguous code copies and keeps the `ef` nearest in `self.keys`
+    /// (sorted), without the candidate pool or the graph (`fresh` clears the visited marks
+    /// first; otherwise the rows already marked are skipped). Returns the rows estimated, or `None`
+    /// when fewer than `k` distinct rows were found (the caller then searches the graph).
+    fn scan_packed(
+        &mut self,
+        g: &VGraph,
+        query: &[f32],
+        k: usize,
+        ef: usize,
+        probes: usize,
+        fresh: bool,
+    ) -> Option<usize> {
+        /// Rows ahead of the scan whose codes are prefetched.
+        const LOOKAHEAD: usize = 16;
+        let lists = g.lists.as_ref()?;
+        lists.probe(query, probes, &mut self.probe_query, &mut self.probed);
+        if fresh {
+            self.visited.next();
+        }
+        self.keys.clear();
+        let (qc, qsum, cb) = (&self.qc[..], self.qsum, g.cbytes);
+        let cap = ef;
+        let mut tau = u64::MAX;
+        let mut scanned = 0usize;
+        // Every row met is marked, so a row listed under several probed lists is estimated
+        // once and its code is never read again. A key past `tau` (the `cap`-th best at the
+        // last compaction) cannot enter the best `cap`.
+        let mut offer = |keys: &mut Vec<u64>, id: u32, dot: i64, scale: f32| {
+            let k = key(-(scale * dot as f32), id);
+            if k < tau {
+                keys.push(k);
+                if keys.len() >= 2 * cap {
+                    keys.select_nth_unstable(cap - 1);
+                    keys.truncate(cap);
+                    tau = keys[cap - 1];
+                }
+            }
+        };
+        for &(_, c) in &self.probed {
+            let (ids, codes, scales) = lists.packed_list(c)?;
+            let row = |i: usize| &codes[i * cb..(i + 1) * cb];
+            let mut batch = [0usize; 4];
+            let mut held = 0;
+            for (i, &id) in ids.iter().enumerate() {
+                if let Some(&ahead) = ids.get(i + LOOKAHEAD) {
+                    if !self.visited.seen(ahead) {
+                        prefetch_bytes(row(i + LOOKAHEAD));
+                    }
+                }
+                if !self.visited.insert(id) {
+                    continue;
+                }
+                batch[held] = i;
+                held += 1;
+                if held == 4 {
+                    held = 0;
+                    scanned += 4;
+                    let rows = [row(batch[0]), row(batch[1]), row(batch[2]), row(batch[3])];
+                    let dots = dot_i8_query_x4(qc, rows, qsum);
+                    for (&at, dot) in batch.iter().zip(dots) {
+                        offer(&mut self.keys, ids[at], dot, scales[at]);
+                    }
+                }
+            }
+            for &at in &batch[..held] {
+                scanned += 1;
+                let dot = dot_i8_query(qc, row(at), qsum);
+                offer(&mut self.keys, ids[at], dot, scales[at]);
+            }
+        }
+        self.keys.sort_unstable();
+        self.keys.truncate(cap);
+        (self.keys.len() >= k.min(g.n)).then_some(scanned)
+    }
+
+    /// Re-scores the best `take` of `self.keys` (sorted, nearest first) with the residual
+    /// codes and writes the `k` nearest original ids to `out`; `evals` is the work so far.
+    #[allow(clippy::too_many_arguments)]
+    fn rerank_keys<const PROFILE: bool>(
+        &mut self,
+        g: &VGraph,
+        k: usize,
+        take: usize,
+        params: VSearchParams,
+        sq: f32,
+        mut evals: usize,
+        out: &mut Vec<u32>,
+        profile: &mut QueryProfile,
+        rerank_started: Option<Instant>,
+        started: Option<Instant>,
+    ) -> Result<usize, WarmError> {
+        let knobs = self.knobs;
         if PROFILE {
             profile.retained = self.keys.len();
         }
