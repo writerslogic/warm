@@ -1,21 +1,21 @@
-# warm-openai-agents
+# @writerslogic/warm-openai-agents
 
 A `Session` and memory tools for the OpenAI Agents SDK (JS) on the WARM native engine, in process.
 
 ## Install
 
 ```sh
-npm install warm-openai-agents @openai/agents zod
+npm install @writerslogic/warm-openai-agents @openai/agents zod
 ```
 
-The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
+The native engine `warm-memory` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 
 <!-- quickstart-check: skip: requires API key (offline: examples/quickstart.mjs) -->
 ```js
 import { Agent, run } from '@openai/agents'
-import { WarmSession, WarmStore, createMemoryTools } from 'warm-openai-agents'
+import { WarmSession, WarmStore, createMemoryTools } from '@writerslogic/warm-openai-agents'
 
 const store = new WarmStore({ path: './memory' })
 const session = new WarmSession({ store, sessionId: 'ada-chat' }) // conversation memory
@@ -40,7 +40,7 @@ No API key: `examples/quickstart.mjs` uses a scripted model.
 
 ## Compatibility
 
-`@openai/agents` >=0.20.0 <0.21.0 (tested 0.20.0), `zod` ^4, `writerslogic-warm` >=0.6.5, Node 20+ (tested 26.8). 15 tests.
+`@openai/agents` >=0.20.0 <0.21.0 (tested 0.20.0), `zod` ^4, `warm-memory` >=0.7.4, Node 20+ (tested 26.8). 15 tests.
 
 ## Reference
 

@@ -1,11 +1,11 @@
-# warm-core
+# @writerslogic/warm-core
 
 Shared record API of the WARM JS adapters: `remember`, `recall`, `get`, `list` and `forget` over the in-process native engine.
 
 ## Install
 
 ```sh
-npm install warm-core writerslogic-warm
+npm install @writerslogic/warm-core warm-memory
 ```
 
 From source (repository root): `npm ci --omit=optional && npm run build && npm ci --ignore-scripts --prefix integrations/js && npm run build --prefix integrations/js`.
@@ -13,7 +13,7 @@ From source (repository root): `npm ci --omit=optional && npm run build && npm c
 ## Quickstart
 
 ```js
-import { WarmStore } from 'warm-core'
+import { WarmStore } from '@writerslogic/warm-core'
 
 const store = new WarmStore({ path: './memory' })
 await store.remember([{ id: 'a', text: 'Ada wrote the first program', metadata: { topic: 'history' } }])
@@ -39,7 +39,7 @@ More (BM25, fusion, chunking, `rerank`): see the reference.
 
 ## Compatibility
 
-`writerslogic-warm` >= 0.6.5 (peer), Node 20+ (tested 26.8), TypeScript 5.9. 62 tests.
+`warm-memory` >= 0.7.4 (peer), Node 20+ (tested 26.8), TypeScript 5.9. 62 tests.
 
 ## Reference
 

@@ -1,21 +1,21 @@
-# warm-llamaindex
+# @writerslogic/warm-llamaindex
 
 A LlamaIndex.TS `BaseVectorStore` and `BaseKVStore` on the WARM native engine, in process.
 
 ## Install
 
 ```sh
-npm install warm-llamaindex llamaindex @llamaindex/core
+npm install @writerslogic/warm-llamaindex llamaindex @llamaindex/core
 ```
 
-The native engine `writerslogic-warm` is a peer that npm 7+ installs for you; `warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
+The native engine `warm-memory` is a peer that npm 7+ installs for you; `@writerslogic/warm-core` comes as a dependency. From source: [JS core](../core/README.md#install).
 
 ## Quickstart
 
 ```js
 import { Document, Settings, VectorStoreIndex, storageContextFromDefaults } from 'llamaindex'
 import { BaseEmbedding } from '@llamaindex/core/embeddings'
-import { HashingEmbedder, WarmVectorStore } from 'warm-llamaindex'
+import { HashingEmbedder, WarmVectorStore } from '@writerslogic/warm-llamaindex'
 
 const h = new HashingEmbedder(384) // lexical; use any LlamaIndex embedding for semantic search
 class HashEmbedding extends BaseEmbedding { async getTextEmbedding(t) { return h.encodeQuery(t) } }
@@ -44,7 +44,7 @@ Runnable with a mock LLM, filters and KV store: `examples/quickstart.mjs`.
 
 ## Compatibility
 
-`llamaindex` 0.12.1 with `@llamaindex/core` >=0.6.22 <0.7 (keep one copy), `writerslogic-warm` >=0.6.5, Node 20+ (tested 26.8). 20 tests.
+`llamaindex` 0.12.1 with `@llamaindex/core` >=0.6.22 <0.7 (keep one copy), `warm-memory` >=0.7.4, Node 20+ (tested 26.8). 20 tests.
 
 ## Reference
 

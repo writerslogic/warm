@@ -1,5 +1,5 @@
 {
-  "name": "warm-openai-agents",
+  "name": "@writerslogic/warm-openai-agents",
   "version": "0.1.0",
   "description": "OpenAI Agents SDK (JS) Session and memory tools backed by WARM",
   "keywords": [
@@ -53,7 +53,7 @@
     "test": "tsup && node --test test/*.test.mjs"
   },
   "dependencies": {
-    "warm-core": "^0.1.0"
+    "@writerslogic/warm-core": "^0.1.0"
   },
   "peerDependencies": {
     "@openai/agents": ">=0.20.0 <0.21.0",

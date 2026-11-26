@@ -1,5 +1,5 @@
 {
-  "name": "warm-langchain",
+  "name": "@writerslogic/warm-langchain",
   "version": "0.1.0",
   "description": "LangChain.js VectorStore, retriever and chat message history backed by WARM",
   "keywords": [
@@ -54,7 +54,7 @@
     "test": "tsup && node --test test/*.test.mjs"
   },
   "dependencies": {
-    "warm-core": "^0.1.0"
+    "@writerslogic/warm-core": "^0.1.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=1.2.19 <2"

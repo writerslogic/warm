@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomUUID } from 'node:crypto'
 import type { AgentInputItem, Session } from '@openai/agents'
-import type { WarmStore } from 'warm-core'
+import type { WarmStore } from '@writerslogic/warm-core'
 import { OrderedLog, packPayload, unpackPayload } from './log.js'
 
 export interface WarmSessionOptions {

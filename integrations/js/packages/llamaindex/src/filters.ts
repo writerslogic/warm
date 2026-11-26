@@ -1,6 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-import { WarmError, type Filter } from 'warm-core'
+import { WarmError, type Filter } from '@writerslogic/warm-core'
 import type { MetadataFilter, MetadataFilters } from '@llamaindex/core/vector-store'
 
 function list(f: MetadataFilter): unknown[] {

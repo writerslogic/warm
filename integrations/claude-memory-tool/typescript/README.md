@@ -1,11 +1,11 @@
-# warm-claude-tool (TypeScript)
+# @writerslogic/warm-claude-tool (TypeScript)
 
 Backs Anthropic's client-side memory tool (`memory_20250818`) with WARM: Claude's `/memories` directory is stored in a `warm-mcp` server and every file is searchable by meaning.
 
 ## Install
 
 ```sh
-npm install warm-claude-tool @anthropic-ai/sdk   # plus a warm-mcp binary: npx -y writerslogic-warm-mcp
+npm install @writerslogic/warm-claude-tool @anthropic-ai/sdk   # plus a warm-mcp binary: npx -y warm-mcp
 ```
 
 ## Quickstart
@@ -13,7 +13,7 @@ npm install warm-claude-tool @anthropic-ai/sdk   # plus a warm-mcp binary: npx -
 <!-- quickstart-check: skip: requires API key (ANTHROPIC_API_KEY) -->
 ```ts
 import Anthropic from "@anthropic-ai/sdk";
-import { WarmMemoryTool } from "warm-claude-tool";
+import { WarmMemoryTool } from "@writerslogic/warm-claude-tool";
 
 const memory = await WarmMemoryTool.connect({ connection: { command: "warm-mcp" } }); // or { url: "http://127.0.0.1:8765/mcp" }
 const client = new Anthropic();
