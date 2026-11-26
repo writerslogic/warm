@@ -77,7 +77,7 @@ def main():
             if line.startswith(("VmHWM", "VmRSS")):
                 memory[line.split(":")[0]] = int(line.split()[1]) * 1024
     except OSError:
-        pass
+        pass  # /proc is Linux-only; memory stats are best-effort
     print(f"build/load {build:.1f}s {memory}", flush=True)
 
     rows = []
