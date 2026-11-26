@@ -1,6 +1,6 @@
 # LoCoMo on Mem0's own harness: WARM against Mem0 Platform's published per-question file
 
-Recorded 2026-11-14. One WARM run, all 1,540 questions of categories 1 to 4. Prose and caveats: `docs/benchmarks/LOCOMO.md`.
+Recorded 2026-11-14. One WARM run, all 1,540 questions of categories 1 to 4.
 
 ## Result
 
@@ -18,7 +18,7 @@ temporal +1.6 [-0.9, +4.4], open-domain -1.0 [-8.3, +5.2], single-hop +2.0 [+0.2
 | `run.py.diff` | the only change to Mem0's `benchmarks/locomo/run.py` (questions of a conversation run concurrently; prompts, retrieval and judging untouched) |
 | `scripts/run_pilot.py`, `scripts/run_full.py` | the driver (spend guard, prompt-hash call cache, usage log) and the orchestration that started the server, ingested, gated and answered |
 | `all-usage.jsonl`, `all-child-env-names.txt` | one line per paid call (tokens, USD, prompt hash; no response bodies or ids) and the environment variable names the harness process saw |
-| `empty_answers.txt`, `scripts/empty_answers.py` | the 22 questions whose answer came back empty (see the LOCOMO.md section) |
+| `empty_answers.txt`, `scripts/empty_answers.py` | the 22 questions whose answer came back empty |
 | `mem0_published/` | Mem0's per-question file, unmodified, with its licence (below) |
 | `retrieval_multihop/` | free offline retrieval study of the multi-hop misses: pre-registration, scripts, results |
 
@@ -32,7 +32,7 @@ The paid-call response cache (`call-cache.jsonl`) is not committed: it holds raw
   is Apache-2.0 (`mem0_published/LICENSE-memory-benchmarks-Apache-2.0`); the file is copyright its authors, redistributed
   unchanged under that licence. Its metadata: provider azure, answerer and judge `gpt-5`, project `locomo-v3-run`, timestamp
   20260406_170942, cutoff top_200 only.
-- Dataset: `locomo10.json` from snap-research/locomo (see `docs/benchmarks/LOCOMO.md`, Setup).
+- Dataset: `locomo10.json` from snap-research/locomo at 3eb6f2c, 10 conversations; category 5 (adversarial) is excluded, as in Mem0.
 - Models: answerer and judge requested as `gpt-5`, returned `gpt-5-2025-08-07` on every call, through the OpenAI API.
   Embeddings `text-embedding-3-small`, 1,536 dimensions, for turns and queries.
 - WARM: `warm-server` 0.6.8, defaults, no tuning; the `src/` tree is identical to this repository at 29fd6dc (checked with

@@ -33,6 +33,7 @@ retrieval; the holographic part is the vector-symbolic layer ([concepts](docs/co
 | Rust | `cargo add warm-rust` (add `--features security` for encrypted stores) |
 | Node, embedded engine | `npm install writerslogic-warm` |
 | JavaScript or TypeScript, HTTP client | `npm install warm-sdk` |
+| Python, embedded engine | `uv pip install warm-python` |
 | Python, HTTP client | `uv pip install warm-sdk` |
 | HTTP server for the clients | `cargo install --locked --features server,security --bin warm-server warm-rust` |
 | MCP client or editor | `npx -y writerslogic-warm-mcp` or `uvx warm-mcp` |
