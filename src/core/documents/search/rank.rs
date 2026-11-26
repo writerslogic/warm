@@ -139,13 +139,7 @@ impl LexicalScratch {
             .is_some()
             {
                 let candidates = &mut self.pruned.candidates;
-                top_ranked(candidates, limit, |a, b| {
-                    b.0.total_cmp(&a.0).then_with(|| {
-                        store
-                            .slot_order(a.1 as usize)
-                            .cmp(&store.slot_order(b.1 as usize))
-                    })
-                });
+                top_by_order(store, candidates, limit);
                 return candidates.clone();
             }
         }
@@ -372,6 +366,25 @@ impl LexicalScratch {
             best.peek().expect("full heap").0
         };
         candidates.retain(|&(score, _)| score.to_bits() >= bar);
+        top_by_order(store, candidates, limit);
+        self.dirty = false;
+        candidates.clone()
+    }
+}
+
+/// `candidates` cut to the best `limit` and ordered by score descending, then by the source's
+/// tie order. A source that gives the order as an integer is read once per candidate rather
+/// than twice per comparison.
+fn top_by_order<S: LexicalSource>(store: &S, candidates: &mut Vec<(f64, u32)>, limit: usize) {
+    let keyed: Option<Vec<(f64, u64, u32)>> = candidates
+        .iter()
+        .map(|&(score, slot)| {
+            store
+                .slot_tie_key(slot as usize)
+                .map(|key| (score, key, slot))
+        })
+        .collect();
+    let Some(mut keyed) = keyed else {
         top_ranked(candidates, limit, |a, b| {
             b.0.total_cmp(&a.0).then_with(|| {
                 store
@@ -379,9 +392,13 @@ impl LexicalScratch {
                     .cmp(&store.slot_order(b.1 as usize))
             })
         });
-        self.dirty = false;
-        candidates.clone()
-    }
+        return;
+    };
+    top_ranked(&mut keyed, limit, |a, b| {
+        b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1))
+    });
+    candidates.clear();
+    candidates.extend(keyed.iter().map(|&(score, _, slot)| (score, slot)));
 }
 
 pub(super) const WEIGH_BLOCK: usize = 128;

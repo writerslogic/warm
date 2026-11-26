@@ -17,6 +17,10 @@ pub(in super::super) trait LexicalSource {
     fn slot_word_count(&self, slot: usize) -> u32;
     /// `(document id, chunk index)` of the chunk in `slot`, the tie order of equal scores.
     fn slot_order(&self, slot: usize) -> (&str, usize);
+    /// The order of [`Self::slot_order`] as one integer, when this source can give it.
+    fn slot_tie_key(&self, _slot: usize) -> Option<u64> {
+        None
+    }
     /// The checkpoint whose postings carry impacts, when this source is one: its queries may
     /// be pruned by block-max bounds (see [`super::super::impact`]).
     fn impact_image(&self) -> Option<&super::super::image::ServingImage> {
